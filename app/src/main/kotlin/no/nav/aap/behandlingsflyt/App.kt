@@ -350,7 +350,9 @@ class DbConfig(
     val database: String = if (Miljø.er() == MiljøKode.DEV) System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_DATABASE") else System.getenv(
         "NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_JDBC_URL"
     ),
-    val url: String = "jdbc:postgresql://$host:$port/$database",
+    val url: String = System.getenv(
+        "NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_JDBC_URL"
+    ),
     val username: String = System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_USERNAME"),
     val password: String = System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_PASSWORD")
 )
@@ -361,7 +363,6 @@ fun initDatasource(dbConfig: DbConfig): DataSource = HikariDataSource(HikariConf
     password = dbConfig.password
     maximumPoolSize = 10 + (ANTALL_WORKERS * 2)
     minimumIdle = 1
-    driverClassName = "org.postgresql.Driver"
     connectionTestQuery = "SELECT 1"
     metricRegistry = prometheus
 })
