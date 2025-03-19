@@ -90,7 +90,6 @@ spec:
             roles:
               - "bestill-varselbrev"
         - application: paw-patrol
-        - application: api
         - application: api-intern
         - application: saksbehandling-lokal # For lokal utvikling. IKKE kopier denne til prod.yaml
         - application: azure-token-generator # Ikke i prod :)
