@@ -32,10 +32,22 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
             setRowMapper { row ->
                 BistandGrunnlag(
                     id = row.getLong("ID"),
-                    behandlingId = behandlingId,
                     vurdering = bistandvurderingRowMapper(row)
                 )
             }
+        }
+    }
+
+    private fun mapBistandsvurderinger(bistandsvurderingerId: Long?): List<BistandVurdering> {
+        return connection.queryList(
+            """
+                SELECT * FROM bistand WHERE BISTAND_VURDERINGER_ID = ?
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, bistandsvurderingerId)
+            }
+            setRowMapper(::bistandvurderingRowMapper)
         }
     }
 
@@ -76,33 +88,83 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
     override fun lagre(behandlingId: BehandlingId, bistandVurdering: BistandVurdering) {
         val eksisterendeBistandGrunnlag = hentHvisEksisterer(behandlingId)
 
-        if (eksisterendeBistandGrunnlag?.vurdering == bistandVurdering) return
+        val nyttGrunnlag = BistandGrunnlag(
+            id = null,
+            vurdering = bistandVurdering
+        )
 
-        if (eksisterendeBistandGrunnlag != null) {
-            deaktiverEksisterende(behandlingId)
-        }
-
-        val bistandId =
-            connection.executeReturnKey("INSERT INTO BISTAND (BEGRUNNELSE, BEHOV_FOR_AKTIV_BEHANDLING, BEHOV_FOR_ARBEIDSRETTET_TILTAK, BEHOV_FOR_ANNEN_OPPFOELGING, VURDERINGEN_GJELDER_FRA, VURDERT_AV, OVERGANG_BEGRUNNELSE, OVERGANG_TIL_UFOERE, OVERGANG_TIL_ARBEID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)") {
-                setParams {
-                    setString(1, bistandVurdering.begrunnelse)
-                    setBoolean(2, bistandVurdering.erBehovForAktivBehandling)
-                    setBoolean(3, bistandVurdering.erBehovForArbeidsrettetTiltak)
-                    setBoolean(4, bistandVurdering.erBehovForAnnenOppfølging)
-                    setLocalDate(5, bistandVurdering.vurderingenGjelderFra)
-                    setString(6, bistandVurdering.vurdertAv)
-                    setString(7, bistandVurdering.overgangBegrunnelse)
-                    setBoolean(8, bistandVurdering.skalVurdereAapIOvergangTilUføre)
-                    setBoolean(9, bistandVurdering.skalVurdereAapIOvergangTilArbeid)
-                }
+        if (eksisterendeBistandGrunnlag != nyttGrunnlag) {
+            eksisterendeBistandGrunnlag?.let {
+                deaktiverEksisterende(behandlingId)
             }
+            lagre(behandlingId, nyttGrunnlag)
+        }
+    }
 
-        connection.execute("INSERT INTO BISTAND_GRUNNLAG (BEHANDLING_ID, BISTAND_ID) VALUES (?, ?)") {
+    private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: BistandGrunnlag) {
+        //val bistandvurderingerId = lagreBistandsvurderinger(nyttGrunnlag.vurderinger)
+        val (bistandId, bistandvurderingerId) = lagreBistandsvurdering(nyttGrunnlag.vurdering)
+
+        connection.execute("INSERT INTO BISTAND_GRUNNLAG (BEHANDLING_ID, BISTAND_ID, BISTAND_VURDERINGER_ID) VALUES (?, ?, ?)") {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, bistandId)
+                setLong(3, bistandvurderingerId)
             }
         }
+    }
+
+    // Double write frem til migrering av data
+    private fun lagreBistandsvurdering(vurdering: BistandVurdering?): Pair<Long?, Long> {
+        val bistandvurderingerId = connection.executeReturnKey("""INSERT INTO BISTAND_VURDERINGER DEFAULT VALUES""")
+
+        if (vurdering == null) {
+            return Pair(null, bistandvurderingerId)
+        }
+
+        val id = connection.executeReturnKey(
+            "INSERT INTO BISTAND (BEGRUNNELSE, BEHOV_FOR_AKTIV_BEHANDLING, BEHOV_FOR_ARBEIDSRETTET_TILTAK, BEHOV_FOR_ANNEN_OPPFOELGING, VURDERINGEN_GJELDER_FRA, VURDERT_AV, OVERGANG_BEGRUNNELSE, OVERGANG_TIL_UFOERE, OVERGANG_TIL_ARBEID, BISTAND_VURDERINGER_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        ) {
+            setParams {
+                setString(1, vurdering.begrunnelse)
+                setBoolean(2, vurdering.erBehovForAktivBehandling)
+                setBoolean(3, vurdering.erBehovForArbeidsrettetTiltak)
+                setBoolean(4, vurdering.erBehovForAnnenOppfølging)
+                setLocalDate(5, vurdering.vurderingenGjelderFra)
+                setString(6, vurdering.vurdertAv)
+                setString(7, vurdering.overgangBegrunnelse)
+                setBoolean(8, vurdering.skalVurdereAapIOvergangTilUføre)
+                setBoolean(9, vurdering.skalVurdereAapIOvergangTilArbeid)
+                setLong(10, bistandvurderingerId)
+            }
+        }
+
+        return Pair(id, bistandvurderingerId)
+    }
+
+
+    private fun lagreBistandsvurderinger(vurderinger: List<BistandVurdering>): Long {
+        val bistandvurderingerId = connection.executeReturnKey("""INSERT INTO BISTAND_VURDERINGER DEFAULT VALUES""")
+
+        connection.executeBatch(
+            "INSERT INTO BISTAND (BEGRUNNELSE, BEHOV_FOR_AKTIV_BEHANDLING, BEHOV_FOR_ARBEIDSRETTET_TILTAK, BEHOV_FOR_ANNEN_OPPFOELGING, VURDERINGEN_GJELDER_FRA, VURDERT_AV, OVERGANG_BEGRUNNELSE, OVERGANG_TIL_UFOERE, OVERGANG_TIL_ARBEID, BISTAND_VURDERINGER_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            vurderinger
+        ) {
+            setParams { vurdering ->
+                setString(1, vurdering.begrunnelse)
+                setBoolean(2, vurdering.erBehovForAktivBehandling)
+                setBoolean(3, vurdering.erBehovForArbeidsrettetTiltak)
+                setBoolean(4, vurdering.erBehovForAnnenOppfølging)
+                setLocalDate(5, vurdering.vurderingenGjelderFra)
+                setString(6, vurdering.vurdertAv)
+                setString(7, vurdering.overgangBegrunnelse)
+                setBoolean(8, vurdering.skalVurdereAapIOvergangTilUføre)
+                setBoolean(9, vurdering.skalVurdereAapIOvergangTilArbeid)
+                setLong(10, bistandvurderingerId)
+            }
+        }
+
+        return bistandvurderingerId
     }
 
     private fun deaktiverEksisterende(behandlingId: BehandlingId) {
@@ -118,7 +180,13 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         require(fraBehandling != tilBehandling)
-        connection.execute("INSERT INTO BISTAND_GRUNNLAG (BEHANDLING_ID, BISTAND_ID) SELECT ?, BISTAND_ID FROM BISTAND_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
+        connection.execute(
+            """
+            INSERT INTO BISTAND_GRUNNLAG (BEHANDLING_ID, BISTAND_ID, BISTAND_VURDERINGER_ID) 
+            SELECT ?, BISTAND_ID, BISTAND_VURDERINGER_ID 
+            FROM BISTAND_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?
+            """.trimIndent()
+        ) {
             setParams {
                 setLong(1, tilBehandling.toLong())
                 setLong(2, fraBehandling.toLong())
