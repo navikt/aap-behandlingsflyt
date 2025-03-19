@@ -42,6 +42,6 @@ data class SamordningVurderingGrunnlag(
     val vurderinger: List<SamordningVurdering>,
 ) {
     init {
-        require(!maksDatoEndelig || maksDato != null)
+        require(maksDatoEndelig || maksDato != null)
     }
 }
