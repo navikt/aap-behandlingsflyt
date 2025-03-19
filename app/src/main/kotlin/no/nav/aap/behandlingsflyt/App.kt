@@ -312,7 +312,6 @@ private fun registerRepositories() {
         .register<InstitusjonsoppholdRepositoryImpl>()
         .register<InntektGrunnlagRepositoryImpl>()
         .register<MeldeperiodeRepositoryImpl>()
-        .register<BrevbestillingRepositoryImpl>()
         .register<VedtakRepositoryImpl>()
         .status()
 }
