@@ -58,7 +58,8 @@ data class SamordningUføreVurderingGrunnlagDTO(
 
 data class SamordningUføreGrunnlagDTO(
     val virkningstidspunkt: LocalDate,
-    val uføregrad: Prosent
+    val uføregrad: Prosent,
+    val kilde: String
 )
 
 data class SamordningUføreVurderingDTO(
@@ -167,7 +168,8 @@ private fun mapSamordningUføreGrunnlag(registerGrunnlag: UføreGrunnlag?): List
     return registerGrunnlag?.vurderinger?.map {
         SamordningUføreGrunnlagDTO(
             virkningstidspunkt = it.virkningstidspunkt,
-            uføregrad = it.uføregrad
+            uføregrad = it.uføregrad,
+            kilde = it.kilde
         )
     } ?: emptyList()
 }
