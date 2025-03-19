@@ -126,7 +126,7 @@ jobs:
         env:
           PRINT_PAYLOAD: true
           CLUSTER: dev-gcp
-          RESOURCE: .nais/nais-dev.yml
+          RESOURCE: .nais/dev.yaml
           VAR: image=${{ needs.build.outputs.image }}
 
   deploy-prod:
@@ -141,5 +141,5 @@ jobs:
             env:
                 PRINT_PAYLOAD: true
                 CLUSTER: prod-gcp
-                RESOURCE: .nais/nais-prod.yml
+                RESOURCE: .nais/prod.yaml
                 VAR: image=${{ needs.build.outputs.image }}
