@@ -93,10 +93,10 @@ spec:
     outbound:
       external:
         - host: pdl-api.prod-fss-pub.nais.io
-        - host: pensjon-popp-q2.prod-fss-pub.nais.io
+        - host: pensjon-popp.prod-fss-pub.nais.io
         - host: fpabakus.prod-fss-pub.nais.io
-        - host: aareg-services-q1.prod-fss-pub.nais.io
-        - host: pensjon-pen-q2.prod-fss-pub.nais.io
+        - host: aareg-services.prod-fss-pub.nais.io
+        - host: pensjon-pen.prod-fss-pub.nais.io
       rules:
         - application: brev
         - application: tilgang
@@ -109,8 +109,8 @@ spec:
         - application: dokumentinnhenting
         - application: spokelse
           namespace: tbd
-        - application: pensjon-pen-q2
-          namespace: pensjon-q2
+        - application: pensjon-pen
+          namespace: pensjondeployer
           cluster: prod-fss
         - application: api-intern
 
@@ -120,9 +120,9 @@ spec:
     - name: INTEGRASJON_PDL_SCOPE
       value: api://prod-fss.pdl.pdl-api/.default
     - name: INTEGRASJON_SAF_URL_GRAPHQL
-      value: https://saf-q2.prod-fss-pub.nais.io/graphql
+      value: https://saf.prod-fss-pub.nais.io/graphql
     - name: INTEGRASJON_SAF_URL_REST
-      value: https://saf-q2.prod-fss-pub.nais.io/rest
+      value: https://saf.prod-fss-pub.nais.io/rest
     - name: INTEGRASJON_SAF_SCOPE
       value: api://prod-fss.teamdokumenthandtering.saf/.default
     - name: INTEGRASJON_YRKESSKADE_URL
@@ -130,13 +130,13 @@ spec:
     - name: INTEGRASJON_YRKESSKADE_SCOPE
       value: api://prod-gcp.yrkesskade.yrkesskade-saker/.default
     - name: INTEGRASJON_INSTITUSJONSOPPHOLD_URL
-      value: https://institusjon-opphold-proxy-q2.prod-fss-pub.nais.io/api/v1/person/institusjonsopphold
+      value: https://institusjon-opphold-proxy.prod-fss-pub.nais.io/api/v1/person/institusjonsopphold
     - name: INTEGRASJON_INSTITUSJONSOPPHOLD_SCOPE
-      value: api://prod-fss.team-rocket.inst2-q2/.default
+      value: api://prod-fss.team-rocket.inst2/.default
     - name: INTEGRASJON_INNTEKT_URL
-      value: https://pensjon-popp-q2.prod-fss-pub.nais.io/popp/api/inntekt/sumPi
+      value: https://pensjon-popp.prod-fss-pub.nais.io/popp/api/inntekt/sumPi
     - name: INTEGRASJON_INNTEKT_SCOPE
-      value: api://prod-fss.pensjonopptjening.pensjon-popp-q2/.default
+      value: api://prod-fss.pensjonopptjening.pensjon-popp/.default
     - name: INTEGRASJON_OPPGAVESTYRING_URL
       value: http://oppgave
     - name: INTEGRASJON_OPPGAVESTYRING_SCOPE
@@ -146,9 +146,9 @@ spec:
     - name: INTEGRASJON_STATISTIKK_SCOPE
       value: api://prod-gcp.aap.statistikk/.default
     - name: INTEGRASJON_PESYS_URL
-      value: https://pensjon-pen-q2.prod-fss-pub.nais.io
+      value: https://pensjon-pen.prod-fss-pub.nais.io
     - name: INTEGRASJON_PESYS_SCOPE
-      value: api://prod-fss.pensjon-q2.pensjon-pen-q2/.default
+      value: api://prod-fss.pensjondeployer.pensjon-pen/.default
     - name: INTEGRASJON_TILGANG_URL
       value: http://tilgang
     - name: INTEGRASJON_TILGANG_SCOPE
@@ -194,11 +194,11 @@ spec:
     - name: INTEGRASJON_SAKSBEHANDLING_AZP
       value: prod-gcp:aap:saksbehandling
     - name: INTEGRASJON_AAREG_URL
-      value: https://aareg-services-q2.prod-fss-pub.nais.io
+      value: https://aareg-services.prod-fss-pub.nais.io
     - name: INTEGRASJON_AAREG_SCOPE
       value: api://prod-fss.arbeidsforhold.aareg-services-nais/.default
     - name: INTEGRASJON_INNTEKTSKOMPONENTEN_URL
-      value: https://team-inntekt-proxy.prod-fss-pub.nais.io/proxy/inntektskomponenten-q2/rs/api/v1
+      value: https://team-inntekt-proxy.prod-fss-pub.nais.io/proxy/inntektskomponenten/rs/api/v1
     - name: INTEGRASJON_INNTEKTSKOMPONENTEN_SCOPE
       value: api://prod-fss.team-inntekt.inntektskomponenten/.default
     - name: INTEGRASJON_DATADELING_URL
