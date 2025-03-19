@@ -116,7 +116,7 @@ fun main() {
                                     brevkategori = InnsendingType.SØKNAD,
                                     kanal = Kanal.DIGITAL,
                                     melding = mapTilSøknad(dto, urelaterteBarn),
-                                    mottattTidspunkt = LocalDateTime.now()
+                                    mottattTidspunkt = dto.søknadsdato?.atStartOfDay() ?: LocalDateTime.now(),
                                 )
                             )
                         }
