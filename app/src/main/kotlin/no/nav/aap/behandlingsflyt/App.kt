@@ -115,6 +115,8 @@ import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangException
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.komponenter.miljo.Miljø
+import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.server.AZURE
 import no.nav.aap.komponenter.server.commonKtorModule
 import no.nav.aap.lookup.gateway.GatewayRegistry
@@ -345,7 +347,9 @@ fun Application.startMotor(dataSource: DataSource): Motor {
 class DbConfig(
     host: String? = System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_HOST"),
     val port: String? = System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_PORT"),
-    val database: String = System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_DATABASE"),
+    val database: String = if (Miljø.er() == MiljøKode.DEV) System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_DATABASE") else System.getenv(
+        "NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_JDBC_URL"
+    ),
     val url: String = "jdbc:postgresql://$host:$port/$database",
     val username: String = System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_USERNAME"),
     val password: String = System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_PASSWORD")
