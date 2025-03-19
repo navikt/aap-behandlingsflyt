@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.help
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
 import org.junit.jupiter.api.Assertions
 import org.opentest4j.AssertionFailedError
 
@@ -21,4 +22,8 @@ inline fun <reified T> Tidslinje<T>.assertTidslinje(vararg assertions: Segment<(
             null
         }
     )
+}
+
+inline fun <reified T> assertTidslinje(tidslinje: Tidslinje<T>, vararg assertions: Pair<Periode, (T) -> Unit>) {
+    tidslinje.assertTidslinje(*assertions.map { (periode, assertion) -> Segment(periode, assertion) }.toTypedArray())
 }

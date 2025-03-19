@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.DayOfWeek
 
 class FastsettMeldeperiodeSteg(
     private val sakRepository: SakRepository,
@@ -53,7 +54,8 @@ class FastsettMeldeperiodeSteg(
             val fastsattDag = gamlePerioder.firstOrNull()?.fom
 
             val førsteFastsatteDag = if (fastsattDag == null)
-                rettighetsperiode.fom
+                generateSequence(rettighetsperiode.fom) { it.minusDays(1) }
+                    .first { it.dayOfWeek == DayOfWeek.MONDAY }
             else
                 generateSequence(fastsattDag) { it.minusDays(MELDEPERIODE_LENGDE) }
                     .first { it <= rettighetsperiode.fom }

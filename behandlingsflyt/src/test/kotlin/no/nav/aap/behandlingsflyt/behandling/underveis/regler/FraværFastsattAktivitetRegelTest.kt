@@ -14,6 +14,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_M
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.INGEN_GYLDIG_GRUNN
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.STERKE_VELFERDSGRUNNER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.SYKDOM_ELLER_SKADE
+import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.desember
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -244,22 +247,33 @@ class FraværFastsattAktivitetRegelTest {
         }
     }
 
+    /**
+     * 2020
+     *       January
+     *  Mo Tu We Th Fr Sa Su
+     *         1  2  3  4  5
+     *   6  7  8  9 10 11 12
+     *  13 14 15 16 17 18 19
+     *  20 21 22 23 24 25 26
+     *  27 28 29 30 31
+     *
+     */
     @Test
     fun `brudd som strekker seg over to meldeperioder blir vurdert i hver sin meldeperiode`() {
         val vurderinger = aktivitetsbruddVurderinger(
-            rettighetsperiode = Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2022, 12, 31)),
+            rettighetsperiode = Periode(fom = 17 januar 2020, tom = 31 desember 2022),
             brudd(
                 bruddType = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
-                periode = Periode(LocalDate.of(2020, 1, 14), LocalDate.of(2020, 1, 15)),
-                opprettet = LocalDate.of(2020, 4, 1),
+                periode = Periode(26 januar 2020, 27 januar 2020),
+                opprettet = 1 april 2020,
             ),
         )
 
-        vurderinger.segment(LocalDate.of(2020, 1, 14))!!.verdi.also {
+        vurderinger.segment(26 januar 2020)!!.verdi.also {
             assertEquals(UNNTAK_INNTIL_EN_DAG, it.vilkårsvurdering)
         }
-        vurderinger.segment(LocalDate.of(2020, 1, 15))!!.verdi.also {
+        vurderinger.segment(27 januar 2020)!!.verdi.also {
             assertEquals(UNNTAK_INNTIL_EN_DAG, it.vilkårsvurdering)
         }
     }
