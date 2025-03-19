@@ -355,6 +355,7 @@ fun initDatasource(dbConfig: DbConfig): DataSource = HikariDataSource(HikariConf
     password = dbConfig.password
     maximumPoolSize = 10 + (ANTALL_WORKERS * 2)
     minimumIdle = 1
+    driverClassName = "org.postgresql.Driver"
     connectionTestQuery = "SELECT 1"
     metricRegistry = prometheus
 })
