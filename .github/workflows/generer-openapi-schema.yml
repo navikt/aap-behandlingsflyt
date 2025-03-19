@@ -43,7 +43,6 @@ jobs:
                     overwrite: 'true'
             - uses: navikt/github-app-token-generator@v1
               id: get-token
-              if: ${{ inputs.publish-typescript == true }}
               with:
                   app-id: "${{ secrets.TEAM_AAP_GITHUB_APP_ID }}"
                   private-key: "${{ secrets.TEAM_AAP_GITHUB_APP_PRIVATE_KEY }}"
