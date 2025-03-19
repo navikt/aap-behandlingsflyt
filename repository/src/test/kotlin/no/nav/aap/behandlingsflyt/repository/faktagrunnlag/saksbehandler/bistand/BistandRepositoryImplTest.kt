@@ -54,30 +54,34 @@ class BistandRepositoryImplTest {
             val bistandRepository = BistandRepositoryImpl(connection)
             bistandRepository.lagre(
                 behandling.id,
-                BistandVurdering(
-                    begrunnelse = "begrunnelse",
-                    erBehovForAktivBehandling = false,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false,
-                    vurderingenGjelderFra = null,
-                    vurdertAv = "Z00000",
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
+                listOf(
+                    BistandVurdering(
+                        begrunnelse = "begrunnelse",
+                        erBehovForAktivBehandling = false,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = false,
+                        vurderingenGjelderFra = null,
+                        vurdertAv = "Z00000",
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                    )
                 )
             )
             val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
-            assertThat(bistandGrunnlag?.vurdering).isEqualTo(
-                BistandVurdering(
-                    begrunnelse = "begrunnelse",
-                    erBehovForAktivBehandling = false,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false,
-                    vurderingenGjelderFra = null,
-                    vurdertAv = "Z00000",
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
+            assertThat(bistandGrunnlag?.vurderinger).isEqualTo(
+                listOf(
+                    BistandVurdering(
+                        begrunnelse = "begrunnelse",
+                        erBehovForAktivBehandling = false,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = false,
+                        vurderingenGjelderFra = null,
+                        vurdertAv = "Z00000",
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                    )
                 )
             )
         }
@@ -92,44 +96,50 @@ class BistandRepositoryImplTest {
             val bistandRepository = BistandRepositoryImpl(connection)
             bistandRepository.lagre(
                 behandling.id,
-                BistandVurdering(
-                    begrunnelse = "en begrunnelse",
-                    erBehovForAktivBehandling = false,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false,
-                    vurderingenGjelderFra = null,
-                    vurdertAv = "Z00000",
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
+                listOf(
+                    BistandVurdering(
+                        begrunnelse = "en begrunnelse",
+                        erBehovForAktivBehandling = false,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = false,
+                        vurderingenGjelderFra = null,
+                        vurdertAv = "Z00000",
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                    )
                 )
             )
             bistandRepository.lagre(
                 behandling.id,
-                BistandVurdering(
-                    begrunnelse = "annen begrunnelse",
-                    erBehovForAktivBehandling = false,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false,
-                    vurderingenGjelderFra = null,
-                    vurdertAv = "Z00000",
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
+                listOf(
+                    BistandVurdering(
+                        begrunnelse = "annen begrunnelse",
+                        erBehovForAktivBehandling = false,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = false,
+                        vurderingenGjelderFra = null,
+                        vurdertAv = "Z00000",
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                    )
                 )
             )
             bistandRepository.lagre(
                 behandling.id,
-                BistandVurdering(
-                    begrunnelse = "annen begrunnelse",
-                    erBehovForAktivBehandling = false,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false,
-                    vurderingenGjelderFra = null,
-                    vurdertAv = "Z00000",
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
+                listOf(
+                    BistandVurdering(
+                        begrunnelse = "annen begrunnelse",
+                        erBehovForAktivBehandling = false,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = false,
+                        vurderingenGjelderFra = null,
+                        vurdertAv = "Z00000",
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                    )
                 )
             )
 
@@ -161,16 +171,18 @@ class BistandRepositoryImplTest {
             val bistandRepository = BistandRepositoryImpl(connection)
             bistandRepository.lagre(
                 behandling1.id,
-                BistandVurdering(
-                    begrunnelse = "begrunnelse",
-                    erBehovForAktivBehandling = false,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false,
-                    vurderingenGjelderFra = null,
-                    vurdertAv = "Z00000",
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
+                listOf(
+                    BistandVurdering(
+                        begrunnelse = "begrunnelse",
+                        erBehovForAktivBehandling = false,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = false,
+                        vurderingenGjelderFra = null,
+                        vurdertAv = "Z00000",
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                    )
                 )
             )
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
@@ -182,17 +194,19 @@ class BistandRepositoryImplTest {
             val behandling2 = behandling(connection, sak)
 
             val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(bistandGrunnlag?.vurdering).isEqualTo(
-                BistandVurdering(
-                    begrunnelse = "begrunnelse",
-                    erBehovForAktivBehandling = false,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false,
-                    vurderingenGjelderFra = null,
-                    vurdertAv = "Z00000",
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
+            assertThat(bistandGrunnlag?.vurderinger).isEqualTo(
+                listOf(
+                    BistandVurdering(
+                        begrunnelse = "begrunnelse",
+                        erBehovForAktivBehandling = false,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = false,
+                        vurderingenGjelderFra = null,
+                        vurdertAv = "Z00000",
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                    )
                 )
             )
         }
@@ -216,30 +230,34 @@ class BistandRepositoryImplTest {
             val bistandRepository = BistandRepositoryImpl(connection)
             bistandRepository.lagre(
                 behandling1.id,
-                BistandVurdering(
-                    begrunnelse = "en begrunnelse",
-                    erBehovForAktivBehandling = false,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false,
-                    vurderingenGjelderFra = null,
-                    vurdertAv = "Z00000",
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
+                listOf(
+                    BistandVurdering(
+                        begrunnelse = "en begrunnelse",
+                        erBehovForAktivBehandling = false,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = false,
+                        vurderingenGjelderFra = null,
+                        vurdertAv = "Z00000",
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                    )
                 )
             )
             bistandRepository.lagre(
                 behandling1.id,
-                BistandVurdering(
-                    begrunnelse = "annen begrunnelse",
-                    erBehovForAktivBehandling = false,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false,
-                    vurderingenGjelderFra = null,
-                    vurdertAv = "Z00000",
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
+                listOf(
+                    BistandVurdering(
+                        begrunnelse = "annen begrunnelse",
+                        erBehovForAktivBehandling = false,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = false,
+                        vurderingenGjelderFra = null,
+                        vurdertAv = "Z00000",
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                    )
                 )
             )
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
@@ -251,17 +269,19 @@ class BistandRepositoryImplTest {
             val behandling2 = behandling(connection, sak)
 
             val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(bistandGrunnlag?.vurdering).isEqualTo(
-                BistandVurdering(
-                    begrunnelse = "annen begrunnelse",
-                    erBehovForAktivBehandling = false,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false,
-                    vurderingenGjelderFra = null,
-                    vurdertAv = "Z00000",
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
+            assertThat(bistandGrunnlag?.vurderinger).isEqualTo(
+                listOf(
+                    BistandVurdering(
+                        begrunnelse = "annen begrunnelse",
+                        erBehovForAktivBehandling = false,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = false,
+                        vurderingenGjelderFra = null,
+                        vurdertAv = "Z00000",
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                    )
                 )
             )
         }
@@ -276,59 +296,67 @@ class BistandRepositoryImplTest {
 
             bistandRepository.lagre(
                 behandling.id,
-                BistandVurdering(
-                    begrunnelse = "en begrunnelse",
-                    erBehovForAktivBehandling = false,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false,
-                    vurderingenGjelderFra = null,
-                    vurdertAv = "Z00000",
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
+                listOf(
+                    BistandVurdering(
+                        begrunnelse = "en begrunnelse",
+                        erBehovForAktivBehandling = false,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = false,
+                        vurderingenGjelderFra = null,
+                        vurdertAv = "Z00000",
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                    )
                 )
             )
             val orginaltGrunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
-            assertThat(orginaltGrunnlag?.vurdering).isEqualTo(
-                BistandVurdering(
-                    begrunnelse = "en begrunnelse",
-                    erBehovForAktivBehandling = false,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false,
-                    vurderingenGjelderFra = null,
-                    vurdertAv = "Z00000",
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
+            assertThat(orginaltGrunnlag?.vurderinger).isEqualTo(
+                listOf(
+                    BistandVurdering(
+                        begrunnelse = "en begrunnelse",
+                        erBehovForAktivBehandling = false,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = false,
+                        vurderingenGjelderFra = null,
+                        vurdertAv = "Z00000",
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                    )
                 )
             )
 
             bistandRepository.lagre(
                 behandling.id,
-                BistandVurdering(
-                    begrunnelse = "annen begrunnelse",
-                    erBehovForAktivBehandling = false,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false,
-                    vurderingenGjelderFra = null,
-                    vurdertAv = "Z00000",
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
+                listOf(
+                    BistandVurdering(
+                        begrunnelse = "annen begrunnelse",
+                        erBehovForAktivBehandling = false,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = false,
+                        vurderingenGjelderFra = null,
+                        vurdertAv = "Z00000",
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                    )
                 )
             )
             val oppdatertGrunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
-            assertThat(oppdatertGrunnlag?.vurdering).isEqualTo(
-                BistandVurdering(
-                    begrunnelse = "annen begrunnelse",
-                    erBehovForAktivBehandling = false,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false,
-                    vurderingenGjelderFra = null,
-                    vurdertAv = "Z00000",
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
+            assertThat(oppdatertGrunnlag?.vurderinger).isEqualTo(
+                listOf(
+                    BistandVurdering(
+                        begrunnelse = "annen begrunnelse",
+                        erBehovForAktivBehandling = false,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = false,
+                        vurderingenGjelderFra = null,
+                        vurdertAv = "Z00000",
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                    )
                 )
             )
 
@@ -374,30 +402,34 @@ class BistandRepositoryImplTest {
             val bistandRepository = BistandRepositoryImpl(connection)
             bistandRepository.lagre(
                 behandling1.id,
-                BistandVurdering(
-                    begrunnelse = "en begrunnelse",
-                    erBehovForAktivBehandling = false,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false,
-                    vurderingenGjelderFra = null,
-                    vurdertAv = "Z00000",
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
+                listOf(
+                    BistandVurdering(
+                        begrunnelse = "en begrunnelse",
+                        erBehovForAktivBehandling = false,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = false,
+                        vurderingenGjelderFra = null,
+                        vurdertAv = "Z00000",
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                    )
                 )
             )
             bistandRepository.lagre(
                 behandling1.id,
-                BistandVurdering(
-                    begrunnelse = "annen begrunnelse",
-                    erBehovForAktivBehandling = false,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false,
-                    vurderingenGjelderFra = null,
-                    vurdertAv = "Z00000",
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
+                listOf(
+                    BistandVurdering(
+                        begrunnelse = "annen begrunnelse",
+                        erBehovForAktivBehandling = false,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = false,
+                        vurderingenGjelderFra = null,
+                        vurdertAv = "Z00000",
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                    )
                 )
             )
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
@@ -493,8 +525,8 @@ class BistandRepositoryImplTest {
             val sak = sak(connection)
             val førstegangsbehandling = behandling(connection, sak)
 
-            repo.lagre(førstegangsbehandling.id, bistandsvurdering1)
-            repo.lagre(førstegangsbehandling.id, bistandsvurdering2)
+            repo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering1))
+            repo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering2))
             Pair(førstegangsbehandling, sak)
         }
 
@@ -520,7 +552,7 @@ class BistandRepositoryImplTest {
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
             )
-            repo.lagre(revurdering.id, bistandsvurdering3)
+            repo.lagre(revurdering.id, listOf(bistandsvurdering3))
             val historikk = repo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id)
             assertEquals(listOf(bistandsvurdering2), historikk)
         }

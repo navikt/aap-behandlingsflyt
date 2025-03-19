@@ -34,7 +34,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource) {
                     val historiskeVurderinger =
                         bistandRepository.hentHistoriskeBistandsvurderinger(behandling.sakId, behandling.id)
                     val grunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
-                    val vurderingDto = BistandVurderingDto.fraBistandVurdering(grunnlag?.vurdering)
+                    val vurderingDto = BistandVurderingDto.fraBistandVurdering(grunnlag?.vurderinger?.firstOrNull())
                     BistandGrunnlagDto(
                         vurderingDto,
                         listOfNotNull(vurderingDto),

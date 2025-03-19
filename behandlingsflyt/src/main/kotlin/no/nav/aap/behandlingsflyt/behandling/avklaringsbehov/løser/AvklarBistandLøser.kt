@@ -24,7 +24,7 @@ class AvklarBistandLøser(val connection: DBConnection) :
         val bistandsVurdering = løsning.bistandsVurdering.tilBistandVurdering(kontekst.bruker)
         bistandRepository.lagre(
             behandlingId = behandling.id,
-            bistandVurdering = bistandsVurdering
+            bistandsvurderinger = listOf(bistandsVurdering) // TODO: Konstruer tidslinje
         )
 
         return LøsningsResultat(

@@ -155,7 +155,7 @@ class VurderBistandsbehovSteg private constructor(
         val grunnlag = BistandFaktagrunnlag(
             periode.fom,
             periode.tom,
-            bistandsGrunnlag?.vurdering,
+            bistandsGrunnlag?.vurderinger?.firstOrNull(), // TODO: Oppdater til å ta inn liste
             studentGrunnlag?.studentvurdering
         )
         Bistandsvilkåret(vilkårsresultat).vurder(grunnlag = grunnlag)

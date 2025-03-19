@@ -4,7 +4,7 @@ import no.nav.aap.komponenter.type.Periode
 
 class BistandGrunnlag(
     val id: Long?,
-    val vurdering: BistandVurdering,
+    val vurderinger: List<BistandVurdering>,
 ) {
     fun harVurdertPeriode(periode: Periode): Boolean {
         return true
@@ -16,8 +16,12 @@ class BistandGrunnlag(
 
         other as BistandGrunnlag
 
-        if (vurdering != other.vurdering) return false
+        if (vurderinger != other.vurderinger) return false
 
         return true
+    }
+
+    override fun hashCode(): Int {
+        return vurderinger.hashCode()
     }
 }

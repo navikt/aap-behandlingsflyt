@@ -20,10 +20,9 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
     override fun hentHvisEksisterer(behandlingId: BehandlingId): BistandGrunnlag? {
         return connection.queryFirstOrNull(
             """
-            SELECT g.ID, b.*
-            FROM BISTAND_GRUNNLAG g
-            INNER JOIN BISTAND b ON g.BISTAND_ID = b.ID
-            WHERE g.AKTIV AND g.BEHANDLING_ID = ?
+            SELECT ID, BISTAND_ID, BISTAND_VURDERINGER_ID
+            FROM BISTAND_GRUNNLAG
+            WHERE AKTIV AND BEHANDLING_ID = ?
             """.trimIndent()
         ) {
             setParams {
@@ -32,10 +31,40 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
             setRowMapper { row ->
                 BistandGrunnlag(
                     id = row.getLong("ID"),
-                    vurdering = bistandvurderingRowMapper(row)
+                    vurderinger = mapVurderingerTemp(
+                        row.getLongOrNull("BISTAND_ID"),
+                        row.getLongOrNull("BISTAND_VURDERINGER_ID")
+                    )
                 )
             }
         }
+    }
+    
+    private fun mapVurderingerTemp(bistandId: Long?, bistandsvurderingerId: Long?): List<BistandVurdering> {
+        if (bistandsvurderingerId == null) {
+            return listOfNotNull(mapBistandsvurdering(bistandId))
+        } else {
+            return mapBistandsvurderinger(bistandsvurderingerId)
+        }
+
+    }
+    
+    private fun mapBistandsvurdering(bistandvurderingId: Long?): BistandVurdering?{
+        if (bistandvurderingId == null) {
+            return null
+        }
+        
+        return connection.queryFirstOrNull(
+            """
+            SELECT * FROM bistand WHERE ID = ?
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, bistandvurderingId)
+            }
+            setRowMapper(::bistandvurderingRowMapper)
+        }
+        
     }
 
     private fun mapBistandsvurderinger(bistandsvurderingerId: Long?): List<BistandVurdering> {
@@ -85,12 +114,12 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         }
     }
 
-    override fun lagre(behandlingId: BehandlingId, bistandVurdering: BistandVurdering) {
+    override fun lagre(behandlingId: BehandlingId, bistandsvurderinger: List<BistandVurdering>) {
         val eksisterendeBistandGrunnlag = hentHvisEksisterer(behandlingId)
 
         val nyttGrunnlag = BistandGrunnlag(
             id = null,
-            vurdering = bistandVurdering
+            vurderinger = bistandsvurderinger
         )
 
         if (eksisterendeBistandGrunnlag != nyttGrunnlag) {
@@ -103,7 +132,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
 
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: BistandGrunnlag) {
         //val bistandvurderingerId = lagreBistandsvurderinger(nyttGrunnlag.vurderinger)
-        val (bistandId, bistandvurderingerId) = lagreBistandsvurdering(nyttGrunnlag.vurdering)
+        val (bistandId, bistandvurderingerId) = lagreBistandsvurdering(nyttGrunnlag.vurderinger.firstOrNull()) // TODO: Bruk den over ved konstruksjon av tidlslinje
 
         connection.execute("INSERT INTO BISTAND_GRUNNLAG (BEHANDLING_ID, BISTAND_ID, BISTAND_VURDERINGER_ID) VALUES (?, ?, ?)") {
             setParams {
