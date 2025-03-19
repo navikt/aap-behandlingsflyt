@@ -5,24 +5,13 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 
 class SamordningVurderingTest {
-    @Test
-    fun `om maksdato er endelig, må ikke maksdato oppgis`() {
-        assertThrows<IllegalArgumentException> {
-            SamordningVurderingGrunnlag(
-                begrunnelse = "....",
-                maksDatoEndelig = false,
-                maksDato = null,
-                vurderinger = listOf()
-            )
-        }
-    }
 
     @Test
-    fun `om maksdato er endelig kan den være null`() {
+    fun `lov å ha null i både maksDatoEndelig og maksDato`() {
         assertDoesNotThrow {
             SamordningVurderingGrunnlag(
                 begrunnelse = "....",
-                maksDatoEndelig = true,
+                maksDatoEndelig = null,
                 maksDato = null,
                 vurderinger = listOf()
             )

@@ -37,11 +37,7 @@ data class SamordningYtelseGrunnlag(
 data class SamordningVurderingGrunnlag(
     val vurderingerId: Long? = null,
     val begrunnelse: String,
-    val maksDatoEndelig: Boolean,
+    val maksDatoEndelig: Boolean?,
     val maksDato: LocalDate?,
     val vurderinger: List<SamordningVurdering>,
-) {
-    init {
-        require(maksDatoEndelig || maksDato != null)
-    }
-}
+)

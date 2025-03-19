@@ -8,7 +8,7 @@ import java.time.LocalDate
 
 data class VurderingerForSamordning(
     val begrunnelse: String,
-    val maksDatoEndelig: Boolean,
+    val maksDatoEndelig: Boolean?,
     val maksDato: LocalDate?,
     val vurderteSamordningerData: List<SamordningVurderingData>
 )
