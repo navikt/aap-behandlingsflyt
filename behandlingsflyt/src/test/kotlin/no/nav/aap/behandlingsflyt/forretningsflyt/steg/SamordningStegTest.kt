@@ -140,6 +140,7 @@ class SamordningStegTest {
                             SamordningVurderingPeriode(
                                 periode = pleiepengerPeriode,
                                 gradering = Prosent(50),
+                                manuell= false
                             )
                         )
                     ),
@@ -149,6 +150,7 @@ class SamordningStegTest {
                             SamordningVurderingPeriode(
                                 periode = periodeMedSykepenger,
                                 gradering = Prosent(90),
+                                manuell= false
                             )
                         )
                     )
