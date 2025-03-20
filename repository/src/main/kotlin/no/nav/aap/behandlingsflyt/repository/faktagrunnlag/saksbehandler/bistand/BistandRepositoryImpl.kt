@@ -20,7 +20,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
     override fun hentHvisEksisterer(behandlingId: BehandlingId): BistandGrunnlag? {
         return connection.queryFirstOrNull(
             """
-            SELECT ID, BISTAND_ID, BISTAND_VURDERINGER_ID
+            SELECT ID, BISTAND_VURDERINGER_ID
             FROM BISTAND_GRUNNLAG
             WHERE AKTIV AND BEHANDLING_ID = ?
             """.trimIndent()
@@ -31,40 +31,10 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
             setRowMapper { row ->
                 BistandGrunnlag(
                     id = row.getLong("ID"),
-                    vurderinger = mapVurderingerTemp(
-                        row.getLongOrNull("BISTAND_ID"),
-                        row.getLongOrNull("BISTAND_VURDERINGER_ID")
-                    )
+                    vurderinger = mapBistandsvurderinger(row.getLongOrNull("BISTAND_VURDERINGER_ID"))
                 )
             }
         }
-    }
-    
-    private fun mapVurderingerTemp(bistandId: Long?, bistandsvurderingerId: Long?): List<BistandVurdering> {
-        if (bistandsvurderingerId == null) {
-            return listOfNotNull(mapBistandsvurdering(bistandId))
-        } else {
-            return mapBistandsvurderinger(bistandsvurderingerId)
-        }
-
-    }
-    
-    private fun mapBistandsvurdering(bistandvurderingId: Long?): BistandVurdering?{
-        if (bistandvurderingId == null) {
-            return null
-        }
-        
-        return connection.queryFirstOrNull(
-            """
-            SELECT * FROM bistand WHERE ID = ?
-            """.trimIndent()
-        ) {
-            setParams {
-                setLong(1, bistandvurderingId)
-            }
-            setRowMapper(::bistandvurderingRowMapper)
-        }
-        
     }
 
     private fun mapBistandsvurderinger(bistandsvurderingerId: Long?): List<BistandVurdering> {
@@ -90,7 +60,8 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
             skalVurdereAapIOvergangTilUføre = row.getBooleanOrNull("OVERGANG_TIL_UFOERE"),
             skalVurdereAapIOvergangTilArbeid = row.getBooleanOrNull("OVERGANG_TIL_ARBEID"),
             overgangBegrunnelse = row.getStringOrNull("OVERGANG_BEGRUNNELSE"),
-            vurdertAv = row.getString("VURDERT_AV")
+            vurdertAv = row.getString("VURDERT_AV"),
+            opprettet = row.getInstant("OPPRETTET_TID")
         )
     }
 
@@ -98,7 +69,8 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         val query = """
             SELECT DISTINCT bistand.*
             FROM bistand_grunnlag grunnlag
-            INNER JOIN bistand ON grunnlag.bistand_id = bistand.id
+            INNER JOIN bistand_vurderinger ON grunnlag.bistand_vurderinger_id = bistand_vurderinger.id
+            INNER JOIN bistand ON bistand.bistand_vurderinger_id = bistand_vurderinger.id
             INNER JOIN behandling ON grunnlag.behandling_id = behandling.id
             WHERE grunnlag.aktiv AND behandling.sak_id = ?
                 AND behandling.opprettet_tid < (select a.opprettet_tid from behandling a where id = ?)
@@ -131,46 +103,15 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
     }
 
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: BistandGrunnlag) {
-        //val bistandvurderingerId = lagreBistandsvurderinger(nyttGrunnlag.vurderinger)
-        val (bistandId, bistandvurderingerId) = lagreBistandsvurdering(nyttGrunnlag.vurderinger.firstOrNull()) // TODO: Bruk den over ved konstruksjon av tidlslinje
+        val bistandvurderingerId = lagreBistandsvurderinger(nyttGrunnlag.vurderinger)
 
-        connection.execute("INSERT INTO BISTAND_GRUNNLAG (BEHANDLING_ID, BISTAND_ID, BISTAND_VURDERINGER_ID) VALUES (?, ?, ?)") {
+        connection.execute("INSERT INTO BISTAND_GRUNNLAG (BEHANDLING_ID, BISTAND_VURDERINGER_ID) VALUES (?, ?)") {
             setParams {
                 setLong(1, behandlingId.toLong())
-                setLong(2, bistandId)
-                setLong(3, bistandvurderingerId)
+                setLong(2, bistandvurderingerId)
             }
         }
     }
-
-    // Double write frem til migrering av data
-    private fun lagreBistandsvurdering(vurdering: BistandVurdering?): Pair<Long?, Long> {
-        val bistandvurderingerId = connection.executeReturnKey("""INSERT INTO BISTAND_VURDERINGER DEFAULT VALUES""")
-
-        if (vurdering == null) {
-            return Pair(null, bistandvurderingerId)
-        }
-
-        val id = connection.executeReturnKey(
-            "INSERT INTO BISTAND (BEGRUNNELSE, BEHOV_FOR_AKTIV_BEHANDLING, BEHOV_FOR_ARBEIDSRETTET_TILTAK, BEHOV_FOR_ANNEN_OPPFOELGING, VURDERINGEN_GJELDER_FRA, VURDERT_AV, OVERGANG_BEGRUNNELSE, OVERGANG_TIL_UFOERE, OVERGANG_TIL_ARBEID, BISTAND_VURDERINGER_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        ) {
-            setParams {
-                setString(1, vurdering.begrunnelse)
-                setBoolean(2, vurdering.erBehovForAktivBehandling)
-                setBoolean(3, vurdering.erBehovForArbeidsrettetTiltak)
-                setBoolean(4, vurdering.erBehovForAnnenOppfølging)
-                setLocalDate(5, vurdering.vurderingenGjelderFra)
-                setString(6, vurdering.vurdertAv)
-                setString(7, vurdering.overgangBegrunnelse)
-                setBoolean(8, vurdering.skalVurdereAapIOvergangTilUføre)
-                setBoolean(9, vurdering.skalVurdereAapIOvergangTilArbeid)
-                setLong(10, bistandvurderingerId)
-            }
-        }
-
-        return Pair(id, bistandvurderingerId)
-    }
-
 
     private fun lagreBistandsvurderinger(vurderinger: List<BistandVurdering>): Long {
         val bistandvurderingerId = connection.executeReturnKey("""INSERT INTO BISTAND_VURDERINGER DEFAULT VALUES""")
@@ -211,8 +152,8 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         require(fraBehandling != tilBehandling)
         connection.execute(
             """
-            INSERT INTO BISTAND_GRUNNLAG (BEHANDLING_ID, BISTAND_ID, BISTAND_VURDERINGER_ID) 
-            SELECT ?, BISTAND_ID, BISTAND_VURDERINGER_ID 
+            INSERT INTO BISTAND_GRUNNLAG (BEHANDLING_ID, BISTAND_VURDERINGER_ID) 
+            SELECT ?, BISTAND_VURDERINGER_ID 
             FROM BISTAND_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?
             """.trimIndent()
         ) {

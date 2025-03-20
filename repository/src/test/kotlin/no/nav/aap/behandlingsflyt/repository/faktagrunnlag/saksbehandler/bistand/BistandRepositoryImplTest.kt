@@ -148,7 +148,8 @@ class BistandRepositoryImplTest {
                     SELECT bi.BEGRUNNELSE
                     FROM BEHANDLING b
                     INNER JOIN BISTAND_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
-                    INNER JOIN BISTAND bi ON g.BISTAND_ID = bi.ID
+                    INNER JOIN BISTAND_VURDERINGER biv ON biv.id = g.bistand_vurderinger_id
+                    INNER JOIN BISTAND bi ON bi.bistand_vurderinger_id = biv.id
                     WHERE b.SAK_ID = ?
                     """.trimIndent()
             ) {
@@ -371,7 +372,8 @@ class BistandRepositoryImplTest {
                     SELECT g.AKTIV, bi.BEGRUNNELSE
                     FROM BEHANDLING b
                     INNER JOIN BISTAND_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
-                    INNER JOIN BISTAND bi ON g.BISTAND_ID = bi.ID
+                    INNER JOIN BISTAND_VURDERINGER biv ON biv.id = g.bistand_vurderinger_id
+                    INNER JOIN BISTAND bi ON bi.bistand_vurderinger_id = biv.id
                     WHERE b.SAK_ID = ?
                     """.trimIndent()
                 ) {
@@ -453,7 +455,8 @@ class BistandRepositoryImplTest {
                     SELECT b.ID AS BEHANDLING_ID, bi.ID AS BISTAND_ID, g.AKTIV, bi.BEGRUNNELSE
                     FROM BEHANDLING b
                     INNER JOIN BISTAND_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
-                    INNER JOIN BISTAND bi ON g.BISTAND_ID = bi.ID
+                    INNER JOIN BISTAND_VURDERINGER biv ON biv.id = g.bistand_vurderinger_id
+                    INNER JOIN BISTAND bi ON bi.bistand_vurderinger_id = biv.id
                     WHERE b.SAK_ID = ?
                     """.trimIndent()
                 ) {
@@ -475,7 +478,7 @@ class BistandRepositoryImplTest {
                 .hasSize(2)
             assertThat(opplysninger.map(Grunnlag::opplysning))
                 .hasSize(3)
-                .containsExactly(
+                .containsExactlyInAnyOrder(
                     Opplysning(
                         behandlingId = behandling1.id.toLong(),
                         aktiv = false,

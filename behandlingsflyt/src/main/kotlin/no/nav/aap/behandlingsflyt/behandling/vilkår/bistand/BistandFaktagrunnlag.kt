@@ -8,6 +8,6 @@ import java.time.LocalDate
 class BistandFaktagrunnlag(
     val vurderingsdato: LocalDate,
     val sisteDagMedMuligYtelse: LocalDate,
-    val vurdering: BistandVurdering?,
+    val vurderinger: List<BistandVurdering>,
     val studentvurdering: StudentVurdering?,
 ) : Faktagrunnlag

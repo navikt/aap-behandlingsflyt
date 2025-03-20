@@ -2,11 +2,15 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDate
 
 class AvklarBistandLøser(val connection: DBConnection) :
     AvklaringsbehovsLøser<AvklarBistandsbehovLøsning> {
@@ -22,9 +26,26 @@ class AvklarBistandLøser(val connection: DBConnection) :
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
         val bistandsVurdering = løsning.bistandsVurdering.tilBistandVurdering(kontekst.bruker)
+
+        val eksisterendeBistandsvurderinger = behandling.forrigeBehandlingId
+            ?.let { bistandRepository.hentHvisEksisterer(it) }
+            ?.somBistandsvurderingstidslinje(LocalDate.MIN)
+            ?: Tidslinje()
+
+        val ny = bistandsVurdering.let {
+            BistandGrunnlag(
+                id = null,
+                vurderinger = listOf(it),
+            ).somBistandsvurderingstidslinje(LocalDate.MIN)
+        }
+
+        val gjeldende = eksisterendeBistandsvurderinger
+            .kombiner(ny, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+            .toList().map { it.verdi }
+
         bistandRepository.lagre(
             behandlingId = behandling.id,
-            bistandsvurderinger = listOf(bistandsVurdering) // TODO: Konstruer tidslinje
+            bistandsvurderinger = gjeldende
         )
 
         return LøsningsResultat(
