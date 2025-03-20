@@ -58,7 +58,7 @@ data class SamordningUføreVurderingGrunnlagDTO(
 
 data class SamordningUføreGrunnlagDTO(
     val virkningstidspunkt: LocalDate,
-    val uføregrad: Prosent,
+    val uføregrad: Int,
     val kilde: String
 )
 
@@ -69,7 +69,7 @@ data class SamordningUføreVurderingDTO(
 
 data class SamordningUføreVurderingPeriodeDTO(
     val periode: Periode,
-    val uføregradTilSamordning: Prosent
+    val uføregradTilSamordning: Int
 )
 
 
@@ -158,7 +158,7 @@ private fun mapSamordningUføreVurdering(vurdering: SamordningUføreVurdering?) 
             vurderingPerioder = it.vurderingPerioder.map { periode ->
                 SamordningUføreVurderingPeriodeDTO(
                     periode.periode,
-                    periode.uføregradTilSamordning
+                    periode.uføregradTilSamordning.prosentverdi()
                 )
             })
     }
@@ -168,7 +168,7 @@ private fun mapSamordningUføreGrunnlag(registerGrunnlag: UføreGrunnlag?): List
     return registerGrunnlag?.vurderinger?.map {
         SamordningUføreGrunnlagDTO(
             virkningstidspunkt = it.virkningstidspunkt,
-            uføregrad = it.uføregrad,
+            uføregrad = it.uføregrad.prosentverdi(),
             kilde = it.kilde
         )
     } ?: emptyList()
