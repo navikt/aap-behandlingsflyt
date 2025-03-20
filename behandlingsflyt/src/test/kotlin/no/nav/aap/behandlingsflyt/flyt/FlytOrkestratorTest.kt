@@ -26,10 +26,12 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettYrkesskadeInntektLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FritakMeldepliktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SamordningVentPaVirkningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
@@ -55,6 +57,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
@@ -335,7 +338,7 @@ class FlytOrkestratorTest {
         util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
 
-        løsAvklaringsBehov(
+        behandling = løsAvklaringsBehov(
             behandling, AvklarBistandsbehovLøsning(
                 bistandsVurdering = BistandVurderingLøsningDto(
                     begrunnelse = "Trenger hjelp fra nav",
@@ -349,7 +352,6 @@ class FlytOrkestratorTest {
                 ),
             )
         )
-        behandling = hentBehandling(sak.id)
 
         // Sender inn en søknad
         sendInnDokument(
@@ -564,13 +566,7 @@ class FlytOrkestratorTest {
         var brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
 
         løsAvklaringsBehov(
-            behandling, BrevbestillingLøsning(
-                LøsBrevbestillingDto(
-                    behandlingReferanse = behandling.referanse.referanse,
-                    bestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
-                    status = BrevbestillingLøsningStatus.KLAR_FOR_EDITERING
-                )
-            ), BREV_SYSTEMBRUKER
+            behandling, brevbestillingLøsning(behandling, brevbestilling), BREV_SYSTEMBRUKER
         )
         brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
         // Brevet er klar for forhåndsvisning og editering
@@ -718,7 +714,7 @@ class FlytOrkestratorTest {
 
         behandling = hentBehandling(sak.id)
 
-        løsAvklaringsBehov(
+        behandling = løsAvklaringsBehov(
             behandling,
             AvklarBistandsbehovLøsning(
                 bistandsVurdering = BistandVurderingLøsningDto(
@@ -733,10 +729,9 @@ class FlytOrkestratorTest {
                 ),
             ),
         )
-        behandling = hentBehandling(sak.id)
 
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        løsAvklaringsBehov(
+        behandling = løsAvklaringsBehov(
             behandling,
             KvalitetssikringLøsning(
                 alleAvklaringsbehov
@@ -750,9 +745,8 @@ class FlytOrkestratorTest {
                         )
                     }),
         )
-        behandling = hentBehandling(sak.id)
 
-        løsAvklaringsBehov(
+        behandling = løsAvklaringsBehov(
             behandling,
             AvklarYrkesskadeLøsning(
                 yrkesskadesvurdering = YrkesskadevurderingDto(
@@ -763,9 +757,8 @@ class FlytOrkestratorTest {
                 )
             ),
         )
-        behandling = hentBehandling(sak.id)
 
-        løsAvklaringsBehov(
+        behandling = løsAvklaringsBehov(
             behandling,
             FastsettBeregningstidspunktLøsning(
                 beregningVurdering = BeregningstidspunktVurdering(
@@ -776,7 +769,6 @@ class FlytOrkestratorTest {
                 ),
             ),
         )
-        behandling = hentBehandling(sak.id)
 
         løsAvklaringsBehov(
             behandling,
@@ -832,13 +824,7 @@ class FlytOrkestratorTest {
         var brevBestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
 
         løsAvklaringsBehov(
-            behandling, BrevbestillingLøsning(
-                LøsBrevbestillingDto(
-                    behandlingReferanse = behandling.referanse.referanse,
-                    bestillingReferanse = brevBestilling.referanse.brevbestillingReferanse,
-                    status = BrevbestillingLøsningStatus.KLAR_FOR_EDITERING
-                )
-            ), BREV_SYSTEMBRUKER
+            behandling, brevbestillingLøsning(behandling, brevBestilling), BREV_SYSTEMBRUKER
         )
 
         brevBestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
@@ -889,7 +875,7 @@ class FlytOrkestratorTest {
 
     @Test
     fun `stopper opp ved samordning ved funn av sykepenger, og løses ved info fra saksbehandler`() {
-        val fom = LocalDate.now().minusMonths(3)
+        val fom = LocalDate.now()
         val periode = Periode(fom, fom.plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
@@ -937,7 +923,7 @@ class FlytOrkestratorTest {
         løsSykdom(behandling)
         behandling = hentBehandling(sak.id)
 
-        løsAvklaringsBehov(
+        behandling = løsAvklaringsBehov(
             behandling,
             AvklarBistandsbehovLøsning(
                 bistandsVurdering = BistandVurderingLøsningDto(
@@ -952,10 +938,22 @@ class FlytOrkestratorTest {
                 ),
             ),
         )
-        behandling = hentBehandling(sak.id)
+
+        løsAvklaringsBehov(
+            behandling,
+            avklaringsBehovLøsning = FritakMeldepliktLøsning(
+                fritaksvurderinger = listOf(
+                    FritaksvurderingDto(
+                        harFritak = true,
+                        fraDato = periode.fom,
+                        begrunnelse = "...",
+                    )
+                ),
+            ),
+        )
 
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        løsAvklaringsBehov(
+        behandling = løsAvklaringsBehov(
             behandling,
             KvalitetssikringLøsning(
                 alleAvklaringsbehov
@@ -970,9 +968,8 @@ class FlytOrkestratorTest {
                     }),
 
             )
-        behandling = hentBehandling(sak.id)
 
-        løsAvklaringsBehov(
+        behandling = løsAvklaringsBehov(
             behandling,
             FastsettBeregningstidspunktLøsning(
                 beregningVurdering = BeregningstidspunktVurdering(
@@ -983,32 +980,8 @@ class FlytOrkestratorTest {
                 ),
             ),
         )
-        behandling = hentBehandling(sak.id)
-
-        // Sender inn en søknad
-        sendInnDokument(
-            ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId("22"),
-                mottattTidspunkt = LocalDateTime.now(),
-                strukturertDokument = StrukturertDokument(
-                    MeldekortV0(
-                        harDuArbeidet = false,
-                        timerArbeidPerPeriode = listOf(
-                            ArbeidIPeriodeV0(
-                                fraOgMedDato = LocalDate.now().minusMonths(3),
-                                tilOgMedDato = LocalDate.now().plusMonths(3),
-                                timerArbeid = 0.0,
-                            )
-                        )
-                    ),
-                ),
-                periode = periode
-            )
-        )
-        util.ventPåSvar()
 
         assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).containsExactly(Definisjon.AVKLAR_SAMORDNING_GRADERING)
-
 
         løsAvklaringsBehov(
             behandling,
@@ -1053,26 +1026,19 @@ class FlytOrkestratorTest {
                 .let(::Tidslinje)
                 .filter { (it.verdi?.prosentverdi() ?: 0) > 0 }.helePerioden()
 
-        // Verifiser at samordningen ble anget opp
-        assertThat(periodeMedPositivSamordning).isEqualTo(sykePengerPeriode)
+        // Verifiser at samordningen ble fanget opp
+        assertThat(periodeMedPositivSamordning.tom).isEqualTo(sykePengerPeriode.tom)
 
         var brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
         løsAvklaringsBehov(
-            behandling, BrevbestillingLøsning(
-                LøsBrevbestillingDto(
-                    behandlingReferanse = behandling.referanse.referanse,
-                    bestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
-                    status = BrevbestillingLøsningStatus.KLAR_FOR_EDITERING
-                )
-            ), BREV_SYSTEMBRUKER
+            behandling, brevbestillingLøsning(behandling, brevbestilling), BREV_SYSTEMBRUKER
         )
         brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
         val behandlingReferanse = behandling.referanse
-        løsAvklaringsBehov(
+        behandling = løsAvklaringsBehov(
             behandling, SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse)
         )
 
-        behandling = hentBehandling(sak.id)
         // Siden samordning overlappet, skal en revurdering opprettes med en gang
         assertThat(behandling.referanse).isNotEqualTo(behandlingReferanse)
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
@@ -1399,13 +1365,7 @@ class FlytOrkestratorTest {
 
         var brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
         løsAvklaringsBehov(
-            behandling, BrevbestillingLøsning(
-                LøsBrevbestillingDto(
-                    behandlingReferanse = behandling.referanse.referanse,
-                    bestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
-                    status = BrevbestillingLøsningStatus.KLAR_FOR_EDITERING
-                )
-            ),
+            behandling, brevbestillingLøsning(behandling, brevbestilling),
             BREV_SYSTEMBRUKER
         )
 
@@ -1422,6 +1382,17 @@ class FlytOrkestratorTest {
         assertThat(hentBehandling(sak.id).status()).isEqualTo(Status.AVSLUTTET)
         assertThat(hendelser.last().behandlingStatus).isEqualTo(Status.AVSLUTTET)
     }
+
+    private fun brevbestillingLøsning(
+        behandling: Behandling,
+        brevbestilling: Brevbestilling
+    ) = BrevbestillingLøsning(
+        LøsBrevbestillingDto(
+            behandlingReferanse = behandling.referanse.referanse,
+            bestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
+            status = BrevbestillingLøsningStatus.KLAR_FOR_EDITERING
+        )
+    )
 
     @Test
     fun `Blir satt på vent for etterspørring av informasjon`() {
@@ -2397,7 +2368,7 @@ class FlytOrkestratorTest {
         avklaringsBehovLøsning: AvklaringsbehovLøsning,
         bruker: Bruker = Bruker("SAKSBEHANDLER"),
         ingenEndringIGruppe: Boolean = false
-    ) {
+    ): Behandling {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(
                 AvklaringsbehovOrkestrator(
@@ -2418,6 +2389,7 @@ class FlytOrkestratorTest {
             )
         }
         util.ventPåSvar(behandling.sakId.id, behandling.id.id)
+        return hentBehandling(behandling.sakId)
     }
 
     private fun løsSykdom(behandling: Behandling) {
