@@ -16,3 +16,13 @@ data class SamordningUføreVurderingPeriode(
     val periode: Periode,
     val uføregradTilSamordning: Prosent
 )
+
+data class SamordningUføreVurderingDto(
+    val begrunnelse: String,
+    val vurderingPerioder: List<SamordningUføreVurderingPeriodeDto>,
+)
+
+data class SamordningUføreVurderingPeriodeDto(
+    val periode: Periode,
+    val uføregradTilSamordning: Int
+)
