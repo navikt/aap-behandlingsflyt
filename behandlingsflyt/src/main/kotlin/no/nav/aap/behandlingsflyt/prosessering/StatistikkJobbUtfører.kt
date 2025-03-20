@@ -36,6 +36,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype
 import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -125,6 +126,14 @@ class StatistikkJobbUtfører(
                     ÅrsakTilBehandling.REVURDER_LOVVALG -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REVURDER_LOVVALG
                     ÅrsakTilBehandling.REVURDER_SAMORDNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REVURDER_SAMORDNING
                     ÅrsakTilBehandling.MOTATT_KLAGE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.KLAGE
+                    ÅrsakTilBehandling.LOVVALG_OG_MEDLEMSKAP -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.LOVVALG_OG_MEDLEMSKAP
+                    ÅrsakTilBehandling.FORUTGAENDE_MEDLEMSKAP -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.FORUTGAENDE_MEDLEMSKAP
+                    ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+                    ÅrsakTilBehandling.BARNETILLEGG -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.BARNETILLEGG
+                    ÅrsakTilBehandling.INSTITUSJONSOPPHOLD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.INSTITUSJONSOPPHOLD
+                    ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING
+                    ÅrsakTilBehandling.REFUSJONSKRAV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REFUSJONSKRAV
+                    ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT
                 }
             }.distinct()
         )

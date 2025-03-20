@@ -13,9 +13,17 @@ enum class ÅrsakTilBehandling {
     REVURDER_MEDLEMSKAP,
     REVURDER_SAMORDNING,
     REVURDER_LOVVALG,
-    REVURDER_BEREGNING,
-    REVURDER_YRKESSKADE,
-    G_REGULERING;
+    REVURDER_BEREGNING,         // Beregningstidspunkt
+    REVURDER_YRKESSKADE,        // Yrkesskade
+    G_REGULERING,
+    LOVVALG_OG_MEDLEMSKAP,      // Lovvalg og medlemskap
+    FORUTGAENDE_MEDLEMSKAP,     // Forutgående medlemskap
+    SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, // Sykdom, arbeidsevne og behov for bistand
+    BARNETILLEGG,               // Barnetillegg
+    INSTITUSJONSOPPHOLD,        // Institusjonsopphold
+    SAMORDNING_OG_AVREGNING,    // Samordning og avregning
+    REFUSJONSKRAV,              // Refusjonskrav
+    UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT; // Utenlandsopphold før søknadstidspunkt
 
     companion object {
         /**
@@ -53,4 +61,13 @@ fun EksponertÅrsak.tilÅrsakTilBehandling() =
         EksponertÅrsak.REVURDER_LOVVALG -> ÅrsakTilBehandling.REVURDER_LOVVALG
         EksponertÅrsak.REVURDER_SAMORDNING -> ÅrsakTilBehandling.REVURDER_SAMORDNING
         EksponertÅrsak.KLAGE -> ÅrsakTilBehandling.MOTATT_KLAGE
+        EksponertÅrsak.LOVVALG_OG_MEDLEMSKAP -> ÅrsakTilBehandling.LOVVALG_OG_MEDLEMSKAP
+        EksponertÅrsak.FORUTGAENDE_MEDLEMSKAP -> ÅrsakTilBehandling.FORUTGAENDE_MEDLEMSKAP
+        EksponertÅrsak.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND -> ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+        EksponertÅrsak.BARNETILLEGG -> ÅrsakTilBehandling.BARNETILLEGG
+        EksponertÅrsak.INSTITUSJONSOPPHOLD -> ÅrsakTilBehandling.INSTITUSJONSOPPHOLD
+        EksponertÅrsak.SAMORDNING_OG_AVREGNING -> ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING
+        EksponertÅrsak.REFUSJONSKRAV -> ÅrsakTilBehandling.REFUSJONSKRAV
+        EksponertÅrsak.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT -> ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT
+
     }
