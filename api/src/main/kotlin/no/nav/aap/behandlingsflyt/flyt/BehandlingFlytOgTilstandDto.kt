@@ -1,11 +1,13 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.Visning
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 
 data class BehandlingFlytOgTilstandDto(
     val flyt: List<FlytGruppe>,
+    val aktivtStegDefinisjon: List<Definisjon>,
     val aktivtSteg: StegType,
     val aktivGruppe: StegGruppe,
     val vurdertSteg: StegType?,

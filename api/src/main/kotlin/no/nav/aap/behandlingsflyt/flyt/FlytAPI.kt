@@ -103,6 +103,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                     val stegGrupper: Map<StegGruppe, List<StegType>> =
                         flyt.stegene().groupBy { steg -> steg.gruppe }
                     val aktivtSteg = behandling.aktivtSteg()
+                    val aktivtStegDefinisjon = Definisjon.fraStegType(aktivtSteg);
                     var erFullført = true
 
                     val alleAvklaringsbehovInkludertFrivillige = FrivilligeAvklaringsbehov(
@@ -145,6 +146,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                             )
                         },
                         aktivtSteg = aktivtSteg,
+                        aktivtStegDefinisjon = aktivtStegDefinisjon,
                         aktivGruppe = aktivtSteg.gruppe,
                         vurdertSteg = vurdertStegPair?.second,
                         vurdertGruppe = vurdertStegPair?.first,
@@ -436,7 +438,7 @@ private fun hentUtRelevantVilkårForSteg(vilkårsresultat: Vilkårsresultat, ste
     if (stegType == StegType.VURDER_LOVVALG) {
         vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.LOVVALG)
     }
-    if ( stegType == StegType.VURDER_MEDLEMSKAP) {
+    if (stegType == StegType.VURDER_MEDLEMSKAP) {
         vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.MEDLEMSKAP)
     }
     if (vilkår == null) {

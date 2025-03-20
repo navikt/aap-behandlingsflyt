@@ -259,6 +259,10 @@ public enum class Definisjon(
             return entries.single { it.kode == definisjon }
         }
 
+        public fun fraStegType(steg: StegType): List<Definisjon> {
+            return entries.filter {it.løsesISteg == steg }
+        }
+
         init {
             val unikeKoder =
                 Arrays.stream(entries.toTypedArray())
