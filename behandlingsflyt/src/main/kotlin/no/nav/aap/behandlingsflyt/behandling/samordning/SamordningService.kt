@@ -98,7 +98,7 @@ class SamordningService(
         return samordningTidslinje
     }
 
-    private fun <E> slåSammenTilListe(): JoinStyle.OUTER_JOIN<List<Pair<Ytelse, E>>, Pair<Ytelse, E>, List<Pair<Ytelse, E>>> =
+    private fun <E> slåSammenTilListe(): JoinStyle.OUTER_JOIN<List<E>, E, List<E>> =
         JoinStyle.OUTER_JOIN { periode, venstre, høyre ->
             if (venstre == null && høyre == null) {
                 null
@@ -110,6 +110,4 @@ class SamordningService(
                 Segment(periode, venstre?.verdi.orEmpty() + listOfNotNull(høyre?.verdi))
             }
         }
-
-
 }

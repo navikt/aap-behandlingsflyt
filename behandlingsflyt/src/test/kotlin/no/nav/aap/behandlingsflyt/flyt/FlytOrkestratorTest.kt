@@ -160,6 +160,8 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -174,7 +176,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -886,7 +887,6 @@ class FlytOrkestratorTest {
         }
     }
 
-    @Disabled("MIDLERTIDIG!!")
     @Test
     fun `stopper opp ved samordning ved funn av sykepenger, og løses ved info fra saksbehandler`() {
         val fom = LocalDate.now().minusMonths(3)
@@ -985,6 +985,28 @@ class FlytOrkestratorTest {
         )
         behandling = hentBehandling(sak.id)
 
+        // Sender inn en søknad
+        sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("22"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    MeldekortV0(
+                        harDuArbeidet = false,
+                        timerArbeidPerPeriode = listOf(
+                            ArbeidIPeriodeV0(
+                                fraOgMedDato = LocalDate.now().minusMonths(3),
+                                tilOgMedDato = LocalDate.now().plusMonths(3),
+                                timerArbeid = 0.0,
+                            )
+                        )
+                    ),
+                ),
+                periode = periode
+            )
+        )
+        util.ventPåSvar()
+
         assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).containsExactly(Definisjon.AVKLAR_SAMORDNING_GRADERING)
 
 
@@ -1001,7 +1023,7 @@ class FlytOrkestratorTest {
                         )
                     ),
                     begrunnelse = "En god begrunnelse",
-                    maksDatoEndelig = true,
+                    maksDatoEndelig = false,
                     maksDato = LocalDate.now().plusMonths(1),
                 ),
             ),
@@ -1022,6 +1044,18 @@ class FlytOrkestratorTest {
                         )
                     }), Bruker("BESLUTTER")
         )
+
+        val uthentetTilkjentYtelse =
+            requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) }) { "Tilkjent ytelse skal være beregnet her." }
+
+        val periodeMedPositivSamordning =
+            uthentetTilkjentYtelse.map { Segment(it.periode, it.tilkjent.gradering.samordningGradering) }
+                .let(::Tidslinje)
+                .filter { (it.verdi?.prosentverdi() ?: 0) > 0 }.helePerioden()
+
+        // Verifiser at samordningen ble anget opp
+        assertThat(periodeMedPositivSamordning).isEqualTo(sykePengerPeriode)
+
         var brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
         løsAvklaringsBehov(
             behandling, BrevbestillingLøsning(
