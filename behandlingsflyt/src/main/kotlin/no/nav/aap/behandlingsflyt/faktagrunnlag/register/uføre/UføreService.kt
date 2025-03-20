@@ -18,7 +18,7 @@ class UføreService(
 ) : Informasjonskrav {
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
-        val uføregrader = uføreRegisterGateway.innhent(sak.person, sak.rettighetsperiode.fom)
+        val uføregrader = uføreRegisterGateway.innhentMedHistorikk(sak.person, sak.rettighetsperiode.fom)
 
         val behandlingId = kontekst.behandlingId
         val eksisterendeGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)

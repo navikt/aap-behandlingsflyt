@@ -5,8 +5,14 @@ import no.nav.aap.lookup.gateway.Gateway
 import java.time.LocalDate
 
 interface UføreRegisterGateway : Gateway {
+    @Deprecated("Henter kun for en gitt dag - bruk heller innhentMedHistorikk som henter for hele perioden fra en gitt dato")
     fun innhent(
         person: Person,
         forDato: LocalDate
+    ): List<Uføre>
+
+    fun innhentMedHistorikk(
+        person: Person,
+        fraDato: LocalDate
     ): List<Uføre>
 }
