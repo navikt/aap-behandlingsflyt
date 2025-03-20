@@ -138,6 +138,14 @@ class PerioderTilVurderingService(
             ÅrsakTilBehandling.REVURDER_LOVVALG -> VurderingType.REVURDERING
             ÅrsakTilBehandling.REVURDER_SAMORDNING -> VurderingType.REVURDERING
             ÅrsakTilBehandling.MOTATT_KLAGE -> VurderingType.IKKE_RELEVANT // TODO: Verifiser at dette er korrekt. 
+            ÅrsakTilBehandling.LOVVALG_OG_MEDLEMSKAP -> VurderingType.REVURDERING
+            ÅrsakTilBehandling.FORUTGAENDE_MEDLEMSKAP -> VurderingType.REVURDERING
+            ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND -> VurderingType.REVURDERING
+            ÅrsakTilBehandling.BARNETILLEGG -> VurderingType.REVURDERING
+            ÅrsakTilBehandling.INSTITUSJONSOPPHOLD -> VurderingType.REVURDERING
+            ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING -> VurderingType.REVURDERING
+            ÅrsakTilBehandling.REFUSJONSKRAV -> VurderingType.REVURDERING
+            ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT -> VurderingType.REVURDERING
         }
     }
 }

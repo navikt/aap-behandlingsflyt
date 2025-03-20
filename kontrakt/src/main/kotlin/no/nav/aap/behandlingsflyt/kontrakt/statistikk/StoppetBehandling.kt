@@ -49,19 +49,27 @@ public data class StoppetBehandling(
  * Eksponert versjon av [no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling] til kontrakt.
  */
 public enum class ÅrsakTilBehandling {
-    SØKNAD,
-    AKTIVITETSMELDING,
-    MELDEKORT,
-    LEGEERKLÆRING,
-    AVVIST_LEGEERKLÆRING,
-    DIALOGMELDING,
-    G_REGULERING,
-    REVURDER_MEDLEMSKAP,
-    REVURDER_YRKESSKADE,
-    REVURDER_BEREGNING,
-    REVURDER_LOVVALG,
-    REVURDER_SAMORDNING,
-    KLAGE
+    SØKNAD,                 // deprecated
+    AKTIVITETSMELDING,      // deprecated
+    MELDEKORT,              // deprecated
+    LEGEERKLÆRING,          // deprecated
+    AVVIST_LEGEERKLÆRING,   // deprecated
+    DIALOGMELDING,          // deprecated
+    G_REGULERING,           // deprecated
+    REVURDER_MEDLEMSKAP,    // deprecated
+    REVURDER_YRKESSKADE,        // Yrkesskade
+    REVURDER_BEREGNING,         // Beregningstidspunkt
+    REVURDER_LOVVALG,       // deprecated
+    REVURDER_SAMORDNING,    // deprecated
+    KLAGE,                  // deprecated
+    LOVVALG_OG_MEDLEMSKAP,      // Lovvalg og medlemskap
+    FORUTGAENDE_MEDLEMSKAP,     // Forutgående medlemskap
+    SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, // Sykdom, arbeidsevne og behov for bistand
+    BARNETILLEGG,               // Barnetillegg
+    INSTITUSJONSOPPHOLD,        // Institusjonsopphold
+    SAMORDNING_OG_AVREGNING,    // Samordning og avregning
+    REFUSJONSKRAV,              // Refusjonskrav
+    UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT, // Utenlandsopphold før søknadstidspunkt
 }
 
 /**
