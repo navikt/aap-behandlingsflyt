@@ -72,9 +72,7 @@ class SamordningService(
 
         val samordningTidslinje =
             hentedeYtelserFraRegister.kombiner(vurderinger, JoinStyle.OUTER_JOIN { periode, venstre, høyre ->
-                // Vi har allerede verifisert at periodene overlapper
-                requireNotNull(venstre)
-                if (venstre.verdi.any { it.first.type == AvklaringsType.MANUELL }) {
+                if (venstre != null && venstre.verdi.any { it.first.type == AvklaringsType.MANUELL }) {
                     requireNotNull(høyre) { "Mangler manuell vurdering for periode ${venstre.periode}" }
                 }
 
@@ -83,7 +81,7 @@ class SamordningService(
                         .mapValues { it.value.gradering!! }
                         .filterKeys { it.type == AvklaringsType.MANUELL }
 
-                val registerVurderinger = venstre.verdi.associate { it.first to it.second.gradering!! }
+                val registerVurderinger = venstre?.verdi.orEmpty().associate { it.first to it.second.gradering!! }
                     .filterKeys { it.type == AvklaringsType.AUTOMATISK }
 
                 val alleSammen = manueltVurderteGraderinger.plus(registerVurderinger)

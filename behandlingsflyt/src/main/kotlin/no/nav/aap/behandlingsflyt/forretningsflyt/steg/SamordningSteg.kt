@@ -34,8 +34,6 @@ class SamordningSteg(
         // 3.  hvis har all tilgjengelig data:
         // 3.1 lag tidslinje av prosentgradering og lagre i SamordningRepository
 
-        return Fullført
-
         val vurderinger = samordningService.hentVurderinger(behandlingId = kontekst.behandlingId)
         val ytelser = samordningService.hentYtelser(behandlingId = kontekst.behandlingId)
         val tidligereVurderinger = samordningService.tidligereVurderinger(vurderinger)

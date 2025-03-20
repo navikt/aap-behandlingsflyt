@@ -38,7 +38,6 @@ import java.time.LocalDate
 import java.util.*
 import java.util.stream.Stream
 
-@Disabled("FOR TESTDAG - BUG")
 class SamordningStegTest {
     @ParameterizedTest
     @MethodSource("manuelleYtelserProvider")
@@ -220,7 +219,58 @@ class SamordningStegTest {
         val res3 = steg.utfør(kontekst = kontekst)
 
         assertThat(res3).isEqualTo(FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING))
+    }
 
+    @Test
+    fun `skal kunne regne ut samordninggrad også uten registeropplysninger, kun vurderinger`() {
+        val behandling = opprettBehandling(nySak(), TypeBehandling.Førstegangsbehandling)
+        val steg = SamordningSteg(
+            samordningService = SamordningService(
+                samordningVurderingRepository = InMemorySamordningVurderingRepository,
+                samordningYtelseRepository = InMemorySamordningYtelseRepository,
+            ),
+            samordningRepository = InMemorySamordningRepository,
+            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+        )
+
+        InMemorySamordningVurderingRepository.lagreVurderinger(
+            behandlingId = behandling.id,
+            samordningVurderinger = SamordningVurderingGrunnlag(
+                begrunnelse = "bla bla",
+                maksDatoEndelig = false,
+                maksDato = LocalDate.now().plusWeeks(1),
+                vurderinger = listOf(
+                    SamordningVurdering(
+                        Ytelse.SYKEPENGER, listOf(
+                            SamordningVurderingPeriode(
+                                periode = Periode(LocalDate.now().minusWeeks(2), LocalDate.now().plusWeeks(2)),
+                                gradering = Prosent.`100_PROSENT`,
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+        val kontekst = FlytKontekstMedPerioder(
+            sakId = behandling.sakId,
+            behandlingId = behandling.id,
+            behandlingType = TypeBehandling.Førstegangsbehandling,
+            vurdering = VurderingTilBehandling(
+                vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+                årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+            )
+        )
+
+        val res = steg.utfør(kontekst)
+
+        assertThat(res).isEqualTo(Fullført)
+
+        val uthentet = InMemorySamordningRepository.hentHvisEksisterer(behandling.id)
+
+        assertThat(uthentet!!.samordningPerioder).hasSize(1)
+        assertThat(uthentet.samordningPerioder.first().gradering).isEqualTo(Prosent.`100_PROSENT`)
     }
 
     private fun settOppRessurser(
