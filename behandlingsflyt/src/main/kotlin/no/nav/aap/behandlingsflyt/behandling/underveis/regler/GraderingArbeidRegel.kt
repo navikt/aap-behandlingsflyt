@@ -101,7 +101,9 @@ class GraderingArbeidRegel : UnderveisRegel {
             .lastOrNull { it.tom.plusDays(8) <= dagensDato }
         val harGittOpplysningerFramTilNå = sisteMeldeperiodeSomSkalHaOpplysninger == null || opplysninger
             .takeWhile { it.periode.fom <= sisteMeldeperiodeSomSkalHaOpplysninger.fom }
-            .all { it.verdi.timerArbeid != null }
+            .let {
+                it.isNotEmpty() && it.all { it.verdi.timerArbeid != null }
+            }
 
         if (harGittOpplysningerFramTilNå) {
             // anta null timer arbeidet hvis medlemmet har gitt alle opplysninger
