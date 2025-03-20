@@ -40,7 +40,9 @@ import no.nav.aap.behandlingsflyt.drift.Driftfunksjoner
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -422,11 +424,11 @@ class FlytOrkestratorTest {
 
         løsAvklaringsBehov(
             behandling, AvklarSamordningUføreLøsning(
-                samordningUføreVurdering = SamordningUføreVurdering(
+                samordningUføreVurdering = SamordningUføreVurderingDto(
                     begrunnelse = "Samordnet med uføre",
                     vurderingPerioder = listOf(
-                        SamordningUføreVurderingPeriode(
-                            periode = sak.rettighetsperiode, uføregradTilSamordning = Prosent(45)
+                        SamordningUføreVurderingPeriodeDto(
+                            periode = sak.rettighetsperiode, uføregradTilSamordning = 45
                         )
                     )
                 )
@@ -511,11 +513,11 @@ class FlytOrkestratorTest {
 
         løsAvklaringsBehov(
             behandling, AvklarSamordningUføreLøsning(
-                samordningUføreVurdering = SamordningUføreVurdering(
+                samordningUføreVurdering = SamordningUføreVurderingDto(
                     begrunnelse = "Samordnet med uføre",
                     vurderingPerioder = listOf(
-                        SamordningUføreVurderingPeriode(
-                            periode = sak.rettighetsperiode, uføregradTilSamordning = Prosent(45)
+                        SamordningUføreVurderingPeriodeDto(
+                            periode = sak.rettighetsperiode, uføregradTilSamordning = 45
                         )
                     )
                 )
