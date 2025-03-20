@@ -28,7 +28,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedta
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SamordningVentPaVirkningstidspunktLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SattPåVentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
@@ -40,8 +39,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -57,7 +54,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
@@ -78,6 +74,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.inntekt.InntektGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
+import no.nav.aap.behandlingsflyt.integrasjon.meldekort.MeldekortGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
@@ -256,6 +253,7 @@ class FlytOrkestratorTest {
                 .register<OppgavestyringGatewayImpl>()
                 .register<UføreGateway>()
                 .register<YrkesskadeRegisterGatewayImpl>()
+                .register<MeldekortGatewayImpl>()
             motor.start()
         }
 

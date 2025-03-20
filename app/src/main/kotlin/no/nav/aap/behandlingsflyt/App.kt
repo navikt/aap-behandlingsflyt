@@ -60,6 +60,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.inntekt.InntektGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
+import no.nav.aap.behandlingsflyt.integrasjon.meldekort.MeldekortGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
@@ -270,6 +271,7 @@ private fun registerGateways() {
         .register<OppgavestyringGatewayImpl>()
         .register<UføreGateway>()
         .register<YrkesskadeRegisterGatewayImpl>()
+        .register<MeldekortGatewayImpl>()
         .status()
 }
 

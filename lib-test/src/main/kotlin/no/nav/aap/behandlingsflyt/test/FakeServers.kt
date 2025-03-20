@@ -37,14 +37,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.Medl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY_HISTORIKK
-import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeModell
-import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRequest
-import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.integrasjon.barn.BARN_RELASJON_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PERSON_BOLK_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.ident.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
+import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRespons
+import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRequest
+import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingLøsningStatus
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
@@ -90,6 +90,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.JournalpostTilgangRequest
 import no.nav.aap.tilgang.SakTilgangRequest
@@ -104,7 +105,6 @@ import java.time.Year
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-
 
 
 object FakeServers : AutoCloseable {
@@ -128,6 +128,7 @@ object FakeServers : AutoCloseable {
     private val aareg = embeddedServer(Netty, port = 0, module = { aaregFake() })
     private val datadeling = embeddedServer(Netty, port = 0, module = { datadelingFake() })
     private val utbetal = embeddedServer(Netty, port = 0, module = { utbetalFake() })
+    private val meldekort = embeddedServer(Netty, port = 0, module = { meldekortFake() })
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
@@ -1310,6 +1311,31 @@ object FakeServers : AutoCloseable {
 
     }
 
+    private fun Application.meldekortFake() {
+        install(ContentNegotiation) {
+            jackson {
+                registerModule(JavaTimeModule())
+            }
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@meldekortFake.log.info("Meldekort :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                call.respond(
+                    status = HttpStatusCode.InternalServerError,
+                    message = ErrorRespons(cause.message)
+                )
+            }
+
+        }
+
+        routing {
+            post("/api/behandlingsflyt/sak/meldeperioder") {
+                call.receive<MeldeperioderV0>()
+                call.respond(HttpStatusCode.NoContent)
+            }
+        }
+
+    }
 
     private fun Application.brevFake() {
         val config = ClientConfig(scope = "")
@@ -1464,6 +1490,7 @@ object FakeServers : AutoCloseable {
         aareg.start()
         datadeling.start()
         utbetal.start()
+        meldekort.start()
 
         println("AZURE PORT ${azure.port()}")
 
@@ -1556,6 +1583,10 @@ object FakeServers : AutoCloseable {
         // Utbetal
         System.setProperty("integrasjon.utbetal.url", "http://localhost:${utbetal.port()}")
         System.setProperty("integrasjon.utbetal.scope", "utbetal")
+
+        // Meldekort
+        System.setProperty("integrasjon.meldekort.url", "http://localhost:${meldekort.port()}")
+        System.setProperty("integrasjon.meldekort.scope", "meldekort")
     }
 
     override fun close() {
@@ -1580,6 +1611,7 @@ object FakeServers : AutoCloseable {
         aareg.stop(0L, 0L)
         datadeling.stop(0L, 0L)
         utbetal.stop(0L, 0L)
+        meldekort.stop(0L, 0L)
     }
 }
 

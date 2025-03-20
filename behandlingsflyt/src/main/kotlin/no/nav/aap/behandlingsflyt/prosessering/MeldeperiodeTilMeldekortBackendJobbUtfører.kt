@@ -1,31 +1,38 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.meldekort.kontrakt.Periode
+import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
-import org.slf4j.LoggerFactory
 
 class MeldeperiodeTilMeldekortBackendJobbUtfører(
     private val sakService: SakService,
-    private val meldeperiodeRepository: MeldeperiodeRepository,
+    private val meldeperiodeService: MeldeperiodeService,
+    private val meldekortGateway: MeldekortGateway,
 ): JobbUtfører {
-    private val log = LoggerFactory.getLogger(javaClass)!!
-
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
         val behandlingId = BehandlingId(input.behandlingId())
 
         val sak = sakService.hent(sakId)
-        val meldeperioder = meldeperiodeRepository.hent(behandlingId)
+        val meldeperioder = meldeperiodeService.meldeperioder(sak, behandlingId)
 
-        // TODO
-        log.info("Skal pushe informasjon til meldekort-backend om meldeperioder")
+        meldekortGateway.oppdaterMeldeperioder(
+            MeldeperioderV0(
+                saksnummer = sak.saksnummer.toString(),
+                sakenGjelderFor = Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.tom),
+                meldeperioder = meldeperioder.map { Periode(it.fom, it.tom) },
+            )
+        )
     }
 
     companion object: Jobb {
@@ -38,12 +45,16 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
 
         override fun konstruer(connection: DBConnection): JobbUtfører {
             val repositoryProvider = RepositoryProvider(connection)
+            val sakRepository = repositoryProvider.provide<SakRepository>()
 
             return MeldeperiodeTilMeldekortBackendJobbUtfører(
                 sakService = SakService(
-                    sakRepository = repositoryProvider.provide(),
+                    sakRepository = sakRepository,
                 ),
-                meldeperiodeRepository = repositoryProvider.provide(),
+                meldeperiodeService = MeldeperiodeService(
+                    meldeperiodeRepository = repositoryProvider.provide(),
+                ),
+                meldekortGateway = GatewayProvider.provide(),
             )
         }
 
