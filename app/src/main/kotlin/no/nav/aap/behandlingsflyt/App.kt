@@ -346,8 +346,6 @@ fun Application.startMotor(dataSource: DataSource): Motor {
 }
 
 class DbConfig(
-    host: String? = System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_HOST"),
-    val port: String? = System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_PORT"),
     val database: String = if (Miljø.er() == MiljøKode.DEV) System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_DATABASE") else System.getenv(
         "NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_JDBC_URL"
     ),

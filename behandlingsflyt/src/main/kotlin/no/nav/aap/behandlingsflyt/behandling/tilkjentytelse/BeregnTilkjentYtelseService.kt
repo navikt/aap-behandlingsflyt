@@ -106,7 +106,10 @@ class BeregnTilkjentYtelseService(
                         val nyGradering =
                             tilkjentGUnit.copy(
                                 gradering = tilkjentGUnit.gradering.copy(
-                                    endeligGradering = tilkjentGUnit.gradering.endeligGradering.minus(høyre.verdi.uføregradTilSamordning, Prosent.`0_PROSENT`),
+                                    endeligGradering = tilkjentGUnit.gradering.endeligGradering.minus(
+                                        høyre.verdi.uføregradTilSamordning,
+                                        Prosent.`0_PROSENT`
+                                    ),
                                     samordningUføregradering = høyre.verdi.uføregradTilSamordning
                                 )
                             )
@@ -128,7 +131,10 @@ class BeregnTilkjentYtelseService(
                         val nyGradering =
                             tilkjentGUnit.copy(
                                 gradering = tilkjentGUnit.gradering.copy(
-                                    endeligGradering = tilkjentGUnit.gradering.endeligGradering.minus(høyre.verdi.gradering, Prosent.`0_PROSENT`),
+                                    endeligGradering = tilkjentGUnit.gradering.endeligGradering.minus(
+                                        høyre.verdi.gradering,
+                                        Prosent.`0_PROSENT`
+                                    ),
                                     samordningGradering = høyre.verdi.gradering,
                                 )
                             )

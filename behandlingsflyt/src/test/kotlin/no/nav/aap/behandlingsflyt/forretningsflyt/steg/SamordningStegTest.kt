@@ -122,6 +122,69 @@ class SamordningStegTest {
     }
 
     @Test
+    fun `en fra register og en manuell, ikke overlappende perioder`() {
+        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+        val periodeMedSykepenger = Periode(LocalDate.now().minusYears(1), LocalDate.now())
+
+        val pleiepengerPeriode = Periode(LocalDate.now().plusDays(1), LocalDate.now().plusWeeks(2))
+        InMemorySamordningVurderingRepository.lagreVurderinger(
+            behandling.id, SamordningVurderingGrunnlag(
+                begrunnelse = "En god begrunnelse",
+                maksDatoEndelig = false,
+                maksDato = LocalDate.now().plusYears(1),
+                vurderinger = listOf(
+                    SamordningVurdering(
+                        ytelseType = Ytelse.PLEIEPENGER,
+                        vurderingPerioder = listOf(
+                            SamordningVurderingPeriode(
+                                periode = pleiepengerPeriode,
+                                gradering = Prosent(50),
+                            )
+                        )
+                    ),
+                    SamordningVurdering(
+                        ytelseType = Ytelse.SYKEPENGER,
+                        vurderingPerioder = listOf(
+                            SamordningVurderingPeriode(
+                                periode = periodeMedSykepenger,
+                                gradering = Prosent(90),
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+
+        val steg = settOppRessurser(
+            Ytelse.SYKEPENGER,
+            behandling.id,
+            periode = periodeMedSykepenger
+        )
+
+        steg.utfør(
+            FlytKontekstMedPerioder(
+                sakId = behandling.sakId,
+                behandlingId = behandling.id,
+                behandlingType = TypeBehandling.Førstegangsbehandling,
+                vurdering = VurderingTilBehandling(
+                    vurderingType = VurderingType.REVURDERING,
+                    årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                    rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
+                )
+            )
+        )
+
+        val perioderMedSamordning = InMemorySamordningRepository.hentHvisEksisterer(behandling.id)!!
+
+        assertThat(perioderMedSamordning.samordningPerioder).hasSize(2)
+        assertThat(perioderMedSamordning.samordningPerioder.first().periode).isEqualTo(periodeMedSykepenger)
+        assertThat(perioderMedSamordning.samordningPerioder.first().gradering).isEqualTo(Prosent(90))
+        assertThat(perioderMedSamordning.samordningPerioder.last().periode).isEqualTo(pleiepengerPeriode)
+        assertThat(perioderMedSamordning.samordningPerioder.last().gradering).isEqualTo(Prosent(50))
+    }
+
+    @Test
     fun `saksbehandler kan lagre flere perioder enn det vi får fra registre`() {
         val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
         val steg = settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
@@ -275,7 +338,8 @@ class SamordningStegTest {
 
     private fun settOppRessurser(
         ytelse: Ytelse,
-        behandlingId: BehandlingId
+        behandlingId: BehandlingId,
+        periode: Periode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
     ): SamordningSteg {
         val steg = SamordningSteg(
             samordningService = SamordningService(
@@ -286,7 +350,7 @@ class SamordningStegTest {
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
         )
 
-        lagreYtelseGrunnlag(behandlingId, ytelse, Periode(LocalDate.now().minusYears(1), LocalDate.now()))
+        lagreYtelseGrunnlag(behandlingId, ytelse, periode)
         return steg
     }
 

@@ -58,7 +58,7 @@ fun main() {
     FakeServers.start() // azurePort = 8081)
 
     // Starter server
-    embeddedServer(Netty, port = 8080) {
+    embeddedServer(Netty, port = 8080, watchPaths = listOf("classes")) {
         val dbConfig = DbConfig(
             database = "sdf",
             url = postgres.jdbcUrl,
@@ -69,6 +69,7 @@ fun main() {
         // jdbc URL contains the host and port and database name.
         println("jdbcUrl: ${postgres.jdbcUrl}. Password: ${postgres.password}. Username: ${postgres.username}.")
         server(dbConfig)
+        System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
 
         val datasource = initDatasource(dbConfig)
 
@@ -92,7 +93,13 @@ fun main() {
                                     if (dto.institusjoner.fengsel == true) genererFengselsopphold() else null,
                                     if (dto.institusjoner.sykehus == true) genererSykehusopphold() else null,
                                 ),
-                                inntekter = dto.inntekterPerAr?.map { inn -> inn.to() } ?: defaultInntekt()
+                                inntekter = dto.inntekterPerAr?.map { inn -> inn.to() } ?: defaultInntekt(),
+                                sykepenger = listOf(
+                                    TestPerson.Sykepenger(
+                                        grad = 100,
+                                        periode = Periode(LocalDate.now().minusWeeks(2), LocalDate.now().plusWeeks(2))
+                                    )
+                                )
                             )
                         )
                         val periode = Periode(
