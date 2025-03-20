@@ -34,8 +34,8 @@ class VurderForutgåendeMedlemskapSteg private constructor(
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val avslag = harTidligereAvslag(kontekst.behandlingId)
-        if (avslag) {
+        val ingenAvslag = harIkkeTidligereAvslag(kontekst.behandlingId)
+        if (!ingenAvslag) {
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
             val medlemskapBehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
             if (medlemskapBehov != null && medlemskapBehov.erÅpent()) {
@@ -110,7 +110,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         return erSpesifiktTriggetRevurderMedlemskap && manuellVurdering == null
     }
 
-    private fun harTidligereAvslag(behandlingId: BehandlingId): Boolean {
+    private fun harIkkeTidligereAvslag(behandlingId: BehandlingId): Boolean {
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
 
         val lovvalgvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG)
@@ -121,12 +121,9 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         } else {
             bistandsvilkåret.harPerioderSomErOppfylt()
         }
-
-        log.info("sykdomsvilkåret: ${sykdomsvilkåret.harPerioderSomErOppfylt()}, bistand: ${bistandsvilkåretEllerSykepengerErstatningHvisIkke}, lovvalg: ${lovvalgvilkåret.harPerioderSomErOppfylt()}")
-
-        return !sykdomsvilkåret.harPerioderSomErOppfylt()
-            && !bistandsvilkåretEllerSykepengerErstatningHvisIkke
-            && !lovvalgvilkåret.harPerioderSomErOppfylt()
+        return sykdomsvilkåret.harPerioderSomErOppfylt()
+            && bistandsvilkåretEllerSykepengerErstatningHvisIkke
+            && lovvalgvilkåret.harPerioderSomErOppfylt()
     }
 
     companion object : FlytSteg {
