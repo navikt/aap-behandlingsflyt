@@ -35,8 +35,8 @@ class UtbetalingService(
             val personIdent = sak.person.aktivIdent().identifikator
             val avklaringsbehovForeslåVedtak = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FORESLÅ_VEDTAK)
             val avklaringsbehovFatteVedtak = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK)
-            val saksbehandlerIdent = avklaringsbehovForeslåVedtak?.endretAv() ?: ""
-            val beslutterIdent = avklaringsbehovFatteVedtak?.endretAv() ?: ""
+            val saksbehandlerIdent = avklaringsbehovForeslåVedtak?.endretAv() ?: "Kelvin"
+            val beslutterIdent = avklaringsbehovFatteVedtak?.endretAv() ?: "Kelvin"
             val vedtakstidspunkt = vedtakRepository.hent(behandlingId)?.vedtakstidspunkt ?: error("Fant ikke vedtak")
 
             TilkjentYtelseDto(
