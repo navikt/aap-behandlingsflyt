@@ -23,7 +23,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 
 class VurderForutgåendeMedlemskapSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -32,7 +31,6 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     private val personopplysningForutgåendeRepository: PersonopplysningForutgåendeRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository
 ) : BehandlingSteg {
-    private val log = LoggerFactory.getLogger(javaClass)
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val ingenAvslag = harIkkeTidligereAvslag(kontekst.behandlingId)
         if (!ingenAvslag) {
@@ -41,7 +39,6 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             if (medlemskapBehov != null && medlemskapBehov.erÅpent()) {
                 avklaringsbehovene.avbryt(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
             }
-            log.info("Kjører avslag for ${kontekst.behandlingId}, skal skippe dette steget")
             return Fullført
         }
 
