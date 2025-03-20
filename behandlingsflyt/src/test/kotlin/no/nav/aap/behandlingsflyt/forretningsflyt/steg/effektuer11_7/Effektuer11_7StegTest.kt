@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg.effektuer11_7
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING
+import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
@@ -107,6 +108,7 @@ class Effektuer11_7StegTest {
         val steg = Effektuer11_7Steg(
             underveisRepository = InMemoryUnderveisRepository,
             brevbestillingService = BrevbestillingService(
+                signaturService = SignaturService(avklaringsbehovRepository = InMemoryAvklaringsbehovRepository),
                 brevbestillingGateway = brevbestillingGateway,
                 brevbestillingRepository = InMemoryBrevbestillingRepository,
                 behandlingRepository = InMemoryBehandlingRepository,
@@ -145,7 +147,7 @@ class Effektuer11_7StegTest {
         }
 
         BrevbestillingReferanse(brevbestillingGateway.brevbestillingResponse!!.referanse).let { ref ->
-            brevbestillingGateway.ferdigstill(ref)
+            brevbestillingGateway.ferdigstill(ref, emptyList())
             InMemoryBrevbestillingRepository.oppdaterStatus(behandling.id, ref, Status.FULLFØRT)
         }
 
@@ -180,6 +182,7 @@ class Effektuer11_7StegTest {
         val steg = Effektuer11_7Steg(
             underveisRepository = InMemoryUnderveisRepository,
             brevbestillingService = BrevbestillingService(
+                signaturService = SignaturService(avklaringsbehovRepository = InMemoryAvklaringsbehovRepository),
                 brevbestillingGateway = brevbestillingGateway,
                 brevbestillingRepository = InMemoryBrevbestillingRepository,
                 behandlingRepository = InMemoryBehandlingRepository,
@@ -269,6 +272,7 @@ class Effektuer11_7StegTest {
     private fun effektuer11_7steg() = Effektuer11_7Steg(
         underveisRepository = InMemoryUnderveisRepository,
         brevbestillingService = BrevbestillingService(
+            signaturService = SignaturService(avklaringsbehovRepository = InMemoryAvklaringsbehovRepository),
             brevbestillingGateway = FakeBrevbestillingGateway(),
             brevbestillingRepository = InMemoryBrevbestillingRepository,
             behandlingRepository = InMemoryBehandlingRepository,
@@ -342,7 +346,7 @@ class Effektuer11_7StegTest {
         this.utfør(kontekst)
 
         val referanse = BrevbestillingReferanse(brevbestillingGateway.brevbestillingResponse!!.referanse)
-        brevbestillingGateway.ferdigstill(referanse)
+        brevbestillingGateway.ferdigstill(referanse, emptyList())
         InMemoryBrevbestillingRepository.oppdaterStatus(behandling.id, referanse, Status.FULLFØRT)
     }
 }

@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
+import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.Språk
 import no.nav.aap.brev.kontrakt.Status
 import no.nav.aap.brev.kontrakt.Vedlegg
@@ -40,7 +41,7 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
             }
     }
 
-    override fun ferdigstill(referanse: BrevbestillingReferanse): Boolean {
+    override fun ferdigstill(referanse: BrevbestillingReferanse, signaturer: List<Signatur>): Boolean {
         brevbestillingResponse = brevbestillingResponse!!.copy(status = Status.FERDIGSTILT)
         return true
     }

@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevLøsning
+import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
@@ -18,12 +20,14 @@ class SkrivBrevLøser(val connection: DBConnection) : AvklaringsbehovsLøser<Skr
     private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
     private val sakRepository = repositoryProvider.provide<SakRepository>()
     private val brevbestillingRepository = repositoryProvider.provide<BrevbestillingRepository>()
+    private val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
         løsning: SkrivBrevLøsning
     ): LøsningsResultat {
         val brevbestillingService = BrevbestillingService(
+            signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository),
             brevbestillingGateway = GatewayProvider.provide(),
             brevbestillingRepository = brevbestillingRepository,
             behandlingRepository = behandlingRepository,

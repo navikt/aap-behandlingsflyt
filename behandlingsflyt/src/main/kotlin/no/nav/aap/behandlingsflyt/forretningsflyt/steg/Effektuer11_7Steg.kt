@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
+import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
@@ -177,9 +178,11 @@ class Effektuer11_7Steg(
             val brevbestillingRepository =
                 repositoryProvider.provide<BrevbestillingRepository>()
             val effektuer117repository = repositoryProvider.provide<Effektuer11_7Repository>()
+            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
 
             val brevbestillingService =
                 BrevbestillingService(
+                    signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository),
                     brevbestillingGateway = GatewayProvider.provide(),
                     brevbestillingRepository = brevbestillingRepository,
                     behandlingRepository = behandlingRepository,
@@ -187,8 +190,6 @@ class Effektuer11_7Steg(
                 )
 
             val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
-            val avklaringsbehovRepository =
-                repositoryProvider.provide<AvklaringsbehovRepository>()
             return Effektuer11_7Steg(
                 underveisRepository,
                 brevbestillingService,

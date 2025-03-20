@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
+import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -9,6 +10,7 @@ import no.nav.aap.brev.kontrakt.Vedlegg
 import java.util.*
 
 class BrevbestillingService(
+    private val signaturService: SignaturService,
     private val brevbestillingGateway: BrevbestillingGateway,
     private val brevbestillingRepository: BrevbestillingRepository,
     private val behandlingRepository: BehandlingRepository,
@@ -60,14 +62,16 @@ class BrevbestillingService(
         brevbestillingRepository.oppdaterStatus(behandlingId, referanse, status)
     }
 
-    fun ferdigstill(behandlingId: BehandlingId, referanse: BrevbestillingReferanse) {
-        val ferdigstilt = brevbestillingGateway.ferdigstill(referanse)
+    fun ferdigstill(behandlingId: BehandlingId, brevbestillingReferanse: BrevbestillingReferanse) {
+        val brevbestilling = brevbestillingRepository.hent(brevbestillingReferanse)
+        val signaturer = signaturService.finnSignaturer(brevbestilling)
+        val ferdigstilt = brevbestillingGateway.ferdigstill(brevbestillingReferanse, signaturer)
         if (!ferdigstilt) {
             throw IllegalArgumentException("Brevet er ikke gyldig ferdigstilt, fullfør brevet og prøv på nytt.")
         } else {
             brevbestillingRepository.oppdaterStatus(
                 behandlingId = behandlingId,
-                referanse = referanse,
+                referanse = brevbestillingReferanse,
                 status = Status.FULLFØRT
             )
         }

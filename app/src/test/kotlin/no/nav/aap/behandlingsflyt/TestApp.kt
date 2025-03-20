@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.integrasjon.brev.BrevGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
@@ -135,12 +136,14 @@ fun main() {
                     post<Unit, String, TestBestillBrev> { _, dto ->
                         datasource.transaction { connection ->
                             val behandlingRepository = BehandlingRepositoryImpl(connection)
+                            val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
                             val sakRepository = SakRepositoryImpl(connection)
                             val behandling = behandlingRepository.hent(dto.behandlingReferanse)
                             if (behandling.status().erAvsluttet()) {
                                 throw IllegalStateException("Kan ikke legge på brevbehov på en avsluttet behandling")
                             }
                             val brevbestillingService = BrevbestillingService(
+                                SignaturService(avklaringsbehovRepository),
                                 BrevGateway(),
                                 BrevbestillingRepositoryImpl(connection),
                                 behandlingRepository,

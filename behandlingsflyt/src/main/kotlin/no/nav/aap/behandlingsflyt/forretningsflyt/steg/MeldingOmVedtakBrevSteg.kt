@@ -2,8 +2,10 @@
 
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
+import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
@@ -53,10 +55,9 @@ class MeldingOmVedtakBrevSteg private constructor(
             val repositoryProvider = RepositoryProvider(connection)
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val sakRepository = repositoryProvider.provide<SakRepository>()
-            val brevbestillingRepository =
-                repositoryProvider.provide<BrevbestillingRepository>()
-            val underveisRepository =
-                repositoryProvider.provide<UnderveisRepository>()
+            val brevbestillingRepository = repositoryProvider.provide<BrevbestillingRepository>()
+            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
+            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
 
             return MeldingOmVedtakBrevSteg(
                 BrevUtlederService(
@@ -64,6 +65,7 @@ class MeldingOmVedtakBrevSteg private constructor(
                     underveisRepository = underveisRepository,
                 ),
                 BrevbestillingService(
+                    signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository),
                     brevbestillingGateway = GatewayProvider.provide<BrevbestillingGateway>(),
                     brevbestillingRepository = brevbestillingRepository,
                     behandlingRepository = behandlingRepository,

@@ -15,6 +15,7 @@ import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
 import no.nav.aap.brev.kontrakt.FerdigstillBrevRequest
+import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.Språk
 import no.nav.aap.brev.kontrakt.Vedlegg
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -95,11 +96,12 @@ class BrevGateway : BrevbestillingGateway {
         return BrevbestillingReferanse(response.referanse)
     }
 
-    override fun ferdigstill(referanse: BrevbestillingReferanse): Boolean {
+    override fun ferdigstill(referanse: BrevbestillingReferanse,
+                             signaturer: List<Signatur>): Boolean {
         val url = baseUri.resolve("/api/ferdigstill")
 
         val request = PostRequest<FerdigstillBrevRequest>(
-            body = FerdigstillBrevRequest(referanse.brevbestillingReferanse, emptyList()),
+            body = FerdigstillBrevRequest(referanse.brevbestillingReferanse, signaturer),
             additionalHeaders = listOf(
                 Header("Accept", "application/json")
             )

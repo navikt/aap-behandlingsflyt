@@ -63,14 +63,14 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                 ) { behandlingReferanse ->
                     val grunnlag = dataSource.transaction(readOnly = true) { connection ->
                         val repositoryProvider = RepositoryProvider(connection)
-                        val behandlingRepository =
-                            repositoryProvider.provide<BehandlingRepository>()
+                        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                         val sakRepository = repositoryProvider.provide<SakRepository>()
-                        val brevbestillingRepository =
-                            repositoryProvider.provide<BrevbestillingRepository>()
+                        val brevbestillingRepository = repositoryProvider.provide<BrevbestillingRepository>()
+                        val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
 
                         val brevbestillinger =
                             BrevbestillingService(
+                                signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository),
                                 brevbestillingGateway = brevbestillingGateway,
                                 brevbestillingRepository = brevbestillingRepository,
                                 behandlingRepository = behandlingRepository,
@@ -136,15 +136,18 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                         repositoryProvider.provide<SakRepository>()
                                     val brevbestillingRepository =
                                         repositoryProvider.provide<BrevbestillingRepository>()
+                                    val avklaringsbehovRepository =
+                                        repositoryProvider.provide<AvklaringsbehovRepository>()
 
                                     val behandling =
                                         behandlingRepository.hent(req.behandlingsReferanse)
 
                                     val service = BrevbestillingService(
-                                        brevbestillingGateway,
-                                        brevbestillingRepository,
-                                        behandlingRepository,
-                                        sakRepository
+                                        signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository),
+                                        brevbestillingGateway = brevbestillingGateway,
+                                        brevbestillingRepository = brevbestillingRepository,
+                                        behandlingRepository = behandlingRepository,
+                                        sakRepository = sakRepository
                                     )
 
                                     val avklaringsbehovene =
