@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRefer
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
@@ -18,6 +19,7 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
     var brevbestillingResponse: BrevbestillingResponse? = null
     override fun bestillBrev(
         saksnummer: Saksnummer,
+        brukerIdent: Ident,
         behandlingReferanse: BehandlingReferanse,
         unikReferanse: String,
         typeBrev: TypeBrev,

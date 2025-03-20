@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.brev.kontrakt.AvbrytBrevbestillingRequest
 import no.nav.aap.brev.kontrakt.BestillBrevRequest
 import no.nav.aap.brev.kontrakt.BestillBrevResponse
@@ -56,6 +57,7 @@ class BrevGateway : BrevbestillingGateway {
 
     override fun bestillBrev(
         saksnummer: Saksnummer,
+        brukerIdent: Ident,
         behandlingReferanse: BehandlingReferanse,
         unikReferanse: String,
         typeBrev: TypeBrev,
@@ -64,6 +66,7 @@ class BrevGateway : BrevbestillingGateway {
         // TODO språk
         val request = BestillBrevRequest(
             saksnummer = saksnummer.toString(),
+            brukerIdent = brukerIdent.identifikator,
             behandlingReferanse = behandlingReferanse.referanse,
             unikReferanse = unikReferanse,
             brevtype = mapTypeBrev(typeBrev),
@@ -96,7 +99,7 @@ class BrevGateway : BrevbestillingGateway {
         val url = baseUri.resolve("/api/ferdigstill")
 
         val request = PostRequest<FerdigstillBrevRequest>(
-            body = FerdigstillBrevRequest(referanse.brevbestillingReferanse),
+            body = FerdigstillBrevRequest(referanse.brevbestillingReferanse, emptyList()),
             additionalHeaders = listOf(
                 Header("Accept", "application/json")
             )

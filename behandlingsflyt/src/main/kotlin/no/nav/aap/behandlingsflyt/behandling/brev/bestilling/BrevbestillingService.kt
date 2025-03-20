@@ -30,6 +30,7 @@ class BrevbestillingService(
 
         val bestillingReferanse = brevbestillingGateway.bestillBrev(
             saksnummer = sak.saksnummer,
+            brukerIdent = sak.person.aktivIdent(),
             behandlingReferanse = behandling.referanse,
             unikReferanse = unikReferanse,
             typeBrev = typeBrev,
