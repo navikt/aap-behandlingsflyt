@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning
 
-import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
@@ -81,7 +80,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
                 SamordningYtelsePeriode(
                     periode = it.getPeriode("periode"),
                     gradering = it.getIntOrNull("gradering")?.let(::Prosent),
-                    kronesum = it.getIntOrNull("kronesum")
+                    kronesum = it.getIntOrNull("kronesum"),
                 )
             }
         }

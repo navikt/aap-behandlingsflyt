@@ -26,7 +26,8 @@ data class SamordningVurdering(
 data class SamordningVurderingPeriode(
     val periode: Periode,
     val gradering: Prosent?,
-    val kronesum: Number? = null
+    val kronesum: Number? = null,
+    val manuell: Boolean?,
 )
 
 data class SamordningYtelseGrunnlag(

@@ -64,7 +64,7 @@ class SamordningServiceTest {
                         ytelsePerioder = listOf(
                             SamordningYtelsePeriode(
                                 periode = Periode(1 januar 2024, 10 januar 2024),
-                                gradering = Prosent.`70_PROSENT`
+                                gradering = Prosent.`70_PROSENT`,
                             )
                         ),
                         kilde = "kilde",
@@ -88,6 +88,7 @@ class SamordningServiceTest {
                                 SamordningVurderingPeriode(
                                     periode = Periode(5 januar 2024, 10 januar 2024),
                                     gradering = Prosent.`50_PROSENT`,
+                                    manuell = false,
                                 )
                             )
                         )
@@ -155,7 +156,8 @@ class SamordningServiceTest {
                         SamordningVurderingPeriode(
                             Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
                             Prosent(50),
-                            0
+                            0,
+                            false
                         )
                     )
                 )

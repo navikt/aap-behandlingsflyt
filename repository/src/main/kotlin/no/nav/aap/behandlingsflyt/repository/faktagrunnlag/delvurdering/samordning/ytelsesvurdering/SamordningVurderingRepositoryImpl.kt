@@ -89,7 +89,8 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
                 SamordningVurderingPeriode(
                     periode = it.getPeriode("periode"),
                     gradering = it.getIntOrNull("gradering")?.let { g -> Prosent(g) },
-                    kronesum = it.getIntOrNull("kronesum")
+                    kronesum = it.getIntOrNull("kronesum"),
+                    manuell = it.getBooleanOrNull("manuell"),
                 )
             }
         }
@@ -129,7 +130,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
             }
 
             val veriodePeriodeQuery = """
-                INSERT INTO SAMORDNING_VURDERING_PERIODE (periode, vurdering_id, gradering, kronesum) VALUES (?::daterange, ?, ?, ?)
+                INSERT INTO SAMORDNING_VURDERING_PERIODE (periode, vurdering_id, gradering, kronesum, manuell) VALUES (?::daterange, ?, ?, ?, ?)
                 """.trimIndent()
             connection.executeBatch(veriodePeriodeQuery, vurdering.vurderingPerioder) {
                 setParams {
@@ -137,6 +138,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
                     setLong(2, vurderingId)
                     setInt(3, it.gradering?.prosentverdi())
                     setInt(4, it.kronesum?.toInt())
+                    setBoolean(5, it.manuell)
                 }
             }
         }

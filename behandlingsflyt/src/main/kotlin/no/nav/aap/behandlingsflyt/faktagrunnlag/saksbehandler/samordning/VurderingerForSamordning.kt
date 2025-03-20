@@ -17,6 +17,7 @@ data class SamordningVurderingData(
     val ytelseType: Ytelse,
     val periode: Periode,
     val gradering: Int?,
-    val kronesum: BigDecimal? = null
+    val kronesum: BigDecimal? = null,
+    val manuell: Boolean? = null
 )
 

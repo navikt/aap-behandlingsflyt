@@ -74,6 +74,7 @@ class SamordningStegTest {
                             SamordningVurderingPeriode(
                                 periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
                                 gradering = Prosent(50),
+                                manuell = false,
                             )
                         )
                     )
@@ -201,6 +202,7 @@ class SamordningStegTest {
                             SamordningVurderingPeriode(
                                 periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
                                 gradering = Prosent(50),
+                                manuell = false,
                             )
                         )
                     )
@@ -266,6 +268,7 @@ class SamordningStegTest {
                             SamordningVurderingPeriode(
                                 periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
                                 gradering = Prosent(50),
+                                manuell = false,
                             )
                         )
                     )
@@ -308,6 +311,7 @@ class SamordningStegTest {
                             SamordningVurderingPeriode(
                                 periode = Periode(LocalDate.now().minusWeeks(2), LocalDate.now().plusWeeks(2)),
                                 gradering = Prosent.`100_PROSENT`,
+                                manuell = false,
                             )
                         )
                     )
@@ -367,7 +371,7 @@ class SamordningStegTest {
                         SamordningYtelsePeriode(
                             periode = periode,
                             gradering = Prosent(50),
-                            kronesum = 1234
+                            kronesum = 1234,
                         )
                     ),
                     kilde = "xxxx",

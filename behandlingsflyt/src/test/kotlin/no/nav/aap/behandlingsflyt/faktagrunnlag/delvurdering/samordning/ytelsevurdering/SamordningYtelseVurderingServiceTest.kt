@@ -84,7 +84,8 @@ class SamordningYtelseVurderingServiceTest {
                             SamordningVurderingPeriode(
                                 Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
                                 Prosent(50),
-                                0
+                                0,
+                                false
                             )
                         )
                     )

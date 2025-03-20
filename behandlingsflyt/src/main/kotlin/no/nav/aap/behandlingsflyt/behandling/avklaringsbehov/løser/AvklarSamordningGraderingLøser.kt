@@ -28,7 +28,8 @@ class AvklarSamordningGraderingLøser(connection: DBConnection) :
                     ytelseType = it.key, vurderingPerioder = it.value.map { SamordningVurderingPeriode(
                         periode = it.periode,
                         gradering = it.gradering?.let(::Prosent),
-                        kronesum = it.kronesum
+                        kronesum = it.kronesum,
+                        manuell= it.manuell,
                     ) },
                 )}
             )

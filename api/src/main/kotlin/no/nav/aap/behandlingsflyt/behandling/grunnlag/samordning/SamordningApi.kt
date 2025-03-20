@@ -48,7 +48,8 @@ data class SamordningVurderingDTO(
     val ytelseType: Ytelse,
     val periode: Periode,
     val gradering: Int?,
-    val kronesum: Int?
+    val kronesum: Int?,
+    val manuell: Boolean?
 )
 
 data class SamordningUføreVurderingGrunnlagDTO(
@@ -136,6 +137,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                                     gradering = it.gradering?.prosentverdi(),
                                     periode = Periode(fom = it.periode.fom, tom = it.periode.tom),
                                     kronesum = it.kronesum?.toInt(),
+                                    manuell = it.manuell,
                                 )
                             }
                         },

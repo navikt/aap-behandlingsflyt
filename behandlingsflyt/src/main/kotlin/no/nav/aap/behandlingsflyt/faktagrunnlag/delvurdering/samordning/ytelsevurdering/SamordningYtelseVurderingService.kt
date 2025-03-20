@@ -95,7 +95,7 @@ class SamordningYtelseVurderingService(
                         SamordningYtelsePeriode(
                             periode = it.periode,
                             gradering = Prosent(it.utbetalingsgrad.verdi.toInt()),
-                            kronesum = it.beløp
+                            kronesum = it.beløp,
                         )
                     },
                     kilde = ytelse.kildesystem,

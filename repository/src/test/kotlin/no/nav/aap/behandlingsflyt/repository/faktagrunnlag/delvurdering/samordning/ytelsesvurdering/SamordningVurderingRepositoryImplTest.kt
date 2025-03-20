@@ -46,6 +46,7 @@ class SamordningVurderingRepositoryImplTest {
                     periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
                     gradering = Prosent(40),
                     kronesum = null,
+                    manuell = false,
                 )
             )
         )
@@ -84,6 +85,7 @@ class SamordningVurderingRepositoryImplTest {
                     periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
                     gradering = Prosent(40),
                     kronesum = null,
+                    manuell = false,
                 )
             )
         )

@@ -101,7 +101,7 @@ class SamordningYtelseRepositoryImplTest {
                 ytelsePerioder = listOf(
                     SamordningYtelsePeriode(
                         periode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(3)),
-                        gradering = Prosent.`70_PROSENT`
+                        gradering = Prosent.`70_PROSENT`,
                     ),
                     SamordningYtelsePeriode(
                         periode = Periode(LocalDate.now().plusYears(3).plusDays(1), LocalDate.now().plusYears(6)),

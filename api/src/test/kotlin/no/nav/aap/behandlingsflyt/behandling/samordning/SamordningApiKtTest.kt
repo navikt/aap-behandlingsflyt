@@ -61,7 +61,7 @@ class SamordningApiKtTest {
                         SamordningYtelsePeriode(
                             periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1).minusDays(1)),
                             gradering = Prosent(50),
-                            kronesum = null
+                            kronesum = null,
                         )
                     ),
                     kilde = "kilde",
