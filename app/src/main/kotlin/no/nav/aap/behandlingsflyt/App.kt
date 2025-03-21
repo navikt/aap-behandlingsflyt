@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder.aldersGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt.meldepliktsgrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon.refusjonGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepengergrunnlag.sykepengerGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt.beregningVurderingAPI
@@ -236,6 +237,7 @@ internal fun Application.server(dbConfig: DbConfig) {
                 behandlingsflytPip(dataSource)
                 aktivitetspliktApi(dataSource)
                 auditlogApi(dataSource)
+                refusjonGrunnlagAPI(dataSource)
                 // Flytt
                 brevApi(dataSource)
                 dokumentinnhentingAPI(dataSource)

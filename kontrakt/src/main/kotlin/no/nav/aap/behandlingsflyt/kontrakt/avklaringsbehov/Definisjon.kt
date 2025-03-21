@@ -248,6 +248,13 @@ public enum class Definisjon(
         løsesISteg = StegType.START_BEHANDLING,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
         defaultFrist = Period.ofYears(5),
+    ),
+    REFUSJON_KRAV(
+        kode = AvklaringsbehovKode.`5026`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.REFUSJON_KRAV,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
+        kreverToTrinn = true
     );
 
     public companion object {

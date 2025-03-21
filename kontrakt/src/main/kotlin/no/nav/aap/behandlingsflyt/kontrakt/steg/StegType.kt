@@ -63,6 +63,10 @@ public enum class StegType(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
+    REFUSJON_KRAV(
+        gruppe = StegGruppe.SYKDOM,
+        status = Status.UTREDES
+    ),
     FASTSETT_ARBEIDSEVNE(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES

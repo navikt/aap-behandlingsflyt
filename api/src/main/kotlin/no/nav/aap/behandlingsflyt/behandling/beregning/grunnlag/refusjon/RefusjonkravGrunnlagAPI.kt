@@ -1,0 +1,26 @@
+package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon
+
+import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
+import com.papsign.ktor.openapigen.route.response.respond
+import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.BehandlingPathParam
+import no.nav.aap.tilgang.authorizedGet
+import javax.sql.DataSource
+
+fun NormalOpenAPIRoute.refusjonGrunnlagAPI(dataSource: DataSource) {
+    route("/api/behandling") {
+        route("/{referanse}/grunnlag/refusjon") {
+            authorizedGet<BehandlingReferanse, RefusjonkravGrunnlagDto>(
+                AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse")
+                    )
+                ) { req ->
+                val response = dataSource.transaction(readOnly = true) { connection -> }
+                respond(RefusjonkravGrunnlagDto(listOf()))
+            }
+        }
+    }
+}
+

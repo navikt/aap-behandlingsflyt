@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.IverksettVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OpprettRevurderingSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RefusjonkravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SimulerUtbetalingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
@@ -87,6 +88,12 @@ object Revurdering : BehandlingType {
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
                     ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING
+                )
+            )
+            .medSteg(
+                steg = RefusjonkravSteg, årsakRelevanteForSteg = listOf(
+                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
+                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING
                 )
             )
             .medSteg(
