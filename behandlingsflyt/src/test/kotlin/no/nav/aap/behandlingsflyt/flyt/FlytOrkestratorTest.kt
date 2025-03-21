@@ -1339,7 +1339,7 @@ class FlytOrkestratorTest {
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
 
         val stegHistorikk = hentStegHistorikk(behandling.id)
-//        assertThat(stegHistorikk.map { it.steg() }).contains(StegType.BREV)
+        assertThat(stegHistorikk.map { it.steg() }).contains(StegType.BREV)
         assertThat(stegHistorikk.map { it.status() }).contains(StegStatus.AVKLARINGSPUNKT)
 
         //Henter vurder alder-vilkår
