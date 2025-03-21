@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Aktivitetskort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDokumentV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
@@ -57,6 +58,11 @@ class HåndterMottattDokumentService(
     private fun utledÅrsaker(brevkategori: InnsendingType, melding: Melding?, periode: Periode?): List<Årsak> {
         return when (brevkategori) {
             InnsendingType.SØKNAD -> listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
+            InnsendingType.MANUELL_REVURDERING -> when (melding) {
+                is ManuellRevurderingV0 -> melding.årsakerTilBehandling.map { Årsak(it.tilÅrsakTilBehandling()) }
+                else -> error("Melding må være ManuellRevurderingV0")
+            }
+
             InnsendingType.MELDEKORT ->
                 listOf(
                     Årsak(
@@ -74,6 +80,7 @@ class HåndterMottattDokumentService(
                     is AnnetRelevantDokumentV0 -> melding.årsakerTilBehandling.map { Årsak(it.tilÅrsakTilBehandling()) }
                     else -> error("Melding må være AnnetRelevantDokumentV0")
                 }
+
             InnsendingType.KLAGE -> listOf(Årsak(ÅrsakTilBehandling.MOTATT_KLAGE))
 
         }

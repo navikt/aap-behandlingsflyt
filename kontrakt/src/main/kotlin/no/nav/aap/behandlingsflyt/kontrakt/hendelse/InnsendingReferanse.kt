@@ -12,7 +12,8 @@ public data class InnsendingReferanse(
     public enum class Type {
         JOURNALPOST,
         BRUDD_AKTIVITETSPLIKT_INNSENDING_ID,
-        AVVIST_LEGEERKLÆRING_ID
+        AVVIST_LEGEERKLÆRING_ID,
+        REVURDERING_ID,
     }
 
     @get:JsonIgnore
