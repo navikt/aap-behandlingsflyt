@@ -61,7 +61,7 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
             }
             setRowMapper {
                 SamordningUføreVurderingPeriode(
-                    periode = it.getPeriode("periode"),
+                    virkningstidspunkt = it.getLocalDate("virkningstidspunkt"),
                     uføregradTilSamordning = Prosent(it.getInt("uforegrad")),
                 )
             }
@@ -99,12 +99,12 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
         }
 
         val periodeQuery = """
-                INSERT INTO SAMORDNING_UFORE_VURDERING_PERIODE (periode, vurdering_id, uforegrad) VALUES (?::daterange, ?, ?)
+                INSERT INTO SAMORDNING_UFORE_VURDERING_PERIODE (virkningstidspunkt, vurdering_id, uforegrad) VALUES (?, ?, ?)
                 """.trimIndent()
 
         connection.executeBatch(periodeQuery, vurdering.vurderingPerioder) {
             setParams {
-                setPeriode(1, it.periode)
+                setLocalDate(1, it.virkningstidspunkt)
                 setLong(2, vurderingId)
                 setInt(3, it.uføregradTilSamordning.prosentverdi())
             }

@@ -25,7 +25,7 @@ class AvklarSamordningUføreLøser(connection: DBConnection) : AvklaringsbehovsL
                 begrunnelse = løsning.samordningUføreVurdering.begrunnelse,
                 vurderingPerioder = løsning.samordningUføreVurdering.vurderingPerioder.map {
                     SamordningUføreVurderingPeriode(
-                        periode = it.periode,
+                        virkningstidspunkt = it.virkningstidspunkt,
                         uføregradTilSamordning = it.uføregradTilSamordning.let(::Prosent)
                     )
                 }

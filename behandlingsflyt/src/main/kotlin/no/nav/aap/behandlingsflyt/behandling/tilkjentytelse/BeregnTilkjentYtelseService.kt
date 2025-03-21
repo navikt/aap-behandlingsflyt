@@ -71,8 +71,7 @@ class BeregnTilkjentYtelseService(
         }
 
         val samordningTidslinje = samordningGrunnlag.samordningPerioder.map { Segment(it.periode, it) }.let(::Tidslinje)
-        val samordningUføreTidslinje =
-            samordningUføre?.vurdering?.vurderingPerioder?.map { Segment(it.periode, it) }?.let(::Tidslinje)
+        val samordningUføreTidslinje = samordningUføre?.vurdering?.tilTidslinje()
 
         val gradertÅrligYtelseTidslinje = underveisTidslinje.kombiner(
             årligYtelseTidslinje, JoinStyle.INNER_JOIN { periode, venstre, høyre ->
