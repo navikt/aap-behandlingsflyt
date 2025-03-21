@@ -111,6 +111,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
@@ -274,6 +275,7 @@ private fun registerGateways() {
         .register<UføreGateway>()
         .register<YrkesskadeRegisterGatewayImpl>()
         .register<MeldekortGatewayImpl>()
+        .register<TilgangGatewayImpl>()
         .status()
 }
 
