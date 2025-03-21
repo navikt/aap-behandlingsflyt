@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.papsign.ktor.openapigen.annotations.Response
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.jetbrains.annotations.NotNull
 import java.time.LocalDate
@@ -23,6 +25,7 @@ data class OpprettTestcaseDTO(
     @NotNull @JsonProperty(value = "medlemskap", defaultValue = "true") val medlemskap: Boolean,
     @JsonProperty(value = "inntekterPerAr") val inntekterPerAr: List<InntektPerÅrDto>? = null,
     val institusjoner: Institusjoner = Institusjoner(),
+    val sykepenger: List<TestPerson.Sykepenger> = emptyList(),
     val søknadsdato: LocalDate? = null,
 )
 
