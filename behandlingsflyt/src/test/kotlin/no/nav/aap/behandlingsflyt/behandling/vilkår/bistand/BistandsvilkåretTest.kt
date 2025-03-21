@@ -13,6 +13,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
@@ -38,9 +40,11 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.time.LocalDate
 
 class BistandsvilkåretTest {
@@ -250,12 +254,15 @@ class BistandsvilkåretTest {
 
         // Send inn revurderingsløsning
         InitTestDatabase.dataSource.transaction { connection ->
+            // Må lagre ned sykdomsvurdering for behandlingen da vurderingenGjelderFra for 11-6 skal være lik den for 11-5 i samme behandling
+            val sykdomsvurdering = sykdomsvurdering(vurderingenGjelderFra = now.plusDays(10))
+            RepositoryProvider(connection).provide<SykdomRepository>().lagre(revurdering.id, listOf(sykdomsvurdering))
+
             val bistandsvurdering2 = BistandVurderingLøsningDto(
                 begrunnelse = "Begrunnelse",
                 erBehovForAktivBehandling = false,
                 erBehovForArbeidsrettetTiltak = false,
                 erBehovForAnnenOppfølging = false,
-                vurderingenGjelderFra = now.plusDays(10),
                 skalVurdereAapIOvergangTilUføre = false,
                 skalVurdereAapIOvergangTilArbeid = false,
                 overgangBegrunnelse = null,
@@ -362,4 +369,28 @@ class BistandsvilkåretTest {
 
         return behandling(connection, sak)
     }
+
+    private fun sykdomsvurdering(
+        harSkadeSykdomEllerLyte: Boolean = true,
+        erSkadeSykdomEllerLyteVesentligdel: Boolean = true,
+        erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean = true,
+        erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean? = true,
+        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
+        erArbeidsevnenNedsatt: Boolean = true,
+        vurderingenGjelderFra: LocalDate? = null,
+        opprettet: Instant = Instant.now(),
+    ) = Sykdomsvurdering(
+        begrunnelse = "",
+        dokumenterBruktIVurdering = listOf(),
+        harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
+        erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
+        erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
+        erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
+        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
+        erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
+        yrkesskadeBegrunnelse = null,
+        vurderingenGjelderFra = vurderingenGjelderFra,
+        vurdertAv = Bruker("Z00000"),
+        opprettet = opprettet,
+    )
 }

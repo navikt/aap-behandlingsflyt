@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -25,7 +26,13 @@ class AvklarBistandLøser(val connection: DBConnection) :
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
-        val bistandsVurdering = løsning.bistandsVurdering.tilBistandVurdering(kontekst.bruker)
+        val nyesteSykdomsvurdering = repositoryProvider.provide<SykdomRepository>().hentHvisEksisterer(behandling.id)
+            ?.sykdomsvurderinger?.maxByOrNull { it.opprettet }
+
+        val bistandsVurdering = løsning.bistandsVurdering.tilBistandVurdering(
+            kontekst.bruker,
+            nyesteSykdomsvurdering?.vurderingenGjelderFra
+        )
 
         val eksisterendeBistandsvurderinger = behandling.forrigeBehandlingId
             ?.let { bistandRepository.hentHvisEksisterer(it) }
