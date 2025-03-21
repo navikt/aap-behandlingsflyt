@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class VedtakRepositoryImpl(private val connection: DBConnection) : VedtakRepository {
@@ -17,16 +18,18 @@ class VedtakRepositoryImpl(private val connection: DBConnection) : VedtakReposit
 
     override fun lagre(
         behandlingId: BehandlingId,
-        vedtakstidspunkt: LocalDateTime
+        vedtakstidspunkt: LocalDateTime,
+        virkningstidspunkt: LocalDate,
     ) {
         connection.execute(
             """
-            INSERT INTO VEDTAK (behandling_id, vedtakstidspunkt) VALUES (?, ?)
+            INSERT INTO VEDTAK (behandling_id, vedtakstidspunkt, virkningstidspunkt) VALUES (?, ?, ?)
             """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLocalDateTime(2, vedtakstidspunkt)
+                setLocalDate(3, virkningstidspunkt)
             }
         }
     }
@@ -39,7 +42,8 @@ class VedtakRepositoryImpl(private val connection: DBConnection) : VedtakReposit
             setRowMapper {
                 Vedtak(
                     behandlingId = BehandlingId(it.getLong("behandling_id")),
-                    vedtakstidspunkt = it.getLocalDateTime("vedtakstidspunkt")
+                    vedtakstidspunkt = it.getLocalDateTime("vedtakstidspunkt"),
+                    virkningstidspunkt = it.getLocalDateTime("virkningstidspunkt")
                 )
             }
         }

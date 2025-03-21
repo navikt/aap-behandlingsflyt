@@ -5,5 +5,6 @@ import java.time.LocalDateTime
 
 data class Vedtak(
     val behandlingId: BehandlingId,
-    val vedtakstidspunkt: LocalDateTime
+    val vedtakstidspunkt: LocalDateTime,
+    val virkningstidspunkt: LocalDateTime,
 )

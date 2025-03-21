@@ -2,10 +2,13 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -19,11 +22,13 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 
 class IverksettVedtakSteg private constructor(
     private val behandlingRepository: BehandlingRepository,
     private val utbetalingService: UtbetalingService,
     private val vedtakService: VedtakService,
+    private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
     private val utbetalingGateway: UtbetalingGateway,
 ) : BehandlingSteg {
 
@@ -37,7 +42,9 @@ class IverksettVedtakSteg private constructor(
                 .find { it.steg() == StegType.FATTE_VEDTAK && it.status() == StegStatus.AVSLUTTER }
                 ?.tidspunkt() ?: error("Forventet å finne et avsluttet fatte vedtak steg")
 
-        vedtakService.lagreVedtak(kontekst.behandlingId, vedtakstidspunkt)
+//        val virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId)
+        val virkningstidspunkt = LocalDate.now()
+        vedtakService.lagreVedtak(kontekst.behandlingId, vedtakstidspunkt, virkningstidspunkt)
 
         val tilkjentYtelseDto = utbetalingService.lagTilkjentYtelseForUtbetaling(kontekst.sakId, kontekst.behandlingId)
         if (tilkjentYtelseDto != null) {
@@ -54,10 +61,17 @@ class IverksettVedtakSteg private constructor(
             val repositoryProvider = RepositoryProvider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val samordningRepository = repositoryProvider.provide<SamordningRepository>()
+            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
             val tilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>()
             val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
             val vedtakRepository = repositoryProvider.provide<VedtakRepository>()
             val utbetalingGateway = GatewayProvider.provide<UtbetalingGateway>()
+            val virkningstidspunktUtlederService = VirkningstidspunktUtleder(
+                underveisRepository = underveisRepository,
+                samordningRepository = samordningRepository,
+                tilkjentYtelseRepository = tilkjentYtelseRepository
+            )
             return IverksettVedtakSteg(
                 behandlingRepository = behandlingRepository,
                 utbetalingService = UtbetalingService(
@@ -68,7 +82,8 @@ class IverksettVedtakSteg private constructor(
                     vedtakRepository = vedtakRepository
                 ),
                 vedtakService = VedtakService(vedtakRepository, behandlingRepository),
-                utbetalingGateway = utbetalingGateway
+                utbetalingGateway = utbetalingGateway,
+                virkningstidspunktUtleder = virkningstidspunktUtlederService,
             )
         }
 

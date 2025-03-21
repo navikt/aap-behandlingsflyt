@@ -4,14 +4,15 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class VedtakService(
     private val vedtakRepository: VedtakRepository,
     private val behandlingRepository: BehandlingRepository,
 ) {
-    fun lagreVedtak(behandlingId: BehandlingId, vedtakstidspunkt: LocalDateTime) {
-        vedtakRepository.lagre(behandlingId, vedtakstidspunkt)
+    fun lagreVedtak(behandlingId: BehandlingId, vedtakstidspunkt: LocalDateTime, virkningstidspunkt: LocalDate) {
+        vedtakRepository.lagre(behandlingId, vedtakstidspunkt, virkningstidspunkt)
     }
 
     fun vedtakstidspunktFørstegangsbehandling(sakId: SakId): LocalDateTime? {
