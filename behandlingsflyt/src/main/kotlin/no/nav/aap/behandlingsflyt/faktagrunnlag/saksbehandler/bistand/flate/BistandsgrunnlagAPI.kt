@@ -53,7 +53,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource) {
                         BistandVurderingDto.fraBistandVurdering(vurdering),
                         vedtatteBistandsvurderinger.map { it.toDto() },
                         historiskeVurderinger.map { it.toDto() },
-                        gjeldendeSykdomsvurderinger
+                        gjeldendeSykdomsvurderinger.map{it.toDto()}
                     )
                 }
                 
