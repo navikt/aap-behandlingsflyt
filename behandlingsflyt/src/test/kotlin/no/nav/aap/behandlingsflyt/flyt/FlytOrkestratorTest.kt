@@ -424,7 +424,7 @@ class FlytOrkestratorTest {
                     begrunnelse = "Samordnet med uføre",
                     vurderingPerioder = listOf(
                         SamordningUføreVurderingPeriodeDto(
-                            periode = sak.rettighetsperiode, uføregradTilSamordning = 45
+                            virkningstidspunkt = sak.rettighetsperiode.fom, uføregradTilSamordning = 45
                         )
                     )
                 )
@@ -512,7 +512,7 @@ class FlytOrkestratorTest {
                     begrunnelse = "Samordnet med uføre",
                     vurderingPerioder = listOf(
                         SamordningUføreVurderingPeriodeDto(
-                            periode = sak.rettighetsperiode, uføregradTilSamordning = 45
+                            virkningstidspunkt = sak.rettighetsperiode.fom, uføregradTilSamordning = 45
                         )
                     )
                 )

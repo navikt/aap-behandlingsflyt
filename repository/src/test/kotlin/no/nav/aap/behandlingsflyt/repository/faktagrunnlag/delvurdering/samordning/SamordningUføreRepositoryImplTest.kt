@@ -37,14 +37,12 @@ class SamordningUføreRepositoryImplTest {
         val vurdering = SamordningUføreVurdering(
             begrunnelse = "En fin begrunnelse", vurderingPerioder = listOf(
                 SamordningUføreVurderingPeriode(
-                    periode = Periode(periode.fom, periode.fom.plusMonths(3)),
+                    virkningstidspunkt = periode.fom,
                     uføregradTilSamordning = Prosent.`50_PROSENT`
                 ),
                 SamordningUføreVurderingPeriode(
-                    periode = Periode(
-                        periode.fom.plusMonths(4),
-                        periode.fom.plusMonths(7)
-                    ), uføregradTilSamordning = Prosent.`70_PROSENT`
+                    virkningstidspunkt = periode.fom.plusMonths(4),
+                    uføregradTilSamordning = Prosent.`70_PROSENT`
                 )
             )
         )

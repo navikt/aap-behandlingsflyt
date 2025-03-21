@@ -69,7 +69,7 @@ data class SamordningUføreVurderingDTO(
 )
 
 data class SamordningUføreVurderingPeriodeDTO(
-    val periode: Periode,
+    val virkningstidspunkt: LocalDate,
     val uføregradTilSamordning: Int
 )
 
@@ -159,7 +159,7 @@ private fun mapSamordningUføreVurdering(vurdering: SamordningUføreVurdering?) 
             begrunnelse = it.begrunnelse,
             vurderingPerioder = it.vurderingPerioder.map { periode ->
                 SamordningUføreVurderingPeriodeDTO(
-                    periode.periode,
+                    periode.virkningstidspunkt,
                     periode.uføregradTilSamordning.prosentverdi()
                 )
             })

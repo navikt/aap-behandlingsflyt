@@ -452,7 +452,8 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningUføre = SamordningUføreGrunnlag(
             vurdering = SamordningUføreVurdering(
                 "", listOf(
-                    SamordningUføreVurderingPeriode(periode = Periode(1 juli 2023, 1 august 2023), Prosent.`30_PROSENT`)
+                    SamordningUføreVurderingPeriode(virkningstidspunkt = 1 juli 2023, Prosent.`30_PROSENT`),
+                    SamordningUføreVurderingPeriode(virkningstidspunkt = 2 august 2023, Prosent.`0_PROSENT`)
                 )
             )
         )
@@ -555,8 +556,8 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningUføre = SamordningUføreGrunnlag(
             vurdering = SamordningUføreVurdering(
                 "", listOf(
-                    SamordningUføreVurderingPeriode(Periode(1 mars 2023, 30 juni 2023), Prosent.`50_PROSENT`),
-                    SamordningUføreVurderingPeriode(Periode(1 juli 2023, 1 august 2023), Prosent.`70_PROSENT`)
+                    SamordningUføreVurderingPeriode(virkningstidspunkt = 1 mars 2023, Prosent.`50_PROSENT`),
+                    SamordningUføreVurderingPeriode(virkningstidspunkt = 1 juli 2023, Prosent.`70_PROSENT`)
                 )
             )
         )
@@ -777,7 +778,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningUføre = SamordningUføreGrunnlag(
             vurdering = SamordningUføreVurdering(
                 "", listOf(
-                    SamordningUføreVurderingPeriode(periode = periode, Prosent.`30_PROSENT`)
+                    SamordningUføreVurderingPeriode(virkningstidspunkt = periode.fom, Prosent.`30_PROSENT`)
                 )
             )
         )

@@ -1,7 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering
 
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import java.time.LocalDate
 
 data class SamordningUføreGrunnlag(
     val vurdering: SamordningUføreVurdering,
@@ -10,10 +13,28 @@ data class SamordningUføreGrunnlag(
 data class SamordningUføreVurdering(
     val begrunnelse: String,
     val vurderingPerioder: List<SamordningUføreVurderingPeriode>,
-)
+) {
+    fun tilTidslinje(): Tidslinje<SamordningUføreVurderingPeriode> {
+        val sorterteVurderinger = vurderingPerioder.sortedBy { it.virkningstidspunkt };
+        val sisteElement = sorterteVurderinger.lastOrNull()
+
+        return if (sisteElement == null) {
+            Tidslinje.empty()
+        } else
+
+            sorterteVurderinger.zipWithNext { gjeldende, neste ->
+                Segment(
+                    periode = Periode(
+                        gjeldende.virkningstidspunkt,
+                        neste.virkningstidspunkt.minusDays(1)
+                    ), verdi = gjeldende
+                )
+            }.plus(Segment(Periode(sisteElement.virkningstidspunkt, LocalDate.MAX), sisteElement)).let(::Tidslinje)
+    }
+}
 
 data class SamordningUføreVurderingPeriode(
-    val periode: Periode,
+    val virkningstidspunkt: LocalDate,
     val uføregradTilSamordning: Prosent
 )
 
@@ -23,6 +44,6 @@ data class SamordningUføreVurderingDto(
 )
 
 data class SamordningUføreVurderingPeriodeDto(
-    val periode: Periode,
+    val virkningstidspunkt: LocalDate,
     val uføregradTilSamordning: Int
 )
