@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import java.time.Instant
 import java.time.LocalDate
 
@@ -16,7 +17,7 @@ class BistandVurdering(
     val vurderingenGjelderFra: LocalDate?,
     val opprettet: Instant? = null
 ) {
-    fun toDto(harOppfylt11_5: Boolean? = null) = BistandVurderingDto(
+    fun toDto() = BistandVurderingDto(
         begrunnelse = begrunnelse,
         erBehovForAktivBehandling = erBehovForAktivBehandling,
         erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
@@ -26,7 +27,6 @@ class BistandVurdering(
         skalVurdereAapIOvergangTilUføre = skalVurdereAapIOvergangTilUføre,
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
         vurdertAv = vurdertAv,
-        harOppfylt11_5 = harOppfylt11_5
     )
 
     fun erBehovForBistand(): Boolean {

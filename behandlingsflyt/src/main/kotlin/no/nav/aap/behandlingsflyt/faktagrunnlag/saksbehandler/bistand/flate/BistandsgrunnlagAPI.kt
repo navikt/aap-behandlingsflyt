@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -29,8 +30,11 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource) {
                     val repositoryProvider = RepositoryProvider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val bistandRepository = repositoryProvider.provide<BistandRepository>()
+                    val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
+
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
+
                     val historiskeVurderinger =
                         bistandRepository.hentHistoriskeBistandsvurderinger(behandling.sakId, behandling.id)
                     val grunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
@@ -38,17 +42,21 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource) {
                     val vedtatteBistandsvurderinger = behandling.forrigeBehandlingId
                         ?.let { bistandRepository.hentHvisEksisterer(it) }
                         ?.vurderinger.orEmpty()
-                    
                     val vurdering = nåTilstand
                         .filterNot { it in vedtatteBistandsvurderinger }
                         .singleOrNull()
 
+                    val gjeldendeSykdomsvurderinger =
+                        sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger ?: emptyList()
+
                     BistandGrunnlagDto(
                         BistandVurderingDto.fraBistandVurdering(vurdering),
-                        vedtatteBistandsvurderinger.map{it.toDto()},
-                        historiskeVurderinger.map { it.toDto() })
+                        vedtatteBistandsvurderinger.map { it.toDto() },
+                        historiskeVurderinger.map { it.toDto() },
+                        gjeldendeSykdomsvurderinger
+                    )
                 }
-
+                
                 respond(respons)
             }
         }

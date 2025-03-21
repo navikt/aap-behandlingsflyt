@@ -14,9 +14,8 @@ data class BistandVurderingDto(
     val vurderingenGjelderFra: LocalDate?,
 
     val vurdertAv: String,
-    val harOppfylt11_5: Boolean?
 ) {
     companion object {
-        fun fraBistandVurdering(bistandVurdering: BistandVurdering?, harOppfylt11_5: Boolean? = null) = bistandVurdering?.toDto(harOppfylt11_5)
+        fun fraBistandVurdering(bistandVurdering: BistandVurdering?) = bistandVurdering?.toDto()
     }
 }
