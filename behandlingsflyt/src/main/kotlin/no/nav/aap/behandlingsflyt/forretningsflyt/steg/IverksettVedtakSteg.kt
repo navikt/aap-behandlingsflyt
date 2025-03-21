@@ -42,7 +42,7 @@ class IverksettVedtakSteg private constructor(
                 .find { it.steg() == StegType.FATTE_VEDTAK && it.status() == StegStatus.AVSLUTTER }
                 ?.tidspunkt() ?: error("Forventet å finne et avsluttet fatte vedtak steg")
 
-//        val virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId)
+  //      val virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId)
         val virkningstidspunkt = LocalDate.now()
         vedtakService.lagreVedtak(kontekst.behandlingId, vedtakstidspunkt, virkningstidspunkt)
 

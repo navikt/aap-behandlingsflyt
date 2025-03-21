@@ -43,7 +43,7 @@ class VedtakRepositoryImpl(private val connection: DBConnection) : VedtakReposit
                 Vedtak(
                     behandlingId = BehandlingId(it.getLong("behandling_id")),
                     vedtakstidspunkt = it.getLocalDateTime("vedtakstidspunkt"),
-                    virkningstidspunkt = it.getLocalDateTime("virkningstidspunkt")
+                    virkningstidspunkt = it.getLocalDate("virkningstidspunkt")
                 )
             }
         }
