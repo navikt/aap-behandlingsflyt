@@ -58,7 +58,8 @@ object Revurdering : BehandlingType {
                 informasjonskrav = listOf(PersonopplysningService, LovvalgService),
                 årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.REVURDER_LOVVALG
+                    ÅrsakTilBehandling.REVURDER_LOVVALG,
+                    ÅrsakTilBehandling.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
             .medSteg(steg = FastsettMeldeperiodeSteg)
@@ -70,7 +71,8 @@ object Revurdering : BehandlingType {
                 årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
-                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING
+                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING,
+                    ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
                 )
             )
             .medSteg(
@@ -131,13 +133,27 @@ object Revurdering : BehandlingType {
                 informasjonskrav = listOf(PersonopplysningForutgåendeService, ForutgåendeMedlemskapService),
                 årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.REVURDER_MEDLEMSKAP
+                    ÅrsakTilBehandling.REVURDER_MEDLEMSKAP,
+                    ÅrsakTilBehandling.FORUTGAENDE_MEDLEMSKAP,
+                    ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT,
                 )
             )
-            .medSteg(steg = BarnetilleggSteg, informasjonskrav = listOf(BarnService))
-            .medSteg(steg = EtAnnetStedSteg, informasjonskrav = listOf(InstitusjonsoppholdService))
+            .medSteg(
+                steg = BarnetilleggSteg,
+                informasjonskrav = listOf(BarnService),
+                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.BARNETILLEGG)
+            )
+            .medSteg(
+                steg = EtAnnetStedSteg,
+                informasjonskrav = listOf(InstitusjonsoppholdService),
+                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.INSTITUSJONSOPPHOLD)
+            )
             .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(MeldekortService, AktivitetspliktInformasjonskrav))
-            .medSteg(steg = SamordningSteg, informasjonskrav = listOf(SamordningYtelseVurderingService))
+            .medSteg(
+                steg = SamordningSteg,
+                informasjonskrav = listOf(SamordningYtelseVurderingService),
+                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING)
+            )
             .medSteg(steg = SamordningUføreSteg, informasjonskrav = listOf(UføreService))
             .medSteg(steg = Effektuer11_7Steg)
             .medSteg(

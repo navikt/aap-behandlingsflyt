@@ -61,6 +61,12 @@ public class Innsending(
                 requireNotNull(melding)
                 require(melding is AnnetRelevantDokument)
             }
+
+            InnsendingType.MANUELL_REVURDERING -> {
+                require(referanse.type == InnsendingReferanse.Type.REVURDERING_ID)
+                requireNotNull(melding)
+                require(melding is ManuellRevurdering)
+            }
             
             InnsendingType.KLAGE -> {
                 require(referanse.type == InnsendingReferanse.Type.JOURNALPOST)
@@ -85,6 +91,7 @@ public fun Melding.innsendingType(): InnsendingType = when (this) {
     is Meldekort -> InnsendingType.MELDEKORT
     is Søknad -> InnsendingType.SØKNAD
     is AnnetRelevantDokument -> InnsendingType.ANNET_RELEVANT_DOKUMENT
+    is ManuellRevurdering -> InnsendingType.MANUELL_REVURDERING
 }
 
 /**
@@ -106,6 +113,8 @@ private fun example(innsending: Innsending) {
         is AnnetRelevantDokument -> when (innsending.melding) {
             is AnnetRelevantDokumentV0 -> TODO()
         }
+
+        is ManuellRevurdering,
 
         null -> TODO()
     }
