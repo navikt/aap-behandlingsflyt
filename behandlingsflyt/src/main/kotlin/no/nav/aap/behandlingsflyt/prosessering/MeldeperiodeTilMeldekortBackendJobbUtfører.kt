@@ -29,6 +29,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
         meldekortGateway.oppdaterMeldeperioder(
             MeldeperioderV0(
                 saksnummer = sak.saksnummer.toString(),
+                identer = sak.person.identer().map { it.identifikator },
                 sakenGjelderFor = Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.tom),
                 meldeperioder = meldeperioder.map { Periode(it.fom, it.tom) },
             )
