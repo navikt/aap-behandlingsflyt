@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeids
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepositoryImpl
@@ -58,6 +59,7 @@ class AvklaringsbehovsLøserTest {
         RepositoryRegistry.register<BrevbestillingRepositoryImpl>()
         RepositoryRegistry.register<YrkesskadeRepositoryImpl>()
         RepositoryRegistry.register<SamordningUføreRepositoryImpl>()
+        RepositoryRegistry.register<RefusjonkravRepositoryImpl>()
     }
 
     @Test

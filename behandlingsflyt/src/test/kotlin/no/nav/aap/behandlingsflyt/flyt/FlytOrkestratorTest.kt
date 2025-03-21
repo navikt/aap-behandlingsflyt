@@ -131,6 +131,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeids
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepositoryImpl
@@ -237,6 +238,7 @@ class FlytOrkestratorTest {
                 .register<VedtakRepositoryImpl>()
                 .register<SamordningYtelseRepositoryImpl>()
                 .register<SamordningUføreRepositoryImpl>()
+                .register<RefusjonkravRepositoryImpl>()
                 .status()
             GatewayRegistry
                 .register<PdlBarnGateway>()

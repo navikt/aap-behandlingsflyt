@@ -1,15 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon
 
-import no.nav.aap.komponenter.type.Periode
-import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
+
 
 data class RefusjonkravGrunnlagDto (
-    val vurderinger: List<RefusjonkravVurderingDto>
-)
-
-data class RefusjonkravVurderingDto (
-    val harKrav: Boolean,
-    val periode: Periode,
-    val vurdertAvIdent: String,
-    val vurdertDato: LocalDate
+    val gjeldendeVurdering: RefusjonkravVurdering?,
+    val historiskeVurderinger: List<RefusjonkravVurdering>?
 )

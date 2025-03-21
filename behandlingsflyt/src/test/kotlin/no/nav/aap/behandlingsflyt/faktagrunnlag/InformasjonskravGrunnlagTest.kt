@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.Med
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -68,6 +69,7 @@ class InformasjonskravGrunnlagTest {
             .register<MedlemskapArbeidInntektRepositoryImpl>()
             .register<MedlemskapArbeidInntektForutgåendeRepositoryImpl>()
             .register<PersonopplysningForutgåendeRepositoryImpl>()
+            .register<RefusjonkravRepositoryImpl>()
 
         GatewayRegistry.register<MedlemskapGateway>().register<AARegisterGateway>()
             .register<YrkesskadeRegisterGatewayImpl>()

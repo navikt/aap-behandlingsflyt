@@ -1,8 +1,9 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav
 
-import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDate
 
 data class RefusjonkravVurdering(
     val harKrav: Boolean,
-    val periode: Periode
+    val fom: LocalDate?,
+    val tom: LocalDate?
 )
