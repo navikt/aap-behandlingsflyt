@@ -40,7 +40,7 @@ class SamordningYtelseRepositoryImplTest {
                         gradering = Prosent.`70_PROSENT`,
                     ),
                     SamordningYtelsePeriode(
-                        periode = Periode(LocalDate.now().plusYears(3).plusDays(1), LocalDate.now().plusYears(6)),
+                        periode = Periode(LocalDate.now().plusYears(7).plusDays(1), LocalDate.now().plusYears(10)),
                         gradering = Prosent.`30_PROSENT`,
                     )
                 ),
@@ -98,11 +98,11 @@ class SamordningYtelseRepositoryImplTest {
                 ytelseType = Ytelse.OMSORGSPENGER,
                 ytelsePerioder = listOf(
                     SamordningYtelsePeriode(
-                        periode = Periode(LocalDate.now().plusDays(1), LocalDate.now().plusYears(6)),
+                        periode = Periode(LocalDate.now().plusDays(1), LocalDate.now().plusYears(2)),
                         gradering = Prosent(51),
                     ),
                     SamordningYtelsePeriode(
-                        periode = Periode(LocalDate.now().plusYears(7).plusDays(2), LocalDate.now().plusYears(10)),
+                        periode = Periode(LocalDate.now().plusYears(3).plusDays(2), LocalDate.now().plusYears(6)),
                         gradering = Prosent(67)
                     )
                 ),
@@ -114,7 +114,7 @@ class SamordningYtelseRepositoryImplTest {
         dataSource.transaction {
             SamordningYtelseRepositoryImpl(it).lagre(
                 behandling.id,
-                samordningYtelser = samordningYtelser
+                samordningYtelser = samordningYtelser2
             )
         }
 

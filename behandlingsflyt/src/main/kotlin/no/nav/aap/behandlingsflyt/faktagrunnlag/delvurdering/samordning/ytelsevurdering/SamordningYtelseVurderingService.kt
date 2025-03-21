@@ -42,6 +42,7 @@ class SamordningYtelseVurderingService(
         val samordningYtelser = mapTilSamordningYtelse(foreldrepenger, sykepenger)
 
         if (harEndringerIYtelser(eksisterendeData, samordningYtelser)) {
+            log.info("Oppdaterer samordning ytelser for behandling ${kontekst.behandlingId}. Ytelser funnet: ${samordningYtelser.map { it.ytelseType }}")
             samordningYtelseRepository.lagre(kontekst.behandlingId, samordningYtelser)
             return Informasjonskrav.Endret.ENDRET
         }
