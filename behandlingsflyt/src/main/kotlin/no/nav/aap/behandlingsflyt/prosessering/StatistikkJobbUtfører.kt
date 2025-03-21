@@ -36,11 +36,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype
 import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.Jobb
@@ -48,9 +50,8 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 import java.time.LocalDateTime
-
-
 
 
 class StatistikkJobbUtfører(
@@ -194,16 +195,20 @@ class StatistikkJobbUtfører(
             log.warn("Kjører statistikkjobb for behandling som ikke er avsluttet. Behandling-ref: ${behandling.referanse.referanse}. Sak: ${sak.saksnummer}")
         }
 
-        val tilkjentYtelse = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
-
-        val tilkjentYtelseDTO = TilkjentYtelseDTO(perioder = tilkjentYtelse?.map {
-            TilkjentYtelsePeriodeDTO(
-                fraDato = it.periode.fom,
-                tilDato = it.periode.tom,
-                dagsats = it.tilkjent.dagsats.verdi().toDouble(),
-                gradering = it.tilkjent.gradering.endeligGradering.prosentverdi().toDouble()
-            )
-        } ?: listOf())
+        val tilkjentYtelse =
+            tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
+                ?.map { Segment(it.periode, it.tilkjent) }
+                ?.let(::Tidslinje)?.mapValue { Pair(it.dagsats, it.gradering.endeligGradering.prosentverdi()) }
+                ?.komprimer()
+                ?.disjoint(Periode(LocalDate.MIN, LocalDate.now())) // TODO: vedtaktidspunkt
+                ?.map {
+                    TilkjentYtelsePeriodeDTO(
+                        fraDato = it.periode.fom,
+                        tilDato = it.periode.tom,
+                        dagsats = it.verdi.first.verdi().toDouble(),
+                        gradering = it.verdi.second.toDouble()
+                    )
+                }
 
         if (tilkjentYtelse == null) {
             log.info("Ingen tilkjente ytelser knyttet til avsluttet behandling ${behandling.id}.")
@@ -251,7 +256,7 @@ class StatistikkJobbUtfører(
                     )
                 }
             ),
-            tilkjentYtelse = tilkjentYtelseDTO,
+            tilkjentYtelse = TilkjentYtelseDTO(perioder = tilkjentYtelse.orEmpty()),
             beregningsGrunnlag = beregningsGrunnlagDTO,
             diagnoser = hentDiagnose(behandling),
             rettighetstypePerioder = rettighetstypePerioder
@@ -260,7 +265,8 @@ class StatistikkJobbUtfører(
     }
 
     private fun hentDiagnose(behandling: Behandling): Diagnoser? {
-        val sykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger?.last() // TODO: Det kan være flere vurderinger og diagnoser som er aktuelle for statistikk - ikke bare én, men dette støttes ikke i kontrakten nedenfor?
+        val sykdomsvurdering =
+            sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger?.last() // TODO: Det kan være flere vurderinger og diagnoser som er aktuelle for statistikk - ikke bare én, men dette støttes ikke i kontrakten nedenfor?
 
         if (sykdomsvurdering == null) {
             log.info("Fant ikke sykdomsvurdering for behandling ${behandling.referanse} (id: ${behandling.id})")
