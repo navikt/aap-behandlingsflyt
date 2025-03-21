@@ -42,6 +42,9 @@ import no.nav.aap.behandlingsflyt.integrasjon.barn.BARN_RELASJON_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PERSON_BOLK_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.ident.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
+import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreHistorikkRespons
+import no.nav.aap.behandlingsflyt.integrasjon.ufore.UførePeriode
+import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRequest
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRespons
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRequest
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.Yrkesskader
@@ -163,7 +166,9 @@ object FakeServers : AutoCloseable {
 
     private fun Application.pesysFake() {
         install(ContentNegotiation) {
-            jackson()
+            jackson {
+                registerModule(JavaTimeModule())
+            }
         }
         install(StatusPages) {
             exception<Throwable> { call, cause ->
@@ -189,6 +194,33 @@ object FakeServers : AutoCloseable {
                     call.respond(HttpStatusCode.OK, UføreRespons(uforegrad = uføregrad))
                 }
             }
+            post("/pen/api/uforetrygd/uforehistorikk/perioder") {
+                val body = call.receive<UføreRequest>()
+                val hentPerson = FakePersoner.hentPerson(body.fnr)
+                if (hentPerson == null) {
+                    call.respond(HttpStatusCode.NotFound, "Fant ikke person med fnr ${body.fnr}")
+                    return@post
+                }
+                val uføregrad = hentPerson.uføre?.prosentverdi()
+                if (uføregrad == null) {
+                    call.respond(HttpStatusCode.NotFound)
+                } else {
+                    call.respond(
+                        HttpStatusCode.OK, UføreHistorikkRespons(
+                            uforeperioder = listOf(
+                                UførePeriode(
+                                    uforegrad = uføregrad,
+                                    uforegradTom = null,
+                                    uforegradFom = null,
+                                    uforetidspunkt = null,
+                                    virkningstidspunkt = LocalDate.parse(body.dato)
+                                )
+                            )
+                        )
+                    )
+                }
+            }
+
         }
     }
 
