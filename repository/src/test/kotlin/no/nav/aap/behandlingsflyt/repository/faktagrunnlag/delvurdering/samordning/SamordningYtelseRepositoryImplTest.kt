@@ -28,10 +28,9 @@ class SamordningYtelseRepositoryImplTest {
     private val dataSource = InitTestDatabase.dataSource
 
     @Test
-    fun `sette inn ytelse, hente ut`() {
-        val behandling = dataSource.transaction {
-            behandling(it, sak(it))
-        }
+    fun `sette inn flere ytelser, skal hente ut nyeste`() {
+        val behandling = dataSource.transaction { behandling(it, sak(it)) }
+
         val samordningYtelser = listOf(
             SamordningYtelse(
                 ytelseType = Ytelse.SYKEPENGER,
@@ -43,6 +42,21 @@ class SamordningYtelseRepositoryImplTest {
                     SamordningYtelsePeriode(
                         periode = Periode(LocalDate.now().plusYears(3).plusDays(1), LocalDate.now().plusYears(6)),
                         gradering = Prosent.`30_PROSENT`,
+                    )
+                ),
+                kilde = "kilde",
+                saksRef = "abc"
+            ),
+            SamordningYtelse(
+                ytelseType = Ytelse.OMSORGSPENGER,
+                ytelsePerioder = listOf(
+                    SamordningYtelsePeriode(
+                        periode = Periode(LocalDate.now(), LocalDate.now().plusYears(6)),
+                        gradering = Prosent.`50_PROSENT`,
+                    ),
+                    SamordningYtelsePeriode(
+                        periode = Periode(LocalDate.now().plusYears(7).plusDays(1), LocalDate.now().plusYears(10)),
+                        gradering = Prosent.`66_PROSENT`
                     )
                 ),
                 kilde = "kilde",
@@ -60,7 +74,56 @@ class SamordningYtelseRepositoryImplTest {
             SamordningYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id)
         }
 
-        assertThat(samordningYtelser).isEqualTo(uthentet!!.ytelser)
+        assertThat(uthentet!!.ytelser.size).isEqualTo(2)
+        assertThat(samordningYtelser).containsExactlyInAnyOrderElementsOf(uthentet.ytelser)
+
+        // Setter inn på nytt
+        val samordningYtelser2 = listOf(
+            SamordningYtelse(
+                ytelseType = Ytelse.SYKEPENGER,
+                ytelsePerioder = listOf(
+                    SamordningYtelsePeriode(
+                        periode = Periode(LocalDate.now().plusDays(1), LocalDate.now().plusYears(3)),
+                        gradering = Prosent(66),
+                    ),
+                    SamordningYtelsePeriode(
+                        periode = Periode(LocalDate.now().plusYears(3).plusDays(2), LocalDate.now().plusYears(6)),
+                        gradering = Prosent(31)
+                    )
+                ),
+                kilde = "kilde",
+                saksRef = "abc"
+            ),
+            SamordningYtelse(
+                ytelseType = Ytelse.OMSORGSPENGER,
+                ytelsePerioder = listOf(
+                    SamordningYtelsePeriode(
+                        periode = Periode(LocalDate.now().plusDays(1), LocalDate.now().plusYears(6)),
+                        gradering = Prosent(51),
+                    ),
+                    SamordningYtelsePeriode(
+                        periode = Periode(LocalDate.now().plusYears(7).plusDays(2), LocalDate.now().plusYears(10)),
+                        gradering = Prosent(67)
+                    )
+                ),
+                kilde = "kilde",
+                saksRef = "abc"
+            )
+        )
+
+        dataSource.transaction {
+            SamordningYtelseRepositoryImpl(it).lagre(
+                behandling.id,
+                samordningYtelser = samordningYtelser
+            )
+        }
+
+        val uthentet2 = dataSource.transaction {
+            SamordningYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id)
+        }
+
+        assertThat(uthentet2!!.ytelser.size).isEqualTo(2)
+        assertThat(samordningYtelser).containsExactlyInAnyOrderElementsOf(uthentet2.ytelser)
 
         // Kopier:
         val kopiertBehandling = dataSource.transaction {

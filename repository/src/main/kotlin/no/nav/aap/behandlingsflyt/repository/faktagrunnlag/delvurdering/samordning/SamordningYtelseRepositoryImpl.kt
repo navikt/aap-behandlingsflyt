@@ -15,7 +15,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
 
     companion object : Factory<SamordningYtelseRepository> {
         override fun konstruer(connection: DBConnection): SamordningYtelseRepository {
-         return SamordningYtelseRepositoryImpl(connection)
+            return SamordningYtelseRepositoryImpl(connection)
         }
     }
 
@@ -49,8 +49,14 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
     }
 
     private fun hentYtelser(ytelserId: Long): List<SamordningYtelse> {
-        val sql  ="""
-            select * from samordning_ytelser join samordning_ytelse on samordning_ytelser.id = samordning_ytelse.ytelser_id where samordning_ytelser.id = ?
+        val sql = """
+            select sy.ytelse_type as sy_ytelse_type,
+                   sy.id          as sy_id,
+                   sy.kilde       as sy_kilde,
+                   sy.saks_ref    as sy_saks_ref
+            from samordning_ytelser syr
+                     join samordning_ytelse sy on syr.id = sy.ytelser_id
+            where syr.id = ?
         """.trimIndent()
 
         return dbConnection.queryList(sql) {
@@ -59,10 +65,10 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
             }
             setRowMapper { row ->
                 SamordningYtelse(
-                    ytelseType = row.getEnum("ytelse_type"),
-                    ytelsePerioder = hentYtelsePerioder(row.getLong("ytelser_id")),
-                    kilde = row.getString("kilde"),
-                    saksRef = row.getStringOrNull("saks_ref")
+                    ytelseType = row.getEnum("sy_ytelse_type"),
+                    ytelsePerioder = hentYtelsePerioder(row.getLong("sy_id")),
+                    kilde = row.getString("sy_kilde"),
+                    saksRef = row.getStringOrNull("sy_saks_ref")
                 )
             }
         }
@@ -135,6 +141,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
                 setBoolean(3, true)
             }
         }
+        log.info("Lagret samordningytelsegrunnlag med id $grunnlagId for behandling $behandlingId.")
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {

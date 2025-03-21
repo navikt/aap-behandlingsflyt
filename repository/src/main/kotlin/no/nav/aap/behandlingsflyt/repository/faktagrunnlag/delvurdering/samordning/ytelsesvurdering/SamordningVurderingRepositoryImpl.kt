@@ -28,6 +28,8 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper {
+                // At denne kunne være nullable er egentlig rester fra tidligere. Vurder å slette
+                // grunnlag uten vurderinger?
                 hentSamordningVurderinger(it.getLongOrNull("vurderinger_id"))
             }
         }
@@ -39,7 +41,18 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
         }
 
         val query = """
-            SELECT * FROM SAMORDNING_VURDERINGER svr JOIN SAMORDNING_VURDERING sv on svr.id = sv.vurderinger_id  WHERE vurderinger_id = ?
+            SELECT svr.opprettet_tid    as svr_opprettet_tid,
+                   svr.begrunnelse      as svr_begrunnelse,
+                   svr.maksdato_endelig as svr_maksdato_endelig,
+                   svr.id               as svr_id,
+                   svr.maksdato         as svr_maksdato,
+                   sv.id                as sv_id,
+                   sv.opprettet_tid     as sv_opprettet_tid,
+                   sv.vurderinger_id    as sv_vurdering_id,
+                   sv.ytelse_type       as sv_ytelse_type
+            FROM SAMORDNING_VURDERINGER svr
+                     JOIN SAMORDNING_VURDERING sv on svr.id = sv.vurderinger_id
+            WHERE vurderinger_id = ?
         """.trimIndent()
 
         data class FellesFelter(
@@ -55,12 +68,12 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
             setRowMapper {
                 Pair(
                     FellesFelter(
-                        begrunnelse = it.getString("begrunnelse"),
-                        maksDatoEndelig = it.getBoolean("maksdato_endelig"),
-                        maksDato = it.getLocalDateOrNull("maksdato")
+                        begrunnelse = it.getString("svr_begrunnelse"),
+                        maksDatoEndelig = it.getBoolean("svr_maksdato_endelig"),
+                        maksDato = it.getLocalDateOrNull("svr_maksdato")
                     ), SamordningVurdering(
-                        ytelseType = it.getEnum("ytelse_type"),
-                        vurderingPerioder = hentSamordningVurderingPerioder(it.getLong("id")),
+                        ytelseType = it.getEnum("sv_ytelse_type"),
+                        vurderingPerioder = hentSamordningVurderingPerioder(it.getLong("sv_id")),
                     )
                 )
             }
@@ -88,7 +101,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
             setRowMapper {
                 SamordningVurderingPeriode(
                     periode = it.getPeriode("periode"),
-                    gradering = it.getIntOrNull("gradering")?.let { g -> Prosent(g) },
+                    gradering = it.getIntOrNull("gradering")?.let(::Prosent),
                     kronesum = it.getIntOrNull("kronesum"),
                     manuell = it.getBooleanOrNull("manuell"),
                 )
@@ -130,7 +143,8 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
             }
 
             val veriodePeriodeQuery = """
-                INSERT INTO SAMORDNING_VURDERING_PERIODE (periode, vurdering_id, gradering, kronesum, manuell) VALUES (?::daterange, ?, ?, ?, ?)
+                INSERT INTO SAMORDNING_VURDERING_PERIODE (periode, vurdering_id, gradering, kronesum, manuell)
+                VALUES (?::daterange, ?, ?, ?, ?)
                 """.trimIndent()
             connection.executeBatch(veriodePeriodeQuery, vurdering.vurderingPerioder) {
                 setParams {
@@ -143,7 +157,6 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
             }
         }
 
-        // TODO: Skal denne sjekke om det er nye ytelser, eller skjer det uansett når det kommer nye vurderinger?
         val grunnlagQuery = """
             INSERT INTO SAMORDNING_YTELSEVURDERING_GRUNNLAG (behandling_id, vurderinger_id) VALUES (?, ?)
         """.trimIndent()
@@ -165,10 +178,8 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandling)
-        if (eksisterendeGrunnlag == null) {
-            return
-        }
+        hentHvisEksisterer(fraBehandling) ?: return
+
         val query = """
             INSERT INTO SAMORDNING_YTELSEVURDERING_GRUNNLAG 
                 (behandling_id, vurderinger_id)
