@@ -46,7 +46,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         val meldekorteneId = row.getLong("perioder_id")
 
         val query = """
-            SELECT * FROM UNDERVEIS_PERIODE WHERE perioder_id = ?
+            SELECT * FROM UNDERVEIS_PERIODE WHERE perioder_id = ? ORDER BY periode
         """.trimIndent()
 
         val underveisperioder = connection.queryList(query) {

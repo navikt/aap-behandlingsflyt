@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering.Companion.tidslinje
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
@@ -60,23 +60,53 @@ class MeldepliktRegel(
         return resultat.leggTilVurderinger(meldepliktVurderinger, Vurdering::leggTilMeldepliktVurdering)
     }
 
+
+    fun fastsatteDagerMedMeldeplikt(
+        vedtaksdatoFørstegangsbehandling: LocalDate?,
+        fritak: Tidslinje<Fritaksvurdering.FritaksvurderingData>,
+        meldeperioder: List<Periode>,
+        underveis: Tidslinje<Underveisperiode>,
+    ): List<Periode> {
+        val meldepliktFraOgMed = vedtaksdatoFørstegangsbehandling?.plusDays(1)
+            ?: return listOf()
+
+        val harRett = underveis.mapValue {
+            /* TODO: hent inn 100% gradering (?) */
+            it.rettighetsType != null
+        }
+
+        return meldeperioder
+            .asSequence()
+            .map { Periode(it.fom, it.fom.plusDays(7)) }
+            .filter { fastsatteDager -> meldepliktFraOgMed <= fastsatteDager.fom }
+            .filter { fastsatteDager -> fritak.kryss(fastsatteDager).none { it.verdi.harFritak } }
+            .filter { fastsatteDager -> harRett.kryss(fastsatteDager).any { harRett -> harRett.verdi } }
+            .toList()
+    }
+
+    fun meldepliktFraOgMed(input: UnderveisInput): LocalDate? {
+        /* TODO: virkningstidspunkt kan dra tidspunktet for når meldefristen inntrer lenger frem i tid (?) */
+        return input.vedtaksdatoFørstegangsbehandling?.plusDays(1)
+    }
+
+
     private fun fritaksvurderingTidslinje(input: UnderveisInput): Tidslinje<MeldepliktData> {
-        return input.meldepliktGrunnlag.vurderinger.tidslinje().mapValue { MeldepliktData(fritaksvurdering = it) }
+        return input.meldepliktGrunnlag.tilTidslinje().mapValue { MeldepliktData(fritaksvurdering = it) }
     }
 
     private fun førVedtakTidslinje(input: UnderveisInput): Tidslinje<MeldepliktData> {
-        val vedtaksdato = input.vedtaksdatoFørstegangsbehandling
-        return if (vedtaksdato == null) {
+        val meldepliktFraOgMed = meldepliktFraOgMed(input)
+        return if (meldepliktFraOgMed == null) {
             Tidslinje(input.rettighetsperiode, MeldepliktData(førVedtak = true))
         } else {
             Tidslinje(
                 listOf(
                     Segment(
-                        periode = Periode(input.rettighetsperiode.fom, vedtaksdato),
+                        periode = Periode(input.rettighetsperiode.fom, meldepliktFraOgMed.minusDays(1)),
                         verdi = MeldepliktData(førVedtak = true)
                     ),
                     Segment(
-                        periode = Periode(vedtaksdato.plusDays(1), input.rettighetsperiode.tom),
+                        periode = Periode(meldepliktFraOgMed, input.rettighetsperiode.tom),
                         verdi = MeldepliktData(førVedtak = false)
                     ),
                 )

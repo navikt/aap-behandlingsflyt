@@ -37,35 +37,36 @@ class Vilkårsresultat(
      * @return En tidslinje med [RettighetsType].
      */
     fun rettighetstypeTidslinje(): Tidslinje<RettighetsType> {
-        return listOf(
-            Vilkårtype.SYKEPENGEERSTATNING,
-            Vilkårtype.SYKDOMSVILKÅRET,
-            Vilkårtype.BISTANDSVILKÅRET
-        )
-            .mapNotNull { v -> this.optionalVilkår(v) }
-            .map { vilkår ->
-                Tidslinje(vilkår.vilkårsperioder().filter { it.utfall == Utfall.OPPFYLT }
-                    .map { Segment(it.periode, Pair(vilkår, it)) })
+        return vilkår
+            .asSequence()
+            .filter {
+                it.type in listOf(
+                    Vilkårtype.SYKEPENGEERSTATNING,
+                    Vilkårtype.SYKDOMSVILKÅRET,
+                    Vilkårtype.BISTANDSVILKÅRET
+                )
             }
-            .map { it.filter { it.verdi.second.erOppfylt() } }
+            .map { vilkår ->
+                Tidslinje(vilkår.vilkårsperioder()
+                    .filter { it.utfall == Utfall.OPPFYLT }
+                    .map { Segment(it.periode, Pair(vilkår, it)) }
+                )
+            }
             .fold(Tidslinje.empty<Set<Pair<Vilkårtype, Innvilgelsesårsak?>>>()) { acc, curr ->
-                acc.kombiner(curr, JoinStyle.OUTER_JOIN { periode, venstre, høyre ->
+                acc.outerJoin(curr) { venstre, høyre ->
                     if (høyre == null && venstre == null) {
-                        null
+                        error("outer join")
                     } else if (venstre != null && høyre == null) {
-                        Segment(periode, venstre.verdi)
+                        venstre
                     } else if (venstre == null && høyre != null) {
-                        Segment(periode, setOf(Pair(høyre.verdi.first.type, høyre.verdi.second.innvilgelsesårsak)))
+                        setOf(Pair(høyre.first.type, høyre.second.innvilgelsesårsak))
                     } else {
                         // Rart kompilatoren ikke skjønte dette...
                         requireNotNull(høyre)
                         requireNotNull(venstre)
-                        Segment(
-                            periode,
-                            venstre.verdi + Pair(høyre.verdi.first.type, høyre.verdi.second.innvilgelsesårsak)
-                        )
+                        venstre + Pair(høyre.first.type, høyre.second.innvilgelsesårsak)
                     }
-                })
+                }
             }
             .filter { it.verdi.any { it.first == Vilkårtype.BISTANDSVILKÅRET } }
             .mapValue { prioriterVilkår(it) }
