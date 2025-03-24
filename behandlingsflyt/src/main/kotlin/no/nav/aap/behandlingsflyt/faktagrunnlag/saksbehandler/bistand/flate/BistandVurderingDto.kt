@@ -13,6 +13,7 @@ data class BistandVurderingDto(
     val skalVurdereAapIOvergangTilArbeid: Boolean?,
     val vurderingenGjelderFra: LocalDate?,
 
+    val vurdertDato: LocalDate?,
     val vurdertAv: String,
 ) {
     companion object {

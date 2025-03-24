@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.Bist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 
 class BistandVurdering(
     val begrunnelse: String,
@@ -27,6 +28,7 @@ class BistandVurdering(
         skalVurdereAapIOvergangTilUføre = skalVurdereAapIOvergangTilUføre,
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
         vurdertAv = vurdertAv,
+        vurdertDato = opprettet?.atZone(ZoneId.of("Europe/Oslo"))?.toLocalDate(),
     )
 
     fun erBehovForBistand(): Boolean {
