@@ -14,7 +14,7 @@ class VirkningstidspunktUtleder(
     private val tilkjentYtelseRepository: TilkjentYtelseRepository
 ) {
 
-    fun utledVirkningsTidspunkt(behandlingId: BehandlingId): LocalDate {
+    fun utledVirkningsTidspunkt(behandlingId: BehandlingId): LocalDate? {
         val tilkjentTidslinje = tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)!!
             .map { Segment(it.periode, it.tilkjent) }
             .let(::Tidslinje)
@@ -36,13 +36,20 @@ class VirkningstidspunktUtleder(
 
         require(kombinertTidslinje.isNotEmpty())
 
-        return kombinertTidslinje.filter {
+        val filtrertKombinertTidslinje = kombinertTidslinje.filter {
             it.verdi.let { (samordningsprosent, tilkjentytelse, underveisperiode) ->
                 if (underveisperiode?.utfall != Utfall.OPPFYLT) return@filter false
 
                 tilkjentytelse != null && tilkjentytelse.redusertDagsats().verdi.toDouble() > 0 && (samordningsprosent?.prosentverdi()
                     ?: 0) < 100
             }
-        }.minDato()
+        }
+
+        return if (filtrertKombinertTidslinje.isEmpty()) {
+           null
+        } else {
+            filtrertKombinertTidslinje.minDato()
+        }
+
     }
 }

@@ -19,7 +19,7 @@ class VedtakRepositoryImpl(private val connection: DBConnection) : VedtakReposit
     override fun lagre(
         behandlingId: BehandlingId,
         vedtakstidspunkt: LocalDateTime,
-        virkningstidspunkt: LocalDate,
+        virkningstidspunkt: LocalDate?,
     ) {
         connection.execute(
             """
@@ -43,7 +43,7 @@ class VedtakRepositoryImpl(private val connection: DBConnection) : VedtakReposit
                 Vedtak(
                     behandlingId = BehandlingId(it.getLong("behandling_id")),
                     vedtakstidspunkt = it.getLocalDateTime("vedtakstidspunkt"),
-                    virkningstidspunkt = it.getLocalDate("virkningstidspunkt")
+                    virkningstidspunkt = it.getLocalDateOrNull("virkningstidspunkt")
                 )
             }
         }

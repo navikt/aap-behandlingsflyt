@@ -22,7 +22,6 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
 
 class IverksettVedtakSteg private constructor(
     private val behandlingRepository: BehandlingRepository,
@@ -42,8 +41,7 @@ class IverksettVedtakSteg private constructor(
                 .find { it.steg() == StegType.FATTE_VEDTAK && it.status() == StegStatus.AVSLUTTER }
                 ?.tidspunkt() ?: error("Forventet å finne et avsluttet fatte vedtak steg")
 
-  //      val virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId)
-        val virkningstidspunkt = LocalDate.now()
+        val virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId)
         vedtakService.lagreVedtak(kontekst.behandlingId, vedtakstidspunkt, virkningstidspunkt)
 
         val tilkjentYtelseDto = utbetalingService.lagTilkjentYtelseForUtbetaling(kontekst.sakId, kontekst.behandlingId)

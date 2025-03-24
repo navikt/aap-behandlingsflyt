@@ -11,7 +11,7 @@ class VedtakService(
     private val vedtakRepository: VedtakRepository,
     private val behandlingRepository: BehandlingRepository,
 ) {
-    fun lagreVedtak(behandlingId: BehandlingId, vedtakstidspunkt: LocalDateTime, virkningstidspunkt: LocalDate) {
+    fun lagreVedtak(behandlingId: BehandlingId, vedtakstidspunkt: LocalDateTime, virkningstidspunkt: LocalDate?) {
         vedtakRepository.lagre(behandlingId, vedtakstidspunkt, virkningstidspunkt)
     }
 
