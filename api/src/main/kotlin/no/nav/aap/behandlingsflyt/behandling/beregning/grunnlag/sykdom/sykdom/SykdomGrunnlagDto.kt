@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.Innhe
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingDto
 
 data class SykdomGrunnlagDto(
-    val readOnly: Boolean,
+    val harTilgangTilÅSaksbehandle: Boolean,
     val skalVurdereYrkesskade: Boolean,
     val opplysninger: InnhentetSykdomsOpplysninger,
 
