@@ -5,11 +5,14 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -49,14 +52,22 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource) {
                     val gjeldendeSykdomsvurderinger =
                         sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger ?: emptyList()
 
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                        req.referanse,
+                        Definisjon.AVKLAR_BISTANDSBEHOV.kode.toString(),
+                        token()
+                    )
+
+
                     BistandGrunnlagDto(
+                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         BistandVurderingDto.fraBistandVurdering(vurdering),
                         vedtatteBistandsvurderinger.map { it.toDto() },
                         historiskeVurderinger.map { it.toDto() },
                         gjeldendeSykdomsvurderinger.map{it.toDto()}
                     )
                 }
-                
+
                 respond(respons)
             }
         }
