@@ -4,10 +4,13 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -26,9 +29,22 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(dataSource: DataSource) {
                     val lovvalgMedlemskapRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
 
-                    val gjeldendeManuellVurdering = lovvalgMedlemskapRepository.hentHvisEksisterer(behandling.id)?.manuellVurdering
-                    val historiskeManuelleVurderinger = lovvalgMedlemskapRepository.hentHistoriskeVurderinger(behandling.sakId)
-                    LovvalgMedlemskapGrunnlagDto(gjeldendeManuellVurdering, historiskeManuelleVurderinger)
+                    val gjeldendeManuellVurdering =
+                        lovvalgMedlemskapRepository.hentHvisEksisterer(behandling.id)?.manuellVurdering
+                    val historiskeManuelleVurderinger =
+                        lovvalgMedlemskapRepository.hentHistoriskeVurderinger(behandling.sakId)
+
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                        req.referanse,
+                        Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP.kode.toString(),
+                        token()
+                    )
+
+                    LovvalgMedlemskapGrunnlagDto(
+                        harTilgangTilÅSaksbehandle,
+                        gjeldendeManuellVurdering,
+                        historiskeManuelleVurderinger
+                    )
                 }
                 respond(grunnlag)
             }
