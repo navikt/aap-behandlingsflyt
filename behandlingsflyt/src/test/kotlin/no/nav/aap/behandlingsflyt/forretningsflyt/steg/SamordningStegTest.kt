@@ -3,6 +3,9 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
@@ -14,19 +17,23 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
@@ -35,7 +42,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
-import java.util.*
 import java.util.stream.Stream
 
 class SamordningStegTest {
@@ -299,6 +305,7 @@ class SamordningStegTest {
             ),
             samordningRepository = InMemorySamordningRepository,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
         )
 
         InMemorySamordningVurderingRepository.lagreVurderinger(
@@ -354,6 +361,7 @@ class SamordningStegTest {
             ),
             samordningRepository = InMemorySamordningRepository,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
         )
 
         lagreYtelseGrunnlag(behandlingId, ytelse, periode)
@@ -383,22 +391,44 @@ class SamordningStegTest {
     }
 
     // TODO: trekk disse ut i felles hjelpemetoder i testene
-    private fun opprettBehandling(sak: Sak, typeBehandling: TypeBehandling) =
-        InMemoryBehandlingRepository.opprettBehandling(
-            sak.id,
-            årsaker = listOf(),
-            typeBehandling = typeBehandling,
-            forrigeBehandlingId = null,
-        )
+//    private fun opprettBehandling(sak: Sak, typeBehandling: TypeBehandling) =
+//        InMemoryBehandlingRepository.opprettBehandling(
+//            sak.id,
+//            årsaker = listOf(),
+//            typeBehandling = typeBehandling,
+//            forrigeBehandlingId = null,
+//        )
 
-    private fun nySak() = InMemorySakRepository.finnEllerOpprett(
-        person = Person(
-            id = 0,
-            identifikator = UUID.randomUUID(),
-            identer = listOf(Ident("0".repeat(11)))
-        ),
-        periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
-    )
+//    private fun nySak() = InMemorySakRepository.finnEllerOpprett(
+//        person = Person(
+//            id = 0,
+//            identifikator = UUID.randomUUID(),
+//            identer = listOf(Ident("0".repeat(11)))
+//        ),
+//        periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+//    )
+
+    private fun nySak(): Sak {
+        return PersonOgSakService(
+            FakePdlGateway,
+            InMemoryPersonRepository,
+            InMemorySakRepository,
+        ).finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+    }
+
+    private fun opprettBehandling(sak: Sak, typeBehandling: TypeBehandling): Behandling {
+        return SakOgBehandlingService(
+            object: GrunnlagKopierer {
+                override fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
+                }
+            },
+            InMemorySakRepository,
+            InMemoryBehandlingRepository,
+        ).finnEllerOpprettBehandling(
+            sak.saksnummer,
+            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
+        ).behandling
+    }
 
     companion object {
         @JvmStatic

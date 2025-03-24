@@ -16,7 +16,9 @@ class RettTilRegel : UnderveisRegel {
         input: UnderveisInput,
         resultat: Tidslinje<Vurdering>
     ): Tidslinje<Vurdering> {
-        val relevanteVilkår = input.vilkårsresultat.alle().filter { it.type.obligatorisk }
+        val relevanteVilkår = input.vilkårsresultat.alle().filter {
+            it.type.obligatorisk || it.type == Vilkårtype.SAMORDNING
+        }
         require(relevanteVilkår.any { it.type == Vilkårtype.ALDERSVILKÅRET })
         require(relevanteVilkår.any { it.type == Vilkårtype.BISTANDSVILKÅRET })
         require(relevanteVilkår.any { it.type == Vilkårtype.MEDLEMSKAP })
