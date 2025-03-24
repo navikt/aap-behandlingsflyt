@@ -53,7 +53,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource) {
                     val vedtatteSykdomsvurderingerIder = vedtatteSykdomsvurderinger.map { it.id }
                     val sykdomsvurderinger = nåTilstand.filterNot { it.id in vedtatteSykdomsvurderingerIder }
 
-                    val readOnly = TilgangGatewayImpl.sjekkTilgang(
+                    val harTilgang = TilgangGatewayImpl.sjekkTilgang(
                         behandling.referanse.referanse,
                         Definisjon.AVKLAR_SYKDOM.kode.toString(),
                         token()
@@ -79,7 +79,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource) {
                         gjeldendeVedtatteSykdomsvurderinger = vedtatteSykdomsvurderinger
                             .sortedBy { it.vurderingenGjelderFra ?: LocalDate.MIN }
                             .map { it.toDto() },
-                        readOnly = readOnly
+                        readOnly = !harTilgang
                     )
                 }
 
