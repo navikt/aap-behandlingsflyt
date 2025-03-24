@@ -14,11 +14,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.InstitusjonsoppholdDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.SoningsGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.Soningsforhold
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -129,8 +132,15 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
                             )
                         }
 
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                        req.referanse,
+                        Definisjon.AVKLAR_HELSEINSTITUSJON.kode.toString(),
+                        token()
+                    )
+
 
                     HelseinstitusjonGrunnlag(
+                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         opphold = oppholdInfo.segmenter().map { InstitusjonsoppholdDto.institusjonToDto(it) },
                         vurderinger = manglendePerioder
                     )
