@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.Innhe
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
 
 data class YrkesskadeVurderingGrunnlagDto(
+    val harTilgangTilÅSaksbehandle: Boolean,
     val opplysninger: InnhentetSykdomsOpplysninger,
     val yrkesskadeVurdering: YrkesskadevurderingDto?
 )

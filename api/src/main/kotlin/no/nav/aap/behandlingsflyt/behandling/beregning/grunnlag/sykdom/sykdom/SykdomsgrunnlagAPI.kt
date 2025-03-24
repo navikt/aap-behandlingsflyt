@@ -109,7 +109,15 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource) {
                     val innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader.orEmpty()
                         .map { yrkesskade -> RegistrertYrkesskade(yrkesskade, "Yrkesskaderegisteret") }
 
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                        req.referanse,
+                        Definisjon.AVKLAR_YRKESSKADE.kode.toString(),
+                        token()
+                    )
+
+
                     YrkesskadeVurderingGrunnlagDto(
+                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         opplysninger = InnhentetSykdomsOpplysninger(
                             oppgittYrkesskadeISøknad = false,
                             innhentedeYrkesskader = innhentedeYrkesskader,
