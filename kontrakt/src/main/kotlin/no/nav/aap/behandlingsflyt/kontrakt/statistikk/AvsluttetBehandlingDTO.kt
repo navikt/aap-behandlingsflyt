@@ -60,7 +60,8 @@ public enum class Vilkårtype {
     MEDLEMSKAP,
     LOVVALG,
     GRUNNLAGET,
-    SYKEPENGEERSTATNING
+    SYKEPENGEERSTATNING,
+    SAMORDNING,
 }
 
 public data class VilkårsPeriodeDTO(
