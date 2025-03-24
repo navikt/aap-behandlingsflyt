@@ -14,7 +14,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = REFUSJON_KRAV)
 class RefusjonkravLøsning(
-    @JsonProperty("refusjonkravVurderinger", required = true) val refusjonkravVurdering: RefusjonkravVurdering,
+    @JsonProperty("refusjonkravVurdering", required = true) val refusjonkravVurdering: RefusjonkravVurdering,
     @JsonProperty(
         "behovstype",
         required = true,
