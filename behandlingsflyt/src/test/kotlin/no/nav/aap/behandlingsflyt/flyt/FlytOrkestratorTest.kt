@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedta
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FritakMeldepliktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SamordningVentPaVirkningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
@@ -58,6 +59,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
@@ -339,6 +341,18 @@ class FlytOrkestratorTest {
         util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
 
+        løsAvklaringsBehov(
+            behandling,
+            RefusjonkravLøsning(
+                RefusjonkravVurdering(
+                    harKrav = true,
+                    fom = LocalDate.now(),
+                    tom = null
+                )
+            )
+        )
+
+        behandling = hentBehandling(sak.id)
         behandling = løsAvklaringsBehov(
             behandling, AvklarBistandsbehovLøsning(
                 bistandsVurdering = BistandVurderingLøsningDto(
@@ -464,6 +478,18 @@ class FlytOrkestratorTest {
         behandling = hentBehandling(sak.id)
 
         løsSykdom(behandling)
+        behandling = hentBehandling(sak.id)
+
+        løsAvklaringsBehov(
+            behandling,
+            RefusjonkravLøsning(
+                RefusjonkravVurdering(
+                    harKrav = true,
+                    fom = LocalDate.now(),
+                    tom = null
+                )
+            )
+        )
         behandling = hentBehandling(sak.id)
 
         løsAvklaringsBehov(
@@ -663,8 +689,20 @@ class FlytOrkestratorTest {
                 )
             ),
         )
-        behandling = hentBehandling(sak.id)
 
+        behandling = hentBehandling(sak.id)
+        løsAvklaringsBehov(
+            behandling,
+            RefusjonkravLøsning(
+                RefusjonkravVurdering(
+                    harKrav = true,
+                    fom = LocalDate.now(),
+                    tom = null
+                )
+            )
+        )
+
+        behandling = hentBehandling(sak.id)
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
 
         assertThat(alleAvklaringsbehov).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV) }
@@ -712,6 +750,16 @@ class FlytOrkestratorTest {
         løsSykdom(behandling)
 
         behandling = hentBehandling(sak.id)
+        løsAvklaringsBehov(
+            behandling,
+            RefusjonkravLøsning(
+                RefusjonkravVurdering(
+                    harKrav = true,
+                    fom = LocalDate.now(),
+                    tom = null
+                )
+            )
+        )
 
         behandling = løsAvklaringsBehov(
             behandling,
@@ -919,6 +967,19 @@ class FlytOrkestratorTest {
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
         løsSykdom(behandling)
+
+        behandling = hentBehandling(sak.id)
+        løsAvklaringsBehov(
+            behandling,
+            RefusjonkravLøsning(
+                RefusjonkravVurdering(
+                    harKrav = true,
+                    fom = LocalDate.now(),
+                    tom = null
+                )
+            )
+        )
+
         behandling = hentBehandling(sak.id)
 
         behandling = løsAvklaringsBehov(
@@ -1129,8 +1190,20 @@ class FlytOrkestratorTest {
                 )
             )
         )
-        behandling = hentBehandling(sak.id)
 
+        behandling = hentBehandling(sak.id)
+        løsAvklaringsBehov(
+            behandling,
+            RefusjonkravLøsning(
+                RefusjonkravVurdering(
+                    harKrav = true,
+                    fom = LocalDate.now(),
+                    tom = null
+                )
+            )
+        )
+
+        behandling = hentBehandling(sak.id)
         løsAvklaringsBehov(
             behandling,
             AvklarBistandsbehovLøsning(
@@ -2567,6 +2640,18 @@ class FlytOrkestratorTest {
 
         var behandling = behandling
         løsSykdom(behandling)
+
+        behandling = hentBehandling(sak.id)
+        løsAvklaringsBehov(
+            behandling,
+            RefusjonkravLøsning(
+                RefusjonkravVurdering(
+                    harKrav = true,
+                    fom = LocalDate.now(),
+                    tom = null
+                )
+            )
+        )
 
         behandling = hentBehandling(sak.id)
 

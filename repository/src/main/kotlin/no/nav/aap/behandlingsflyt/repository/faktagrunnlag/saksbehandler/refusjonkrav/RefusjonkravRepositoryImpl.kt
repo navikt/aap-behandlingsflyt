@@ -85,7 +85,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
 
     private fun lagreVurdering(vurdering: RefusjonkravVurdering): Long {
         val query = """
-            INSERT INTO REFUSJONKRAV_VURDERING (HAR_KRAV, PERIODE) VALUES (?, ?::daterange)
+            INSERT INTO REFUSJONKRAV_VURDERING (HAR_KRAV, FOM, TOM) VALUES (?, ?, ?)
         """.trimIndent()
 
         return connection.executeReturnKey(query) {
