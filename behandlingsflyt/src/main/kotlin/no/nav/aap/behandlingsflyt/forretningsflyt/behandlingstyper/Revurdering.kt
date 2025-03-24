@@ -92,16 +92,16 @@ object Revurdering : BehandlingType {
                 )
             )
             .medSteg(
-                steg = RefusjonkravSteg, årsakRelevanteForSteg = listOf(
-                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING
-                )
-            )
-            .medSteg(
                 steg = VurderBistandsbehovSteg, årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
                     ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING
+                )
+            )
+            .medSteg(
+                steg = RefusjonkravSteg, årsakRelevanteForSteg = listOf(
+                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
+                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING
                 )
             )
             .medSteg(steg = KvalitetssikringsSteg)

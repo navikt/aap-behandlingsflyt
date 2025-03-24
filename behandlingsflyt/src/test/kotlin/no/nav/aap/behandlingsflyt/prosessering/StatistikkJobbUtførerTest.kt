@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
@@ -355,6 +355,7 @@ class StatistikkJobbUtførerTest {
                         bruddAktivitetspliktId = null,
                         avslagsårsak = null,
                         institusjonsoppholdReduksjon = Prosent.`0_PROSENT`,
+                        meldepliktStatus = MeldepliktStatus.MELDT_SEG,
                     )
                 ),
                 input = object : Faktagrunnlag {}

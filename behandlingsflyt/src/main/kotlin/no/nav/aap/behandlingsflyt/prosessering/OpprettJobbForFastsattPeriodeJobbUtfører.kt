@@ -1,0 +1,52 @@
+package no.nav.aap.behandlingsflyt.prosessering
+
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.Jobb
+import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.motor.cron.CronExpression
+
+class OpprettJobbForFastsattPeriodeJobbUtfører(
+    private val flytJobbRepository: FlytJobbRepository,
+    private val sakRepository: SakRepository,
+) : JobbUtfører {
+
+    override fun utfør(input: JobbInput) {
+        /* TODO: optimaliser */
+        for (sak in sakRepository.finnAlle()) {
+            flytJobbRepository.leggTil(JobbInput(OpprettBehandlingFastsattPeriodePassertJobbUtfører).forSak(sak.id.toLong()))
+        }
+    }
+
+
+    companion object : Jobb {
+        override fun konstruer(connection: DBConnection): JobbUtfører {
+            return OpprettJobbForFastsattPeriodeJobbUtfører(
+                FlytJobbRepository(connection),
+                RepositoryProvider(connection).provide(),
+            )
+        }
+
+        override fun type(): String {
+            return "batch.OpprettJobbForFastsattPeriode"
+        }
+
+        override fun navn(): String {
+            return "Start jobb for å sjekke behov for revurdering pga manglende meldekort"
+        }
+
+        override fun beskrivelse(): String {
+            return """
+                Start jobb for å sjekke om fastsatt dager er passert.
+                """.trimIndent()
+        }
+
+        override fun cron(): CronExpression {
+            return CronExpression.createWithoutSeconds("10 * * * *")
+        }
+    }
+}

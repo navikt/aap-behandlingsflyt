@@ -23,7 +23,9 @@ enum class ÅrsakTilBehandling {
     INSTITUSJONSOPPHOLD,        // Institusjonsopphold
     SAMORDNING_OG_AVREGNING,    // Samordning og avregning
     REFUSJONSKRAV,              // Refusjonskrav
-    UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT; // Utenlandsopphold før søknadstidspunkt
+    UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT, // Utenlandsopphold før søknadstidspunkt
+    FASTSATT_PERIODE_PASSERT,
+    ;
 
     companion object {
         /**

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
@@ -163,6 +164,7 @@ class Effektuer11_7RepositoryImplTest {
         trekk = Dagsatser(0),
         brukerAvKvoter = setOf(),
         bruddAktivitetspliktId = null,
-        institusjonsoppholdReduksjon = Prosent.`0_PROSENT`
+        institusjonsoppholdReduksjon = Prosent.`0_PROSENT`,
+        meldepliktStatus = MeldepliktStatus.MELDT_SEG,
     )
 }

@@ -135,6 +135,7 @@ class StatistikkJobbUtfører(
                     ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING
                     ÅrsakTilBehandling.REFUSJONSKRAV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REFUSJONSKRAV
                     ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT
+                    ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.MELDEKORT /* TODO: mer spesifikk? er pga fravær av meldekort */
                 }
             }.distinct()
         )

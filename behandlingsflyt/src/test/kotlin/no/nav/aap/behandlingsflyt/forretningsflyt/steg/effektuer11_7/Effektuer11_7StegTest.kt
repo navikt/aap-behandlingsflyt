@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -299,7 +300,8 @@ class Effektuer11_7StegTest {
         trekk = Dagsatser(0),
         brukerAvKvoter = setOf(),
         bruddAktivitetspliktId = null,
-        institusjonsoppholdReduksjon = Prosent.`0_PROSENT`
+        institusjonsoppholdReduksjon = Prosent.`0_PROSENT`,
+        meldepliktStatus = MeldepliktStatus.MELDT_SEG,
     )
 
     private fun kontekst(

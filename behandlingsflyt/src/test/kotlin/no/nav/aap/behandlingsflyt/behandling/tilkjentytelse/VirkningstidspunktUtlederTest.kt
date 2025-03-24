@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
@@ -136,6 +137,7 @@ private fun Underveisperiode.Companion.oppfylt(periode: Periode): Underveisperio
         ),
         trekk = Dagsatser(0),
         brukerAvKvoter = setOf(),
-        bruddAktivitetspliktId = null
+        bruddAktivitetspliktId = null,
+        meldepliktStatus = MeldepliktStatus.MELDT_SEG,
     )
 }

@@ -40,11 +40,11 @@ class RefusjonkravSteg private constructor(
 
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
-                //refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId) ?: return FantAvklaringsbehov(Definisjon.REFUSJON_KRAV)
+                refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId) ?: return FantAvklaringsbehov(Definisjon.REFUSJON_KRAV)
             }
 
             VurderingType.REVURDERING -> {
-                //refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId) ?: return FantAvklaringsbehov(Definisjon.REFUSJON_KRAV)
+                refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId) ?: return FantAvklaringsbehov(Definisjon.REFUSJON_KRAV)
             }
 
             VurderingType.FORLENGELSE -> {

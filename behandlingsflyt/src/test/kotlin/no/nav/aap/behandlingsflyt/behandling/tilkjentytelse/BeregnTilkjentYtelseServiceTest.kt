@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag
@@ -748,7 +749,8 @@ class BeregnTilkjentYtelseServiceTest {
                     trekk = Dagsatser(0),
                     brukerAvKvoter = setOf(Kvote.ORDINÆR),
                     bruddAktivitetspliktId = BruddAktivitetspliktId(1),
-                    institusjonsoppholdReduksjon = institusjonsOppholdReduksjon
+                    institusjonsoppholdReduksjon = institusjonsOppholdReduksjon,
+                    meldepliktStatus = MeldepliktStatus.MELDT_SEG,
                 )
             )
         )

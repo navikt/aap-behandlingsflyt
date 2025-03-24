@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
@@ -25,6 +26,7 @@ data class Underveisperiode(
     val trekk: Dagsatser,
     val brukerAvKvoter: Set<Kvote>,
     val bruddAktivitetspliktId: BruddAktivitetspliktId?,
+    val meldepliktStatus: MeldepliktStatus?,
     val id: UnderveisperiodeId? = null,
 ) : Comparable<Underveisperiode> {
     init {
