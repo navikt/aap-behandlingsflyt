@@ -7,6 +7,7 @@ data class SamordningAndreStatligeYtelserGrunnlag(
 )
 data class SamordningAndreStatligeYtelserVurdering(
     val begrunnelse: String,
+    val vurdertAv: String,
     val vurderingPerioder: List<SamordningAndreStatligeYtelserVurderingPeriode>,
 )
 
