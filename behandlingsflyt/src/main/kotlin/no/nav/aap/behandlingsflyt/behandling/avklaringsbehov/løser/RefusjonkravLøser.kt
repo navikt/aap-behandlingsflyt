@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -14,9 +15,9 @@ class RefusjonkravLøser(val connection: DBConnection) : AvklaringsbehovsLøser<
     private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: RefusjonkravLøsning): LøsningsResultat {
-        validerRefusjonDato(kontekst, løsning)
+        val vurdering = validerRefusjonDato(kontekst, løsning)
 
-        refusjonkravRepository.lagre(kontekst.kontekst.sakId, kontekst.behandlingId(), løsning.refusjonkravVurdering)
+        refusjonkravRepository.lagre(kontekst.kontekst.sakId, kontekst.behandlingId(), vurdering)
         return LøsningsResultat("Vurdert refusjonskrav")
     }
 
@@ -24,7 +25,7 @@ class RefusjonkravLøser(val connection: DBConnection) : AvklaringsbehovsLøser<
         return Definisjon.REFUSJON_KRAV
     }
 
-    private fun validerRefusjonDato (kontekst: AvklaringsbehovKontekst, løsning: RefusjonkravLøsning) {
+    private fun validerRefusjonDato (kontekst: AvklaringsbehovKontekst, løsning: RefusjonkravLøsning): RefusjonkravVurdering {
         if (løsning.refusjonkravVurdering.harKrav) {
             val behandling = behandlingRepository.hent(kontekst.behandlingId())
             val kravDato = behandling.opprettetTidspunkt.toLocalDate()
@@ -39,6 +40,8 @@ class RefusjonkravLøser(val connection: DBConnection) : AvklaringsbehovsLøser<
             if (refusjonTomDato != null && refusjonFomDato.isAfter(refusjonTomDato)) {
                 throw IllegalArgumentException("Tom (${refusjonTomDato}) er før fom(${refusjonFomDato})")
             }
+            return RefusjonkravVurdering(løsning.refusjonkravVurdering.harKrav, refusjonFomDato, refusjonTomDato)
         }
+        return løsning.refusjonkravVurdering
     }
 }
