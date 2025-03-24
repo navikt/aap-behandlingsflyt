@@ -160,7 +160,8 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5012`,
         type = BehovType.MANUELT_FRIVILLIG,
         løsesISteg = StegType.SAMORDNING_GRADERING,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = true,
     ),
     AVKLAR_SAMORDNING_UFØRE(
         kode = AvklaringsbehovKode.`5024`,
