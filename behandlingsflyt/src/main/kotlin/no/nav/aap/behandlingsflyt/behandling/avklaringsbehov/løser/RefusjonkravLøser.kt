@@ -26,12 +26,11 @@ class RefusjonkravLøser(val connection: DBConnection) : AvklaringsbehovsLøser<
 
     private fun validerRefusjonDato (kontekst: AvklaringsbehovKontekst, løsning: RefusjonkravLøsning) {
         if (løsning.refusjonkravVurdering.harKrav) {
-            val refusjonFomDato = løsning.refusjonkravVurdering.fom
-            val refusjonTomDato = løsning.refusjonkravVurdering.tom
-            requireNotNull(refusjonFomDato) {"Krever fra-dato når refusjonskrav er satt"}
-
             val behandling = behandlingRepository.hent(kontekst.behandlingId())
             val kravDato = behandling.opprettetTidspunkt.toLocalDate()
+
+            val refusjonFomDato = løsning.refusjonkravVurdering.fom ?: kravDato
+            val refusjonTomDato = løsning.refusjonkravVurdering.tom
 
             if (refusjonFomDato.isBefore(kravDato)) {
                 throw IllegalArgumentException("Refusjonsdato kan ikke være før kravdato")
