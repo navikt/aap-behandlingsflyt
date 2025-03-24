@@ -37,7 +37,7 @@ jobs:
                   echo '$randomDelimiter' >> $GITHUB_OUTPUT
 
             - run: |
-                  ./gradlew -Pversion=${{ input.tag }} publish
+                  ./gradlew -Pversion=${{ inputs.tag }} publish
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -61,7 +61,7 @@ jobs:
                           owner: context.repo.owner,
                           repo: context.repo.repo,
                           tag_name: '${{ inputs.tag }}',
-                          name: '${{ input.tag }}',
+                          name: '${{ inputs.tag }}',
                           body: '${{ steps.notes.outputs.CHANGELOG }}',
                       })
                   github-token: ${{ secrets.GITHUB_TOKEN }}
