@@ -11,8 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitet
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.VILKÅR_FOR_REDUKSJON_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRegistrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd
@@ -52,7 +51,7 @@ class VurderingTest {
     @Test
     fun `Paragraf 11-7 har høyere prioritet enn 11-8 og 11-9`() {
         val vurdering = Vurdering(
-            vurderinger = listOf(VilkårVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT, null)),
+            fårAapEtter = RettighetsType.BISTANDSBEHOV,
             aktivitetspliktVurdering = AktivitetspliktVurdering(
                 dokument = dokument,
                 vilkårsvurdering = AKTIVT_BIDRAG_IKKE_OPPFYLT
@@ -76,7 +75,7 @@ class VurderingTest {
     fun `Paragraf 11-8 har høyere prioritet enn 11-9`() {
         for (vilkårsvurdering in listOf(STANS_ANDRE_DAG, STANS_TI_DAGER_BRUKT_OPP)) {
             val vurdering = Vurdering(
-                vurderinger = listOf(VilkårVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT, null)),
+                fårAapEtter = RettighetsType.BISTANDSBEHOV,
                 fraværFastsattAktivitetVurdering = FraværFastsattAktivitetVurdering(
                     dokument = dokument,
                     vilkårsvurdering = STANS_ANDRE_DAG,
@@ -101,7 +100,7 @@ class VurderingTest {
             UNNTAK_SYKDOM_ELLER_SKADE
         )) {
             val vurdering = Vurdering(
-                vurderinger = listOf(VilkårVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT, null)),
+                fårAapEtter = RettighetsType.BISTANDSBEHOV,
                 fraværFastsattAktivitetVurdering = FraværFastsattAktivitetVurdering(
                     dokument = dokument,
                     vilkårsvurdering = vilkårsvurdering,
@@ -121,7 +120,7 @@ class VurderingTest {
     @Test
     fun `Paragraf 11-9 kan slå til`() {
         val vurdering = Vurdering(
-            vurderinger = listOf(VilkårVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT, null)),
+            fårAapEtter = RettighetsType.BISTANDSBEHOV,
             reduksjonAktivitetspliktVurdering = ReduksjonAktivitetspliktVurdering(
                 dokument = dokument,
                 vilkårsvurdering = VILKÅR_FOR_REDUKSJON_OPPFYLT,
@@ -137,7 +136,7 @@ class VurderingTest {
     fun `Paragraf 11-9 gir ikke reduksjon hvis vilkår ikke er oppfylt `() {
         for (vilkårsvurdering in listOf(FORELDET, UNNTAK_RIMELIG_GRUNN)) {
             val vurdering = Vurdering(
-                vurderinger = listOf(VilkårVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT, null)),
+                fårAapEtter = RettighetsType.BISTANDSBEHOV,
                 reduksjonAktivitetspliktVurdering = ReduksjonAktivitetspliktVurdering(
                     dokument = dokument,
                     vilkårsvurdering = vilkårsvurdering,

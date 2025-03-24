@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 
 class Vilkårsresultat(
@@ -37,23 +35,28 @@ class Vilkårsresultat(
      * @return En tidslinje med [RettighetsType].
      */
     fun rettighetstypeTidslinje(): Tidslinje<RettighetsType> {
+        require(vilkår.any { it.type == Vilkårtype.ALDERSVILKÅRET })
+        require(vilkår.any { it.type == Vilkårtype.BISTANDSVILKÅRET })
+        require(vilkår.any { it.type == Vilkårtype.MEDLEMSKAP })
+        require(vilkår.any { it.type == Vilkårtype.LOVVALG })
+        require(vilkår.any { it.type == Vilkårtype.SYKDOMSVILKÅRET })
+        require(vilkår.distinctBy { it.type }.size == vilkår.size)
+
         return vilkår
-            .asSequence()
-            .map { vilkår ->
-                Tidslinje(
-                    vilkår.vilkårsperioder()
-                    .filter { it.utfall == Utfall.OPPFYLT }
-                    .map { Segment(it.periode, Pair(vilkår, it)) }
+            .map { vilkår -> vilkår.tidslinje().mapValue { vurdering -> vilkår to vurdering } }
+            .outerJoin()
+            .filter { vilkåreneSegment ->
+                val vurderinger = vilkåreneSegment.verdi
+                vurderinger.isNotEmpty() && vurderinger.none { (vilkår, vurdering) -> vilkår.type.obligatorisk && vurdering.utfall == Utfall.IKKE_OPPFYLT }
+            }
+            .mapValue { vilkårene ->
+                prioriterVilkår(
+                    vilkårene
+                        .filter { (_, vurdering) -> vurdering.erOppfylt() }
+                        .map { (vilkår, vurdering) -> Pair(vilkår.type, vurdering.innvilgelsesårsak) }
+                        .toSet()
                 )
             }
-            .fold(Tidslinje.empty<List<Pair<Vilkår, Vilkårsperiode>>>()) { acc, curr ->
-                acc.kombiner(curr, StandardSammenslåere.slåSammenTilListe())
-            }
-            // Kun ta med perioder hvor alle vilkår er oppfylt
-            .filter { it.verdi.all { it.second.erOppfylt() } }
-            .mapValue { it.map { Pair(it.first.type, it.second.innvilgelsesårsak) }.toSet() }
-            .filter { it.verdi.any { it.first == Vilkårtype.BISTANDSVILKÅRET } }
-            .mapValue { prioriterVilkår(it) }
             .komprimer()
     }
 
@@ -67,18 +70,16 @@ class Vilkårsresultat(
      * Default-verdien er [RettighetsType.BISTANDSBEHOV] (normal § 11-6).
      */
     private fun prioriterVilkår(vilkårPar: Set<Pair<Vilkårtype, Innvilgelsesårsak?>>): RettighetsType {
-        val bistandVilkåret =
+        val (_, bistandsvurderingen) =
             requireNotNull(vilkårPar.firstOrNull { it.first == Vilkårtype.BISTANDSVILKÅRET })
             { "Bistandsvilkåret må være oppfylt for å regne ut rettighetstype." }
 
-        if (bistandVilkåret.second != null) {
-            val innvilgelsesårsak = requireNotNull(bistandVilkåret.second)
-            when (innvilgelsesårsak) {
-                Innvilgelsesårsak.STUDENT -> return RettighetsType.STUDENT
-                Innvilgelsesårsak.ARBEIDSSØKER -> return RettighetsType.ARBEIDSSØKER
-                Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD -> return RettighetsType.VURDERES_FOR_UFØRETRYGD
-                Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG -> {}
-            }
+        when (bistandsvurderingen) {
+            Innvilgelsesårsak.STUDENT -> return RettighetsType.STUDENT
+            Innvilgelsesårsak.ARBEIDSSØKER -> return RettighetsType.ARBEIDSSØKER
+            Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD -> return RettighetsType.VURDERES_FOR_UFØRETRYGD
+            Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG -> {}
+            null -> {}
         }
 
         val sykepengervilkåret = vilkårPar.find { it.first == Vilkårtype.SYKEPENGEERSTATNING }
@@ -105,6 +106,14 @@ class Vilkårsresultat(
 
     override fun toString(): String {
         return "Vilkårsresultat(id=$id, vilkår=$vilkår)"
+    }
+}
+
+private fun <T : Any> List<Tidslinje<T>>.outerJoin(): Tidslinje<List<T>> {
+    return this.fold(Tidslinje()) { listeTidslinje, elementTidslinje ->
+        listeTidslinje.outerJoin(elementTidslinje) { liste, element ->
+            liste.orEmpty() + listOfNotNull(element)
+        }
     }
 }
 

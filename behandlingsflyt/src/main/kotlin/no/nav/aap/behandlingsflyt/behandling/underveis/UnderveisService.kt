@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidReg
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonoppholdTilRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.RettTilRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SammenstiltAktivitetspliktRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SoningRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
@@ -50,14 +49,13 @@ class UnderveisService(
 
     companion object {
         private val regelset = listOf(
-            RettTilRegel(),
+            AapEtterRegel(),
             UtledMeldeperiodeRegel(),
             InstitusjonRegel(),
             SoningRegel(),
             MeldepliktRegel(),
             SammenstiltAktivitetspliktRegel(),
             GraderingArbeidRegel(),
-            AapEtterRegel(),
             VarighetRegel(),
         )
 
@@ -72,7 +70,6 @@ class UnderveisService(
                 }
             }
 
-            checkAvhengighet(forventetFør = RettTilRegel::class, forventetEtter = AapEtterRegel::class)
             checkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = MeldepliktRegel::class)
             checkAvhengighet(
                 forventetFør = UtledMeldeperiodeRegel::class,

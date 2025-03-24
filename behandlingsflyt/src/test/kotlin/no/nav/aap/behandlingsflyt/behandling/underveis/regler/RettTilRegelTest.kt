@@ -1,22 +1,19 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.tomKvoter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class RettTilRegelTest {
-
-    private val regel = RettTilRegel()
-    private val kvoter = tomKvoter
 
     @Test
     fun `skal lage tidslinje med alle relevante vilkår`() {
@@ -83,40 +80,36 @@ class RettTilRegelTest {
                 )
             )
 
-        val input = tomUnderveisInput.copy(
-            rettighetsperiode = periode,
-            vilkårsresultat = Vilkårsresultat(
-                null,
-                listOf(aldersVilkåret, lovvalgsVilkåret, sykdomsVilkåret, medlemskapVilkåret, bistandVilkåret)
-            ),
-            kvoter = kvoter,
-        )
-        val grunnleggendeRettTidslinje = regel.vurder(input = input, Tidslinje())
+        val vilkårsresultat = Vilkårsresultat(
+            vilkår = listOf(aldersVilkåret, lovvalgsVilkåret, sykdomsVilkåret, medlemskapVilkåret, bistandVilkåret)
+        ).rettighetstypeTidslinje()
 
-        val segmenter = grunnleggendeRettTidslinje.segmenter()
-        assertThat(segmenter).hasSize(1)
-        assertThat(segmenter.first().verdi.ingenVilkårErAvslått()).isTrue()
+        assertTidslinje(
+            vilkårsresultat,
+            periode to {
+                assertThat(it).isEqualTo(RettighetsType.BISTANDSBEHOV)
+            }
+        )
     }
 
     @Test
     fun `skal lage tidslinje med alle relevante vilkår, men knekke ved avslag`() {
         val søknadsdato = LocalDate.now().minusDays(29)
-        val periode = Periode(søknadsdato, søknadsdato.plusYears(3))
+        val periode1 = Periode(søknadsdato, søknadsdato.plusYears(3).minusMonths(4))
+        val periode2 = Periode(periode1.tom.plusDays(1), søknadsdato.plusYears(3))
+        val periode = Periode(periode1.fom, periode2.tom)
         val aldersVilkåret =
             Vilkår(
                 Vilkårtype.ALDERSVILKÅRET, setOf(
                     Vilkårsperiode(
-                        Periode(søknadsdato, søknadsdato.plusYears(3).minusMonths(4)),
+                        periode1,
                         Utfall.OPPFYLT,
                         false,
                         null,
                         faktagrunnlag = null
                     ),
                     Vilkårsperiode(
-                        Periode(
-                            søknadsdato.plusYears(3).minusMonths(4).plusDays(1),
-                            søknadsdato.plusYears(3)
-                        ),
+                        periode2,
                         Utfall.IKKE_OPPFYLT,
                         false,
                         null,
@@ -174,24 +167,21 @@ class RettTilRegelTest {
                 )
             )
 
-        val input = tomUnderveisInput.copy(
-            rettighetsperiode = periode,
-            vilkårsresultat = Vilkårsresultat(
-                vilkår = listOf(
-                    aldersVilkåret,
-                    lovvalgsVilkåret,
-                    sykdomsVilkåret,
-                    medlemskapVilkåret,
-                    bistandVilkåret
-                )
-            ),
-            kvoter = kvoter,
-        )
-        val grunnleggendeRettTidslinje = regel.vurder(input = input, Tidslinje())
+        val vilkårsresultat = Vilkårsresultat(
+            vilkår = listOf(
+                aldersVilkåret,
+                lovvalgsVilkåret,
+                sykdomsVilkåret,
+                medlemskapVilkåret,
+                bistandVilkåret
+            )
+        ).rettighetstypeTidslinje()
 
-        val segmenter = grunnleggendeRettTidslinje.segmenter()
-        assertThat(segmenter).hasSize(2)
-        assertThat(segmenter.first().verdi.ingenVilkårErAvslått()).isTrue()
-        assertThat(segmenter.last().verdi.ingenVilkårErAvslått()).isFalse()
+        assertTidslinje(
+            vilkårsresultat,
+            periode1 to {
+                assertThat(it).isEqualTo(RettighetsType.BISTANDSBEHOV)
+            },
+        )
     }
 }

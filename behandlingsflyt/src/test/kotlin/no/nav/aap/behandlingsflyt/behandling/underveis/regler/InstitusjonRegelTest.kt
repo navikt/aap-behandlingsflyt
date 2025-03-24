@@ -4,8 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedInput
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
@@ -41,8 +40,7 @@ class InstitusjonRegelTest {
     fun vurder() {
         val periode = Periode(LocalDate.of(2024, 1, 5), LocalDate.of(2025, 5, 1))
         val vurderingFraTidligereResultat = Vurdering(
-            emptyList(),
-            null,
+            RettighetsType.BISTANDSBEHOV,
             MeldepliktVurdering.Fritak,
             null,
             null,
@@ -54,7 +52,7 @@ class InstitusjonRegelTest {
                 gradering = Prosent.`100_PROSENT`
             ),
             grenseverdi = Prosent(60)
-        ).leggTilVurdering(VilkårVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT))
+        )
 
         val utlederInput = EtAnnetStedInput(
             institusjonsOpphold = listOf(
