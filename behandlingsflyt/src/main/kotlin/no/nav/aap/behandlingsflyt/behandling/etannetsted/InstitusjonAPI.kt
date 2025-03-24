@@ -75,7 +75,7 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
 
                     val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
                         req.referanse,
-                        Definisjon.AVKLAR_SAMORDNING_UFØRE.kode.toString(),
+                        Definisjon.AVKLAR_SONINGSFORRHOLD.kode.toString(),
                         token()
                     )
 
