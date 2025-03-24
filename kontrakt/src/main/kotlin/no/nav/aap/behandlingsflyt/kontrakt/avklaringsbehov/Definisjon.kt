@@ -175,6 +175,12 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         defaultFrist = Period.ofWeeks(4),
     ),
+    SAMORDNING_ANDRE_STATLIGE_YTELSER(
+        kode = AvklaringsbehovKode.`5027`,
+        type = BehovType.MANUELT_FRIVILLIG,
+        løsesISteg = StegType.SAMORDNING_ANDRE_STATLIGE_YTELSER,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
     FORHÅNDSVARSEL_AKTIVITETSPLIKT(
         kode = AvklaringsbehovKode.`5016`,
         type = BehovType.BREV_VENTEPUNKT,

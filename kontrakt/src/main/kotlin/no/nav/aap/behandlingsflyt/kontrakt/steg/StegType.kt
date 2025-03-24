@@ -95,6 +95,10 @@ public enum class StegType(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES
     ),
+    SAMORDNING_ANDRE_STATLIGE_YTELSER(
+        gruppe = StegGruppe.UNDERVEIS,
+        status = Status.UTREDES
+    ),
     EFFEKTUER_11_7(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES
