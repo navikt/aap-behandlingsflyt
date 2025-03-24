@@ -73,7 +73,15 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
                             )
                         }
 
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                        req.referanse,
+                        Definisjon.AVKLAR_SAMORDNING_UFØRE.kode.toString(),
+                        token()
+                    )
+
+
                     SoningsGrunnlag(
+                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         soningsforholdInfo.segmenter().map { InstitusjonsoppholdDto.institusjonToDto(it) },
                         manglendePerioder
                     )
