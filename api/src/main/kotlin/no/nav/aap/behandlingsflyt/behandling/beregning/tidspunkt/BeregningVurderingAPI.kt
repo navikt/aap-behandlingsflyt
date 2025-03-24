@@ -37,7 +37,8 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
 
                     // Dette er logikk, burde i egen service
-                    val skalVurdereUføre = uføreRepository.hentHvisEksisterer(behandling.id)?.vurderinger?.isNotEmpty() == true
+                    val skalVurdereUføre =
+                        uføreRepository.hentHvisEksisterer(behandling.id)?.vurderinger?.isNotEmpty() == true
                     val beregningGrunnlag =
                         repositoryProvider.provide<BeregningVurderingRepository>()
                             .hentHvisEksisterer(behandlingId = behandling.id)
@@ -87,7 +88,15 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
 
                     yrkesskadevurdering?.relevanteSaker
 
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                        req.referanse,
+                        Definisjon.FASTSETT_YRKESSKADEINNTEKT.kode.toString(),
+                        token()
+                    )
+
+
                     BeregningYrkesskadeAvklaringDto(
+                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         skalVurderes = sakerMedDato.filterNotNull().map {
                             YrkesskadeTilVurdering(
                                 it.ref, it.skadedato,
