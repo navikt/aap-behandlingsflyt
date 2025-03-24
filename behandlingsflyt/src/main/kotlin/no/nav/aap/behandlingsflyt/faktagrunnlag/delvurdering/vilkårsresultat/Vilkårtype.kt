@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
+/**
+ * Er `kode` fra felles kodeverk? Eller noe vi har funnet på selv? Dokumenter plz.
+ */
 enum class Vilkårtype(
     val kode: String,
     val spesielleInnvilgelsesÅrsaker: List<Innvilgelsesårsak>,
@@ -76,6 +79,15 @@ enum class Vilkårtype(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON
         ),
         hjemmel = "§ 11-13",
+        obligatorisk = false
+    ),
+    SAMORDNING(
+        kode = "AAP-27",
+        spesielleInnvilgelsesÅrsaker = listOf(),
+        avslagsårsaker = listOf(
+            Avslagsårsak.ANNEN_FULL_YTELSE
+        ),
+        hjemmel = "§ 11-27",
         obligatorisk = false
     ),
 }

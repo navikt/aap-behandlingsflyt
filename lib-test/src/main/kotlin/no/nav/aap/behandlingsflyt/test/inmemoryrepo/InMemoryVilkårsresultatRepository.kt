@@ -20,7 +20,7 @@ object InMemoryVilkårsresultatRepository : VilkårsresultatRepository {
 
     override fun hent(behandlingId: BehandlingId): Vilkårsresultat {
         return synchronized(lock) {
-            memory.getValue(behandlingId)
+            memory[behandlingId] ?: Vilkårsresultat()
         }
     }
 
