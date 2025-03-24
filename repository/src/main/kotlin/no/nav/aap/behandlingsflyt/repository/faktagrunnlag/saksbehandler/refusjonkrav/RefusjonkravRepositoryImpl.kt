@@ -58,7 +58,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
                 setLong(1, sakId.id)
             }
             setRowMapper {
-                hentRefusjonskrav(it.getLong("vurdering_id"))
+                hentRefusjonskrav(it.getLong("REFUSJONKRAV_VURDERING_ID"))
             }
         }
     }
