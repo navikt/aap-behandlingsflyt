@@ -4,10 +4,13 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -23,13 +26,26 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapAPI(dataSource: DataSource) {
                 val grunnlag = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val forutgåendeRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
+                    val forutgåendeRepository =
+                        repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
 
                     val data = forutgåendeRepository.hentHvisEksisterer(behandling.id)?.manuellVurdering
-                    val historiskeManuelleVurderinger = forutgåendeRepository.hentHistoriskeVurderinger(behandling.sakId)
+                    val historiskeManuelleVurderinger =
+                        forutgåendeRepository.hentHistoriskeVurderinger(behandling.sakId)
 
-                    ForutgåendeMedlemskapGrunnlagDto(data, historiskeManuelleVurderinger)
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                        req.referanse,
+                        Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP.kode.toString(),
+                        token()
+                    )
+
+
+                    ForutgåendeMedlemskapGrunnlagDto(
+                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+                        data,
+                        historiskeManuelleVurderinger
+                    )
                 }
                 respond(grunnlag)
             }
