@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
-import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 
 class Vilkårsresultat(
@@ -39,35 +39,19 @@ class Vilkårsresultat(
     fun rettighetstypeTidslinje(): Tidslinje<RettighetsType> {
         return vilkår
             .asSequence()
-            .filter {
-                it.type in listOf(
-                    Vilkårtype.SYKEPENGEERSTATNING,
-                    Vilkårtype.SYKDOMSVILKÅRET,
-                    Vilkårtype.BISTANDSVILKÅRET
-                )
-            }
             .map { vilkår ->
-                Tidslinje(vilkår.vilkårsperioder()
+                Tidslinje(
+                    vilkår.vilkårsperioder()
                     .filter { it.utfall == Utfall.OPPFYLT }
                     .map { Segment(it.periode, Pair(vilkår, it)) }
                 )
             }
-            .fold(Tidslinje.empty<Set<Pair<Vilkårtype, Innvilgelsesårsak?>>>()) { acc, curr ->
-                acc.outerJoin(curr) { venstre, høyre ->
-                    if (høyre == null && venstre == null) {
-                        error("outer join")
-                    } else if (venstre != null && høyre == null) {
-                        venstre
-                    } else if (venstre == null && høyre != null) {
-                        setOf(Pair(høyre.first.type, høyre.second.innvilgelsesårsak))
-                    } else {
-                        // Rart kompilatoren ikke skjønte dette...
-                        requireNotNull(høyre)
-                        requireNotNull(venstre)
-                        venstre + Pair(høyre.first.type, høyre.second.innvilgelsesårsak)
-                    }
-                }
+            .fold(Tidslinje.empty<List<Pair<Vilkår, Vilkårsperiode>>>()) { acc, curr ->
+                acc.kombiner(curr, StandardSammenslåere.slåSammenTilListe())
             }
+            // Kun ta med perioder hvor alle vilkår er oppfylt
+            .filter { it.verdi.all { it.second.erOppfylt() } }
+            .mapValue { it.map { Pair(it.first.type, it.second.innvilgelsesårsak) }.toSet() }
             .filter { it.verdi.any { it.first == Vilkårtype.BISTANDSVILKÅRET } }
             .mapValue { prioriterVilkår(it) }
             .komprimer()

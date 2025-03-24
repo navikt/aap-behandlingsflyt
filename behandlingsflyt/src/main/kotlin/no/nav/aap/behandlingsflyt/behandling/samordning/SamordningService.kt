@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
+import no.nav.aap.komponenter.tidslinje.StandardSammenslåere.slåSammenTilListe
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Prosent
 import kotlin.math.min
@@ -98,17 +99,4 @@ class SamordningService(
 
         return samordningTidslinje
     }
-
-    private fun <E> slåSammenTilListe(): JoinStyle.OUTER_JOIN<List<E>, E, List<E>> =
-        JoinStyle.OUTER_JOIN { periode, venstre, høyre ->
-            if (venstre == null && høyre == null) {
-                null
-            } else if (venstre != null && høyre == null) {
-                Segment(periode, venstre.verdi)
-            } else if (høyre != null && venstre == null) {
-                Segment(periode, listOf(høyre.verdi))
-            } else {
-                Segment(periode, venstre?.verdi.orEmpty() + listOfNotNull(høyre?.verdi))
-            }
-        }
 }

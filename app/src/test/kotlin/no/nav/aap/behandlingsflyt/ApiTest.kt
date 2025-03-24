@@ -188,7 +188,7 @@ class ApiTest {
         )
 
         assertThat(medlemskapGrunnlag).isNotNull
-        Assertions.assertThat(medlemskapGrunnlag?.medlemskap?.unntak).isNotEmpty
+        assertThat(medlemskapGrunnlag?.medlemskap?.unntak).isNotEmpty
     }
 
     @Test
