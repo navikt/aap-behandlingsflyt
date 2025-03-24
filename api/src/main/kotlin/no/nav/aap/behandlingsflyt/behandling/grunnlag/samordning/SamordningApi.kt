@@ -57,6 +57,7 @@ data class SamordningVurderingDTO(
 )
 
 data class SamordningUføreVurderingGrunnlagDTO(
+    val harTilgangTilÅSaksbehandle: Boolean,
     val vurdering: SamordningUføreVurderingDTO?,
     val grunnlag: List<SamordningUføreGrunnlagDTO>
 )
@@ -95,8 +96,16 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                     Pair(uføreGrunnlag, samordningUføreVurdering)
                 }
 
+                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                    behandlingReferanse.referanse,
+                    Definisjon.AVKLAR_SAMORDNING_UFØRE.kode.toString(),
+                    token()
+                )
+
+
                 respond(
                     SamordningUføreVurderingGrunnlagDTO(
+                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         vurdering = mapSamordningUføreVurdering(vurdering),
                         grunnlag = mapSamordningUføreGrunnlag(registerGrunnlag)
 
@@ -165,7 +174,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
 
 }
 
-private fun mapSamordningUføreVurdering(vurdering: SamordningUføreVurdering?) : SamordningUføreVurderingDTO? {
+private fun mapSamordningUføreVurdering(vurdering: SamordningUføreVurdering?): SamordningUføreVurderingDTO? {
     return vurdering?.let {
         SamordningUføreVurderingDTO(
             begrunnelse = it.begrunnelse,
