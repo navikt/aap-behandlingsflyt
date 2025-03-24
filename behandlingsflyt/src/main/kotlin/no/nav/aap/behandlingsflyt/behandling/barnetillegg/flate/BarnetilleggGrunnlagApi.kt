@@ -11,13 +11,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -69,7 +72,15 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
                     val personopplysningGrunnlag =
                         requireNotNull(personopplysningRepository.hentHvisEksisterer(behandling.id))
 
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                        req.referanse,
+                        Definisjon.AVKLAR_BARNETILLEGG.kode.toString(),
+                        token()
+                    )
+
+
                     BarnetilleggDto(
+                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         søknadstidspunkt = sakOgBehandlingService.hentSakFor(behandling.id).rettighetsperiode.fom,
                         folkeregisterbarn = folkeregister.map {
                             hentBarn(
