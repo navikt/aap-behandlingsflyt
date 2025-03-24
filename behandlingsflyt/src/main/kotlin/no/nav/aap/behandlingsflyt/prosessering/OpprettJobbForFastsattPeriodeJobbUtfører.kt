@@ -18,9 +18,7 @@ class OpprettJobbForFastsattPeriodeJobbUtfører(
     override fun utfør(input: JobbInput) {
         /* TODO: optimaliser */
         for (sak in sakRepository.finnAlle()) {
-            if (sak.status() in listOf(Status.LØPENDE)) {
-                flytJobbRepository.leggTil(JobbInput(OpprettBehandlingFastsattPeriodePassertJobbUtfører).forSak(sak.id.toLong()))
-            }
+            flytJobbRepository.leggTil(JobbInput(OpprettBehandlingFastsattPeriodePassertJobbUtfører).forSak(sak.id.toLong()))
         }
     }
 
@@ -48,7 +46,7 @@ class OpprettJobbForFastsattPeriodeJobbUtfører(
         }
 
         override fun cron(): CronExpression {
-            return CronExpression.createWithoutSeconds("*/10 * * * *")
+            return CronExpression.createWithoutSeconds("10 * * * *")
         }
     }
 }
