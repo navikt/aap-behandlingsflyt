@@ -134,7 +134,8 @@ fun beregnForInput(input: Input, fødselsdato: Fødselsdato): Triple<Year, GUnit
                     brukerAvKvoter = setOf(),
                     bruddAktivitetspliktId = BruddAktivitetspliktId(0),
                     id = UnderveisperiodeId(0),
-                    institusjonsoppholdReduksjon = TODO()
+                    institusjonsoppholdReduksjon = TODO(),
+                    meldepliktStatus = null,
                 )
             )
         ),

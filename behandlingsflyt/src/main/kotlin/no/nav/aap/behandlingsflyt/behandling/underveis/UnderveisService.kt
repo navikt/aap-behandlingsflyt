@@ -101,7 +101,8 @@ class UnderveisService(
                         trekk = if (it.verdi.skalReduseresDagsatser()) Dagsatser(1) else Dagsatser(0),
                         brukerAvKvoter = it.verdi.varighetVurdering?.brukerAvKvoter.orEmpty(),
                         bruddAktivitetspliktId = it.verdi.aktivitetspliktVurdering?.dokument?.metadata?.id,
-                        institusjonsoppholdReduksjon = if (it.verdi.institusjonVurdering?.skalReduseres == true) Prosent.`50_PROSENT` else Prosent.`0_PROSENT`
+                        institusjonsoppholdReduksjon = if (it.verdi.institusjonVurdering?.skalReduseres == true) Prosent.`50_PROSENT` else Prosent.`0_PROSENT`,
+                        meldepliktStatus = it.verdi.meldepliktVurdering?.status,
                     )
                 },
             input

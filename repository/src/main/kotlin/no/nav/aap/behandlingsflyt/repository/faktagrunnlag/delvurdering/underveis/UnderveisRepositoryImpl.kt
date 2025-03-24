@@ -96,7 +96,8 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
             brukerAvKvoter = it.getArray("bruker_av_kvoter", String::class).map { Kvote.valueOf(it) }.toSet(),
             bruddAktivitetspliktId = it.getLongOrNull("brudd_aktivitetsplikt_id")?.let { BruddAktivitetspliktId(it) },
             id = UnderveisperiodeId(it.getLong("id")),
-            institusjonsoppholdReduksjon = Prosent(it.getInt("institusjonsoppholdreduksjon"))
+            institusjonsoppholdReduksjon = Prosent(it.getInt("institusjonsoppholdreduksjon")),
+            meldepliktStatus = it.getEnumOrNull("meldeplikt_status"),
         )
     }
 
@@ -131,8 +132,9 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         val query = """
             INSERT INTO UNDERVEIS_PERIODE (perioder_id, periode, utfall, rettighetstype, avslagsarsak,
                                            grenseverdi, timer_arbeid, gradering, meldeperiode, trekk_dagsatser,
-                                           andel_arbeidsevne, bruker_av_kvoter, brudd_aktivitetsplikt_id, institusjonsoppholdreduksjon)
-            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?::daterange, ?, ?, ?, ?, ?)
+                                           andel_arbeidsevne, bruker_av_kvoter, brudd_aktivitetsplikt_id, institusjonsoppholdreduksjon,
+                                           meldeplikt_status)
+            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?::daterange, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
         connection.executeBatch(query, underveisperioder) {
             setParams { periode ->
@@ -150,6 +152,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
                 setArray(12, periode.brukerAvKvoter.map { it.name })
                 setLong(13, periode.bruddAktivitetspliktId?.id)
                 setInt(14, periode.institusjonsoppholdReduksjon.prosentverdi())
+                setEnumName(15, periode.meldepliktStatus)
             }
         }
 
