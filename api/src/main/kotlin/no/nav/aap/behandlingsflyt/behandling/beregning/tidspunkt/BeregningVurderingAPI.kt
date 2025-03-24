@@ -8,10 +8,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -39,7 +42,15 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
                         repositoryProvider.provide<BeregningVurderingRepository>()
                             .hentHvisEksisterer(behandlingId = behandling.id)
 
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                        req.referanse,
+                        Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT.kode.toString(),
+                        token()
+                    )
+
+
                     BeregningTidspunktAvklaringDto(
+                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         vurdering = beregningGrunnlag?.tidspunktVurdering,
                         skalVurdereYtterligere = skalVurdereUføre
                     )
