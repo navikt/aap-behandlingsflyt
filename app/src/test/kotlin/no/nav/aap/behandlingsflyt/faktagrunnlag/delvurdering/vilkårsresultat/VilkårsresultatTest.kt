@@ -1,25 +1,43 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.ALDERSVILKÅRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.BISTANDSVILKÅRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.LOVVALG
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.MEDLEMSKAP
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.SYKDOMSVILKÅRET
+import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 
 class VilkårsresultatTest {
     @Nested
     inner class RettighetsTypeTidslinjeTest {
         @Test
-        fun `tomt vilkårsresultat gir tom tidslinje`() {
+        fun `tomt vilkårsresultat gir ikke en veldefinert tidslinje`() {
             val v = Vilkårsresultat()
 
-            assertThat(v.alle()).isEmpty()
-            assertThat(v.rettighetstypeTidslinje()).isEmpty()
+            assertThrows<Exception> {
+                v.rettighetstypeTidslinje()
+            }
+        }
+
+        private fun tomVurdering(): Vilkårsresultat {
+            val vilkårsresultat = Vilkårsresultat()
+            for (vilkårtype in Vilkårtype.entries) {
+                if (vilkårtype.obligatorisk) {
+                    vilkårsresultat.leggTilHvisIkkeEksisterer(vilkårtype)
+                }
+            }
+            return vilkårsresultat
         }
 
         @Test
         fun `om sykdomsvilkåret er innvilget som student, så er rettighetstype 11-5_11-14`() {
-            val v = Vilkårsresultat()
+            val v = tomVurdering()
             val periode = Periode(LocalDate.now(), LocalDate.now().plusDays(10))
             v.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
@@ -48,7 +66,7 @@ class VilkårsresultatTest {
 
         @Test
         fun `om sykepenger-vilkåret er oppfylt så er rettighetstype AAP-13`() {
-            val v = Vilkårsresultat()
+            val v = tomVurdering()
             val periode = Periode(LocalDate.now(), LocalDate.now().plusDays(10))
             v.leggTilHvisIkkeEksisterer(Vilkårtype.SYKEPENGEERSTATNING).leggTilVurdering(
                 Vilkårsperiode(
@@ -57,7 +75,9 @@ class VilkårsresultatTest {
                     begrunnelse = null,
                 )
             )
-            Vilkårtype.entries.filter { it != Vilkårtype.SYKEPENGEERSTATNING }.forEach {
+            Vilkårtype.entries
+                .filter { it != Vilkårtype.SYKEPENGEERSTATNING }
+                .forEach {
                 val vilkår = v.leggTilHvisIkkeEksisterer(it)
                 vilkår.leggTilVurdering(
                     Vilkårsperiode(
@@ -76,7 +96,7 @@ class VilkårsresultatTest {
 
         @Test
         fun `om bistands-vilkåret ikke er i midten får vi brudd på tidslinjen`() {
-            val v = Vilkårsresultat()
+            val v = tomVurdering()
             v.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
                     Periode(LocalDate.now(), LocalDate.now().plusDays(10)),
@@ -107,7 +127,7 @@ class VilkårsresultatTest {
 
         @Test
         fun `overlapp mellom vilkår (sykepenge-erstatning først, så student)`() {
-            val v = Vilkårsresultat()
+            val v = tomVurdering()
             v.leggTilHvisIkkeEksisterer(Vilkårtype.SYKEPENGEERSTATNING).leggTilVurdering(
                 Vilkårsperiode(
                     Periode(LocalDate.now().minusDays(5), LocalDate.now().plusDays(10)),
@@ -131,30 +151,23 @@ class VilkårsresultatTest {
                 )
             )
 
-            val res = v.rettighetstypeTidslinje().komprimer()
-            assertThat(res.segmenter()).hasSize(2)
-            assertThat(res.segmenter().first().verdi).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
-            // Kun sykepengererstatning først
-            assertThat(res.segmenter().first().periode).isEqualTo(
-                Periode(
-                    LocalDate.now().minusDays(5),
-                    LocalDate.now()
-                )
-            )
-            // Student-hjemmel får prioritet
-            assertThat(res.segmenter().toList()[1].verdi).isEqualTo(RettighetsType.STUDENT)
-            assertThat(res.segmenter().toList()[1].periode).isEqualTo(
-                Periode(
-                    LocalDate.now().plusDays(1),
-                    LocalDate.now().plusDays(15)
-                )
+            val res = v.rettighetstypeTidslinje()
+            assertTidslinje(
+                res,
+                Periode(LocalDate.now().minusDays(5), LocalDate.now()) to {
+                    assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
+                },
+
+                Periode(LocalDate.now().plusDays(1), LocalDate.now().plusDays(15)) to {
+                    assertThat(it).isEqualTo(RettighetsType.STUDENT)
+                }
             )
         }
 
 
         @Test
         fun `ignorerer perioder hvor bistandsvilkåret ikke er oppfylt`() {
-            val v = Vilkårsresultat()
+            val v = tomVurdering()
             v.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
                     Periode(LocalDate.now().minusDays(5), LocalDate.now().plusDays(3)),

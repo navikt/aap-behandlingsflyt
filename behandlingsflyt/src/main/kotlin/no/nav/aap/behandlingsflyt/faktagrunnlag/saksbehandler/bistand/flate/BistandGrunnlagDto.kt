@@ -7,5 +7,6 @@ data class BistandGrunnlagDto(
     val vurdering: BistandVurderingDto?,
     val gjeldendeVedtatteVurderinger: List<BistandVurderingDto>,
     val historiskeVurderinger: List<BistandVurderingDto>,
-    val gjeldendeSykdsomsvurderinger: List<SykdomsvurderingDto>
+    val gjeldendeSykdsomsvurderinger: List<SykdomsvurderingDto>,
+    val harOppfylt11_5: Boolean
 )

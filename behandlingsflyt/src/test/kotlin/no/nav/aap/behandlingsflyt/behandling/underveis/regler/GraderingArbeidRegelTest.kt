@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
@@ -185,6 +184,6 @@ class GraderingArbeidRegelTest {
         return regel.vurder(
             input,
             UtledMeldeperiodeRegel().vurder(input, Tidslinje())
-        ).mapValue { it.copy(vurderinger = listOf(VilkårVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT, null))) }
+        ).mapValue { it.copy(fårAapEtter = RettighetsType.BISTANDSBEHOV) }
     }
 }

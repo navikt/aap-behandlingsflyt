@@ -48,9 +48,11 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource) {
                     val vurdering = nåTilstand
                         .filterNot { it in vedtatteBistandsvurderinger }
                         .singleOrNull()
-
+                    
                     val gjeldendeSykdomsvurderinger =
-                        sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger ?: emptyList()
+                        sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger!!
+                    
+                    val harOppfylt11_5 = gjeldendeSykdomsvurderinger.maxBy { it.opprettet }
 
                     val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
                         req.referanse,
@@ -64,7 +66,8 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource) {
                         BistandVurderingDto.fraBistandVurdering(vurdering),
                         vedtatteBistandsvurderinger.map { it.toDto() },
                         historiskeVurderinger.map { it.toDto() },
-                        gjeldendeSykdomsvurderinger.map{it.toDto()}
+                        gjeldendeSykdomsvurderinger.map{it.toDto()},
+                        harOppfylt11_5.erOppfylt()
                     )
                 }
 

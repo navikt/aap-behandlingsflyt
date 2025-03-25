@@ -167,7 +167,8 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5024`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.SAMORDNING_UFØRE,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = true,
     ),
     SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT(
         kode = AvklaringsbehovKode.`5025`,
@@ -261,8 +262,6 @@ public enum class Definisjon(
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.REFUSJON_KRAV,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
-        kreverToTrinn = true,
-        kvalitetssikres = true
     );
 
     public companion object {
