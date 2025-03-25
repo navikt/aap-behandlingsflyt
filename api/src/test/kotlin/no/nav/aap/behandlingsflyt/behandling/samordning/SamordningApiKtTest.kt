@@ -26,8 +26,11 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingRepository
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.lookup.gateway.GatewayRegistry
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
@@ -45,6 +48,9 @@ class SamordningApiKtTest {
                 .register<InMemorySamordningVurderingRepository>()
                 .register<InMemorySamordningYtelseRepository>()
                 .register<InMemoryBehandlingRepository>()
+
+            GatewayRegistry
+                .register<TilgangGatewayImpl>()
         }
     }
 
@@ -80,6 +86,7 @@ class SamordningApiKtTest {
 
             assertThat(response.body<SamordningYtelseVurderingGrunnlagDTO>()).isEqualTo(
                 SamordningYtelseVurderingGrunnlagDTO(
+                    harTilgangTilÅSaksbehandle = true,
                     ytelser = listOf(
                         SamordningYtelseDTO(
                             ytelseType = Ytelse.PLEIEPENGER,

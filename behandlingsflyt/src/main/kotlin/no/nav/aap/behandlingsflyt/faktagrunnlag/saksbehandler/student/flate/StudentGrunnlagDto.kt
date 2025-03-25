@@ -5,6 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVur
 
 open class StudentGrunnlagDto(
     val harTilgangTilÅSaksbehandle: Boolean,
-    studentvurdering: StudentVurdering?,
+    val studentvurdering: StudentVurdering?,
     val oppgittStudent: OppgittStudent?
 )
