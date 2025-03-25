@@ -122,8 +122,6 @@ class AvklaringsbehovOrkestrator(
         avklaringsbehovLøsning: AvklaringsbehovLøsning,
         bruker: Bruker
     ) {
-        avklaringsbehovene.leggTilFrivilligHvisMangler(avklaringsbehovLøsning.definisjon(), bruker)
-        avklaringsbehovene.leggTilOverstyringHvisMangler(avklaringsbehovLøsning.definisjon(), bruker)
         val løsningsResultat = avklaringsbehovLøsning.løs(connection, AvklaringsbehovKontekst(bruker, kontekst))
 
         avklaringsbehovene.løsAvklaringsbehov(

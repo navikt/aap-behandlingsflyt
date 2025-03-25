@@ -228,6 +228,7 @@ class FlytOrkestrator(
         val flyt = utledFlytFra(behandling)
         flyt.forberedFlyt(behandling.aktivtSteg())
 
+        opprettAvklaringsbehovHvisMangler(behovDefinisjon, kontekst)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val behovForLøsninger = avklaringsbehovene.hentBehovForDefinisjon(behovDefinisjon)
         val tilbakeføringsflyt = flyt.tilbakeflyt(behovForLøsninger)
@@ -243,6 +244,14 @@ class FlytOrkestrator(
         val skulleVærtISteg = flyt.skalTilStegForBehov(behovForLøsninger)
         if (skulleVærtISteg != null) {
             flyt.validerPlassering(skulleVærtISteg)
+        }
+    }
+
+    private fun opprettAvklaringsbehovHvisMangler(behovDefinisjon: Definisjon, kontekst: FlytKontekst) {
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        if (avklaringsbehovene.hentBehovForDefinisjon(behovDefinisjon) == null) {
+            avklaringsbehovene.leggTilFrivilligHvisMangler(behovDefinisjon, SYSTEMBRUKER)
+            avklaringsbehovene.leggTilOverstyringHvisMangler(behovDefinisjon, SYSTEMBRUKER)
         }
     }
 
