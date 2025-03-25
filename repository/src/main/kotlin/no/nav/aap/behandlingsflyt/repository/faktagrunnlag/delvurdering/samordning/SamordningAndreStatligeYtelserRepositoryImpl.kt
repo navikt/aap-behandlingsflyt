@@ -74,7 +74,7 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
             setRowMapper {
                 SamordningAndreStatligeYtelserVurderingPeriode(
                     periode = it.getPeriode("periode"),
-                    ytelse = it.getEnum("ytelse"),
+                    ytelse = it.getEnum("ytelse_type"),
                     beløp = it.getInt("belop"),
                 )
             }
