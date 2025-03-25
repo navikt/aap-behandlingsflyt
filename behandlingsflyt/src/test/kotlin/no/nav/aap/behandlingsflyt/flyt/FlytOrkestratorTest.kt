@@ -310,7 +310,7 @@ class FlytOrkestratorTest {
         val ident = person.aktivIdent()
 
         // Sender inn en søknad
-        sendInnDokument(
+        var behandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("20"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
@@ -325,10 +325,7 @@ class FlytOrkestratorTest {
                 periode = periode
             )
         )
-        util.ventPåSvar()
-
         val sak = hentSak(ident, periode)
-        var behandling = hentBehandling(sak.id)
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
 
         var alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
@@ -363,7 +360,7 @@ class FlytOrkestratorTest {
         )
 
         // Sender inn en søknad
-        sendInnDokument(
+        behandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("22"),
                 mottattTidspunkt = LocalDateTime.now(),
@@ -382,7 +379,6 @@ class FlytOrkestratorTest {
                 periode = periode
             )
         )
-        util.ventPåSvar()
 
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         behandling = løsAvklaringsBehov(
@@ -617,7 +613,7 @@ class FlytOrkestratorTest {
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
         assertThat(åpneAvklaringsbehov).isEmpty()
 
-        sendInnDokument(
+        behandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("29"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
@@ -632,9 +628,7 @@ class FlytOrkestratorTest {
                 periode = periode
             )
         )
-        util.ventPåSvar(sakId = sak.id.toLong())
 
-        behandling = hentBehandling(sak.id)
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
@@ -674,7 +668,7 @@ class FlytOrkestratorTest {
         val ident = person.aktivIdent()
 
         // Sender inn en søknad
-        sendInnDokument(
+        var behandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("10"),
                 mottattTidspunkt = LocalDateTime.now(),
@@ -689,10 +683,6 @@ class FlytOrkestratorTest {
                 periode = periode
             )
         )
-        util.ventPåSvar()
-
-        val sak = hentSak(ident, periode)
-        var behandling = hentBehandling(sak.id)
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
 
         var alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
@@ -877,7 +867,7 @@ class FlytOrkestratorTest {
         val ident = person.aktivIdent()
 
         // Sender inn en søknad
-        sendInnDokument(
+        var behandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("20"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(0),
@@ -892,10 +882,6 @@ class FlytOrkestratorTest {
                 periode = periode
             )
         )
-        util.ventPåSvar()
-
-        val sak = hentSak(ident, periode)
-        var behandling = hentBehandling(sak.id)
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
 
         var alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
@@ -1070,7 +1056,7 @@ class FlytOrkestratorTest {
         val ident = person.aktivIdent()
 
         // Sender inn en søknad
-        sendInnDokument(
+        var behandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("20"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(0),
@@ -1085,10 +1071,6 @@ class FlytOrkestratorTest {
                 periode = periode
             )
         )
-        util.ventPåSvar()
-
-        val sak = hentSak(ident, periode)
-        var behandling = hentBehandling(sak.id)
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
 
         var alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
@@ -1260,7 +1242,7 @@ class FlytOrkestratorTest {
         )
 
         // Sender inn en søknad
-        sendInnDokument(
+        var behandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("11"),
                 mottattTidspunkt = LocalDateTime.now(),
@@ -1275,10 +1257,6 @@ class FlytOrkestratorTest {
                 periode = periode
             )
         )
-        util.ventPåSvar()
-
-        val sak = hentSak(ident, periode)
-        var behandling = hentBehandling(sak.id)
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
 
         var alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
@@ -2517,20 +2495,17 @@ class FlytOrkestratorTest {
             assertThat(førstegangbehandling.status().erAvsluttet())
             sak
         }
+        val nyBehandling = sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("21"),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+                InnsendingType.KLAGE,
+                strukturertDokument = null,
+                periode
+            )
+        )
 
         InitTestDatabase.dataSource.transaction { connection ->
-            sendInnDokument(
-                ident, DokumentMottattPersonHendelse(
-                    journalpost = JournalpostId("21"),
-                    mottattTidspunkt = LocalDateTime.now().minusMonths(3),
-                    InnsendingType.KLAGE,
-                    strukturertDokument = null,
-                    periode
-                )
-            )
-            util.ventPåSvar()
-
-            val nyBehandling = hentBehandling(sak.id)
             assertThat(nyBehandling.typeBehandling() == TypeBehandling.Klage)
 
             val avklaringsbehovene = hentAvklaringsbehov(nyBehandling.id, connection)
@@ -2695,8 +2670,12 @@ class FlytOrkestratorTest {
     private fun sendInnDokument(
         ident: Ident,
         dokumentMottattPersonHendelse: DokumentMottattPersonHendelse
-    ) {
+    ): Behandling {
         hendelsesMottak.håndtere(ident, dokumentMottattPersonHendelse)
+        util.ventPåSvar()
+        val sak = hentSak(ident, dokumentMottattPersonHendelse.periode)
+        val behandling = hentBehandling(sak.id)
+        return behandling
     }
 
     private fun hentBrevAvType(behandling: Behandling, typeBrev: TypeBrev) =
