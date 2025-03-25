@@ -50,7 +50,6 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
             authorizedPost<Unit, String, BestillLegeerklæringDto>(
                 AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SAKSBEHANDLE,
-                    applicationRole = "dokumentinnhenting-api",
                     applicationsOnly = false
                 )
             )
@@ -99,15 +98,16 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
 
                         val bestillingUUID: String = dokumentinnhentingGateway.bestillLegeerklæring(
                             LegeerklæringBestillingRequest(
-                                req.behandlerRef,
-                                req.behandlerNavn,
-                                req.behandlerHprNr,
-                                personIdent.identifikator,
-                                personinfo.fulltNavn(),
-                                req.fritekst,
-                                req.saksnummer,
-                                req.dokumentasjonType,
-                                req.behandlingsReferanse
+//                                navIdent = bruker(),
+                                behandlerRef = req.behandlerRef,
+                                behandlerNavn = req.behandlerNavn,
+                                behandlerHprNr = req.behandlerHprNr,
+                                personIdent = personIdent.identifikator,
+                                personNavn = personinfo.fulltNavn(),
+                                dialogmeldingTekst = req.fritekst,
+                                saksnummer = req.saksnummer,
+                                dokumentasjonType = req.dokumentasjonType,
+                                behandlingsReferanse = req.behandlingsReferanse
                             )
                         )
 
