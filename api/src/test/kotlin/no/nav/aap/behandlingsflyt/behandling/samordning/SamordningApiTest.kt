@@ -92,7 +92,6 @@ class SamordningApiTest {
             val response =
                 sendGetRequest(client, jwt, behandling.id, "/api/behandling/${behandling.referanse.referanse}/grunnlag/samordning")
 
-
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
 
             assertThat(response.body<SamordningYtelseVurderingGrunnlagDTO>()).isEqualTo(

@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
-import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
@@ -43,8 +42,16 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
     route("/api/sak").tag(Tags.Sak) {
-        // TODO! Tilgangskontrollere, men har verken saksnr eller beh.referanse
-        route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
+        route("/finn").authorizedPost<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO>(
+            modules = arrayOf(TagModule(listOf(Tags.Sak))),
+            routeConfig = AuthorizationBodyPathConfig(
+                operasjon = Operasjon.SAKSBEHANDLE,
+                applicationsOnly = true,
+                applicationRole = "opprett-sak",
+            )
+        )
+
+        { _, dto ->
             val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = RepositoryProvider(connection)
                 val ident = Ident(dto.ident)
@@ -68,12 +75,16 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             respond(saker)
         }
 
-        // TODO, hvordan tilgangskontrollere denne?
-        route("/finnSisteBehandlinger").post<Unit, NullableSakOgBehandlingDTO, FinnBehandlingForIdentDTO>(
-            TagModule(
-                listOf(Tags.Behandling)
+        route("/finnSisteBehandlinger").authorizedPost<Unit, NullableSakOgBehandlingDTO, FinnBehandlingForIdentDTO>(
+            modules = arrayOf(TagModule(listOf(Tags.Sak))),
+            routeConfig = AuthorizationBodyPathConfig(
+                operasjon = Operasjon.SAKSBEHANDLE,
+                applicationsOnly = true,
+                applicationRole = "opprett-sak",
             )
-        ) { _, dto ->
+        )
+
+        { _, dto ->
             val behandlinger: SakOgBehandlingDTO? = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = RepositoryProvider(connection)
                 val ident = Ident(dto.ident)
