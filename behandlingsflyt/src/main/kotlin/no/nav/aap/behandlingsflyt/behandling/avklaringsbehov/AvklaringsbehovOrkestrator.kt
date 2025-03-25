@@ -109,7 +109,7 @@ class AvklaringsbehovOrkestrator(
             ),
             behandlingHendelseService = behandlingHendelseService
         )
-        flytOrkestrator.forberedLøsingAvBehov(definisjoner, behandling, kontekst)
+        flytOrkestrator.forberedLøsingAvBehov(definisjoner, behandling, kontekst, bruker)
 
         // Bør ideelt kalle på
         løsFaktiskAvklaringsbehov(kontekst, avklaringsbehovene, avklaringsbehov, bruker)
@@ -122,8 +122,6 @@ class AvklaringsbehovOrkestrator(
         avklaringsbehovLøsning: AvklaringsbehovLøsning,
         bruker: Bruker
     ) {
-        avklaringsbehovene.leggTilFrivilligHvisMangler(avklaringsbehovLøsning.definisjon(), bruker)
-        avklaringsbehovene.leggTilOverstyringHvisMangler(avklaringsbehovLøsning.definisjon(), bruker)
         val løsningsResultat = avklaringsbehovLøsning.løs(connection, AvklaringsbehovKontekst(bruker, kontekst))
 
         avklaringsbehovene.løsAvklaringsbehov(

@@ -908,6 +908,195 @@ class FlytOrkestratorTest {
     }
 
     @Test
+    fun `ingen sykepenger i register, men skal vurdere sykepenger for samordning`() {
+        val fom = LocalDate.now()
+        val periode = Periode(fom, fom.plusYears(3))
+        val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
+        // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
+        val person = TestPerson(
+            fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
+            sykepenger = emptyList()
+        )
+        FakePersoner.leggTil(person)
+
+        val ident = person.aktivIdent()
+
+        // Sender inn en søknad
+        sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("20"),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(0),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"),
+                        yrkesskade = "NEI",
+                        oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
+                    ),
+                ),
+                periode = periode
+            )
+        )
+        util.ventPåSvar()
+
+        val sak = hentSak(ident, periode)
+        var behandling = hentBehandling(sak.id)
+        assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
+
+        var alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
+
+        assertThat(alleAvklaringsbehov).isNotEmpty()
+        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+
+        løsSykdom(behandling)
+
+        behandling = hentBehandling(sak.id)
+        behandling = løsAvklaringsBehov(
+            behandling,
+            AvklarBistandsbehovLøsning(
+                bistandsVurdering = BistandVurderingLøsningDto(
+                    begrunnelse = "Trenger hjelp fra nav",
+                    erBehovForAktivBehandling = true,
+                    erBehovForArbeidsrettetTiltak = false,
+                    erBehovForAnnenOppfølging = null,
+                    skalVurdereAapIOvergangTilUføre = null,
+                    skalVurdereAapIOvergangTilArbeid = null,
+                    overgangBegrunnelse = null
+                ),
+            ),
+        )
+
+        behandling = hentBehandling(sak.id)
+        løsAvklaringsBehov(
+            behandling,
+            RefusjonkravLøsning(
+                RefusjonkravVurdering(
+                    harKrav = true,
+                    fom = LocalDate.now(),
+                    tom = null
+                )
+            )
+        )
+
+        løsAvklaringsBehov(
+            behandling,
+            avklaringsBehovLøsning = FritakMeldepliktLøsning(
+                fritaksvurderinger = listOf(
+                    FritaksvurderingDto(
+                        harFritak = true,
+                        fraDato = periode.fom,
+                        begrunnelse = "...",
+                    )
+                ),
+            ),
+        )
+
+        alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
+        behandling = løsAvklaringsBehov(
+            behandling,
+            KvalitetssikringLøsning(
+                alleAvklaringsbehov
+                    .filter { behov -> behov.erTotrinn() }
+                    .map { behov ->
+                        TotrinnsVurdering(
+                            behov.definisjon.kode,
+                            true,
+                            "begrunnelse",
+                            emptyList()
+                        )
+                    }),
+
+            )
+
+        behandling = løsAvklaringsBehov(
+            behandling,
+            FastsettBeregningstidspunktLøsning(
+                beregningVurdering = BeregningstidspunktVurdering(
+                    begrunnelse = "Trenger hjelp fra Nav",
+                    nedsattArbeidsevneDato = LocalDate.now(),
+                    ytterligereNedsattArbeidsevneDato = null,
+                    ytterligereNedsattBegrunnelse = null
+                ),
+            ),
+        )
+
+        assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
+
+        løsAvklaringsBehov(
+            behandling,
+            AvklarSamordningGraderingLøsning(
+                vurderingerForSamordning = VurderingerForSamordning(
+                    vurderteSamordningerData = listOf(
+                        SamordningVurderingData(
+                            ytelseType = Ytelse.SYKEPENGER,
+                            periode = sykePengerPeriode,
+                            gradering = 90,
+                            kronesum = null,
+                        )
+                    ),
+                    begrunnelse = "En god begrunnelse",
+                    maksDatoEndelig = false,
+                    maksDato = LocalDate.now().plusMonths(1),
+                ),
+            ),
+        )
+        assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).isEqualTo(listOf(Definisjon.FORESLÅ_VEDTAK))
+
+        løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
+        løsAvklaringsBehov(
+            behandling, FatteVedtakLøsning(
+                hentAlleAvklaringsbehov(behandling)
+                    .filter { behov -> behov.erTotrinn() }
+                    .map { behov ->
+                        TotrinnsVurdering(
+                            behov.definisjon.kode,
+                            true,
+                            "begrunnelse",
+                            null
+                        )
+                    }), Bruker("BESLUTTER")
+        )
+
+        val uthentetTilkjentYtelse =
+            requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) }) { "Tilkjent ytelse skal være beregnet her." }
+
+        val periodeMedPositivSamordning =
+            uthentetTilkjentYtelse.map { Segment(it.periode, it.tilkjent.gradering.samordningGradering) }
+                .let(::Tidslinje)
+                .filter { (it.verdi?.prosentverdi() ?: 0) > 0 }.helePerioden()
+
+        // Verifiser at samordningen ble fanget opp
+        assertThat(periodeMedPositivSamordning.tom).isEqualTo(sykePengerPeriode.tom)
+
+        var brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
+        løsAvklaringsBehov(
+            behandling, brevbestillingLøsning(behandling, brevbestilling), BREV_SYSTEMBRUKER
+        )
+        brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
+        val behandlingReferanse = behandling.referanse
+        behandling = løsAvklaringsBehov(
+            behandling, SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse)
+        )
+
+        // Siden samordning overlappet, skal en revurdering opprettes med en gang
+        assertThat(behandling.referanse).isNotEqualTo(behandlingReferanse)
+        assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+        util.ventPåSvar(sakId = behandling.sakId.id)
+
+        // Verifiser at den er satt på vent
+        var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(behandling.id)
+        util.ventPåSvar(behandlingId = behandling.id.id, sakId = behandling.sakId.id)
+        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
+
+        // Ta av vent
+        løsAvklaringsBehov(behandling, SamordningVentPaVirkningstidspunktLøsning())
+
+        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(behandling.id)
+        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
+    }
+
+
+    @Test
     fun `stopper opp ved samordning ved funn av sykepenger, og løses ved info fra saksbehandler`() {
         val fom = LocalDate.now()
         val periode = Periode(fom, fom.plusYears(3))
