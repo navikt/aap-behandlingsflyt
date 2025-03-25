@@ -37,6 +37,11 @@ data class ForhåndsvisBrevRequest (
 
 data class HentStatusLegeerklæring(@PathParam("saksnummer") val saksnummer: String)
 
-data class PurringLegeerklæring(
-    @PathParam("dialogmeldinguuid") val dialogmeldingPurringUUID: UUID
-)
+data class PurringLegeerklæringRequest(
+    val dialogmeldingPurringUUID: UUID,
+    val saksnummer: String
+): Saksreferanse {
+    override fun hentSaksreferanse(): String {
+        return saksnummer
+    }
+}
