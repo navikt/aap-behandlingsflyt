@@ -49,7 +49,6 @@ class SamordningApiTest {
         @JvmStatic
         fun beforeAll() {
             server.start()
-
             RepositoryRegistry
                 .register<InMemorySamordningVurderingRepository>()
                 .register<InMemorySamordningYtelseRepository>()
