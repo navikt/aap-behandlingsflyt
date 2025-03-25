@@ -81,21 +81,24 @@ object Revurdering : BehandlingType {
                 steg = FritakMeldepliktSteg, årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
-                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING
+                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING,
+                    ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
                 )
             )
             .medSteg(
                 steg = FastsettArbeidsevneSteg, årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
-                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING
+                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING,
+                    ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
                 )
             )
             .medSteg(
                 steg = VurderBistandsbehovSteg, årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
-                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING
+                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING,
+                    ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
                 )
             )
             .medSteg(
@@ -110,7 +113,8 @@ object Revurdering : BehandlingType {
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
                     ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING,
-                    ÅrsakTilBehandling.REVURDER_YRKESSKADE
+                    ÅrsakTilBehandling.REVURDER_YRKESSKADE,
+                    ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
                 )
             )
             .medSteg(steg = FastsettSykdomsvilkåretSteg)
@@ -118,7 +122,8 @@ object Revurdering : BehandlingType {
                 steg = VurderSykepengeErstatningSteg, årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
-                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING
+                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING,
+                    ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
                 )
             )
             .medSteg(
