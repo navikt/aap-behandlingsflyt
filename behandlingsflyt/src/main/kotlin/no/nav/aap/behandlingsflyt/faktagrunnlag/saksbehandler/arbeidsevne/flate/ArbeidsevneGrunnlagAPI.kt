@@ -62,7 +62,7 @@ private fun arbeidsevneGrunnlag(
         val arbeidsevneRepository = repositoryProvider.provide<ArbeidsevneRepository>()
 
         val nåTilstand = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
-            ?: return@transaction null
+
         val vedtatteVerdier =
             behandling.forrigeBehandlingId?.let { arbeidsevneRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
         val historikk = arbeidsevneRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
@@ -76,8 +76,8 @@ private fun arbeidsevneGrunnlag(
         ArbeidsevneGrunnlagDto(
             harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
             historikk = historikk.map { it.toDto() }.sortedBy { it.vurderingsTidspunkt }.toSet(),
-            vurderinger = nåTilstand.filterNot { vedtatteVerdier.contains(it) }.map { it.toDto() }
-                .sortedBy { it.fraDato },
+            vurderinger = nåTilstand?.filterNot { vedtatteVerdier.contains(it) }?.map { it.toDto() }
+                ?.sortedBy { it.fraDato } ?: emptyList(),
             gjeldendeVedtatteVurderinger = vedtatteVerdier.map { it.toDto() }
                 .sortedBy { it.fraDato }
         )
