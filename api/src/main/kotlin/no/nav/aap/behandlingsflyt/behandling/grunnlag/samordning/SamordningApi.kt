@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.samordning.EndringStatus
