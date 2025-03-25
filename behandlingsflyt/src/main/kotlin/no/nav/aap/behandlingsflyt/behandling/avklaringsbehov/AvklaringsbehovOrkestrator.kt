@@ -109,7 +109,7 @@ class AvklaringsbehovOrkestrator(
             ),
             behandlingHendelseService = behandlingHendelseService
         )
-        flytOrkestrator.forberedLøsingAvBehov(definisjoner, behandling, kontekst)
+        flytOrkestrator.forberedLøsingAvBehov(definisjoner, behandling, kontekst, bruker)
 
         // Bør ideelt kalle på
         løsFaktiskAvklaringsbehov(kontekst, avklaringsbehovene, avklaringsbehov, bruker)

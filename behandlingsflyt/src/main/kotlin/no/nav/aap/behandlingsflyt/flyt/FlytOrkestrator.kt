@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import org.slf4j.LoggerFactory
 
 
@@ -224,11 +225,11 @@ class FlytOrkestrator(
         return neste
     }
 
-    internal fun forberedLøsingAvBehov(behovDefinisjon: Definisjon, behandling: Behandling, kontekst: FlytKontekst) {
+    internal fun forberedLøsingAvBehov(behovDefinisjon: Definisjon, behandling: Behandling, kontekst: FlytKontekst, bruker: Bruker) {
         val flyt = utledFlytFra(behandling)
         flyt.forberedFlyt(behandling.aktivtSteg())
 
-        opprettAvklaringsbehovHvisMangler(behovDefinisjon, kontekst)
+        opprettAvklaringsbehovHvisMangler(behovDefinisjon, kontekst, bruker)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val behovForLøsninger = avklaringsbehovene.hentBehovForDefinisjon(behovDefinisjon)
         val tilbakeføringsflyt = flyt.tilbakeflyt(behovForLøsninger)
@@ -247,11 +248,11 @@ class FlytOrkestrator(
         }
     }
 
-    private fun opprettAvklaringsbehovHvisMangler(behovDefinisjon: Definisjon, kontekst: FlytKontekst) {
+    private fun opprettAvklaringsbehovHvisMangler(behovDefinisjon: Definisjon, kontekst: FlytKontekst, bruker: Bruker) {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         if (avklaringsbehovene.hentBehovForDefinisjon(behovDefinisjon) == null) {
-            avklaringsbehovene.leggTilFrivilligHvisMangler(behovDefinisjon, SYSTEMBRUKER)
-            avklaringsbehovene.leggTilOverstyringHvisMangler(behovDefinisjon, SYSTEMBRUKER)
+            avklaringsbehovene.leggTilFrivilligHvisMangler(behovDefinisjon, bruker)
+            avklaringsbehovene.leggTilOverstyringHvisMangler(behovDefinisjon, bruker)
         }
     }
 
