@@ -135,7 +135,7 @@ class BehandlingFlyt private constructor(
     internal fun tilbakeflyt(avklaringsbehov: List<Avklaringsbehov>): BehandlingFlyt {
         val skalTilSteg = skalTilStegForBehov(avklaringsbehov)
 
-        return utletTilbakeflytTilSteg(skalTilSteg)
+        return utledTilbakeflytTilSteg(skalTilSteg)
     }
 
     fun skalTilStegForBehov(avklaringsbehov: List<Avklaringsbehov>): StegType? {
@@ -154,10 +154,10 @@ class BehandlingFlyt private constructor(
             flyt.filter { it.kravliste.any { at -> oppdaterteGrunnlagstype.contains(at) } }.map { it.steg.type() }
                 .minWithOrNull(compareable())
 
-        return utletTilbakeflytTilSteg(skalTilSteg)
+        return utledTilbakeflytTilSteg(skalTilSteg)
     }
 
-    private fun utletTilbakeflytTilSteg(skalTilSteg: StegType?): BehandlingFlyt {
+    private fun utledTilbakeflytTilSteg(skalTilSteg: StegType?): BehandlingFlyt {
         if (skalTilSteg == null) {
             return BehandlingFlyt(emptyList())
         }
