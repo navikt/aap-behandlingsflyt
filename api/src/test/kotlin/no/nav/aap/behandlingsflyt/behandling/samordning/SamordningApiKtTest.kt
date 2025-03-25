@@ -22,16 +22,16 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.MockDataSource
+import no.nav.aap.behandlingsflyt.test.inmemorygateway.FakeTilgangGateway
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingRepository
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.gateway.GatewayRegistry
 import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.security.mock.oauth2.MockOAuth2Server
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -41,16 +41,20 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientCon
 
 class SamordningApiKtTest {
     companion object {
+        private val server = MockOAuth2Server()
+
         @BeforeAll
         @JvmStatic
         fun beforeAll() {
+            server.start()
+
             RepositoryRegistry
                 .register<InMemorySamordningVurderingRepository>()
                 .register<InMemorySamordningYtelseRepository>()
                 .register<InMemoryBehandlingRepository>()
 
             GatewayRegistry
-                .register<TilgangGatewayImpl>()
+                .register<FakeTilgangGateway>()
         }
     }
 
@@ -60,7 +64,8 @@ class SamordningApiKtTest {
         val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
 
         InMemorySamordningYtelseRepository.lagre(
-            behandling.id, listOf(
+            behandling.id,
+            listOf(
                 SamordningYtelse(
                     ytelseType = Ytelse.PLEIEPENGER,
                     ytelsePerioder = listOf(
@@ -81,7 +86,10 @@ class SamordningApiKtTest {
                 samordningGrunnlag(ds)
             }
 
-            val response = createClient().get("/api/behandling/${behandling.referanse.referanse}/grunnlag/samordning")
+            val jwt = issueToken("nav:aap:afpoffentlig.read")
+            val response = createClient().get("/api/behandling/${behandling.referanse.referanse}/grunnlag/samordning") {
+                header("Authorization", "Bearer ${jwt.serialize()}")
+            }
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
 
             assertThat(response.body<SamordningYtelseVurderingGrunnlagDTO>()).isEqualTo(
@@ -141,6 +149,14 @@ class SamordningApiKtTest {
             identer = listOf(Ident("0".repeat(11)))
         ),
         periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+    )
+
+    private fun issueToken(scope: String) = server.issueToken(
+        issuerId = "default",
+        claims = mapOf(
+            "scope" to scope,
+            "consumer" to mapOf("authority" to "123", "ID" to "0192:889640782")
+        ),
     )
 
     private fun ApplicationTestBuilder.createClient() = createClient {
