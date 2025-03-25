@@ -74,9 +74,6 @@ spec:
               - "brev"
               - "hent-personinfo"
         - application: saksbehandling
-          permissions:
-            roles:
-              - "dokumentinnhenting-api"
         - application: tilgang
           permissions:
             roles:

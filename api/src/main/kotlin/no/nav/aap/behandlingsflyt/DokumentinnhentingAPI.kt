@@ -123,7 +123,6 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
         route("/status/{saksnummer}") {
             authorizedGet<HentStatusLegeerklæring, List<LegeerklæringStatusResponse>>(
                 AuthorizationParamPathConfig(
-                    applicationRole = "dokumentinnhenting-api",
                     applicationsOnly = false,
                     sakPathParam = SakPathParam("saksnummer")
                 )
@@ -136,7 +135,6 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
             authorizedPost<Unit, BrevResponse, ForhåndsvisBrevRequest>(
                 AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SE,
-                    applicationRole = "dokumentinnhenting-api",
                     applicationsOnly = false
                 )
             ) { _, req ->
@@ -164,7 +162,6 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
             authorizedPost<Unit, String, PurringLegeerklæringRequest>(
                 AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SAKSBEHANDLE,
-                    applicationRole = "dokumentinnhenting-api",
                     applicationsOnly = false
                 )
             ) { _, req ->
