@@ -18,7 +18,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.BestillLegeerklæringDto
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.HentStatusLegeerklæring
-import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.PurringLegeerklæring
+import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.PurringLegeerklæringRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Anvist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerResponse
@@ -369,8 +369,8 @@ object FakeServers : AutoCloseable {
                 )
                 call.respond(dialogmeldingId.toString())
             }
-            post("/api/dokumentinnhenting/syfo/purring/{dialogmelding}") {
-                call.receive<PurringLegeerklæring>()
+            post("/api/dokumentinnhenting/syfo/purring") {
+                call.receive<PurringLegeerklæringRequest>()
                 val dialogmeldingId = UUID.randomUUID()
                 legeerklæringStatuser.add(
                     LegeerklæringStatusResponse(
