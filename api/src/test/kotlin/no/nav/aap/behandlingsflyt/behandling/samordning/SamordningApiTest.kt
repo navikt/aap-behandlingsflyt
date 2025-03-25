@@ -88,13 +88,11 @@ class SamordningApiTest {
                 samordningGrunnlag(ds)
             }
             val jwt = issueToken("nav:aap:afpoffentlig.read")
+            val client = createClient()
             val response =
                 sendGetRequest(client, jwt, behandling.id, "/api/behandling/${behandling.referanse.referanse}/grunnlag/samordning")
 
 
-           /* val response = createClient().get("/api/behandling/${behandling.referanse.referanse}/grunnlag/samordning") {
-                header("Authorization", "Bearer ${jwt.serialize()}")
-            }*/
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
 
             assertThat(response.body<SamordningYtelseVurderingGrunnlagDTO>()).isEqualTo(
