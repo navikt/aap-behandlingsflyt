@@ -30,8 +30,13 @@ object SafListDokumentGateway {
     )
 
     private fun query(request: SafRequest, currentToken: OidcToken): SafDokumentoversiktFagsakDataResponse {
-        val httpRequest = PostRequest(body = request, currentToken = currentToken)
-        return requireNotNull(client.post(uri = graphqlUrl, request = httpRequest))
+        try {
+            val httpRequest = PostRequest(body = request, currentToken = currentToken)
+            return requireNotNull(client.post(uri = graphqlUrl, request = httpRequest))
+        } catch (e: Exception) {
+            log.error("Ukjent feil ved henting av dokumenter fra Saf: ", e)
+            throw e
+        }
     }
 
     fun hentDokumenterForSak(saksnummer: Saksnummer, currentToken: OidcToken): List<SafListDokument> {
