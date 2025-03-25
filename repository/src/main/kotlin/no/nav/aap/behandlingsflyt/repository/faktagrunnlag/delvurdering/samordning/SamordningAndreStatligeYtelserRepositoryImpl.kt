@@ -41,7 +41,7 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
             }
         }
     }
-    data class BegrunnelseOgVurdertAv(
+    private data class BegrunnelseOgVurdertAv(
         val begrunnelse: String,
         val vurdertAv: String,
     )
