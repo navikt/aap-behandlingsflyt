@@ -4,8 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedInput
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
@@ -42,14 +41,14 @@ class SoningRegelTest {
     fun vurder() {
         val periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 1))
         val vurderingFraTidligereResultat = Vurdering(
-            emptyList(), null, MeldepliktVurdering.Fritak,
+            RettighetsType.BISTANDSBEHOV, MeldepliktVurdering.Fritak,
             null, null, null, ArbeidsGradering(
                 totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),
                 andelArbeid = Prosent(0),
                 fastsattArbeidsevne = Prosent.`0_PROSENT`,
                 gradering = Prosent.`100_PROSENT`
             ), grenseverdi = Prosent(60)
-        ).leggTilVurdering(VilkårVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT))
+        )
         val tidligereResultatTidslinje = Tidslinje(listOf(Segment(periode, vurderingFraTidligereResultat)))
 
         val utlederInput = EtAnnetStedInput(

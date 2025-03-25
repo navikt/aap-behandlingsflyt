@@ -16,7 +16,6 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 
 data class Vurdering(
-    private val vurderinger: List<VilkårVurdering> = emptyList(),
     internal val fårAapEtter: RettighetsType? = null,
     internal val meldepliktVurdering: MeldepliktVurdering? = null,
     internal val fraværFastsattAktivitetVurdering: FraværFastsattAktivitetVurdering? = null,
@@ -30,11 +29,6 @@ data class Vurdering(
     private val meldeperiode: Periode? = null,
     val varighetVurdering: VarighetVurdering? = null,
 ) {
-
-    fun leggTilVurdering(vilkårVurdering: VilkårVurdering): Vurdering {
-        return copy(vurderinger = vurderinger + vilkårVurdering)
-    }
-
     fun leggTilRettighetstype(rettighetstype: RettighetsType): Vurdering {
         return copy(fårAapEtter = rettighetstype)
     }
@@ -88,7 +82,7 @@ data class Vurdering(
     }
 
     fun harRett(): Boolean {
-        return ingenVilkårErAvslått() &&
+        return fårAapEtter != null &&
                 arbeiderMindreEnnGrenseverdi() &&
                 harOverholdtMeldeplikten() &&
                 sonerIkke() &&
@@ -113,20 +107,12 @@ data class Vurdering(
         return utfall == null || utfall == OPPFYLT
     }
 
-    internal fun ingenVilkårErAvslått(): Boolean {
-        return vurderinger.isNotEmpty() && vurderinger.none { it.utfall == Utfall.IKKE_OPPFYLT }
-    }
-
-    internal fun alleVilkårErOppfylt(): Boolean {
-        return vurderinger.isNotEmpty() && vurderinger.all { it.utfall == OPPFYLT }
-    }
-
     private fun arbeiderMindreEnnGrenseverdi(): Boolean {
         return gradering == null || grenseverdi == null || grenseverdi() >= gradering.andelArbeid
     }
 
     fun rettighetsType(): RettighetsType? {
-        return if (alleVilkårErOppfylt()) fårAapEtter else null
+        return fårAapEtter
     }
 
     fun grenseverdi(): Prosent {
@@ -165,7 +151,7 @@ data class Vurdering(
             return null
         }
 
-        if (!ingenVilkårErAvslått()) {
+        if (fårAapEtter == null) {
             return UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
         } else if (!sonerIkke()) {
             return UnderveisÅrsak.SONER_STRAFF

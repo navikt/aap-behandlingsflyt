@@ -1,5 +1,5 @@
 val ktorVersion = "3.1.1"
-val komponenterVersjon = "1.0.187"
+val komponenterVersjon = "1.0.188"
 val tilgangVersjon = "1.0.20"
 val junitVersjon = "5.12.1"
 
@@ -15,6 +15,7 @@ dependencies {
     implementation("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
+    implementation("no.nav.aap.kelvin:tidslinje:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")

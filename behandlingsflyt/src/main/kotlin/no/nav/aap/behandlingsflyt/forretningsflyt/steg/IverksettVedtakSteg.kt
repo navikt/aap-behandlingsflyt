@@ -7,8 +7,6 @@ import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -59,16 +57,12 @@ class IverksettVedtakSteg private constructor(
             val repositoryProvider = RepositoryProvider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val samordningRepository = repositoryProvider.provide<SamordningRepository>()
-            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
             val tilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>()
             val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
             val vedtakRepository = repositoryProvider.provide<VedtakRepository>()
             val utbetalingGateway = GatewayProvider.provide<UtbetalingGateway>()
             val virkningstidspunktUtlederService = VirkningstidspunktUtleder(
-                underveisRepository = underveisRepository,
-                samordningRepository = samordningRepository,
-                tilkjentYtelseRepository = tilkjentYtelseRepository
+                vilkårsresultatRepository = repositoryProvider.provide(),
             )
             return IverksettVedtakSteg(
                 behandlingRepository = behandlingRepository,
