@@ -82,15 +82,23 @@ class BeregnTilkjentYtelseService(
                 } else {
                     venstre.verdi.arbeidsgradering.gradering
                 }
+
+                val meldeperiode = venstre.verdi.meldePeriode
+                val utbetalingsdato = (venstre.verdi.arbeidsgradering.opplysningerMottatt ?: meldeperiode.tom.plusDays(9))
+                    .coerceIn(meldeperiode.tom.plusDays(1) .. meldeperiode.tom.plusDays(9))
+
                 Segment(
-                    periode, TilkjentGUnit(
-                        dagsats, TilkjentGradering(
+                    periode,
+                    TilkjentGUnit(
+                        dagsats = dagsats,
+                        gradering = TilkjentGradering(
                             endeligGradering = utbetalingsgrad,
                             arbeidGradering = venstre.verdi.arbeidsgradering.gradering,
                             institusjonGradering = venstre.verdi.institusjonsoppholdReduksjon,
                             samordningGradering = Prosent.`0_PROSENT`,
                             samordningUføregradering = Prosent.`0_PROSENT`
-                        ), venstre.verdi.meldePeriode.tom.plusDays(9)
+                        ),
+                        utbetalingsdato = utbetalingsdato
                     )
                 )
             })

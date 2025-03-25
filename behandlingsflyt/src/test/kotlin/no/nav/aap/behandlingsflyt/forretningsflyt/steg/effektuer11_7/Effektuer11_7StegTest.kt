@@ -296,6 +296,7 @@ class Effektuer11_7StegTest {
             andelArbeid = Prosent.`100_PROSENT`,
             fastsattArbeidsevne = Prosent.`100_PROSENT`,
             gradering = Prosent.`100_PROSENT`,
+            opplysningerMottatt = null,
         ),
         trekk = Dagsatser(0),
         brukerAvKvoter = setOf(),

@@ -46,7 +46,8 @@ class SoningRegelTest {
                 totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),
                 andelArbeid = Prosent(0),
                 fastsattArbeidsevne = Prosent.`0_PROSENT`,
-                gradering = Prosent.`100_PROSENT`
+                gradering = Prosent.`100_PROSENT`,
+                opplysningerMottatt = null,
             ), grenseverdi = Prosent(60)
         )
         val tidligereResultatTidslinje = Tidslinje(listOf(Segment(periode, vurderingFraTidligereResultat)))

@@ -348,7 +348,8 @@ class StatistikkJobbUtførerTest {
                             totaltAntallTimer = TimerArbeid(BigDecimal(22)),
                             andelArbeid = Prosent(33),
                             fastsattArbeidsevne = Prosent(23),
-                            gradering = Prosent(23)
+                            gradering = Prosent(23),
+                            opplysningerMottatt = null,
                         ),
                         trekk = Dagsatser(0),
                         brukerAvKvoter = setOf(Kvote.STUDENT, Kvote.ORDINÆR),

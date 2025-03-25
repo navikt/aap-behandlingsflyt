@@ -79,12 +79,14 @@ class GraderingArbeidRegel : UnderveisRegel {
         val timerArbeid: TimerArbeid?,
         /** null representerer fravær av opplysninger */
         val arbeidsevne: Prosent?,
+        val opplysningerFørstMottatt: LocalDate?,
     ) {
         companion object {
             fun mergePrioriterHøyre(venstre: OpplysningerOmArbeid?, høyre: OpplysningerOmArbeid?) =
                 OpplysningerOmArbeid(
                     timerArbeid = høyre?.timerArbeid ?: venstre?.timerArbeid,
                     arbeidsevne = høyre?.arbeidsevne ?: venstre?.arbeidsevne,
+                    opplysningerFørstMottatt = listOfNotNull(venstre?.opplysningerFørstMottatt, høyre?.opplysningerFørstMottatt).minOrNull()
                 )
         }
     }
@@ -93,7 +95,7 @@ class GraderingArbeidRegel : UnderveisRegel {
         resultat: Tidslinje<Vurdering>,
         input: UnderveisInput
     ): Tidslinje<ArbeidsGradering> {
-        var opplysninger = Tidslinje(input.rettighetsperiode, OpplysningerOmArbeid(null, null))
+        var opplysninger = Tidslinje(input.rettighetsperiode, OpplysningerOmArbeid(null, null, null))
             .outerJoin(arbeidsevnevurdering(input), OpplysningerOmArbeid::mergePrioriterHøyre)
             .outerJoin(nullTimerVedFritakFraMeldeplikt(input), OpplysningerOmArbeid::mergePrioriterHøyre)
             .outerJoin(opplysningerFraMeldekort(input), OpplysningerOmArbeid::mergePrioriterHøyre)
@@ -110,9 +112,10 @@ class GraderingArbeidRegel : UnderveisRegel {
 
         if (harGittOpplysningerFramTilNå) {
             // anta null timer arbeidet hvis medlemmet har gitt alle opplysninger
-            opplysninger = Tidslinje(input.rettighetsperiode, OpplysningerOmArbeid(timerArbeid = TimerArbeid(BigDecimal.ZERO), null))
+            opplysninger = Tidslinje(input.rettighetsperiode, OpplysningerOmArbeid(timerArbeid = TimerArbeid(BigDecimal.ZERO), null, null))
                 .outerJoin(opplysninger, OpplysningerOmArbeid::mergePrioriterHøyre)
         }
+
 
         return groupByMeldeperiode(resultat, opplysninger)
             .flatMap { meldeperiode ->
@@ -125,7 +128,8 @@ class GraderingArbeidRegel : UnderveisRegel {
         return input.arbeidsevneGrunnlag.vurderinger.tidslinje().mapValue {
             OpplysningerOmArbeid(
                 timerArbeid = null,
-                arbeidsevne = it.arbeidsevne
+                arbeidsevne = it.arbeidsevne,
+                opplysningerFørstMottatt = null,
             )
         }
     }
@@ -136,40 +140,48 @@ class GraderingArbeidRegel : UnderveisRegel {
                 OpplysningerOmArbeid(
                     timerArbeid = TimerArbeid(BigDecimal.ZERO),
                     arbeidsevne = null,
+                    opplysningerFørstMottatt = null,
                 )
             } else {
-                OpplysningerOmArbeid(timerArbeid = null, arbeidsevne = null)
+                OpplysningerOmArbeid(
+                    timerArbeid = null,
+                    arbeidsevne = null,
+                    opplysningerFørstMottatt = null,
+                )
             }
         }
 
     private fun opplysningerFraMeldekort(input: UnderveisInput): Tidslinje<OpplysningerOmArbeid> {
         val innsendt = input.innsendingsTidspunkt.map { it.value to it.key }.toMap()
         var tidslinje = Tidslinje<OpplysningerOmArbeid>()
+
         for (meldekort in input.meldekort.sortedBy { innsendt[it.journalpostId] }) {
             tidslinje = tidslinje.outerJoin(meldekort.somTidslinje()) { tidligereOpplysnigner, meldekortopplysninger ->
-                OpplysningerOmArbeid.mergePrioriterHøyre(
-                    tidligereOpplysnigner,
-                    OpplysningerOmArbeid(
-                        timerArbeid = meldekortopplysninger?.let { (timerArbeidet, antallDager) ->
-                            TimerArbeid(
-                                timerArbeidet.antallTimer.divide(
-                                    BigDecimal(antallDager),
-                                    3,
-                                    RoundingMode.HALF_UP
-                                )
+                /* opplsysninger fra nyeste meldekort, opplysningerMottat fra eldste meldekort */
+                val timerArbeidetOpplysninger = OpplysningerOmArbeid(
+                    timerArbeid = meldekortopplysninger?.let { (timerArbeidet, antallDager) ->
+                        TimerArbeid(
+                            timerArbeidet.antallTimer.divide(
+                                BigDecimal(antallDager),
+                                3,
+                                RoundingMode.HALF_UP
                             )
-                        },
-                        arbeidsevne = null,
-                    )
+                        )
+                    },
+                    arbeidsevne = null,
+                    opplysningerFørstMottatt = innsendt[meldekort.journalpostId],
                 )
+
+                OpplysningerOmArbeid.mergePrioriterHøyre(tidligereOpplysnigner, timerArbeidetOpplysninger)
             }
         }
+
         return tidslinje
     }
 
     private fun regnUtGradering(
         periode: Periode,
-        opplysningerOmArbeid: Tidslinje<OpplysningerOmArbeid>
+        opplysningerOmArbeid: Tidslinje<OpplysningerOmArbeid>,
     ): Tidslinje<ArbeidsGradering> {
         require(opplysningerOmArbeid.helePerioden() == periode)
         require(opplysningerOmArbeid.erSammenhengende())
@@ -184,13 +196,14 @@ class GraderingArbeidRegel : UnderveisRegel {
                     andelArbeid = `0_PROSENT`,
                     fastsattArbeidsevne = it.arbeidsevne ?: `0_PROSENT`,
                     gradering = `0_PROSENT`,
+                    opplysningerMottatt = null,
                 )
             }
         }
 
 
         val timerArbeidet = opplysningerOmArbeid.sumOf {
-            (it.verdi.timerArbeid?.antallTimer ?: BigDecimal.ZERO) * BigDecimal(it.periode.antallDager())
+            it.verdi.timerArbeid!!.antallTimer * BigDecimal(it.periode.antallDager())
         }
         val antallHverdager = BigDecimal(periode.antallHverdager().asInt)
 
@@ -218,6 +231,10 @@ class GraderingArbeidRegel : UnderveisRegel {
                 gradering = Prosent.`100_PROSENT`.minus(
                     Prosent.max(andelArbeid, fastsattArbeidsevne)
                 ),
+                opplysningerMottatt =
+                    opplysningerOmArbeid.segmenter().mapNotNull { it.verdi.opplysningerFørstMottatt }
+                        /* Høyeste dato er datoen første dato vi hadde opplysninger for *hele* meldeperioden. */
+                        .maxOrNull()
             )
         }
     }

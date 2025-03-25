@@ -82,6 +82,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
             andelArbeid = Prosent.`100_PROSENT`.minus(Prosent(graderingProsent)),
             fastsattArbeidsevne = Prosent(andelArbeidsevne),
             gradering = Prosent(graderingProsent),
+            opplysningerMottatt = it.getLocalDateOrNull("meldekort_mottatt"),
         )
 
         return Underveisperiode(

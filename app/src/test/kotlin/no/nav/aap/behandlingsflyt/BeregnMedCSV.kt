@@ -129,6 +129,7 @@ fun beregnForInput(input: Input, fødselsdato: Fødselsdato): Triple<Year, GUnit
                         andelArbeid = Prosent.`100_PROSENT`,
                         fastsattArbeidsevne = Prosent.`100_PROSENT`, // TODO
                         gradering = Prosent.`100_PROSENT`,
+                        opplysningerMottatt = null,
                     ),
                     trekk = Dagsatser(0),
                     brukerAvKvoter = setOf(),

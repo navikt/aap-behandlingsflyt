@@ -160,6 +160,7 @@ class Effektuer11_7RepositoryImplTest {
             andelArbeid = Prosent.`0_PROSENT`,
             fastsattArbeidsevne = Prosent.`100_PROSENT`,
             gradering = Prosent.`100_PROSENT`,
+            opplysningerMottatt = null,
         ),
         trekk = Dagsatser(0),
         brukerAvKvoter = setOf(),

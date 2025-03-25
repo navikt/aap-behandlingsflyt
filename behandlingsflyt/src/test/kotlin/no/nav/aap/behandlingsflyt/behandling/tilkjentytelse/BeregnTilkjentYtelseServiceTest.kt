@@ -744,7 +744,8 @@ class BeregnTilkjentYtelseServiceTest {
                         totaltAntallTimer = TimerArbeid(BigDecimal(10)),
                         andelArbeid = Prosent.`50_PROSENT`,
                         fastsattArbeidsevne = Prosent.`50_PROSENT`,
-                        gradering = gradering
+                        gradering = gradering,
+                        opplysningerMottatt = null,
                     ),
                     trekk = Dagsatser(0),
                     brukerAvKvoter = setOf(Kvote.ORDINÆR),
