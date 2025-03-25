@@ -2,9 +2,11 @@ package no.nav.aap.behandlingsflyt.behandling.samordning
 
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.nimbusds.jwt.SignedJWT
 import com.papsign.ktor.openapigen.OpenAPIGen
 import com.papsign.ktor.openapigen.route.apiRouting
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
+import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -39,7 +41,7 @@ import java.time.LocalDate
 import java.util.*
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
 
-class SamordningApiKtTest {
+class SamordningApiTest {
     companion object {
         private val server = MockOAuth2Server()
 
@@ -56,6 +58,7 @@ class SamordningApiKtTest {
             GatewayRegistry
                 .register<FakeTilgangGateway>()
         }
+
     }
 
     @Test
@@ -85,11 +88,14 @@ class SamordningApiKtTest {
             installApplication {
                 samordningGrunnlag(ds)
             }
-
             val jwt = issueToken("nav:aap:afpoffentlig.read")
-            val response = createClient().get("/api/behandling/${behandling.referanse.referanse}/grunnlag/samordning") {
+            val response =
+                sendGetRequest(client, jwt, behandling.id, "/api/behandling/${behandling.referanse.referanse}/grunnlag/samordning")
+
+
+           /* val response = createClient().get("/api/behandling/${behandling.referanse.referanse}/grunnlag/samordning") {
                 header("Authorization", "Bearer ${jwt.serialize()}")
-            }
+            }*/
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
 
             assertThat(response.body<SamordningYtelseVurderingGrunnlagDTO>()).isEqualTo(
@@ -152,14 +158,6 @@ class SamordningApiKtTest {
         periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
     )
 
-    private fun issueToken(scope: String) = server.issueToken(
-        issuerId = "default",
-        claims = mapOf(
-            "scope" to scope,
-            "consumer" to mapOf("authority" to "123", "ID" to "0192:889640782")
-        ),
-    )
-
     private fun ApplicationTestBuilder.createClient() = createClient {
         install(ClientContentNegotiation) {
             jackson {
@@ -168,4 +166,24 @@ class SamordningApiKtTest {
             }
         }
     }
+
+    private suspend fun sendGetRequest(
+        client: HttpClient,
+        jwt: SignedJWT,
+        payload: Any,
+        path: String
+    ) = client.get(path) {
+        header("Authorization", "Bearer ${jwt.serialize()}")
+        header("X-callid", UUID.randomUUID().toString())
+        contentType(ContentType.Application.Json)
+        setBody(payload)
+    }
+
+    private fun issueToken(scope: String) = server.issueToken(
+        issuerId = "default",
+        claims = mapOf(
+            "scope" to scope,
+            "consumer" to mapOf("authority" to "123", "ID" to "0192:889640782")
+        ),
+    )
 }
