@@ -173,6 +173,7 @@ internal fun Application.server(dbConfig: DbConfig) {
     install(StatusPages) {
         exception<Throwable> { call, cause ->
             val logger = LoggerFactory.getLogger(javaClass)
+            val uri = call.request.local.uri
             when (cause) {
                 is ElementNotFoundException -> {
                     call.respondText(status = HttpStatusCode.NotFound, text = cause.message ?: "")
@@ -183,7 +184,7 @@ internal fun Application.server(dbConfig: DbConfig) {
                 }
 
                 is ManglerTilgangException -> {
-                    logger.warn("Mangler tilgang til å vise route: '{}'", call.request.local.uri, cause)
+                    logger.warn("Mangler tilgang til å vise route: '{}'", uri, cause)
                     call.respondText(status = HttpStatusCode.Forbidden, text = "Forbidden")
                 }
 
@@ -193,8 +194,11 @@ internal fun Application.server(dbConfig: DbConfig) {
                 }
 
                 else -> {
-                    logger.warn("Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
-                    call.respond(status = HttpStatusCode.InternalServerError, message = ErrorRespons(cause.message))
+                    logger.warn("Ukjent feil ved kall til '{}'", uri, cause)
+                    call.respond(
+                        status = HttpStatusCode.InternalServerError,
+                        message = ErrorRespons("Feil i backend av type ${cause.javaClass.signers} ved kall mot $uri. Se logg for detaljer.")
+                    )
                 }
             }
         }
