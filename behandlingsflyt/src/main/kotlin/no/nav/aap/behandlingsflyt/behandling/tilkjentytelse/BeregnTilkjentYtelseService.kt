@@ -90,7 +90,7 @@ class BeregnTilkjentYtelseService(
                             institusjonGradering = venstre.verdi.institusjonsoppholdReduksjon,
                             samordningGradering = Prosent.`0_PROSENT`,
                             samordningUføregradering = Prosent.`0_PROSENT`
-                        ), venstre.verdi.meldePeriode.tom.plusDays(1)
+                        ), venstre.verdi.meldePeriode.tom.plusDays(9)
                     )
                 )
             })

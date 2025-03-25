@@ -83,7 +83,7 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(1)
+                    utbetalingsdato = periode.tom.plusDays(9)
                 )
             ), Segment(
                 periode = Periode(LocalDate.of(2023, 5, 1), LocalDate.of(2023, 5, 1)), verdi = Tilkjent(
@@ -101,7 +101,7 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(1)
+                    utbetalingsdato = periode.tom.plusDays(9)
                 )
             )
         )
@@ -158,7 +158,7 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 1,
                     barnetilleggsats = Beløp("36"),
                     barnetillegg = Beløp("36"),
-                    utbetalingsdato = periode.tom.plusDays(1)
+                    utbetalingsdato = periode.tom.plusDays(9)
                 )
             )
         )
@@ -217,7 +217,7 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 1,
                     barnetilleggsats = Beløp("35"),
                     barnetillegg = Beløp("35"),
-                    utbetalingsdato = periode.tom.plusDays(1)
+                    utbetalingsdato = periode.tom.plusDays(9)
                 )
             ), Segment(
                 periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)), verdi = Tilkjent(
@@ -235,7 +235,7 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 1,
                     barnetilleggsats = Beløp("36"),
                     barnetillegg = Beløp("36"),
-                    utbetalingsdato = periode.tom.plusDays(1)
+                    utbetalingsdato = periode.tom.plusDays(9)
                 )
             )
         )
@@ -285,7 +285,7 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(1)
+                    utbetalingsdato = periode.tom.plusDays(9)
 
                 )
             ), Segment(
@@ -304,7 +304,7 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(1)
+                    utbetalingsdato = periode.tom.plusDays(9)
                 )
             )
         )
@@ -354,7 +354,7 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(1)
+                    utbetalingsdato = periode.tom.plusDays(9)
 
                 )
             ), Segment(
@@ -373,7 +373,7 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(1)
+                    utbetalingsdato = periode.tom.plusDays(9)
                 )
             )
         )
@@ -421,7 +421,7 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(1),
+                    utbetalingsdato = periode.tom.plusDays(9),
                 )
             ),
         )
@@ -492,7 +492,7 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(1)
+                    utbetalingsdato = periode.tom.plusDays(9)
                 )
             ),
             Segment(
@@ -511,7 +511,7 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(1)
+                    utbetalingsdato = periode.tom.plusDays(9)
                 )
             ), Segment(
                 periode = Periode(2 august 2023, 1 september 2023), verdi = Tilkjent(
@@ -529,7 +529,7 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(1)
+                    utbetalingsdato = periode.tom.plusDays(9)
                 )
             )
         )
@@ -596,7 +596,7 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(1)
+                    utbetalingsdato = periode.tom.plusDays(9)
                 )
             ), Segment(
                 periode = Periode(1 juli 2023, 1 august 2023), verdi = Tilkjent(
@@ -614,7 +614,7 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(1)
+                    utbetalingsdato = periode.tom.plusDays(9)
                 )
             )
         )
@@ -663,7 +663,7 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(1)
+                    utbetalingsdato = periode.tom.plusDays(9)
                 )
             )
         )
@@ -720,7 +720,7 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(1)
+                    utbetalingsdato = periode.tom.plusDays(9)
                 )
             )
         )
@@ -811,7 +811,7 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(1),
+                    utbetalingsdato = periode.tom.plusDays(9),
                 )
             ),
         )
