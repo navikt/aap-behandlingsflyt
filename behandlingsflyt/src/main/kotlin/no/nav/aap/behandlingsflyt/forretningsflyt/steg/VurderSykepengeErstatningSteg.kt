@@ -101,6 +101,7 @@ class VurderSykepengeErstatningSteg private constructor(
             }
 
             VurderingType.FORLENGELSE -> {
+                // TODO: Denne må vi finne ut av
                 // !!! RIP !!!
                 // Her blir det en del logikk for å vite om dette vilkåret faktisk skal forlengelse
                 // Er kvoten tom? osv osv
