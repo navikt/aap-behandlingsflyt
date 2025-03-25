@@ -32,6 +32,7 @@ import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.JournalpostPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakPathParam
@@ -170,45 +171,49 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     respondWithStatus(HttpStatusCode.NotFound)
                 }
             }
-            route("/{saksnummer}").authorizedGet<HentSakDTO, UtvidetSaksinfoDTO>(
-                AuthorizationParamPathConfig(
-                    sakPathParam = SakPathParam("saksnummer")
-                ),
-                null,
-                TagModule(listOf(Tags.Sak)),
-            ) { req ->
-                val saksnummer = req.saksnummer
 
-                val (sak, behandlinger) = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
-                    val sak = repositoryProvider.provide<SakRepository>()
-                        .hent(saksnummer = Saksnummer(saksnummer))
+            route("/{saksnummer}") {
+                authorizedGet<HentSakDTO, UtvidetSaksinfoDTO>(
+                    AuthorizationParamPathConfig(
+                        sakPathParam = SakPathParam("saksnummer")
+                    ),
+                    null,
+                    TagModule(listOf(Tags.Sak)),
+                ) { req ->
+                    val saksnummer = req.saksnummer
 
-                    val behandlinger =
-                        repositoryProvider.provide<BehandlingRepository>().hentAlleFor(sak.id)
-                            .map { behandling ->
-                                BehandlinginfoDTO(
-                                    referanse = behandling.referanse.referanse,
-                                    type = behandling.typeBehandling().identifikator(),
-                                    status = behandling.status(),
-                                    opprettet = behandling.opprettetTidspunkt
-                                )
-                            }
+                    val (sak, behandlinger) = dataSource.transaction(readOnly = true) { connection ->
+                        val repositoryProvider = RepositoryProvider(connection)
+                        val sak = repositoryProvider.provide<SakRepository>()
+                            .hent(saksnummer = Saksnummer(saksnummer))
 
-                    sak to behandlinger
-                }
+                        val behandlinger =
+                            repositoryProvider.provide<BehandlingRepository>().hentAlleFor(sak.id)
+                                .map { behandling ->
+                                    BehandlinginfoDTO(
+                                        referanse = behandling.referanse.referanse,
+                                        type = behandling.typeBehandling().identifikator(),
+                                        status = behandling.status(),
+                                        opprettet = behandling.opprettetTidspunkt
+                                    )
+                                }
 
-                respond(
-                    UtvidetSaksinfoDTO(
-                        saksnummer = sak.saksnummer.toString(),
-                        opprettetTidspunkt = sak.opprettetTidspunkt,
-                        periode = sak.rettighetsperiode,
-                        ident = sak.person.identer().first().identifikator,
-                        behandlinger = behandlinger,
-                        status = sak.status()
+                        sak to behandlinger
+                    }
+
+                    respond(
+                        UtvidetSaksinfoDTO(
+                            saksnummer = sak.saksnummer.toString(),
+                            opprettetTidspunkt = sak.opprettetTidspunkt,
+                            periode = sak.rettighetsperiode,
+                            ident = sak.person.identer().first().identifikator,
+                            behandlinger = behandlinger,
+                            status = sak.status()
+                        )
                     )
-                )
+                }
             }
+
             route("/{saksnummer}/dokumenter") {
                 authorizedGet<HentSakDTO, List<SafListDokument>>(
                     AuthorizationParamPathConfig(
