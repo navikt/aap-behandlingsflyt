@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.steg.internal.StegKonstruktørImpl
 import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererServiceImpl
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
@@ -26,8 +26,9 @@ import no.nav.aap.motor.FlytJobbRepository
 import org.slf4j.LoggerFactory
 
 class AvklaringsbehovOrkestrator(
-    private val connection: DBConnection, private val behandlingHendelseService: BehandlingHendelseServiceImpl
+    private val connection: DBConnection, private val behandlingHendelseService: BehandlingHendelseService
 ) {
+    // TODO flytt?
     private val repositoryProvider = RepositoryProvider(connection)
     private val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
     private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
