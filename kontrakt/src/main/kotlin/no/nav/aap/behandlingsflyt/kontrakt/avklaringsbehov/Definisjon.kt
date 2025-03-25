@@ -262,8 +262,6 @@ public enum class Definisjon(
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.REFUSJON_KRAV,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
-        kreverToTrinn = true,
-        kvalitetssikres = true
     );
 
     public companion object {
