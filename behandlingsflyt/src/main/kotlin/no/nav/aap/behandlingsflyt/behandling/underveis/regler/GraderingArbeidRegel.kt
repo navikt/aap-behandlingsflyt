@@ -99,20 +99,14 @@ class GraderingArbeidRegel : UnderveisRegel {
             .outerJoin(arbeidsevnevurdering(input), OpplysningerOmArbeid::mergePrioriterHøyre)
             .outerJoin(nullTimerVedFritakFraMeldeplikt(input), OpplysningerOmArbeid::mergePrioriterHøyre)
             .outerJoin(opplysningerFraMeldekort(input), OpplysningerOmArbeid::mergePrioriterHøyre)
+            .kryss(resultat.filter { it.verdi.fårAapEtter != null }.mapValue { null })
 
-        val dagensDato = LocalDate.now()
-        val sisteMeldeperiodeSomSkalHaOpplysninger = resultat.asSequence()
-            .map { it.verdi.meldeperiode() }
-            .lastOrNull { it.tom.plusDays(8) <= dagensDato }
-        val harGittOpplysningerFramTilNå = sisteMeldeperiodeSomSkalHaOpplysninger == null || opplysninger
-            .takeWhile { it.periode.fom <= sisteMeldeperiodeSomSkalHaOpplysninger.fom }
-            .let {
-                it.isNotEmpty() && it.all { it.verdi.timerArbeid != null }
-            }
-
-        if (harGittOpplysningerFramTilNå) {
+        if (skalAntaTimerArbeidet(resultat, opplysninger)) {
             // anta null timer arbeidet hvis medlemmet har gitt alle opplysninger
-            opplysninger = Tidslinje(input.rettighetsperiode, OpplysningerOmArbeid(timerArbeid = TimerArbeid(BigDecimal.ZERO), null, null))
+            opplysninger = Tidslinje(
+                input.rettighetsperiode,
+                OpplysningerOmArbeid(timerArbeid = TimerArbeid(BigDecimal.ZERO), null, null)
+            )
                 .outerJoin(opplysninger, OpplysningerOmArbeid::mergePrioriterHøyre)
         }
 
@@ -122,6 +116,35 @@ class GraderingArbeidRegel : UnderveisRegel {
                 regnUtGradering(meldeperiode.periode, meldeperiode.verdi)
             }
             .komprimer()
+    }
+
+    private fun skalAntaTimerArbeidet(
+        underveisVurderinger: Tidslinje<Vurdering>,
+        opplysningerTidslinje: Tidslinje<OpplysningerOmArbeid>
+    ): Boolean {
+        val dagensDato = LocalDate.now()
+
+        val skalHaOpplysningerTidslinje = underveisVurderinger.mapValue { underveisVurdering ->
+            /* uten rett skal vi ikke ha opplysninger */
+            if (underveisVurdering.fårAapEtter == null) {
+                return@mapValue false
+            }
+
+            val fastsattDag = underveisVurdering.meldeperiode().tom.plusDays(1)
+            val sisteFrist = fastsattDag.plusDays(7)
+
+            return@mapValue dagensDato < sisteFrist
+        }
+
+        val manglerOpplysninger = skalHaOpplysningerTidslinje.outerJoin(opplysningerTidslinje) { skalHaOpplysninger, opplysninger ->
+            if (skalHaOpplysninger == true) {
+                return@outerJoin opplysninger?.timerArbeid == null
+            } else {
+                return@outerJoin false
+            }
+        }
+
+        return manglerOpplysninger.none { it.verdi }
     }
 
     private fun arbeidsevnevurdering(input: UnderveisInput): Tidslinje<OpplysningerOmArbeid> {

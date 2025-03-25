@@ -183,7 +183,7 @@ class GraderingArbeidRegelTest {
     private fun vurder(input: UnderveisInput): Tidslinje<Vurdering> {
         return regel.vurder(
             input,
-            UtledMeldeperiodeRegel().vurder(input, Tidslinje())
+            UtledMeldeperiodeRegel().vurder(input, Tidslinje(input.rettighetsperiode, Vurdering(fårAapEtter = RettighetsType.BISTANDSBEHOV)))
         ).mapValue { it.copy(fårAapEtter = RettighetsType.BISTANDSBEHOV) }
     }
 }
