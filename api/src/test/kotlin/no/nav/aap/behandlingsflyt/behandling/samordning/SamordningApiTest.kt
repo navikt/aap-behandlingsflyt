@@ -21,7 +21,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeServers
+import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.inmemorygateway.FakeTilgangGateway
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -41,6 +41,8 @@ import java.time.LocalDate
 import java.util.*
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
 
+
+@Fakes
 class SamordningApiKtTest {
     companion object {
         private val server = MockOAuth2Server()
@@ -48,7 +50,6 @@ class SamordningApiKtTest {
         @BeforeAll
         @JvmStatic
         fun beforeAll() {
-            FakeServers.start()
             server.start()
 
             RepositoryRegistry
@@ -60,13 +61,6 @@ class SamordningApiKtTest {
                 .register<FakeTilgangGateway>()
         }
 
-
-        @AfterAll
-        @JvmStatic
-        fun afterAll() {
-            server.shutdown()
-            FakeServers.close()
-        }
     }
 
     @Test
