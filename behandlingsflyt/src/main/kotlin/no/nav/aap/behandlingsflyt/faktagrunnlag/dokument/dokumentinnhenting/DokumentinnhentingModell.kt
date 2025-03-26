@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 data class LegeerklæringBestillingRequest (
-    val bestillerIdent: String,
+    val bestillerNavIdent: String,
     val behandlerRef: String,
     val behandlerNavn: String,
     val behandlerHprNr: String,

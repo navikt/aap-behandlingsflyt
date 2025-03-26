@@ -98,7 +98,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
 
                         val bestillingUUID: String = dokumentinnhentingGateway.bestillLegeerklæring(
                             LegeerklæringBestillingRequest(
-                                bestillerIdent = bruker().ident,
+                                bestillerNavIdent = bruker().ident,
                                 behandlerRef = req.behandlerRef,
                                 behandlerNavn = req.behandlerNavn,
                                 behandlerHprNr = req.behandlerHprNr,
