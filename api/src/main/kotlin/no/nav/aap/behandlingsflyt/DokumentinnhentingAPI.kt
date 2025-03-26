@@ -164,8 +164,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
             authorizedPost<Unit, String, PurringLegeerklæringRequest>(
                 AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SAKSBEHANDLE,
-                    applicationRole = "dokumentinnhenting-api",
-                    applicationsOnly = false
+                    applicationsOnly = false,
                 )
             ) { _, req ->
                 val request = LegeerklæringPurringRequest(req.dialogmeldingPurringUUID)
