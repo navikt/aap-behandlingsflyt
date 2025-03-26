@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeid
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.TimerArbeid
@@ -76,17 +75,19 @@ class GraderingArbeidRegel : UnderveisRegel {
     /** § 11-23 tredje ledd */
     class OpplysningerOmArbeid(
         /** null representerer fravær av opplysninger */
-        val timerArbeid: TimerArbeid?,
+        val timerArbeid: TimerArbeid? = null,
         /** null representerer fravær av opplysninger */
-        val arbeidsevne: Prosent?,
-        val opplysningerFørstMottatt: LocalDate?,
+        val arbeidsevne: Prosent? = null,
+        val opplysningerFørstMottatt: LocalDate? = null,
+        val harRett: Boolean? = null,
     ) {
         companion object {
             fun mergePrioriterHøyre(venstre: OpplysningerOmArbeid?, høyre: OpplysningerOmArbeid?) =
                 OpplysningerOmArbeid(
                     timerArbeid = høyre?.timerArbeid ?: venstre?.timerArbeid,
                     arbeidsevne = høyre?.arbeidsevne ?: venstre?.arbeidsevne,
-                    opplysningerFørstMottatt = listOfNotNull(venstre?.opplysningerFørstMottatt, høyre?.opplysningerFørstMottatt).minOrNull()
+                    opplysningerFørstMottatt = listOfNotNull(venstre?.opplysningerFørstMottatt, høyre?.opplysningerFørstMottatt).minOrNull(),
+                    harRett = høyre?.harRett ?: venstre?.harRett,
                 )
         }
     }
@@ -95,17 +96,17 @@ class GraderingArbeidRegel : UnderveisRegel {
         resultat: Tidslinje<Vurdering>,
         input: UnderveisInput
     ): Tidslinje<ArbeidsGradering> {
-        var opplysninger = Tidslinje(input.rettighetsperiode, OpplysningerOmArbeid(null, null, null))
+        var opplysninger = Tidslinje(input.rettighetsperiode, OpplysningerOmArbeid())
             .outerJoin(arbeidsevnevurdering(input), OpplysningerOmArbeid::mergePrioriterHøyre)
             .outerJoin(nullTimerVedFritakFraMeldeplikt(input), OpplysningerOmArbeid::mergePrioriterHøyre)
             .outerJoin(opplysningerFraMeldekort(input), OpplysningerOmArbeid::mergePrioriterHøyre)
-            .kryss(resultat.filter { it.verdi.fårAapEtter != null }.mapValue { null })
+            .outerJoin(harRettTidslinje(resultat), OpplysningerOmArbeid::mergePrioriterHøyre)
 
         if (skalAntaTimerArbeidet(resultat, opplysninger)) {
             // anta null timer arbeidet hvis medlemmet har gitt alle opplysninger
             opplysninger = Tidslinje(
                 input.rettighetsperiode,
-                OpplysningerOmArbeid(timerArbeid = TimerArbeid(BigDecimal.ZERO), null, null)
+                OpplysningerOmArbeid(timerArbeid = TimerArbeid(BigDecimal.ZERO))
             )
                 .outerJoin(opplysninger, OpplysningerOmArbeid::mergePrioriterHøyre)
         }
@@ -113,7 +114,7 @@ class GraderingArbeidRegel : UnderveisRegel {
 
         return groupByMeldeperiode(resultat, opplysninger)
             .flatMap { meldeperiode ->
-                regnUtGradering(meldeperiode.periode, meldeperiode.verdi)
+                regnUtGradering(meldeperiode.verdi)
             }
             .komprimer()
     }
@@ -147,13 +148,15 @@ class GraderingArbeidRegel : UnderveisRegel {
         return manglerOpplysninger.none { it.verdi }
     }
 
+    private fun harRettTidslinje(vurderinger: Tidslinje<Vurdering>): Tidslinje<OpplysningerOmArbeid> {
+        return vurderinger.mapValue { vurdering ->
+            OpplysningerOmArbeid(harRett = vurdering.fårAapEtter != null)
+        }
+    }
+
     private fun arbeidsevnevurdering(input: UnderveisInput): Tidslinje<OpplysningerOmArbeid> {
         return input.arbeidsevneGrunnlag.vurderinger.tidslinje().mapValue {
-            OpplysningerOmArbeid(
-                timerArbeid = null,
-                arbeidsevne = it.arbeidsevne,
-                opplysningerFørstMottatt = null,
-            )
+            OpplysningerOmArbeid(arbeidsevne = it.arbeidsevne)
         }
     }
 
@@ -162,15 +165,9 @@ class GraderingArbeidRegel : UnderveisRegel {
             if (it.harFritak) {
                 OpplysningerOmArbeid(
                     timerArbeid = TimerArbeid(BigDecimal.ZERO),
-                    arbeidsevne = null,
-                    opplysningerFørstMottatt = null,
                 )
             } else {
-                OpplysningerOmArbeid(
-                    timerArbeid = null,
-                    arbeidsevne = null,
-                    opplysningerFørstMottatt = null,
-                )
+                OpplysningerOmArbeid()
             }
         }
 
@@ -191,7 +188,6 @@ class GraderingArbeidRegel : UnderveisRegel {
                             )
                         )
                     },
-                    arbeidsevne = null,
                     opplysningerFørstMottatt = innsendt[meldekort.journalpostId],
                 )
 
@@ -203,10 +199,17 @@ class GraderingArbeidRegel : UnderveisRegel {
     }
 
     private fun regnUtGradering(
-        periode: Periode,
         opplysningerOmArbeid: Tidslinje<OpplysningerOmArbeid>,
     ): Tidslinje<ArbeidsGradering> {
-        if (opplysningerOmArbeid.any { it.verdi.timerArbeid == null} ) {
+        val antallHverdager = opplysningerOmArbeid
+            .sumOf {
+                if (it.verdi.harRett == true)
+                    BigDecimal(it.periode.antallHverdager().asInt)
+                else
+                    BigDecimal.ZERO
+            }
+
+        if (antallHverdager == BigDecimal.ZERO || opplysningerOmArbeid.any { it.verdi.harRett == true && it.verdi.timerArbeid == null }) {
             /* mangler opplysninger for hele perioden, vet derfor ikke hva som er
              * totalt antall timer.
              */
@@ -223,9 +226,12 @@ class GraderingArbeidRegel : UnderveisRegel {
 
 
         val timerArbeidet = opplysningerOmArbeid.sumOf {
-            it.verdi.timerArbeid!!.antallTimer * BigDecimal(it.periode.antallDager())
+            if (it.verdi.harRett == true)
+                it.verdi.timerArbeid!!.antallTimer * BigDecimal(it.periode.antallDager())
+            else
+                BigDecimal.ZERO
         }
-        val antallHverdager = BigDecimal(periode.antallHverdager().asInt)
+
 
         // En meldeperiode har ikke nødvendigvis 10 hverdager, f.eks. ved start og stopp.
         // Vi skalerer derfor antall timer i meldeperiode med hvor lang meldeperioden faktisk er, altså:
