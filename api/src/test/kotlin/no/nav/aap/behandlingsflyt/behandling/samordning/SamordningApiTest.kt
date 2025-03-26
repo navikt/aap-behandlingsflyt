@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.inmemorygateway.FakeTilgangGateway
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -33,6 +34,7 @@ import no.nav.aap.lookup.gateway.GatewayRegistry
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -46,6 +48,7 @@ class SamordningApiKtTest {
         @BeforeAll
         @JvmStatic
         fun beforeAll() {
+            FakeServers.start()
             server.start()
 
             RepositoryRegistry
@@ -55,6 +58,14 @@ class SamordningApiKtTest {
 
             GatewayRegistry
                 .register<FakeTilgangGateway>()
+        }
+
+
+        @AfterAll
+        @JvmStatic
+        fun afterAll() {
+            server.shutdown()
+            FakeServers.close()
         }
     }
 
