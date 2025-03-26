@@ -39,7 +39,7 @@ import java.util.*
 @Fakes
 class TilkjentYtelseAPITest {
     companion object {
-        val server = MockOAuth2Server()
+        private val server = MockOAuth2Server()
 
         @BeforeAll
         @JvmStatic
