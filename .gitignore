@@ -33,7 +33,7 @@ dep.txt
 /.mvn/
 /logback.xml
 .temp*.txt
-.env
+.env*
 APP_LOG_HOME_IS_UNDEFINED
 .factorypath
 .DS_Store
