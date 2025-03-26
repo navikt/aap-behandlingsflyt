@@ -45,7 +45,7 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
         val begrunnelse: String,
         val vurdertAv: String,
     )
-    fun hentSamordningAndreStatligeYtelserVurderingBegrunnelseOgVurdertAv(vurderingId: Long): BegrunnelseOgVurdertAv {
+    private fun hentSamordningAndreStatligeYtelserVurderingBegrunnelseOgVurdertAv(vurderingId: Long): BegrunnelseOgVurdertAv {
         val query = """
             SELECT * FROM SAMORDNING_ANDRE_STATLIGE_YTELSER_VURDERING WHERE id = ?
         """.trimIndent()
@@ -63,7 +63,7 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
         }
     }
 
-    fun hentSamordningAndreStatligeYtelserVurderingPerioder(vurderingId: Long): List<SamordningAndreStatligeYtelserVurderingPeriode> {
+    private fun hentSamordningAndreStatligeYtelserVurderingPerioder(vurderingId: Long): List<SamordningAndreStatligeYtelserVurderingPeriode> {
         val query = """
             SELECT * FROM SAMORDNING_ANDRE_STATLIGE_YTELSER_VURDERING_PERIODE WHERE vurdering_id = ?
         """.trimIndent()
