@@ -28,8 +28,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
-private const val s = "yyy"
-
 class SamordningPeriodeSammenlignerTest {
     companion object {
         @AfterEach
@@ -170,10 +168,6 @@ class SamordningPeriodeSammenlignerTest {
         )
 
         InMemorySamordningYtelseRepository.setClock(Clock.offset(fixedClock, Duration.ofDays(2)))
-        val andrePeriode = Periode(
-            LocalDate.now(fixedClock).plusYears(1).plusDays(1),
-            LocalDate.now(fixedClock).plusYears(2)
-        )
         InMemorySamordningYtelseRepository.lagre(
             behandling.id, listOf(
                 SamordningYtelse(
@@ -222,7 +216,6 @@ class SamordningPeriodeSammenlignerTest {
         InMemorySamordningYtelseRepository.setClock(fixedClock)
         val førstePeriode = Periode(LocalDate.now(fixedClock), LocalDate.now(fixedClock).plusYears(1))
 
-
         val kilde = "xxx"
         val saksRef = "yyy"
         InMemorySamordningYtelseRepository.lagre(
@@ -242,10 +235,6 @@ class SamordningPeriodeSammenlignerTest {
         )
 
         InMemorySamordningYtelseRepository.setClock(Clock.offset(fixedClock, Duration.ofDays(2)))
-        val andrePeriode = Periode(
-            LocalDate.now(fixedClock).plusYears(1).plusDays(1),
-            LocalDate.now(fixedClock).plusYears(2)
-        )
         InMemorySamordningYtelseRepository.lagre(
             behandling.id, listOf(
                 SamordningYtelse(

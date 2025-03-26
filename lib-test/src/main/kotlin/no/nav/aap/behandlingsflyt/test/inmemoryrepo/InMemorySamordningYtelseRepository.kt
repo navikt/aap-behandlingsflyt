@@ -16,7 +16,9 @@ object InMemorySamordningYtelseRepository : SamordningYtelseRepository {
 
     private var clock = Clock.systemDefaultZone()
     fun setClock(c: Clock) {
-        clock = c
+        synchronized(lock) {
+            clock = c
+        }
     }
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningYtelseGrunnlag? {
@@ -55,19 +57,19 @@ object InMemorySamordningYtelseRepository : SamordningYtelseRepository {
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         synchronized(lock) {
-            val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandling)
-            if (eksisterendeGrunnlag == null) {
-                return
-            }
+            hentHvisEksisterer(fraBehandling) ?: return
 
             val fraYtelser = ytelser[fraBehandling]
             if (fraYtelser != null) {
                 val aktivYtelse = fraYtelser.maxByOrNull { it.second }
                 if (aktivYtelse != null) {
                     if (ytelser.containsKey(tilBehandling)) {
-                        ytelser[tilBehandling] = ytelser[tilBehandling]!! + Pair(aktivYtelse.first, Instant.now(clock))
+                        ytelser[tilBehandling] = ytelser[tilBehandling]!! + Pair(
+                            aktivYtelse.first.copy(grunnlagId = idSeq.andIncrement),
+                            Instant.now(clock)
+                        )
                     } else {
-                        ytelser[tilBehandling] = listOf(Pair(aktivYtelse.first, Instant.now(clock)))
+                        ytelser[tilBehandling] = listOf(Pair(aktivYtelse.first.copy(grunnlagId = idSeq.getAndIncrement()), Instant.now(clock)))
                     }
                 }
             }

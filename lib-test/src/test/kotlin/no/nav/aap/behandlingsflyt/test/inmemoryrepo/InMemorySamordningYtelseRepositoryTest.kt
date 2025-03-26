@@ -1,36 +1,38 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.util.function.Consumer
 
 class InMemorySamordningYtelseRepositoryTest {
-
-    @BeforeEach
-    fun setup() {
-        // Clear the repository before each test
-        val repo = InMemorySamordningYtelseRepository
-        val field = repo.javaClass.getDeclaredField("ytelser")
-        field.isAccessible = true
-        val ytelser = field.get(repo)
-        ytelser.javaClass.getMethod("clear").invoke(ytelser)
-    }
 
     @Test
     fun `lagre og hente ut igjen`() {
         val repo = InMemorySamordningYtelseRepository
-        repo.lagre(BehandlingId(123), emptyList())
+        val behandling = opprettBehandling(nySak(), TypeBehandling.Førstegangsbehandling)
+        repo.lagre(behandling.id, emptyList())
 
-        val res = repo.hentHvisEksisterer(BehandlingId(123))
+        val res = repo.hentHvisEksisterer(behandling.id)
 
         assertThat(res).isNotNull()
     }
@@ -38,8 +40,11 @@ class InMemorySamordningYtelseRepositoryTest {
     @Test
     fun `kopier fra en behandling til en annen`() {
         val repo = InMemorySamordningYtelseRepository
-        val fraBehandlingId = BehandlingId(123)
-        val tilBehandlingId = BehandlingId(456)
+        val sak = nySak()
+        val behandling1 = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+        val behandling2 = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+        val fraBehandlingId = behandling1.id
+        val tilBehandlingId = behandling2.id
 
         // Create a test ytelse
         val ytelse = SamordningYtelse(
@@ -83,8 +88,11 @@ class InMemorySamordningYtelseRepositoryTest {
     @Test
     fun `kopier fra en behandling som ikke eksisterer`() {
         val repo = InMemorySamordningYtelseRepository
-        val fraBehandlingId = BehandlingId(123)
-        val tilBehandlingId = BehandlingId(456)
+        val sak = nySak()
+        val behandling1 = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+        val behandling2 = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+        val fraBehandlingId = behandling1.id
+        val tilBehandlingId = behandling2.id
 
         // Try to copy from a non-existent behandling
         repo.kopier(fraBehandlingId, tilBehandlingId)
@@ -98,7 +106,9 @@ class InMemorySamordningYtelseRepositoryTest {
     @Test
     fun `hentEldsteGrunnlag returnerer det eldste grunnlaget`() {
         val repo = InMemorySamordningYtelseRepository
-        val behandlingId = BehandlingId(123)
+        val sak = nySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+        val behandlingId = behandling.id
 
         // Create test ytelser with different attributes to identify them
         val ytelse1 = SamordningYtelse(
@@ -195,7 +205,8 @@ class InMemorySamordningYtelseRepositoryTest {
     @Test
     fun `lagre med flere ytelser i en enkelt kall`() {
         val repo = InMemorySamordningYtelseRepository
-        val behandlingId = BehandlingId(123)
+        val sak = nySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         // Create multiple ytelser
         val ytelse1 = SamordningYtelse(
@@ -231,10 +242,10 @@ class InMemorySamordningYtelseRepositoryTest {
         )
 
         // Save multiple ytelser in a single call
-        repo.lagre(behandlingId, listOf(ytelse1, ytelse2))
+        repo.lagre(behandling.id, listOf(ytelse1, ytelse2))
 
         // Verify that both ytelser are saved
-        val grunnlag = repo.hentHvisEksisterer(behandlingId)
+        val grunnlag = repo.hentHvisEksisterer(behandling.id)
         assertThat(grunnlag).isNotNull()
         assertThat(grunnlag?.ytelser).hasSize(2)
 
@@ -258,7 +269,9 @@ class InMemorySamordningYtelseRepositoryTest {
     @Test
     fun `lagre med flere kall for samme behandlingId`() {
         val repo = InMemorySamordningYtelseRepository
-        val behandlingId = BehandlingId(123)
+        val sak = nySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+        val behandlingId = behandling.id
 
         // Create different ytelser for each call
         val ytelse1 = SamordningYtelse(
@@ -341,8 +354,9 @@ class InMemorySamordningYtelseRepositoryTest {
     @Test
     fun `kopier når målbehandlingen allerede har data`() {
         val repo = InMemorySamordningYtelseRepository
-        val fraBehandlingId = BehandlingId(123)
-        val tilBehandlingId = BehandlingId(456)
+        val sak = nySak()
+        val behandling1 = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+        val fraBehandlingId = behandling1.id
 
         // Create ytelser for source and target
         val ytelseSource = SamordningYtelse(
@@ -379,11 +393,11 @@ class InMemorySamordningYtelseRepositoryTest {
 
         // First, save data to both source and target
         repo.lagre(fraBehandlingId, listOf(ytelseSource))
-        repo.lagre(tilBehandlingId, listOf(ytelseTarget))
+        repo.lagre(fraBehandlingId, listOf(ytelseTarget))
 
-        // Store the target's grunnlagId before copying
-        val targetGrunnlagIdBeforeCopy = repo.hentHvisEksisterer(tilBehandlingId)?.grunnlagId
-        assertThat(targetGrunnlagIdBeforeCopy).isNotNull()
+        // Opprett ny behandling på samme sak
+        val behandling2 = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+        val tilBehandlingId = behandling2.id
 
         // Copy from source to target
         repo.kopier(fraBehandlingId, tilBehandlingId)
@@ -392,21 +406,57 @@ class InMemorySamordningYtelseRepositoryTest {
         val targetGrunnlagAfterCopy = repo.hentHvisEksisterer(tilBehandlingId)
         assertThat(targetGrunnlagAfterCopy).isNotNull()
 
-        // Verify that the grunnlagId is different (a new grunnlag was created)
-        assertThat(targetGrunnlagAfterCopy?.grunnlagId).isNotEqualTo(targetGrunnlagIdBeforeCopy)
-
         // Verify that the new grunnlag has the source's data
+        assertThat(targetGrunnlagAfterCopy?.ytelser).satisfiesExactlyInAnyOrder(
+            Consumer { ytelse ->
+                assertThat(ytelse.ytelseType).isEqualTo(Ytelse.FORELDREPENGER)
+                assertThat(ytelse.kilde).isEqualTo("TARGET")
+                assertThat(ytelse.saksRef).isEqualTo("REF_TARGET")
+                assertThat(ytelse.ytelsePerioder).satisfiesExactlyInAnyOrder(
+                    Consumer { ytelsePeriode ->
+                        assertThat(ytelsePeriode.periode.fom).isEqualTo(LocalDate.of(2023, 2, 1))
+                        assertThat(ytelsePeriode.periode.tom).isEqualTo(LocalDate.of(2023, 12, 31))
+                        assertThat(ytelsePeriode.gradering).isNull()
+                        assertThat(ytelsePeriode.kronesum).isEqualTo(2000)
+                    }
+                )
+            },
+        )
         assertThat(targetGrunnlagAfterCopy?.ytelser).hasSize(1)
-        assertThat(targetGrunnlagAfterCopy?.ytelser?.get(0)?.ytelseType).isEqualTo(Ytelse.SYKEPENGER)
-        assertThat(targetGrunnlagAfterCopy?.ytelser?.get(0)?.kilde).isEqualTo("SOURCE")
-        assertThat(targetGrunnlagAfterCopy?.ytelser?.get(0)?.saksRef).isEqualTo("REF_SOURCE")
 
         // Verify that hentEldsteGrunnlag still returns the original target grunnlag
         val oldestGrunnlag = repo.hentEldsteGrunnlag(tilBehandlingId)
         assertThat(oldestGrunnlag).isNotNull()
-        assertThat(oldestGrunnlag?.grunnlagId).isEqualTo(targetGrunnlagIdBeforeCopy)
+
         assertThat(oldestGrunnlag?.ytelser).hasSize(1)
-        assertThat(oldestGrunnlag?.ytelser?.get(0)?.ytelseType).isEqualTo(Ytelse.FORELDREPENGER)
-        assertThat(oldestGrunnlag?.ytelser?.get(0)?.kilde).isEqualTo("TARGET")
+        assertThat(oldestGrunnlag?.ytelser?.get(0)?.ytelseType).isEqualTo(Ytelse.SYKEPENGER)
+        assertThat(oldestGrunnlag?.ytelser?.get(0)?.kilde).isEqualTo("SOURCE")
+    }
+
+
+    private fun nySak(): Sak {
+        return PersonOgSakService(
+            object : IdentGateway {
+                override fun hentAlleIdenterForPerson(ident: Ident): List<Ident> {
+                    return listOf(ident)
+                }
+            },
+            InMemoryPersonRepository,
+            InMemorySakRepository,
+        ).finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+    }
+
+    private fun opprettBehandling(sak: Sak, typeBehandling: TypeBehandling): Behandling {
+        return SakOgBehandlingService(
+            object : GrunnlagKopierer {
+                override fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
+                }
+            },
+            InMemorySakRepository,
+            InMemoryBehandlingRepository,
+        ).finnEllerOpprettBehandling(
+            sak.saksnummer,
+            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
+        ).behandling
     }
 }

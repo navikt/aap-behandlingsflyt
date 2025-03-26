@@ -1932,7 +1932,7 @@ class FlytOrkestratorTest {
         val sak = hentSak(ident, periode)
         var behandling = hentBehandling(sak.id)
 
-        løsFramTilForutgåendeMedlemskap(behandling, sak, false, ident, true)
+        løsFramTilForutgåendeMedlemskap(behandling, false, ident, true)
 
         // Validér avklaring
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -1980,7 +1980,7 @@ class FlytOrkestratorTest {
         val sak = hentSak(ident, periode)
         var behandling = hentBehandling(sak.id)
 
-        løsFramTilForutgåendeMedlemskap(behandling, sak, false, ident, true)
+        løsFramTilForutgåendeMedlemskap(behandling, false, ident, true)
 
         // Validér avklaring
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -2030,7 +2030,7 @@ class FlytOrkestratorTest {
         val sak = hentSak(ident, periode)
         var behandling = hentBehandling(sak.id)
 
-        løsFramTilForutgåendeMedlemskap(behandling, sak, false, ident, true)
+        løsFramTilForutgåendeMedlemskap(behandling, false, ident, true)
 
         // Validér avklaring
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -2077,7 +2077,7 @@ class FlytOrkestratorTest {
         val sak = hentSak(ident, periode)
         val behandling = hentBehandling(sak.id)
 
-        løsFramTilForutgåendeMedlemskap(behandling, sak, true, ident)
+        løsFramTilForutgåendeMedlemskap(behandling, true, ident)
 
         // Validér avklaring
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -2287,7 +2287,7 @@ class FlytOrkestratorTest {
         val sak = hentSak(ident, periode)
         var behandling = hentBehandling(sak.id)
 
-        løsFramTilForutgåendeMedlemskap(behandling, sak, false, ident, false)
+        løsFramTilForutgåendeMedlemskap(behandling, false, ident, false)
 
         // Validér avklaring
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -2688,7 +2688,6 @@ class FlytOrkestratorTest {
 
     private fun løsFramTilForutgåendeMedlemskap(
         behandling: Behandling,
-        sak: Sak,
         harYrkesskade: Boolean = false,
         ident: Ident,
         harUtenlandskOpphold: Boolean = false

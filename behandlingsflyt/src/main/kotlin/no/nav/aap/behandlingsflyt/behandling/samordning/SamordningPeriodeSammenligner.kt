@@ -17,6 +17,7 @@ data class SamordningYtelseMedEndring(
     val saksRef: String? = null,
     val periode: Periode,
     val gradering: Prosent?,
+    val kronesum: Number? = null,
     val endringStatus: EndringStatus,
 ) {
     companion object {
@@ -30,6 +31,7 @@ data class SamordningYtelseMedEndring(
                 saksRef = ytelse.saksRef,
                 periode = periode.periode,
                 gradering = periode.gradering,
+                kronesum = periode.kronesum,
                 endringStatus = endringStatus
             )
         }
@@ -81,18 +83,20 @@ class SamordningPeriodeSammenligner(private val samordningYtelseRepository: Samo
             .tilSamordningYtelseMedEndring(EndringStatus.UENDRET)
 
         // Som bare er i gamle, ikke nye
-        val slettede = eldsteYtelser.mapValues { (ytelseType, nyePerioder) ->
+        val slettede = eldsteYtelser.mapValues { (ytelseType, eldstePerioder) ->
             val nye = nyeYtelser[ytelseType]?.second
-                ?: return@mapValues Pair(nyePerioder.first, emptyList<SamordningYtelsePeriode>())
+                ?: return@mapValues Pair(eldstePerioder.first, emptyList<SamordningYtelsePeriode>())
 
-            Pair(nyePerioder.first, nyePerioder.second.filterNot { it in nye })
+            Pair(eldstePerioder.first, eldstePerioder.second.filterNot { it in nye })
         }
             .tilSamordningYtelseMedEndring(EndringStatus.SLETTET)
 
         return nyeSammenlignetMedEldre + uendrede + slettede
     }
 
-    fun Map<Ytelse, Pair<SamordningYtelse, List<SamordningYtelsePeriode>>>.tilSamordningYtelseMedEndring(endringStatus: EndringStatus): List<SamordningYtelseMedEndring> {
+    private fun Map<Ytelse, Pair<SamordningYtelse, List<SamordningYtelsePeriode>>>.tilSamordningYtelseMedEndring(
+        endringStatus: EndringStatus
+    ): List<SamordningYtelseMedEndring> {
         return this.flatMap { par -> par.value.second.map { Pair(par.value.first, it) } }
             .map { SamordningYtelseMedEndring.konstruer(it, endringStatus) }
     }
