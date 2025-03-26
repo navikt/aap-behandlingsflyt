@@ -91,7 +91,7 @@ class ApiInternGatewayImpl() : ApiInternGateway {
                         no.nav.aap.behandlingsflyt.kontrakt.datadeling.TilkjentDTO(
                             tilkjentFom = tilkjentPeriode.periode.fom,
                             tilkjentTom = tilkjentPeriode.periode.tom,
-                            dagsats = tilkjentPeriode.tilkjent.dagsats.verdi.toInt(),
+                            dagsats = tilkjentPeriode.tilkjent.redusertDagsats().verdi.toInt(),
                             gradering = tilkjentPeriode.tilkjent.gradering.endeligGradering.prosentverdi(),
                             grunnlag = tilkjentPeriode.tilkjent.grunnlag.verdi,
                             grunnlagsfaktor = tilkjentPeriode.tilkjent.grunnlagsfaktor.verdi(),
