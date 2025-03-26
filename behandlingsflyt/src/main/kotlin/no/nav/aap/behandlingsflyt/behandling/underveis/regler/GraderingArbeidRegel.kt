@@ -120,9 +120,9 @@ class GraderingArbeidRegel : UnderveisRegel {
 
     fun skalAntaTimerArbeidet(
         underveisVurderinger: Tidslinje<Vurdering>,
-        opplysningerTidslinje: Tidslinje<OpplysningerOmArbeid>
+        opplysningerTidslinje: Tidslinje<OpplysningerOmArbeid>,
+        dagensDato: LocalDate = LocalDate.now(),
     ): Boolean {
-        val dagensDato = LocalDate.now()
 
         val skalHaOpplysningerTidslinje = underveisVurderinger.mapValue { underveisVurdering ->
             /* uten rett skal vi ikke ha opplysninger */
