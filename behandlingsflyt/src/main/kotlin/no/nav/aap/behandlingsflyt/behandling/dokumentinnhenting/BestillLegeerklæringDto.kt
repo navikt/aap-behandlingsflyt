@@ -39,9 +39,13 @@ data class HentStatusLegeerklæring(@PathParam("saksnummer") val saksnummer: Str
 
 data class PurringLegeerklæringRequest(
     val dialogmeldingPurringUUID: UUID,
-    val saksnummer: String
-): Saksreferanse {
-    override fun hentSaksreferanse(): String {
-        return saksnummer
+    val behandlingsReferanse: UUID
+) : Behandlingsreferanse {
+    override fun hentAvklaringsbehovKode(): String? {
+        return Definisjon.BESTILL_LEGEERKLÆRING.kode.toString()
+    }
+
+    override fun behandlingsreferanseResolverInput(): String {
+        return behandlingsReferanse.toString()
     }
 }
