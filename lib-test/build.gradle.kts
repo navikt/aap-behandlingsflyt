@@ -11,7 +11,7 @@ dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation(project(":kontrakt"))
-    implementation("no.nav.aap.brev:kontrakt:0.0.79")
+    implementation("no.nav.aap.brev:kontrakt:0.0.82")
     implementation("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
@@ -38,4 +38,5 @@ dependencies {
     implementation("com.nimbusds:nimbus-jose-jwt:10.0.2")
 
     implementation("org.junit.jupiter:junit-jupiter-api:$junitVersjon")
+    testImplementation("org.assertj:assertj-core:3.27.3")
 }

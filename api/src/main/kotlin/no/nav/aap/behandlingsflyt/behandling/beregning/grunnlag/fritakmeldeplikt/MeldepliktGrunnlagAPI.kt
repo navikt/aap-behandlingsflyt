@@ -8,11 +8,14 @@ import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktFritaksperioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -36,23 +39,29 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: DataSource) {
 
                 val nåTilstand = meldepliktRepository.hentHvisEksisterer(behandling.id)?.vurderinger
 
-                if (nåTilstand == null) {
-                    return@transaction null
-                }
                 val vedtatteVerdier =
                     behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }?.vurderinger
                         ?: emptyList()
                 val historikk =
                     meldepliktRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
 
+                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                    req.referanse,
+                    Definisjon.FRITAK_MELDEPLIKT.kode.toString(),
+                    token()
+                )
+
+
+
                 FritakMeldepliktGrunnlagDto(
+                    harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                     historikk = historikk.map { tilDto(it) }.sortedBy { it.vurderingsTidspunkt }
                         .toSet(),
                     gjeldendeVedtatteVurderinger = vedtatteVerdier.map { tilDto(it) }
                         .sortedBy { it.fraDato },
-                    vurderinger = nåTilstand.filterNot { vedtatteVerdier.contains(it) }
-                        .map { tilDto(it) }
-                        .sortedBy { it.fraDato }
+                    vurderinger = nåTilstand?.filterNot { vedtatteVerdier.contains(it) }
+                        ?.map { tilDto(it) }
+                        ?.sortedBy { it.fraDato } ?: emptyList(),
                 )
             }
 

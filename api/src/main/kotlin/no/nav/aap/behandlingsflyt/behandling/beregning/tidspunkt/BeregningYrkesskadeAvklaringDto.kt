@@ -5,6 +5,7 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import java.time.LocalDate
 
 data class BeregningYrkesskadeAvklaringDto(
+    val harTilgangTilÅSaksbehandle: Boolean,
     val skalVurderes: List<YrkesskadeTilVurdering>,
     val vurderinger: List<YrkesskadeBeløpVurdering>
 )

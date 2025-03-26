@@ -5,6 +5,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class FritakMeldepliktGrunnlagDto(
+    val harTilgangTilÅSaksbehandle: Boolean,
     val historikk: Set<FritakMeldepliktVurderingDto>,
     val gjeldendeVedtatteVurderinger: List<FritakMeldepliktVurderingDto>,
     val vurderinger: List<FritakMeldepliktVurderingDto>

@@ -83,19 +83,19 @@ public enum class StegType(
         gruppe = StegGruppe.GRUNNLAG,
         status = Status.UTREDES
     ),
-    FASTSETT_UTTAK(
-        gruppe = StegGruppe.UNDERVEIS,
-        status = Status.UTREDES
-    ),
     SAMORDNING_UFØRE(
-        gruppe = StegGruppe.UNDERVEIS,
+        gruppe = StegGruppe.SAMORDNING,
         status = Status.UTREDES
     ),
     SAMORDNING_GRADERING(
-        gruppe = StegGruppe.UNDERVEIS,
+        gruppe = StegGruppe.SAMORDNING,
         status = Status.UTREDES
     ),
     SAMORDNING_ANDRE_STATLIGE_YTELSER(
+        gruppe = StegGruppe.SAMORDNING,
+        status = Status.UTREDES
+    ),
+    FASTSETT_UTTAK(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES
     ),

@@ -17,7 +17,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.verdityper.Interval
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -47,7 +49,14 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(dataSource: DataSource) {
                         avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
 
                     val vurderinger = kvalitetssikringsVurdering(avklaringsbehovene)
+
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                        req.referanse,
+                        Definisjon.KVALITETSSIKRING.kode.toString(),
+                        token()
+                    )
                     KvalitetssikringGrunnlagDto(
+                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         vurderinger = vurderinger,
                         historikk = utledKvalitetssikringHistorikk(avklaringsbehovene)
                     )

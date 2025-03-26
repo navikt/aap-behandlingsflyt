@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effek
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentInput
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -24,11 +25,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.brev.kontrakt.Status
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.bruker
+import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.gateway.GatewayProvider
@@ -83,7 +86,15 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                     ?.takeIf { it.status == Status.FERDIGSTILT }
                     ?.oppdatert?.toLocalDate()
 
+                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                    behandlingReferanse.referanse,
+                    Definisjon.EFFEKTUER_11_7.kode.toString(),
+                    token()
+                )
+
+
                 Effektuer11_7Dto(
+                    harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                     begrunnelse = effektuer11_7Grunnlag?.vurdering?.begrunnelse,
                     forhåndsvarselDato = forhåndsvarselDato,
                     forhåndsvarselSvar = null,

@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.Query
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
@@ -25,10 +26,42 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
                    sy.id                    as sy_id
             FROM SAMORDNING_YTELSE_GRUNNLAG syg
                      left join samordning_ytelser sy on syg.samordning_ytelse_id = sy.id
-            WHERE BEHANDLING_ID = ?
+            WHERE BEHANDLING_ID = ? and aktiv = true
         """.trimIndent()
 
-        val par = dbConnection.queryList(sql) {
+        val par = dbConnection.queryList(sql, mapGrunnlag(behandlingId))
+
+        if (par.isEmpty()) return null
+
+        return SamordningYtelseGrunnlag(
+            grunnlagId = par.first().first,
+            ytelser = par.first().second,
+        )
+    }
+
+    override fun hentEldsteGrunnlag(behandlingId: BehandlingId): SamordningYtelseGrunnlag? {
+        val sql = """
+            SELECT syg.samordning_ytelse_id as syg_samordning_ytelse_id,
+                   sy.id                    as sy_id
+            FROM SAMORDNING_YTELSE_GRUNNLAG syg
+                     left join samordning_ytelser sy on syg.samordning_ytelse_id = sy.id
+            WHERE BEHANDLING_ID = ?
+            ORDER BY syg.id ASC
+            LIMIT 1
+        """.trimIndent()
+
+        val par = dbConnection.queryList(sql, mapGrunnlag(behandlingId))
+
+        if (par.isEmpty()) return null
+
+        return SamordningYtelseGrunnlag(
+            grunnlagId = par.first().first,
+            ytelser = par.first().second,
+        )
+    }
+
+    private fun mapGrunnlag(behandlingId: BehandlingId): Query<Pair<Long, List<SamordningYtelse>>>.() -> Unit =
+        {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
@@ -39,14 +72,6 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
                 )
             }
         }
-
-        if (par.isEmpty()) return null
-
-        return SamordningYtelseGrunnlag(
-            grunnlagId = par.first().first,
-            ytelser = par.first().second,
-        )
-    }
 
     private fun hentYtelser(ytelserId: Long): List<SamordningYtelse> {
         val sql = """

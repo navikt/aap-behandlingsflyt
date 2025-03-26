@@ -4,4 +4,4 @@ import com.papsign.ktor.openapigen.annotations.Response
 
 @Response(statusCode = 204)
 class NoneStudentGrunnlagDto() :
-    StudentGrunnlagDto(null, null)
+    StudentGrunnlagDto(false,null, null)

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.kontrakt.datadeling
 
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -14,6 +15,14 @@ public data class DatadelingDTO(
     val vedtaksDato: LocalDate,
     val sak: SakDTO, // -\\-
     val tilkjent: List<TilkjentDTO>,
+    val rettighetsTypeTidsLinje: List<RettighetsTypePeriode>,
+    val behandlingsReferanse: String
+)
+
+public data class RettighetsTypePeriode(
+    val fom: LocalDate,
+    val tom: LocalDate,
+    val verdi: String
 )
 
 public data class SakDTO(

@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.HistoriskManue
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 
 data class LovvalgMedlemskapGrunnlagDto (
+    val harTilgangTilÅSaksbehandle:  Boolean,
     val vurdering: ManuellVurderingForLovvalgMedlemskap?,
     val historiskeManuelleVurderinger: List<HistoriskManuellVurderingForLovvalgMedlemskap>
 )
