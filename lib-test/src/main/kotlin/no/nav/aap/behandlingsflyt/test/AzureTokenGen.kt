@@ -38,7 +38,6 @@ class AzureTokenGen(private val issuer: String, private val audience: String) {
                 .claim(
                     "roles",
                     listOf(
-                        "dokumentinnhenting-api",
                         "opprett-sak",
                         "hent-personinfo",
                         "bestill-varselbrev",
