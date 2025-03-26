@@ -7,6 +7,9 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.samordning.EndringStatus
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningPeriodeSammenligner
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
@@ -77,6 +80,20 @@ data class SamordningUføreVurderingDTO(
 data class SamordningUføreVurderingPeriodeDTO(
     val virkningstidspunkt: LocalDate,
     val uføregradTilSamordning: Int
+)
+
+data class SamordningAndreStatligeYtelserGrunnlagDTO(
+    val vurdering: SamordningAndreStatligeYtelserVurderingDTO?,
+)
+data class SamordningAndreStatligeYtelserVurderingDTO(
+    val begrunnelse: String,
+    val vurderingPerioder: List<SamordningAndreStatligeYtelserVurderingPeriodeDTO>,
+)
+
+data class SamordningAndreStatligeYtelserVurderingPeriodeDTO(
+    val periode: Periode,
+    val ytelse: AndreStatligeYtelser,
+    val beløp: Int
 )
 
 
@@ -173,6 +190,35 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                     )
                 )
 
+            }
+        }
+        route("/{referanse}/grunnlag/samordning-andre-statlige-ytelser") {
+            get<BehandlingReferanse, SamordningAndreStatligeYtelserGrunnlagDTO> { behandlingReferanse ->
+                val samordningAndreStatligeYtelserVurdering = dataSource.transaction { connection ->
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val samordningAndreStatligeYtelserRepository = repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>()
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+
+                    val behandling = behandlingRepository.hent(behandlingReferanse)
+
+                    samordningAndreStatligeYtelserRepository.hentHvisEksisterer(behandling.id)?.vurdering
+                }
+
+
+                respond(
+                    SamordningAndreStatligeYtelserGrunnlagDTO(
+                        vurdering = SamordningAndreStatligeYtelserVurderingDTO(
+                            begrunnelse = samordningAndreStatligeYtelserVurdering?.begrunnelse ?: "",
+                            vurderingPerioder = (samordningAndreStatligeYtelserVurdering?.vurderingPerioder ?: listOf<SamordningAndreStatligeYtelserVurderingPeriode>()).map {
+                                SamordningAndreStatligeYtelserVurderingPeriodeDTO(
+                                    periode = it.periode,
+                                    ytelse = it.ytelse,
+                                    beløp = it.beløp
+                                )
+                            }
+                        )
+                    )
+                )
             }
         }
     }
