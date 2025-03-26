@@ -21,7 +21,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(dataSource: DataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/lovvalgmedlemskap") {
             authorizedGet<BehandlingReferanse, LovvalgMedlemskapGrunnlagDto>(
-                pathConfig = AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
+                AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
             ) { req ->
                 val grunnlag = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)

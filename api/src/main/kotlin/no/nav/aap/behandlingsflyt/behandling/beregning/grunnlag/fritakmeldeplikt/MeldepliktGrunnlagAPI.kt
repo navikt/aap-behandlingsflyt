@@ -27,7 +27,7 @@ import javax.sql.DataSource
 fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: DataSource) {
     route("/api/behandling/{referanse}/grunnlag/fritak-meldeplikt") {
         authorizedGet<BehandlingReferanse, FritakMeldepliktGrunnlagDto>(
-            pathConfig = AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
+            AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
         ) { req ->
             val meldepliktGrunnlag = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = RepositoryProvider(connection)

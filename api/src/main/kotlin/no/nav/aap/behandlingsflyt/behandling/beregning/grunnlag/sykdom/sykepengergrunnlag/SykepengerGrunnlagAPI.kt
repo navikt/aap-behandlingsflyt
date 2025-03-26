@@ -23,7 +23,7 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(dataSource: DataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/sykdom/sykepengergrunnlag") {
             authorizedGet<BehandlingReferanse, SykepengerGrunnlagDto>(
-                pathConfig = AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
+                AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
             ) { req ->
                 val sykepengerErstatningGrunnlag = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
