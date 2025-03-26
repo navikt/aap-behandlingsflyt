@@ -206,9 +206,6 @@ class GraderingArbeidRegel : UnderveisRegel {
         periode: Periode,
         opplysningerOmArbeid: Tidslinje<OpplysningerOmArbeid>,
     ): Tidslinje<ArbeidsGradering> {
-        require(opplysningerOmArbeid.helePerioden() == periode)
-        require(opplysningerOmArbeid.erSammenhengende())
-
         if (opplysningerOmArbeid.any { it.verdi.timerArbeid == null} ) {
             /* mangler opplysninger for hele perioden, vet derfor ikke hva som er
              * totalt antall timer.
