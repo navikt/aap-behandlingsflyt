@@ -5,27 +5,35 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effek
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Vurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import java.util.concurrent.ConcurrentHashMap
 
 object InMemoryEffektuer117Repository: Effektuer11_7Repository {
-    private val grunnlag = mutableMapOf<BehandlingId, Effektuer11_7Grunnlag>()
+    private val grunnlag = ConcurrentHashMap<BehandlingId, Effektuer11_7Grunnlag>()
+    private val lock = Object()
 
     override fun lagreVurdering(behandlingId: BehandlingId, vurdering: Effektuer11_7Vurdering) {
-        grunnlag[behandlingId] = hentEllerOpprett(behandlingId)
-            .copy(vurdering = vurdering)
+        synchronized(lock) {
+            grunnlag[behandlingId] = hentEllerOpprett(behandlingId)
+                .copy(vurdering = vurdering)
+        }
     }
 
     override fun lagreVarsel(
         behandlingId: BehandlingId,
         varsel: Effektuer11_7Forhåndsvarsel
     ) {
-        grunnlag[behandlingId] = hentEllerOpprett(behandlingId)
-            .let {
-                it.copy(varslinger = it.varslinger + varsel)
-            }
+        synchronized(lock) {
+            grunnlag[behandlingId] = hentEllerOpprett(behandlingId)
+                .let {
+                    it.copy(varslinger = it.varslinger + varsel)
+                }
+        }
     }
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): Effektuer11_7Grunnlag? {
-        return grunnlag[behandlingId]
+        synchronized(lock) {
+            return grunnlag[behandlingId]
+        }
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {

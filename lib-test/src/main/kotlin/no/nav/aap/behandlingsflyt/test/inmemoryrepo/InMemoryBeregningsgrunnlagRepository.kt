@@ -19,13 +19,7 @@ object InMemoryBeregningsgrunnlagRepository : BeregningsgrunnlagRepository {
 
     override fun lagre(behandlingId: BehandlingId, beregningsgrunnlag: Beregningsgrunnlag) {
         synchronized(lock) {
-            val id = BehandlingId(idSeq.andIncrement)
-            if (memory.containsKey(id)) {
-                throw IllegalArgumentException("Behandling id finnes allerede $id")
-            }
-
-
-            memory[id] = beregningsgrunnlag
+            memory[behandlingId] = beregningsgrunnlag
         }
     }
 
@@ -33,12 +27,10 @@ object InMemoryBeregningsgrunnlagRepository : BeregningsgrunnlagRepository {
         synchronized(lock) {
             require(fraBehandling != tilBehandling)
 
-            val id = BehandlingId(idSeq.andIncrement)
-            if (memory.containsKey(id)) {
-                throw IllegalArgumentException("Behandling id finnes allerede $id")
+            val beregningsgrunnlag = memory[fraBehandling]
+            if (beregningsgrunnlag != null) {
+                memory[tilBehandling] = beregningsgrunnlag
             }
-
-            memory[id] = memory[fraBehandling]!!
         }
     }
 

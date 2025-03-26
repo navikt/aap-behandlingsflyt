@@ -3,18 +3,24 @@ package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.*
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.LocalDateTime
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicLong
 
 object InMemoryBrevbestillingRepository: BrevbestillingRepository {
-    private val bestilling = mutableListOf<Brevbestilling>()
+    private val bestilling = CopyOnWriteArrayList<Brevbestilling>()
     private val id = AtomicLong()
+    private val lock = Object()
 
     override fun hent(behandlingId: BehandlingId): List<Brevbestilling> {
-        return bestilling.filter { it.behandlingId == behandlingId }.toList()
+        synchronized(lock) {
+            return bestilling.filter { it.behandlingId == behandlingId }.toList()
+        }
     }
 
     override fun hent(brevbestillingReferanse: BrevbestillingReferanse): Brevbestilling {
-        return bestilling.first { it.referanse == brevbestillingReferanse }
+        synchronized(lock) {
+            return bestilling.first { it.referanse == brevbestillingReferanse }
+        }
     }
 
     override fun lagre(
@@ -23,18 +29,24 @@ object InMemoryBrevbestillingRepository: BrevbestillingRepository {
         bestillingReferanse: BrevbestillingReferanse,
         status: Status
     ) {
-        bestilling += Brevbestilling(
-            id = id.getAndIncrement(),
-            behandlingId = behandlingId,
-            typeBrev = typeBrev,
-            referanse = bestillingReferanse,
-            status = status,
-            opprettet = LocalDateTime.now(),
-        )
+        synchronized(lock) {
+            bestilling.add(Brevbestilling(
+                id = id.getAndIncrement(),
+                behandlingId = behandlingId,
+                typeBrev = typeBrev,
+                referanse = bestillingReferanse,
+                status = status,
+                opprettet = LocalDateTime.now(),
+            ))
+        }
     }
 
     override fun oppdaterStatus(behandlingId: BehandlingId, referanse: BrevbestillingReferanse, status: Status) {
-        val index = bestilling.indexOfFirst { it.referanse == referanse }
-        bestilling[index] = bestilling[index].copy(status = status)
+        synchronized(lock) {
+            val index = bestilling.indexOfFirst { it.referanse == referanse }
+            if (index >= 0) {
+                bestilling[index] = bestilling[index].copy(status = status)
+            }
+        }
     }
 }
