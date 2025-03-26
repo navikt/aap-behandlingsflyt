@@ -7,8 +7,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DatadelingDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.RettighetsTypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -17,6 +19,8 @@ import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.gateway.Factory
 import java.net.URI
@@ -55,7 +59,7 @@ class ApiInternGatewayImpl() : ApiInternGateway {
             })
     }
 
-    override fun sendBehandling(sak: Sak, behandling: Behandling, tilkjent: List<TilkjentYtelsePeriode>?, underveis: List<Underveisperiode>, vedtaksDato: LocalDate) {
+    override fun sendBehandling(sak: Sak, behandling: Behandling, tilkjent: List<TilkjentYtelsePeriode>?, underveis: List<Underveisperiode>, vedtaksDato: LocalDate, rettighetsTypeTidslinje: Tidslinje<no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType>) {
         if (tilkjent != null) {
             restClient.post(
                 uri = uri.resolve("/api/insert/vedtak"),
@@ -94,6 +98,13 @@ class ApiInternGatewayImpl() : ApiInternGateway {
                             antallBarn = tilkjentPeriode.tilkjent.antallBarn,
                             barnetilleggsats = tilkjentPeriode.tilkjent.barnetilleggsats.verdi,
                             barnetillegg = tilkjentPeriode.tilkjent.barnetillegg.verdi
+                        )
+                    },
+                    rettighetsTypeTidsLinje = rettighetsTypeTidslinje.map { segment ->
+                        RettighetsTypePeriode(
+                            segment.periode.fom,
+                            segment.periode.tom,
+                            segment.verdi.toString()
                         )
                     }
                 )),
