@@ -53,8 +53,8 @@ class SamordningApiKtTest {
                 .register<InMemorySamordningYtelseRepository>()
                 .register<InMemoryBehandlingRepository>()
 
-            /*GatewayRegistry
-                .register<FakeTilgangGateway>()*/
+            GatewayRegistry
+                .register<FakeTilgangGateway>()
         }
     }
 
