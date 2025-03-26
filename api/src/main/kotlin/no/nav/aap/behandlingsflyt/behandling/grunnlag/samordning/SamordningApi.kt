@@ -147,7 +147,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                 )
             }
         }
-    }
+
 
     route("/{referanse}/grunnlag/samordning") {
         authorizedGet<BehandlingReferanse, SamordningYtelseVurderingGrunnlagDTO>(
@@ -256,6 +256,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
             }
         }
     }
+}
 
 private fun mapSamordningUføreVurdering(vurdering: SamordningUføreVurdering?): SamordningUføreVurderingDTO? {
     return vurdering?.let {
