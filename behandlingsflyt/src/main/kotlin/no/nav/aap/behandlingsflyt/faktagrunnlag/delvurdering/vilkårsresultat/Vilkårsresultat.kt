@@ -47,7 +47,7 @@ class Vilkårsresultat(
             .outerJoin()
             .filter { vilkåreneSegment ->
                 val vurderinger = vilkåreneSegment.verdi
-                vurderinger.isNotEmpty() && vurderinger.none { (vilkår, vurdering) -> vilkår.type.obligatorisk && vurdering.utfall == Utfall.IKKE_OPPFYLT }
+                vurderinger.isNotEmpty() && vurderinger.none { (_, vurdering) -> vurdering.utfall == Utfall.IKKE_OPPFYLT }
             }
             .mapValue { vilkårene ->
                 prioriterVilkår(

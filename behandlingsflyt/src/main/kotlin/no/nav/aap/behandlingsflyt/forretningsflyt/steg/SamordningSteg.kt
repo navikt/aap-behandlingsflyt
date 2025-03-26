@@ -5,12 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -20,9 +14,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -30,7 +21,6 @@ class SamordningSteg(
     private val samordningService: SamordningService,
     private val samordningRepository: SamordningRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -71,36 +61,6 @@ class SamordningSteg(
             SamordningYtelseVurderingGrunnlag(ytelser, vurderinger)
         )
 
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SAMORDNING)
-        vilkår.leggTilVurderinger(
-            samordningTidslinje
-                .mapNotNull { segment ->
-                    val fullGradering = segment.verdi.ytelsesGraderinger
-                        .filter { it.gradering == `100_PROSENT` }
-
-                    if (fullGradering.isNotEmpty()) {
-                        Segment(
-                            segment.periode,
-                            Vilkårsvurdering(
-                                Vilkårsperiode(
-                                    periode = segment.periode,
-                                    utfall = Utfall.IKKE_OPPFYLT,
-                                    manuellVurdering = false,
-                                    begrunnelse = "Full ytelse ${fullGradering.joinToString { it.ytelse.name }}",
-                                    avslagsårsak = Avslagsårsak.ANNEN_FULL_YTELSE,
-                                    faktagrunnlag = SamordningYtelseVurderingGrunnlag(ytelser, vurderinger),
-                                )
-                            )
-                        )
-                    } else {
-                        null
-                    }
-                }
-                .let(::Tidslinje)
-        )
-        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
-
         log.info("Samordning tidslinje $samordningTidslinje")
         return Fullført
     }
@@ -125,7 +85,6 @@ class SamordningSteg(
                 ),
                 samordningRepository = samordningRepository,
                 avklaringsbehovRepository = avklaringsbehovRepository,
-                vilkårsresultatRepository = repositoryProvider.provide(),
             )
         }
 

@@ -91,6 +91,10 @@ public enum class StegType(
         gruppe = StegGruppe.SAMORDNING,
         status = Status.UTREDES
     ),
+    SAMORDNING_AVSLAG(
+        gruppe = StegGruppe.SAMORDNING,
+        status = Status.UTREDES,
+    ),
     SAMORDNING_ANDRE_STATLIGE_YTELSER(
         gruppe = StegGruppe.SAMORDNING,
         status = Status.UTREDES

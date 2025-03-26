@@ -1,18 +1,26 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class UføreService(
     private val sakService: SakService,
+    private val sakOgBehandlingService: SakOgBehandlingService,
     private val uføreRepository: UføreRepository,
     private val uføreRegisterGateway: UføreRegisterGateway
 ) : Informasjonskrav {
@@ -31,6 +39,20 @@ class UføreService(
         return IKKE_ENDRET
     }
 
+    fun tidslinje(behandlingId: BehandlingId): Tidslinje<Prosent> {
+        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
+        return uføreRepository.hentHvisEksisterer(behandlingId)
+            ?.vurderinger
+            .orEmpty()
+            .map {
+                Segment(
+                    Periode(it.virkningstidspunkt, sak.rettighetsperiode.tom),
+                    it.uføregrad
+                )
+            }
+            .let(::Tidslinje)
+    }
+
     private fun harEndringerUføre(
         eksisterende: UføreGrunnlag?,
         uføregrader: List<Uføre>
@@ -47,9 +69,14 @@ class UføreService(
             val repositoryProvider = RepositoryProvider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()
             return UføreService(
-                SakService(sakRepository),
-                repositoryProvider.provide(),
-                GatewayProvider.provide<UføreRegisterGateway>()
+                sakService = SakService(sakRepository),
+                sakOgBehandlingService = SakOgBehandlingService(
+                    grunnlagKopierer = GrunnlagKopierer(connection),
+                    sakRepository = repositoryProvider.provide(),
+                    behandlingRepository = repositoryProvider.provide(),
+                ),
+                uføreRegisterGateway = GatewayProvider.provide<UføreRegisterGateway>(),
+                uføreRepository = repositoryProvider.provide(),
             )
         }
     }

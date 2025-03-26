@@ -12,8 +12,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -35,7 +33,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
@@ -104,75 +101,6 @@ class SamordningStegTest {
         )
 
         assertThat(res2).isEqualTo(Fullført)
-
-        assertThat(InMemoryVilkårsresultatRepository.hent(behandling.id).finnVilkår(Vilkårtype.SAMORDNING).vilkårsperioder())
-            .isEmpty()
-    }
-
-    @ParameterizedTest
-    @MethodSource("manuelleYtelserProvider")
-    fun `ved 100 prosent samordning er det ikke grunnleggende rett`(ytelse: Ytelse) {
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
-        val steg = settOppRessurser(ytelse, behandling.id)
-
-        val rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
-        val res = steg.utfør(
-            kontekst = FlytKontekstMedPerioder(
-                sakId = behandling.sakId,
-                behandlingId = behandling.id,
-                behandlingType = TypeBehandling.Revurdering,
-                vurdering = VurderingTilBehandling(
-                    vurderingType = VurderingType.REVURDERING,
-                    årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
-                    rettighetsperiode = rettighetsperiode
-                )
-            )
-        )
-
-        assertThat(res).isEqualTo(FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING))
-
-        InMemorySamordningVurderingRepository.lagreVurderinger(
-            behandling.id, SamordningVurderingGrunnlag(
-                begrunnelse = "En god begrunnelse",
-                maksDatoEndelig = false,
-                maksDato = LocalDate.now().plusYears(1),
-                vurderinger = listOf(
-                    SamordningVurdering(
-                        ytelseType = ytelse,
-                        vurderingPerioder = listOf(
-                            SamordningVurderingPeriode(
-                                periode = rettighetsperiode,
-                                gradering = Prosent(100),
-                                manuell = false,
-                            )
-                        )
-                    )
-                )
-            )
-        )
-
-        val res2 = steg.utfør(
-            kontekst = FlytKontekstMedPerioder(
-                sakId = behandling.sakId,
-                behandlingId = behandling.id,
-                behandlingType = TypeBehandling.Revurdering,
-                vurdering = VurderingTilBehandling(
-                    vurderingType = VurderingType.REVURDERING,
-                    årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
-                    rettighetsperiode = rettighetsperiode
-                )
-            )
-        )
-
-        assertThat(res2).isEqualTo(Fullført)
-
-        val vilkårsperioder = InMemoryVilkårsresultatRepository.hent(behandling.id).finnVilkår(Vilkårtype.SAMORDNING).vilkårsperioder()
-        assertThat(vilkårsperioder)
-            .hasSize(1)
-       val vilkårsperiode =  vilkårsperioder.first()
-        assertThat(vilkårsperiode.erOppfylt()).isFalse()
-        assertThat(vilkårsperiode.periode).isEqualTo(rettighetsperiode)
-        assertThat(vilkårsperiode.avslagsårsak).isEqualTo(Avslagsårsak.ANNEN_FULL_YTELSE)
     }
 
     @Disabled("Inntil vi samordner ytelser automatisk")
@@ -376,7 +304,6 @@ class SamordningStegTest {
             ),
             samordningRepository = InMemorySamordningRepository,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
         )
 
         InMemorySamordningVurderingRepository.lagreVurderinger(
@@ -432,7 +359,6 @@ class SamordningStegTest {
             ),
             samordningRepository = InMemorySamordningRepository,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
         )
 
         lagreYtelseGrunnlag(behandlingId, ytelse, periode)

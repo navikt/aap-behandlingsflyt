@@ -2,14 +2,24 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 
-class Vilkårsvurdering(vilkårsperiode: Vilkårsperiode) {
-    val utfall: Utfall = vilkårsperiode.utfall
-    val manuellVurdering: Boolean = vilkårsperiode.manuellVurdering
-    val begrunnelse: String? = vilkårsperiode.begrunnelse
-    val innvilgelsesårsak: Innvilgelsesårsak? = vilkårsperiode.innvilgelsesårsak
-    val avslagsårsak: Avslagsårsak? = vilkårsperiode.avslagsårsak
-    internal val faktagrunnlag: Faktagrunnlag? = vilkårsperiode.faktagrunnlag
-    internal val versjon: String = vilkårsperiode.versjon
+class Vilkårsvurdering(
+    val utfall: Utfall,
+    val manuellVurdering: Boolean,
+    val begrunnelse: String?,
+    val innvilgelsesårsak: Innvilgelsesårsak? = null,
+    val avslagsårsak: Avslagsårsak? = null,
+    internal val faktagrunnlag: Faktagrunnlag?,
+    internal val versjon: String = ApplikasjonsVersjon.versjon
+) {
+    constructor(vilkårsperiode: Vilkårsperiode) : this(
+        utfall = vilkårsperiode.utfall,
+        manuellVurdering = vilkårsperiode.manuellVurdering,
+        begrunnelse = vilkårsperiode.begrunnelse,
+        innvilgelsesårsak = vilkårsperiode.innvilgelsesårsak,
+        avslagsårsak = vilkårsperiode.avslagsårsak,
+        faktagrunnlag = vilkårsperiode.faktagrunnlag,
+        versjon = vilkårsperiode.versjon,
+    )
 
     init {
         if (utfall == Utfall.IKKE_OPPFYLT && avslagsårsak == null) {

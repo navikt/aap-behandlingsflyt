@@ -41,6 +41,13 @@ class SamordningService(
         return vurderinger
     }
 
+    fun tidslinje(behandlingId: BehandlingId): Tidslinje<SamordningGradering>{
+        val vurderinger = hentVurderinger(behandlingId)
+        val ytelser = hentYtelser(behandlingId)
+        val tidligereVurderinger = tidligereVurderinger(vurderinger)
+        return vurder(ytelser, tidligereVurderinger)
+    }
+
     fun perioderSomIkkeHarBlittVurdert(
         grunnlag: SamordningYtelseGrunnlag?,
         tidligereVurderinger: Tidslinje<List<Pair<Ytelse, SamordningVurderingPeriode>>>
