@@ -123,7 +123,7 @@ class SamordningYtelseRepositoryImplTest {
         }
 
         assertThat(uthentet2!!.ytelser.size).isEqualTo(2)
-        assertThat(samordningYtelser).containsExactlyInAnyOrderElementsOf(uthentet2.ytelser)
+        assertThat(samordningYtelser2).containsExactlyInAnyOrderElementsOf(uthentet2.ytelser)
 
         // Kopier:
         val kopiertBehandling = dataSource.transaction {
@@ -131,6 +131,73 @@ class SamordningYtelseRepositoryImplTest {
 
             SamordningYtelseRepositoryImpl(it).kopier(behandling.id, nyBehandling.id)
         }
+    }
+
+    @Test
+    fun `sette inn flere ytelser, skal hente ut eldste`() {
+        val behandling = dataSource.transaction { behandling(it, sak(it)) }
+
+        // Første sett med ytelser (eldste)
+        val samordningYtelserEldste = listOf(
+            SamordningYtelse(
+                ytelseType = Ytelse.SYKEPENGER,
+                ytelsePerioder = listOf(
+                    SamordningYtelsePeriode(
+                        periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3)),
+                        gradering = Prosent.`70_PROSENT`,
+                    )
+                ),
+                kilde = "kilde-eldste",
+                saksRef = "abc-eldste"
+            )
+        )
+        dataSource.transaction {
+            SamordningYtelseRepositoryImpl(it).lagre(
+                behandling.id,
+                samordningYtelser = samordningYtelserEldste
+            )
+        }
+
+        // Andre sett med ytelser (nyeste)
+        val samordningYtelserNyeste = listOf(
+            SamordningYtelse(
+                ytelseType = Ytelse.OMSORGSPENGER,
+                ytelsePerioder = listOf(
+                    SamordningYtelsePeriode(
+                        periode = Periode(LocalDate.now().plusDays(1), LocalDate.now().plusYears(2)),
+                        gradering = Prosent(51),
+                    )
+                ),
+                kilde = "kilde-nyeste",
+                saksRef = "abc-nyeste"
+            )
+        )
+        dataSource.transaction {
+            SamordningYtelseRepositoryImpl(it).lagre(
+                behandling.id,
+                samordningYtelser = samordningYtelserNyeste
+            )
+        }
+
+        // Verifiser at hentEldsteGrunnlag returnerer det eldste grunnlaget
+        val eldsteGrunnlag = dataSource.transaction {
+            SamordningYtelseRepositoryImpl(it).hentEldsteGrunnlag(behandling.id)
+        }
+        assertThat(eldsteGrunnlag).isNotNull
+        assertThat(eldsteGrunnlag!!.ytelser.size).isEqualTo(1)
+        assertThat(eldsteGrunnlag.ytelser[0].kilde).isEqualTo("kilde-eldste")
+        assertThat(eldsteGrunnlag.ytelser[0].saksRef).isEqualTo("abc-eldste")
+        assertThat(eldsteGrunnlag.ytelser[0].ytelseType).isEqualTo(Ytelse.SYKEPENGER)
+
+        // Verifiser at hentHvisEksisterer returnerer det nyeste grunnlaget
+        val nyesteGrunnlag = dataSource.transaction {
+            SamordningYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id)
+        }
+        assertThat(nyesteGrunnlag).isNotNull
+        assertThat(nyesteGrunnlag!!.ytelser.size).isEqualTo(1)
+        assertThat(nyesteGrunnlag.ytelser[0].kilde).isEqualTo("kilde-nyeste")
+        assertThat(nyesteGrunnlag.ytelser[0].saksRef).isEqualTo("abc-nyeste")
+        assertThat(nyesteGrunnlag.ytelser[0].ytelseType).isEqualTo(Ytelse.OMSORGSPENGER)
     }
 
     @Test

@@ -38,4 +38,5 @@ dependencies {
     implementation("com.nimbusds:nimbus-jose-jwt:10.0.2")
 
     implementation("org.junit.jupiter:junit-jupiter-api:$junitVersjon")
+    testImplementation("org.assertj:assertj-core:3.27.3")
 }
