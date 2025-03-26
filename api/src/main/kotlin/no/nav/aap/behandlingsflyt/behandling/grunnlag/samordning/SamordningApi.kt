@@ -28,7 +28,6 @@ import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
-import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
 import java.time.LocalDate
 import javax.sql.DataSource
@@ -109,7 +108,6 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
         route("/{referanse}/grunnlag/samordning-ufore") {
             authorizedGet<BehandlingReferanse, SamordningUføreVurderingGrunnlagDTO>(
                 AuthorizationParamPathConfig(
-                    operasjon = Operasjon.SE,
                     behandlingPathParam = BehandlingPathParam(
                         "referanse"
                     )
@@ -154,7 +152,6 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
         route("/{referanse}/grunnlag/samordning") {
             authorizedGet<BehandlingReferanse, SamordningYtelseVurderingGrunnlagDTO>(
                 AuthorizationParamPathConfig(
-                    operasjon = Operasjon.SE,
                     behandlingPathParam = BehandlingPathParam(
                         "referanse"
                     )
