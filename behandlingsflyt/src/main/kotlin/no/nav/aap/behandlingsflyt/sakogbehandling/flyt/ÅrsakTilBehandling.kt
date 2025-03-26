@@ -24,8 +24,7 @@ enum class ÅrsakTilBehandling {
     SAMORDNING_OG_AVREGNING,    // Samordning og avregning
     REFUSJONSKRAV,              // Refusjonskrav
     UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT, // Utenlandsopphold før søknadstidspunkt
-    FASTSATT_PERIODE_PASSERT,
-    ;
+    FASTSATT_PERIODE_PASSERT;
 
     companion object {
         /**
