@@ -53,9 +53,6 @@ class SamordningApiTest {
                 .register<InMemorySamordningVurderingRepository>()
                 .register<InMemorySamordningYtelseRepository>()
                 .register<InMemoryBehandlingRepository>()
-
-            GatewayRegistry
-                .register<FakeTilgangGateway>()
         }
 
     }

@@ -28,6 +28,7 @@ import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
+import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
 import java.time.LocalDate
 import javax.sql.DataSource
@@ -108,6 +109,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
         route("/{referanse}/grunnlag/samordning-ufore") {
             authorizedGet<BehandlingReferanse, SamordningUføreVurderingGrunnlagDTO>(
                 AuthorizationParamPathConfig(
+                    operasjon = Operasjon.SE,
                     behandlingPathParam = BehandlingPathParam(
                         "referanse"
                     )
@@ -149,19 +151,20 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
         }
 
 
-    route("/{referanse}/grunnlag/samordning") {
-        authorizedGet<BehandlingReferanse, SamordningYtelseVurderingGrunnlagDTO>(
-            AuthorizationParamPathConfig(
-                behandlingPathParam = BehandlingPathParam(
-                    "referanse"
+        route("/{referanse}/grunnlag/samordning") {
+            authorizedGet<BehandlingReferanse, SamordningYtelseVurderingGrunnlagDTO>(
+                AuthorizationParamPathConfig(
+                    operasjon = Operasjon.SE,
+                    behandlingPathParam = BehandlingPathParam(
+                        "referanse"
+                    )
                 )
             )
-        )
-        { req ->
-            val (registerYtelser, samordning) = dataSource.transaction { connection ->
-                val repositoryProvider = RepositoryProvider(connection)
-                val samordningRepository = repositoryProvider.provide<SamordningVurderingRepository>()
-                val samordningYtelseRepository = repositoryProvider.provide<SamordningYtelseRepository>()
+            { req ->
+                val (registerYtelser, samordning) = dataSource.transaction { connection ->
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val samordningRepository = repositoryProvider.provide<SamordningVurderingRepository>()
+                    val samordningYtelseRepository = repositoryProvider.provide<SamordningYtelseRepository>()
 
                 val behandling =
                     BehandlingReferanseService(repositoryProvider.provide<BehandlingRepository>()).behandling(req)
@@ -176,7 +179,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                     Pair(perioderMedEndringer, samordning)
                 }
 
-                val tilgangGateway = GatewayProvider.provide(TilgangGateway::class)
+               val tilgangGateway = GatewayProvider.provide(TilgangGateway::class)
                 val harTilgangTilÅSaksbehandle = tilgangGateway.sjekkTilgang(
                     req.referanse,
                     Definisjon.AVKLAR_SAMORDNING_GRADERING.kode.toString(),
