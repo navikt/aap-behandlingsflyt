@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
+import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -53,7 +54,10 @@ class GraderingArbeidRegelTest {
         )
         val vurdering = vurder(input)
 
-        assertEquals(Prosent.`50_PROSENT`, vurdering.segment(rettighetsperiode.fom)?.verdi?.arbeidsgradering()?.gradering)
+        assertEquals(
+            Prosent.`50_PROSENT`,
+            vurdering.segment(rettighetsperiode.fom)?.verdi?.arbeidsgradering()?.gradering
+        )
     }
 
     @Test
@@ -80,7 +84,10 @@ class GraderingArbeidRegelTest {
         )
         val vurdering = vurder(input)
 
-        assertEquals(Prosent.`0_PROSENT`, vurdering.segment(rettighetsperiode.fom)?.verdi?.arbeidsgradering()?.gradering)
+        assertEquals(
+            Prosent.`0_PROSENT`,
+            vurdering.segment(rettighetsperiode.fom)?.verdi?.arbeidsgradering()?.gradering
+        )
     }
 
     @Test
@@ -108,7 +115,10 @@ class GraderingArbeidRegelTest {
         )
         val vurdering = vurder(input)
 
-        assertEquals(Prosent.`0_PROSENT`, vurdering.segment(rettighetsperiode.fom)?.verdi?.arbeidsgradering()?.gradering)
+        assertEquals(
+            Prosent.`0_PROSENT`,
+            vurdering.segment(rettighetsperiode.fom)?.verdi?.arbeidsgradering()?.gradering
+        )
     }
 
     @Test
@@ -183,7 +193,10 @@ class GraderingArbeidRegelTest {
     private fun vurder(input: UnderveisInput): Tidslinje<Vurdering> {
         return regel.vurder(
             input,
-            UtledMeldeperiodeRegel().vurder(input, Tidslinje(input.rettighetsperiode, Vurdering(fårAapEtter = RettighetsType.BISTANDSBEHOV)))
+            UtledMeldeperiodeRegel().vurder(
+                input,
+                Tidslinje(input.rettighetsperiode, Vurdering(fårAapEtter = RettighetsType.BISTANDSBEHOV))
+            )
         ).mapValue { it.copy(fårAapEtter = RettighetsType.BISTANDSBEHOV) }
     }
 }

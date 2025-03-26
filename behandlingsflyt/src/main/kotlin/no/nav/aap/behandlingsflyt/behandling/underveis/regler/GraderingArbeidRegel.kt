@@ -74,7 +74,7 @@ class GraderingArbeidRegel : UnderveisRegel {
     }
 
     /** § 11-23 tredje ledd */
-    private class OpplysningerOmArbeid(
+    class OpplysningerOmArbeid(
         /** null representerer fravær av opplysninger */
         val timerArbeid: TimerArbeid?,
         /** null representerer fravær av opplysninger */
@@ -118,7 +118,7 @@ class GraderingArbeidRegel : UnderveisRegel {
             .komprimer()
     }
 
-    private fun skalAntaTimerArbeidet(
+    fun skalAntaTimerArbeidet(
         underveisVurderinger: Tidslinje<Vurdering>,
         opplysningerTidslinje: Tidslinje<OpplysningerOmArbeid>
     ): Boolean {
@@ -133,7 +133,7 @@ class GraderingArbeidRegel : UnderveisRegel {
             val fastsattDag = underveisVurdering.meldeperiode().tom.plusDays(1)
             val sisteFrist = fastsattDag.plusDays(7)
 
-            return@mapValue dagensDato < sisteFrist
+            return@mapValue sisteFrist < dagensDato
         }
 
         val manglerOpplysninger = skalHaOpplysningerTidslinje.outerJoin(opplysningerTidslinje) { skalHaOpplysninger, opplysninger ->
