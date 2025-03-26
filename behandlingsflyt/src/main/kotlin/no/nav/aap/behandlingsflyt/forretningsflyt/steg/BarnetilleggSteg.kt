@@ -42,7 +42,7 @@ class BarnetilleggSteg(
                     )
                 }
         )
-        log.info("Barnetillegg {}", barnetillegg)
+        log.info("Beregnet barnetillegg for behandling med id=${kontekst.behandlingId}")
 
         // TODO: Bør det inn sjekk om dette skjer i revurdering osv
         if (barnetillegg.segmenter().any { it.verdi.harBarnTilAvklaring() }) {
