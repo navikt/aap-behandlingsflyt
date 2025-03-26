@@ -7,11 +7,15 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevnePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.auth.token
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -28,7 +32,8 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(dataSource: DataSource) {
                 )
             )
         ) { behandlingReferanse ->
-            arbeidsevneGrunnlag(dataSource, behandlingReferanse)?.let { respond(it) } ?: respondWithStatus(
+
+            arbeidsevneGrunnlag(dataSource, behandlingReferanse, token())?.let { respond(it) } ?: respondWithStatus(
                 HttpStatusCode.NoContent
             )
         }
@@ -46,7 +51,8 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(dataSource: DataSource) {
 
 private fun arbeidsevneGrunnlag(
     dataSource: DataSource,
-    behandlingReferanse: BehandlingReferanse
+    behandlingReferanse: BehandlingReferanse,
+    token: OidcToken
 ): ArbeidsevneGrunnlagDto? {
     return dataSource.transaction { connection ->
         val repositoryProvider = RepositoryProvider(connection)
@@ -56,15 +62,22 @@ private fun arbeidsevneGrunnlag(
         val arbeidsevneRepository = repositoryProvider.provide<ArbeidsevneRepository>()
 
         val nåTilstand = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
-            ?: return@transaction null
+
         val vedtatteVerdier =
             behandling.forrigeBehandlingId?.let { arbeidsevneRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
         val historikk = arbeidsevneRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
 
+        val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+            behandlingReferanse.referanse,
+            Definisjon.FASTSETT_ARBEIDSEVNE.kode.toString(),
+            token
+        )
+
         ArbeidsevneGrunnlagDto(
+            harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
             historikk = historikk.map { it.toDto() }.sortedBy { it.vurderingsTidspunkt }.toSet(),
-            vurderinger = nåTilstand.filterNot { vedtatteVerdier.contains(it) }.map { it.toDto() }
-                .sortedBy { it.fraDato },
+            vurderinger = nåTilstand?.filterNot { vedtatteVerdier.contains(it) }?.map { it.toDto() }
+                ?.sortedBy { it.fraDato } ?: emptyList(),
             gjeldendeVedtatteVurderinger = vedtatteVerdier.map { it.toDto() }
                 .sortedBy { it.fraDato }
         )

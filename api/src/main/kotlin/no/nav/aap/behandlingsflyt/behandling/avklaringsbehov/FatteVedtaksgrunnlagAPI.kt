@@ -17,7 +17,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.verdityper.Interval
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -51,7 +53,15 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource) {
                     val flyt = utledType(behandling.typeBehandling()).flyt()
 
                     val vurderinger = beslutterVurdering(avklaringsbehovene, flyt)
+
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                        req.referanse,
+                        Definisjon.FATTE_VEDTAK.kode.toString(),
+                        token()
+                    )
+
                     FatteVedtakGrunnlagDto(
+                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         vurderinger = vurderinger,
                         historikk = utledHistorikk(avklaringsbehovene)
                     )

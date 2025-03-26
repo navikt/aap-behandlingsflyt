@@ -13,12 +13,17 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 import javax.sql.DataSource
@@ -28,6 +33,7 @@ import javax.sql.DataSource
  * @param vurderinger Manuelle vurderinger gjort av saksbehandler for gitte ytelser.
  */
 data class SamordningYtelseVurderingGrunnlagDTO(
+    val harTilgangTilÅSaksbehandle: Boolean,
     val begrunnelse: String?,
     val maksDato: LocalDate?,
     val maksDatoEndelig: Boolean?,
@@ -53,6 +59,7 @@ data class SamordningVurderingDTO(
 )
 
 data class SamordningUføreVurderingGrunnlagDTO(
+    val harTilgangTilÅSaksbehandle: Boolean,
     val vurdering: SamordningUføreVurderingDTO?,
     val grunnlag: List<SamordningUføreGrunnlagDTO>
 )
@@ -91,8 +98,17 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                     Pair(uføreGrunnlag, samordningUføreVurdering)
                 }
 
+                val tilgangGateway = GatewayProvider.provide(TilgangGateway::class)
+                val harTilgangTilÅSaksbehandle = tilgangGateway.sjekkTilgang(
+                    behandlingReferanse.referanse,
+                    Definisjon.AVKLAR_SAMORDNING_UFØRE.kode.toString(),
+                    token()
+                )
+
+
                 respond(
                     SamordningUføreVurderingGrunnlagDTO(
+                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         vurdering = mapSamordningUføreVurdering(vurdering),
                         grunnlag = mapSamordningUføreGrunnlag(registerGrunnlag)
 
@@ -116,8 +132,16 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                     Pair(registerYtelser, samordning)
                 }
 
+                val tilgangGateway = GatewayProvider.provide(TilgangGateway::class)
+                val harTilgangTilÅSaksbehandle = tilgangGateway.sjekkTilgang(
+                    req.referanse,
+                    Definisjon.AVKLAR_SAMORDNING_GRADERING.kode.toString(),
+                    token()
+                )
+
                 respond(
                     SamordningYtelseVurderingGrunnlagDTO(
+                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         ytelser = registerYtelser?.ytelser?.flatMap { ytelse ->
                             ytelse.ytelsePerioder.map {
                                 SamordningYtelseDTO(
@@ -153,7 +177,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
 
 }
 
-private fun mapSamordningUføreVurdering(vurdering: SamordningUføreVurdering?) : SamordningUføreVurderingDTO? {
+private fun mapSamordningUføreVurdering(vurdering: SamordningUføreVurdering?): SamordningUføreVurderingDTO? {
     return vurdering?.let {
         SamordningUføreVurderingDTO(
             begrunnelse = it.begrunnelse,

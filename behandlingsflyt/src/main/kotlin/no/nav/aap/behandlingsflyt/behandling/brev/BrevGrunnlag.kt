@@ -6,7 +6,7 @@ import no.nav.aap.brev.kontrakt.Språk
 import java.time.LocalDateTime
 import java.util.*
 
-data class BrevGrunnlag(val brevGrunnlag: List<Brev>) {
+data class BrevGrunnlag(val harTilgangTilÅSaksbehandle: Boolean, val brevGrunnlag: List<Brev>) {
     data class Brev(
         val brevbestillingReferanse: UUID,
         val brev: no.nav.aap.brev.kontrakt.Brev?,
