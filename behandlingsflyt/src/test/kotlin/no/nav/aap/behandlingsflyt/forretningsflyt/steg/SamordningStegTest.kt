@@ -12,6 +12,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -33,17 +35,43 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import java.time.Clock
 import java.time.LocalDate
 import java.util.stream.Stream
 
 class SamordningStegTest {
+    companion object {
+        @BeforeEach
+        fun beforeEach() {
+            InMemorySamordningYtelseRepository.setClock(Clock.systemDefaultZone())
+        }
+
+        @AfterEach
+        fun afterEach() {
+            InMemorySamordningYtelseRepository.setClock(Clock.systemDefaultZone())
+        }
+
+        @JvmStatic
+        fun manuelleYtelserProvider(): Stream<Ytelse> {
+            return Ytelse.entries.filter { it.type == AvklaringsType.MANUELL }.stream()
+        }
+
+        @JvmStatic
+        fun automatiskBehandledeYtelserProvider(): Stream<Ytelse> {
+            return Ytelse.entries.filter { it.type == AvklaringsType.AUTOMATISK }.stream()
+        }
+    }
+
     @ParameterizedTest
     @MethodSource("manuelleYtelserProvider")
     fun `om det finnes tilfeller av samordning med Sykepenger, Svangerskapspenger, Pleiepenger, skal det opprettes et avklaringsbehov`(
@@ -145,7 +173,7 @@ class SamordningStegTest {
                             SamordningVurderingPeriode(
                                 periode = pleiepengerPeriode,
                                 gradering = Prosent(50),
-                                manuell= false
+                                manuell = false
                             )
                         )
                     ),
@@ -155,7 +183,7 @@ class SamordningStegTest {
                             SamordningVurderingPeriode(
                                 periode = periodeMedSykepenger,
                                 gradering = Prosent(90),
-                                manuell= false
+                                manuell = false
                             )
                         )
                     )
@@ -397,7 +425,7 @@ class SamordningStegTest {
 
     private fun opprettBehandling(sak: Sak, typeBehandling: TypeBehandling): Behandling {
         return SakOgBehandlingService(
-            object: GrunnlagKopierer {
+            object : GrunnlagKopierer {
                 override fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
                 }
             },
@@ -407,17 +435,5 @@ class SamordningStegTest {
             sak.saksnummer,
             listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
         ).behandling
-    }
-
-    companion object {
-        @JvmStatic
-        fun manuelleYtelserProvider(): Stream<Ytelse> {
-            return Ytelse.entries.filter { it.type == AvklaringsType.MANUELL }.stream()
-        }
-
-        @JvmStatic
-        fun automatiskBehandledeYtelserProvider(): Stream<Ytelse> {
-            return Ytelse.entries.filter { it.type == AvklaringsType.AUTOMATISK }.stream()
-        }
     }
 }

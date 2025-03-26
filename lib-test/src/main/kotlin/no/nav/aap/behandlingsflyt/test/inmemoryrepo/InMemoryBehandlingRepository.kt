@@ -94,7 +94,7 @@ object InMemoryBehandlingRepository : BehandlingRepository, BehandlingFlytReposi
         behandling: Behandling,
         årsaker: List<Årsak>
     ) {
-        TODO("Not yet implemented")
+
     }
 
     override fun finnSøker(referanse: BehandlingReferanse): Person {

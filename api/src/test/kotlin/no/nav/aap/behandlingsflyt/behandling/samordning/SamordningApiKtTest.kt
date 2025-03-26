@@ -107,6 +107,7 @@ class SamordningApiKtTest {
                                 ),
                             gradering = 50,
                             kronesum = null,
+                            endringStatus = EndringStatus.NY
                         )
                     ),
                     vurderinger = listOf(),

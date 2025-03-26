@@ -4,12 +4,12 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.samordning.EndringStatus
+import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningPeriodeSammenligner
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
@@ -18,11 +18,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
@@ -47,7 +45,8 @@ data class SamordningYtelseDTO(
     val gradering: Int?,
     val kronesum: Int?,
     val kilde: String,
-    val saksRef: String?
+    val saksRef: String?,
+    val endringStatus: EndringStatus
 )
 
 data class SamordningVurderingDTO(
@@ -126,10 +125,14 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                     val behandling =
                         BehandlingReferanseService(repositoryProvider.provide<BehandlingRepository>()).behandling(req)
 
-                    val registerYtelser = samordningYtelseRepository.hentHvisEksisterer(behandling.id)
                     val samordning = samordningRepository.hentHvisEksisterer(behandling.id)
 
-                    Pair(registerYtelser, samordning)
+                    val perioderMedEndringer =
+                        SamordningPeriodeSammenligner(samordningYtelseRepository).hentPerioderMarkertMedEndringer(
+                            behandling.id
+                        )
+
+                    Pair(perioderMedEndringer, samordning)
                 }
 
                 val tilgangGateway = GatewayProvider.provide(TilgangGateway::class)
@@ -142,18 +145,17 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                 respond(
                     SamordningYtelseVurderingGrunnlagDTO(
                         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
-                        ytelser = registerYtelser?.ytelser?.flatMap { ytelse ->
-                            ytelse.ytelsePerioder.map {
-                                SamordningYtelseDTO(
-                                    ytelseType = ytelse.ytelseType,
-                                    periode = Periode(fom = it.periode.fom, tom = it.periode.tom),
-                                    gradering = it.gradering?.prosentverdi(),
-                                    kronesum = it.kronesum?.toInt(),
-                                    kilde = ytelse.kilde,
-                                    saksRef = ytelse.saksRef
-                                )
-                            }
-                        }.orEmpty(),
+                        ytelser = registerYtelser.map { ytelse ->
+                            SamordningYtelseDTO(
+                                ytelseType = ytelse.ytelseType,
+                                periode = Periode(fom = ytelse.periode.fom, tom = ytelse.periode.tom),
+                                gradering = ytelse.gradering?.prosentverdi(),
+                                kronesum = ytelse.kronesum?.toInt(),
+                                kilde = ytelse.kilde,
+                                saksRef = ytelse.saksRef,
+                                endringStatus = ytelse.endringStatus
+                            )
+                        },
                         vurderinger = samordning?.vurderinger.orEmpty().flatMap { vurdering ->
                             vurdering.vurderingPerioder.map {
                                 SamordningVurderingDTO(
@@ -198,18 +200,4 @@ private fun mapSamordningUføreGrunnlag(registerGrunnlag: UføreGrunnlag?): List
             kilde = it.kilde
         )
     } ?: emptyList()
-}
-
-private fun SamordningVurderingPeriode.tilDTO(): Periode {
-    return Periode(
-        fom = this.periode.fom,
-        tom = this.periode.tom,
-    )
-}
-
-private fun SamordningYtelsePeriode.tilDTO(): Periode {
-    return Periode(
-        fom = this.periode.fom,
-        tom = this.periode.tom,
-    )
 }
