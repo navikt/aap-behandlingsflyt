@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.type.Periode
@@ -129,8 +130,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                     Pair(uføregrunnlagMedEndretStatus, samordningUføreVurdering)
                 }
 
-                val tilgangGateway = GatewayProvider.provide(TilgangGateway::class)
-                val harTilgangTilÅSaksbehandle = tilgangGateway.sjekkTilgang(
+                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
                     behandlingReferanse.referanse,
                     Definisjon.AVKLAR_SAMORDNING_UFØRE.kode.toString(),
                     token()
@@ -163,8 +163,8 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                     val samordningRepository = repositoryProvider.provide<SamordningVurderingRepository>()
                     val samordningYtelseRepository = repositoryProvider.provide<SamordningYtelseRepository>()
 
-                val behandling =
-                    BehandlingReferanseService(repositoryProvider.provide<BehandlingRepository>()).behandling(req)
+                    val behandling =
+                        BehandlingReferanseService(repositoryProvider.provide<BehandlingRepository>()).behandling(req)
 
                     val samordning = samordningRepository.hentHvisEksisterer(behandling.id)
 
@@ -176,8 +176,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                     Pair(perioderMedEndringer, samordning)
                 }
 
-               val tilgangGateway = GatewayProvider.provide(TilgangGateway::class)
-                val harTilgangTilÅSaksbehandle = tilgangGateway.sjekkTilgang(
+                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
                     req.referanse,
                     Definisjon.AVKLAR_SAMORDNING_GRADERING.kode.toString(),
                     token()

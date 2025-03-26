@@ -51,8 +51,6 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: DataSource) {
                     token()
                 )
 
-
-
                 FritakMeldepliktGrunnlagDto(
                     harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                     historikk = historikk.map { tilDto(it) }.sortedBy { it.vurderingsTidspunkt }
