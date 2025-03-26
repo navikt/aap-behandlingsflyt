@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import java.time.LocalDateTime
 
 /**
@@ -17,6 +18,7 @@ public data class BehandlingFlytStoppetHendelse(
     val referanse: BehandlingReferanse,
     val behandlingType: TypeBehandling,
     val status: Status,
+    val aktivtSteg: StegType? = null,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
     val opprettetTidspunkt: LocalDateTime,
     val hendelsesTidspunkt: LocalDateTime,

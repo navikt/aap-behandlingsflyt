@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
@@ -10,7 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepos
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.BestillLegeerklæringDto
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.HentStatusLegeerklæring
-import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.PurringLegeerklæring
+import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.PurringLegeerklæringRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.BrevRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.BrevResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
@@ -160,10 +159,15 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                 respond(brevPreview)
             }
         }
-        //TODO: Fikse denne til å benytte tilgangstyring, mangler journal/sak/behandlingkontekst i request
-        route("/purring/{dialogmeldinguuid}") {
-            post<PurringLegeerklæring, String, Unit> { par, _ ->
-                val request = LegeerklæringPurringRequest(par.dialogmeldingPurringUUID)
+
+        route("/purring") {
+            authorizedPost<Unit, String, PurringLegeerklæringRequest>(
+                AuthorizationBodyPathConfig(
+                    operasjon = Operasjon.SAKSBEHANDLE,
+                    applicationsOnly = false,
+                )
+            ) { _, req ->
+                val request = LegeerklæringPurringRequest(req.dialogmeldingPurringUUID)
                 val bestillingUUID = dokumentinnhentingGateway.purrPåLegeerklæring(request)
                 respond(bestillingUUID)
             }

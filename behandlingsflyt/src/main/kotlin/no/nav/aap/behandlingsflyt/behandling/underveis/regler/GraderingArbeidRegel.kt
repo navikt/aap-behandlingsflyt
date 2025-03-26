@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel.Companion.groupByMeldeperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
@@ -37,6 +38,8 @@ utbetaling = 100 % - max(arbeidsevne, faktisk arbeid)
 
 // § 11-23 tredje ledd
 private const val ANTALL_TIMER_I_ARBEIDSUKE = 37.5
+
+private val HVERDAGER_I_FULL_MELDEPERIODE = BigDecimal(10)
 
 private val ANTALL_TIMER_I_MELDEPERIODE =
     BigDecimal(ANTALL_TIMER_I_ARBEIDSUKE).multiply(BigDecimal.TWO)
@@ -189,18 +192,17 @@ class GraderingArbeidRegel : UnderveisRegel {
         val timerArbeidet = opplysningerOmArbeid.sumOf {
             (it.verdi.timerArbeid?.antallTimer ?: BigDecimal.ZERO) * BigDecimal(it.periode.antallDager())
         }
-        val antallDager = BigDecimal(periode.antallDager())
+        val antallHverdager = BigDecimal(periode.antallHverdager().asInt)
 
-        // TODO: Hvordan skal vi regne ut andel arbeid hvis siste meldeperiode slutter før 14 dager.
-        // Siste meldeperiode i rettighetsperioden er ikke nødvendig vis 14 dager lang.
+        // En meldeperiode har ikke nødvendigvis 10 hverdager, f.eks. ved start og stopp.
         // Vi skalerer derfor antall timer i meldeperiode med hvor lang meldeperioden faktisk er, altså:
-        // (antall timer arbeidet) / (antall timer i meldeperiode * (antall faktiske timer i meldeperioden / 14))
+        // (antall timer arbeidet) / (antall timer i meldeperiode * (antall faktiske timer i meldeperioden / 10))
         // men for å bevare presisjon er formelen stokket om.
         val andelArbeid = Prosent.fraDesimal(
             minOf(
                 BigDecimal.ONE,
-                (timerArbeidet * BigDecimal(14)).divide(
-                    ANTALL_TIMER_I_MELDEPERIODE * antallDager,
+                (timerArbeidet * HVERDAGER_I_FULL_MELDEPERIODE).divide(
+                    ANTALL_TIMER_I_MELDEPERIODE * antallHverdager,
                     3,
                     RoundingMode.HALF_UP
                 )

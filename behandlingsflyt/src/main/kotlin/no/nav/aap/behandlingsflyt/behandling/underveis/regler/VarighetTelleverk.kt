@@ -3,20 +3,19 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.komponenter.type.Periode
 import java.time.DayOfWeek
 import java.time.LocalDate
 
 @JvmInline
-value class Hverdager(private val hverdager: Int) : Comparable<Hverdager> {
-    operator fun plus(other: Hverdager) = Hverdager(this.hverdager + other.hverdager)
-    operator fun minus(other: Hverdager) = Hverdager(this.hverdager - other.hverdager)
-    override fun compareTo(other: Hverdager) = hverdager.compareTo(other.hverdager)
+value class Hverdager(val asInt: Int) : Comparable<Hverdager> {
+    operator fun plus(other: Hverdager) = Hverdager(this.asInt + other.asInt)
+    operator fun minus(other: Hverdager) = Hverdager(this.asInt - other.asInt)
+    override fun compareTo(other: Hverdager) = asInt.compareTo(other.asInt)
 
     companion object {
         fun LocalDate.plusHverdager(hverdager: Hverdager): LocalDate {
-            return hverdagerFraOgMed(this).elementAt(hverdager.hverdager)
+            return hverdagerFraOgMed(this).elementAt(hverdager.asInt)
         }
 
         private val hverdagene = listOf(

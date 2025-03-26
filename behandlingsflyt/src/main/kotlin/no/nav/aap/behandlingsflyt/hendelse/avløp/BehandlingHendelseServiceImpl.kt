@@ -48,6 +48,7 @@ class BehandlingHendelseServiceImpl(
             saksnummer = sak.saksnummer,
             referanse = behandling.referanse,
             behandlingType = behandling.typeBehandling(),
+            aktivtSteg =  behandling.aktivtSteg(),
             status = behandling.status(),
             avklaringsbehov = avklaringsbehovene.alle().map { avklaringsbehov ->
                 val brevbestilling = if (avklaringsbehov.definisjon == Definisjon.SKRIV_BREV) {

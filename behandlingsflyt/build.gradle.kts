@@ -16,8 +16,8 @@ dependencies {
 
     api("no.nav.aap.tilgang:plugin:$tilgangVersjon")
     api("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
-    api("no.nav.aap.brev:kontrakt:0.0.79")
-    api("no.nav.aap.meldekort:kontrakt:0.0.12")
+    api("no.nav.aap.brev:kontrakt:0.0.82")
+    api("no.nav.aap.meldekort:kontrakt:0.0.14")
     api("no.nav.aap.kelvin:motor:$komponenterVersjon")
     api("no.nav.aap.utbetal:api-kontrakt:$utbetalVersjon")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
@@ -30,7 +30,7 @@ dependencies {
     implementation(kotlin("reflect"))
     // TODO: fjern når alle api er flyttet til api-modul
     compileOnly("io.ktor:ktor-http-jvm:$ktorVersion")
-    implementation("org.flywaydb:flyway-database-postgresql:11.4.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.4.1")
     runtimeOnly("org.postgresql:postgresql:42.7.5")
 
 

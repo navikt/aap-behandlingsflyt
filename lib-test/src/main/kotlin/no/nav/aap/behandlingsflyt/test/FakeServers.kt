@@ -18,7 +18,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.BestillLegeerklæringDto
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.HentStatusLegeerklæring
-import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.PurringLegeerklæring
+import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.PurringLegeerklæringRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Anvist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerResponse
@@ -50,6 +50,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRequest
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingLøsningStatus
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.HentPerson
@@ -159,6 +160,10 @@ object FakeServers : AutoCloseable {
         }
         routing {
             post("/oppdater-oppgaver") {
+                val received = call.receive<BehandlingFlytStoppetHendelse>()
+                val åpneBehov = received.avklaringsbehov.filter { it.status.erÅpent() }.map { Pair(it.avklaringsbehovDefinisjon.name, it.status) }
+                FakeServers.log.info("Åpne behov $åpneBehov")
+                FakeServers.log.info("Fikk oppgave-oppdatering: {}", received)
                 call.respond(HttpStatusCode.NoContent)
             }
         }
@@ -369,8 +374,8 @@ object FakeServers : AutoCloseable {
                 )
                 call.respond(dialogmeldingId.toString())
             }
-            post("/api/dokumentinnhenting/syfo/purring/{dialogmelding}") {
-                call.receive<PurringLegeerklæring>()
+            post("/api/dokumentinnhenting/syfo/purring") {
+                call.receive<PurringLegeerklæringRequest>()
                 val dialogmeldingId = UUID.randomUUID()
                 legeerklæringStatuser.add(
                     LegeerklæringStatusResponse(

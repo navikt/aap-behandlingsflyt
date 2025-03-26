@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -160,7 +161,8 @@ class EnklereFlytOrkestratorTest {
         flytOrkestrator.forberedLøsingAvBehov(
             behovDefinisjon = Definisjon.AVKLAR_SYKDOM,
             behandling = behandling,
-            kontekst = flytKontekst3
+            kontekst = flytKontekst3,
+            bruker = Bruker("Z123456")
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "asdf", "TESTEN")
 
@@ -268,7 +270,8 @@ class EnklereFlytOrkestratorTest {
         flytOrkestrator.forberedLøsingAvBehov(
             behovDefinisjon = Definisjon.AVKLAR_STUDENT,
             behandling = behandling,
-            kontekst = flytKontekst3
+            kontekst = flytKontekst3,
+            bruker = Bruker("Z123456")
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_STUDENT, "asdf", "TESTEN")
 
