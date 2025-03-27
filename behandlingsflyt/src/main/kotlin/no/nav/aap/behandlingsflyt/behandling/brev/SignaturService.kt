@@ -7,8 +7,10 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.brev.kontrakt.Rolle
+import no.nav.aap.tilgang.Rolle as TilgangRolle
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.komponenter.httpklient.auth.Bruker
+import kotlin.collections.filter
 
 class SignaturService(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
@@ -42,18 +44,22 @@ class SignaturService(
         }
     }
 
-    private val rolleTilAvklaringsbehov = buildMap {
-        // TODO finne en måte å hente siste veileder som har løst avklaringsbehov på behandlingen
-        put(Rolle.SAKSBEHANDLER_OPPFOLGING, Definisjon.AVKLAR_SYKDOM)
-        put(Rolle.SAKSBEHANDLER_NASJONAL, Definisjon.KVALITETSSIKRING)
-        put(Rolle.KVALITETSSIKRER, Definisjon.FORESLÅ_VEDTAK)
-        put(Rolle.BESLUTTER, Definisjon.FATTE_VEDTAK)
+    private val rolleTilAvklaringsbehov: Map<Rolle, List<Definisjon>> = buildMap {
+        put(Rolle.SAKSBEHANDLER_OPPFOLGING, definisjonerSomLøsesAv(TilgangRolle.SAKSBEHANDLER_OPPFOLGING))
+        put(Rolle.SAKSBEHANDLER_NASJONAL, definisjonerSomLøsesAv(TilgangRolle.SAKSBEHANDLER_NASJONAL))
+        put(Rolle.KVALITETSSIKRER, definisjonerSomLøsesAv(TilgangRolle.KVALITETSSIKRER))
+        put(Rolle.BESLUTTER, definisjonerSomLøsesAv(TilgangRolle.BESLUTTER))
+    }
+
+    private fun definisjonerSomLøsesAv(rolle: TilgangRolle): List<Definisjon> {
+        return Definisjon.entries.filter { it.løsesAv.contains(rolle) }
     }
 
     private fun utledSignatur(rolle: Rolle, avklaringsbehovene: Avklaringsbehovene): SignaturGrunnlag? {
-        val definisjon = rolleTilAvklaringsbehov.getValue(rolle)
-        return avklaringsbehovene.hentBehovForDefinisjon(definisjon)?.let {
-            SignaturGrunnlag(it.endretAv(), rolle)
-        }
+        val definisjoner = rolleTilAvklaringsbehov.getValue(rolle)
+        return avklaringsbehovene.hentBehovForDefinisjon(definisjoner).maxByOrNull { it.historikk.max().tidsstempel }
+            ?.let {
+                SignaturGrunnlag(it.endretAv(), rolle)
+            }
     }
 }
