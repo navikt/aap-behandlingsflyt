@@ -2,9 +2,9 @@ plugins {
     id("behandlingsflyt.conventions")
 }
 
-val komponenterVersjon = "1.0.188"
+val komponenterVersjon = "1.0.190"
 val ktorVersion = "3.1.1"
-val tilgangVersjon = "1.0.20"
+val tilgangVersjon = "1.0.29"
 val utbetalVersjon = "0.0.29"
 val junitVersjon = "5.12.1"
 
@@ -16,7 +16,7 @@ dependencies {
 
     api("no.nav.aap.tilgang:plugin:$tilgangVersjon")
     api("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
-    api("no.nav.aap.brev:kontrakt:0.0.82")
+    api("no.nav.aap.brev:kontrakt:0.0.83")
     api("no.nav.aap.meldekort:kontrakt:0.0.14")
     api("no.nav.aap.kelvin:motor:$komponenterVersjon")
     api("no.nav.aap.utbetal:api-kontrakt:$utbetalVersjon")
@@ -30,7 +30,7 @@ dependencies {
     implementation(kotlin("reflect"))
     // TODO: fjern når alle api er flyttet til api-modul
     compileOnly("io.ktor:ktor-http-jvm:$ktorVersion")
-    implementation("org.flywaydb:flyway-database-postgresql:11.4.1")
+    implementation("org.flywaydb:flyway-database-postgresql:11.5.0")
     runtimeOnly("org.postgresql:postgresql:42.7.5")
 
 

@@ -85,6 +85,7 @@ data class SamordningUføreVurderingPeriodeDTO(
 )
 
 data class SamordningAndreStatligeYtelserGrunnlagDTO(
+    val harTilgangTilÅSaksbehandle: Boolean,
     val vurdering: SamordningAndreStatligeYtelserVurderingDTO?,
 )
 
@@ -210,9 +211,17 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                     samordningAndreStatligeYtelserRepository.hentHvisEksisterer(behandling.id)?.vurdering
                 }
 
+                val tilgangGateway = GatewayProvider.provide(TilgangGateway::class)
+                val harTilgangTilÅSaksbehandle = tilgangGateway.sjekkTilgang(
+                    behandlingReferanse.referanse,
+                    Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER.kode.toString(),
+                    token()
+                )
+
 
                 respond(
                     SamordningAndreStatligeYtelserGrunnlagDTO(
+                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         vurdering = SamordningAndreStatligeYtelserVurderingDTO(
                             begrunnelse = samordningAndreStatligeYtelserVurdering?.begrunnelse ?: "",
                             vurderingPerioder = (samordningAndreStatligeYtelserVurdering?.vurderingPerioder

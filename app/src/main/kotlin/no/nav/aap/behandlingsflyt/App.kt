@@ -1,10 +1,12 @@
 package no.nav.aap.behandlingsflyt
 
+import com.fasterxml.jackson.core.JacksonException
 import com.papsign.ktor.openapigen.model.info.InfoModel
 import com.papsign.ktor.openapigen.route.apiRouting
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.http.*
+import io.ktor.serialization.JsonConvertException
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.engine.*
@@ -120,6 +122,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangException
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.komponenter.json.DeserializationException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.server.AZURE
@@ -185,7 +188,7 @@ internal fun Application.server(dbConfig: DbConfig) {
                 }
 
                 is ManglerTilgangException -> {
-                    logger.warn("Mangler tilgang til å vise route: '{}'", uri, cause)
+                    logger.warn("Mangler tilgang til å vise route: '$uri'", cause)
                     call.respondText(status = HttpStatusCode.Forbidden, text = "Forbidden")
                 }
 
@@ -194,8 +197,18 @@ internal fun Application.server(dbConfig: DbConfig) {
                     call.respondText(status = HttpStatusCode.NotFound, text = "Ikke funnet")
                 }
 
+                is JacksonException,
+                is JsonConvertException,
+                is DeserializationException -> {
+                    logger.error("Deserialiseringsfeil ved kall til '$uri': ", cause)
+                    call.respond(
+                        status = HttpStatusCode.BadRequest,
+                        message = ErrorRespons("Deserialiseringsfeil ved kall til '$uri'")
+                    )
+                }
+
                 else -> {
-                    logger.warn("Ukjent feil ved kall til '{}'", uri, cause)
+                    logger.warn("Ukjent feil ved kall til '$uri'" , cause)
                     call.respond(
                         status = HttpStatusCode.InternalServerError,
                         message = ErrorRespons("Feil i backend av type ${cause.javaClass.signers} ved kall mot $uri. Se logg for detaljer.")

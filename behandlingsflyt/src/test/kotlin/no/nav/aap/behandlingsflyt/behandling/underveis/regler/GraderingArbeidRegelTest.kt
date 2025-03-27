@@ -1,10 +1,12 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel.OpplysningerOmArbeid
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
+import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -12,6 +14,7 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -41,6 +44,80 @@ class GraderingArbeidRegelTest {
         val vurdering = vurder(input)
 
         assertTrue(rettighetsperiode.inneholder(vurdering.helePerioden()))
+    }
+
+    @Test
+    fun `skal anta timer hvis frist ikke er passert selv om opplysninger mangler`() {
+        assertTrue(
+            regel.skalAntaTimerArbeidet(
+                underveisVurderinger = Tidslinje(
+                    listOf(
+                        Segment(
+                            Periode(3 mars 2025, 16 mars 2025),
+                            Vurdering(
+                                fårAapEtter = RettighetsType.BISTANDSBEHOV,
+                                meldeperiode = Periode(3 mars 2025, 16 mars 2025),
+                            )
+                        )
+                    )
+                ),
+                opplysningerTidslinje = Tidslinje(listOf()),
+                dagensDato = 24 mars 2025
+            ),
+        )
+    }
+
+    @Test
+    fun `skal ikke anta timer hvis opplysninger mangler`() {
+        assertFalse(
+            regel.skalAntaTimerArbeidet(
+                underveisVurderinger = Tidslinje(
+                    listOf(
+                        Segment(
+                            Periode(3 mars 2025, 16 mars 2025),
+                            Vurdering(
+                                fårAapEtter = RettighetsType.BISTANDSBEHOV,
+                                meldeperiode = Periode(3 mars 2025, 16 mars 2025),
+                            )
+                        )
+                    )
+                ),
+                opplysningerTidslinje = Tidslinje(listOf()),
+                dagensDato = 25 mars 2025
+            ),
+        )
+    }
+
+    @Test
+    fun `skal anta timer hvis opplysninger er gitt`() {
+        assertTrue(
+            regel.skalAntaTimerArbeidet(
+                underveisVurderinger = Tidslinje(
+                    listOf(
+                        Segment(
+                            Periode(3 mars 2025, 16 mars 2025),
+                            Vurdering(
+                                fårAapEtter = RettighetsType.BISTANDSBEHOV,
+                                meldeperiode = Periode(3 mars 2025, 16 mars 2025),
+                            )
+                        )
+                    )
+                ),
+                opplysningerTidslinje = Tidslinje(
+                    listOf(
+                        Segment(
+                            Periode(3 mars 2025, 16 mars 2025),
+                            OpplysningerOmArbeid(
+                                timerArbeid = TimerArbeid(BigDecimal.ZERO),
+                                arbeidsevne = null,
+                                opplysningerFørstMottatt = 17 mars 2025
+                            )
+                        )
+                    ),
+                ),
+                dagensDato = 25 mars 2025
+            )
+        )
     }
 
     @Test
