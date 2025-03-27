@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -216,13 +217,22 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
 
             }
         }
-        route("/{referanse}/grunnlag/samordning-andre-statlige-ytelser") {
-            get<BehandlingReferanse, SamordningAndreStatligeYtelserGrunnlagDTO> { behandlingReferanse ->
-                val samordningAndreStatligeYtelserVurdering = dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
-                    val samordningAndreStatligeYtelserRepository =
-                        repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>()
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+
+
+            route("/{referanse}/grunnlag/samordning-andre-statlige-ytelser") {
+                authorizedGet<BehandlingReferanse, SamordningAndreStatligeYtelserGrunnlagDTO>(
+                    AuthorizationParamPathConfig(
+                        behandlingPathParam = BehandlingPathParam(
+                            "referanse"
+                        )
+                    )
+                )
+                { behandlingReferanse ->
+                    val samordningAndreStatligeYtelserVurdering = dataSource.transaction { connection ->
+                        val repositoryProvider = RepositoryProvider(connection)
+                        val samordningAndreStatligeYtelserRepository =
+                            repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>()
+                        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
 
                         val behandling = behandlingRepository.hent(behandlingReferanse)
 
