@@ -90,12 +90,16 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                         brevbestillinger.map { brevbestilling ->
                             val brevbestillingResponse =
                                 brevbestillingService.hentBrevbestilling(brevbestilling.referanse)
-                            val signaturerGrunnlag = signaturService.finnSignaturGrunnlag(brevbestilling, bruker())
-                            val signaturer = brevbestillingGateway.hentSignaturForhåndsvisning(
-                                signaturerGrunnlag,
-                                personIdent.identifikator,
-                                brevbestillingResponse.brevtype
-                            )
+
+                            val signaturer = if (brevbestilling.status == Status.FORHÅNDSVISNING_KLAR) {
+                                brevbestillingGateway.hentSignaturForhåndsvisning(
+                                    signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),
+                                    personIdent.identifikator,
+                                    brevbestillingResponse.brevtype
+                                )
+                            } else {
+                                emptyList()
+                            }
 
                             BrevGrunnlag.Brev(
                                 brevbestillingReferanse = brevbestillingResponse.referanse,
