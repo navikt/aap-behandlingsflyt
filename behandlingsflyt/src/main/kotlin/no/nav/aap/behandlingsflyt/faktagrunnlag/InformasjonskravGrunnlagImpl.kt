@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
+import io.opentelemetry.api.GlobalOpenTelemetry
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
 
 class InformasjonskravGrunnlagImpl(private val connection: DBConnection) : InformasjonskravGrunnlag {
+    private val tracer = GlobalOpenTelemetry.getTracer("informasjonskrav")
 
     override fun oppdaterFaktagrunnlagForKravliste(
         kravliste: List<Informasjonskravkonstruktør>,
@@ -11,6 +13,15 @@ class InformasjonskravGrunnlagImpl(private val connection: DBConnection) : Infor
     ): List<Informasjonskravkonstruktør> {
         return kravliste
             .filter { kravtype -> kravtype.erRelevant(kontekst) }
-            .filter { kravtype -> kravtype.konstruer(connection).oppdater(kontekst) == Informasjonskrav.Endret.ENDRET }
+            .filter { kravtype ->
+                val span = tracer.spanBuilder("informasjonskrav ${kravtype::class.simpleName}")
+                    .setAttribute("informasjonskrav", kravtype::class.simpleName ?: "null")
+                    .startSpan()
+                try {
+                    kravtype.konstruer(connection).oppdater(kontekst) == Informasjonskrav.Endret.ENDRET
+                } finally {
+                    span.end()
+                }
+            }
     }
 }
