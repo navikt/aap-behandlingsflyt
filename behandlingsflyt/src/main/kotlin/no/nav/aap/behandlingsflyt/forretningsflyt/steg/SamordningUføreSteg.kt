@@ -23,6 +23,7 @@ class SamordningUføreSteg(
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        // TODO: Sjekk om vi har vurdert alle uføre-periodene!
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene)) {
