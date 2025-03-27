@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
-class PersonopplysningRepositoryTest {
+class PersonopplysningRepositoryImplTest {
 
     @BeforeEach
     fun setUp() {
@@ -282,8 +282,7 @@ class PersonopplysningRepositoryTest {
         }
     }
 
-
-    private companion object {
+        private companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
