@@ -4,9 +4,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeModell
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
@@ -17,10 +17,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.miljo.Miljø
+import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDate
+import org.slf4j.LoggerFactory
 
 class YrkesskadeService private constructor(
     private val sakService: SakService,
@@ -30,20 +32,23 @@ class YrkesskadeService private constructor(
     private val mottattDokumentRepository: MottattDokumentRepository
 ) : Informasjonskrav {
 
+    private val log = LoggerFactory.getLogger(javaClass)
+
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
         val fødselsdato =
             requireNotNull(personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)?.brukerPersonopplysning?.fødselsdato)
-        val oppgittYrkesskade = oppgittYrkesskade(kontekst.sakId, sak.rettighetsperiode)
-        val yrkesskadePeriode = yrkesskadeRegisterGateway.innhent(sak.person, fødselsdato, oppgittYrkesskade)
+        val registerYrkesskade: List<Yrkesskade> = yrkesskadeRegisterGateway.innhent(sak.person, fødselsdato)
+        val oppgittYrkesskade = oppgittYrkesskade(kontekst.sakId, sak.rettighetsperiode, harRegisterData = registerYrkesskade.isNotEmpty())
+        val yrkesskader = registerYrkesskade + listOfNotNull(oppgittYrkesskade)
 
         val behandlingId = kontekst.behandlingId
         val gamleData = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
 
-        if (yrkesskadePeriode.isNotEmpty()) {
+        if (yrkesskader.isNotEmpty()) {
             yrkesskadeRepository.lagre(
                 behandlingId,
-                Yrkesskader(yrkesskadePeriode.map { skade -> Yrkesskade(skade.ref, skade.skadedato) })
+                Yrkesskader(yrkesskader)
             )
         } else if (yrkesskadeRepository.hentHvisEksisterer(behandlingId) != null) {
             yrkesskadeRepository.lagre(behandlingId, null)
@@ -55,37 +60,45 @@ class YrkesskadeService private constructor(
 
     private fun oppgittYrkesskade(
         id: SakId,
-        periode: Periode
-    ): YrkesskadeModell? {
+        periode: Periode,
+        harRegisterData: Boolean,
+    ): Yrkesskade? {
         val mottattDokumenter = mottattDokumentRepository.hentDokumenterAvType(id, InnsendingType.SØKNAD)
 
-        // TODO dette er kun fake data!?
-        if (mottattDokumenter.any { dokument ->
-                val data = dokument.strukturerteData<Søknad>()?.data
-                val yrkesskadeString = when (data) {
-                    is SøknadV0 -> data.yrkesskade.uppercase()
-                    null -> error("Søknad kan ikke være null")
-                }
-                yrkesskadeString == "JA"
-            }) {
-            return YrkesskadeModell(
-                kommunenr = "0301",
-                saksblokk = "1",
-                saksnr = 123456,
-                sakstype = "YRK",
-                mottattdato = LocalDate.now(),
-                resultat = "I",
-                resultattekst = "Innvilget",
-                vedtaksdato = LocalDate.now(),
-                skadeart = "YRK",
-                diagnose = "YRK",
-                skadedato = periode.fom.minusDays(60),
-                kildetabell = "YRK",
-                kildesystem = "YRK",
-                saksreferanse = "YRK"
-            )
+        if (harOppgittYrkesskade(mottattDokumenter)) {
+            if (Miljø.er() in listOf(MiljøKode.DEV, MiljøKode.LOKALT)) {
+                return fakeOppgittYrkesskade(periode)
+            }
+
+            /* TODO: Modeller og vis informasjon fra søknad i kelvin. */
+            if (!harRegisterData) {
+                log.error("yrkesskade er JA i søknad, men finner ikke yrkesskade i register")
+            }
         }
+
         return null
+    }
+
+    private fun harOppgittYrkesskade(mottattDokumenter: Set<MottattDokument>): Boolean {
+        return mottattDokumenter.any { dokument ->
+            val data = dokument.strukturerteData<Søknad>()?.data
+            val yrkesskadeString = when (data) {
+                is SøknadV0 -> data.yrkesskade.uppercase()
+                null -> error("Søknad kan ikke være null")
+            }
+            yrkesskadeString == "JA"
+        }
+    }
+
+    private fun fakeOppgittYrkesskade(
+        periode: Periode
+    ): Yrkesskade {
+        assert(Miljø.er() in listOf(MiljøKode.DEV, MiljøKode.LOKALT))
+        assert(!Miljø.erProd())
+        return Yrkesskade(
+            ref = "YRK",
+            skadedato = periode.fom.minusDays(60),
+        )
     }
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): YrkesskadeGrunnlag? {

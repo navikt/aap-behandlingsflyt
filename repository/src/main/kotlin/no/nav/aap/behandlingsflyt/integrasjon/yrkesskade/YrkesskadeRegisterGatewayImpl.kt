@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.integrasjon.yrkesskade
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeModell
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterGateway
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -29,33 +28,23 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
         prometheus = prometheus
     )
 
-    private fun query(request: YrkesskadeRequest, oppgittYrkesskade: YrkesskadeModell?): Yrkesskader? {
-
-        if (oppgittYrkesskade != null) {
-            return Yrkesskader(listOf(oppgittYrkesskade))
-        }
-
-        val httpRequest = PostRequest(body = request)
-        return client.post(uri = url, request = httpRequest) { body, _ -> DefaultJsonMapper.fromJson(body) }
-    }
-
-    override fun innhent(person: Person, fødselsdato: Fødselsdato, oppgittYrkesskade: YrkesskadeModell?): List<Yrkesskade> {
+    override fun innhent(person: Person, fødselsdato: Fødselsdato): List<Yrkesskade> {
         val identer = person.identer().map(Ident::identifikator)
         //TODO: fra når skal yrkesskade hentes
         val request = YrkesskadeRequest(identer, fødselsdato.toLocalDate())
-        val response: Yrkesskader? = query(request, oppgittYrkesskade)
+        val httpRequest = PostRequest(body = request)
+        val response: Yrkesskader? = client.post(uri = url, request = httpRequest) { body, _ ->
+            DefaultJsonMapper.fromJson<Yrkesskader?>(body)
+        }
 
         if (response == null) {
             return emptyList()
         }
 
         //FIXME: Kan denne være null?? Når da? Ser ut som at yrkesskade-saker alltid returnerer en liste med mindre det er en feil i responsen
-        val skader = response.skader
-
-        if (skader == null) {
-            return emptyList()
-        }
-
-        return skader.map { yrkesskade -> Yrkesskade(yrkesskade.saksreferanse, yrkesskade.skadedato) }
+        return response
+            .skader
+            .orEmpty()
+            .map { yrkesskade -> Yrkesskade(yrkesskade.saksreferanse, yrkesskade.skadedato) }
     }
 }
