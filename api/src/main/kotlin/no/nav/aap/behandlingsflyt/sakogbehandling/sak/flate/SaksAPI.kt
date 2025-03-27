@@ -115,10 +115,6 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     applicationRole = "opprett-sak",
                 )
             ) { _, dto ->
-                if (Miljø.er() == MiljøKode.PROD) {
-                    TODO("Vi er ikke i produksjon ennå.")
-                }
-
                 val saken: SaksinfoDTO = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val ident = Ident(dto.ident)
