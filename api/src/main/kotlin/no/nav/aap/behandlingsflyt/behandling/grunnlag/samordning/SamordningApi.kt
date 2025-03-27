@@ -83,8 +83,10 @@ data class SamordningUføreVurderingPeriodeDTO(
 )
 
 data class SamordningAndreStatligeYtelserGrunnlagDTO(
+    val harTilgangTilÅSaksbehandle: Boolean,
     val vurdering: SamordningAndreStatligeYtelserVurderingDTO?,
 )
+
 data class SamordningAndreStatligeYtelserVurderingDTO(
     val begrunnelse: String,
     val vurderingPerioder: List<SamordningAndreStatligeYtelserVurderingPeriodeDTO>,
@@ -196,7 +198,8 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
             get<BehandlingReferanse, SamordningAndreStatligeYtelserGrunnlagDTO> { behandlingReferanse ->
                 val samordningAndreStatligeYtelserVurdering = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val samordningAndreStatligeYtelserRepository = repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>()
+                    val samordningAndreStatligeYtelserRepository =
+                        repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>()
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
 
                     val behandling = behandlingRepository.hent(behandlingReferanse)
@@ -204,12 +207,21 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                     samordningAndreStatligeYtelserRepository.hentHvisEksisterer(behandling.id)?.vurdering
                 }
 
+                val tilgangGateway = GatewayProvider.provide(TilgangGateway::class)
+                val harTilgangTilÅSaksbehandle = tilgangGateway.sjekkTilgang(
+                    behandlingReferanse.referanse,
+                    Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER.kode.toString(),
+                    token()
+                )
+
 
                 respond(
                     SamordningAndreStatligeYtelserGrunnlagDTO(
+                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         vurdering = SamordningAndreStatligeYtelserVurderingDTO(
                             begrunnelse = samordningAndreStatligeYtelserVurdering?.begrunnelse ?: "",
-                            vurderingPerioder = (samordningAndreStatligeYtelserVurdering?.vurderingPerioder ?: listOf<SamordningAndreStatligeYtelserVurderingPeriode>()).map {
+                            vurderingPerioder = (samordningAndreStatligeYtelserVurdering?.vurderingPerioder
+                                ?: listOf<SamordningAndreStatligeYtelserVurderingPeriode>()).map {
                                 SamordningAndreStatligeYtelserVurderingPeriodeDTO(
                                     periode = it.periode,
                                     ytelse = it.ytelse,
