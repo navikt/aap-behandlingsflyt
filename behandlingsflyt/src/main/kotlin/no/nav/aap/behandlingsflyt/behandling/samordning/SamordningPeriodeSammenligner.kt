@@ -7,10 +7,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 
-enum class EndringStatus {
-    NY, UENDRET, SLETTET
-}
-
 data class SamordningYtelseMedEndring(
     val ytelseType: Ytelse,
     val kilde: String,

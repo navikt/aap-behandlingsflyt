@@ -46,6 +46,9 @@ class UføreRepositoryImplTest {
             val uføreRepository = UføreRepositoryImpl(connection)
             val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
             assertThat(uføreGrunnlag).isNull()
+
+            val eldsteGrunlag = uføreRepository.hentEldsteGrunnlag(behandling.id)
+            assertThat(eldsteGrunlag).isNull()
         }
     }
 
@@ -59,6 +62,10 @@ class UføreRepositoryImplTest {
             uføreRepository.lagre(behandling.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
             val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
             assertThat(uføreGrunnlag?.vurderinger).isEqualTo(listOf(Uføre(LocalDate.now(), Prosent(100))))
+
+            val eldsteGrunnlag = uføreRepository.hentEldsteGrunnlag(behandling.id)
+            assertThat(eldsteGrunnlag).isNotNull
+            assertThat(eldsteGrunnlag).isEqualTo(uføreGrunnlag)
         }
     }
 
@@ -160,6 +167,10 @@ class UføreRepositoryImplTest {
             val oppdatertGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
             assertThat(oppdatertGrunnlag?.vurderinger).isEqualTo(listOf(Uføre(LocalDate.now(), Prosent(80))))
 
+            val eldsteGrunnlag = uføreRepository.hentEldsteGrunnlag(behandling.id)
+            assertThat(eldsteGrunnlag).isEqualTo(orginaltGrunnlag)
+            assertThat(eldsteGrunnlag).isNotEqualTo(oppdatertGrunnlag)
+
             data class Opplysning(
                 val aktiv: Boolean,
                 val uføregrad: Prosent
@@ -192,6 +203,8 @@ class UføreRepositoryImplTest {
                     Opplysning(aktiv = false, uføregrad = Prosent(100)),
                     Opplysning(aktiv = true, uføregrad = Prosent(80))
                 )
+
+
         }
     }
 
@@ -285,3 +298,4 @@ class UføreRepositoryImplTest {
         ).behandling
     }
 }
+
