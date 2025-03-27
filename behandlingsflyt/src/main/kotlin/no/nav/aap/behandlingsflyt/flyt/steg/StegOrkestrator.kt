@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
+import io.opentelemetry.api.GlobalOpenTelemetry
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
@@ -39,6 +40,7 @@ class StegOrkestrator(
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
+    private val tracer = GlobalOpenTelemetry.getTracer("stegorkestrator")
 
     private val behandlingSteg = stegKonstruktør.konstruer(aktivtSteg)
 
@@ -47,52 +49,14 @@ class StegOrkestrator(
         behandling: Behandling,
         faktagrunnlagForGjeldendeSteg: List<Informasjonskravkonstruktør>
     ): Transisjon {
-        MDC.putCloseable("stegType", aktivtSteg.type().name).use {
-            var gjeldendeStegStatus = StegStatus.START
-            log.info("Behandler steg '{}'. Behandling-ref: ${behandling.referanse}", aktivtSteg.type())
+        val stegSpan = tracer.spanBuilder("utfør ${aktivtSteg.type().name}")
+            .setAttribute("steg", aktivtSteg.type().name)
+            .startSpan()
+        try {
+            MDC.putCloseable("stegType", aktivtSteg.type().name).use {
+                var gjeldendeStegStatus = StegStatus.START
+                log.info("Behandler steg '{}'. Behandling-ref: ${behandling.referanse}", aktivtSteg.type())
 
-            val kontekstMedPerioder = FlytKontekstMedPerioder(
-                sakId = kontekst.sakId,
-                behandlingId = kontekst.behandlingId,
-                behandlingType = kontekst.behandlingType,
-                vurdering = perioderTilVurderingService.utled(
-                    kontekst = kontekst,
-                    stegType = aktivtSteg.type()
-                )
-            )
-
-            while (true) {
-                MDC.putCloseable("stegStatus", gjeldendeStegStatus.name).use {
-                    val resultat = utførTilstandsEndring(
-                        kontekstMedPerioder,
-                        gjeldendeStegStatus,
-                        behandling,
-                        faktagrunnlagForGjeldendeSteg
-                    )
-                    if (gjeldendeStegStatus in setOf(StegStatus.START, StegStatus.OPPDATER_FAKTAGRUNNLAG)) {
-                        // Legger denne her slik at vi får savepoint på at vi har byttet steg, slik at vi starter opp igjen på rett sted når prosessen dras i gang igjen
-                        stegKonstruktør.markerSavepoint()
-                    }
-
-                    if (gjeldendeStegStatus == StegStatus.AVSLUTTER) {
-                        return resultat
-                    }
-
-                    if (!resultat.kanFortsette() || resultat.erTilbakeføring()) {
-                        return resultat
-                    }
-                    gjeldendeStegStatus = gjeldendeStegStatus.neste()
-                }
-            }
-        }
-    }
-
-    fun utførTilbakefør(
-        kontekst: FlytKontekst,
-        behandling: Behandling
-    ): Transisjon {
-        MDC.putCloseable("stegType", aktivtSteg.type().name).use {
-            MDC.putCloseable("stegStatus", StegStatus.TILBAKEFØRT.name).use {
                 val kontekstMedPerioder = FlytKontekstMedPerioder(
                     sakId = kontekst.sakId,
                     behandlingId = kontekst.behandlingId,
@@ -102,13 +66,72 @@ class StegOrkestrator(
                         stegType = aktivtSteg.type()
                     )
                 )
-                return utførTilstandsEndring(
-                    kontekstMedPerioder,
-                    StegStatus.TILBAKEFØRT,
-                    behandling,
-                    listOf()
-                )
+
+                while (true) {
+                    val statusSpan = tracer.spanBuilder("steg status ${gjeldendeStegStatus.name}")
+                        .startSpan()
+                    try {
+                        MDC.putCloseable("stegStatus", gjeldendeStegStatus.name).use {
+                            val resultat = utførTilstandsEndring(
+                                kontekstMedPerioder,
+                                gjeldendeStegStatus,
+                                behandling,
+                                faktagrunnlagForGjeldendeSteg
+                            )
+                            if (gjeldendeStegStatus in setOf(StegStatus.START, StegStatus.OPPDATER_FAKTAGRUNNLAG)) {
+                                // Legger denne her slik at vi får savepoint på at vi har byttet steg, slik at vi starter opp igjen på rett sted når prosessen dras i gang igjen
+                                stegKonstruktør.markerSavepoint()
+                            }
+
+                            if (gjeldendeStegStatus == StegStatus.AVSLUTTER) {
+                                return resultat
+                            }
+
+                            if (!resultat.kanFortsette() || resultat.erTilbakeføring()) {
+                                return resultat
+                            }
+                            gjeldendeStegStatus = gjeldendeStegStatus.neste()
+                        }
+                    } finally {
+                        statusSpan.end()
+                    }
+                }
             }
+        } finally {
+            stegSpan.end()
+        }
+    }
+
+    fun utførTilbakefør(
+        kontekst: FlytKontekst,
+        behandling: Behandling
+    ): Transisjon {
+        val stegSpan = tracer.spanBuilder("utførTilbakefør ${aktivtSteg.type().name}")
+            .setAttribute("steg", aktivtSteg.type().name)
+            .startSpan()
+
+        try {
+            MDC.putCloseable("stegType", aktivtSteg.type().name).use {
+                MDC.putCloseable("stegStatus", StegStatus.TILBAKEFØRT.name).use {
+                    val kontekstMedPerioder = FlytKontekstMedPerioder(
+                        sakId = kontekst.sakId,
+                        behandlingId = kontekst.behandlingId,
+                        behandlingType = kontekst.behandlingType,
+                        vurdering = perioderTilVurderingService.utled(
+                            kontekst = kontekst,
+                            stegType = aktivtSteg.type()
+                        )
+                    )
+                    return utførTilstandsEndring(
+                        kontekstMedPerioder,
+                        StegStatus.TILBAKEFØRT,
+                        behandling,
+                        listOf()
+                    )
+                }
+            }
+        } finally {
+            stegSpan.end()
         }
     }
 

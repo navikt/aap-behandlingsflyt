@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import io.opentelemetry.api.GlobalOpenTelemetry
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
@@ -148,6 +149,7 @@ class FlytOrkestrator(
         var gjeldendeSteg = behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
 
         while (true) {
+
             val result = StegOrkestrator(
                 aktivtSteg = gjeldendeSteg,
                 informasjonskravGrunnlag = informasjonskravGrunnlag,
