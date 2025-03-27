@@ -6,7 +6,7 @@ class BarnInnhentingRespons(val registerBarn: List<Barn>, val oppgitteBarn: List
     fun alleBarn(): List<Barn> {
         val alleBarn = registerBarn + oppgitteBarn
         require(alleBarn.map { it.ident }.toSet().size == alleBarn.size) {
-            "Det finnes duplikater i barn"
+            "Det finnes duplikater i barn. Registerbarn: ${registerBarn.size}. Oppgitte barn: ${oppgitteBarn.size}"
         }
         return oppgitteBarn + registerBarn
     }
