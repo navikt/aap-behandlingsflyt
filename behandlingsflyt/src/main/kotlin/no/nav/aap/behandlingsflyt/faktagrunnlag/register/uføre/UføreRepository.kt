@@ -5,6 +5,7 @@ import no.nav.aap.lookup.repository.Repository
 
 interface UføreRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): UføreGrunnlag?
+    fun hentEldsteGrunnlag(behandlingId: BehandlingId): UføreGrunnlag?
     fun lagre(behandlingId: BehandlingId, uføre: List<Uføre>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

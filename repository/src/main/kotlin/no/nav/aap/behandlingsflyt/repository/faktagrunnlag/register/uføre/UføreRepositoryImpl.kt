@@ -36,6 +36,29 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
         }
     }
 
+    override fun hentEldsteGrunnlag(behandlingId: BehandlingId): UføreGrunnlag? {
+        return connection.queryFirstOrNull(
+            """
+            SELECT *
+            FROM UFORE_GRUNNLAG
+            WHERE BEHANDLING_ID = ?
+            ORDER BY OPPRETTET_TID
+            LIMIT 1
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper { row ->
+                UføreGrunnlag(
+                    id = row.getLong("id"),
+                    behandlingId = behandlingId,
+                    vurderinger = hentVurderinger(row.getLong("ufore_id"))
+                )
+            }
+        }
+    }
+
     private fun hentVurderinger(uføreId: Long): List<Uføre> {
         return connection.queryList(
             """

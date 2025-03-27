@@ -14,7 +14,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UførePeriodeMedEndringStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UførePeriodeSammenligner
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -69,7 +70,8 @@ data class SamordningUføreVurderingGrunnlagDTO(
 data class SamordningUføreGrunnlagDTO(
     val virkningstidspunkt: LocalDate,
     val uføregrad: Int,
-    val kilde: String
+    val kilde: String,
+    val endringStatus: EndringStatus,
 )
 
 data class SamordningUføreVurderingDTO(
@@ -110,10 +112,12 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                     val uføreRepository = repositoryProvider.provide<UføreRepository>()
 
                     val behandling = behandlingRepository.hent(behandlingReferanse)
-                    val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
                     val samordningUføreVurdering =
                         samordningUføreRepository.hentHvisEksisterer(behandling.id)?.vurdering
-                    Pair(uføreGrunnlag, samordningUføreVurdering)
+                    val uføregrunnlagMedEndretStatus =
+                        UførePeriodeSammenligner(uføreRepository).hentUføreGrunnlagMedEndretStatus(behandling.id)
+
+                    Pair(uføregrunnlagMedEndretStatus, samordningUføreVurdering)
                 }
 
                 val tilgangGateway = GatewayProvider.provide(TilgangGateway::class)
@@ -250,12 +254,13 @@ private fun mapSamordningUføreVurdering(vurdering: SamordningUføreVurdering?):
     }
 }
 
-private fun mapSamordningUføreGrunnlag(registerGrunnlag: UføreGrunnlag?): List<SamordningUføreGrunnlagDTO> {
-    return registerGrunnlag?.vurderinger?.map {
+private fun mapSamordningUføreGrunnlag(registerGrunnlagVurderinger: List<UførePeriodeMedEndringStatus>): List<SamordningUføreGrunnlagDTO> {
+    return registerGrunnlagVurderinger.map {
         SamordningUføreGrunnlagDTO(
             virkningstidspunkt = it.virkningstidspunkt,
             uføregrad = it.uføregrad.prosentverdi(),
-            kilde = it.kilde
+            kilde = it.kilde,
+            endringStatus = it.endringStatus
         )
-    } ?: emptyList()
+    }
 }
