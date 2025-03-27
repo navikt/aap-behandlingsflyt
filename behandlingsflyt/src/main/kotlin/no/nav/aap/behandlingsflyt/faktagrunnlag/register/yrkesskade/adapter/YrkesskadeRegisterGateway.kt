@@ -6,5 +6,5 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.lookup.gateway.Gateway
 
 interface YrkesskadeRegisterGateway : Gateway {
-    fun innhent(person: Person, fødselsdato: Fødselsdato, oppgittYrkesskade: YrkesskadeModell?): List<Yrkesskade>
+    fun innhent(person: Person, fødselsdato: Fødselsdato): List<Yrkesskade>
 }

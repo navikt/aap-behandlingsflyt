@@ -48,7 +48,7 @@ class LegeerklæringVentebehovEvaluererTest {
     }
 
     @Test
-    fun LøserBehovNårDetFinnesAvvistDokument () {
+    fun `Løser behov når det finnes avvist dokument` () {
         InitTestDatabase.dataSource.transaction { connection ->
             val evaluerer = LegeerklæringVentebehovEvaluerer(connection)
             val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
@@ -70,7 +70,7 @@ class LegeerklæringVentebehovEvaluererTest {
     }
 
     @Test
-    fun LøserBehovNårDetFinnesMottattLegeerklæring () {
+    fun `løser behov når det finnes mottatt legeerklæring` () {
         InitTestDatabase.dataSource.transaction { connection ->
             val evaluerer = LegeerklæringVentebehovEvaluerer(connection)
             val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
@@ -92,7 +92,7 @@ class LegeerklæringVentebehovEvaluererTest {
     }
 
     @Test
-    fun LøserBehovNårDetFinnesMottattDialogmelding() {
+    fun `løser behov når det finnes mottatt dialogmelding`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val evaluerer = LegeerklæringVentebehovEvaluerer(connection)
             val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
@@ -114,7 +114,7 @@ class LegeerklæringVentebehovEvaluererTest {
     }
 
     @Test
-    fun LøserIkkeBehovNårLegeerklæringErEldreEnnBestilling() {
+    fun `løser ikke behov når legeerklæring er eldre enn bestilling`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val evaluerer = LegeerklæringVentebehovEvaluerer(connection)
 
@@ -136,7 +136,7 @@ class LegeerklæringVentebehovEvaluererTest {
     }
 
     @Test
-    fun LøserIkkeBehovNårIkkeDetFinnesAvvistDokument () {
+    fun `løser ikke behov når ikke det finnes avvist dokument` () {
         InitTestDatabase.dataSource.transaction { connection ->
             val evaluerer = LegeerklæringVentebehovEvaluerer(connection)
             val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
