@@ -132,7 +132,7 @@ class PersonopplysningRepositoryImpl(
         }
     }
 
-    override fun lagre(behandlingId: BehandlingId, barn: List<Barn>) {
+    override fun lagre(behandlingId: BehandlingId, barn: Set<Barn>) {
         val personopplysningGrunnlag = hentHvisEksisterer(behandlingId)
 
         if (personopplysningGrunnlag != null) {

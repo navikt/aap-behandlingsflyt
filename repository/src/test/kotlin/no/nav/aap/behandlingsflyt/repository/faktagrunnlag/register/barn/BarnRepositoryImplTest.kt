@@ -26,36 +26,49 @@ import java.time.LocalDate
 
 class BarnRepositoryImplTest {
 
+    private val dataSource = InitTestDatabase.dataSource
+
     @Test
     fun `Finner ikke barn hvis det ikke finnes barn`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
             val barnRepository = BarnRepositoryImpl(connection)
             val barn = barnRepository.hentHvisEksisterer(behandling.id)
             assertThat(barn?.registerbarn?.identer).isNullOrEmpty()
+
+            val barnViaReferanse = barnRepository.hentHvisEksisterer(behandling.referanse)
+            assertThat(barnViaReferanse?.registerbarn?.identer).isNullOrEmpty()
         }
     }
 
     @Test
     fun `Lagrer og henter barn`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
             val barnRepository = BarnRepositoryImpl(connection)
-            val barnListe = setOf(Ident("12345678910"))
+            val barnListe = setOf(Ident("12345678910"), Ident("12345"))
 
             barnRepository.lagreRegisterBarn(behandling.id, barnListe)
             val barn = barnRepository.hent(behandling.id)
-            assertThat(barn.registerbarn?.identer).size().isEqualTo(1)
+            assertThat(barn.registerbarn?.identer).containsExactlyInAnyOrderElementsOf(barnListe)
+
+            val barnViaReferanse = barnRepository.hentHvisEksisterer(behandling.referanse)
+            assertThat(barnViaReferanse?.registerbarn?.identer).size().isEqualTo(2)
+            assertThat(barnViaReferanse?.registerbarn?.identer).containsExactlyInAnyOrderElementsOf(barnListe)
+
+            val barnPåSak = barnRepository.hentHvisEksisterer(sak.saksnummer)
+            assertThat(barnPåSak?.registerbarn?.identer).size().isEqualTo(2)
+            assertThat(barnPåSak?.registerbarn?.identer).containsExactlyInAnyOrderElementsOf(barnListe)
         }
     }
 
     @Test
     fun `Henter barn for saker`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
             val barnRepository = BarnRepositoryImpl(connection)
@@ -75,7 +88,7 @@ class BarnRepositoryImplTest {
 
     @Test
     fun `Kopiering av barn fra en behandling til en annen`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val barnRepository = BarnRepositoryImpl(connection)
             // Given
             val sak = sak(connection)

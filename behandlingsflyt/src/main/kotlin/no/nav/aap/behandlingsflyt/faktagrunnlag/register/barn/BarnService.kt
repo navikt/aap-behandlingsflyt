@@ -70,7 +70,7 @@ class BarnService private constructor(
     }
 
     private fun harEndringerIPersonopplysninger(
-        barn: List<Barn>,
+        barn: Set<Barn>,
         relatertePersonopplysninger: List<RelatertPersonopplysning>?
     ): Boolean {
         if (barn.isNotEmpty() && relatertePersonopplysninger.isNullOrEmpty()) {

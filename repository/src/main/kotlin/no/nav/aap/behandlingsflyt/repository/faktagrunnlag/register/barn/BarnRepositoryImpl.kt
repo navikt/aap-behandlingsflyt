@@ -240,6 +240,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         if (eksisterendeGrunnlag != null) {
             deaktiverEksisterende(behandlingId)
         }
+
         val alleOppgitteBarn = HashSet(eksisterendeGrunnlag?.oppgitteBarn?.identer ?: emptySet())
         alleOppgitteBarn.addAll(oppgitteBarn?.identer ?: emptySet())
 
