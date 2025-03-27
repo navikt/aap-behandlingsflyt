@@ -16,6 +16,7 @@ import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
 import no.nav.aap.brev.kontrakt.FerdigstillBrevRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerRequest
+import no.nav.aap.brev.kontrakt.HentSignaturerResponse
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.brev.kontrakt.Språk
@@ -177,7 +178,7 @@ class BrevGateway : BrevbestillingGateway {
             )
         )
 
-        return requireNotNull(
+        val response: HentSignaturerResponse = requireNotNull(
             client.post(
                 uri = baseUri.resolve("/api/forhandsvis-signaturer"),
                 request = httpRequest,
@@ -185,6 +186,7 @@ class BrevGateway : BrevbestillingGateway {
                     DefaultJsonMapper.fromJson(body)
                 })
         )
+        return response.signaturer
     }
 
     private fun mapTypeBrev(typeBrev: TypeBrev): Brevtype = when (typeBrev) {
