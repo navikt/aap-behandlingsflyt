@@ -32,6 +32,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -69,14 +70,15 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                         val brevbestillingRepository = repositoryProvider.provide<BrevbestillingRepository>()
                         val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
 
-                        val brevbestillinger =
-                            BrevbestillingService(
-                                signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository),
-                                brevbestillingGateway = brevbestillingGateway,
-                                brevbestillingRepository = brevbestillingRepository,
-                                behandlingRepository = behandlingRepository,
-                                sakRepository = sakRepository
-                            ).hentBrevbestillinger(behandlingReferanse)
+                        val signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository)
+                        val brevbestillingService = BrevbestillingService(
+                            signaturService = signaturService,
+                            brevbestillingGateway = brevbestillingGateway,
+                            brevbestillingRepository = brevbestillingRepository,
+                            behandlingRepository = behandlingRepository,
+                            sakRepository = sakRepository
+                        )
+                        val brevbestillinger = brevbestillingService.hentBrevbestillinger(behandlingReferanse)
 
                         val behandling = behandlingRepository.hent(behandlingReferanse)
                         val sak = SakService(sakRepository).hent(behandling.sakId)
@@ -85,15 +87,24 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                             GatewayProvider.provide(PersoninfoGateway::class)
                                 .hentPersoninfoForIdent(personIdent, token())
 
-                        brevbestillinger.map {
+                        brevbestillinger.map { brevbestilling ->
+                            val brevbestillingResponse =
+                                brevbestillingService.hentBrevbestilling(brevbestilling.referanse)
+                            val signaturerGrunnlag = signaturService.finnSignaturGrunnlag(brevbestilling, bruker())
+                            val signaturer = brevbestillingGateway.hentSignaturForhåndsvisning(
+                                signaturerGrunnlag,
+                                personIdent.identifikator,
+                                brevbestillingResponse.brevtype
+                            )
+
                             BrevGrunnlag.Brev(
-                                brevbestillingReferanse = it.referanse,
-                                brev = it.brev,
-                                opprettet = it.opprettet,
-                                oppdatert = it.oppdatert,
-                                brevtype = it.brevtype,
-                                språk = it.språk,
-                                status = when (it.status) {
+                                brevbestillingReferanse = brevbestillingResponse.referanse,
+                                brev = brevbestillingResponse.brev,
+                                opprettet = brevbestillingResponse.opprettet,
+                                oppdatert = brevbestillingResponse.oppdatert,
+                                brevtype = brevbestillingResponse.brevtype,
+                                språk = brevbestillingResponse.språk,
+                                status = when (brevbestillingResponse.status) {
                                     no.nav.aap.brev.kontrakt.Status.REGISTRERT -> Status.SENDT
                                     no.nav.aap.brev.kontrakt.Status.UNDER_ARBEID -> Status.FORHÅNDSVISNING_KLAR
                                     no.nav.aap.brev.kontrakt.Status.FERDIGSTILT -> Status.FULLFØRT
@@ -102,7 +113,8 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                 mottaker = Mottaker(
                                     navn = personinfo.fulltNavn(),
                                     ident = personinfo.ident.identifikator
-                                )
+                                ),
+                                signaturer = signaturer
                             )
                         }
                     }

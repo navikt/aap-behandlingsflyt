@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Vedlegg
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import java.util.*
 
 class BrevbestillingService(
@@ -51,20 +52,22 @@ class BrevbestillingService(
         return brevbestillingGateway.hent(referanse)
     }
 
-    fun hentBrevbestillinger(behandlingReferanse: BehandlingReferanse): List<BrevbestillingResponse> {
+    fun hentBrevbestillinger(behandlingReferanse: BehandlingReferanse): List<Brevbestilling> {
         val behandling = behandlingRepository.hent(behandlingReferanse)
-        return brevbestillingRepository.hent(behandling.id).map {
-            hentBrevbestilling(it.referanse)
-        }
+        return brevbestillingRepository.hent(behandling.id)
     }
 
     fun oppdaterStatus(behandlingId: BehandlingId, referanse: BrevbestillingReferanse, status: Status) {
         brevbestillingRepository.oppdaterStatus(behandlingId, referanse, status)
     }
 
-    fun ferdigstill(behandlingId: BehandlingId, brevbestillingReferanse: BrevbestillingReferanse) {
+    fun ferdigstill(
+        behandlingId: BehandlingId,
+        brevbestillingReferanse: BrevbestillingReferanse,
+        bruker: Bruker
+    ) {
         val brevbestilling = brevbestillingRepository.hent(brevbestillingReferanse)
-        val signaturer = signaturService.finnSignaturer(brevbestilling)
+        val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, bruker)
         val ferdigstilt = brevbestillingGateway.ferdigstill(brevbestillingReferanse, signaturer)
         if (!ferdigstilt) {
             throw IllegalArgumentException("Brevet er ikke gyldig ferdigstilt, fullfør brevet og prøv på nytt.")

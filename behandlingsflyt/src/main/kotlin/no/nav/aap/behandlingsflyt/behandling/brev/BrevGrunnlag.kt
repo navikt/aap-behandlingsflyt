@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.brev.kontrakt.Brevtype
+import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.Språk
 import java.time.LocalDateTime
 import java.util.*
@@ -16,6 +17,7 @@ data class BrevGrunnlag(val harTilgangTilÅSaksbehandle: Boolean, val brevGrunnl
         val språk: Språk,
         val status: Status,
         val mottaker: Mottaker,
+        val signaturer: List<Signatur>
     ) {
         data class Mottaker(val navn: String, val ident: String)
     }

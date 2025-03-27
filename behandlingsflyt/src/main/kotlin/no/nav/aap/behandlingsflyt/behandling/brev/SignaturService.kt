@@ -3,19 +3,26 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.brev.kontrakt.Rolle
-import no.nav.aap.brev.kontrakt.Signatur
+import no.nav.aap.brev.kontrakt.SignaturGrunnlag
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 
 class SignaturService(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) {
 
-    fun finnSignaturer(brevbestilling: Brevbestilling): List<Signatur> {
+    fun finnSignaturGrunnlag(brevbestilling: Brevbestilling, bruker: Bruker): List<SignaturGrunnlag> {
+
+        require(brevbestilling.status == Status.FORHÅNDSVISNING_KLAR) {
+            "Kan ikke utlede signaturer på brev i status ${brevbestilling.status}"
+        }
 
         return when (brevbestilling.typeBrev) {
             TypeBrev.VEDTAK_AVSLAG, TypeBrev.VEDTAK_INNVILGELSE, TypeBrev.VEDTAK_ENDRING -> {
+
                 val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(brevbestilling.behandlingId)
                 listOfNotNull(
                     utledSignatur(Rolle.SAKSBEHANDLER_OPPFOLGING, avklaringsbehovene),
@@ -30,8 +37,7 @@ class SignaturService(
             }
 
             TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT -> {
-                // TODO finne saksbehandler som ferdigstiller brevet
-                emptyList()
+                listOf(SignaturGrunnlag(bruker.ident, Rolle.SAKSBEHANDLER_OPPFOLGING))
             }
         }
     }
@@ -44,10 +50,10 @@ class SignaturService(
         put(Rolle.BESLUTTER, Definisjon.FATTE_VEDTAK)
     }
 
-    private fun utledSignatur(rolle: Rolle, avklaringsbehovene: Avklaringsbehovene): Signatur? {
+    private fun utledSignatur(rolle: Rolle, avklaringsbehovene: Avklaringsbehovene): SignaturGrunnlag? {
         val definisjon = rolleTilAvklaringsbehov.getValue(rolle)
         return avklaringsbehovene.hentBehovForDefinisjon(definisjon)?.let {
-            Signatur(it.endretAv(), rolle)
+            SignaturGrunnlag(it.endretAv(), rolle)
         }
     }
 }

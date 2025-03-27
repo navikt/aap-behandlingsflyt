@@ -15,7 +15,9 @@ import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
 import no.nav.aap.brev.kontrakt.FerdigstillBrevRequest
+import no.nav.aap.brev.kontrakt.HentSignaturerRequest
 import no.nav.aap.brev.kontrakt.Signatur
+import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.brev.kontrakt.Språk
 import no.nav.aap.brev.kontrakt.Vedlegg
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -96,8 +98,10 @@ class BrevGateway : BrevbestillingGateway {
         return BrevbestillingReferanse(response.referanse)
     }
 
-    override fun ferdigstill(referanse: BrevbestillingReferanse,
-                             signaturer: List<Signatur>): Boolean {
+    override fun ferdigstill(
+        referanse: BrevbestillingReferanse,
+        signaturer: List<SignaturGrunnlag>
+    ): Boolean {
         val url = baseUri.resolve("/api/ferdigstill")
 
         val request = PostRequest<FerdigstillBrevRequest>(
@@ -157,6 +161,29 @@ class BrevGateway : BrevbestillingGateway {
         client.post<_, Unit>(
             uri = url,
             request = request
+        )
+    }
+
+    override fun hentSignaturForhåndsvisning(
+        signaturer: List<SignaturGrunnlag>,
+        brukerIdent: String,
+        brevtype: Brevtype
+    ): List<Signatur> {
+
+        val httpRequest = PostRequest(
+            body = HentSignaturerRequest(brukerIdent, brevtype, signaturer),
+            additionalHeaders = listOf(
+                Header("Accept", "application/json")
+            )
+        )
+
+        return requireNotNull(
+            client.post(
+                uri = baseUri.resolve("/api/forhandsvis-signaturer"),
+                request = httpRequest,
+                mapper = { body, _ ->
+                    DefaultJsonMapper.fromJson(body)
+                })
         )
     }
 

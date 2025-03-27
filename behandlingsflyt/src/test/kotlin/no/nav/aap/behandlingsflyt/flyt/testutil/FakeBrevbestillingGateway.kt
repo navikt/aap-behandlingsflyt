@@ -10,6 +10,7 @@ import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
 import no.nav.aap.brev.kontrakt.Signatur
+import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.brev.kontrakt.Språk
 import no.nav.aap.brev.kontrakt.Status
 import no.nav.aap.brev.kontrakt.Vedlegg
@@ -41,7 +42,7 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
             }
     }
 
-    override fun ferdigstill(referanse: BrevbestillingReferanse, signaturer: List<Signatur>): Boolean {
+    override fun ferdigstill(referanse: BrevbestillingReferanse, signaturer: List<SignaturGrunnlag>): Boolean {
         brevbestillingResponse = brevbestillingResponse!!.copy(status = Status.FERDIGSTILT)
         return true
     }
@@ -56,5 +57,13 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
 
     override fun oppdater(bestillingReferanse: BrevbestillingReferanse, brev: Brev) {
         brevbestillingResponse = brevbestillingResponse!!.copy(brev = brev)
+    }
+
+    override fun hentSignaturForhåndsvisning(
+        signaturer: List<SignaturGrunnlag>,
+        brukerIdent: String,
+        brevtype: Brevtype
+    ): List<Signatur> {
+        return signaturer.map { Signatur(it.navIdent, "Nav Enhet") }
     }
 }
