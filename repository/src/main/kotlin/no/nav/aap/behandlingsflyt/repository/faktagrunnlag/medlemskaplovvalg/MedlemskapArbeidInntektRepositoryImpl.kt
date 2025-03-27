@@ -175,7 +175,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 periode = ÅpenPeriodeDto(it.vurdertDato),
                 vurdering = it.manuellVurdering
             )
-        }
+        }.filter { !it.erGjeldendeVurdering }
     }
 
     private fun lagreArbeidGrunnlag(arbeidGrunnlag: List<ArbeidINorgeGrunnlag>): Long? {
