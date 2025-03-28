@@ -163,15 +163,15 @@ object Revurdering : BehandlingType {
                 årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.INSTITUSJONSOPPHOLD)
             )
             .medSteg(
-                steg = SamordningAndreStatligeYtelserSteg,
-                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING)
-            )
-            .medSteg(
                 steg = SamordningSteg,
                 informasjonskrav = listOf(SamordningYtelseVurderingService),
                 årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING)
             )
             .medSteg(steg = SamordningUføreSteg, informasjonskrav = listOf(UføreService))
+            .medSteg(
+                steg = SamordningAndreStatligeYtelserSteg,
+                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING)
+            )
             .medSteg(steg = SamordningAvslagSteg)
             .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(MeldekortService, AktivitetspliktInformasjonskrav))
             .medSteg(steg = Effektuer11_7Steg)
