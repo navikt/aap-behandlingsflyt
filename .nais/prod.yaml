@@ -8,10 +8,6 @@ metadata:
     sub: behandlingsflyt
 spec:
   image: {{image}}
-  replicas:
-    disableAutoScaling: true
-    max: 2
-    min: 2
   resources:
     limits:
       memory: 1024Mi
