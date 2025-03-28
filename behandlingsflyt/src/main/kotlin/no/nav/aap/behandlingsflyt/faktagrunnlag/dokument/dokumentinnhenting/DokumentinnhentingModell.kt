@@ -37,6 +37,7 @@ data class LegeerklæringStatusResponse(
 )
 
 data class BrevRequest(
+    val bestillerNavIdent: String,
     val personNavn: String,
     val personIdent: String,
     val dialogmeldingTekst: String,
