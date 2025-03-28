@@ -15,13 +15,14 @@ class InformasjonskravGrunnlagImpl(private val connection: DBConnection) : Infor
         return kravliste
             .filter { kravtype -> kravtype.erRelevant(kontekst) }
             .filter { kravtype ->
-                val span = tracer.spanBuilder("informasjonskrav ${kravtype::class.simpleName}")
+                val informasjonskrav = kravtype.konstruer(connection)
+                val span = tracer.spanBuilder("informasjonskrav ${informasjonskrav::class.simpleName}")
                     .setSpanKind(SpanKind.INTERNAL)
                     .setAttribute("informasjonskrav", kravtype::class.simpleName ?: "null")
                     .startSpan()
                 try {
                     span.makeCurrent().use {
-                        kravtype.konstruer(connection).oppdater(kontekst) == Informasjonskrav.Endret.ENDRET
+                        informasjonskrav.oppdater(kontekst) == Informasjonskrav.Endret.ENDRET
                     }
                 } finally {
                     span.end()
