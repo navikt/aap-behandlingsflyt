@@ -5,8 +5,10 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
+import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
+import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -139,19 +141,23 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
         }
         route("") {
             route("/alle").get<Unit, List<SaksinfoDTO>>(TagModule(listOf(Tags.Sak))) {
-                val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
-                    repositoryProvider.provide<SakRepository>().finnAlle().map { sak ->
-                        SaksinfoDTO(
-                            saksnummer = sak.saksnummer.toString(),
-                            opprettetTidspunkt = sak.opprettetTidspunkt,
-                            periode = sak.rettighetsperiode,
-                            ident = sak.person.aktivIdent().identifikator
-                        )
+                if (Miljø.er() == MiljøKode.DEV || Miljø.er() == MiljøKode.LOKALT) {
+                    // saksoversikt er bare tilgjengelig i DEV og lokalt
+                    val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
+                        val repositoryProvider = RepositoryProvider(connection)
+                        repositoryProvider.provide<SakRepository>().finnAlle().map { sak ->
+                            SaksinfoDTO(
+                                saksnummer = sak.saksnummer.toString(),
+                                opprettetTidspunkt = sak.opprettetTidspunkt,
+                                periode = sak.rettighetsperiode,
+                                ident = sak.person.aktivIdent().identifikator
+                            )
+                        }
                     }
+                    respond(saker)
+                } else {
+                    respondWithStatus(HttpStatusCode.NotFound)
                 }
-
-                respond(saker)
             }
             route("/{saksnummer}").authorizedGet<HentSakDTO, UtvidetSaksinfoDTO>(
                 AuthorizationParamPathConfig(

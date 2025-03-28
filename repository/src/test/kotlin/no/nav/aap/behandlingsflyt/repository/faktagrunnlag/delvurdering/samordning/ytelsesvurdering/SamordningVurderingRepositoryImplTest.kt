@@ -92,6 +92,29 @@ class SamordningVurderingRepositoryImplTest {
     }
 
     @Test
+    fun `lagre en vurdering uten perioder`() {
+        val behandling = dataSource.transaction { behandling(it, sak(it)) }
+
+        dataSource.transaction {
+            SamordningVurderingRepositoryImpl(it).lagreVurderinger(behandling.id, SamordningVurderingGrunnlag(
+                begrunnelse = "xxxx",
+                maksDatoEndelig = true,
+                maksDato = LocalDate.now().plusYears(1),
+                vurderinger = listOf()
+            )
+            )
+        }
+
+        val uthentet = dataSource.transaction {
+            SamordningVurderingRepositoryImpl(it).hentHvisEksisterer(behandling.id)
+        }
+
+        assertThat(uthentet?.begrunnelse).isEqualTo("xxxx")
+        assertThat(uthentet?.maksDatoEndelig).isTrue()
+        assertThat(uthentet?.maksDato).isEqualTo(LocalDate.now().plusYears(1))
+    }
+
+    @Test
     fun `å lagre en vurdering før ytelse eksisterer gir ikke feil`() {
         val dataSource = InitTestDatabase.dataSource
         val behandling = dataSource.transaction {

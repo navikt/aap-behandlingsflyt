@@ -147,10 +147,11 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                         GatewayProvider.provide(PersoninfoGateway::class).hentPersoninfoForIdent(personIdent, token())
 
                     val brevRequest = BrevRequest(
-                        personinfo.fulltNavn(),
-                        personIdent.identifikator,
-                        req.fritekst,
-                        req.dokumentasjonType,
+                        bestillerNavIdent = bruker().ident,
+                        personNavn = personinfo.fulltNavn(),
+                        personIdent = personIdent.identifikator,
+                        dialogmeldingTekst = req.fritekst,
+                        dokumentasjonType = req.dokumentasjonType,
                     )
                     dokumentinnhentingGateway.forhåndsvisBrev(brevRequest)
                 }
@@ -170,5 +171,20 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                 respond(bestillingUUID)
             }
         }
+
+        // TODO: Enten slette eller aktivere denne når vi vet hvordan bestilling-statuser skal settes til mottat
+        /*
+        route("/status/markerbestillingmottatt") {
+            authorizedPost<Unit, LegeerklæringStatusResponse, MarkerBestillingSomMottattRequest>(
+                AuthorizationBodyPathConfig(
+                    operasjon = Operasjon.SAKSBEHANDLE,
+                    applicationsOnly = false
+                )
+            ) { _, req ->
+                val request = MarkerDialogmeldingSomMottattRequest(req.dialogmeldingBestillingUUID)
+                val response = dokumentinnhentingGateway.markerDialogmeldingStatusSomMottatt(request)
+                respond(response)
+            }
+        }*/
     }
 }
