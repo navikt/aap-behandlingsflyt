@@ -184,6 +184,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
@@ -553,6 +554,11 @@ class FlytOrkestratorTest {
         )
         assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
 
+        // Skal feile dersom man prøver å sende til beslutter etter at vedtaket er fattet
+        val avklaringsbehovFeil = assertThrows<IllegalArgumentException> {
+            løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
+        }
+        assertThat(avklaringsbehovFeil.message).contains("Forsøker å løse avklaringsbehov FORESLÅ_VEDTAK(kode='5098') som er definert i et steg før nåværende steg[BREV]")
         val vedtak = hentVedtak(behandling.id)
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
