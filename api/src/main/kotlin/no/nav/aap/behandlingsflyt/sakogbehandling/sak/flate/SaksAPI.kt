@@ -47,7 +47,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             modules = arrayOf(TagModule(listOf(Tags.Sak))),
             routeConfig = AuthorizationBodyPathConfig(
                 operasjon = Operasjon.SAKSBEHANDLE,
-                applicationsOnly = true,
+                applicationsOnly = false,
                 applicationRole = "opprett-sak",
             )
         )
