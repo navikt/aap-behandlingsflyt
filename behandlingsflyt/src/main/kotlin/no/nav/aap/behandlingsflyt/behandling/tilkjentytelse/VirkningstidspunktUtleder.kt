@@ -13,7 +13,6 @@ class VirkningstidspunktUtleder(
         val vilkårsResultat = vilkårsresultatRepository.hent(behandlingId)
         val bistandsvilkåret = vilkårsResultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
         if (!bistandsvilkåret.harPerioderSomErOppfylt()) return null
-        else
-        return vilkårsresultatRepository.hent(behandlingId).rettighetstypeTidslinje().firstOrNull()?.periode?.fom
+        return vilkårsResultat.rettighetstypeTidslinje().firstOrNull()?.periode?.fom
     }
 }
