@@ -36,7 +36,7 @@ class SamordningYtelseVurderingService(
         val foreldrepenger =
             hentYtelseForeldrepenger(personIdent, sak.rettighetsperiode.fom.minusWeeks(4), sak.rettighetsperiode.tom)
         val sykepenger =
-            hentYtelseSykepenger(personIdent, sak.rettighetsperiode.fom.minusYears(1), sak.rettighetsperiode.tom)
+            hentYtelseSykepenger(personIdent, sak.rettighetsperiode.fom.minusWeeks(4), sak.rettighetsperiode.tom)
 
         log.info("Hentet sykepenger for person i sak ${sak.saksnummer}. Antall: ${sykepenger.size}")
 
