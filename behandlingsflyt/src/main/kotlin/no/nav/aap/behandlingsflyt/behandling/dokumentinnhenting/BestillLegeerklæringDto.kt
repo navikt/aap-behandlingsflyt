@@ -49,3 +49,16 @@ data class PurringLegeerklæringRequest(
         return behandlingsReferanse.toString()
     }
 }
+
+data class MarkerBestillingSomMottattRequest(
+    val dialogmeldingBestillingUUID: UUID,
+    val behandlingsReferanse: UUID
+) : Behandlingsreferanse {
+    override fun hentAvklaringsbehovKode(): String? {
+        return Definisjon.BESTILL_LEGEERKLÆRING.kode.toString()
+    }
+
+    override fun behandlingsreferanseResolverInput(): String {
+        return behandlingsReferanse.toString()
+    }
+}

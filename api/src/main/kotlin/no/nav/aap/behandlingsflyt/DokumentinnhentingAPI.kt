@@ -2,13 +2,16 @@ package no.nav.aap.behandlingsflyt
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
+import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
+import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.BestillLegeerklæringDto
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.HentStatusLegeerklæring
+import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.MarkerBestillingSomMottattRequest
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.PurringLegeerklæringRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.BrevRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.BrevResponse
@@ -16,6 +19,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.Doku
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringBestillingRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringPurringRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.MarkerDialogmeldingSomMottattRequest
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -170,5 +174,20 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                 respond(bestillingUUID)
             }
         }
+
+        // TODO: Enten slette eller aktivere denne når vi vet hvordan bestilling-statuser skal settes til mottat
+        /*
+        route("/status/markerbestillingmottatt") {
+            authorizedPost<Unit, LegeerklæringStatusResponse, MarkerBestillingSomMottattRequest>(
+                AuthorizationBodyPathConfig(
+                    operasjon = Operasjon.SAKSBEHANDLE,
+                    applicationsOnly = false
+                )
+            ) { _, req ->
+                val request = MarkerDialogmeldingSomMottattRequest(req.dialogmeldingBestillingUUID)
+                val response = dokumentinnhentingGateway.markerDialogmeldingStatusSomMottatt(request)
+                respond(response)
+            }
+        }*/
     }
 }

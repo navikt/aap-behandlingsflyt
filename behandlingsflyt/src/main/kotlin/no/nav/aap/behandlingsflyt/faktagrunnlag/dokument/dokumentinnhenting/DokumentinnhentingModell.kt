@@ -20,6 +20,10 @@ data class LegeerklæringPurringRequest(
     val dialogmeldingUuid: UUID
 )
 
+data class MarkerDialogmeldingSomMottattRequest(
+    val dialogmeldingUuid: UUID
+)
+
 data class LegeerklæringStatusResponse(
     val dialogmeldingUuid: UUID,
     val status: MeldingStatusType?,
