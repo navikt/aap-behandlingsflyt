@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
+import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
@@ -74,17 +75,13 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             }
             respond(saker)
         }
-
-        route("/finnSisteBehandlinger").authorizedPost<Unit, NullableSakOgBehandlingDTO, FinnBehandlingForIdentDTO>(
-            modules = arrayOf(TagModule(listOf(Tags.Sak))),
-            routeConfig = AuthorizationBodyPathConfig(
-                operasjon = Operasjon.SAKSBEHANDLE,
-                applicationsOnly = true,
-                applicationRole = "opprett-sak",
+        
+        // TODO, hvordan tilgangskontrollere denne?
+        route("/finnSisteBehandlinger").post<Unit, NullableSakOgBehandlingDTO, FinnBehandlingForIdentDTO>(
+            TagModule(
+                listOf(Tags.Behandling)
             )
-        )
-
-        { _, dto ->
+        ) { _, dto ->
             val behandlinger: SakOgBehandlingDTO? = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = RepositoryProvider(connection)
                 val ident = Ident(dto.ident)
