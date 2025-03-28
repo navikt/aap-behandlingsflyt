@@ -75,7 +75,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             }
             respond(saker)
         }
-        
+
         // TODO, hvordan tilgangskontrollere denne?
         route("/finnSisteBehandlinger").post<Unit, NullableSakOgBehandlingDTO, FinnBehandlingForIdentDTO>(
             TagModule(
@@ -167,6 +167,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     respondWithStatus(HttpStatusCode.NotFound)
                 }
             }
+        }
 
         route("/{saksnummer}") {
             authorizedGet<HentSakDTO, UtvidetSaksinfoDTO>(
