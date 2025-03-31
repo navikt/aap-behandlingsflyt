@@ -20,21 +20,14 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepo
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import java.time.Clock
-import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
 class SamordningPeriodeSammenlignerTest {
-    companion object {
-        @AfterEach
-        fun afterEach() {
-            InMemorySamordningYtelseRepository.setClock(Clock.systemDefaultZone())
-        }
-    }
+
 
     @Test
     fun `om det kun er en lagring, så er alle nye`() {
@@ -70,7 +63,6 @@ class SamordningPeriodeSammenlignerTest {
 
         val fixedClock = Clock.fixed(Instant.now(), ZoneId.systemDefault())
 
-        InMemorySamordningYtelseRepository.setClock(fixedClock)
         val førstePeriode = Periode(LocalDate.now(fixedClock), LocalDate.now(fixedClock).plusYears(1))
 
 
@@ -92,7 +84,6 @@ class SamordningPeriodeSammenlignerTest {
             )
         )
 
-        InMemorySamordningYtelseRepository.setClock(Clock.offset(fixedClock, Duration.ofDays(2)))
         val andrePeriode = Periode(
             LocalDate.now(fixedClock).plusYears(1).plusDays(1),
             LocalDate.now(fixedClock).plusYears(2)
@@ -145,7 +136,6 @@ class SamordningPeriodeSammenlignerTest {
 
         val fixedClock = Clock.fixed(Instant.now(), ZoneId.systemDefault())
 
-        InMemorySamordningYtelseRepository.setClock(fixedClock)
         val førstePeriode = Periode(LocalDate.now(fixedClock), LocalDate.now(fixedClock).plusYears(1))
 
 
@@ -167,7 +157,6 @@ class SamordningPeriodeSammenlignerTest {
             )
         )
 
-        InMemorySamordningYtelseRepository.setClock(Clock.offset(fixedClock, Duration.ofDays(2)))
         InMemorySamordningYtelseRepository.lagre(
             behandling.id, listOf(
                 SamordningYtelse(
@@ -213,7 +202,6 @@ class SamordningPeriodeSammenlignerTest {
 
         val fixedClock = Clock.fixed(Instant.now(), ZoneId.systemDefault())
 
-        InMemorySamordningYtelseRepository.setClock(fixedClock)
         val førstePeriode = Periode(LocalDate.now(fixedClock), LocalDate.now(fixedClock).plusYears(1))
 
         val kilde = "xxx"
@@ -234,7 +222,6 @@ class SamordningPeriodeSammenlignerTest {
             )
         )
 
-        InMemorySamordningYtelseRepository.setClock(Clock.offset(fixedClock, Duration.ofDays(2)))
         InMemorySamordningYtelseRepository.lagre(
             behandling.id, listOf(
                 SamordningYtelse(

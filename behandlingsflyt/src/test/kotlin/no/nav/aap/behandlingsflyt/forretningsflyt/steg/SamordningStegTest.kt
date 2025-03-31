@@ -36,28 +36,15 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepo
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import java.time.Clock
 import java.time.LocalDate
 import java.util.stream.Stream
 
 class SamordningStegTest {
     companion object {
-        @BeforeEach
-        fun beforeEach() {
-            InMemorySamordningYtelseRepository.setClock(Clock.systemDefaultZone())
-        }
-
-        @AfterEach
-        fun afterEach() {
-            InMemorySamordningYtelseRepository.setClock(Clock.systemDefaultZone())
-        }
-
         @JvmStatic
         fun manuelleYtelserProvider(): Stream<Ytelse> {
             return Ytelse.entries.filter { it.type == AvklaringsType.MANUELL }.stream()
@@ -318,8 +305,6 @@ class SamordningStegTest {
 
         assertThat(res2).isEqualTo(Fullført)
 
-        // Må oppdatere klokka for at steget skal kunne hente ut nyeste grunnlag
-        InMemorySamordningYtelseRepository.setClock(Clock.systemDefaultZone())
         lagreYtelseGrunnlag(behandling.id, Ytelse.SYKEPENGER, Periode(LocalDate.now().minusYears(2), LocalDate.now()))
 
         val res3 = steg.utfør(kontekst = kontekst)
