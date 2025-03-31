@@ -96,7 +96,9 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                     signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),
                                     personIdent.identifikator,
                                     brevbestillingResponse.brevtype
-                                )
+                                ).also {
+                                    log.info("Fant ${it.size} signaturer")
+                                }
                             } else {
                                 emptyList()
                             }

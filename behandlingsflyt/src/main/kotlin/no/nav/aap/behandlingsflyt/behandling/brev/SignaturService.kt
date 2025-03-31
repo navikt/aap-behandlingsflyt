@@ -10,14 +10,15 @@ import no.nav.aap.brev.kontrakt.Rolle
 import no.nav.aap.tilgang.Rolle as TilgangRolle
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.komponenter.httpklient.auth.Bruker
+import org.slf4j.LoggerFactory
 import kotlin.collections.filter
 
 class SignaturService(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) {
-
+    private val log = LoggerFactory.getLogger(javaClass)
     fun finnSignaturGrunnlag(brevbestilling: Brevbestilling, bruker: Bruker): List<SignaturGrunnlag> {
-
+        log.info("Finn signaturgrunnlag ${brevbestilling.behandlingId}")
         require(brevbestilling.status == Status.FORHÅNDSVISNING_KLAR) {
             "Kan ikke utlede signaturer på brev i status ${brevbestilling.status}"
         }
@@ -41,6 +42,8 @@ class SignaturService(
             TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT -> {
                 listOf(SignaturGrunnlag(bruker.ident, Rolle.SAKSBEHANDLER_OPPFOLGING))
             }
+        }.also {
+            log.info("Fant ${it.size} signaturgrunnlag")
         }
     }
 
