@@ -1491,7 +1491,16 @@ object FakeServers : AutoCloseable {
                     call.respond(HttpStatusCode.Accepted, Unit)
                 }
                 post("/forhandsvis-signaturer") {
-                    call.respond(HttpStatusCode.OK, HentSignaturerResponse(listOf(Signatur("Fake navn", "Fake enhet"))))
+                    val request = call.receive<HentSignaturerRequest>()
+
+                    val signaturer = request.signaturGrunnlag.map {
+                        Signatur(
+                            navn = "Navn ${it.navIdent}",
+                            enhet = "Nav Enheten"
+                        )
+                    }
+                    val response = HentSignaturerResponse(signaturer)
+                    call.respond(response)
                 }
             }
         }
