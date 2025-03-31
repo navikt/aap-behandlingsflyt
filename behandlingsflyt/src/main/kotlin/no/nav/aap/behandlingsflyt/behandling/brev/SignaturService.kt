@@ -57,9 +57,15 @@ class SignaturService(
 
     private fun utledSignatur(rolle: Rolle, avklaringsbehovene: Avklaringsbehovene): SignaturGrunnlag? {
         val definisjoner = rolleTilAvklaringsbehov.getValue(rolle)
-        return avklaringsbehovene.hentBehovForDefinisjon(definisjoner).maxByOrNull { it.historikk.max().tidsstempel }
+        return avklaringsbehovene.hentBehovForDefinisjon(definisjoner)
+            .filter { it.endretAv().erNavIdent() }
+            .maxByOrNull { it.historikk.max().tidsstempel }
             ?.let {
                 SignaturGrunnlag(it.endretAv(), rolle)
             }
     }
+}
+
+private fun String.erNavIdent(): Boolean {
+    return this.matches(Regex("\\w\\d{6}"));
 }
