@@ -37,7 +37,7 @@ internal object ValiderBehandlingTilstand {
                     }"
                 )
             }
-            if (gjelderAvklaringsbehovTidligereStegOgBehandlingenTillatterIkkeOppdateringer(flyt, avklaringsbehov, behandling)) {
+            if (løserAvklaringsbehovForTidligereStegEtterAtBehandlingenErLåst(flyt, avklaringsbehov, behandling)) {
                 log.warn(
                     "Forsøker å løse avklaringsbehov $avklaringsbehov som er definert i et steg før nåværende steg[${behandling.aktivtSteg()}], men dette er ikke tillatt for behandlingens gjeldende steg ${
                         behandling.typeBehandling().identifikator()
@@ -52,15 +52,15 @@ internal object ValiderBehandlingTilstand {
         }
     }
 
-    private fun gjelderAvklaringsbehovTidligereStegOgBehandlingenTillatterIkkeOppdateringer(
+    private fun løserAvklaringsbehovForTidligereStegEtterAtBehandlingenErLåst(
         flyt: BehandlingFlyt,
         avklaringsbehov: Definisjon,
         behandling: Behandling
     ): Boolean {
         val forsøkerÅLøseAvklaringsbehovFørGjeldendeSteg = flyt.erStegFør(avklaringsbehov.løsesISteg, behandling.aktivtSteg())
         val erGjeldendeStegLåstForOppdateringAvOpplysninger = !flyt.skalOppdatereFaktagrunnlagForSteg(behandling.aktivtSteg())
-        val avklaringsbehovUnntattForSjekk =  listOf(AvklaringsbehovKode.`9002`, AvklaringsbehovKode.`5050`)
-        return forsøkerÅLøseAvklaringsbehovFørGjeldendeSteg && erGjeldendeStegLåstForOppdateringAvOpplysninger && !avklaringsbehovUnntattForSjekk.contains(avklaringsbehov.kode)
+        val erAvklaringsbehovUnntattForSjekk =  avklaringsbehov.kode in listOf(AvklaringsbehovKode.`9002`, AvklaringsbehovKode.`5050`)
+        return forsøkerÅLøseAvklaringsbehovFørGjeldendeSteg && erGjeldendeStegLåstForOppdateringAvOpplysninger && !erAvklaringsbehovUnntattForSjekk
     }
 
     /**
