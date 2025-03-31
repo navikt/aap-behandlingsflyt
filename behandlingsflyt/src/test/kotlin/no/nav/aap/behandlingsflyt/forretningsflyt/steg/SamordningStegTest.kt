@@ -318,6 +318,8 @@ class SamordningStegTest {
 
         assertThat(res2).isEqualTo(Fullført)
 
+        // Må oppdatere klokka for at steget skal kunne hente ut nyeste grunnlag
+        InMemorySamordningYtelseRepository.setClock(Clock.systemDefaultZone())
         lagreYtelseGrunnlag(behandling.id, Ytelse.SYKEPENGER, Periode(LocalDate.now().minusYears(2), LocalDate.now()))
 
         val res3 = steg.utfør(kontekst = kontekst)
