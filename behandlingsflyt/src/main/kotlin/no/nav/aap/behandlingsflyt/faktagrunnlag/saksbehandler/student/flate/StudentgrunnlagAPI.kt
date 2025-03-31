@@ -38,7 +38,7 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(dataSource: DataSource) {
                     studentRepository.hentHvisEksisterer(behandlingId = behandling.id)
                 }
 
-                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                     req.referanse,
                     Definisjon.AVKLAR_STUDENT.kode.toString(),
                     token()

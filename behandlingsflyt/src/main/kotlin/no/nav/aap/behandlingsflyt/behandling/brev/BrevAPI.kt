@@ -125,7 +125,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                         }
                     }
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                         behandlingReferanse.referanse,
                         Definisjon.SKRIV_BREV.kode.toString(),
                         token()

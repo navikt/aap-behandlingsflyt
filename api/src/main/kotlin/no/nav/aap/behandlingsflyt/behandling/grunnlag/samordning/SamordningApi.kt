@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning
 
-import com.papsign.ktor.openapigen.content.type.ktor.KtorContentProvider.respond
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.samordning.EndringStatus
@@ -132,7 +130,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                     Pair(uføregrunnlagMedEndretStatus, samordningUføreVurdering)
                 }
 
-                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                     behandlingReferanse.referanse,
                     Definisjon.AVKLAR_SAMORDNING_UFØRE.kode.toString(),
                     token()
@@ -178,7 +176,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                     Pair(perioderMedEndringer, samordning)
                 }
 
-                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                     req.referanse,
                     Definisjon.AVKLAR_SAMORDNING_GRADERING.kode.toString(),
                     token()
@@ -240,7 +238,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                     }
 
                 val tilgangGateway = GatewayProvider.provide(TilgangGateway::class)
-                val harTilgangTilÅSaksbehandle = tilgangGateway.sjekkTilgang(
+                val harTilgangTilÅSaksbehandle = tilgangGateway.sjekkTilgangTilBehandling(
                     behandlingReferanse.referanse,
                     Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER.kode.toString(),
                     token()

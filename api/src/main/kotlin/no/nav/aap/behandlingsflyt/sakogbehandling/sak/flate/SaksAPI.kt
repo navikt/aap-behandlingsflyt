@@ -10,6 +10,7 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -24,6 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafHentDokumentGa
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokument
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokumentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.miljo.Miljø
@@ -43,16 +45,7 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
     route("/api/sak").tag(Tags.Sak) {
-        route("/finn").authorizedPost<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO>(
-            modules = arrayOf(TagModule(listOf(Tags.Sak))),
-            routeConfig = AuthorizationBodyPathConfig(
-                operasjon = Operasjon.SAKSBEHANDLE,
-                applicationsOnly = false,
-                applicationRole = "opprett-sak",
-            )
-        )
-
-        { _, dto ->
+        route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
             val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = RepositoryProvider(connection)
                 val ident = Ident(dto.ident)
@@ -70,10 +63,24 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                                 ident = sak.person.aktivIdent().identifikator
                             )
                         }
-
                 }
+
             }
-            respond(saker)
+            val sakerMedTilgang =
+                saker.filter { sak ->
+                    TilgangGatewayImpl.sjekkTilgangTilSak(
+                        Saksnummer(sak.saksnummer),
+                        token()
+                    )
+                }
+
+            
+            if (sakerMedTilgang.isNotEmpty()) {
+                respond(saker)
+            } else {
+                respondWithStatus(HttpStatusCode.NotFound)
+            }
+
         }
 
         // TODO, hvordan tilgangskontrollere denne?

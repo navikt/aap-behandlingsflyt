@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.tilgang
 
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -10,6 +11,9 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBeha
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.SakTilgangRequest
+import no.nav.aap.tilgang.TilgangGateway.harTilgangTilBehandling
+import no.nav.aap.tilgang.TilgangGateway.harTilgangTilSak
 import no.nav.aap.tilgang.TilgangResponse
 import java.net.URI
 import java.util.UUID
@@ -25,7 +29,7 @@ object TilgangGatewayImpl : TilgangGateway {
         prometheus = prometheus
     )
 
-    override fun sjekkTilgang(behandlingsreferanse: UUID, avklaringsbehovKode: String, token: OidcToken): Boolean {
+    override fun sjekkTilgangTilBehandling(behandlingsreferanse: UUID, avklaringsbehovKode: String, token: OidcToken): Boolean {
         return harTilgangTilBehandling(
             BehandlingTilgangRequest(
                 behandlingsreferanse = behandlingsreferanse,
@@ -35,17 +39,12 @@ object TilgangGatewayImpl : TilgangGateway {
         )
     }
 
-    private fun harTilgangTilBehandling(body: BehandlingTilgangRequest, currentToken: OidcToken): Boolean {
-        val httpRequest = PostRequest(
-            body = body,
-            currentToken = currentToken
+    override fun sjekkTilgangTilSak(saksnummer: Saksnummer, token: OidcToken): Boolean {
+        return harTilgangTilSak(
+            SakTilgangRequest(
+                saksnummer = saksnummer.toString(),
+                operasjon = Operasjon.SAKSBEHANDLE
+            ), token
         )
-        val respons = requireNotNull(
-            client.post<_, TilgangResponse>(
-                uri = baseUrl.resolve("/tilgang/behandling"),
-                request = httpRequest
-            )
-        )
-        return respons.tilgang
     }
 }

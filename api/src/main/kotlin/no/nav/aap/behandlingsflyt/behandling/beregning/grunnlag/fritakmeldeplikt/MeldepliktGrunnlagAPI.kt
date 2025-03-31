@@ -45,7 +45,7 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: DataSource) {
                 val historikk =
                     meldepliktRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
 
-                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                     req.referanse,
                     Definisjon.FRITAK_MELDEPLIKT.kode.toString(),
                     token()

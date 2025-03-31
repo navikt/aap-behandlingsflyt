@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
@@ -87,7 +86,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                     ?.takeIf { it.status == Status.FERDIGSTILT }
                     ?.oppdatert?.toLocalDate()
 
-                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                     behandlingReferanse.referanse,
                     Definisjon.EFFEKTUER_11_7.kode.toString(),
                     token()

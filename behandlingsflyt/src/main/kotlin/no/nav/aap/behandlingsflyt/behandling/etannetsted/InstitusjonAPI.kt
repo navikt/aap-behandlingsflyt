@@ -73,7 +73,7 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
                             )
                         }
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                         req.referanse,
                         Definisjon.AVKLAR_SONINGSFORRHOLD.kode.toString(),
                         token()
@@ -140,7 +140,7 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
                             )
                         }
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                         req.referanse,
                         Definisjon.AVKLAR_HELSEINSTITUSJON.kode.toString(),
                         token()
