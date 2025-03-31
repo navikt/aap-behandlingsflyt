@@ -114,10 +114,10 @@ class BeregnTilkjentYtelseService(
                             tilkjentGUnit.copy(
                                 gradering = tilkjentGUnit.gradering.copy(
                                     endeligGradering = tilkjentGUnit.gradering.endeligGradering.minus(
-                                        høyre.verdi.uføregradTilSamordning,
+                                        høyre.verdi,
                                         Prosent.`0_PROSENT`
                                     ),
-                                    samordningUføregradering = høyre.verdi.uføregradTilSamordning
+                                    samordningUføregradering = høyre.verdi
                                 )
                             )
                         Segment(periode, nyGradering)
