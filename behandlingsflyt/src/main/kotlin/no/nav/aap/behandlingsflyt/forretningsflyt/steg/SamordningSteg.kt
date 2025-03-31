@@ -41,7 +41,17 @@ class SamordningSteg(
             }
 
             VurderingType.REVURDERING -> {
-                vurdervilkår(kontekst)
+                val forrigeBehandlingId =
+                    requireNotNull(kontekst.forrigeBehandlingId) { "En revurdering har alltid en forrige behandling." }
+
+                val forrigeVurdering = samordningService.hentVurderinger(forrigeBehandlingId)
+                val gjeldendeVurdering = samordningService.hentVurderinger(kontekst.behandlingId)
+
+                if (forrigeVurdering == gjeldendeVurdering) {
+                    FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
+                } else {
+                    vurdervilkår(kontekst)
+                }
             }
 
             VurderingType.FORLENGELSE, VurderingType.IKKE_RELEVANT -> Fullført
