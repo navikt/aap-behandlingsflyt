@@ -210,6 +210,10 @@ class BehandlingFlyt private constructor(
             ÅrsakTilBehandling.entries.toSet()
         }
     }
+
+    fun skalOppdatereFaktagrunnlagForSteg(nåværendeSteg: StegType): Boolean {
+        return steg(nåværendeSteg).oppdaterFaktagrunnlag
+    }
 }
 
 class StegComparator(private var flyt: List<BehandlingFlyt.Behandlingsflytsteg>) : Comparator<StegType> {
