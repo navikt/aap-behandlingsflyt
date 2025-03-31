@@ -135,18 +135,20 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
     }
 
-    override fun hentHistoriskeVurderinger(sakId: SakId): List<HistoriskManuellVurderingForLovvalgMedlemskap> {
+    override fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<HistoriskManuellVurderingForLovvalgMedlemskap> {
         val query = """
             SELECT vurdering.*
             FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG grunnlag
             INNER JOIN LOVVALG_MEDLEMSKAP_MANUELL_VURDERING vurdering ON grunnlag.MANUELL_VURDERING_ID = vurdering.ID
             JOIN BEHANDLING behandling ON grunnlag.BEHANDLING_ID = behandling.ID
-            WHERE grunnlag.AKTIV AND behandling.SAK_ID = ?
+            WHERE grunnlag.AKTIV AND behandling.SAK_ID = ? 
+              AND behandling.opprettet_tid < (SELECT a.opprettet_tid from behandling a where id = ?)
         """.trimIndent()
 
         val vurderinger = connection.queryList(query) {
             setParams {
                 setLong(1, sakId.id)
+                setLong(2, behandlingId.id)
             }
             setRowMapper {
                 InternalHistoriskManuellVurderingForLovvalgMedlemskap(
