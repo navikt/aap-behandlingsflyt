@@ -26,28 +26,19 @@ internal object ValiderBehandlingTilstand {
             }
             val flyt = utledType(behandling.typeBehandling()).flyt()
             if (!flyt.erStegFørEllerLik(avklaringsbehov.løsesISteg, behandling.aktivtSteg())) {
-                log.warn(
-                    "Forsøker å løse avklaringsbehov $avklaringsbehov som er definert i et steg etter nåværende steg[${behandling.aktivtSteg()}] ${
-                        behandling.typeBehandling().identifikator()
-                    }"
-                )
-                throw IllegalArgumentException(
-                    "Forsøker å løse avklaringsbehov $avklaringsbehov som er definert i et steg etter nåværende steg[${behandling.aktivtSteg()}] ${
-                        behandling.typeBehandling().identifikator()
-                    }"
-                )
+                val errorMsg = "Forsøker å løse avklaringsbehov $avklaringsbehov som er definert i et steg etter " +
+                        "nåværende steg[${behandling.aktivtSteg()}] ${behandling.typeBehandling().toLogString()}"
+
+                log.warn(errorMsg)
+                throw IllegalArgumentException(errorMsg)
             }
             if (løserAvklaringsbehovForTidligereStegEtterAtBehandlingenErLåst(flyt, avklaringsbehov, behandling)) {
-                log.warn(
-                    "Forsøker å løse avklaringsbehov $avklaringsbehov som er definert i et steg før nåværende steg[${behandling.aktivtSteg()}], men dette er ikke tillatt for behandlingens gjeldende steg ${
-                        behandling.typeBehandling().identifikator()
-                    }"
-                )
-                throw IllegalArgumentException(
-                    "Forsøker å løse avklaringsbehov $avklaringsbehov som er definert i et steg før nåværende steg[${behandling.aktivtSteg()}], men dette er ikke tillatt for behandlingens gjeldende steg ${
-                        behandling.typeBehandling().identifikator()
-                    }"
-                )
+                val errorMsg = "Forsøker å løse avklaringsbehov $avklaringsbehov som er definert i et steg før " +
+                        "nåværende steg[${behandling.aktivtSteg()}], men dette er ikke tillatt for behandlingens " +
+                        "gjeldende steg ${behandling.typeBehandling().toLogString()}"
+
+                log.warn(errorMsg)
+                throw IllegalArgumentException(errorMsg)
             }
         }
     }
