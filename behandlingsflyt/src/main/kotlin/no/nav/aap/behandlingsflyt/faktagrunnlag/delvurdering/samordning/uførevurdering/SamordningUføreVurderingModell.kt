@@ -14,7 +14,7 @@ data class SamordningUføreVurdering(
     val begrunnelse: String,
     val vurderingPerioder: List<SamordningUføreVurderingPeriode>,
 ) {
-    fun tilTidslinje(): Tidslinje<SamordningUføreVurderingPeriode> {
+    fun tilTidslinje(): Tidslinje<Prosent> {
         val sorterteVurderinger = vurderingPerioder.sortedBy { it.virkningstidspunkt };
         val sisteElement = sorterteVurderinger.lastOrNull()
 
@@ -27,9 +27,9 @@ data class SamordningUføreVurdering(
                     periode = Periode(
                         gjeldende.virkningstidspunkt,
                         neste.virkningstidspunkt.minusDays(1)
-                    ), verdi = gjeldende
+                    ), verdi = gjeldende.uføregradTilSamordning
                 )
-            }.plus(Segment(Periode(sisteElement.virkningstidspunkt, LocalDate.MAX), sisteElement)).let(::Tidslinje)
+            }.plus(Segment(Periode(sisteElement.virkningstidspunkt, LocalDate.MAX), sisteElement.uføregradTilSamordning)).let(::Tidslinje)
     }
 }
 

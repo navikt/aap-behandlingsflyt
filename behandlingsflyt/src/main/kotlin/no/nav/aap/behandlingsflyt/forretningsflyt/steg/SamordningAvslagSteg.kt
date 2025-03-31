@@ -3,16 +3,14 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -31,13 +29,13 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @Suppress("unused")
 class SamordningAvslagGrunnlag(
     val samordningGrunnlag: SamordningYtelseVurderingGrunnlag?,
-    val uføreGrunnlag: UføreGrunnlag?,
+    val uføreRegisterGrunnlag: UføreGrunnlag?,
+    val uføreVurderingGrunnlag: SamordningUføreGrunnlag?,
 ) : Faktagrunnlag
 
 class SamordningAvslagSteg(
     private val samordningService: SamordningService,
     private val uføreService: UføreService,
-    private val uføreRepository: UføreRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sakRepository: SakRepository,
@@ -47,33 +45,35 @@ class SamordningAvslagSteg(
         val sak = sakRepository.hent(kontekst.sakId)
 
         val samordningTidslinje = samordningService.tidslinje(kontekst.behandlingId)
-        val uføre = uføreService.tidslinje(kontekst.behandlingId)
+        val samordningUføreTidslinje = uføreService.tidslinje(kontekst.behandlingId)
 
         /* NB: bevisst valg å ikke gi avslag selv om summen av samordninger blir til 100%. */
-        val samordningsVurderinger = samordningTidslinje.outerJoinNotNull(uføre) { andreYtelserSamordning, uføregradering ->
-            val samordningerYtelser =
-                andreYtelserSamordning?.ytelsesGraderinger.orEmpty().map { it.ytelse.toString() to it.gradering }
-            val samordningUføre = listOfNotNull(uføregradering?.let { "UFØRE" to it })
-            val samordninger = (samordningerYtelser + samordningUføre)
-                .filter { (_, prosent) -> prosent == `100_PROSENT` }
+        val samordningsVurderinger =
+            samordningTidslinje.outerJoinNotNull(samordningUføreTidslinje) { andreYtelserSamordning, samordningUføreGradering ->
+                val samordningerYtelser =
+                    andreYtelserSamordning?.ytelsesGraderinger.orEmpty().map { it.ytelse.toString() to it.gradering }
+                val samordningUføre = listOfNotNull(samordningUføreGradering?.let { "UFØRE" to it })
+                val samordninger = (samordningerYtelser + samordningUføre)
+                    .filter { (_, prosent) -> prosent == `100_PROSENT` }
 
-            if (samordninger.isEmpty())
-                null
-            else
-                Vilkårsvurdering(
-                    utfall = Utfall.IKKE_OPPFYLT,
-                    manuellVurdering = false,
-                    begrunnelse = "Full ytelse ${samordninger.joinToString { (navn, _) -> navn }}",
-                    avslagsårsak = Avslagsårsak.ANNEN_FULL_YTELSE,
-                    faktagrunnlag = SamordningAvslagGrunnlag(
-                        samordningGrunnlag = SamordningYtelseVurderingGrunnlag(
-                            ytelseGrunnlag = samordningService.hentYtelser(kontekst.behandlingId),
-                            vurderingGrunnlag = samordningService.hentVurderinger(kontekst.behandlingId),
+                if (samordninger.isEmpty())
+                    null
+                else
+                    Vilkårsvurdering(
+                        utfall = Utfall.IKKE_OPPFYLT,
+                        manuellVurdering = false,
+                        begrunnelse = "Full ytelse ${samordninger.joinToString { (navn, _) -> navn }}",
+                        avslagsårsak = Avslagsårsak.ANNEN_FULL_YTELSE,
+                        faktagrunnlag = SamordningAvslagGrunnlag(
+                            samordningGrunnlag = SamordningYtelseVurderingGrunnlag(
+                                ytelseGrunnlag = samordningService.hentYtelser(kontekst.behandlingId),
+                                vurderingGrunnlag = samordningService.hentVurderinger(kontekst.behandlingId),
+                            ),
+                            uføreRegisterGrunnlag = uføreService.hentRegisterGrunnlagHvisEksisterer(kontekst.behandlingId),
+                            uføreVurderingGrunnlag = uføreService.hentVurderingGrunnlagHvisEksisterer(kontekst.behandlingId),
                         ),
-                        uføreGrunnlag = uføreRepository.hentHvisEksisterer(kontekst.behandlingId),
-                    ),
-                )
-        }
+                    )
+            }
 
 
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
@@ -108,14 +108,9 @@ class SamordningAvslagSteg(
                         sakRepository = repositoryProvider.provide(),
                     ),
                     uføreRepository = repositoryProvider.provide(),
+                    samordningUføreRepository = repositoryProvider.provide(),
                     uføreRegisterGateway = GatewayProvider.provide(),
-                    sakOgBehandlingService = SakOgBehandlingService(
-                        grunnlagKopierer = GrunnlagKopierer(connection),
-                        sakRepository = repositoryProvider.provide(),
-                        behandlingRepository = repositoryProvider.provide(),
-                    ),
                 ),
-                uføreRepository = repositoryProvider.provide(),
             )
         }
 
