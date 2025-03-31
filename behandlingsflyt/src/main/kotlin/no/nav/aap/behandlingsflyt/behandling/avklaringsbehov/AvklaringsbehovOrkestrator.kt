@@ -101,7 +101,10 @@ class AvklaringsbehovOrkestrator(
             behandlingRepository = behandlingRepository,
             behandlingFlytRepository = repositoryProvider.provide<BehandlingFlytRepository>(),
             avklaringsbehovRepository = avklaringsbehovRepository,
-            informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection),
+            informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
+                repositoryProvider.provide(),
+                connection,
+            ),
             sakRepository = sakFlytRepository,
             perioderTilVurderingService = PerioderTilVurderingService(
                 SakService(sakRepository),

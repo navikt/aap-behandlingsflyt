@@ -79,7 +79,7 @@ class InformasjonskravGrunnlagTest {
     fun `Yrkesskadedata er oppdatert`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
-            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), connection)
 
             FakePersoner.leggTil(
                 TestPerson(
@@ -111,7 +111,7 @@ class InformasjonskravGrunnlagTest {
     fun `Yrkesskadedata er ikke oppdatert`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
-            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), connection)
 
             FakePersoner.leggTil(
                 TestPerson(
@@ -136,7 +136,7 @@ class InformasjonskravGrunnlagTest {
     fun `Yrkesskadedata er utdatert, men har ingen endring fra registeret`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val (_, kontekst) = klargjør(connection)
-            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), connection)
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
                 listOf(YrkesskadeService),
@@ -151,7 +151,7 @@ class InformasjonskravGrunnlagTest {
     fun LovvalgMedlemskapErOppdatert() {
         InitTestDatabase.dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
-            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), connection)
 
             FakePersoner.leggTil(
                 TestPerson(

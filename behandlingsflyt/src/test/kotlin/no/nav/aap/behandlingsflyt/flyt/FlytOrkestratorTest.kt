@@ -38,6 +38,7 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
 import no.nav.aap.behandlingsflyt.drift.Driftfunksjoner
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
@@ -244,6 +245,7 @@ class FlytOrkestratorTest {
                 .register<SamordningUføreRepositoryImpl>()
                 .register<SamordningAndreStatligeYtelserRepositoryImpl>()
                 .register<RefusjonkravRepositoryImpl>()
+                .register<InformasjonskravRepositoryImpl>()
                 .status()
             GatewayRegistry
                 .register<PdlBarnGateway>()
@@ -1916,7 +1918,7 @@ class FlytOrkestratorTest {
 
     @Test
     fun `Går videre i forutgåendemedlemskapsteget når manuell vurdering mottas`() {
-        val ident = ident()
+        val ident = nyPerson(harYrkesskade = false, harUtenlandskOpphold = true)
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Oppretter vanlig søknad
@@ -1938,7 +1940,7 @@ class FlytOrkestratorTest {
         val sak = hentSak(ident, periode)
         var behandling = hentBehandling(sak.id)
 
-        løsFramTilForutgåendeMedlemskap(behandling, false, ident, true)
+        løsFramTilForutgåendeMedlemskap(behandling, harYrkesskade = false)
 
         // Validér avklaring
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -1962,7 +1964,7 @@ class FlytOrkestratorTest {
 
     @Test
     fun `Oppfyller ikke forutgående medlemskap når unntak ikke oppfylles og ikke medlem i folketrygden`() {
-        val ident = ident()
+        val ident = nyPerson(harYrkesskade = false, harUtenlandskOpphold = true)
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Oppretter vanlig søknad
@@ -1986,7 +1988,7 @@ class FlytOrkestratorTest {
         val sak = hentSak(ident, periode)
         var behandling = hentBehandling(sak.id)
 
-        løsFramTilForutgåendeMedlemskap(behandling, false, ident, true)
+        løsFramTilForutgåendeMedlemskap(behandling, harYrkesskade = false)
 
         // Validér avklaring
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -2012,7 +2014,7 @@ class FlytOrkestratorTest {
 
     @Test
     fun `Oppfyller forutgående medlemskap når unntak finnes`() {
-        val ident = ident()
+        val ident = nyPerson(harYrkesskade = false, harUtenlandskOpphold = true)
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Oppretter vanlig søknad
@@ -2036,7 +2038,7 @@ class FlytOrkestratorTest {
         val sak = hentSak(ident, periode)
         var behandling = hentBehandling(sak.id)
 
-        løsFramTilForutgåendeMedlemskap(behandling, false, ident, true)
+        løsFramTilForutgåendeMedlemskap(behandling, harYrkesskade = false)
 
         // Validér avklaring
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -2061,7 +2063,7 @@ class FlytOrkestratorTest {
 
     @Test
     fun `Går forbi forutgåendemedlemskapsteget når yrkesskade eksisterer`() {
-        val ident = ident()
+        val ident = nyPerson(harYrkesskade = true, harUtenlandskOpphold = false)
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Oppretter vanlig søknad
@@ -2083,7 +2085,7 @@ class FlytOrkestratorTest {
         val sak = hentSak(ident, periode)
         val behandling = hentBehandling(sak.id)
 
-        løsFramTilForutgåendeMedlemskap(behandling, true, ident)
+        løsFramTilForutgåendeMedlemskap(behandling = behandling, harYrkesskade = true)
 
         // Validér avklaring
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -2272,7 +2274,7 @@ class FlytOrkestratorTest {
 
     @Test
     fun `Kan løse forutgående overstyringsbehov til ikke oppfylt`() {
-        val ident = ident()
+        val ident = nyPerson(harYrkesskade = false, harUtenlandskOpphold = false)
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Oppretter vanlig søknad
@@ -2293,7 +2295,7 @@ class FlytOrkestratorTest {
         val sak = hentSak(ident, periode)
         var behandling = hentBehandling(sak.id)
 
-        løsFramTilForutgåendeMedlemskap(behandling, false, ident, false)
+        løsFramTilForutgåendeMedlemskap(behandling, harYrkesskade = false)
 
         // Validér avklaring
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -2695,46 +2697,7 @@ class FlytOrkestratorTest {
     private fun løsFramTilForutgåendeMedlemskap(
         behandling: Behandling,
         harYrkesskade: Boolean = false,
-        ident: Ident,
-        harUtenlandskOpphold: Boolean = false
     ) {
-        val person = TestPerson(
-            identer = setOf(ident),
-            statsborgerskap = if (harUtenlandskOpphold) listOf(
-                PdlStatsborgerskap(
-                    "MAC",
-                    LocalDate.now().minusYears(5),
-                    LocalDate.now()
-                )
-            )
-            else listOf(PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), LocalDate.now())),
-            yrkesskade = if (harYrkesskade) listOf(TestYrkesskade()) else emptyList(),
-            personStatus = if (!harUtenlandskOpphold) listOf(
-                PdlFolkeregisterPersonStatus(
-                    PersonStatus.bosatt,
-                    PdlFolkeregistermetadata(
-                        LocalDateTime.now(),
-                        LocalDateTime.now().plusYears(2)
-                    )
-                )
-            ) else listOf(
-                PdlFolkeregisterPersonStatus(
-                    PersonStatus.bosatt,
-                    PdlFolkeregistermetadata(
-                        LocalDateTime.now(),
-                        LocalDateTime.now().plusYears(2)
-                    )
-                ),
-                PdlFolkeregisterPersonStatus(
-                    PersonStatus.ikkeBosatt,
-                    PdlFolkeregistermetadata(
-                        LocalDateTime.now().minusYears(5),
-                        LocalDateTime.now().minusYears(2)
-                    )
-                )
-            )
-        )
-        FakePersoner.leggTil(person)
         var behandling = behandling
         behandling = løsSykdom(behandling)
         behandling = løsAvklaringsBehov(
@@ -2803,5 +2766,50 @@ class FlytOrkestratorTest {
                 ),
             ),
         )
+    }
+
+    private fun nyPerson(
+        harYrkesskade: Boolean,
+        harUtenlandskOpphold: Boolean,
+    ): Ident {
+        val ident = ident()
+        val person = TestPerson(
+            identer = setOf(ident),
+            statsborgerskap = if (harUtenlandskOpphold) listOf(
+                PdlStatsborgerskap(
+                    "MAC",
+                    LocalDate.now().minusYears(5),
+                    LocalDate.now()
+                )
+            )
+            else listOf(PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), LocalDate.now())),
+            yrkesskade = if (harYrkesskade) listOf(TestYrkesskade()) else emptyList(),
+            personStatus = if (!harUtenlandskOpphold) listOf(
+                PdlFolkeregisterPersonStatus(
+                    PersonStatus.bosatt,
+                    PdlFolkeregistermetadata(
+                        LocalDateTime.now(),
+                        LocalDateTime.now().plusYears(2)
+                    )
+                )
+            ) else listOf(
+                PdlFolkeregisterPersonStatus(
+                    PersonStatus.bosatt,
+                    PdlFolkeregistermetadata(
+                        LocalDateTime.now(),
+                        LocalDateTime.now().plusYears(2)
+                    )
+                ),
+                PdlFolkeregisterPersonStatus(
+                    PersonStatus.ikkeBosatt,
+                    PdlFolkeregistermetadata(
+                        LocalDateTime.now().minusYears(5),
+                        LocalDateTime.now().minusYears(2)
+                    )
+                )
+            )
+        )
+        FakePersoner.leggTil(person)
+        return ident
     }
 }

@@ -59,7 +59,7 @@ class ProsesserBehandlingJobbUtfører(
                     behandlingRepository = behandlingRepository,
                     behandlingFlytRepository = behandlingFlytRepository,
                     avklaringsbehovRepository = avklaringsbehovRepository,
-                    informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection),
+                    informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(repositoryProvider.provide(), connection),
                     sakRepository = sakFlytRepository,
                     perioderTilVurderingService = PerioderTilVurderingService(
                         SakService(sakRepository),
