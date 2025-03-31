@@ -74,7 +74,6 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     )
                 }
 
-            
             if (sakerMedTilgang.isNotEmpty()) {
                 respond(saker)
             } else {
@@ -83,7 +82,6 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
 
         }
 
-        // TODO, hvordan tilgangskontrollere denne?
         route("/finnSisteBehandlinger").post<Unit, NullableSakOgBehandlingDTO, FinnBehandlingForIdentDTO>(
             TagModule(
                 listOf(Tags.Behandling)
@@ -112,14 +110,30 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                                 )
                             )
 
-                    SakOgBehandlingDTO(
-                        personIdent = sak.person.aktivIdent().toString(),
-                        saksnummer = sak.saksnummer.toString(),
-                        status = sak.status().toString(),
-                        sisteBehandlingStatus = behandling?.status().toString()
-                    )
+                    val behandlingMedTilgang =
+                        if (behandling?.referanse?.referanse != null) {
+                            TilgangGatewayImpl.sjekkTilgangTilBehandling(
+                                behandling.referanse.referanse,
+                                Definisjon.MANUELT_SATT_PÅ_VENT.kode.toString(),
+                                token()
+                            )
+                        } else {
+                            null
+                        }
+
+                    if (behandlingMedTilgang != null) {
+                        SakOgBehandlingDTO(
+                            personIdent = sak.person.aktivIdent().toString(),
+                            saksnummer = sak.saksnummer.toString(),
+                            status = sak.status().toString(),
+                            sisteBehandlingStatus = behandling?.status().toString()
+                        )
+                    } else {
+                        null
+                    }
                 }
             }
+
             respond(NullableSakOgBehandlingDTO(behandlinger))
         }
 
