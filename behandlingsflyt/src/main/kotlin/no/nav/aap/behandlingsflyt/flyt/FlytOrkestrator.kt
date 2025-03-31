@@ -210,9 +210,9 @@ class FlytOrkestrator(
     }
 
     private fun validerAtAvklaringsBehovErLukkede(avklaringsbehovene: Avklaringsbehovene) {
-        assert(
-            avklaringsbehovene.åpne().isEmpty()
-        ) { "Behandlingen er avsluttet, men det finnes åpne avklaringsbehov." }
+        check(avklaringsbehovene.åpne().isEmpty()) {
+            "Behandlingen er avsluttet, men det finnes åpne avklaringsbehov."
+        }
     }
 
     private fun utledNesteSteg(

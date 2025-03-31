@@ -93,8 +93,9 @@ class YrkesskadeService private constructor(
     private fun fakeOppgittYrkesskade(
         periode: Periode
     ): Yrkesskade {
-        assert(Miljø.er() in listOf(MiljøKode.DEV, MiljøKode.LOKALT))
-        assert(!Miljø.erProd())
+        check(Miljø.er() in listOf(MiljøKode.DEV, MiljøKode.LOKALT))
+        check(!Miljø.erProd())
+
         return Yrkesskade(
             ref = "YRK",
             skadedato = periode.fom.minusDays(60),
