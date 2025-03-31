@@ -13,6 +13,8 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -33,6 +35,20 @@ class SamordningSteg(
         // 3.  hvis har all tilgjengelig data:
         // 3.1 lag tidslinje av prosentgradering og lagre i SamordningRepository
 
+        return when (kontekst.vurdering.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING -> {
+                vurdervilkår(kontekst)
+            }
+
+            VurderingType.REVURDERING -> {
+                vurdervilkår(kontekst)
+            }
+
+            VurderingType.FORLENGELSE, VurderingType.IKKE_RELEVANT -> Fullført
+        }
+    }
+
+    private fun vurdervilkår(kontekst: FlytKontekstMedPerioder): StegResultat {
         val vurderinger = samordningService.hentVurderinger(behandlingId = kontekst.behandlingId)
         val ytelser = samordningService.hentYtelser(behandlingId = kontekst.behandlingId)
         val tidligereVurderinger = samordningService.tidligereVurderinger(vurderinger)

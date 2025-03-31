@@ -206,6 +206,7 @@ class InformasjonskravGrunnlagTest {
         return ident to FlytKontekstMedPerioder(
             flytKontekst.sakId,
             flytKontekst.behandlingId,
+            flytKontekst.forrigeBehandlingId,
             behandling.typeBehandling(),
             VurderingTilBehandling(
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,

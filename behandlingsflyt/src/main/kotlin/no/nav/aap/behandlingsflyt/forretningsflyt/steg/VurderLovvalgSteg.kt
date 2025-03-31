@@ -61,25 +61,38 @@ class VurderLovvalgSteg private constructor(
     }
 
     private fun vurderVilkår(kontekst: FlytKontekstMedPerioder): StegResultat? {
-        val manuellVurdering = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)?.manuellVurdering
+        val manuellVurdering =
+            medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)?.manuellVurdering
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
 
         if (kontekst.harNoeTilBehandling()) {
             val sak = sakRepository.hent(kontekst.sakId)
             val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)
                 ?: throw IllegalStateException("Forventet å finne personopplysninger")
-            val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
-            val oppgittUtenlandsOppholdGrunnlag = medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(kontekst.behandlingId)
-                ?: medlemskapArbeidInntektRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(kontekst.sakId)
+            val medlemskapArbeidInntektGrunnlag =
+                medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
+            val oppgittUtenlandsOppholdGrunnlag =
+                medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(kontekst.behandlingId)
+                    ?: medlemskapArbeidInntektRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(
+                        kontekst.sakId
+                    )
 
             Medlemskapvilkåret(vilkårsresultat, sak.rettighetsperiode).vurder(
-                MedlemskapLovvalgGrunnlag(medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag)
+                MedlemskapLovvalgGrunnlag(
+                    medlemskapArbeidInntektGrunnlag,
+                    personopplysningGrunnlag,
+                    oppgittUtenlandsOppholdGrunnlag
+                )
             )
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         }
 
-        val måOverføresTilAnnetLand = vilkårsresultatRepository.hent(kontekst.behandlingId).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder().any{it.avslagsårsak == Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT}
-        val alleVilkårOppfylt = vilkårsresultatRepository.hent(kontekst.behandlingId).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder().all{it.erOppfylt()}
+        val måOverføresTilAnnetLand =
+            vilkårsresultatRepository.hent(kontekst.behandlingId).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+                .any { it.avslagsårsak == Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT }
+        val alleVilkårOppfylt =
+            vilkårsresultatRepository.hent(kontekst.behandlingId).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+                .all { it.erOppfylt() }
 
         if (måOverføresTilAnnetLand) {
             return FantVentebehov(
@@ -89,15 +102,20 @@ class VurderLovvalgSteg private constructor(
                 )
             )
         }
-        if ((!alleVilkårOppfylt && manuellVurdering == null
-            || spesifiktTriggetRevurderLovvalgUtenManuellVurdering(kontekst, manuellVurdering))) {
+        if (!alleVilkårOppfylt && manuellVurdering == null
+            || spesifiktTriggetRevurderLovvalgUtenManuellVurdering(kontekst, manuellVurdering)
+        ) {
             return FantAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
         }
         return null
     }
 
-    private fun spesifiktTriggetRevurderLovvalgUtenManuellVurdering(kontekst: FlytKontekstMedPerioder, manuellVurdering: ManuellVurderingForLovvalgMedlemskap?): Boolean {
-        val erSpesifiktTriggetRevurderLovvalg = kontekst.vurdering.årsakerTilBehandling.any{it == ÅrsakTilBehandling.REVURDER_LOVVALG}
+    private fun spesifiktTriggetRevurderLovvalgUtenManuellVurdering(
+        kontekst: FlytKontekstMedPerioder,
+        manuellVurdering: ManuellVurderingForLovvalgMedlemskap?
+    ): Boolean {
+        val erSpesifiktTriggetRevurderLovvalg =
+            kontekst.vurdering.årsakerTilBehandling.any { it == ÅrsakTilBehandling.REVURDER_LOVVALG }
         return erSpesifiktTriggetRevurderLovvalg && manuellVurdering == null
     }
 
@@ -108,7 +126,12 @@ class VurderLovvalgSteg private constructor(
             val personopplysningRepository = repositoryProvider.provide<PersonopplysningRepository>()
             val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
             val sakRepository = repositoryProvider.provide<SakRepository>()
-            return VurderLovvalgSteg(vilkårsresultatRepository, personopplysningRepository, medlemskapArbeidInntektRepository, sakRepository)
+            return VurderLovvalgSteg(
+                vilkårsresultatRepository,
+                personopplysningRepository,
+                medlemskapArbeidInntektRepository,
+                sakRepository
+            )
         }
 
         override fun type(): StegType {

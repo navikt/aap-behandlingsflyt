@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import io.opentelemetry.api.GlobalOpenTelemetry
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
@@ -57,9 +56,14 @@ class FlytOrkestrator(
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun opprettKontekst(sakId: SakId, behandlingId: BehandlingId): FlytKontekst {
-        val typeBehandling = behandlingRepository.hentBehandlingType(behandlingId)
+        val behandling = behandlingRepository.hent(behandlingId)
 
-        return FlytKontekst(sakId = sakId, behandlingId = behandlingId, behandlingType = typeBehandling)
+        return FlytKontekst(
+            sakId = sakId,
+            behandlingId = behandlingId,
+            behandlingType = behandling.typeBehandling(),
+            forrigeBehandlingId = behandling.forrigeBehandlingId
+        )
     }
 
     fun forberedOgProsesserBehandling(kontekst: FlytKontekst) {
@@ -88,7 +92,13 @@ class FlytOrkestrator(
             val kandidatBehov = avklaringsbehovene.hentÅpneVentebehov()
 
             val behovSomErLøst =
-                kandidatBehov.filter { behov -> ventebehovEvaluererService.ansesSomLøst(behandling.id, behov, kontekst.sakId) }
+                kandidatBehov.filter { behov ->
+                    ventebehovEvaluererService.ansesSomLøst(
+                        behandling.id,
+                        behov,
+                        kontekst.sakId
+                    )
+                }
             behovSomErLøst.forEach { avklaringsbehovene.løsAvklaringsbehov(it.definisjon, "", SYSTEMBRUKER.ident) }
             // Hvis fortsatt på vent
             if (avklaringsbehovene.erSattPåVent()) {
@@ -113,6 +123,7 @@ class FlytOrkestrator(
                 kontekst = FlytKontekstMedPerioder(
                     sakId = kontekst.sakId,
                     behandlingId = kontekst.behandlingId,
+                    forrigeBehandlingId = kontekst.forrigeBehandlingId,
                     behandlingType = kontekst.behandlingType,
                     vurdering = perioderTilVurderingService.utled(
                         kontekst = kontekst,
@@ -227,7 +238,12 @@ class FlytOrkestrator(
         return neste
     }
 
-    internal fun forberedLøsingAvBehov(behovDefinisjon: Definisjon, behandling: Behandling, kontekst: FlytKontekst, bruker: Bruker) {
+    internal fun forberedLøsingAvBehov(
+        behovDefinisjon: Definisjon,
+        behandling: Behandling,
+        kontekst: FlytKontekst,
+        bruker: Bruker
+    ) {
         val flyt = utledFlytFra(behandling)
         flyt.forberedFlyt(behandling.aktivtSteg())
 

@@ -128,7 +128,7 @@ class SamordningYtelseVurderingServiceTest {
             null
         ).id
         return FlytKontekstMedPerioder(
-            sakId, behandlingId, TypeBehandling.Førstegangsbehandling,
+            sakId, behandlingId, null, TypeBehandling.Førstegangsbehandling,
             VurderingTilBehandling(VurderingType.FØRSTEGANGSBEHANDLING, rettighetsperiode, null, setOf())
         )
     }

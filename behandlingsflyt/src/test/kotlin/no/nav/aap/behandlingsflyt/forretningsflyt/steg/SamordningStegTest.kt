@@ -81,6 +81,7 @@ class SamordningStegTest {
             kontekst = FlytKontekstMedPerioder(
                 sakId = behandling.sakId,
                 behandlingId = behandling.id,
+                forrigeBehandlingId = behandling.forrigeBehandlingId,
                 behandlingType = TypeBehandling.Revurdering,
                 vurdering = VurderingTilBehandling(
                     vurderingType = VurderingType.REVURDERING,
@@ -116,6 +117,7 @@ class SamordningStegTest {
             kontekst = FlytKontekstMedPerioder(
                 sakId = behandling.sakId,
                 behandlingId = behandling.id,
+                forrigeBehandlingId = behandling.forrigeBehandlingId,
                 behandlingType = TypeBehandling.Revurdering,
                 vurdering = VurderingTilBehandling(
                     vurderingType = VurderingType.REVURDERING,
@@ -139,6 +141,7 @@ class SamordningStegTest {
             kontekst = FlytKontekstMedPerioder(
                 sakId = behandling.sakId,
                 behandlingId = behandling.id,
+                forrigeBehandlingId = behandling.forrigeBehandlingId,
                 behandlingType = TypeBehandling.Førstegangsbehandling,
                 vurdering = VurderingTilBehandling(
                     vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
@@ -199,6 +202,7 @@ class SamordningStegTest {
             FlytKontekstMedPerioder(
                 sakId = behandling.sakId,
                 behandlingId = behandling.id,
+                forrigeBehandlingId = behandling.forrigeBehandlingId,
                 behandlingType = TypeBehandling.Førstegangsbehandling,
                 vurdering = VurderingTilBehandling(
                     vurderingType = VurderingType.REVURDERING,
@@ -246,6 +250,7 @@ class SamordningStegTest {
             kontekst = FlytKontekstMedPerioder(
                 sakId = behandling.sakId,
                 behandlingId = behandling.id,
+                forrigeBehandlingId = behandling.forrigeBehandlingId,
                 behandlingType = TypeBehandling.Revurdering,
                 vurdering = VurderingTilBehandling(
                     vurderingType = VurderingType.REVURDERING,
@@ -275,6 +280,7 @@ class SamordningStegTest {
         val kontekst = FlytKontekstMedPerioder(
             sakId = behandling.sakId,
             behandlingId = behandling.id,
+            forrigeBehandlingId = behandling.forrigeBehandlingId,
             behandlingType = TypeBehandling.Revurdering,
             vurdering = VurderingTilBehandling(
                 vurderingType = VurderingType.REVURDERING,
@@ -354,6 +360,7 @@ class SamordningStegTest {
         val kontekst = FlytKontekstMedPerioder(
             sakId = behandling.sakId,
             behandlingId = behandling.id,
+            forrigeBehandlingId = behandling.forrigeBehandlingId,
             behandlingType = TypeBehandling.Førstegangsbehandling,
             vurdering = VurderingTilBehandling(
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,

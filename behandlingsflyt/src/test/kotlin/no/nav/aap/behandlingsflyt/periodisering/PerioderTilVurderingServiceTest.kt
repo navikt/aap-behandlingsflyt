@@ -56,6 +56,7 @@ class PerioderTilVurderingServiceTest {
             FlytKontekst(
                 sakId = sak.id,
                 behandlingId = behandling.id,
+                forrigeBehandlingId = behandling.forrigeBehandlingId,
                 behandlingType = TypeBehandling.Førstegangsbehandling
             ),
             stegType = StegType.AVKLAR_SYKDOM
@@ -120,6 +121,7 @@ class PerioderTilVurderingServiceTest {
             FlytKontekst(
                 sakId = sak.id,
                 behandlingId = behandling2.id,
+                forrigeBehandlingId = behandling.id,
                 behandlingType = behandling2.typeBehandling()
             ),
             stegType = StegType.AVKLAR_SYKDOM
