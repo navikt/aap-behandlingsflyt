@@ -86,9 +86,11 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                             GatewayProvider.provide(PersoninfoGateway::class)
                                 .hentPersoninfoForIdent(personIdent, token())
 
-                        val skrivBrevAvklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).hentBehovForDefinisjon(
-                            listOf(Definisjon.SKRIV_BREV, Definisjon.SKRIV_VEDTAKSBREV)
-                        )
+                        val skrivBrevAvklaringsbehov = avklaringsbehovRepository
+                            .hentAvklaringsbehovene(behandling.id)
+                            .hentBehovForDefinisjon(listOf(Definisjon.SKRIV_BREV, Definisjon.SKRIV_VEDTAKSBREV))
+                            .filter { it.erÅpent() }
+
                         if (skrivBrevAvklaringsbehov.size > 1) {
                             log.warn("Fant flere avklaringsbehov for SKRIV_BREV/SKRIV_VEDTAKSBREV")
                         }
