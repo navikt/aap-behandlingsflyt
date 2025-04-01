@@ -67,7 +67,7 @@ private fun arbeidsevneGrunnlag(
             behandling.forrigeBehandlingId?.let { arbeidsevneRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
         val historikk = arbeidsevneRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
 
-        val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+        val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
             behandlingReferanse.referanse,
             Definisjon.FASTSETT_ARBEIDSEVNE.kode.toString(),
             token

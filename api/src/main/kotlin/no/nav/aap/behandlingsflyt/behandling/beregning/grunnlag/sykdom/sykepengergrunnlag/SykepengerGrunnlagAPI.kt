@@ -34,7 +34,7 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(dataSource: DataSource) {
                     sykeRepository.hentHvisEksisterer(behandling.id)
                 }
 
-                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                     req.referanse,
                     Definisjon.AVKLAR_SYKEPENGEERSTATNING.kode.toString(),
                     token()

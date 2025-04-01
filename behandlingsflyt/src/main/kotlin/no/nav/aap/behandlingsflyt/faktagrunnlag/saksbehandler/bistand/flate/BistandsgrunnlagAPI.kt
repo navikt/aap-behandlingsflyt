@@ -55,7 +55,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource) {
                     
                     val sisteSykdomsvurdering = gjeldendeSykdomsvurderinger.maxBy { it.opprettet }
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                         req.referanse,
                         Definisjon.AVKLAR_BISTANDSBEHOV.kode.toString(),
                         token()

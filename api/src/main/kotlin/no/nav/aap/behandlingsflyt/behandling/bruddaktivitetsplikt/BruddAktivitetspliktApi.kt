@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
@@ -41,6 +40,7 @@ import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -86,7 +86,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                     ?.takeIf { it.status == Status.FERDIGSTILT }
                     ?.oppdatert?.toLocalDate()
 
-                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                     behandlingReferanse.referanse,
                     Definisjon.EFFEKTUER_11_7.kode.toString(),
                     token()
@@ -106,24 +106,38 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
         }
 
         route("/sak/{saksnummer}/aktivitetsplikt") {
-            route("/opprett").post<SaksnummerParameter, String, OpprettAktivitetspliktDTO>(
-            ) { params, req ->
-                val navIdent = bruker()
-                dataSource.transaction { connection ->
-                    opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
+            route("/opprett") {
+                authorizedPost<SaksnummerParameter, String, OpprettAktivitetspliktDTO>(
+                    AuthorizationParamPathConfig(
+                        sakPathParam = SakPathParam(
+                            "saksnummer"
+                        )
+                    )
+                ) { params, req ->
+                    val navIdent = bruker()
+                    dataSource.transaction { connection ->
+                        opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
+                    }
+                    respond("{}", HttpStatusCode.Accepted)
                 }
-                respond("{}", HttpStatusCode.Accepted)
             }
 
-            // TODO !! Denne må tilgangskontrollers. Men hva er nødvendig kontekst?
-            route("/oppdater").post<SaksnummerParameter, String, OppdaterAktivitetspliktDTOV2> { params, req ->
-                val navIdent = bruker()
-                dataSource.transaction { connection ->
-                    opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
+            route("/oppdater") {
+                authorizedPost<SaksnummerParameter, String, OppdaterAktivitetspliktDTOV2>(
+                    AuthorizationParamPathConfig(
+                        sakPathParam = SakPathParam(
+                            "saksnummer"
+                        )
+                    )
+                )
+                { params, req ->
+                    val navIdent = bruker()
+                    dataSource.transaction { connection ->
+                        opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
+                    }
+                    respond("{}", HttpStatusCode.Accepted)
                 }
-                respond("{}", HttpStatusCode.Accepted)
             }
-
             authorizedGet<SaksnummerParameter, BruddAktivitetspliktResponse>(
                 AuthorizationParamPathConfig(
                     sakPathParam = SakPathParam(

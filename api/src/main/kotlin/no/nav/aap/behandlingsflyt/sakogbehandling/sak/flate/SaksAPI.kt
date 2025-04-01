@@ -10,6 +10,7 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -24,6 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafHentDokumentGa
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokument
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokumentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.miljo.Miljø
@@ -43,7 +45,6 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
     route("/api/sak").tag(Tags.Sak) {
-        // TODO! Tilgangskontrollere, men har verken saksnr eller beh.referanse
         route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
             val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = RepositoryProvider(connection)
@@ -62,50 +63,68 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                                 ident = sak.person.aktivIdent().identifikator
                             )
                         }
-
                 }
+
             }
-            respond(saker)
-        }
-
-        // TODO, hvordan tilgangskontrollere denne?
-        route("/finnSisteBehandlinger").post<Unit, NullableSakOgBehandlingDTO, FinnBehandlingForIdentDTO>(
-            TagModule(
-                listOf(Tags.Behandling)
-            )
-        ) { _, dto ->
-            val behandlinger: SakOgBehandlingDTO? = dataSource.transaction(readOnly = true) { connection ->
-                val repositoryProvider = RepositoryProvider(connection)
-                val ident = Ident(dto.ident)
-                val person = repositoryProvider.provide<PersonRepository>().finn(ident)
-
-                if (person == null) {
-                    null
-                } else {
-                    val sak = repositoryProvider.provide<SakRepository>().finnSakerFor(person)
-                        .filter { sak ->
-                            sak.rettighetsperiode.inneholder(dto.mottattTidspunkt) && sak.status() != Status.AVSLUTTET
-                        }.minByOrNull { it.opprettetTidspunkt }!!
-
-                    val behandling =
-                        repositoryProvider.provide<BehandlingRepository>()
-                            .finnSisteBehandlingFor(
-                                sak.id,
-                                behandlingstypeFilter = listOf(
-                                    TypeBehandling.Førstegangsbehandling,
-                                    TypeBehandling.Revurdering
-                                )
-                            )
-
-                    SakOgBehandlingDTO(
-                        personIdent = sak.person.aktivIdent().toString(),
-                        saksnummer = sak.saksnummer.toString(),
-                        status = sak.status().toString(),
-                        sisteBehandlingStatus = behandling?.status().toString()
+            val sakerMedTilgang =
+                saker.filter { sak ->
+                    TilgangGatewayImpl.sjekkTilgangTilSak(
+                        Saksnummer(sak.saksnummer),
+                        token()
                     )
                 }
+
+            if (sakerMedTilgang.isNotEmpty()) {
+                respond(sakerMedTilgang)
+            } else {
+                respondWithStatus(HttpStatusCode.NotFound)
             }
-            respond(NullableSakOgBehandlingDTO(behandlinger))
+
+        }
+
+        route("/finnSisteBehandlinger") {
+            authorizedPost<Unit, NullableSakOgBehandlingDTO, FinnBehandlingForIdentDTO>(
+                modules = arrayOf(TagModule(listOf(Tags.Sak))),
+                routeConfig = AuthorizationBodyPathConfig(
+                    operasjon = Operasjon.SAKSBEHANDLE,
+                    applicationsOnly = true,
+                    applicationRole = "finn-siste-behandlinger",
+                )
+            )
+            { _, dto ->
+                val behandlinger: SakOgBehandlingDTO? = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val ident = Ident(dto.ident)
+                    val person = repositoryProvider.provide<PersonRepository>().finn(ident)
+
+                    if (person == null) {
+                        null
+                    } else {
+                        val sak = repositoryProvider.provide<SakRepository>().finnSakerFor(person)
+                            .filter { sak ->
+                                sak.rettighetsperiode.inneholder(dto.mottattTidspunkt) && sak.status() != Status.AVSLUTTET
+                            }.minByOrNull { it.opprettetTidspunkt }!!
+
+                        val behandling =
+                            repositoryProvider.provide<BehandlingRepository>()
+                                .finnSisteBehandlingFor(
+                                    sak.id,
+                                    behandlingstypeFilter = listOf(
+                                        TypeBehandling.Førstegangsbehandling,
+                                        TypeBehandling.Revurdering
+                                    )
+                                )
+
+                        SakOgBehandlingDTO(
+                            personIdent = sak.person.aktivIdent().toString(),
+                            saksnummer = sak.saksnummer.toString(),
+                            status = sak.status().toString(),
+                            sisteBehandlingStatus = behandling?.status().toString()
+                        )
+                    }
+                }
+                respond(NullableSakOgBehandlingDTO(behandlinger))
+            }
         }
 
         route("/finnEllerOpprett") {
@@ -139,6 +158,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 respond(saken)
             }
         }
+
         route("") {
             route("/alle").get<Unit, List<SaksinfoDTO>>(TagModule(listOf(Tags.Sak))) {
                 if (Miljø.er() == MiljøKode.DEV || Miljø.er() == MiljøKode.LOKALT) {
@@ -159,7 +179,10 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     respondWithStatus(HttpStatusCode.NotFound)
                 }
             }
-            route("/{saksnummer}").authorizedGet<HentSakDTO, UtvidetSaksinfoDTO>(
+        }
+
+        route("/{saksnummer}") {
+            authorizedGet<HentSakDTO, UtvidetSaksinfoDTO>(
                 AuthorizationParamPathConfig(
                     sakPathParam = SakPathParam("saksnummer")
                 ),
@@ -198,71 +221,72 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     )
                 )
             }
-            route("/{saksnummer}/dokumenter") {
-                authorizedGet<HentSakDTO, List<SafListDokument>>(
-                    AuthorizationParamPathConfig(
-                        sakPathParam = SakPathParam("saksnummer")
-                    ), null, TagModule(listOf(Tags.Sak))
-                ) { req ->
-                    val token = token()
-                    val safRespons = SafListDokumentGateway.hentDokumenterForSak(Saksnummer(req.saksnummer), token)
-                    respond(
-                        safRespons
-                    )
-                }
+        }
+
+        route("/{saksnummer}/dokumenter") {
+            authorizedGet<HentSakDTO, List<SafListDokument>>(
+                AuthorizationParamPathConfig(
+                    sakPathParam = SakPathParam("saksnummer")
+                ), null, TagModule(listOf(Tags.Sak))
+            ) { req ->
+                val token = token()
+                val safRespons = SafListDokumentGateway.hentDokumenterForSak(Saksnummer(req.saksnummer), token)
+                respond(
+                    safRespons
+                )
             }
-            route("/dokument/{journalpostId}/{dokumentinfoId}") {
-                authorizedGet<HentDokumentDTO, DokumentResponsDTO>(
-                    AuthorizationParamPathConfig(
-                        journalpostPathParam = JournalpostPathParam(
-                            "journalpostId"
-                        )
+        }
+        route("/dokument/{journalpostId}/{dokumentinfoId}") {
+            authorizedGet<HentDokumentDTO, DokumentResponsDTO>(
+                AuthorizationParamPathConfig(
+                    journalpostPathParam = JournalpostPathParam(
+                        "journalpostId"
                     )
-                ) { req ->
-                    val journalpostId = req.journalpostId
-                    val dokumentInfoId = req.dokumentinfoId
+                )
+            ) { req ->
+                val journalpostId = req.journalpostId
+                val dokumentInfoId = req.dokumentinfoId
 
-                    val token = token()
-                    val gateway = SafHentDokumentGateway.withDefaultRestClient()
+                val token = token()
+                val gateway = SafHentDokumentGateway.withDefaultRestClient()
 
-                    val dokumentRespons =
-                        gateway.hentDokument(JournalpostId(journalpostId), DokumentInfoId(dokumentInfoId), token)
+                val dokumentRespons =
+                    gateway.hentDokument(JournalpostId(journalpostId), DokumentInfoId(dokumentInfoId), token)
 
-                    pipeline.call.response.headers.append(
-                        name = "Content-Disposition", value = "inline; filename=${dokumentRespons.filnavn}"
-                    )
-                    respond(DokumentResponsDTO(stream = dokumentRespons.dokument))
-                }
+                pipeline.call.response.headers.append(
+                    name = "Content-Disposition", value = "inline; filename=${dokumentRespons.filnavn}"
+                )
+                respond(DokumentResponsDTO(stream = dokumentRespons.dokument))
             }
+        }
 
-            route("/{saksnummer}/personinformasjon") {
-                authorizedGet<HentSakDTO, SakPersoninfoDTO>(
-                    AuthorizationParamPathConfig(
-                        sakPathParam = SakPathParam("saksnummer"),
-                        applicationRole = "hent-personinfo"
-                    )
-                ) { req ->
+        route("/{saksnummer}/personinformasjon") {
+            authorizedGet<HentSakDTO, SakPersoninfoDTO>(
+                AuthorizationParamPathConfig(
+                    sakPathParam = SakPathParam("saksnummer"),
+                    applicationRole = "hent-personinfo"
+                )
+            ) { req ->
 
-                    val saksnummer = req.saksnummer
+                val saksnummer = req.saksnummer
 
-                    val ident = dataSource.transaction(readOnly = true) { connection ->
-                        val repositoryProvider = RepositoryProvider(connection)
-                        val sak =
-                            repositoryProvider.provide<SakRepository>()
-                                .hent(saksnummer = Saksnummer(saksnummer))
-                        sak.person.aktivIdent()
-                    }
-
-                    val personinfo =
-                        GatewayProvider.provide(PersoninfoGateway::class).hentPersoninfoForIdent(ident, token())
-
-                    respond(
-                        SakPersoninfoDTO(
-                            fnr = personinfo.ident.identifikator,
-                            navn = personinfo.fulltNavn(),
-                        )
-                    )
+                val ident = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val sak =
+                        repositoryProvider.provide<SakRepository>()
+                            .hent(saksnummer = Saksnummer(saksnummer))
+                    sak.person.aktivIdent()
                 }
+
+                val personinfo =
+                    GatewayProvider.provide(PersoninfoGateway::class).hentPersoninfoForIdent(ident, token())
+
+                respond(
+                    SakPersoninfoDTO(
+                        fnr = personinfo.ident.identifikator,
+                        navn = personinfo.fulltNavn(),
+                    )
+                )
             }
         }
     }

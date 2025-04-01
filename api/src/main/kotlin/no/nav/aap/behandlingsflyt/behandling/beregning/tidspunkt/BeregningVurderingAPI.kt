@@ -43,7 +43,7 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
                         repositoryProvider.provide<BeregningVurderingRepository>()
                             .hentHvisEksisterer(behandlingId = behandling.id)
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                         req.referanse,
                         Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT.kode.toString(),
                         token()
@@ -88,7 +88,7 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
 
                     yrkesskadevurdering?.relevanteSaker
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                         req.referanse,
                         Definisjon.FASTSETT_YRKESSKADEINNTEKT.kode.toString(),
                         token()

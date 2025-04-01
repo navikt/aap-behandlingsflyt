@@ -50,7 +50,7 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(dataSource: DataSource) {
 
                     val vurderinger = kvalitetssikringsVurdering(avklaringsbehovene)
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                         req.referanse,
                         Definisjon.KVALITETSSIKRING.kode.toString(),
                         token()
