@@ -36,7 +36,7 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
             authorizedPost<Unit, String, Innsending>(
                 modules = arrayOf(TagModule(listOf(Tags.Sak))),
                 routeConfig = AuthorizationBodyPathConfig(
-                    operasjon = Operasjon.SAKSBEHANDLE,
+                    operasjon = Operasjon.SE,
                     applicationsOnly = false,
                     applicationRole = "opprett-sak",
                 )
