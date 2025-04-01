@@ -10,6 +10,7 @@ import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.tilgang.Rolle
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
+import no.nav.aap.brev.kontrakt.Rolle as SignaturRolle
 
 class SignaturService(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
@@ -32,11 +33,11 @@ class SignaturService(
             }
 
             TypeBrev.VARSEL_OM_BESTILLING -> {
-                listOf(SignaturGrunnlag(bruker.ident)) // TODO dette brevet skal være automatisk men er manuelt nå
+                listOf(SignaturGrunnlag(bruker.ident, null)) // TODO dette brevet skal være automatisk men er manuelt nå
             }
 
             TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT -> {
-                listOf(SignaturGrunnlag(bruker.ident))
+                listOf(SignaturGrunnlag(bruker.ident, null))
             }
         }
     }
@@ -58,8 +59,18 @@ class SignaturService(
             .filter { it.endretAv().erNavIdent() }
             .maxByOrNull { it.historikk.filter { it.status == AvklaringsbehovStatus.AVSLUTTET }.max().tidsstempel }
             ?.let {
-                SignaturGrunnlag(it.endretAv())
+                SignaturGrunnlag(it.endretAv(), mapRolle(rolle))
             }
+    }
+
+    private fun mapRolle(rolle: Rolle): SignaturRolle? {
+        return when (rolle) {
+            Rolle.SAKSBEHANDLER_OPPFOLGING -> SignaturRolle.SAKSBEHANDLER_OPPFOLGING
+            Rolle.SAKSBEHANDLER_NASJONAL -> SignaturRolle.SAKSBEHANDLER_NASJONAL
+            Rolle.KVALITETSSIKRER -> SignaturRolle.KVALITETSSIKRER
+            Rolle.BESLUTTER -> SignaturRolle.BESLUTTER
+            else -> null
+        }
     }
 }
 
