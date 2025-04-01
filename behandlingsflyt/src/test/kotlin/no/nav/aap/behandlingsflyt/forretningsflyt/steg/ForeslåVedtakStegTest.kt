@@ -39,7 +39,7 @@ class ForeslåVedtakStegTest {
         val behandling =
             behandlingRepository.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
         val kontekstMedPerioder = FlytKontekstMedPerioder(
-            sak.id, behandling.id, behandling.typeBehandling(), VurderingTilBehandling(
+            sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(), VurderingTilBehandling(
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
                 årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
                 rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
@@ -65,7 +65,7 @@ class ForeslåVedtakStegTest {
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "ja", "TESTEN")
         val kontekstMedPerioder = FlytKontekstMedPerioder(
-            sak.id, behandling.id, behandling.typeBehandling(), VurderingTilBehandling(
+            sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(), VurderingTilBehandling(
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
                 årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
                 rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
@@ -96,7 +96,7 @@ class ForeslåVedtakStegTest {
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.FORESLÅ_VEDTAK, "ja", "TESTEN")
         val kontekstMedPerioder = FlytKontekstMedPerioder(
-            sak.id, behandling.id, behandling.typeBehandling(), VurderingTilBehandling(
+            sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(), VurderingTilBehandling(
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
                 årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
                 rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())

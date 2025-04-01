@@ -77,7 +77,8 @@ class FatteVedtakLøserTest {
                 kontekst = FlytKontekst(
                     sakId = sak.id,
                     behandlingId = behandling.id,
-                    behandlingType = TypeBehandling.Førstegangsbehandling
+                    forrigeBehandlingId = behandling.forrigeBehandlingId,
+                    behandlingType = TypeBehandling.Førstegangsbehandling,
                 )
             ),
             løsning = FatteVedtakLøsning(

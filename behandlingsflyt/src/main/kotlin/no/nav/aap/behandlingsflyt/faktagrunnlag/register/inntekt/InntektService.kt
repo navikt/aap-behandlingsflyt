@@ -4,10 +4,13 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.AvklarFaktaBeregningServi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
@@ -22,6 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.Duration
 import java.time.LocalDate
 
 class InntektService private constructor(
@@ -49,7 +53,7 @@ class InntektService private constructor(
             val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
 
             val sak = sakService.hent(kontekst.sakId)
-            val nedsettelsesDato = utledNedsettelsesdato(beregningVurdering?.tidspunktVurdering, studentGrunnlag);
+            val nedsettelsesDato = utledNedsettelsesdato(beregningVurdering?.tidspunktVurdering, studentGrunnlag)
             val behov = Inntektsbehov(
                 Input(
                     nedsettelsesDato = nedsettelsesDato,
@@ -89,6 +93,13 @@ class InntektService private constructor(
     }
 
     companion object : Informasjonskravkonstruktør {
+        override val navn = InformasjonskravNavn.INNTEKT
+
+        override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
+            return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
+                    oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
+        }
+
         override fun konstruer(connection: DBConnection): InntektService {
             val repositoryProvider = RepositoryProvider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()

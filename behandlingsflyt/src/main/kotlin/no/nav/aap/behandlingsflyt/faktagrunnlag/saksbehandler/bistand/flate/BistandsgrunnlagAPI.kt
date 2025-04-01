@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
@@ -52,14 +53,15 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource) {
                     val gjeldendeSykdomsvurderinger =
                         sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger!!
                     
-                    val harOppfylt11_5 = gjeldendeSykdomsvurderinger.maxBy { it.opprettet }
+                    val sisteSykdomsvurdering = gjeldendeSykdomsvurderinger.maxBy { it.opprettet }
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                         req.referanse,
                         Definisjon.AVKLAR_BISTANDSBEHOV.kode.toString(),
                         token()
                     )
 
+                    val erOppfylt11_5 = if (behandling.typeBehandling() == TypeBehandling.Revurdering) sisteSykdomsvurdering.erOppfyltSettBortIfraVissVarighet() else sisteSykdomsvurdering.erOppfylt()
 
                     BistandGrunnlagDto(
                         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
@@ -67,7 +69,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource) {
                         vedtatteBistandsvurderinger.map { it.toDto() },
                         historiskeVurderinger.map { it.toDto() },
                         gjeldendeSykdomsvurderinger.map{it.toDto()},
-                        harOppfylt11_5.erOppfylt()
+                        erOppfylt11_5
                     )
                 }
 

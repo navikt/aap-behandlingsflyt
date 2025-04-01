@@ -10,10 +10,6 @@ spec:
   image: {{image}}
   ingresses:
     - https://aap-behandlingsflyt.intern.dev.nav.no
-  replicas:
-    disableAutoScaling: true
-    max: 2
-    min: 2
   resources:
     limits:
       memory: 1024Mi
@@ -86,6 +82,7 @@ spec:
           permissions:
             roles:
               - "bestill-varselbrev"
+              - "finn-siste-behandlinger"
         - application: paw-patrol
         - application: api-intern
         - application: saksbehandling-lokal # For lokal utvikling. IKKE kopier denne til prod.yaml

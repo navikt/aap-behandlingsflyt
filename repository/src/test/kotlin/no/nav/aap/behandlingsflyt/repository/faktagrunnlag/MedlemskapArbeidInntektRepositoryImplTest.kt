@@ -26,33 +26,32 @@ import java.time.LocalDate
 class MedlemskapArbeidInntektRepositoryImplTest {
     @Test
     fun henterRelaterteHistoriskeVurderinger() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        // Førstegangsbehandling
+        val behandling = InitTestDatabase.dataSource.transaction { connection ->
             val personOgSakService = PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val repo = MedlemskapArbeidInntektRepositoryImpl(connection)
 
             val sak = personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            val behandling = behandlingRepo.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+            lagNyFullVurdering(behandling.id, repo, "Første begrunnelse")
 
-            val behandling1 = behandlingRepo.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
-            val behandlingId1 = behandling1.id
+            val historikk = repo.hentHistoriskeVurderinger(sak.id, behandling.id)
+            assertEquals(0, historikk.size)
 
-            lagNyFullVurdering(behandlingId1, repo, "Første begrunnelse")
+            behandling
+        }
 
-            val behandling2 = behandlingRepo.opprettBehandling(sak.id, listOf(), TypeBehandling.Revurdering, null)
-            val behandlingId2 = behandling2.id
+        // Revurdering
+        InitTestDatabase.dataSource.transaction { connection ->
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
+            val repo = MedlemskapArbeidInntektRepositoryImpl(connection)
 
-            lagNyFullVurdering(behandlingId2, repo, "Andre begrunnelse")
+            val revurdering = behandlingRepo.opprettBehandling(behandling.sakId, listOf(), TypeBehandling.Revurdering, behandling.id)
 
-            val historikk = repo.hentHistoriskeVurderinger(sak.id)
-            assertEquals(2, historikk.size)
-
-            val sak2 = personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
-            val behandling1sak1 = behandlingRepo.opprettBehandling(sak2.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
-            val behandlingId1sak1 = behandling1sak1.id
-            lagNyFullVurdering(behandlingId1sak1, repo, "Random begrunnelse")
-
-            val nyHistorikk = repo.hentHistoriskeVurderinger(sak.id)
-            assertEquals(2, nyHistorikk.size)
+            val historikk = repo.hentHistoriskeVurderinger(revurdering.sakId, revurdering.id)
+            lagNyFullVurdering(revurdering.id, repo, "Andre begrunnelse")
+            assertEquals(1, historikk.size)
         }
     }
 

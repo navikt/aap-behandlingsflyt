@@ -3,22 +3,28 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.Duration
 
 class LegeerklæringService private constructor(
     private val mottaDokumentService: MottaDokumentService
 ) : Informasjonskrav {
 
     companion object : Informasjonskravkonstruktør {
-        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-            // Skal alltid innhentes
-            return true
+        override val navn = InformasjonskravNavn.LEGEERKLÆRING
+
+        override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
+            return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
+                    oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
         }
 
         override fun konstruer(connection: DBConnection): LegeerklæringService {

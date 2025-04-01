@@ -233,6 +233,7 @@ class BistandsvilkåretTest {
                 FlytKontekstMedPerioder(
                     sakId = sak.id,
                     behandlingId = førstegangsbehandling.id,
+                    forrigeBehandlingId = førstegangsbehandling.forrigeBehandlingId,
                     behandlingType = TypeBehandling.Førstegangsbehandling,
                     vurdering = VurderingTilBehandling(
                         vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
@@ -272,7 +273,10 @@ class BistandsvilkåretTest {
                 AvklaringsbehovKontekst(
                     bruker = Bruker(sak.person.aktivIdent().identifikator),
                     kontekst = FlytKontekst(
-                        behandlingId = revurdering.id, sakId = sak.id, behandlingType = TypeBehandling.Revurdering
+                        behandlingId = revurdering.id,
+                        forrigeBehandlingId = revurdering.forrigeBehandlingId,
+                        sakId = sak.id,
+                        behandlingType = TypeBehandling.Revurdering
                     ),
                 ), løsning = AvklarBistandsbehovLøsning(bistandsVurdering = bistandsvurdering2)
             )
@@ -284,6 +288,7 @@ class BistandsvilkåretTest {
                 FlytKontekstMedPerioder(
                     sakId = sak.id,
                     behandlingId = revurdering.id,
+                    forrigeBehandlingId = revurdering.forrigeBehandlingId,
                     behandlingType = TypeBehandling.Revurdering,
                     vurdering = VurderingTilBehandling(
                         vurderingType = VurderingType.REVURDERING,

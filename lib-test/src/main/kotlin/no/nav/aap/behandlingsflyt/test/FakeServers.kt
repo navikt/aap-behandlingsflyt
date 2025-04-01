@@ -82,7 +82,10 @@ import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
 import no.nav.aap.brev.kontrakt.FerdigstillBrevRequest
+import no.nav.aap.brev.kontrakt.HentSignaturerRequest
+import no.nav.aap.brev.kontrakt.HentSignaturerResponse
 import no.nav.aap.brev.kontrakt.Innhold
+import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.Språk
 import no.nav.aap.brev.kontrakt.Status
 import no.nav.aap.brev.kontrakt.Tekstbolk
@@ -1486,6 +1489,18 @@ object FakeServers : AutoCloseable {
                         brevStore[i] = brevStore[i].copy(status = Status.FERDIGSTILT)
                     }
                     call.respond(HttpStatusCode.Accepted, Unit)
+                }
+                post("/forhandsvis-signaturer") {
+                    val request = call.receive<HentSignaturerRequest>()
+
+                    val signaturer = request.signaturGrunnlag.map {
+                        Signatur(
+                            navn = "Navn ${it.navIdent}",
+                            enhet = "Nav Enheten"
+                        )
+                    }
+                    val response = HentSignaturerResponse(signaturer)
+                    call.respond(response)
                 }
             }
         }

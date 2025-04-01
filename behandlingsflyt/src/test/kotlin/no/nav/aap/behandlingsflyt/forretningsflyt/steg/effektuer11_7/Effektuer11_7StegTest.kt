@@ -320,6 +320,7 @@ class Effektuer11_7StegTest {
             sakId = sak.id,
             behandlingId = behandlingId,
             behandlingType = typeBehandling,
+            forrigeBehandlingId = null,
             vurdering = VurderingTilBehandling(
                 vurderingType = vurderingType,
                 årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),

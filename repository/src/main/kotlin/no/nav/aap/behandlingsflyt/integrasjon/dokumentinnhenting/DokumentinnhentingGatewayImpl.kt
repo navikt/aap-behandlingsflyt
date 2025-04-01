@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.Doku
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringBestillingRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringPurringRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.MarkerDialogmeldingSomMottattRequest
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -67,6 +68,28 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
             return requireNotNull(client.post(uri = URI.create("$syfoUri/purring"), request))
         } catch (e: Exception) {
             throw RuntimeException("Feil ved purring av legeerklæring i aap-dokumentinnhenting: ${e.message}")
+        }
+    }
+
+    override fun markerDialogmeldingStatusSomMottatt(markerSomMottattRequest: MarkerDialogmeldingSomMottattRequest): LegeerklæringStatusResponse {
+        val request = PostRequest(
+            body = markerSomMottattRequest,
+            additionalHeaders = listOf(
+                Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
+                Header("Accept", "application/json")
+            )
+        )
+
+        try {
+            return requireNotNull(
+                client.post(
+                    uri = URI.create("$syfoUri/status/markerbestillingmottatt"),
+                    request = request,
+                    mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+                )
+            )
+        } catch (e: Exception) {
+            throw RuntimeException("Feil ved setting av MOTTATT dialogmelding-status i aap-dokumentinnhenting: ${e.message}")
         }
     }
 

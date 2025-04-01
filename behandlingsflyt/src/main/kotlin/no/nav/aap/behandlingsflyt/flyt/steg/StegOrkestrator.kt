@@ -60,6 +60,7 @@ class StegOrkestrator(
                 val kontekstMedPerioder = FlytKontekstMedPerioder(
                     sakId = kontekst.sakId,
                     behandlingId = kontekst.behandlingId,
+                    forrigeBehandlingId = behandling.forrigeBehandlingId,
                     behandlingType = kontekst.behandlingType,
                     vurdering = perioderTilVurderingService.utled(
                         kontekst = kontekst,
@@ -117,6 +118,7 @@ class StegOrkestrator(
                         sakId = kontekst.sakId,
                         behandlingId = kontekst.behandlingId,
                         behandlingType = kontekst.behandlingType,
+                        forrigeBehandlingId = kontekst.forrigeBehandlingId,
                         vurdering = perioderTilVurderingService.utled(
                             kontekst = kontekst,
                             stegType = aktivtSteg.type()
@@ -137,16 +139,17 @@ class StegOrkestrator(
 
     private fun utførTilstandsEndring(
         kontekst: FlytKontekstMedPerioder,
-        nesteStegStatus: StegStatus,
+        gjeldendeStegStatus: StegStatus,
         behandling: Behandling,
         faktagrunnlagForGjeldendeSteg: List<Informasjonskravkonstruktør>
     ): Transisjon {
         log.debug(
             "Behandler steg({}) med status({})",
             aktivtSteg.type(),
-            nesteStegStatus
+            gjeldendeStegStatus
         )
-        val transisjon = when (nesteStegStatus) {
+
+        val transisjon = when (gjeldendeStegStatus) {
             StegStatus.UTFØRER -> behandleSteg(kontekst)
             StegStatus.OPPDATER_FAKTAGRUNNLAG -> oppdaterFaktagrunnlag(kontekst, faktagrunnlagForGjeldendeSteg)
             StegStatus.AVKLARINGSPUNKT -> harAvklaringspunkt(aktivtSteg.type(), kontekst.behandlingId)
@@ -155,7 +158,7 @@ class StegOrkestrator(
             else -> Fortsett
         }
 
-        val nyStegTilstand = StegTilstand(stegType = aktivtSteg.type(), stegStatus = nesteStegStatus, aktiv = true)
+        val nyStegTilstand = StegTilstand(stegType = aktivtSteg.type(), stegStatus = gjeldendeStegStatus, aktiv = true)
         oppdaterStegOgStatus(behandling, nyStegTilstand)
 
         return transisjon

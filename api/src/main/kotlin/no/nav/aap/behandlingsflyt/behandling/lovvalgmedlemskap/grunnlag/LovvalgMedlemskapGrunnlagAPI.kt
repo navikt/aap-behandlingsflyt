@@ -32,9 +32,9 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(dataSource: DataSource) {
                     val gjeldendeManuellVurdering =
                         lovvalgMedlemskapRepository.hentHvisEksisterer(behandling.id)?.manuellVurdering
                     val historiskeManuelleVurderinger =
-                        lovvalgMedlemskapRepository.hentHistoriskeVurderinger(behandling.sakId)
+                        lovvalgMedlemskapRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                         req.referanse,
                         Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP.kode.toString(),
                         token()

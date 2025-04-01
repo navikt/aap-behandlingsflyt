@@ -43,6 +43,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerAPI
 import no.nav.aap.behandlingsflyt.drift.driftAPI
 import no.nav.aap.behandlingsflyt.exception.ErrorRespons
 import no.nav.aap.behandlingsflyt.exception.FlytOperasjonException
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
@@ -134,6 +135,7 @@ import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
 import org.slf4j.LoggerFactory
+import java.sql.SQLException
 import javax.sql.DataSource
 
 fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
@@ -178,6 +180,7 @@ internal fun Application.server(dbConfig: DbConfig) {
     install(StatusPages) {
         exception<Throwable> { call, cause ->
             val logger = LoggerFactory.getLogger(javaClass)
+            val secureLogger = LoggerFactory.getLogger("secureLog")
             val uri = call.request.local.uri
             when (cause) {
                 is ElementNotFoundException -> {
@@ -208,11 +211,20 @@ internal fun Application.server(dbConfig: DbConfig) {
                     )
                 }
 
-                else -> {
-                    logger.warn("Ukjent feil ved kall til '$uri'" , cause)
+                is SQLException -> {
+                    logger.error("SQL-feil ved kall til '$uri' av type ${cause.javaClass.name}. Se sikker logs for flere detaljer.")
+                    secureLogger.error("SQL-feil ved kall til '$uri'.", cause)
                     call.respond(
                         status = HttpStatusCode.InternalServerError,
-                        message = ErrorRespons("Feil i backend av type ${cause.javaClass.signers} ved kall mot $uri. Se logg for detaljer.")
+                        message = ErrorRespons("Feil ved kall til '$uri'")
+                    )
+                }
+
+                else -> {
+                    logger.warn("Ukjent feil ved kall til '$uri'", cause)
+                    call.respond(
+                        status = HttpStatusCode.InternalServerError,
+                        message = ErrorRespons("Feil i backend av type ${cause.javaClass.name} ved kall mot $uri. Se logg for detaljer.")
                     )
                 }
             }
@@ -342,6 +354,7 @@ private fun registerRepositories() {
         .register<MeldeperiodeRepositoryImpl>()
         .register<VedtakRepositoryImpl>()
         .register<RefusjonkravRepositoryImpl>()
+        .register<InformasjonskravRepositoryImpl>()
         .status()
 }
 

@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsev
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Aktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerGateway
@@ -10,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelser
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -19,6 +22,7 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse as ForeldrePengerYtelse
 
@@ -136,8 +140,11 @@ class SamordningYtelseVurderingService(
     }
 
     companion object : Informasjonskravkonstruktør {
-        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-            return true
+        override val navn = InformasjonskravNavn.SAMORDNING_YTELSE
+
+        override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
+            return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
+                    oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
         }
 
         override fun konstruer(connection: DBConnection): SamordningYtelseVurderingService {

@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
-import java.time.LocalDate
 
 class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
     SamordningVurderingRepository {
@@ -40,53 +39,50 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
             return null
         }
 
-        val query = """
-            SELECT svr.opprettet_tid    as svr_opprettet_tid,
-                   svr.begrunnelse      as svr_begrunnelse,
-                   svr.maksdato_endelig as svr_maksdato_endelig,
-                   svr.id               as svr_id,
-                   svr.maksdato         as svr_maksdato,
-                   sv.id                as sv_id,
-                   sv.opprettet_tid     as sv_opprettet_tid,
-                   sv.vurderinger_id    as sv_vurdering_id,
-                   sv.ytelse_type       as sv_ytelse_type
-            FROM SAMORDNING_VURDERINGER svr
-                     JOIN SAMORDNING_VURDERING sv on svr.id = sv.vurderinger_id
-            WHERE vurderinger_id = ?
+        val fellesFelterSpørring = """
+            SELECT begrunnelse, maksdato_endelig, maksdato
+            FROM SAMORDNING_VURDERINGER
+            WHERE id = ?
         """.trimIndent()
 
-        data class FellesFelter(
-            val begrunnelse: String,
-            val maksDatoEndelig: Boolean,
-            val maksDato: LocalDate?
-        )
-
-        val vurderinger = connection.queryList(query) {
+        val fellesFelter = connection.queryFirst(fellesFelterSpørring) {
             setParams {
                 setLong(1, vurderingerId)
             }
             setRowMapper {
-                Pair(
-                    FellesFelter(
-                        begrunnelse = it.getString("svr_begrunnelse"),
-                        maksDatoEndelig = it.getBoolean("svr_maksdato_endelig"),
-                        maksDato = it.getLocalDateOrNull("svr_maksdato")
-                    ), SamordningVurdering(
-                        ytelseType = it.getEnum("sv_ytelse_type"),
-                        vurderingPerioder = hentSamordningVurderingPerioder(it.getLong("sv_id")),
-                    )
+                Triple(
+                    it.getString("begrunnelse"),
+                    it.getBoolean("maksdato_endelig"),
+                    it.getLocalDateOrNull("maksdato")
                 )
             }
         }
-        val begrunnelse = vurderinger.first().first.begrunnelse
-        val maksDatoEndelig = vurderinger.first().first.maksDatoEndelig
-        val maksDato = vurderinger.first().first.maksDato
+
+        val vurderingerQuery = """
+            SELECT sv.id as sv_id, sv.ytelse_type as sv_ytelse_type
+            FROM SAMORDNING_VURDERING sv
+            WHERE sv.vurderinger_id = ?
+        """.trimIndent()
+
+        val vurderinger = connection.queryList(vurderingerQuery) {
+            setParams {
+                setLong(1, vurderingerId)
+            }
+            setRowMapper {
+                SamordningVurdering(
+                    ytelseType = it.getEnum("sv_ytelse_type"),
+                    vurderingPerioder = hentSamordningVurderingPerioder(it.getLong("sv_id")),
+                )
+            }
+        }
+
+        val (begrunnelse, maksDatoEndelig, maksDato) = fellesFelter
         return SamordningVurderingGrunnlag(
             vurderingerId = vurderingerId,
             begrunnelse = begrunnelse,
             maksDatoEndelig = maksDatoEndelig,
             maksDato = maksDato,
-            vurderinger = vurderinger.map { it.second }
+            vurderinger = vurderinger
         )
     }
 

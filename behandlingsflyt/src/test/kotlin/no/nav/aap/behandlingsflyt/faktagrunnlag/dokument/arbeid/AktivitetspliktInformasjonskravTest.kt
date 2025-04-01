@@ -109,6 +109,7 @@ class AktivitetspliktInformasjonskravTest {
         FlytKontekstMedPerioder(
             sakId = behandling.sakId,
             behandlingId = behandling.id,
+            forrigeBehandlingId = behandling.forrigeBehandlingId,
             behandlingType = TypeBehandling.Førstegangsbehandling,
             vurdering = VurderingTilBehandling(
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,

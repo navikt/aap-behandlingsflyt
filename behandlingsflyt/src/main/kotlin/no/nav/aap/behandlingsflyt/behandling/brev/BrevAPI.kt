@@ -96,7 +96,9 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                     signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),
                                     personIdent.identifikator,
                                     brevbestillingResponse.brevtype
-                                )
+                                ).also {
+                                    log.info("Fant ${it.size} signaturer")
+                                }
                             } else {
                                 emptyList()
                             }
@@ -123,7 +125,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                         }
                     }
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                         behandlingReferanse.referanse,
                         Definisjon.SKRIV_BREV.kode.toString(),
                         token()

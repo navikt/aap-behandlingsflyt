@@ -12,7 +12,7 @@ data class VurderingTilBehandling(
 ) {
     init {
         if (vurderingType == VurderingType.FORLENGELSE) {
-            requireNotNull(forlengelsePeriode) { "Forlengenseperiode er påkrevd ved forlengelse" }
+            requireNotNull(forlengelsePeriode) { "Forlengelseperiode er påkrevd ved forlengelse" }
         }
     }
 

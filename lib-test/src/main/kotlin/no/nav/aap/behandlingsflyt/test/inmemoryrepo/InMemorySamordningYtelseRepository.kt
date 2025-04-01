@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import java.time.Clock
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
@@ -14,12 +13,6 @@ object InMemorySamordningYtelseRepository : SamordningYtelseRepository {
     private val lock = Object()
     private val idSeq = AtomicLong(10000)
 
-    private var clock = Clock.systemDefaultZone()
-    fun setClock(c: Clock) {
-        synchronized(lock) {
-            clock = c
-        }
-    }
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningYtelseGrunnlag? {
         synchronized(lock) {
@@ -40,7 +33,7 @@ object InMemorySamordningYtelseRepository : SamordningYtelseRepository {
                     SamordningYtelseGrunnlag(
                         grunnlagId = idSeq.andIncrement,
                         ytelser = samordningYtelser,
-                    ), Instant.now(clock)
+                    ), Instant.now()
                 )
             } else {
                 ytelser[behandlingId] = listOf(
@@ -48,7 +41,7 @@ object InMemorySamordningYtelseRepository : SamordningYtelseRepository {
                         SamordningYtelseGrunnlag(
                             grunnlagId = idSeq.andIncrement,
                             ytelser = samordningYtelser,
-                        ), Instant.now(clock)
+                        ), Instant.now()
                     )
                 )
             }
@@ -66,10 +59,11 @@ object InMemorySamordningYtelseRepository : SamordningYtelseRepository {
                     if (ytelser.containsKey(tilBehandling)) {
                         ytelser[tilBehandling] = ytelser[tilBehandling]!! + Pair(
                             aktivYtelse.first.copy(grunnlagId = idSeq.andIncrement),
-                            Instant.now(clock)
+                            Instant.now()
                         )
                     } else {
-                        ytelser[tilBehandling] = listOf(Pair(aktivYtelse.first.copy(grunnlagId = idSeq.getAndIncrement()), Instant.now(clock)))
+                        ytelser[tilBehandling] =
+                            listOf(Pair(aktivYtelse.first.copy(grunnlagId = idSeq.getAndIncrement()), Instant.now()))
                     }
                 }
             }

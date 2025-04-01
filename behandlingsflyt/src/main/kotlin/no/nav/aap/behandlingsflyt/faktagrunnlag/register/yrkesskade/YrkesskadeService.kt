@@ -3,9 +3,12 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -23,6 +26,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.time.Duration
 
 class YrkesskadeService private constructor(
     private val sakService: SakService,
@@ -93,8 +97,9 @@ class YrkesskadeService private constructor(
     private fun fakeOppgittYrkesskade(
         periode: Periode
     ): Yrkesskade {
-        assert(Miljø.er() in listOf(MiljøKode.DEV, MiljøKode.LOKALT))
-        assert(!Miljø.erProd())
+        check(Miljø.er() in listOf(MiljøKode.DEV, MiljøKode.LOKALT))
+        check(!Miljø.erProd())
+
         return Yrkesskade(
             ref = "YRK",
             skadedato = periode.fom.minusDays(60),
@@ -106,6 +111,12 @@ class YrkesskadeService private constructor(
     }
 
     companion object : Informasjonskravkonstruktør {
+        override val navn = InformasjonskravNavn.YRKESSKADE
+
+        override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
+            return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
+                    oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
+        }
 
         override fun konstruer(connection: DBConnection): YrkesskadeService {
             val repositoryProvider = RepositoryProvider(connection)

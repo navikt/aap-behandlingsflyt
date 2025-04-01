@@ -312,7 +312,7 @@ class ApiTest {
 
         requireNotNull(responseSak)
 
-        client.post<_, Unit>(
+        ccClient.post<_, Unit>(
             URI.create("http://localhost:$port/").resolve("api/hendelse/send"),
             PostRequest(
                 body = Innsending(

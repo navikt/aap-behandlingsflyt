@@ -34,7 +34,7 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(dataSource: DataSource) {
                     val gjeldendeVurdering = refusjonkravRepository.hentHvisEksisterer(behandling.id)
                     val historiskeVurderinger = refusjonkravRepository.hentAlleVurderingerPåSak(behandling.sakId)
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                         req.referanse,
                         Definisjon.REFUSJON_KRAV.kode.toString(),
                         token()

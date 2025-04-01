@@ -4,8 +4,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
 
 interface Informasjonskravkonstruktør {
-    fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-        return kontekst.skalBehandlesSomEntenFørstegangsbehandlingEllerRevurdering()
-    }
+    val navn: InformasjonskravNavn
+    fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean
     fun konstruer(connection: DBConnection): Informasjonskrav
 }

@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
@@ -17,8 +19,10 @@ class AktivitetspliktInformasjonskrav (
 ) : Informasjonskrav {
 
     companion object : Informasjonskravkonstruktør {
-        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-            return true
+        override val navn = InformasjonskravNavn.AKTIVITETSPLIKT
+
+        override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
+            return kontekst.erFørstegangsbehandlingEllerRevurdering()
         }
 
         override fun konstruer(connection: DBConnection): AktivitetspliktInformasjonskrav {

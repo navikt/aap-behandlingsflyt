@@ -52,7 +52,7 @@ class PerioderTilVurderingService(
                 årsakerTilBehandling = relevanteÅrsak
             )
         } else if (relevanteÅrsak.isEmpty()) {
-            // Ved forlengense så vil ikke nødvendigvis årsaken stå som relevant, men steget må forlenge vilkårsperioden i steget eventuelt
+            // Ved forlengelse så vil ikke nødvendigvis årsaken stå som relevant, men steget må forlenge vilkårsperioden i steget eventuelt
             return VurderingTilBehandling(
                 vurderingType = VurderingType.FORLENGELSE,
                 rettighetsperiode = sak.rettighetsperiode,

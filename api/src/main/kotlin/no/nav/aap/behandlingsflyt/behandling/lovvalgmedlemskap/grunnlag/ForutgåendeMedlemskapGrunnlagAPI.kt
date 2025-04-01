@@ -32,9 +32,9 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapAPI(dataSource: DataSource) {
 
                     val data = forutgåendeRepository.hentHvisEksisterer(behandling.id)?.manuellVurdering
                     val historiskeManuelleVurderinger =
-                        forutgåendeRepository.hentHistoriskeVurderinger(behandling.sakId)
+                        forutgåendeRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                         req.referanse,
                         Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP.kode.toString(),
                         token()

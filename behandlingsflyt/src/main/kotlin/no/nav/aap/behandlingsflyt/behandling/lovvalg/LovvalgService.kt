@@ -3,7 +3,10 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.adapter.ARBEIDSFORHOLDSTATUSER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.adapter.ArbeidsforholdRequest
@@ -22,6 +25,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.Duration
 import java.time.YearMonth
 
 class LovvalgService private constructor(
@@ -82,6 +86,12 @@ class LovvalgService private constructor(
     }
 
     companion object : Informasjonskravkonstruktør {
+        override val navn = InformasjonskravNavn.LOVVALG
+
+        override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
+            return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
+                    oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
+        }
 
         override fun konstruer(connection: DBConnection): LovvalgService {
             val repositoryProvider = RepositoryProvider(connection)

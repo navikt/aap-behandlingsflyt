@@ -1,27 +1,29 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.Duration
 
 class UføreService(
     private val sakService: SakService,
-    private val sakOgBehandlingService: SakOgBehandlingService,
     private val uføreRepository: UføreRepository,
+    private val samordningUføreRepository: SamordningUføreRepository,
     private val uføreRegisterGateway: UføreRegisterGateway
 ) : Informasjonskrav {
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
@@ -40,17 +42,15 @@ class UføreService(
     }
 
     fun tidslinje(behandlingId: BehandlingId): Tidslinje<Prosent> {
-        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
+        return samordningUføreRepository.hentHvisEksisterer(behandlingId)?.vurdering?.tilTidslinje() ?: Tidslinje.empty()
+    }
+
+    fun hentRegisterGrunnlagHvisEksisterer(behandlingId: BehandlingId): UføreGrunnlag? {
         return uføreRepository.hentHvisEksisterer(behandlingId)
-            ?.vurderinger
-            .orEmpty()
-            .map {
-                Segment(
-                    Periode(it.virkningstidspunkt, sak.rettighetsperiode.tom),
-                    it.uføregrad
-                )
-            }
-            .let(::Tidslinje)
+    }
+
+    fun hentVurderingGrunnlagHvisEksisterer(behandlingId: BehandlingId): SamordningUføreGrunnlag? {
+        return samordningUføreRepository.hentHvisEksisterer(behandlingId)
     }
 
     private fun harEndringerUføre(
@@ -64,19 +64,21 @@ class UføreService(
     }
 
     companion object : Informasjonskravkonstruktør {
+        override val navn = InformasjonskravNavn.UFØRE
+
+        override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
+            return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
+                    oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
+        }
 
         override fun konstruer(connection: DBConnection): UføreService {
             val repositoryProvider = RepositoryProvider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()
             return UføreService(
                 sakService = SakService(sakRepository),
-                sakOgBehandlingService = SakOgBehandlingService(
-                    grunnlagKopierer = GrunnlagKopierer(connection),
-                    sakRepository = repositoryProvider.provide(),
-                    behandlingRepository = repositoryProvider.provide(),
-                ),
                 uføreRegisterGateway = GatewayProvider.provide<UføreRegisterGateway>(),
                 uføreRepository = repositoryProvider.provide(),
+                samordningUføreRepository = repositoryProvider.provide()
             )
         }
     }

@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 data class FlytKontekstMedPerioder(
     val sakId: SakId,
     val behandlingId: BehandlingId,
+    val forrigeBehandlingId: BehandlingId?,
     val behandlingType: TypeBehandling,
     val vurdering: VurderingTilBehandling
 ) {
@@ -24,7 +25,7 @@ data class FlytKontekstMedPerioder(
         return vurdering.skalVurdereNoe()
     }
 
-    fun skalBehandlesSomEntenFørstegangsbehandlingEllerRevurdering(): Boolean {
+    fun erFørstegangsbehandlingEllerRevurdering(): Boolean {
         return vurdering.vurderingType in setOf(VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING)
     }
 }

@@ -54,7 +54,7 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource) {
 
                     val vurderinger = beslutterVurdering(avklaringsbehovene, flyt)
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                         req.referanse,
                         Definisjon.FATTE_VEDTAK.kode.toString(),
                         token()
