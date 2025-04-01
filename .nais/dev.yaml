@@ -82,6 +82,7 @@ spec:
           permissions:
             roles:
               - "bestill-varselbrev"
+              - "finn-siste-behandlinger"
         - application: paw-patrol
         - application: api-intern
         - application: saksbehandling-lokal # For lokal utvikling. IKKE kopier denne til prod.yaml

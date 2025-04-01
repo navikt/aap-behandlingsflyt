@@ -75,7 +75,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 }
 
             if (sakerMedTilgang.isNotEmpty()) {
-                respond(saker)
+                respond(sakerMedTilgang)
             } else {
                 respondWithStatus(HttpStatusCode.NotFound)
             }
@@ -88,7 +88,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 routeConfig = AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SAKSBEHANDLE,
                     applicationsOnly = true,
-                    applicationRole = "opprett-sak",
+                    applicationRole = "finn-siste-behandlinger",
                 )
             )
             { _, dto ->
