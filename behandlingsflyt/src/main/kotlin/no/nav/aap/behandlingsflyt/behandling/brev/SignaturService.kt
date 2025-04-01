@@ -32,7 +32,7 @@ class SignaturService(
             }
 
             TypeBrev.VARSEL_OM_BESTILLING -> {
-                emptyList()
+                listOf(SignaturGrunnlag(bruker.ident)) // TODO dette brevet skal være automatisk men er manuelt nå
             }
 
             TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT -> {
