@@ -66,7 +66,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 }
 
             }
-            val sakerMedTilgang =
+           /* val sakerMedTilgang =
                 saker.filter { sak ->
                     TilgangGatewayImpl.sjekkTilgangTilSak(
                         Saksnummer(sak.saksnummer),
@@ -78,8 +78,8 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 respond(sakerMedTilgang)
             } else {
                 respondWithStatus(HttpStatusCode.NotFound)
-            }
-
+            }*/
+            respond(saker)
         }
 
         route("/finnSisteBehandlinger") {
