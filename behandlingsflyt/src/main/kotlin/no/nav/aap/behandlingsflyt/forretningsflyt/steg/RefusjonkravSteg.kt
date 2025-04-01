@@ -64,7 +64,6 @@ class RefusjonkravSteg private constructor(
         sykdomsvurderinger: List<Sykdomsvurdering>
     ): Boolean {
         return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()
-            && vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET).harPerioderSomErOppfylt()
             && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
             && sykdomsvurderinger.any { it.erOppfylt() }
     }
