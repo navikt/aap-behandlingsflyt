@@ -24,10 +24,10 @@ class SignaturService(
 
                 val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(brevbestilling.behandlingId)
                 listOfNotNull(
-                    utledSignatur(Rolle.KVALITETSSIKRER, avklaringsbehovene),
-                    utledSignatur(Rolle.SAKSBEHANDLER_OPPFOLGING, avklaringsbehovene),
                     utledSignatur(Rolle.BESLUTTER, avklaringsbehovene),
-                    utledSignatur(Rolle.SAKSBEHANDLER_NASJONAL, avklaringsbehovene)
+                    utledSignatur(Rolle.SAKSBEHANDLER_NASJONAL, avklaringsbehovene),
+                    utledSignatur(Rolle.KVALITETSSIKRER, avklaringsbehovene),
+                    utledSignatur(Rolle.SAKSBEHANDLER_OPPFOLGING, avklaringsbehovene)
                 )
             }
 
