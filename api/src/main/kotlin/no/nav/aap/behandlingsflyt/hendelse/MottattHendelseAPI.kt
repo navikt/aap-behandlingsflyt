@@ -9,8 +9,6 @@ import no.nav.aap.behandlingsflyt.EMPTY_JSON_RESPONSE
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.OPPRETT_HENDELSE_PÅ_SAK
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
