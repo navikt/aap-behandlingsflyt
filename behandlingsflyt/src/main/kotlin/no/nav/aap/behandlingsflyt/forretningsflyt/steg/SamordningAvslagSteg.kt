@@ -57,21 +57,21 @@ class SamordningAvslagSteg(
                     .filter { (_, prosent) -> prosent == `100_PROSENT` }
 
                 if (samordninger.isEmpty())
-                    null
+                    Vilkårsvurdering(
+                        utfall = Utfall.IKKE_VURDERT,
+                        manuellVurdering = false,
+                        begrunnelse = "Ikke full ytelse av samordninger",
+                        avslagsårsak = null,
+                        faktagrunnlag = utledFaktagrunnlag(kontekst),
+                    )
+
                 else
                     Vilkårsvurdering(
                         utfall = Utfall.IKKE_OPPFYLT,
                         manuellVurdering = false,
                         begrunnelse = "Full ytelse ${samordninger.joinToString { (navn, _) -> navn }}",
                         avslagsårsak = Avslagsårsak.ANNEN_FULL_YTELSE,
-                        faktagrunnlag = SamordningAvslagGrunnlag(
-                            samordningGrunnlag = SamordningYtelseVurderingGrunnlag(
-                                ytelseGrunnlag = samordningService.hentYtelser(kontekst.behandlingId),
-                                vurderingGrunnlag = samordningService.hentVurderinger(kontekst.behandlingId),
-                            ),
-                            uføreRegisterGrunnlag = uføreService.hentRegisterGrunnlagHvisEksisterer(kontekst.behandlingId),
-                            uføreVurderingGrunnlag = uføreService.hentVurderingGrunnlagHvisEksisterer(kontekst.behandlingId),
-                        ),
+                        faktagrunnlag = utledFaktagrunnlag(kontekst),
                     )
             }
 
@@ -82,6 +82,16 @@ class SamordningAvslagSteg(
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         return Fullført
     }
+
+    private fun utledFaktagrunnlag(kontekst: FlytKontekstMedPerioder) =
+        SamordningAvslagGrunnlag(
+            samordningGrunnlag = SamordningYtelseVurderingGrunnlag(
+                ytelseGrunnlag = samordningService.hentYtelser(kontekst.behandlingId),
+                vurderingGrunnlag = samordningService.hentVurderinger(kontekst.behandlingId),
+            ),
+            uføreRegisterGrunnlag = uføreService.hentRegisterGrunnlagHvisEksisterer(kontekst.behandlingId),
+            uføreVurderingGrunnlag = uføreService.hentVurderingGrunnlagHvisEksisterer(kontekst.behandlingId),
+        )
 
     override fun vedTilbakeføring(kontekst: FlytKontekstMedPerioder) {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)

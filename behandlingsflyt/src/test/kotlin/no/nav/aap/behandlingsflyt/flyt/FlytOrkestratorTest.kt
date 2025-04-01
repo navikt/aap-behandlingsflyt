@@ -44,6 +44,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
@@ -979,7 +980,7 @@ class FlytOrkestratorTest {
                         SamordningVurderingData(
                             ytelseType = Ytelse.SYKEPENGER,
                             periode = sykePengerPeriode,
-                            gradering = 90,
+                            gradering = 100,
                             kronesum = null,
                         )
                     ),
@@ -990,6 +991,41 @@ class FlytOrkestratorTest {
             ),
         )
         assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).isEqualTo(listOf(Definisjon.FORESLÅ_VEDTAK))
+
+        // Vilkår skal ikke være oppfylt med 100% gradert samordning
+        val vilkår = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
+        assertThat(vilkår.vilkårsperioder()).hasSize(1)
+        assertThat(vilkår.vilkårsperioder().first().utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+
+        behandling = løsAvklaringsBehov(
+            behandling,
+            AvklarSamordningGraderingLøsning(
+                vurderingerForSamordning = VurderingerForSamordning(
+                    vurderteSamordningerData = listOf(
+                        SamordningVurderingData(
+                            ytelseType = Ytelse.SYKEPENGER,
+                            periode = sykePengerPeriode,
+                            gradering = 50,
+                            kronesum = null,
+                        ),
+                        SamordningVurderingData(
+                            ytelseType = Ytelse.PLEIEPENGER,
+                            periode = sykePengerPeriode,
+                            gradering = 50,
+                            kronesum = null,
+                        )
+                    ),
+                    begrunnelse = "En god begrunnelse",
+                    maksDatoEndelig = false,
+                    maksDato = LocalDate.now().plusMonths(1),
+                ),
+            ),
+        )
+
+        // Vilkår skal være ikke vurdert når samordningen har mindre enn 100% gradering
+        val vilkårOppdatert = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
+        assertThat(vilkårOppdatert.vilkårsperioder()).hasSize(1)
+        assertThat(vilkårOppdatert.vilkårsperioder().first().utfall).isEqualTo(Utfall.IKKE_VURDERT)
 
         behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
         behandling = løsAvklaringsBehov(
