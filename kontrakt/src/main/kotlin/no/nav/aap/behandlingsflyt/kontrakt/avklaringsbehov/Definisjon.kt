@@ -58,7 +58,14 @@ public enum class Definisjon(
         type = BehovType.BREV,
         løsesAv = listOf(
             Rolle.SAKSBEHANDLER_OPPFOLGING,
-            Rolle.SAKSBEHANDLER_NASJONAL,
+            Rolle.SAKSBEHANDLER_NASJONAL
+        )
+    ),
+    SKRIV_VEDTAKSBREV(
+        kode = AvklaringsbehovKode.`5051`,
+        løsesISteg = StegType.BREV,
+        type = BehovType.BREV,
+        løsesAv = listOf(
             Rolle.BESLUTTER
         )
     ),

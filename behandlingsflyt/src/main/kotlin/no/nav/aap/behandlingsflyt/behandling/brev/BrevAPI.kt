@@ -69,7 +69,6 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                         val sakRepository = repositoryProvider.provide<SakRepository>()
                         val brevbestillingRepository = repositoryProvider.provide<BrevbestillingRepository>()
                         val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-
                         val signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository)
                         val brevbestillingService = BrevbestillingService(
                             signaturService = signaturService,
@@ -87,6 +86,13 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                             GatewayProvider.provide(PersoninfoGateway::class)
                                 .hentPersoninfoForIdent(personIdent, token())
 
+                        val skrivBrevAvklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).hentBehovForDefinisjon(
+                            listOf(Definisjon.SKRIV_BREV, Definisjon.SKRIV_VEDTAKSBREV)
+                        )
+                        if (skrivBrevAvklaringsbehov.size > 1) {
+                            log.warn("Fant flere avklaringsbehov for SKRIV_BREV/SKRIV_VEDTAKSBREV")
+                        }
+
                         brevbestillinger.map { brevbestilling ->
                             val brevbestillingResponse =
                                 brevbestillingService.hentBrevbestilling(brevbestilling.referanse)
@@ -96,14 +102,13 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                     signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),
                                     personIdent.identifikator,
                                     brevbestillingResponse.brevtype
-                                ).also {
-                                    log.info("Fant ${it.size} signaturer")
-                                }
+                                )
                             } else {
                                 emptyList()
                             }
 
                             BrevGrunnlag.Brev(
+                                skrivBrevDefinisjon = skrivBrevAvklaringsbehov.firstOrNull()?.definisjon,
                                 brevbestillingReferanse = brevbestillingResponse.referanse,
                                 brev = brevbestillingResponse.brev,
                                 opprettet = brevbestillingResponse.opprettet,
@@ -131,8 +136,9 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                         token()
                     )
 
-
-                    respond(BrevGrunnlag(harTilgangTilÅSaksbehandle, grunnlag))
+                    respond(BrevGrunnlag(
+                        harTilgangTilÅSaksbehandle,
+                        grunnlag))
                 }
             }
         }

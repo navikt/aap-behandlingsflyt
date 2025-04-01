@@ -53,10 +53,17 @@ class BrevbestillingLøser(val connection: DBConnection) :
         )
 
         if (status == Status.FORHÅNDSVISNING_KLAR) {
+            val brevbestilling =
+                brevbestillingRepository.hent(BrevbestillingReferanse(løsning.oppdatertStatusForBestilling.bestillingReferanse))
             val behandling = behandlingRepository.hent(kontekst.behandlingId())
             val avklaringsbehovene =
                 avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = kontekst.behandlingId())
-            avklaringsbehovene.leggTil(listOf(Definisjon.SKRIV_BREV), behandling.aktivtSteg())
+            val definisjon = if (brevbestilling.typeBrev.erVedtak()) {
+                Definisjon.SKRIV_VEDTAKSBREV
+            } else {
+                Definisjon.SKRIV_BREV
+            }
+            avklaringsbehovene.leggTil(listOf(definisjon), behandling.aktivtSteg())
             behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
         }
 
