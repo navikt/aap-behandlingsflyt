@@ -82,59 +82,49 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
 
         }
 
-        route("/finnSisteBehandlinger").post<Unit, NullableSakOgBehandlingDTO, FinnBehandlingForIdentDTO>(
-            TagModule(
-                listOf(Tags.Behandling)
+        route("/finnSisteBehandlinger") {
+            authorizedPost<Unit, NullableSakOgBehandlingDTO, FinnBehandlingForIdentDTO>(
+                modules = arrayOf(TagModule(listOf(Tags.Sak))),
+                routeConfig = AuthorizationBodyPathConfig(
+                    operasjon = Operasjon.SAKSBEHANDLE,
+                    applicationsOnly = true,
+                    applicationRole = "opprett-sak",
+                )
             )
-        ) { _, dto ->
-            val behandlinger: SakOgBehandlingDTO? = dataSource.transaction(readOnly = true) { connection ->
-                val repositoryProvider = RepositoryProvider(connection)
-                val ident = Ident(dto.ident)
-                val person = repositoryProvider.provide<PersonRepository>().finn(ident)
+            { _, dto ->
+                val behandlinger: SakOgBehandlingDTO? = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val ident = Ident(dto.ident)
+                    val person = repositoryProvider.provide<PersonRepository>().finn(ident)
 
-                if (person == null) {
-                    null
-                } else {
-                    val sak = repositoryProvider.provide<SakRepository>().finnSakerFor(person)
-                        .filter { sak ->
-                            sak.rettighetsperiode.inneholder(dto.mottattTidspunkt) && sak.status() != Status.AVSLUTTET
-                        }.minByOrNull { it.opprettetTidspunkt }!!
+                    if (person == null) {
+                        null
+                    } else {
+                        val sak = repositoryProvider.provide<SakRepository>().finnSakerFor(person)
+                            .filter { sak ->
+                                sak.rettighetsperiode.inneholder(dto.mottattTidspunkt) && sak.status() != Status.AVSLUTTET
+                            }.minByOrNull { it.opprettetTidspunkt }!!
 
-                    val behandling =
-                        repositoryProvider.provide<BehandlingRepository>()
-                            .finnSisteBehandlingFor(
-                                sak.id,
-                                behandlingstypeFilter = listOf(
-                                    TypeBehandling.Førstegangsbehandling,
-                                    TypeBehandling.Revurdering
+                        val behandling =
+                            repositoryProvider.provide<BehandlingRepository>()
+                                .finnSisteBehandlingFor(
+                                    sak.id,
+                                    behandlingstypeFilter = listOf(
+                                        TypeBehandling.Førstegangsbehandling,
+                                        TypeBehandling.Revurdering
+                                    )
                                 )
-                            )
 
-                    val behandlingMedTilgang =
-                        if (behandling?.referanse?.referanse != null) {
-                            TilgangGatewayImpl.sjekkTilgangTilBehandling(
-                                behandling.referanse.referanse,
-                                Definisjon.MANUELT_SATT_PÅ_VENT.kode.toString(),
-                                token()
-                            )
-                        } else {
-                            null
-                        }
-
-                    if (behandlingMedTilgang != null) {
                         SakOgBehandlingDTO(
                             personIdent = sak.person.aktivIdent().toString(),
                             saksnummer = sak.saksnummer.toString(),
                             status = sak.status().toString(),
                             sisteBehandlingStatus = behandling?.status().toString()
                         )
-                    } else {
-                        null
                     }
                 }
+                respond(NullableSakOgBehandlingDTO(behandlinger))
             }
-
-            respond(NullableSakOgBehandlingDTO(behandlinger))
         }
 
         route("/finnEllerOpprett") {
@@ -168,6 +158,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 respond(saken)
             }
         }
+
         route("") {
             route("/alle").get<Unit, List<SaksinfoDTO>>(TagModule(listOf(Tags.Sak))) {
                 if (Miljø.er() == MiljøKode.DEV || Miljø.er() == MiljøKode.LOKALT) {
