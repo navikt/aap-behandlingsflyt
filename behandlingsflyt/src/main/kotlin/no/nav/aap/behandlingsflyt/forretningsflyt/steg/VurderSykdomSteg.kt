@@ -63,7 +63,7 @@ class VurderSykdomSteg private constructor(
                     val vurdering = sykdomRepository.hent(kontekst.behandlingId)
                     val forrigeVurdering = sykdomRepository.hent(forrigeBehandlingId)
 
-                    if (vurdering.id() != forrigeVurdering.id()) {
+                    if (vurdering.id() == forrigeVurdering.id()) {
                         return FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
                     }
                 }
