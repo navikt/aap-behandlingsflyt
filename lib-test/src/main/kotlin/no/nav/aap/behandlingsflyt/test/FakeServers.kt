@@ -1412,6 +1412,7 @@ object FakeServers : AutoCloseable {
                         brevStore += BrevbestillingResponse(
                             referanse = brevbestillingReferanse,
                             brev = Brev(
+                                kanSendesAutomatisk = false,
                                 journalpostTittel = "En tittel",
                                 overskrift = "Overskrift", tekstbolker = listOf(
                                     Tekstbolk(
