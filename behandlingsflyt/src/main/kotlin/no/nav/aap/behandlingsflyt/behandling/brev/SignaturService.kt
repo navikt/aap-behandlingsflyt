@@ -6,10 +6,9 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.brev.kontrakt.Rolle
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.komponenter.httpklient.auth.Bruker
-import no.nav.aap.tilgang.Rolle as TilgangRolle
+import no.nav.aap.tilgang.Rolle
 
 class SignaturService(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
@@ -36,19 +35,19 @@ class SignaturService(
             }
 
             TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT -> {
-                listOf(SignaturGrunnlag(bruker.ident, Rolle.SAKSBEHANDLER_OPPFOLGING))
+                listOf(SignaturGrunnlag(bruker.ident))
             }
         }
     }
 
     private val rolleTilAvklaringsbehov: Map<Rolle, List<Definisjon>> = buildMap {
-        put(Rolle.SAKSBEHANDLER_OPPFOLGING, definisjonerSomLøsesAv(TilgangRolle.SAKSBEHANDLER_OPPFOLGING))
-        put(Rolle.SAKSBEHANDLER_NASJONAL, definisjonerSomLøsesAv(TilgangRolle.SAKSBEHANDLER_NASJONAL))
-        put(Rolle.KVALITETSSIKRER, definisjonerSomLøsesAv(TilgangRolle.KVALITETSSIKRER))
-        put(Rolle.BESLUTTER, definisjonerSomLøsesAv(TilgangRolle.BESLUTTER))
+        put(Rolle.SAKSBEHANDLER_OPPFOLGING, definisjonerSomLøsesAv(Rolle.SAKSBEHANDLER_OPPFOLGING))
+        put(Rolle.SAKSBEHANDLER_NASJONAL, definisjonerSomLøsesAv(Rolle.SAKSBEHANDLER_NASJONAL))
+        put(Rolle.KVALITETSSIKRER, definisjonerSomLøsesAv(Rolle.KVALITETSSIKRER))
+        put(Rolle.BESLUTTER, definisjonerSomLøsesAv(Rolle.BESLUTTER))
     }
 
-    private fun definisjonerSomLøsesAv(rolle: TilgangRolle): List<Definisjon> {
+    private fun definisjonerSomLøsesAv(rolle: Rolle): List<Definisjon> {
         return Definisjon.entries.filter { it.løsesAv.contains(rolle) }
     }
 
@@ -58,7 +57,7 @@ class SignaturService(
             .filter { it.endretAv().erNavIdent() }
             .maxByOrNull { it.historikk.max().tidsstempel }
             ?.let {
-                SignaturGrunnlag(it.endretAv(), rolle)
+                SignaturGrunnlag(it.endretAv())
             }
     }
 }
