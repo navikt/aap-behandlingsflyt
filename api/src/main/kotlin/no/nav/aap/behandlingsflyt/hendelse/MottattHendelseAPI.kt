@@ -46,14 +46,11 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
         }
 
         route("/sak/{saksnummer}/send") {
+            // TODO: Fikse bug i tilgang for å sikre endepunktet
             authorizedPost<SaksnummerParameter, String, Innsending>(
                 modules = arrayOf(TagModule(listOf(Tags.Sak))),
                 routeConfig = AuthorizationParamPathConfig(
-                    avklaringsbehovKode = OPPRETT_HENDELSE_PÅ_SAK,
                     sakPathParam = SakPathParam("saksnummer"),
-                    operasjon = Operasjon.SAKSBEHANDLE,
-                    applicationsOnly = false,
-                    applicationRole = "opprett-sak",
                 )
             ) { _, dto ->
                 registrerMottattHendelse(dto, dataSource)
