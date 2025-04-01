@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.tilgang.Rolle
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
 class SignaturService(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
@@ -43,8 +44,8 @@ class SignaturService(
     private val rolleTilAvklaringsbehov: Map<Rolle, List<Definisjon>> = buildMap {
         put(Rolle.SAKSBEHANDLER_OPPFOLGING, definisjonerSomLøsesAv(Rolle.SAKSBEHANDLER_OPPFOLGING))
         put(Rolle.SAKSBEHANDLER_NASJONAL, definisjonerSomLøsesAv(Rolle.SAKSBEHANDLER_NASJONAL))
-        put(Rolle.KVALITETSSIKRER, definisjonerSomLøsesAv(Rolle.KVALITETSSIKRER))
-        put(Rolle.BESLUTTER, definisjonerSomLøsesAv(Rolle.BESLUTTER))
+        put(Rolle.KVALITETSSIKRER, listOf(Definisjon.KVALITETSSIKRING))
+        put(Rolle.BESLUTTER, listOf(Definisjon.FATTE_VEDTAK))
     }
 
     private fun definisjonerSomLøsesAv(rolle: Rolle): List<Definisjon> {
@@ -55,7 +56,7 @@ class SignaturService(
         val definisjoner = rolleTilAvklaringsbehov.getValue(rolle)
         return avklaringsbehovene.hentBehovForDefinisjon(definisjoner)
             .filter { it.endretAv().erNavIdent() }
-            .maxByOrNull { it.historikk.max().tidsstempel }
+            .maxByOrNull { it.historikk.filter { it.status == AvklaringsbehovStatus.AVSLUTTET }.max().tidsstempel }
             ?.let {
                 SignaturGrunnlag(it.endretAv())
             }
