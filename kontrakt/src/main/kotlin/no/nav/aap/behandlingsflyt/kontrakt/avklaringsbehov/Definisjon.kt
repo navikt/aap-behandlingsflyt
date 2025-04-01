@@ -52,6 +52,15 @@ public enum class Definisjon(
             Rolle.SAKSBEHANDLER_NASJONAL
         )
     ),
+    OPPRETT_HENDELSE_PÅ_SAK(
+        kode = AvklaringsbehovKode.`9004`,
+        løsesISteg = StegType.UDEFINERT,
+        type = BehovType.VENTEPUNKT,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_NASJONAL,
+            Rolle.SAKSBEHANDLER_OPPFOLGING,
+        )
+    ),
     SKRIV_BREV(
         kode = AvklaringsbehovKode.`5050`,
         løsesISteg = StegType.UDEFINERT,
