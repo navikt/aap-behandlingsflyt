@@ -44,12 +44,10 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.authorizedPut
-import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import java.util.*
 import javax.sql.DataSource
 
-private val log = LoggerFactory.getLogger("BrevAPI")
 fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
 
     val brevbestillingGateway = GatewayProvider.provide<BrevbestillingGateway>()
@@ -96,9 +94,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                     signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),
                                     personIdent.identifikator,
                                     brevbestillingResponse.brevtype
-                                ).also {
-                                    log.info("Fant ${it.size} signaturer")
-                                }
+                                )
                             } else {
                                 emptyList()
                             }
@@ -299,10 +295,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                 faktagrunnlag = request.faktagrunnlag
                             )
                     }
-                    log.info("Ber om faktagrunnlag for " + request.faktagrunnlag.joinToString(","))
-                    respond(FaktagrunnlagDto(faktagrunnlag)).also {
-                        log.info("Fant faktagrunnlag for " + faktagrunnlag.map { it.type }.joinToString(","))
-                    }
+                    respond(FaktagrunnlagDto(faktagrunnlag))
                 }
             }
         }
