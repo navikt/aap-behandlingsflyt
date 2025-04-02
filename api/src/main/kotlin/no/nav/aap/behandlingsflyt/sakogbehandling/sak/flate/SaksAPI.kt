@@ -86,7 +86,6 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 } else {
                     respondWithStatus(HttpStatusCode.NotFound)
                 }
-                respond(sakerMedTilgang)
             }
         }
 
