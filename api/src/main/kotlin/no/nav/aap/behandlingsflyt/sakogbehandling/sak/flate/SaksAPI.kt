@@ -67,6 +67,12 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 }
 
             }
+            
+            // Midlertidig fiks for ikke å brekke postmottak
+            if (token().isClientCredentials()) {
+                respond(saker)
+            }
+            
             val sakerMedTilgang =
                 saker.filter { sak ->
                     TilgangGatewayImpl.sjekkTilgangTilSak(
