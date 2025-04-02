@@ -32,4 +32,24 @@ githubUser=<github-brukernavn>
 githubPassword=<github-token>
 ```
 
-Token må ha rettighet til å lese pakker. Husk å logg inn token med SSO for NAVIKT-organisasjonen.œ 
+Token må ha rettighet til å lese pakker. Husk å logg inn token med SSO for NAVIKT-organisasjonen.œ
+
+## Kjøre lokalt
+
+### Mot dev-gcp
+
+Prosjektet inneholder en run config som kan kjøres av IntelliJ. Burde være synlig under "Run configurations" med navnet 
+`dev-gcp.run.xml`.
+
+For at det skal kjøre lokalt må du gjøre følgende:
+1. Hent secret med [aap-cli/get-secret.sh](https://github.com/navikt/aap-cli): \
+    `get-secret` \
+2. Kjøre opp postgres proxy mot behandlingsflyt: \
+    `nais postgres proxy behandlingsflyt`
+3. Legg til din e-post i `dev-gcp.run.xml` under `NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_USERNAME`
+4. Kjør `dev-gcp` fra IntelliJ.
+
+Etter dette vil appen kjøre mot reelle data. Her kan du velge om du vil koble deg på gjennom autentisert frontend eller 
+f.eks. gyldig token med cURL e.l.
+
+OBS: Krever at du har `EnvFile`-plugin i IntelliJ. 

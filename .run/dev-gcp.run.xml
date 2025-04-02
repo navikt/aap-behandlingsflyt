@@ -1,0 +1,81 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="dev-gcp" type="KtorApplicationConfigurationType" factoryName="Ktor">
+    <envs>
+      <env name="NAIS_APP_NAME" value="behandlingsflyt" />
+      <env name="NAIS_CLUSTER_NAME" value="LOCAL" />
+      <env name="NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_JDBC_URL" value="jdbc:postgresql://localhost:5432/behandlingsflyt" />
+      <env name="NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_USERNAME" value="DIN.NAV.EPOST.HER@nav.no" />
+      <env name="NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_PASSWORD" value="" />
+      <env name="INTEGRASJON_PDL_URL" value="https://pdl-api.dev-fss-pub.nais.io/graphql" />
+      <env name="INTEGRASJON_PDL_SCOPE" value="api://dev-fss.pdl.pdl-api/.default" />
+      <env name="INTEGRASJON_SAF_URL_GRAPHQL" value="https://saf-q2.dev-fss-pub.nais.io/graphql" />
+      <env name="INTEGRASJON_SAF_URL_REST" value="https://saf-q2.dev-fss-pub.nais.io/rest" />
+      <env name="INTEGRASJON_SAF_SCOPE" value="api://dev-fss.teamdokumenthandtering.saf/.default" />
+      <env name="INTEGRASJON_YRKESSKADE_URL" value="http://yrkesskade-saker.yrkesskade/api/v1/saker/" />
+      <env name="INTEGRASJON_YRKESSKADE_SCOPE" value="api://dev-gcp.yrkesskade.yrkesskade-saker/.default" />
+      <env name="INTEGRASJON_INSTITUSJONSOPPHOLD_URL" value="https://inst2-q2.dev-fss-pub.nais.io/api/v1/person/institusjonsopphold" />
+      <env name="INTEGRASJON_INSTITUSJONSOPPHOLD_SCOPE" value="api://dev-fss.team-rocket.inst2-q2/.default" />
+      <env name="INTEGRASJON_INNTEKT_URL" value="https://pensjon-popp-q2.dev-fss-pub.nais.io/popp/api/inntekt/sumPi" />
+      <env name="INTEGRASJON_INNTEKT_SCOPE" value="api://dev-fss.pensjonopptjening.pensjon-popp-q2/.default" />
+      <env name="INTEGRASJON_OPPGAVESTYRING_URL" value="https://aap-oppgave.intern.dev.nav.no" />
+      <env name="INTEGRASJON_OPPGAVESTYRING_SCOPE" value="api://dev-gcp.aap.oppgave/.default" />
+      <env name="INTEGRASJON_STATISTIKK_URL" value="http://statistikk" />
+      <env name="INTEGRASJON_STATISTIKK_SCOPE" value="api://dev-gcp.aap.statistikk/.default" />
+      <env name="INTEGRASJON_PESYS_URL" value="https://pensjon-pen-q2.dev-fss-pub.nais.io" />
+      <env name="INTEGRASJON_PESYS_SCOPE" value="api://dev-fss.pensjon-q2.pensjon-pen-q2/.default" />
+      <env name="INTEGRASJON_TILGANG_URL" value="https://aap-tilgang.intern.dev.nav.no" />
+      <env name="INTEGRASJON_TILGANG_SCOPE" value="api://dev-gcp.aap.tilgang/.default" />
+      <env name="INTEGRASJON_TILGANG_AZP" value="dev-gcp:aap:tilgang" />
+      <env name="INTEGRASJON_MEDL_URL" value="https://medlemskap-medl-api.dev-fss-pub.nais.io/api/v1/medlemskapsunntak" />
+      <env name="INTEGRASJON_MEDL_SCOPE" value="api://dev-fss.team-rocket.medlemskap-medl-api/.default" />
+      <env name="INTEGRASJON_POSTMOTTAK_AZP" value="dev-gcp:aap:postmottak-backend" />
+      <env name="INTEGRASJON_FORELDREPENGER_URL" value="https://fpabakus.dev-fss-pub.nais.io/fpabakus/ekstern/api/ytelse/v1" />
+      <env name="INTEGRASJON_FORELDREPENGER_SCOPE" value="api://dev-fss.teamforeldrepenger.fpabakus/.default" />
+      <env name="INTEGRASJON_SYKEPENGER_URL" value="http://spokelse.tbd" />
+      <env name="INTEGRASJON_SYKEPENGER_SCOPE" value="api://dev-gcp.tbd.spokelse/.default" />
+      <env name="INTEGRASJON_BREV_URL" value="http://brev" />
+      <env name="INTEGRASJON_BREV_SCOPE" value="api://dev-gcp.aap.brev/.default" />
+      <env name="INTEGRASJON_BREV_AZP" value="dev-gcp:aap:brev" />
+      <env name="INTEGRASJON_MELDEKORT_URL" value="http://meldekort-backend" />
+      <env name="INTEGRASJON_MELDEKORT_SCOPE" value="api://dev-gcp.aap.meldekort-backend/.default" />
+      <env name="INTEGRASJON_UTBETAL_URL" value="http://utbetal" />
+      <env name="INTEGRASJON_UTBETAL_SCOPE" value="api://dev-gcp.aap.utbetal/.default" />
+      <env name="INTEGRASJON_UTBETAL_AZP" value="dev-gcp:aap:utbetal" />
+      <env name="INTEGRASJON_DOKUMENTINNHENTING_URL" value="https://aap-dokumentinnhenting.intern.dev.nav.no" />
+      <env name="INTEGRASJON_DOKUMENTINNHENTING_SCOPE" value="api://dev-gcp.aap.dokumentinnhenting/.default" />
+      <env name="INTEGRASJON_DOKUMENTINNHENTING_AZP" value="dev-gcp:aap:dokumentinnhenting" />
+      <env name="INTEGRASJON_SAKSBEHANDLING_AZP" value="dev-gcp:aap:saksbehandling" />
+      <env name="INTEGRASJON_AAREG_URL" value="https://aareg-services-q2.dev-fss-pub.nais.io" />
+      <env name="INTEGRASJON_AAREG_SCOPE" value="api://dev-fss.arbeidsforhold.aareg-services-nais/.default" />
+      <env name="INTEGRASJON_INNTEKTSKOMPONENTEN_URL" value="https://team-inntekt-proxy.dev-fss-pub.nais.io/proxy/inntektskomponenten-q2/rs/api/v1" />
+      <env name="INTEGRASJON_INNTEKTSKOMPONENTEN_SCOPE" value="api://dev-fss.team-inntekt.inntektskomponenten/.default" />
+      <env name="INTEGRASJON_DATADELING_URL" value="https://aap-api.intern.dev.nav.no" />
+      <env name="INTEGRASJON_DATADELING_SCOPE" value="api://dev-gcp.aap.api-intern/.default" />
+    </envs>
+    <option name="MAIN_CLASS_NAME" value="no.nav.aap.behandlingsflyt.AppKt" />
+    <module name="aap-behandlingsflyt.app.main" />
+    <extension name="net.ashald.envfile">
+      <option name="IS_ENABLED" value="true" />
+      <option name="IS_SUBST" value="false" />
+      <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+      <option name="IS_IGNORE_MISSING_FILES" value="false" />
+      <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+      <ENTRIES>
+        <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
+        <ENTRY IS_ENABLED="true" PARSER="env" IS_EXECUTABLE="false" PATH=".env.dev-gcp" />
+      </ENTRIES>
+    </extension>
+    <option name="alternativeJrePath" />
+    <option name="alternativeJrePathEnabled" value="false" />
+    <option name="includeProvidedScope" value="false" />
+    <option name="mainClass" value="no.nav.aap.behandlingsflyt.AppKt" />
+    <option name="passParentEnvs" value="true" />
+    <option name="programParameters" value="" />
+    <option name="shortenCommandLine" />
+    <option name="vmParameters" />
+    <option name="workingDirectory" value="$PROJECT_DIR$" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
