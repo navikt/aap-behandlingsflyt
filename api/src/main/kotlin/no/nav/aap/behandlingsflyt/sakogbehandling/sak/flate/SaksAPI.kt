@@ -67,27 +67,27 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 }
 
             }
-            
+
             // Midlertidig fiks for ikke å brekke postmottak
             if (token().isClientCredentials()) {
                 respond(saker)
-            }
-            
-            val sakerMedTilgang =
-                saker.filter { sak ->
-                    TilgangGatewayImpl.sjekkTilgangTilSak(
-                        Saksnummer(sak.saksnummer),
-                        token(),
-                        Operasjon.SE
-                    )
-                }
-
-            if (sakerMedTilgang.isNotEmpty()) {
-                respond(sakerMedTilgang)
             } else {
-                respondWithStatus(HttpStatusCode.NotFound)
+                val sakerMedTilgang =
+                    saker.filter { sak ->
+                        TilgangGatewayImpl.sjekkTilgangTilSak(
+                            Saksnummer(sak.saksnummer),
+                            token(),
+                            Operasjon.SE
+                        )
+                    }
+
+                if (sakerMedTilgang.isNotEmpty()) {
+                    respond(sakerMedTilgang)
+                } else {
+                    respondWithStatus(HttpStatusCode.NotFound)
+                }
+                respond(sakerMedTilgang)
             }
-            respond(sakerMedTilgang)
         }
 
         route("/finnSisteBehandlinger") {
