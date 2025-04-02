@@ -10,12 +10,12 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
@@ -211,6 +211,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                                     referanse = behandling.referanse.referanse,
                                     type = behandling.typeBehandling().identifikator(),
                                     status = behandling.status(),
+                                    årsaker = behandling.årsaker().map(Årsak::type),
                                     opprettet = behandling.opprettetTidspunkt
                                 )
                             }
