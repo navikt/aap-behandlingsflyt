@@ -143,7 +143,7 @@ class SamordningYtelseVurderingService(
         override val navn = InformasjonskravNavn.SAMORDNING_YTELSE
 
         override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
-            return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
+            return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse() &&
                     oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
         }
 
