@@ -168,11 +168,11 @@ class BrevGateway : BrevbestillingGateway {
     override fun hentSignaturForhåndsvisning(
         signaturer: List<SignaturGrunnlag>,
         brukerIdent: String,
-        brevtype: Brevtype
+        typeBrev: TypeBrev
     ): List<Signatur> {
 
         val httpRequest = PostRequest(
-            body = HentSignaturerRequest(brukerIdent, brevtype, signaturer),
+            body = HentSignaturerRequest(brukerIdent, mapTypeBrev(typeBrev), signaturer),
             additionalHeaders = listOf(
                 Header("Accept", "application/json")
             )
@@ -181,6 +181,29 @@ class BrevGateway : BrevbestillingGateway {
         val response: HentSignaturerResponse = requireNotNull(
             client.post(
                 uri = baseUri.resolve("/api/forhandsvis-signaturer"),
+                request = httpRequest,
+                mapper = { body, _ ->
+                    DefaultJsonMapper.fromJson(body)
+                })
+        )
+        return response.signaturer
+    }
+
+    override fun forhåndsvis(
+        bestillingReferanse: BrevbestillingReferanse,
+        signaturer: List<SignaturGrunnlag>
+    ): ByteArray {
+
+        val httpRequest = PostRequest(
+            body = ForhandsvisBrevRequest(signaturer),
+            additionalHeaders = listOf(
+                Header("Accept", "application/json")
+            )
+        )
+
+        val response: HentSignaturerResponse = requireNotNull(
+            client.post(
+                uri = baseUri.resolve("/api/forhandsvis"),
                 request = httpRequest,
                 mapper = { body, _ ->
                     DefaultJsonMapper.fromJson(body)
