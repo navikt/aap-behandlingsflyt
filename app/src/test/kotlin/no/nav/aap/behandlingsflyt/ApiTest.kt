@@ -258,7 +258,7 @@ class ApiTest {
     "nedsattArbeidsevneÅr": "2024",
     "inntekter": [
       {
-        "år": "2023",
+        "år": "2021",
         "inntektIKroner": 200000.0,
         "inntektIG": 3.0,
         "justertTilMaks6G": 3.0
@@ -270,7 +270,7 @@ class ApiTest {
         "justertTilMaks6G": 3.0
       },
       {
-        "år": "2021",
+        "år": "2023",
         "inntektIKroner": 200000.0,
         "inntektIG": 3.0,
         "justertTilMaks6G": 3.0
