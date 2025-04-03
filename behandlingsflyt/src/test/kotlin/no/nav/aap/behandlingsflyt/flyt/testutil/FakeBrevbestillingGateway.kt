@@ -14,6 +14,8 @@ import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.brev.kontrakt.Språk
 import no.nav.aap.brev.kontrakt.Status
 import no.nav.aap.brev.kontrakt.Vedlegg
+import java.io.ByteArrayInputStream
+import java.io.InputStream
 import java.time.LocalDateTime
 import java.util.*
 
@@ -70,7 +72,7 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
     override fun forhåndsvis(
         bestillingReferanse: BrevbestillingReferanse,
         signaturer: List<SignaturGrunnlag>
-    ): ByteArray {
-        return ByteArray(0)
+    ): InputStream {
+        return ByteArrayInputStream("test".toByteArray())
     }
 }

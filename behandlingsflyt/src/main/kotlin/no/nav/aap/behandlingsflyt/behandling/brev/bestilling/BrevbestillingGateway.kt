@@ -9,6 +9,7 @@ import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.brev.kontrakt.Vedlegg
 import no.nav.aap.lookup.gateway.Gateway
+import java.io.InputStream
 
 interface BrevbestillingGateway : Gateway {
     fun bestillBrev(
@@ -34,5 +35,5 @@ interface BrevbestillingGateway : Gateway {
         typeBrev: TypeBrev
     ): List<Signatur>
 
-    fun forhåndsvis(bestillingReferanse: BrevbestillingReferanse, signaturer: List<SignaturGrunnlag>): ByteArray
+    fun forhåndsvis(bestillingReferanse: BrevbestillingReferanse, signaturer: List<SignaturGrunnlag>): InputStream
 }

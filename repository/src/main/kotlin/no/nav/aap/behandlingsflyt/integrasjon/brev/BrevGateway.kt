@@ -36,6 +36,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.Client
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.lookup.gateway.Factory
 import org.slf4j.LoggerFactory
+import java.io.InputStream
 import java.net.URI
 
 class BrevGateway : BrevbestillingGateway {
@@ -154,7 +155,7 @@ class BrevGateway : BrevbestillingGateway {
     override fun forhåndsvis(
         bestillingReferanse: BrevbestillingReferanse,
         signaturer: List<SignaturGrunnlag>
-    ): ByteArray {
+    ): InputStream {
 
         val httpRequest = PostRequest(
             body = ForhandsvisBrevRequest(signaturer),
@@ -163,12 +164,12 @@ class BrevGateway : BrevbestillingGateway {
             )
         )
 
-        val response: ByteArray = requireNotNull(
+        val response: InputStream = requireNotNull(
             client.post(
                 uri = baseUri.resolve("/api/bestilling/$bestillingReferanse/forhandsvis"),
                 request = httpRequest,
                 mapper = { body, _ ->
-                    DefaultJsonMapper.fromJson(body)
+                    body
                 })
         )
         return response

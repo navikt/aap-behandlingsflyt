@@ -1473,6 +1473,9 @@ object FakeServers : AutoCloseable {
                             }
                         )
                     }
+                    post("/forhandsvis") {
+                        call.respond("test".toByteArray())
+                    }
                     put("/oppdater") {
                         val ref = UUID.fromString(call.pathParameters.get("referanse"))!!
                         val brev = call.receive<Brev>()
