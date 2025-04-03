@@ -62,8 +62,15 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
     override fun hentSignaturForhåndsvisning(
         signaturer: List<SignaturGrunnlag>,
         brukerIdent: String,
-        brevtype: Brevtype
+        typeBrev: TypeBrev
     ): List<Signatur> {
         return signaturer.map { Signatur(it.navIdent, "Nav Enhet") }
+    }
+
+    override fun forhåndsvis(
+        bestillingReferanse: BrevbestillingReferanse,
+        signaturer: List<SignaturGrunnlag>
+    ): ByteArray {
+        return ByteArray(0)
     }
 }

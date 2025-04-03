@@ -49,6 +49,28 @@ import java.util.*
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
+    val authorizationParamPathConfig = AuthorizationParamPathConfig(
+        operasjon = Operasjon.SAKSBEHANDLE,
+        avklaringsbehovKode = SKRIV_BREV_KODE,
+        behandlingPathParam = BehandlingPathParam(
+            param = "brevbestillingReferanse",
+            resolver = {
+                val brevbestillingReferanse = BrevbestillingReferanse(UUID.fromString(it))
+                dataSource.transaction { connection ->
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val brevbestillingRepository =
+                        repositoryProvider.provide<BrevbestillingRepository>()
+                    val behandlingRepository =
+                        repositoryProvider.provide<BehandlingRepository>()
+
+                    val behandlingId =
+                        brevbestillingRepository.hent(brevbestillingReferanse).behandlingId
+
+                    behandlingRepository.hent(behandlingId).referanse.referanse
+                }
+            })
+    )
+
 
     val brevbestillingGateway = GatewayProvider.provide<BrevbestillingGateway>()
     route("/api") {
@@ -93,7 +115,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                 brevbestillingGateway.hentSignaturForhåndsvisning(
                                     signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),
                                     personIdent.identifikator,
-                                    brevbestillingResponse.brevtype
+                                    brevbestilling.typeBrev
                                 )
                             } else {
                                 emptyList()
@@ -198,32 +220,31 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                 }
             }
 
-            route("/{brevbestillingReferanse}/oppdater") {
-                authorizedPut<BrevbestillingReferanse, String, Brev>(
-                    AuthorizationParamPathConfig(
-                        operasjon = Operasjon.SAKSBEHANDLE,
-                        avklaringsbehovKode = SKRIV_BREV_KODE,
-                        behandlingPathParam = BehandlingPathParam(
-                            "brevbestillingReferanse",
-                            {
-                                val brevbestillingReferanse = BrevbestillingReferanse(UUID.fromString(it))
-                                dataSource.transaction { connection ->
-                                    val repositoryProvider = RepositoryProvider(connection)
-                                    val brevbestillingRepository =
-                                        repositoryProvider.provide<BrevbestillingRepository>()
-                                    val behandlingRepository =
-                                        repositoryProvider.provide<BehandlingRepository>()
+            route("/{brevbestillingReferanse}") {
+                route("/oppdater") {
+                    authorizedPut<BrevbestillingReferanse, String, Brev>(authorizationParamPathConfig) { brevbestillingReferanse, brev ->
+                        brevbestillingGateway.oppdater(brevbestillingReferanse, brev)
+                        respond("{}", HttpStatusCode.Accepted)
+                    }
+                }
+                route("/forhandsvis") {
+                    authorizedGet<BrevbestillingReferanse, ByteArray>(authorizationParamPathConfig) { brevbestillingReferanse ->
+                        val pdf = dataSource.transaction { connection ->
+                            val repositoryProvider = RepositoryProvider(connection)
+                            val brevbestillingRepository =
+                                repositoryProvider.provide<BrevbestillingRepository>()
+                            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
 
-                                    val behandlingId =
-                                        brevbestillingRepository.hent(brevbestillingReferanse).behandlingId
+                            val brevbestilling = brevbestillingRepository.hent(brevbestillingReferanse)
 
-                                    behandlingRepository.hent(behandlingId).referanse.referanse
-                                }
-                            })
-                    )
-                ) { brevbestillingReferanse, brev ->
-                    brevbestillingGateway.oppdater(brevbestillingReferanse, brev)
-                    respond("{}", HttpStatusCode.Accepted)
+                            val signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository)
+                            brevbestillingGateway.forhåndsvis(
+                                bestillingReferanse = brevbestillingReferanse,
+                                signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),
+                            )
+                        }
+                        respond(pdf)
+                    }
                 }
             }
             route("/los-bestilling") {
