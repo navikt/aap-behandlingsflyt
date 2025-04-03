@@ -22,7 +22,7 @@ class MeldekortService private constructor(
         override val navn = InformasjonskravNavn.MELDEKORT
 
         override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
-            return kontekst.erFørstegangsbehandlingEllerRevurdering()
+            return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse()
         }
 
         override fun konstruer(connection: DBConnection): MeldekortService {

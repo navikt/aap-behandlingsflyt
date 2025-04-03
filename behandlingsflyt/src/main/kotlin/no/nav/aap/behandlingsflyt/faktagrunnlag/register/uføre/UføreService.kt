@@ -67,7 +67,7 @@ class UføreService(
         override val navn = InformasjonskravNavn.UFØRE
 
         override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
-            return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
+            return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse() &&
                     oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
         }
 

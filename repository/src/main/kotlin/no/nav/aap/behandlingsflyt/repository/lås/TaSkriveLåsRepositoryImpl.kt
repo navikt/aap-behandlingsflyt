@@ -9,9 +9,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 import java.util.*
 
 class TaSkriveLåsRepositoryImpl(private val connection: DBConnection): TaSkriveLåsRepository {
+
+    val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<TaSkriveLåsRepositoryImpl> {
         override fun konstruer(connection: DBConnection): TaSkriveLåsRepositoryImpl {
@@ -89,6 +92,7 @@ class TaSkriveLåsRepositoryImpl(private val connection: DBConnection): TaSkrive
     }
 
     override fun verifiserSkrivelås(skrivelås: SakSkrivelås) {
+        log.info("Oppdaterer fra versjon ${skrivelås.versjon} på sak med id ${skrivelås.id.id}")
         val query = """UPDATE sak SET versjon = ? WHERE ID = ? and versjon = ?"""
 
         return connection.execute(query) {
@@ -104,6 +108,7 @@ class TaSkriveLåsRepositoryImpl(private val connection: DBConnection): TaSkrive
     }
 
     override fun verifiserSkrivelås(skrivelås: BehandlingSkrivelås) {
+        log.info("Oppdaterer fra versjon ${skrivelås.versjon} på behandling med id ${skrivelås.id.id}")
         val query = """UPDATE behandling SET versjon = ? WHERE ID = ? and versjon = ?"""
 
         return connection.execute(query) {

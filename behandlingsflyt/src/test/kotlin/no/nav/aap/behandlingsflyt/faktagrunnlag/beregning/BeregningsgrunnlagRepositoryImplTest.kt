@@ -37,7 +37,7 @@ class BeregningsgrunnlagRepositoryImplTest {
         val behandling = InitTestDatabase.dataSource.transaction { behandling(it, sak) }
         val inntektPerÅr = listOf(
             GrunnlagInntekt(
-                år = Year.of(2015),
+                år = Year.of(2013),
                 inntektIKroner = Beløp(400000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(4),
@@ -53,7 +53,7 @@ class BeregningsgrunnlagRepositoryImplTest {
                 er6GBegrenset = false
             ),
             GrunnlagInntekt(
-                år = Year.of(2013),
+                år = Year.of(2015),
                 inntektIKroner = Beløp(200000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(2),
@@ -64,7 +64,7 @@ class BeregningsgrunnlagRepositoryImplTest {
 
         val inntektPerÅrUføre = listOf(
             uføreInntekt(
-                år = 2022,
+                år = 2020,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(300000),
                 grunnbeløp = Beløp(100000),
@@ -82,7 +82,7 @@ class BeregningsgrunnlagRepositoryImplTest {
                 er6GBegrenset = false
             ),
             uføreInntekt(
-                år = 2020,
+                år = 2022,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(350000),
                 grunnbeløp = Beløp(100000),
@@ -138,7 +138,7 @@ class BeregningsgrunnlagRepositoryImplTest {
 
         val inntektPerÅr = listOf(
             GrunnlagInntekt(
-                år = Year.of(2015),
+                år = Year.of(2013),
                 inntektIKroner = Beløp(400000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(4),
@@ -154,7 +154,7 @@ class BeregningsgrunnlagRepositoryImplTest {
                 er6GBegrenset = false
             ),
             GrunnlagInntekt(
-                år = Year.of(2013),
+                år = Year.of(2015),
                 inntektIKroner = Beløp(200000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(2),
@@ -172,7 +172,7 @@ class BeregningsgrunnlagRepositoryImplTest {
 
         val inntektPerÅrUføre = listOf(
             uføreInntekt(
-                år = 2022,
+                år = 2020,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(300000),
                 grunnbeløp = Beløp(100000),
@@ -190,7 +190,7 @@ class BeregningsgrunnlagRepositoryImplTest {
                 er6GBegrenset = false
             ),
             uføreInntekt(
-                år = 2020,
+                år = 2022,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(350000),
                 grunnbeløp = Beløp(100000),
@@ -276,7 +276,7 @@ class BeregningsgrunnlagRepositoryImplTest {
         val behandling2 = InitTestDatabase.dataSource.transaction { behandling(it, sak2) }
         val inntektPerÅr = listOf(
             GrunnlagInntekt(
-                år = Year.of(2015),
+                år = Year.of(2013),
                 inntektIKroner = Beløp(400000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(4),
@@ -292,7 +292,7 @@ class BeregningsgrunnlagRepositoryImplTest {
                 er6GBegrenset = false
             ),
             GrunnlagInntekt(
-                år = Year.of(2013),
+                år = Year.of(2015),
                 inntektIKroner = Beløp(200000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(2),
@@ -303,7 +303,7 @@ class BeregningsgrunnlagRepositoryImplTest {
 
         val inntektPerÅrUføre = listOf(
             uføreInntekt(
-                år = 2022,
+                år = 2020,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(300000),
                 grunnbeløp = Beløp(100000),
@@ -321,7 +321,7 @@ class BeregningsgrunnlagRepositoryImplTest {
                 er6GBegrenset = false
             ),
             uføreInntekt(
-                år = 2020,
+                år = 2022,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(350000),
                 grunnbeløp = Beløp(100000),

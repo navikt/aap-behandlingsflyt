@@ -28,7 +28,7 @@ class SøknadService private constructor(
         override val navn = InformasjonskravNavn.SØKNAD
 
         override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
-            return kontekst.erFørstegangsbehandlingEllerRevurdering()
+            return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse()
         }
 
         override fun konstruer(connection: DBConnection): SøknadService {

@@ -23,7 +23,7 @@ class LegeerklæringService private constructor(
         override val navn = InformasjonskravNavn.LEGEERKLÆRING
 
         override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
-            return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
+            return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse() &&
                     oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
         }
 

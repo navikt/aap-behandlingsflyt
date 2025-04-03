@@ -236,9 +236,7 @@ internal fun Application.server(dbConfig: DbConfig) {
     }
 
     val dataSource = initDatasource(dbConfig)
-    if (Miljø.erDev() || Miljø.erProd()) {
-        Migrering.migrate(dataSource)
-    }
+    Migrering.migrate(dataSource)
     val motor = startMotor(dataSource)
 
     registerGateways()
