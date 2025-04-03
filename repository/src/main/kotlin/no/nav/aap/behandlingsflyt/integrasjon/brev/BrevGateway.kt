@@ -15,6 +15,7 @@ import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
 import no.nav.aap.brev.kontrakt.FerdigstillBrevRequest
+import no.nav.aap.brev.kontrakt.ForhandsvisBrevRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerResponse
 import no.nav.aap.brev.kontrakt.Signatur
@@ -150,6 +151,29 @@ class BrevGateway : BrevbestillingGateway {
         client.put<_, Unit>(url, request)
     }
 
+    override fun forhåndsvis(
+        bestillingReferanse: BrevbestillingReferanse,
+        signaturer: List<SignaturGrunnlag>
+    ): ByteArray {
+
+        val httpRequest = PostRequest(
+            body = ForhandsvisBrevRequest(signaturer),
+            additionalHeaders = listOf(
+                Header("Accept", "application/json")
+            )
+        )
+
+        val response: ByteArray = requireNotNull(
+            client.post(
+                uri = baseUri.resolve("/api/bestilling/$bestillingReferanse/forhandsvis"),
+                request = httpRequest,
+                mapper = { body, _ ->
+                    DefaultJsonMapper.fromJson(body)
+                })
+        )
+        return response
+    }
+
     override fun avbryt(bestillingReferanse: BrevbestillingReferanse) {
         val url = baseUri.resolve("/api/avbryt")
 
@@ -181,29 +205,6 @@ class BrevGateway : BrevbestillingGateway {
         val response: HentSignaturerResponse = requireNotNull(
             client.post(
                 uri = baseUri.resolve("/api/forhandsvis-signaturer"),
-                request = httpRequest,
-                mapper = { body, _ ->
-                    DefaultJsonMapper.fromJson(body)
-                })
-        )
-        return response.signaturer
-    }
-
-    override fun forhåndsvis(
-        bestillingReferanse: BrevbestillingReferanse,
-        signaturer: List<SignaturGrunnlag>
-    ): ByteArray {
-
-        val httpRequest = PostRequest(
-            body = ForhandsvisBrevRequest(signaturer),
-            additionalHeaders = listOf(
-                Header("Accept", "application/json")
-            )
-        )
-
-        val response: HentSignaturerResponse = requireNotNull(
-            client.post(
-                uri = baseUri.resolve("/api/forhandsvis"),
                 request = httpRequest,
                 mapper = { body, _ ->
                     DefaultJsonMapper.fromJson(body)

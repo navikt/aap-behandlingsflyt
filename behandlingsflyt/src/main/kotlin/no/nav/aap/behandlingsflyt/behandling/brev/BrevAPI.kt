@@ -239,7 +239,8 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
 
                             val signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository)
                             brevbestillingGateway.forhåndsvis(
-                                signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),
+                                bestillingReferanse = brevbestillingReferanse,
+                                signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),
                             )
                         }
                         respond(pdf)
