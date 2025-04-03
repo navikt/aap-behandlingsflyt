@@ -223,7 +223,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                         saksnummer = sak.saksnummer.toString(),
                         opprettetTidspunkt = sak.opprettetTidspunkt,
                         periode = sak.rettighetsperiode,
-                        ident = sak.person.identer().first().identifikator,
+                        ident = sak.person.aktivIdent().identifikator,
                         behandlinger = behandlinger,
                         status = sak.status()
                     )
