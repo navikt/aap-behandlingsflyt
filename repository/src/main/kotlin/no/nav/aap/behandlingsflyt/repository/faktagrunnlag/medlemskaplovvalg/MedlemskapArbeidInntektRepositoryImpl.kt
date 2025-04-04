@@ -73,7 +73,9 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         val eksisterendeManuellVurdering = hentManuellVurdering(grunnlagOppslag?.manuellVurderingId)
         val overstyrt = manuellVurdering.overstyrt || eksisterendeManuellVurdering?.overstyrt == true
 
-        deaktiverGrunnlag(behandlingId)
+        if (grunnlagOppslag != null) {
+            deaktiverGrunnlag(behandlingId)
+        }
 
         val manuellVurderingQuery = """
             INSERT INTO LOVVALG_MEDLEMSKAP_MANUELL_VURDERING (tekstvurdering_lovvalg, lovvalgs_land, tekstvurdering_medlemskap, var_medlem_i_folketrygden, overstyrt, vurdert_av) VALUES (?, ?, ?, ?, ?, ?)
