@@ -1478,7 +1478,9 @@ object FakeServers : AutoCloseable {
                         )
                     }
                     post("/forhandsvis") {
-                        call.respond("test".toByteArray())
+                        call.respond(
+                            this.javaClass.classLoader.getResourceAsStream("sample.pdf")?.readAllBytes() ?: ByteArray(0)
+                        )
                     }
                     put("/oppdater") {
                         val ref = UUID.fromString(call.pathParameters.get("referanse"))!!
