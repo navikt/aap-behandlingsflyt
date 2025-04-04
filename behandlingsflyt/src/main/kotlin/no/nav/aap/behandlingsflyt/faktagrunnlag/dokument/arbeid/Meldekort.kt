@@ -4,10 +4,12 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.JournalpostId
+import java.time.LocalDateTime
 
 data class Meldekort(
     val journalpostId: JournalpostId,
-    val timerArbeidPerPeriode: Set<ArbeidIPeriode>
+    val timerArbeidPerPeriode: Set<ArbeidIPeriode>,
+    val mottattTidspunkt: LocalDateTime
 ) {
     fun somTidslinje(): Tidslinje<Pair<TimerArbeid, Int>> {
         return Tidslinje(timerArbeidPerPeriode.map {

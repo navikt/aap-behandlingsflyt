@@ -233,6 +233,28 @@ class GraderingArbeidRegelTest {
         assertEquals(Prosent.`50_PROSENT`, vurdering.segment(meldeperiode2.fom)?.verdi?.arbeidsgradering()?.gradering)
     }
 
+    @Test
+    fun `korrigering av meldekort`() {
+        val rettighetsperiode = Periode(LocalDate.parse("2022-10-31"), LocalDate.parse("2023-10-31"))
+        val meldeperiode1 = Periode(rettighetsperiode.fom, rettighetsperiode.fom)
+        val meldeperiode2 = Periode(meldeperiode1.fom.plusDays(1), meldeperiode1.fom.plusDays(1))
+        val allemeldekort = meldekort(
+            meldeperiode1 to BigDecimal.ZERO,
+            meldeperiode2 to BigDecimal(3),
+            meldeperiode1 to BigDecimal(3),
+            meldeperiode2 to BigDecimal(5),
+        )
+        val input = underveisInput(
+            rettighetsperiode = rettighetsperiode,
+            fastsattArbeidsevne = Prosent.`30_PROSENT`,
+            meldekort = allemeldekort
+        ).copy(innsendingsTidspunkt = allemeldekort.associate { meldeperiode1.fom.plusDays(it.journalpostId.identifikator.toLong()) to it.journalpostId })
+        val vurdering = vurder(input)
+
+        assertEquals(Prosent.`70_PROSENT`, vurdering.segment(meldeperiode1.fom)?.verdi?.arbeidsgradering()?.gradering)
+        assertEquals(Prosent.`50_PROSENT`, vurdering.segment(meldeperiode2.fom)?.verdi?.arbeidsgradering()?.gradering)
+    }
+
     private fun underveisInput(
         rettighetsperiode: Periode,
         fastsattArbeidsevne: Prosent?,
