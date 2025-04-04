@@ -65,6 +65,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdenterData
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdenterDataResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlNavn
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlNavnData
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlNavnDataBolk
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersonBolk
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersonNavnDataResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfo
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoData
@@ -1279,13 +1281,15 @@ object FakeServers : AutoCloseable {
     private fun bolknavn(req: PdlRequest): PdlPersonNavnDataResponse {
         val navnData = req.variables.identer?.map {
             val testPerson = hentEllerGenererTestPerson(it)
-            PdlNavnData(
+            PdlNavnDataBolk(
                 ident = testPerson.identer.first().identifikator,
-                navn = listOf(
-                    PdlNavn(
-                        fornavn = testPerson.navn.fornavn,
-                        mellomnavn = null,
-                        etternavn = testPerson.navn.etternavn
+                person =
+                    PdlPersonBolk(
+                        navn = listOf(PdlNavn(
+                            fornavn = testPerson.navn.fornavn,
+                            mellomnavn = null,
+                            etternavn = testPerson.navn.etternavn
+                        )
                     )
                 )
             )
