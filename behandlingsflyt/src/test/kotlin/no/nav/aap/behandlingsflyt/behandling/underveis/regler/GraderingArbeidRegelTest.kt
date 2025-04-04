@@ -234,10 +234,10 @@ class GraderingArbeidRegelTest {
     }
 
     @Test
-    fun `korrigering av meldekort`() {
+    fun `korrigering av meldekort på samme dag`() {
         val rettighetsperiode = Periode(LocalDate.parse("2022-10-31"), LocalDate.parse("2023-10-31"))
-        val meldeperiode1 = Periode(rettighetsperiode.fom, rettighetsperiode.fom)
-        val meldeperiode2 = Periode(meldeperiode1.fom.plusDays(1), meldeperiode1.fom.plusDays(1))
+        val meldeperiode1 = Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusDays(13))
+        val meldeperiode2 = Periode(meldeperiode1.tom.plusDays(1), meldeperiode1.tom.plusDays(14))
         val allemeldekort = meldekort(
             meldeperiode1 to BigDecimal.ZERO,
             meldeperiode2 to BigDecimal(3),
@@ -248,11 +248,11 @@ class GraderingArbeidRegelTest {
             rettighetsperiode = rettighetsperiode,
             fastsattArbeidsevne = Prosent.`30_PROSENT`,
             meldekort = allemeldekort
-        ).copy(innsendingsTidspunkt = allemeldekort.associate { meldeperiode1.fom.plusDays(it.journalpostId.identifikator.toLong()) to it.journalpostId })
+        ).copy(innsendingsTidspunkt = allemeldekort.associate { it.mottattTidspunkt.toLocalDate() to it.journalpostId })
         val vurdering = vurder(input)
 
         assertEquals(Prosent.`70_PROSENT`, vurdering.segment(meldeperiode1.fom)?.verdi?.arbeidsgradering()?.gradering)
-        assertEquals(Prosent.`50_PROSENT`, vurdering.segment(meldeperiode2.fom)?.verdi?.arbeidsgradering()?.gradering)
+        assertEquals(Prosent.`70_PROSENT`, vurdering.segment(meldeperiode2.fom)?.verdi?.arbeidsgradering()?.gradering)
     }
 
     private fun underveisInput(
@@ -260,7 +260,7 @@ class GraderingArbeidRegelTest {
         fastsattArbeidsevne: Prosent?,
         meldekort: List<Meldekort>
     ) = tomUnderveisInput(
-        innsendingsTidspunkt = meldekort.associate { it.timerArbeidPerPeriode.first().periode.fom.minusDays(1) to it.journalpostId },
+        innsendingsTidspunkt = meldekort.associate { it.mottattTidspunkt.toLocalDate() to it.journalpostId },
         rettighetsperiode = rettighetsperiode,
         meldekort = meldekort,
         arbeidsevneGrunnlag = ArbeidsevneGrunnlag(
@@ -284,7 +284,8 @@ class GraderingArbeidRegelTest {
                         periode = periode,
                         timerArbeid = TimerArbeid(timerArbeidet)
                     )
-                )
+                ),
+                mottattTidspunkt = LocalDateTime.now().plusMinutes(i.toLong()),
             )
         }
     }
