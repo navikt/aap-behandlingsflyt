@@ -79,7 +79,9 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         val eksisterendeManuellVurdering = hentManuellVurdering(grunnlagOppslag?.manuellVurderingId)
         val overstyrt = manuellVurdering.overstyrt || eksisterendeManuellVurdering?.overstyrt == true
 
-        deaktiverGrunnlag(behandlingId)
+        if (grunnlagOppslag != null) {
+            deaktiverGrunnlag(behandlingId)
+        }
 
         val manuellVurderingQuery = """
             INSERT INTO FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING (BEGRUNNELSE, HAR_FORUTGAAENDE_MEDLEMSKAP, VAR_MEDLEM_MED_NEDSATT_ARBEIDSEVNE, MEDLEM_MED_UNNTAK_AV_MAKS_FEM_AAR, OVERSTYRT) VALUES (?, ?, ?, ?, ?)
