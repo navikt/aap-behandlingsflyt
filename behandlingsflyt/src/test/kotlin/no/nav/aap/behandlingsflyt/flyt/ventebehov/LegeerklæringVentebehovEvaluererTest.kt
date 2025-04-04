@@ -93,36 +93,40 @@ class LegeerklæringVentebehovEvaluererTest {
 
     @Test
     fun `løser behov når det finnes mottatt dialogmelding`() {
+        val behandling = InitTestDatabase.dataSource.transaction { connection ->
+
+            val sak = opprettSak(connection)
+            opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_DIALOGMELDING)
+        }
+
         InitTestDatabase.dataSource.transaction { connection ->
             val evaluerer = LegeerklæringVentebehovEvaluerer(connection)
             val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
 
-            val sak = opprettSak(connection)
-            val behandling = opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_DIALOGMELDING)
-
             genererDokument(
-                sak.id,
+                behandling.sakId,
                 behandling.id,
                 connection,
                 InnsendingType.DIALOGMELDING,
                 InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "referanse")
             )
 
-            val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, sak.id)
+            val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, behandling.sakId)
             assertEquals(true, erLøst)
         }
     }
 
     @Test
     fun `løser ikke behov når legeerklæring er eldre enn bestilling`() {
+        val behandling = InitTestDatabase.dataSource.transaction { connection ->
+            val sak = opprettSak(connection)
+            opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_SØKNAD)
+        }
+
         InitTestDatabase.dataSource.transaction { connection ->
             val evaluerer = LegeerklæringVentebehovEvaluerer(connection)
-
-            val sak = opprettSak(connection)
-            val behandling = opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_SØKNAD)
-
             genererDokument(
-                sak.id,
+                behandling.sakId,
                 behandling.id,
                 connection,
                 InnsendingType.LEGEERKLÆRING,
@@ -130,29 +134,31 @@ class LegeerklæringVentebehovEvaluererTest {
             )
 
             val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
-            val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, sak.id)
+            val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, behandling.sakId)
             assertEquals(false, erLøst)
         }
     }
 
     @Test
     fun `løser ikke behov når ikke det finnes avvist dokument` () {
+        val behandling = InitTestDatabase.dataSource.transaction { connection ->
+            val sak = opprettSak(connection)
+            opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_SØKNAD)
+        }
+
         InitTestDatabase.dataSource.transaction { connection ->
             val evaluerer = LegeerklæringVentebehovEvaluerer(connection)
             val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
 
-            val sak = opprettSak(connection)
-            val behandling = opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_SØKNAD)
-
             genererDokument(
-                sak.id,
+                behandling.sakId,
                 behandling.id,
                 connection,
                 InnsendingType.SØKNAD,
                 InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "referanse")
             )
 
-            val erIkkeLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, sak.id)
+            val erIkkeLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, behandling.sakId)
             assertEquals(false, erIkkeLøst)
         }
     }
