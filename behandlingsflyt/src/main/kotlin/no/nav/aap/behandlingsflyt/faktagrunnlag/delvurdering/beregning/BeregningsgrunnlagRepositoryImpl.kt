@@ -29,6 +29,7 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
                 SELECT BEREGNING_HOVED_ID, ARSTALL, INNTEKT_I_KRONER, GRUNNBELOP, INNTEKT_I_G, INNTEKT_6G_BEGRENSET, ER_6G_BEGRENSET
                 FROM BEREGNING_INNTEKT
                 WHERE BEREGNING_HOVED_ID = ?
+                ORDER BY ARSTALL ASC
             """.trimIndent()
         ) {
             setParams { setLong(1, beregningsId) }
@@ -122,6 +123,7 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
                 SELECT ARSTALL, INNTEKT_I_KRONER, UFOREGRAD, ARBEIDSGRAD, INNTEKT_JUSTERT_FOR_UFOREGRAD, INNTEKT_I_G, GRUNNBELOP, inntekt_justert_ufore_g
                 FROM BEREGNING_UFORE_INNTEKT
                 WHERE BEREGNING_UFORE_ID = ?
+                ORDER BY ARSTALL ASC
             """.trimIndent()
         ) {
             setParams { setLong(1, beregningsId) }

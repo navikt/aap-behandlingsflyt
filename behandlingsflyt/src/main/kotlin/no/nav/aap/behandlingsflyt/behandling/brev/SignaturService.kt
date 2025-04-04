@@ -55,12 +55,11 @@ class SignaturService(
 
     private fun utledSignatur(rolle: Rolle, avklaringsbehovene: Avklaringsbehovene): SignaturGrunnlag? {
         val definisjoner = rolleTilAvklaringsbehov.getValue(rolle)
-        return avklaringsbehovene.hentBehovForDefinisjon(definisjoner)
-            .filter { it.endretAv().erNavIdent() }
-            .maxByOrNull { it.historikk.filter { it.status == AvklaringsbehovStatus.AVSLUTTET }.max().tidsstempel }
-            ?.let {
-                SignaturGrunnlag(it.endretAv(), mapRolle(rolle))
-            }
+        return avklaringsbehovene.hentBehovForDefinisjon(definisjoner).mapNotNull {
+            it.historikk.filter { it.endretAv.erNavIdent() && it.status == AvklaringsbehovStatus.AVSLUTTET }.maxOrNull()
+        }.maxOrNull()?.let {
+            SignaturGrunnlag(it.endretAv, mapRolle(rolle))
+        }
     }
 
     private fun mapRolle(rolle: Rolle): SignaturRolle? {

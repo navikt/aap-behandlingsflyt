@@ -224,19 +224,23 @@ class StatistikkJobbUtfører(
         log.info("Kaller aap-statistikk for sak ${sak.saksnummer} og behandling ${behandling.referanse}")
 
         val rettighetstypePerioder =
-            underveisRepository.hent(behandling.id).perioder.filter { it.rettighetsType != null }.map {
-                RettighetstypePeriode(
-                    fraDato = it.periode.fom,
-                    tilDato = it.periode.tom,
-                    rettighetstype = when (requireNotNull(it.rettighetsType)) {
-                        RettighetsType.BISTANDSBEHOV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.BISTANDSBEHOV
-                        RettighetsType.SYKEPENGEERSTATNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.SYKEPENGEERSTATNING
-                        RettighetsType.STUDENT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.STUDENT
-                        RettighetsType.ARBEIDSSØKER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.ARBEIDSSØKER
-                        RettighetsType.VURDERES_FOR_UFØRETRYGD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.VURDERES_FOR_UFØRETRYGD
-                    }
-                )
-            }
+            underveisRepository.hent(behandling.id).perioder.filter { it.rettighetsType != null }
+                .map { Segment(it.periode, it.rettighetsType) }
+                .let(::Tidslinje)
+                .komprimer()
+                .map {
+                    RettighetstypePeriode(
+                        fraDato = it.periode.fom,
+                        tilDato = it.periode.tom,
+                        rettighetstype = when (requireNotNull(it.verdi)) {
+                            RettighetsType.BISTANDSBEHOV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.BISTANDSBEHOV
+                            RettighetsType.SYKEPENGEERSTATNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.SYKEPENGEERSTATNING
+                            RettighetsType.STUDENT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.STUDENT
+                            RettighetsType.ARBEIDSSØKER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.ARBEIDSSØKER
+                            RettighetsType.VURDERES_FOR_UFØRETRYGD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.VURDERES_FOR_UFØRETRYGD
+                        }
+                    )
+                }
 
         val avsluttetBehandlingDTO = AvsluttetBehandlingDTO(
             vilkårsResultat = VilkårsResultatDTO(

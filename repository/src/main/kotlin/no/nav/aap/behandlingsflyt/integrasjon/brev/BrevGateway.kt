@@ -15,6 +15,7 @@ import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
 import no.nav.aap.brev.kontrakt.FerdigstillBrevRequest
+import no.nav.aap.brev.kontrakt.ForhandsvisBrevRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerResponse
 import no.nav.aap.brev.kontrakt.Signatur
@@ -35,6 +36,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.Client
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.lookup.gateway.Factory
 import org.slf4j.LoggerFactory
+import java.io.InputStream
 import java.net.URI
 
 class BrevGateway : BrevbestillingGateway {
@@ -150,6 +152,29 @@ class BrevGateway : BrevbestillingGateway {
         client.put<_, Unit>(url, request)
     }
 
+    override fun forhåndsvis(
+        bestillingReferanse: BrevbestillingReferanse,
+        signaturer: List<SignaturGrunnlag>
+    ): InputStream {
+
+        val httpRequest = PostRequest(
+            body = ForhandsvisBrevRequest(signaturer),
+            additionalHeaders = listOf(
+                Header("Accept", "application/json")
+            )
+        )
+
+        val response: InputStream = requireNotNull(
+            client.post(
+                uri = baseUri.resolve("/api/bestilling/$bestillingReferanse/forhandsvis"),
+                request = httpRequest,
+                mapper = { body, _ ->
+                    body
+                })
+        )
+        return response
+    }
+
     override fun avbryt(bestillingReferanse: BrevbestillingReferanse) {
         val url = baseUri.resolve("/api/avbryt")
 
@@ -168,11 +193,11 @@ class BrevGateway : BrevbestillingGateway {
     override fun hentSignaturForhåndsvisning(
         signaturer: List<SignaturGrunnlag>,
         brukerIdent: String,
-        brevtype: Brevtype
+        typeBrev: TypeBrev
     ): List<Signatur> {
 
         val httpRequest = PostRequest(
-            body = HentSignaturerRequest(brukerIdent, brevtype, signaturer),
+            body = HentSignaturerRequest(brukerIdent, mapTypeBrev(typeBrev), signaturer),
             additionalHeaders = listOf(
                 Header("Accept", "application/json")
             )
