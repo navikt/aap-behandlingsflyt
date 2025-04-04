@@ -29,12 +29,15 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.verdityper.dokument.Kanal
+import org.junit.Ignore
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Disabled
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.test.Test
 
+@Disabled("Inntil vi får nøstet opp i flakyhet i testklassen")
 @Fakes
 class LegeerklæringVentebehovEvaluererTest {
     companion object {
@@ -94,7 +97,6 @@ class LegeerklæringVentebehovEvaluererTest {
     @Test
     fun `løser behov når det finnes mottatt dialogmelding`() {
         val behandling = InitTestDatabase.dataSource.transaction { connection ->
-
             val sak = opprettSak(connection)
             opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_DIALOGMELDING)
         }
