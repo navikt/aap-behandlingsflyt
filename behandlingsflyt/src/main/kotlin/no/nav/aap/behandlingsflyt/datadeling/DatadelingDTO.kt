@@ -1,11 +1,7 @@
 package no.nav.aap.behandlingsflyt.datadeling
 
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
-import java.time.LocalDate
 
 data class SakStatusDTO(
     val ident: String,
@@ -49,27 +45,5 @@ data class SakStatus(
         LØPENDE,
         AVSLUTTET
 
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as SakStatus
-
-        if (sakId != other.sakId) return false
-        if (statusKode != other.statusKode) return false
-        if (periode != other.periode) return false
-        if (kilde != other.kilde) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = sakId.hashCode()
-        result = 31 * result + statusKode.hashCode()
-        result = 31 * result + periode.hashCode()
-        result = 31 * result + kilde.hashCode()
-        return result
     }
 }

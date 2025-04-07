@@ -37,7 +37,7 @@ class BrevbestillingLøser(val connection: DBConnection) :
         løsning: BrevbestillingLøsning
     ): LøsningsResultat {
 
-        require(kontekst.bruker == BREV_SYSTEMBRUKER) { "Bruker kan ikke løse brevbestilling." }
+        require(kontekst.bruker == BREV_SYSTEMBRUKER) { "Bruker kan ikke løse brevbestilling. Ble forsøkt løst av ${kontekst.bruker}." }
 
         val brevbestillingRepository = repositoryProvider.provide<BrevbestillingRepository>()
 
