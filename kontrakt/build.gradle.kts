@@ -6,7 +6,7 @@ plugins {
     `java-library`
 }
 
-val tilgangVersjon = "1.0.36"
+val tilgangVersjon = "1.0.39"
 val junitVersion = "5.12.0"
 val komponenterVersjon = "1.0.193"
 

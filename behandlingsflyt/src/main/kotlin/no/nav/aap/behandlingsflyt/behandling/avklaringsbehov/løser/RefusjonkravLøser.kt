@@ -34,7 +34,7 @@ class RefusjonkravLøser(val connection: DBConnection) : AvklaringsbehovsLøser<
             val refusjonTomDato = løsning.refusjonkravVurdering.tom
 
             if (refusjonFomDato.isBefore(kravDato)) {
-                throw IllegalArgumentException("Refusjonsdato kan ikke være før kravdato")
+                throw IllegalArgumentException("Refusjonsdato kan ikke være før kravdato. Refusjonsdato: $refusjonFomDato, kravdato: $kravDato")
             }
 
             if (refusjonTomDato != null && refusjonFomDato.isAfter(refusjonTomDato)) {

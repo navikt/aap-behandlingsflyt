@@ -4,7 +4,7 @@ plugins {
 
 val komponenterVersjon = "1.0.193"
 val ktorVersion = "3.1.2"
-val tilgangVersjon = "1.0.36"
+val tilgangVersjon = "1.0.39"
 val utbetalVersjon = "0.0.31"
 val junitVersjon = "5.12.1"
 
@@ -16,7 +16,7 @@ dependencies {
 
     api("no.nav.aap.tilgang:plugin:$tilgangVersjon")
     api("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
-    api("no.nav.aap.brev:kontrakt:0.0.94")
+    api("no.nav.aap.brev:kontrakt:0.0.95")
     api("no.nav.aap.meldekort:kontrakt:0.0.17")
     api("no.nav.aap.kelvin:motor:$komponenterVersjon")
     api("no.nav.aap.utbetal:api-kontrakt:$utbetalVersjon")
