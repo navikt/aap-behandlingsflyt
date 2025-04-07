@@ -67,7 +67,8 @@ class LegeerklæringVentebehovEvaluererTest {
                 behandling.id,
                 connection,
                 InnsendingType.LEGEERKLÆRING_AVVIST,
-                InnsendingReferanse(InnsendingReferanse.Type.AVVIST_LEGEERKLÆRING_ID, "referanse")
+                InnsendingReferanse(InnsendingReferanse.Type.AVVIST_LEGEERKLÆRING_ID, "referanse"),
+                LocalDateTime.now().plusDays(1)
             )
 
             val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, behandling.sakId)
@@ -91,7 +92,8 @@ class LegeerklæringVentebehovEvaluererTest {
                 behandling.id,
                 connection,
                 InnsendingType.LEGEERKLÆRING,
-                InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "referanse")
+                InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "referanse"),
+                LocalDateTime.now().plusDays(1)
             )
 
             val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, behandling.sakId)
@@ -115,7 +117,8 @@ class LegeerklæringVentebehovEvaluererTest {
                 behandling.id,
                 connection,
                 InnsendingType.DIALOGMELDING,
-                InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "referanse")
+                InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "referanse"),
+                LocalDateTime.now().plusDays(1)
             )
 
             val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, behandling.sakId)
@@ -137,7 +140,8 @@ class LegeerklæringVentebehovEvaluererTest {
                 behandling.id,
                 connection,
                 InnsendingType.LEGEERKLÆRING,
-                InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "referanse")
+                InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "referanse"),
+                LocalDateTime.now().minusDays(1)
             )
 
             val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
@@ -162,7 +166,8 @@ class LegeerklæringVentebehovEvaluererTest {
                 behandling.id,
                 connection,
                 InnsendingType.SØKNAD,
-                InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "referanse")
+                InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "referanse"),
+                LocalDateTime.now().plusDays(1)
             )
 
             val erIkkeLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, behandling.sakId)
@@ -175,14 +180,15 @@ class LegeerklæringVentebehovEvaluererTest {
         behandlingId: BehandlingId,
         connection: DBConnection,
         type: InnsendingType,
-        referanse: InnsendingReferanse
+        referanse: InnsendingReferanse,
+        mottatt: LocalDateTime
     ) {
         util.ventPåSvar(sakId.id)
         val mottattDokument = MottattDokument(
             referanse = referanse,
             sakId = sakId,
             behandlingId = behandlingId,
-            mottattTidspunkt = LocalDateTime.now(),
+            mottattTidspunkt = mottatt,
             type = type,
             status = Status.MOTTATT,
             kanal = Kanal.DIGITAL,
