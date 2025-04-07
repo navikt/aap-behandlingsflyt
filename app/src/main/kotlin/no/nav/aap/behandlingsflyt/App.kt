@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.fatteVedtakGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypesTilAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate.barnetilleggApi
+import no.nav.aap.behandlingsflyt.behandling.behandlingsinfo.behandlingsinfoApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder.aldersGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt.meldepliktsgrunnlagApi
@@ -263,6 +264,7 @@ internal fun Application.server(dbConfig: DbConfig) {
                 sykepengerGrunnlagApi(dataSource)
                 institusjonAPI(dataSource)
                 avklaringsbehovApi(dataSource)
+                behandlingsinfoApi(dataSource)
                 tilkjentYtelseAPI(dataSource)
                 beregningVurderingAPI(dataSource)
                 beregningsGrunnlagApi(dataSource)
