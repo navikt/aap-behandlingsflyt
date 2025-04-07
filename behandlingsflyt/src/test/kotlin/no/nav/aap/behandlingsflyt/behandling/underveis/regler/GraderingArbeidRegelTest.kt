@@ -238,11 +238,15 @@ class GraderingArbeidRegelTest {
         val rettighetsperiode = Periode(LocalDate.parse("2022-10-31"), LocalDate.parse("2023-10-31"))
         val meldeperiode1 = Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusDays(13))
         val meldeperiode2 = Periode(meldeperiode1.tom.plusDays(1), meldeperiode1.tom.plusDays(14))
+        val meldekortPeriode1 = meldeperiode1 to BigDecimal.ZERO
+        val meldekortPeriode2 = meldeperiode2 to BigDecimal(3)
+        val korrigertMeldekortPeriode1 = meldeperiode1 to BigDecimal(3)
+        val korrigertMeldekortPeriode2 = meldeperiode2 to BigDecimal(5)
         val allemeldekort = meldekort(
-            meldeperiode1 to BigDecimal.ZERO,
-            meldeperiode2 to BigDecimal(3),
-            meldeperiode1 to BigDecimal(3),
-            meldeperiode2 to BigDecimal(5),
+            meldekortPeriode1,
+            meldekortPeriode2,
+            korrigertMeldekortPeriode1,
+            korrigertMeldekortPeriode2,
         )
         val input = underveisInput(
             rettighetsperiode = rettighetsperiode,
