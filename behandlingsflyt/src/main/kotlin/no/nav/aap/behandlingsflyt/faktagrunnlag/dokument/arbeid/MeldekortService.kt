@@ -22,7 +22,7 @@ class MeldekortService private constructor(
         override val navn = InformasjonskravNavn.MELDEKORT
 
         override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
-            return kontekst.erFørstegangsbehandlingEllerRevurdering()
+            return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse()
         }
 
         override fun konstruer(connection: DBConnection): MeldekortService {
@@ -47,7 +47,8 @@ class MeldekortService private constructor(
         for (ubehandletMeldekort in meldekortSomIkkeErBehandlet) {
             val nyttMeldekort = Meldekort(
                 journalpostId = ubehandletMeldekort.journalpostId,
-                timerArbeidPerPeriode = ubehandletMeldekort.timerArbeidPerPeriode
+                timerArbeidPerPeriode = ubehandletMeldekort.timerArbeidPerPeriode,
+                mottattTidspunkt = ubehandletMeldekort.mottattTidspunkt
             )
             mottaDokumentService.knyttTilBehandling(
                 sakId = kontekst.sakId,

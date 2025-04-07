@@ -1,6 +1,6 @@
 val ktorVersion = "3.1.2"
-val komponenterVersjon = "1.0.193"
-val tilgangVersjon = "1.0.34"
+val komponenterVersjon = "1.0.200"
+val tilgangVersjon = "1.0.39"
 val junitVersjon = "5.12.1"
 
 plugins {
@@ -11,7 +11,7 @@ dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation(project(":kontrakt"))
-    implementation("no.nav.aap.brev:kontrakt:0.0.87")
+    implementation("no.nav.aap.brev:kontrakt:0.0.95")
     implementation("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
@@ -35,7 +35,7 @@ dependencies {
 
     implementation("ch.qos.logback:logback-classic:1.5.18")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:10.0.2")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.1")
 
     implementation("org.junit.jupiter:junit-jupiter-api:$junitVersjon")
     testImplementation("org.assertj:assertj-core:3.27.3")

@@ -48,7 +48,7 @@ class BehandlingHendelseServiceImpl(
             saksnummer = sak.saksnummer,
             referanse = behandling.referanse,
             behandlingType = behandling.typeBehandling(),
-            aktivtSteg =  behandling.aktivtSteg(),
+            aktivtSteg = behandling.aktivtSteg(),
             status = behandling.status(),
             avklaringsbehov = avklaringsbehovene.alle().map { avklaringsbehov ->
                 val brevbestilling = if (avklaringsbehov.definisjon == Definisjon.SKRIV_BREV) {
@@ -68,9 +68,7 @@ class BehandlingHendelseServiceImpl(
                             frist = endring.frist,
                             årsakTilSattPåVent = endring.grunn?.oversettTilKontrakt(),
                             årsakTilRetur = endring.årsakTilRetur.map {
-                                ÅrsakTilRetur(
-                                    it.oversettTilKontrakt()
-                                )
+                                ÅrsakTilRetur(it.oversettTilKontrakt())
                             })
                     },
                     typeBrev = brevbestilling?.typeBrev?.oversettTilKontrakt()

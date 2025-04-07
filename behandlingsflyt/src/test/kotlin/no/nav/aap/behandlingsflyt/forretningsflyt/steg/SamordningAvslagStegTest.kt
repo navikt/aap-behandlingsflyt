@@ -105,7 +105,9 @@ class SamordningAvslagStegTest {
         every { vilkårsresultatRepository.lagre(any(), capture(vilkårSlot)) } just Runs
         steg.utfør(kontekst = kontekst)
         val vilkårTidslinje = vilkårSlot.captured.finnVilkår(Vilkårtype.SAMORDNING).tidslinje()
-        assertThat(vilkårTidslinje.segmenter().size).isEqualTo(0)
+        assertThat(vilkårTidslinje.segmenter().size).isEqualTo(1)
+        assertThat(vilkårTidslinje.segmenter().first().verdi.utfall).isEqualTo(Utfall.IKKE_VURDERT)
+        assertThat(vilkårTidslinje.segmenter().first().periode).isEqualTo(periode)
     }
 
 }

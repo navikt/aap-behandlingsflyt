@@ -118,16 +118,19 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
             ) { req ->
                 dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
+                    val behandlingFørLås = behandling(repositoryProvider.provide(), req)
+                    if (behandlingFørLås.status().erAvsluttet()) {
+                        return@transaction
+                    }
                     val taSkriveLåsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
                     val behandlingRepository =
                         repositoryProvider.provide<BehandlingRepository>()
                     val lås = taSkriveLåsRepository.lås(req.referanse)
                     val behandling = behandling(behandlingRepository, req)
                     val flytJobbRepository = FlytJobbRepository(connection)
-                    if (!behandling.status()
-                            .erAvsluttet() && behandling.harIkkeVærtAktivitetIDetSiste() && flytJobbRepository.hentJobberForBehandling(
-                            behandling.id.toLong()
-                        ).isEmpty()
+                    if (!behandling.status().erAvsluttet()
+                        && behandling.harIkkeVærtAktivitetIDetSiste()
+                        && flytJobbRepository.hentJobberForBehandling(behandling.id.toLong()).isEmpty()
                     ) {
                         flytJobbRepository.leggTil(
                             JobbInput(ProsesserBehandlingJobbUtfører).forBehandling(

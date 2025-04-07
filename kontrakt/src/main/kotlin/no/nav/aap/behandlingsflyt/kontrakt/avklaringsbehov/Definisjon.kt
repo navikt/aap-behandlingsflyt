@@ -52,6 +52,15 @@ public enum class Definisjon(
             Rolle.SAKSBEHANDLER_NASJONAL
         )
     ),
+    OPPRETT_HENDELSE_PÅ_SAK(
+        kode = AvklaringsbehovKode.`9004`,
+        type = BehovType.VENTEPUNKT,
+        løsesISteg = StegType.UDEFINERT,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_NASJONAL,
+            Rolle.SAKSBEHANDLER_OPPFOLGING,
+        )
+    ),
     SKRIV_BREV(
         kode = AvklaringsbehovKode.`5050`,
         løsesISteg = StegType.UDEFINERT,
@@ -359,7 +368,7 @@ public enum class Definisjon(
     }
 
     private fun validerVentepunkt() {
-        if (this in setOf(MANUELT_SATT_PÅ_VENT, BESTILL_LEGEERKLÆRING)) {
+        if (this in setOf(MANUELT_SATT_PÅ_VENT, BESTILL_LEGEERKLÆRING, OPPRETT_HENDELSE_PÅ_SAK)) {
             if (this.løsesISteg != StegType.UDEFINERT) {
                 throw IllegalArgumentException("Ventepunkt er lagt til feil steg")
             }

@@ -5,8 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -22,14 +20,12 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class RefusjonkravSteg private constructor(
     private val refusjonkravRepository: RefusjonkravRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val sykdomsRepository: SykdomRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val sykdomsvurderinger = sykdomsRepository.hentHvisEksisterer(kontekst.behandlingId)?.sykdomsvurderinger ?: emptyList()
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
 
-        if (!erIkkeAvslagPåVilkårTidligere(vilkårsresultat, sykdomsvurderinger)) {
+        if (!erIkkeAvslagPåVilkårTidligere(vilkårsresultat)) {
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
             val refusjonBehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.REFUSJON_KRAV)
             if (refusjonBehov != null && refusjonBehov.erÅpent()) {
@@ -44,7 +40,7 @@ class RefusjonkravSteg private constructor(
             }
 
             VurderingType.REVURDERING -> {
-                refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId) ?: return FantAvklaringsbehov(Definisjon.REFUSJON_KRAV)
+                //refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId) ?: return FantAvklaringsbehov(Definisjon.REFUSJON_KRAV)
             }
 
             VurderingType.FORLENGELSE -> {
@@ -60,13 +56,10 @@ class RefusjonkravSteg private constructor(
     }
 
     private fun erIkkeAvslagPåVilkårTidligere(
-        vilkårsresultat: Vilkårsresultat,
-        sykdomsvurderinger: List<Sykdomsvurdering>
+        vilkårsresultat: Vilkårsresultat
     ): Boolean {
         return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()
-            && vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET).harPerioderSomErOppfylt()
             && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
-            && sykdomsvurderinger.any { it.erOppfylt() }
     }
 
     companion object : FlytSteg {
@@ -74,9 +67,8 @@ class RefusjonkravSteg private constructor(
             val repositoryProvider = RepositoryProvider(connection)
             val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
             val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
-            val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
             val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-            return RefusjonkravSteg(refusjonkravRepository, vilkårsresultatRepository, sykdomRepository, avklaringsbehovRepository)
+            return RefusjonkravSteg(refusjonkravRepository, vilkårsresultatRepository, avklaringsbehovRepository)
         }
 
         override fun type(): StegType {

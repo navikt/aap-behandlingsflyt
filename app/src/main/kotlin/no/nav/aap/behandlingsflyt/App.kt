@@ -129,6 +129,7 @@ import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.server.AZURE
 import no.nav.aap.komponenter.server.commonKtorModule
+import no.nav.aap.komponenter.server.plugins.NavIdentInterceptor
 import no.nav.aap.lookup.gateway.GatewayRegistry
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.Motor
@@ -245,6 +246,8 @@ internal fun Application.server(dbConfig: DbConfig) {
 
     routing {
         authenticate(AZURE) {
+            install(NavIdentInterceptor)
+
             apiRouting {
                 configApi()
                 saksApi(dataSource)

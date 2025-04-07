@@ -10,12 +10,12 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
@@ -43,6 +43,7 @@ import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.verdityper.dokument.JournalpostId
 import javax.sql.DataSource
 
+@Suppress("UnauthorizedPost")
 fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
     route("/api/sak").tag(Tags.Sak) {
         route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
@@ -66,20 +67,26 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 }
 
             }
-            val sakerMedTilgang =
-                saker.filter { sak ->
-                    TilgangGatewayImpl.sjekkTilgangTilSak(
-                        Saksnummer(sak.saksnummer),
-                        token()
-                    )
-                }
 
-            if (sakerMedTilgang.isNotEmpty()) {
-                respond(sakerMedTilgang)
+            // Midlertidig fiks for ikke å brekke postmottak
+            if (token().isClientCredentials()) {
+                respond(saker)
             } else {
-                respondWithStatus(HttpStatusCode.NotFound)
-            }
+                val sakerMedTilgang =
+                    saker.filter { sak ->
+                        TilgangGatewayImpl.sjekkTilgangTilSak(
+                            Saksnummer(sak.saksnummer),
+                            token(),
+                            Operasjon.SE
+                        )
+                    }
 
+                if (sakerMedTilgang.isNotEmpty()) {
+                    respond(sakerMedTilgang)
+                } else {
+                    respondWithStatus(HttpStatusCode.NotFound)
+                }
+            }
         }
 
         route("/finnSisteBehandlinger") {
@@ -203,6 +210,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                                     referanse = behandling.referanse.referanse,
                                     type = behandling.typeBehandling().identifikator(),
                                     status = behandling.status(),
+                                    årsaker = behandling.årsaker().map(Årsak::type),
                                     opprettet = behandling.opprettetTidspunkt
                                 )
                             }
@@ -215,7 +223,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                         saksnummer = sak.saksnummer.toString(),
                         opprettetTidspunkt = sak.opprettetTidspunkt,
                         periode = sak.rettighetsperiode,
-                        ident = sak.person.identer().first().identifikator,
+                        ident = sak.person.aktivIdent().identifikator,
                         behandlinger = behandlinger,
                         status = sak.status()
                     )

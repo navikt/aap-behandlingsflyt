@@ -22,7 +22,7 @@ class AktivitetspliktInformasjonskrav (
         override val navn = InformasjonskravNavn.AKTIVITETSPLIKT
 
         override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
-            return kontekst.erFørstegangsbehandlingEllerRevurdering()
+            return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse()
         }
 
         override fun konstruer(connection: DBConnection): AktivitetspliktInformasjonskrav {

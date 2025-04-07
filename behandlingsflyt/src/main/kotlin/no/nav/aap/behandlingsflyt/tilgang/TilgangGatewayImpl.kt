@@ -22,11 +22,11 @@ object TilgangGatewayImpl : TilgangGateway {
         )
     }
 
-    override fun sjekkTilgangTilSak(saksnummer: Saksnummer, token: OidcToken): Boolean {
+    override fun sjekkTilgangTilSak(saksnummer: Saksnummer, token: OidcToken, operasjon: Operasjon): Boolean {
         return harTilgangTilSak(
             SakTilgangRequest(
                 saksnummer = saksnummer.toString(),
-                operasjon = Operasjon.SAKSBEHANDLE
+                operasjon = operasjon
             ), token
         )
     }

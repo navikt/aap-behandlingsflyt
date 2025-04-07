@@ -28,4 +28,8 @@ data class FlytKontekstMedPerioder(
     fun erFørstegangsbehandlingEllerRevurdering(): Boolean {
         return vurdering.vurderingType in setOf(VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING)
     }
+
+    fun erFørstegangsbehandlingRevurderingEllerForlengelse(): Boolean {
+        return vurdering.vurderingType in setOf(VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.FORLENGELSE)
+    }
 }
