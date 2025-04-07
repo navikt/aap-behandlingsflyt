@@ -172,10 +172,9 @@ class GraderingArbeidRegel : UnderveisRegel {
         }
 
     private fun opplysningerFraMeldekort(input: UnderveisInput): Tidslinje<OpplysningerOmArbeid> {
-        val innsendt = input.innsendingsTidspunkt.map { it.value to it.key }.toMap()
         var tidslinje = Tidslinje<OpplysningerOmArbeid>()
 
-        for (meldekort in input.meldekort.sortedBy { innsendt[it.journalpostId] }) {
+        for (meldekort in input.meldekort.sortedBy { it.mottattTidspunkt }) {
             tidslinje = tidslinje.outerJoin(meldekort.somTidslinje()) { tidligereOpplysnigner, meldekortopplysninger ->
                 /* opplsysninger fra nyeste meldekort, opplysningerMottat fra eldste meldekort */
                 val timerArbeidetOpplysninger = OpplysningerOmArbeid(
@@ -188,7 +187,7 @@ class GraderingArbeidRegel : UnderveisRegel {
                             )
                         )
                     },
-                    opplysningerFørstMottatt = innsendt[meldekort.journalpostId],
+                    opplysningerFørstMottatt = meldekort.mottattTidspunkt.toLocalDate(),
                 )
 
                 OpplysningerOmArbeid.mergePrioriterHøyre(tidligereOpplysnigner, timerArbeidetOpplysninger)

@@ -47,7 +47,8 @@ class MeldekortService private constructor(
         for (ubehandletMeldekort in meldekortSomIkkeErBehandlet) {
             val nyttMeldekort = Meldekort(
                 journalpostId = ubehandletMeldekort.journalpostId,
-                timerArbeidPerPeriode = ubehandletMeldekort.timerArbeidPerPeriode
+                timerArbeidPerPeriode = ubehandletMeldekort.timerArbeidPerPeriode,
+                mottattTidspunkt = ubehandletMeldekort.mottattTidspunkt
             )
             mottaDokumentService.knyttTilBehandling(
                 sakId = kontekst.sakId,
