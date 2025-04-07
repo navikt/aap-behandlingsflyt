@@ -6,7 +6,7 @@ import com.papsign.ktor.openapigen.route.apiRouting
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.http.*
-import io.ktor.serialization.JsonConvertException
+import io.ktor.serialization.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.engine.*
@@ -41,8 +41,12 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerAPI
 import no.nav.aap.behandlingsflyt.drift.driftAPI
+import no.nav.aap.behandlingsflyt.exception.ApiErrorResponse
+import no.nav.aap.behandlingsflyt.exception.ApiException
 import no.nav.aap.behandlingsflyt.exception.ErrorRespons
 import no.nav.aap.behandlingsflyt.exception.FlytOperasjonException
+import no.nav.aap.behandlingsflyt.exception.IkkeTillattException
+import no.nav.aap.behandlingsflyt.exception.InternfeilException
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
@@ -115,7 +119,6 @@ import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -184,22 +187,41 @@ internal fun Application.server(dbConfig: DbConfig) {
             val secureLogger = LoggerFactory.getLogger("secureLog")
             val uri = call.request.local.uri
             when (cause) {
-                is ElementNotFoundException -> {
-                    call.respondText(status = HttpStatusCode.NotFound, text = cause.message ?: "")
+                is InternfeilException -> {
+                    logger.error(cause.cause?.message ?: cause.message)
+                    call.respond(cause.status, cause.tilApiErrorResponse())
+                }
+
+                is ApiException -> {
+                    logger.warn("En feil oppsto", cause)
+                    call.respond(cause.status, cause.tilApiErrorResponse())
                 }
 
                 is FlytOperasjonException -> {
-                    call.respond(status = cause.status(), message = cause.body())
+                    call.respond(
+                        status = cause.status(),
+                        message = ApiErrorResponse(
+                            message = cause.body().message ?: "Ukjent feil i behandlingsflyt"
+                        )
+                    )
                 }
 
                 is ManglerTilgangException -> {
                     logger.warn("Mangler tilgang til å vise route: '$uri'", cause)
-                    call.respondText(status = HttpStatusCode.Forbidden, text = "Forbidden")
+                    call.respond(
+                        status = HttpStatusCode.Forbidden,
+                        message = IkkeTillattException(message = "Mangler tilgang")
+                    )
                 }
 
                 is IkkeFunnetException -> {
-                    logger.warn("Fikk 404 fra ekstern integrasjon.", cause)
-                    call.respondText(status = HttpStatusCode.NotFound, text = "Ikke funnet")
+                    logger.error("Fikk 404 fra ekstern integrasjon", cause)
+                    call.respond(
+                        status = HttpStatusCode.NotFound,
+                        message = ApiErrorResponse(
+                            message = "Fikk 404 fra ekstern integrasjon. Dette er mest sannsynlig en systemfeil."
+                        )
+                    )
                 }
 
                 is JacksonException,
@@ -208,7 +230,9 @@ internal fun Application.server(dbConfig: DbConfig) {
                     logger.error("Deserialiseringsfeil ved kall til '$uri': ", cause)
                     call.respond(
                         status = HttpStatusCode.BadRequest,
-                        message = ErrorRespons("Deserialiseringsfeil ved kall til '$uri'")
+                        message = ApiErrorResponse(
+                            message = "Deserialiseringsfeil ved kall til '$uri'",
+                        )
                     )
                 }
 
@@ -217,15 +241,17 @@ internal fun Application.server(dbConfig: DbConfig) {
                     secureLogger.error("SQL-feil ved kall til '$uri'.", cause)
                     call.respond(
                         status = HttpStatusCode.InternalServerError,
-                        message = ErrorRespons("Feil ved kall til '$uri'")
+                        message = ApiErrorResponse("Feil ved kall til '$uri'")
                     )
                 }
 
                 else -> {
-                    logger.warn("Ukjent feil ved kall til '$uri'", cause)
+                    logger.error("Ukjent/uhåndtert feil ved kall til '$uri'", cause)
                     call.respond(
                         status = HttpStatusCode.InternalServerError,
-                        message = ErrorRespons("Feil i backend av type ${cause.javaClass.name} ved kall mot $uri. Se logg for detaljer.")
+                        message = InternfeilException(
+                            message = "En ukjent feil oppsto",
+                        ).tilApiErrorResponse()
                     )
                 }
             }
