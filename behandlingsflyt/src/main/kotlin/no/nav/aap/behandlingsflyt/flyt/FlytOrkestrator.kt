@@ -197,9 +197,7 @@ class FlytOrkestrator(
             if (!result.kanFortsette() || neste == null) {
                 if (neste == null) {
                     // Valider siste stegstatus behandlingen
-                    val oppdatertBehandling = behandlingRepository.hent(behandling.id)
-                    val sisteSteg = oppdatertBehandling.aktivtStegTilstand()
-                    require(sisteSteg.status() == StegStatus.AVSLUTTER)
+                    validerAtSisteStegstatusErAvsluttet(behandling)
 
                     // Avslutter behandling
                     behandlingFlytRepository.oppdaterBehandlingStatus(
@@ -213,11 +211,19 @@ class FlytOrkestrator(
                     loggStopp(behandling, avklaringsbehovene)
                 }
                 val oppdatertBehandling = behandlingRepository.hent(behandling.id)
-                behandlingHendelseService.stoppet(oppdatertBehandling, avklaringsbehovene)
+
+                // Si i fra til behandlingHendelsesService ved stopp i behandlingen.
+                behandlingHendelseSeravice.stoppet(oppdatertBehandling, avklaringsbehovene)
                 return
             }
             gjeldendeSteg = neste
         }
+    }
+
+    private fun validerAtSisteStegstatusErAvsluttet(behandling: Behandling) {
+        val oppdatertBehandling = behandlingRepository.hent(behandling.id)
+        val sisteSteg = oppdatertBehandling.aktivtStegTilstand()
+        require(sisteSteg.status() == StegStatus.AVSLUTTER)
     }
 
     private fun validerAtAvklaringsBehovErLukkede(avklaringsbehovene: Avklaringsbehovene) {
@@ -226,6 +232,10 @@ class FlytOrkestrator(
         }
     }
 
+    /**
+     * Gitt en flyt, utled neste [FlytSteg]. `null` betyr at det er ikke flere steg, og behandlingen
+     * anses som avsluttet.
+     */
     private fun utledNesteSteg(
         result: Transisjon,
         behandlingFlyt: BehandlingFlyt

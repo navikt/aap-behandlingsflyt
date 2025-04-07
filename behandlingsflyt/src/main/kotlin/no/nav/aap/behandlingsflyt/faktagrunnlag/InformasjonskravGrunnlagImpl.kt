@@ -41,7 +41,12 @@ class InformasjonskravGrunnlagImpl(
                 }
             }
 
-        informasjonskravRepository.registrerOppdateringer(kontekst.sakId, kontekst.behandlingId, relevanteInformasjonskrav.map { it.navn }, Instant.now())
+        informasjonskravRepository.registrerOppdateringer(
+            kontekst.sakId,
+            kontekst.behandlingId,
+            relevanteInformasjonskrav.map { it.navn },
+            Instant.now()
+        )
         return endredeInformasjonskrav
     }
 

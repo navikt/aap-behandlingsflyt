@@ -23,7 +23,11 @@ class BehandlingFlyt private constructor(
         val steg: FlytSteg,
         val kravliste: List<Informasjonskravkonstruktør>,
         val oppdaterFaktagrunnlag: Boolean
-    )
+    ) {
+        override fun toString(): String {
+            return "Behandlingsflytsteg(kravliste=${kravliste.map { it.navn }}, steg=${steg.type()}, oppdaterFaktagrunnlag=$oppdaterFaktagrunnlag)"
+        }
+    }
 
     constructor(flyt: List<Behandlingsflytsteg>, årsaker: Map<ÅrsakTilBehandling, List<StegType>>) : this(
         flyt = flyt,
@@ -41,6 +45,11 @@ class BehandlingFlyt private constructor(
         return aktivtSteg?.kravliste ?: emptyList()
     }
 
+    /**
+     * Henter alle faktagrunnlag strengt før (altså, ikke inklusivt) gjeldende steg.
+     *
+     * @return Alle faktagrunnlag, i form av en liste av [Informasjonskravkonstruktør].
+     */
     fun alleFaktagrunnlagFørGjeldendeSteg(): List<Informasjonskravkonstruktør> {
         if (aktivtSteg?.oppdaterFaktagrunnlag != true) {
             return emptyList()
@@ -151,7 +160,8 @@ class BehandlingFlyt private constructor(
 
     fun tilbakeflytEtterEndringer(oppdaterteGrunnlagstype: List<Informasjonskravkonstruktør>): BehandlingFlyt {
         val skalTilSteg =
-            flyt.filter { it.kravliste.any { at -> oppdaterteGrunnlagstype.contains(at) } }.map { it.steg.type() }
+            flyt.filter { it.kravliste.any { at -> oppdaterteGrunnlagstype.contains(at) } }
+                .map { it.steg.type() }
                 .minWithOrNull(compareable())
 
         return utledTilbakeflytTilSteg(skalTilSteg)
@@ -175,7 +185,7 @@ class BehandlingFlyt private constructor(
         )
     }
 
-    fun erTom(): Boolean {
+    internal fun erTom(): Boolean {
         return flyt.isEmpty()
     }
 
@@ -197,7 +207,7 @@ class BehandlingFlyt private constructor(
     }
 
     /**
-     * Lager en kopi av flyten uten årsaker knyttet til steg
+     * Lager en kopi av flyten uten årsaker knyttet til steg.
      */
     fun utenÅrsaker(): BehandlingFlyt {
         return BehandlingFlyt(flyt = flyt)
@@ -214,6 +224,10 @@ class BehandlingFlyt private constructor(
     fun skalOppdatereFaktagrunnlagForSteg(nåværendeSteg: StegType): Boolean {
         return steg(nåværendeSteg).oppdaterFaktagrunnlag
     }
+
+    override fun toString(): String {
+        return "BehandlingFlyt(aktivtSteg=$aktivtSteg, flyt=$flyt, årsaker=$årsaker, parent=$parent)"
+    }
 }
 
 class StegComparator(private var flyt: List<BehandlingFlyt.Behandlingsflytsteg>) : Comparator<StegType> {
@@ -223,7 +237,6 @@ class StegComparator(private var flyt: List<BehandlingFlyt.Behandlingsflytsteg>)
 
         return aIndex.compareTo(bIndex)
     }
-
 }
 
 class BehandlingFlytBuilder {

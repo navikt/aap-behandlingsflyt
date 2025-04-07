@@ -31,6 +31,9 @@ enum class StegStatus {
      */
     TILBAKEFØRT;
 
+    /**
+     * Gitt den definerte rekkefølgen i [rekkefølge], regn ut neste stegstatus.
+     */
     fun neste(): StegStatus {
         val rekkefølge = rekkefølge()
         val indexOf = rekkefølge.indexOf(this)
