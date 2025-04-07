@@ -213,7 +213,7 @@ class FlytOrkestrator(
                 val oppdatertBehandling = behandlingRepository.hent(behandling.id)
 
                 // Si i fra til behandlingHendelsesService ved stopp i behandlingen.
-                behandlingHendelseSeravice.stoppet(oppdatertBehandling, avklaringsbehovene)
+                behandlingHendelseService.stoppet(oppdatertBehandling, avklaringsbehovene)
                 return
             }
             gjeldendeSteg = neste
