@@ -5,14 +5,14 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Refusjonkr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class RefusjonkravLøser(val connection: DBConnection) : AvklaringsbehovsLøser<RefusjonkravLøsning> {
     private val repositoryProvider = RepositoryProvider(connection)
     private val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
-    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+    private val sakRepository = repositoryProvider.provide<SakRepository>()
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: RefusjonkravLøsning): LøsningsResultat {
         val vurdering = validerRefusjonDato(kontekst, løsning)
@@ -27,8 +27,8 @@ class RefusjonkravLøser(val connection: DBConnection) : AvklaringsbehovsLøser<
 
     private fun validerRefusjonDato (kontekst: AvklaringsbehovKontekst, løsning: RefusjonkravLøsning): RefusjonkravVurdering {
         if (løsning.refusjonkravVurdering.harKrav) {
-            val behandling = behandlingRepository.hent(kontekst.behandlingId())
-            val kravDato = behandling.opprettetTidspunkt.toLocalDate()
+            val sak = sakRepository.hent(kontekst.kontekst.sakId)
+            val kravDato = sak.rettighetsperiode.fom
 
             val refusjonFomDato = løsning.refusjonkravVurdering.fom ?: kravDato
             val refusjonTomDato = løsning.refusjonkravVurdering.tom
