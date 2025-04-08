@@ -34,6 +34,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
+import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.JournalpostPathParam
 import no.nav.aap.tilgang.Operasjon
@@ -43,9 +44,34 @@ import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.verdityper.dokument.JournalpostId
 import javax.sql.DataSource
 
-@Suppress("UnauthorizedPost")
 fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
     route("/api/sak").tag(Tags.Sak) {
+        route("/ekstern/finn").authorizedPost<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO>(
+            AuthorizationMachineToMachineConfig(authorizedRoles = listOf("finn-sak"))
+        ) { _, dto ->
+            val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
+                val repositoryProvider = RepositoryProvider(connection)
+                val ident = Ident(dto.ident)
+                val person = repositoryProvider.provide<PersonRepository>().finn(ident)
+
+                if (person == null) {
+                    emptyList()
+                } else {
+                    repositoryProvider.provide<SakRepository>().finnSakerFor(person)
+                        .map { sak ->
+                            SaksinfoDTO(
+                                saksnummer = sak.saksnummer.toString(),
+                                opprettetTidspunkt = sak.opprettetTidspunkt,
+                                periode = sak.rettighetsperiode,
+                                ident = sak.person.aktivIdent().identifikator
+                            )
+                        }
+                }
+
+            }
+            respond(saker)
+        }
+        @Suppress("UnauthorizedPost")
         route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
             val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = RepositoryProvider(connection)
@@ -167,9 +193,9 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
         }
 
         route("") {
+            @Suppress("UnauthorizedGet") // saksoversikt er bare tilgjengelig i DEV og lokalt
             route("/alle").get<Unit, List<SaksinfoDTO>>(TagModule(listOf(Tags.Sak))) {
                 if (Miljø.er() == MiljøKode.DEV || Miljø.er() == MiljøKode.LOKALT) {
-                    // saksoversikt er bare tilgjengelig i DEV og lokalt
                     val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
                         val repositoryProvider = RepositoryProvider(connection)
                         repositoryProvider.provide<SakRepository>().finnAlle().map { sak ->

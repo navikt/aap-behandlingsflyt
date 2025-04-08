@@ -76,6 +76,7 @@ spec:
           permissions:
             roles:
               - "opprett-sak"
+              - "finn-sak"
         - application: dokumentinnhenting
           permissions:
             roles:
