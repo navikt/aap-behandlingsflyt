@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate
 
-import no.nav.aap.behandlingsflyt.exception.VerdiIkkeFunnetException
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import org.slf4j.LoggerFactory
 
 class BehandlingReferanseService(private val behandlingRepositoryImpl: BehandlingRepository) {
