@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.SamordningUføreVurderingGrunnlagDTO
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
@@ -57,6 +58,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                         repositoryProvider.provide<VilkårsresultatRepository>()
 
                     val behandling = behandling(behandlingRepository, req)
+                    val virkningstidspunkt = VirkningstidspunktUtleder(vilkårsresultatRepository = vilkårsresultatRepository).utledVirkningsTidspunkt(behandling.id)
                     val flyt = utledType(behandling.typeBehandling()).flyt()
                     DetaljertBehandlingDTO(
                         referanse = behandling.referanse.referanse,
@@ -102,7 +104,8 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                                         })
                             },
                         aktivtSteg = behandling.aktivtSteg(),
-                        versjon = behandling.versjon
+                        versjon = behandling.versjon,
+                        virkningstidspunkt = virkningstidspunkt
                     )
                 }
                 respond(dto)
