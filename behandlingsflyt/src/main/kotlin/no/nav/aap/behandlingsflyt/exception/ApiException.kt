@@ -16,11 +16,20 @@ open class ApiException(
     override val message: String,
     override val cause: Throwable? = null,
 ) : Exception(message, cause) {
-    fun tilApiErrorResponse() = ApiErrorResponse(
+    fun tilApiErrorResponse() = ApiErrorRespons(
         message = message,
         code = code?.name ?: ApiErrorCode.UKJENT_FEIL.name
     )
 }
+
+class VerdiIkkeFunnetException(
+    override val message: String,
+    override val code: ApiErrorCode? = null,
+) : ApiException(
+    status = HttpStatusCode.NotFound,
+    message = message,
+    code = code ?: ApiErrorCode.IKKE_FUNNET
+)
 
 class IkkeTillattException(
     override val message: String
@@ -30,12 +39,12 @@ class IkkeTillattException(
 )
 
 class UgyldigForespørselException(
-    override val status: HttpStatusCode = HttpStatusCode.BadRequest,
     override val message: String,
+    override val code: ApiErrorCode = ApiErrorCode.UGYLDIG_FORESPØRSEL,
     override val cause: Throwable? = null,
 ) : ApiException(
-    status = status,
-    code = ApiErrorCode.UGYLDIG_FORESPØRSEL,
+    status = HttpStatusCode.BadRequest,
+    code = code,
     message = message,
     cause = cause
 )

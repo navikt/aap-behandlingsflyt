@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.exception.ErrorRespons
 import no.nav.aap.behandlingsflyt.exception.FlytOperasjonException
+import no.nav.aap.behandlingsflyt.exception.GenerellErrorRespons
 
 class OutdatedBehandlingException(årsak: String) : FlytOperasjonException, RuntimeException(årsak) {
     override fun status(): HttpStatusCode {
@@ -10,6 +11,6 @@ class OutdatedBehandlingException(årsak: String) : FlytOperasjonException, Runt
     }
 
     override fun body(): ErrorRespons {
-        return ErrorRespons(cause?.message)
+        return GenerellErrorRespons(cause?.message)
     }
 }

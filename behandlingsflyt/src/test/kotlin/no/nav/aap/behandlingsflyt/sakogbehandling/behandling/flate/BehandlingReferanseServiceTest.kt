@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate
 
-import no.nav.aap.behandlingsflyt.exception.UgyldigForespørselException
+import no.nav.aap.behandlingsflyt.exception.VerdiIkkeFunnetException
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -15,7 +15,7 @@ class BehandlingReferanseServiceTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val repo = BehandlingRepositoryImpl(connection)
             val service = BehandlingReferanseService(repo)
-            assertThrows<UgyldigForespørselException> {
+            assertThrows<VerdiIkkeFunnetException> {
                 service.behandling(
                     BehandlingReferanse(
                         UUID.randomUUID()
