@@ -53,7 +53,7 @@ class TestPerson(
     val sykepenger: List<Sykepenger>? = null,
     val foreldrepenger: List<ForeldrePenger>? = null
 ) {
-    data class Sykepenger(val grad: Number, val periode: Periode)
+    data class Sykepenger(val grad: Int, val periode: Periode)
     data class ForeldrePenger(val grad: Number, val periode: Periode)
 
 
