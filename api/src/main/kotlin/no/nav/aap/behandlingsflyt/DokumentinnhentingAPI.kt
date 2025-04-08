@@ -82,7 +82,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                             funnetISteg = behandling.aktivtSteg(),
                             grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
                             bruker = bruker(),
-                            frist = LocalDate.now() + Period.ofWeeks(4),
+                            frist = LocalDate.now() + Period.ofWeeks(3),
                         )
                         avklaringsbehovene.validerPlassering(behandling = behandling)
 
