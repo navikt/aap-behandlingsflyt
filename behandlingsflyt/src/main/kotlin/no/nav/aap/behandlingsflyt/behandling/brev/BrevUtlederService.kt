@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
+import no.nav.aap.behandlingsflyt.behandling.Resultat
+import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -10,20 +10,18 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 
 class BrevUtlederService(
     private val behandlingRepository: BehandlingRepository,
-    private val underveisRepository: UnderveisRepository,
+    private val resultatUtleder: ResultatUtleder,
 ) {
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov {
         val behandling = behandlingRepository.hent(behandlingId)
 
         when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> {
-                val underveisGrunnlag = underveisRepository.hent(behandlingId)
-                val oppfyltePerioder = underveisGrunnlag.perioder.filter { it.utfall == Utfall.OPPFYLT }
+                val resultat = resultatUtleder.utledResultat(behandlingId)
 
-                return if (oppfyltePerioder.isNotEmpty()) {
-                    BrevBehov(TypeBrev.VEDTAK_INNVILGELSE)
-                } else {
-                    BrevBehov(TypeBrev.VEDTAK_AVSLAG)
+                return when (resultat) {
+                    Resultat.INNVILGELSE -> BrevBehov(TypeBrev.VEDTAK_INNVILGELSE)
+                    Resultat.AVSLAG -> BrevBehov(TypeBrev.VEDTAK_AVSLAG)
                 }
             }
 

@@ -2,6 +2,7 @@
 
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
@@ -62,7 +63,7 @@ class MeldingOmVedtakBrevSteg private constructor(
             return MeldingOmVedtakBrevSteg(
                 BrevUtlederService(
                     behandlingRepository = behandlingRepository,
-                    underveisRepository = underveisRepository,
+                    resultatUtleder = ResultatUtleder(underveisRepository),
                 ),
                 BrevbestillingService(
                     signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository),
