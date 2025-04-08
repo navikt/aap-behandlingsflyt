@@ -1,3 +1,14 @@
 package no.nav.aap.behandlingsflyt.exception
 
-data class ErrorRespons(val message: String?)
+interface ErrorRespons {
+    val message: String?
+}
+
+data class GenerellErrorRespons(
+    override val message: String?
+) : ErrorRespons
+
+data class ApiErrorRespons(
+    override val message: String,
+    val code: String? = null,
+) : ErrorRespons

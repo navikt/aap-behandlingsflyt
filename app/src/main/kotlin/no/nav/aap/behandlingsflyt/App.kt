@@ -1,19 +1,16 @@
 package no.nav.aap.behandlingsflyt
 
-import com.fasterxml.jackson.core.JacksonException
 import com.papsign.ktor.openapigen.model.info.InfoModel
 import com.papsign.ktor.openapigen.route.apiRouting
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.http.*
-import io.ktor.serialization.JsonConvertException
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.aap.behandlingsflyt.api.actuator.actuator
 import no.nav.aap.behandlingsflyt.api.config.definisjoner.configApi
@@ -41,8 +38,6 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerAPI
 import no.nav.aap.behandlingsflyt.drift.driftAPI
-import no.nav.aap.behandlingsflyt.exception.ErrorRespons
-import no.nav.aap.behandlingsflyt.exception.FlytOperasjonException
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
@@ -115,16 +110,12 @@ import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
-import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
-import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangException
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.komponenter.json.DeserializationException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.server.AZURE
@@ -136,7 +127,6 @@ import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
 import org.slf4j.LoggerFactory
-import java.sql.SQLException
 import javax.sql.DataSource
 
 fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
@@ -178,59 +168,7 @@ internal fun Application.server(dbConfig: DbConfig) {
         )
     )
 
-    install(StatusPages) {
-        exception<Throwable> { call, cause ->
-            val logger = LoggerFactory.getLogger(javaClass)
-            val secureLogger = LoggerFactory.getLogger("secureLog")
-            val uri = call.request.local.uri
-            when (cause) {
-                is ElementNotFoundException -> {
-                    call.respondText(status = HttpStatusCode.NotFound, text = cause.message ?: "")
-                }
-
-                is FlytOperasjonException -> {
-                    call.respond(status = cause.status(), message = cause.body())
-                }
-
-                is ManglerTilgangException -> {
-                    logger.warn("Mangler tilgang til å vise route: '$uri'", cause)
-                    call.respondText(status = HttpStatusCode.Forbidden, text = "Forbidden")
-                }
-
-                is IkkeFunnetException -> {
-                    logger.warn("Fikk 404 fra ekstern integrasjon.", cause)
-                    call.respondText(status = HttpStatusCode.NotFound, text = "Ikke funnet")
-                }
-
-                is JacksonException,
-                is JsonConvertException,
-                is DeserializationException -> {
-                    logger.error("Deserialiseringsfeil ved kall til '$uri': ", cause)
-                    call.respond(
-                        status = HttpStatusCode.BadRequest,
-                        message = ErrorRespons("Deserialiseringsfeil ved kall til '$uri'")
-                    )
-                }
-
-                is SQLException -> {
-                    logger.error("SQL-feil ved kall til '$uri' av type ${cause.javaClass.name}. Se sikker logs for flere detaljer.")
-                    secureLogger.error("SQL-feil ved kall til '$uri'.", cause)
-                    call.respond(
-                        status = HttpStatusCode.InternalServerError,
-                        message = ErrorRespons("Feil ved kall til '$uri'")
-                    )
-                }
-
-                else -> {
-                    logger.warn("Ukjent feil ved kall til '$uri'", cause)
-                    call.respond(
-                        status = HttpStatusCode.InternalServerError,
-                        message = ErrorRespons("Feil i backend av type ${cause.javaClass.name} ved kall mot $uri. Se logg for detaljer.")
-                    )
-                }
-            }
-        }
-    }
+    install(StatusPages, StatusPagesConfigHelper.setup())
 
     install(CORS) {
         anyHost()
