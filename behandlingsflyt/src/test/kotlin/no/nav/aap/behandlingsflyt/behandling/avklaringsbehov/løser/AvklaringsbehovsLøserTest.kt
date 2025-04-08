@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.Brevbest
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7RepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningAndreStatligeYtelserRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningUføreRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
@@ -64,6 +65,7 @@ class AvklaringsbehovsLøserTest {
         RepositoryRegistry.register<SamordningAndreStatligeYtelserRepositoryImpl>()
         RepositoryRegistry.register<RefusjonkravRepositoryImpl>()
         RepositoryRegistry.register<UføreRepositoryImpl>()
+        RepositoryRegistry.register<SamordningYtelseRepositoryImpl>()
     }
 
     @Test

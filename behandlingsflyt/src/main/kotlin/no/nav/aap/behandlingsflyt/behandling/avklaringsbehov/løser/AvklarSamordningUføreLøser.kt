@@ -46,7 +46,7 @@ class AvklarSamordningUføreLøser(connection: DBConnection) : AvklaringsbehovsL
             vurderinger.any { vurdering -> vurdering.virkningstidspunkt == uføre.virkningstidspunkt } ?: false
         } ?: true
         if (!harVurdertAllePerioder) {
-            throw UgyldigForespørselException(message = "Har ikke vurdert alle perioder  for samordning uføre for behandling=$behandlingId")
+            throw UgyldigForespørselException(message = "Har ikke vurdert alle perioder for samordning med delvis uføre")
         }
     }
 
