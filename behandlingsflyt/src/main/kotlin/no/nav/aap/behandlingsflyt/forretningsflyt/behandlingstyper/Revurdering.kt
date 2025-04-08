@@ -70,7 +70,8 @@ object Revurdering : BehandlingType {
             .medSteg(steg = VurderStudentSteg)
             .medSteg(
                 steg = VurderSykdomSteg,
-                informasjonskrav = listOf(YrkesskadeService, LegeerklæringService, UføreService), // UføreService trengs her for å trigge ytterligere nedsatt arbeidsevne vurdering
+                // UføreService trengs her for å trigge ytterligere nedsatt arbeidsevne-vurdering
+                informasjonskrav = listOf(YrkesskadeService, LegeerklæringService, UføreService),
                 årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
@@ -21,9 +22,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
+import java.time.Period
 
 class AvklaringsbehovOrkestrator(
     private val connection: DBConnection, private val behandlingHendelseService: BehandlingHendelseService
@@ -153,6 +157,26 @@ class AvklaringsbehovOrkestrator(
 
         avklaringsbehovene.validateTilstand(behandling = behandling)
         avklaringsbehovene.validerPlassering(behandling = behandling)
+        behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
+    }
+
+    fun settPåVentMensVentePåMedisinskeOpplysninger(behandlingId: BehandlingId, bruker: Bruker) {
+        val behandling = behandlingRepository.hent(behandlingId)
+
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
+        avklaringsbehovene.validateTilstand(behandling = behandling)
+
+
+        avklaringsbehovene.leggTil(
+            definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
+            funnetISteg = behandling.aktivtSteg(),
+            grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
+            bruker = bruker,
+            frist = LocalDate.now() + Period.ofWeeks(4),
+        )
+        avklaringsbehovene.validateTilstand(behandling = behandling)
+        avklaringsbehovene.validerPlassering(behandling = behandling)
+
         behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
     }
 }

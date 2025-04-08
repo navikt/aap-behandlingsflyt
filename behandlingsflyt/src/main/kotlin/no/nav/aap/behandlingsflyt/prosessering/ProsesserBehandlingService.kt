@@ -15,7 +15,8 @@ class ProsesserBehandlingService(private val flytJobbRepository: FlytJobbReposit
         behandlingId: BehandlingId,
         parameters: List<Pair<String, String>> = emptyList()
     ) {
-        val eksisterendeJobber = flytJobbRepository.hentJobberForBehandling(behandlingId.toLong())
+        val eksisterendeJobber = flytJobbRepository
+            .hentJobberForBehandling(behandlingId.toLong())
             .filter { it.type() == ProsesserBehandlingJobbUtfører.type() }
 
         if (eksisterendeJobber.isNotEmpty()) {

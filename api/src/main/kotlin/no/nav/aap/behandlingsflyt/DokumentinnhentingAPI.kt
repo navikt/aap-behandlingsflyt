@@ -3,8 +3,7 @@ package no.nav.aap.behandlingsflyt
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.BestillLegeerklæringDto
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrevRequest
@@ -17,7 +16,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.Lege
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringPurringRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
@@ -39,8 +37,6 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
-import java.time.LocalDate
-import java.time.Period
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
@@ -68,33 +64,24 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                             repositoryProvider.provide<SakRepository>().hent((Saksnummer(req.saksnummer)))
                         val behandling = repositoryProvider.provide<BehandlingRepository>()
                             .hent(BehandlingReferanse(req.behandlingsReferanse))
-                        val avklaringsbehovene = repositoryProvider.provide<AvklaringsbehovRepository>()
-                            .hentAvklaringsbehovene(behandling.id)
+
+                        val sakService = SakService(repositoryProvider.provide<SakRepository>())
+                        val behandlingHendelseService =
+                            BehandlingHendelseServiceImpl(
+                                FlytJobbRepository(connection),
+                                repositoryProvider.provide<BrevbestillingRepository>(),
+                                sakService
+                            )
+
+                        AvklaringsbehovOrkestrator(
+                            connection,
+                            behandlingHendelseService
+                        ).settPåVentMensVentePåMedisinskeOpplysninger(behandling.id, bruker())
 
                         val personIdent = sak.person.aktivIdent()
                         val personinfo =
                             GatewayProvider.provide(PersoninfoGateway::class)
                                 .hentPersoninfoForIdent(personIdent, token())
-
-                        avklaringsbehovene.validateTilstand(behandling = behandling)
-                        avklaringsbehovene.leggTil(
-                            definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
-                            funnetISteg = behandling.aktivtSteg(),
-                            grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
-                            bruker = bruker(),
-                            frist = LocalDate.now() + Period.ofWeeks(4),
-                        )
-                        avklaringsbehovene.validerPlassering(behandling = behandling)
-
-                        val sakService = SakService(repositoryProvider.provide<SakRepository>())
-                        val behandlingHendelseService =
-                            BehandlingHendelseServiceImpl(
-                                FlytJobbRepository((connection)),
-                                repositoryProvider.provide<BrevbestillingRepository>(),
-                                sakService
-                            )
-
-                        behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
 
                         val bestillingUUID: String = dokumentinnhentingGateway.bestillLegeerklæring(
                             LegeerklæringBestillingRequest(

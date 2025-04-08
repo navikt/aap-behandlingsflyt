@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
@@ -20,7 +19,7 @@ import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårsperiodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.pip.PipRepository
-import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -32,7 +31,6 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.motor.JobbInput
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
@@ -135,11 +133,9 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                         && behandling.harIkkeVærtAktivitetIDetSiste()
                         && flytJobbRepository.hentJobberForBehandling(behandling.id.toLong()).isEmpty()
                     ) {
-                        flytJobbRepository.leggTil(
-                            JobbInput(ProsesserBehandlingJobbUtfører).forBehandling(
-                                behandling.sakId.toLong(),
-                                behandling.id.toLong()
-                            )
+                        ProsesserBehandlingService(flytJobbRepository).triggProsesserBehandling(
+                            behandling.sakId,
+                            behandling.id
                         )
                     }
                     taSkriveLåsRepository.verifiserSkrivelås(lås)
