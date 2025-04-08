@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
+import no.nav.aap.behandlingsflyt.exception.UgyldigForespørselException
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
@@ -77,7 +78,7 @@ class AvklarSykdomLøser(connection: DBConnection) : AvklaringsbehovsLøser<Avkl
                     it.verdi,
                     harYrkesskade,
                 )
-                throw IllegalStateException("Sykdomsvurdering og yrkesskade har ikke konsistente verdier")
+                throw UgyldigForespørselException("Sykdomsvurdering og yrkesskade har ikke konsistente verdier")
             }
         }
     }
