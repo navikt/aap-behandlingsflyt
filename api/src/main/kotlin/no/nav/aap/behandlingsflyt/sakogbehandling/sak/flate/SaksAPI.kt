@@ -5,11 +5,10 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
-import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
-import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.exception.VerdiIkkeFunnetException
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -110,7 +109,9 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 if (sakerMedTilgang.isNotEmpty()) {
                     respond(sakerMedTilgang)
                 } else {
-                    respondWithStatus(HttpStatusCode.NotFound)
+                    // TODO:
+                    //  Bedre skille på om sak faktisk ikke finnes eller om sb mangler tilgang (unntak på gradering)
+                    throw VerdiIkkeFunnetException("Fant ikke sak for ident")
                 }
             }
         }
@@ -209,7 +210,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     }
                     respond(saker)
                 } else {
-                    respondWithStatus(HttpStatusCode.NotFound)
+                    throw VerdiIkkeFunnetException("Fant ingen saker")
                 }
             }
         }

@@ -32,7 +32,7 @@ object StatusPagesConfigHelper {
                 }
 
                 is ApiException -> {
-                    logger.warn("En feil oppsto", cause)
+                    logger.warn(cause.message, cause)
                     call.respondWithError(cause)
                 }
 
