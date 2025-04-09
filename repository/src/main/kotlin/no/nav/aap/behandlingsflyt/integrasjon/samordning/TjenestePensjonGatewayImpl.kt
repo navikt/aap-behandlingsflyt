@@ -35,7 +35,7 @@ class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
                 Header("fnr", request.fnr),
             )
         )
-        println("full url: ${URI.create("${url}?fomDate=${request.periode.fom}&tomDate=${request.periode.tom}")}")
+
         return requireNotNull(client.get(
             uri = URI.create("${url}?fomDate=${request.periode.fom}&tomDate=${request.periode.tom}"),
             request = httpRequest,
