@@ -40,7 +40,7 @@ fun NormalOpenAPIRoute.underveisVurderingerAPI(datasource: DataSource) {
         }
 
         if (underveisGrunnlag == null) {
-            respondWithStatus(HttpStatusCode.NotFound)
+            respond(emptyList())
         } else {
             respond(underveisGrunnlag.perioder.map(::UnderveisperiodeDto))
         }
