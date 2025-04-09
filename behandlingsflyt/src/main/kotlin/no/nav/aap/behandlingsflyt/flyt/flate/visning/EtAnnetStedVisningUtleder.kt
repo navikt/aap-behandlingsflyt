@@ -6,6 +6,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 
+// Er ikke ubrukt, men blir opprettet med refleksjon
+@Suppress("unused")
 class EtAnnetStedVisningUtleder(connection: DBConnection) : StegGruppeVisningUtleder {
 
     private val institusjonsoppholdRepository = RepositoryProvider(connection).provide<InstitusjonsoppholdRepository>()
