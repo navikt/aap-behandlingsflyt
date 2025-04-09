@@ -28,9 +28,7 @@ class TjenestePensjonService(
 
         override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
             return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse() && oppdatert.ikkeKjørtSiste(
-                Duration.ofHours(
-                    1
-                )
+                Duration.ofHours(1)
             )
         }
 
