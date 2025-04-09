@@ -45,7 +45,7 @@ data class DokumentoversiktFagsak(val journalposter: List<Journalpost>)
 data class SafDokumentversiktFagsakData(val dokumentoversiktFagsak: DokumentoversiktFagsak?)
 
 enum class Variantformat {
-    ARKIV, SLADDET, ORIGINAL, PRODUKSJON
+    ARKIV, SLADDET, ORIGINAL, PRODUKSJON, FULLVERSJON
 }
 
 enum class Journalposttype {
