@@ -48,18 +48,22 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
 
         val foedselsdato = PdlParser.utledFødselsdato(response.data?.hentPerson?.foedselsdato)
             ?: return null
-        val gyldigFom = response.data?.hentPerson?.statsborgerskap?.firstOrNull()?.gyldigFraOgMed ?: foedselsdato.toLocalDate()
 
         val status = requireNotNull(response.data?.hentPerson?.folkeregisterpersonstatus?.firstOrNull()?.status)
-        val land = requireNotNull(response.data?.hentPerson?.statsborgerskap?.firstOrNull()?.land)
+
+        val statsborgerskap = requireNotNull(response.data?.hentPerson?.statsborgerskap?.map {
+            Statsborgerskap(
+                land = it.land,
+                gyldigFraOgMed = it.gyldigFraOgMed,
+                gyldigTilOgMed = it.gyldigTilOgMed
+            )
+        })
 
         return Personopplysning(
             id = 0, // Setter no bs her for å få det gjennom
             fødselsdato = foedselsdato,
             dødsdato = response.data?.hentPerson?.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) },
-            land = land,
-            gyldigFraOgMed = gyldigFom,
-            gyldigTilOgMed = response.data?.hentPerson?.statsborgerskap?.firstOrNull()?.gyldigTilOgMed,
+            statsborgerskap = statsborgerskap,
             status = status
         )
     }

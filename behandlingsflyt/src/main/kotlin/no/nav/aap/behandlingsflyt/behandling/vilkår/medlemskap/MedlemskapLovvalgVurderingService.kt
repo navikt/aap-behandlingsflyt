@@ -87,7 +87,7 @@ class MedlemskapLovvalgVurderingService {
     }
 
     private fun manglerStatsborgerskapIEØS(grunnlag: PersonopplysningGrunnlag): TilhørighetVurdering {
-        val manglerEØS = grunnlag.brukerPersonopplysning.land !in enumValues<EØSLand>().map { it.name }
+        val manglerEØS = grunnlag.brukerPersonopplysning.statsborgerskap.none{it.land in enumValues<EØSLand>().map { eøsLand -> eøsLand.name }}
         val jsonGrunnlag = grunnlag.let { DefaultJsonMapper.toJson(it) } // TODO: Her må vi faktisk lande hva vi vil ha ut
         return TilhørighetVurdering(listOf(Kilde.PDL), Indikasjon.UTENFOR_NORGE, "Mangler statsborgerskap i EØS", manglerEØS, jsonGrunnlag)
     }
