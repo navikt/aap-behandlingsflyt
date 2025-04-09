@@ -138,6 +138,7 @@ object FakeServers : AutoCloseable {
     private val datadeling = embeddedServer(Netty, port = 0, module = { datadelingFake() })
     private val utbetal = embeddedServer(Netty, port = 0, module = { utbetalFake() })
     private val meldekort = embeddedServer(Netty, port = 0, module = { meldekortFake() })
+    private val tjenestePensjon = embeddedServer(Netty, port = 0, module = { tjenestePensjonFake() })
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
@@ -300,6 +301,34 @@ object FakeServers : AutoCloseable {
                     PERSON_BOLK_QUERY -> call.respond(barn(req))
                     else -> call.respond(HttpStatusCode.BadRequest)
                 }
+            }
+        }
+    }
+
+    private fun Application.tjenestePensjonFake(){
+        install(ContentNegotiation) {
+            jackson {
+                registerModule(JavaTimeModule())
+            }
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@tjenestePensjonFake.log.info("TP :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                call.respond(
+                    status = HttpStatusCode.InternalServerError,
+                    message = ErrorRespons(cause.message)
+                )
+            }
+        }
+        //create route
+        routing {
+            get("/api/tjenestepensjon/tpNrWithYtelse") {
+                val fomDate = call.request.queryParameters["fomDate"]
+                val tomDate = call.request.queryParameters["tomDate"]
+
+                val response = listOf("12345678987654321")
+
+                call.respond(response)
             }
         }
     }
@@ -1553,6 +1582,7 @@ object FakeServers : AutoCloseable {
         datadeling.start()
         utbetal.start()
         meldekort.start()
+        tjenestePensjon.start()
 
         println("AZURE PORT ${azure.port()}")
 
@@ -1649,6 +1679,10 @@ object FakeServers : AutoCloseable {
         // Meldekort
         System.setProperty("integrasjon.meldekort.url", "http://localhost:${meldekort.port()}")
         System.setProperty("integrasjon.meldekort.scope", "meldekort")
+
+        //tjenestepensjon
+        System.setProperty("integrasjon.tjenestepensjon.url", "http://localhost:${tjenestePensjon.port()}")
+        System.setProperty("integrasjon.tjenestepensjon.scope", "tjenestepensjon")
     }
 
     override fun close() {
@@ -1674,6 +1708,7 @@ object FakeServers : AutoCloseable {
         datadeling.stop(0L, 0L)
         utbetal.stop(0L, 0L)
         meldekort.stop(0L, 0L)
+        tjenestePensjon.stop(0L, 0L)
     }
 }
 

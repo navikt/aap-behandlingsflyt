@@ -85,6 +85,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.meldekort.MeldekortGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.TjenestePensjonGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreGateway
 import no.nav.aap.behandlingsflyt.integrasjon.utbetaling.UtbetalingGatewayImpl
@@ -119,6 +120,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordni
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningUføreRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
@@ -247,6 +249,7 @@ class FlytOrkestratorTest {
                 .register<SamordningAndreStatligeYtelserRepositoryImpl>()
                 .register<RefusjonkravRepositoryImpl>()
                 .register<InformasjonskravRepositoryImpl>()
+                .register<TjenestePensjonRepositoryImpl>()
                 .status()
             GatewayRegistry
                 .register<PdlBarnGateway>()
@@ -267,6 +270,7 @@ class FlytOrkestratorTest {
                 .register<UføreGateway>()
                 .register<YrkesskadeRegisterGatewayImpl>()
                 .register<MeldekortGatewayImpl>()
+                .register<TjenestePensjonGatewayImpl>()
             motor.start()
         }
 

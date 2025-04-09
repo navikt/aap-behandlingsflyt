@@ -9,6 +9,7 @@ enum class InformasjonskravNavn {
     INNTEKT,
     LOVVALG,
     SAMORDNING_YTELSE,
+    SAMORDNING_TJENESTEPENSJON,
     LEGEERKLÆRING,
     SØKNAD,
     INSTITUSJONSOPPHOLD,

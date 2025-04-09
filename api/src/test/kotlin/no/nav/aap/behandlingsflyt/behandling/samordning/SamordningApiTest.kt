@@ -28,13 +28,13 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTjenestePensjonRepository
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.gateway.GatewayRegistry
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -56,6 +56,7 @@ class SamordningApiKtTest {
                 .register<InMemorySamordningVurderingRepository>()
                 .register<InMemorySamordningYtelseRepository>()
                 .register<InMemoryBehandlingRepository>()
+                .register<InMemoryTjenestePensjonRepository>()
 
             GatewayRegistry
                 .register<FakeTilgangGateway>()
@@ -118,7 +119,8 @@ class SamordningApiKtTest {
                     vurderinger = listOf(),
                     begrunnelse = null,
                     maksDato = null,
-                    maksDatoEndelig = null
+                    maksDatoEndelig = null,
+                    tpYtelser = null,
                 )
             )
 
