@@ -94,6 +94,9 @@ class PersonopplysningRepositoryImpl(
                     id = id,
                     fødselsdato = Fødselsdato(row.getLocalDate("FODSELSDATO")),
                     dødsdato = row.getLocalDateOrNull("dodsdato")?.let { Dødsdato(it) },
+                    land = row.getString("LAND"),
+                    gyldigFraOgMed = row.getLocalDateOrNull("GYLDIGFRAOGMED"),
+                    gyldigTilOgMed = row.getLocalDateOrNull("GYLDIGTILOGMED"),
                     statsborgerskap = hentStatsborgerskap(row.getLongOrNull("LANDKODER_ID")),
                     status = row.getEnum("STATUS")
                 )
