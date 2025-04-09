@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingFlytRepos
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -47,7 +46,6 @@ class ProsesserBehandlingJobbUtfører(
             val behandlingFlytRepository =
                 repositoryProvider.provide<BehandlingFlytRepository>()
             val sakRepository = repositoryProvider.provide<SakRepository>()
-            val sakFlytRepository = repositoryProvider.provide<SakFlytRepository>()
             val låsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
             val avklaringsbehovRepository =
                 repositoryProvider.provide<AvklaringsbehovRepository>()
@@ -60,7 +58,7 @@ class ProsesserBehandlingJobbUtfører(
                     behandlingFlytRepository = behandlingFlytRepository,
                     avklaringsbehovRepository = avklaringsbehovRepository,
                     informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(repositoryProvider.provide(), connection),
-                    sakRepository = sakFlytRepository,
+                    sakRepository = sakRepository,
                     perioderTilVurderingService = PerioderTilVurderingService(
                         SakService(sakRepository),
                         behandlingRepository,

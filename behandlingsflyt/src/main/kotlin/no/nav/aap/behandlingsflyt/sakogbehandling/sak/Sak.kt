@@ -19,7 +19,7 @@ class Sak(
     }
 
     override fun toString(): String {
-        return "Sak(id=$id, saksnummer='$saksnummer, person=$person, periode=$rettighetsperiode, status=$status')"
+        return "Sak(id=$id, saksnummer=$saksnummer, person=$person, rettighetsperiode=$rettighetsperiode, status=$status, opprettetTidspunkt=$opprettetTidspunkt)"
     }
 
     override fun equals(other: Any?): Boolean {

@@ -95,29 +95,6 @@ class SakOgBehandlingService(
         return finnEllerOpprettBehandling(sak.id, årsaker)
     }
 
-    private fun utledBehandlingstype(sisteBehandlingForSak: Behandling?, årsaker: List<Årsak>): TypeBehandling {
-        return if (årsaker.any { it.type == ÅrsakTilBehandling.MOTATT_KLAGE }) {
-            when (sisteBehandlingForSak) {
-                null -> throw IllegalArgumentException("Mottok klage, men det finnes ingen eksisterende behandling")
-                else -> TypeBehandling.Klage
-            }
-        } else {
-            when (sisteBehandlingForSak) {
-                null -> TypeBehandling.Førstegangsbehandling
-                else -> TypeBehandling.Revurdering
-            }
-        }
-    }
-
-    private fun validerStegStatus(behandling: Behandling) {
-        val flyt = utledType(behandling.typeBehandling()).flyt()
-        // TODO Utvide med regler for hva som kan knyttes til en behandling og når den eventuelt skal tilbake likevel
-        // Om den skal tilbake krever det endringer for å ta hensyn til disse
-        if (!flyt.skalOppdatereFaktagrunnlag()) {
-            throw IllegalStateException("Behandlingen[${behandling.referanse}] kan ikke motta opplysinger nå, avventer fullføring av steg som ligger etter at oppdatering av faktagrunnlag opphører.")
-        }
-    }
-
     fun hentSakFor(behandlingId: BehandlingId): Sak {
         val behandling = behandlingRepository.hent(behandlingId)
         return sakRepository.hent(behandling.sakId)
@@ -142,6 +119,29 @@ class SakOgBehandlingService(
             ) // TODO: Usikker på om dette blir helt korrekt..
             if (periode != rettighetsperiode) {
                 sakRepository.oppdaterRettighetsperiode(sakId, periode)
+            }
+        }
+    }
+
+    private fun validerStegStatus(behandling: Behandling) {
+        val flyt = utledType(behandling.typeBehandling()).flyt()
+        // TODO Utvide med regler for hva som kan knyttes til en behandling og når den eventuelt skal tilbake likevel
+        // Om den skal tilbake krever det endringer for å ta hensyn til disse
+        if (!flyt.skalOppdatereFaktagrunnlag()) {
+            throw IllegalStateException("Behandlingen[${behandling.referanse}] kan ikke motta opplysinger nå, avventer fullføring av steg som ligger etter at oppdatering av faktagrunnlag opphører.")
+        }
+    }
+
+    private fun utledBehandlingstype(sisteBehandlingForSak: Behandling?, årsaker: List<Årsak>): TypeBehandling {
+        return if (årsaker.any { it.type == ÅrsakTilBehandling.MOTATT_KLAGE }) {
+            when (sisteBehandlingForSak) {
+                null -> throw IllegalArgumentException("Mottok klage, men det finnes ingen eksisterende behandling")
+                else -> TypeBehandling.Klage
+            }
+        } else {
+            when (sisteBehandlingForSak) {
+                null -> TypeBehandling.Førstegangsbehandling
+                else -> TypeBehandling.Revurdering
             }
         }
     }

@@ -196,7 +196,7 @@ import java.util.*
 class FlytOrkestratorTest {
 
     companion object {
-        private val dataSource = InitTestDatabase.dataSource
+        private val dataSource = InitTestDatabase.freshDatabase()
         private val motor = Motor(dataSource, 8, jobber = ProsesseringsJobber.alle())
         private val hendelsesMottak = TestHendelsesMottak(dataSource)
         private val util =
@@ -2451,7 +2451,7 @@ class FlytOrkestratorTest {
 
     @Test
     fun `kan tilbakeføre behandling til start`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val ident = ident()
             val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             val behandlingRepo = BehandlingRepositoryImpl(connection)
@@ -2551,7 +2551,7 @@ class FlytOrkestratorTest {
             )
         )
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             assertThat(nyBehandling.typeBehandling() == TypeBehandling.Klage)
 
             val avklaringsbehovene = hentAvklaringsbehov(nyBehandling.id, connection)

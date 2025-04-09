@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.*
 import no.nav.aap.komponenter.type.Periode
 import java.util.concurrent.atomic.AtomicLong
 
-object InMemorySakRepository : SakRepository, SakFlytRepository {
+object InMemorySakRepository : SakRepository {
 
     private val idSeq = AtomicLong(10000)
     private val memory = HashMap<SakId, Sak>()

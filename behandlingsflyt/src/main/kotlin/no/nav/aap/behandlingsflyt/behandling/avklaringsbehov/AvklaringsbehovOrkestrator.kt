@@ -17,12 +17,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingFlytRepos
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.auth.Bruker
-import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import org.slf4j.LoggerFactory
@@ -36,7 +34,6 @@ class AvklaringsbehovOrkestrator(
     private val repositoryProvider = RepositoryProvider(connection)
     private val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
     private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-    private val sakFlytRepository = repositoryProvider.provide<SakFlytRepository>()
     private val sakRepository = repositoryProvider.provide<SakRepository>()
     private val prosesserBehandling = ProsesserBehandlingService(FlytJobbRepository(connection))
 
@@ -109,7 +106,7 @@ class AvklaringsbehovOrkestrator(
                 repositoryProvider.provide(),
                 connection,
             ),
-            sakRepository = sakFlytRepository,
+            sakRepository = sakRepository,
             perioderTilVurderingService = PerioderTilVurderingService(
                 SakService(sakRepository),
                 behandlingRepository,

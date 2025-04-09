@@ -23,8 +23,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import org.slf4j.LoggerFactory
 
@@ -45,7 +45,7 @@ class FlytOrkestrator(
     private val stegKonstruktør: StegKonstruktør,
     private val perioderTilVurderingService: PerioderTilVurderingService,
     private val informasjonskravGrunnlag: InformasjonskravGrunnlag,
-    private val sakRepository: SakFlytRepository,
+    private val sakRepository: SakRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val behandlingRepository: BehandlingRepository,
     private val behandlingFlytRepository: BehandlingFlytRepository,
