@@ -31,6 +31,7 @@ class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
     override fun hentTjenestePensjon(request: TjenestePensjonRequest): TjenestePensjon {
         val httpRequest = GetRequest(
             additionalHeaders = listOf(
+                Header("Accept", "application/json"),
                 Header("fnr", request.fnr),
             )
         )
