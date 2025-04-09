@@ -16,6 +16,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangException
 import no.nav.aap.komponenter.json.DeserializationException
 import org.slf4j.LoggerFactory
+import java.net.http.HttpTimeoutException
 import java.sql.SQLException
 
 object StatusPagesConfigHelper {
@@ -75,6 +76,16 @@ object StatusPagesConfigHelper {
                     secureLogger.error("SQL-feil ved kall til '$uri'.", cause)
 
                     call.respondWithError(InternfeilException("Feil ved kall til '$uri'"))
+                }
+
+                is HttpTimeoutException -> {
+                    logger.warn("Timeout ved kall til '$uri'", cause)
+                    call.respondWithError(
+                        ApiException(
+                            status = HttpStatusCode.RequestTimeout,
+                            message = "Forespørselen tok for lang tid. Prøv igjen om litt."
+                        )
+                    )
                 }
 
                 else -> {
