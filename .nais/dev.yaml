@@ -97,6 +97,7 @@ spec:
         - host: fpabakus.dev-fss-pub.nais.io
         - host: aareg-services-q1.dev-fss-pub.nais.io
         - host: pensjon-pen-q2.dev-fss-pub.nais.io
+        - host: tp-api.dev-fss-pub.nais.io
       rules:
         - application: brev
         - application: tilgang
