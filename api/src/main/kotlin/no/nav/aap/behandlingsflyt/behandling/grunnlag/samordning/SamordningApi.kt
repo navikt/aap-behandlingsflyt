@@ -9,6 +9,8 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
@@ -44,6 +46,7 @@ data class SamordningYtelseVurderingGrunnlagDTO(
     val maksDatoEndelig: Boolean?,
     val ytelser: List<SamordningYtelseDTO>,
     val vurderinger: List<SamordningVurderingDTO>,
+    val tpYtelser: TjenestePensjon?,
 )
 
 data class SamordningYtelseDTO(
@@ -158,10 +161,11 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                 )
             )
             { req ->
-                val (registerYtelser, samordning) = dataSource.transaction { connection ->
+                val (registerYtelser, samordning, tp) = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val samordningRepository = repositoryProvider.provide<SamordningVurderingRepository>()
                     val samordningYtelseRepository = repositoryProvider.provide<SamordningYtelseRepository>()
+                    val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
 
                     val behandling =
                         BehandlingReferanseService(repositoryProvider.provide<BehandlingRepository>()).behandling(req)
@@ -173,7 +177,9 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                             behandling.id
                         )
 
-                    Pair(perioderMedEndringer, samordning)
+                    val tp = tjenestePensjonRepository.hentHvisEksisterer(behandling.id)
+
+                    Triple(perioderMedEndringer, samordning, tp)
                 }
 
                 val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
@@ -209,7 +215,8 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                         },
                         begrunnelse = samordning?.begrunnelse,
                         maksDato = samordning?.maksDato,
-                        maksDatoEndelig = samordning?.maksDatoEndelig
+                        maksDatoEndelig = samordning?.maksDatoEndelig,
+                        tpYtelser = tp
                     )
                 )
 
