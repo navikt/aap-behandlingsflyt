@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.integrasjon.samordning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
@@ -10,6 +10,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper.fromJson
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.gateway.Factory
 import java.net.URI
 
@@ -28,16 +29,16 @@ class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
         tokenProvider = ClientCredentialsTokenProvider,
     )
 
-    override fun hentTjenestePensjon(request: TjenestePensjonRequest): TjenestePensjon {
+    override fun hentTjenestePensjon(ident: String, periode: Periode): TjenestePensjon {
         val httpRequest = GetRequest(
             additionalHeaders = listOf(
                 Header("Accept", "application/json"),
-                Header("fnr", request.fnr),
+                Header("fnr", ident),
             )
         )
 
         return requireNotNull(client.get(
-            uri = URI.create("${url}?fomDate=${request.periode.fom}&tomDate=${request.periode.tom}"),
+            uri = URI.create("${url}?fomDate=${periode.fom}&tomDate=${periode.tom}"),
             request = httpRequest,
             mapper = { body, _ ->
                 val list = fromJson<List<String>>(body)

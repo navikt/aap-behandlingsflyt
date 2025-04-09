@@ -75,10 +75,9 @@ class TjenestePensjonService(
         rettigetsperiode: Periode
     ): TjenestePensjon {
         return tpGateway.hentTjenestePensjon(
-            TjenestePensjonRequest(
-                fnr = personIdent,
-                periode = rettigetsperiode
-            )
+                personIdent,
+                rettigetsperiode
+
         )
     }
 
