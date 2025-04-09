@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortService
@@ -37,6 +38,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RefusjonkravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningAndreStatligeYtelserSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningAvslagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningUføreSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SimulerUtbetalingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.UnderveisSteg
@@ -49,7 +51,6 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderStudentSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningUføreSteg
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 
 object Revurdering : BehandlingType {
@@ -165,7 +166,7 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = SamordningSteg,
-                informasjonskrav = listOf(SamordningYtelseVurderingService),
+                informasjonskrav = listOf(SamordningYtelseVurderingService, TjenestePensjonService),
                 årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING)
             )
             .medSteg(steg = SamordningUføreSteg, informasjonskrav = listOf(UføreService))
