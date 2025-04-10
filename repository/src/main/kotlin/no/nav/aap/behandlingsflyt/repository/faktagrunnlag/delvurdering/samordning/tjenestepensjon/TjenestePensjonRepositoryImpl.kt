@@ -83,7 +83,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
             INSERT INTO TJENESTEPENSJON_YTELSE (TJENESTEPENSJON_YTELSER_ID,TP_NUMMER)
             VALUES (?, ?)
         """.trimIndent(),
-            tjenestePensjon.tp
+            tjenestePensjon.tpNr
             ) {
             setParams {
                 setLong(1, tyId)

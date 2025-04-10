@@ -55,12 +55,12 @@ class TjenestePensjonService(
             sak.rettighetsperiode
         )
 
-        log.info("hentet tjeneste pensjon for person i sak ${sak.saksnummer}. Antall: ${tjenestePensjon.tp.size}")
+        log.info("hentet tjeneste pensjon for person i sak ${sak.saksnummer}. Antall: ${tjenestePensjon.tpNr.size}")
 
         val eksisterendeData = tjenestePensjonRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         if (harEndringerITjenestePensjon(eksisterendeData, tjenestePensjon)) {
-            log.info("Oppdaterer tjeneste pensjon for behandling ${kontekst.behandlingId}. Tjeneste pensjon funnet: ${tjenestePensjon.tp}")
+            log.info("Oppdaterer tjeneste pensjon for behandling ${kontekst.behandlingId}. Tjeneste pensjon funnet: ${tjenestePensjon.tpNr}")
             tjenestePensjonRepository.lagre(kontekst.behandlingId, tjenestePensjon)
             return Informasjonskrav.Endret.ENDRET
         }
@@ -83,6 +83,6 @@ class TjenestePensjonService(
         eksisterendeData: TjenestePensjon?,
         tjenestePensjon: TjenestePensjon
     ): Boolean {
-        return eksisterendeData == null || eksisterendeData.tp != tjenestePensjon.tp
+        return eksisterendeData == null || eksisterendeData.tpNr != tjenestePensjon.tpNr
     }
 }
