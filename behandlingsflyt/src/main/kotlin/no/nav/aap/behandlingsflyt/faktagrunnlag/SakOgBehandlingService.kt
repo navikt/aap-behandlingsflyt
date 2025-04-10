@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.flyt.utledType
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -8,6 +9,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.BehandlingTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.BeriketBehandling
@@ -93,6 +95,22 @@ class SakOgBehandlingService(
         val sak = sakRepository.hent(saksnummer)
 
         return finnEllerOpprettBehandling(sak.id, årsaker)
+    }
+
+    fun lukkBehandling(behandlingId: BehandlingId) {
+        // Valider siste stegstatus behandlingen
+        validerAtSisteStegstatusErAvsluttet(behandlingId)
+
+        behandlingRepository.oppdaterBehandlingStatus(
+            behandlingId = behandlingId,
+            status = Status.AVSLUTTET
+        )
+    }
+
+    private fun validerAtSisteStegstatusErAvsluttet(behandlingId: BehandlingId) {
+        val oppdatertBehandling = behandlingRepository.hent(behandlingId)
+        val sisteSteg = oppdatertBehandling.aktivtStegTilstand()
+        require(sisteSteg.status() == StegStatus.AVSLUTTER)
     }
 
     fun hentSakFor(behandlingId: BehandlingId): Sak {

@@ -2,13 +2,14 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.steg.internal.StegKonstruktørImpl
 import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
@@ -43,8 +44,6 @@ class ProsesserBehandlingJobbUtfører(
         override fun konstruer(connection: DBConnection): JobbUtfører {
             val repositoryProvider = RepositoryProvider(connection)
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val behandlingFlytRepository =
-                repositoryProvider.provide<BehandlingFlytRepository>()
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val låsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
             val avklaringsbehovRepository =
@@ -55,7 +54,6 @@ class ProsesserBehandlingJobbUtfører(
                     stegKonstruktør = StegKonstruktørImpl(connection),
                     ventebehovEvaluererService = VentebehovEvaluererServiceImpl(connection),
                     behandlingRepository = behandlingRepository,
-                    behandlingFlytRepository = behandlingFlytRepository,
                     avklaringsbehovRepository = avklaringsbehovRepository,
                     informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(repositoryProvider.provide(), connection),
                     sakRepository = sakRepository,
@@ -63,6 +61,11 @@ class ProsesserBehandlingJobbUtfører(
                         SakService(sakRepository),
                         behandlingRepository,
                         repositoryProvider.provide()
+                    ),
+                    sakOgBehandlingService = SakOgBehandlingService(
+                        GrunnlagKopiererImpl(connection),
+                        sakRepository,
+                        behandlingRepository
                     ),
                     behandlingHendelseService = BehandlingHendelseServiceImpl(
                         FlytJobbRepository(connection),

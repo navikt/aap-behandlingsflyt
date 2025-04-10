@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyBehandlingHendelseService
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyInformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyStegKonstruktør
@@ -13,6 +15,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -45,11 +48,18 @@ class EnklereFlytOrkestratorTest {
         ),
         informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
         behandlingRepository = behandlingRepository,
-        behandlingFlytRepository = behandlingRepository,
         ventebehovEvaluererService = DummyVentebehovEvaluererService(),
         sakRepository = sakRepository,
         avklaringsbehovRepository = avklaringsbehovRepository,
-        behandlingHendelseService = DummyBehandlingHendelseService
+        behandlingHendelseService = DummyBehandlingHendelseService,
+        sakOgBehandlingService = SakOgBehandlingService(
+            object : GrunnlagKopierer {
+                override fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
+                }
+            },
+            sakRepository,
+            behandlingRepository
+        ),
     )
 
     @Test
@@ -65,7 +75,8 @@ class EnklereFlytOrkestratorTest {
         flytOrkestrator.forberedOgProsesserBehandling(flytKontekst)
 
         assertThat(behandlingRepository.hentStegHistorikk(behandling.id)).isNotEmpty()
-        assertThat(behandlingRepository.hentStegHistorikk(behandling.id).map { tilstand -> tilstand.steg() }.distinct()).containsExactlyElementsOf(
+        assertThat(behandlingRepository.hentStegHistorikk(behandling.id).map { tilstand -> tilstand.steg() }
+            .distinct()).containsExactlyElementsOf(
             Førstegangsbehandling.flyt().stegene()
         )
 
@@ -94,11 +105,18 @@ class EnklereFlytOrkestratorTest {
             ),
             informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
             behandlingRepository = behandlingRepository,
-            behandlingFlytRepository = behandlingRepository,
             ventebehovEvaluererService = DummyVentebehovEvaluererService(),
             sakRepository = sakRepository,
             avklaringsbehovRepository = avklaringsbehovRepository,
-            behandlingHendelseService = behandlingHendelseService
+            behandlingHendelseService = behandlingHendelseService,
+            sakOgBehandlingService = SakOgBehandlingService(
+                object : GrunnlagKopierer {
+                    override fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
+                    }
+                },
+                sakRepository,
+                behandlingRepository
+            ),
         )
 
         val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
@@ -128,7 +146,8 @@ class EnklereFlytOrkestratorTest {
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         assertThat(behandling.aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
         assertThat(behandlingRepository.hentStegHistorikk(behandling.id)).isNotEmpty()
-        assertThat(behandlingRepository.hentStegHistorikk(behandling.id).map { tilstand -> tilstand.steg() }.distinct()).containsExactlyElementsOf(
+        assertThat(behandlingRepository.hentStegHistorikk(behandling.id).map { tilstand -> tilstand.steg() }
+            .distinct()).containsExactlyElementsOf(
             listOf(
                 StegType.START_BEHANDLING,
                 StegType.VURDER_LOVVALG,
@@ -146,7 +165,8 @@ class EnklereFlytOrkestratorTest {
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         assertThat(behandling.aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
         assertThat(behandlingRepository.hentStegHistorikk(behandling.id)).isNotEmpty()
-        assertThat(behandlingRepository.hentStegHistorikk(behandling.id).map { tilstand -> tilstand.steg() }.distinct()).containsExactlyElementsOf(
+        assertThat(behandlingRepository.hentStegHistorikk(behandling.id).map { tilstand -> tilstand.steg() }
+            .distinct()).containsExactlyElementsOf(
             listOf(
                 StegType.START_BEHANDLING,
                 StegType.VURDER_LOVVALG,
@@ -169,7 +189,8 @@ class EnklereFlytOrkestratorTest {
         flytOrkestrator.forberedOgProsesserBehandling(flytKontekst3)
 
         assertThat(behandlingRepository.hentStegHistorikk(behandling.id)).isNotEmpty()
-        assertThat(behandlingRepository.hentStegHistorikk(behandling.id).map { tilstand -> tilstand.steg() }.distinct()).containsExactlyElementsOf(
+        assertThat(behandlingRepository.hentStegHistorikk(behandling.id).map { tilstand -> tilstand.steg() }
+            .distinct()).containsExactlyElementsOf(
             Førstegangsbehandling.flyt().stegene()
         )
 
@@ -228,11 +249,27 @@ class EnklereFlytOrkestratorTest {
                     aktiv = false
                 ),
                 StegTilstand(stegType = StegType.VURDER_LOVVALG, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
-                StegTilstand(stegType=StegType.FASTSETT_MELDEPERIODER, stegStatus=StegStatus.START, aktiv=false),
-                StegTilstand(stegType=StegType.FASTSETT_MELDEPERIODER, stegStatus=StegStatus.OPPDATER_FAKTAGRUNNLAG, aktiv=false),
-                StegTilstand(stegType=StegType.FASTSETT_MELDEPERIODER, stegStatus=StegStatus.UTFØRER, aktiv=false),
-                StegTilstand(stegType=StegType.FASTSETT_MELDEPERIODER, stegStatus=StegStatus.AVKLARINGSPUNKT, aktiv=false),
-                StegTilstand(stegType=StegType.FASTSETT_MELDEPERIODER, stegStatus=StegStatus.AVSLUTTER, aktiv=false),
+                StegTilstand(stegType = StegType.FASTSETT_MELDEPERIODER, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(
+                    stegType = StegType.FASTSETT_MELDEPERIODER,
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = StegType.FASTSETT_MELDEPERIODER,
+                    stegStatus = StegStatus.UTFØRER,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = StegType.FASTSETT_MELDEPERIODER,
+                    stegStatus = StegStatus.AVKLARINGSPUNKT,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = StegType.FASTSETT_MELDEPERIODER,
+                    stegStatus = StegStatus.AVSLUTTER,
+                    aktiv = false
+                ),
                 StegTilstand(stegType = StegType.VURDER_ALDER, stegStatus = StegStatus.START, aktiv = false),
                 StegTilstand(
                     stegType = StegType.VURDER_ALDER,
@@ -306,11 +343,27 @@ class EnklereFlytOrkestratorTest {
                     aktiv = false
                 ),
                 StegTilstand(stegType = StegType.VURDER_LOVVALG, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
-                StegTilstand(stegType=StegType.FASTSETT_MELDEPERIODER, stegStatus=StegStatus.START, aktiv=false),
-                StegTilstand(stegType=StegType.FASTSETT_MELDEPERIODER, stegStatus=StegStatus.OPPDATER_FAKTAGRUNNLAG, aktiv=false),
-                StegTilstand(stegType=StegType.FASTSETT_MELDEPERIODER, stegStatus=StegStatus.UTFØRER, aktiv=false),
-                StegTilstand(stegType=StegType.FASTSETT_MELDEPERIODER, stegStatus=StegStatus.AVKLARINGSPUNKT, aktiv=false),
-                StegTilstand(stegType=StegType.FASTSETT_MELDEPERIODER, stegStatus=StegStatus.AVSLUTTER, aktiv=false),
+                StegTilstand(stegType = StegType.FASTSETT_MELDEPERIODER, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(
+                    stegType = StegType.FASTSETT_MELDEPERIODER,
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = StegType.FASTSETT_MELDEPERIODER,
+                    stegStatus = StegStatus.UTFØRER,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = StegType.FASTSETT_MELDEPERIODER,
+                    stegStatus = StegStatus.AVKLARINGSPUNKT,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = StegType.FASTSETT_MELDEPERIODER,
+                    stegStatus = StegStatus.AVSLUTTER,
+                    aktiv = false
+                ),
                 StegTilstand(stegType = StegType.VURDER_ALDER, stegStatus = StegStatus.START, aktiv = false),
                 StegTilstand(
                     stegType = StegType.VURDER_ALDER,

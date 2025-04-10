@@ -308,15 +308,14 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
 
         val uføreId = connection.executeReturnKey(
             """
-                INSERT INTO BEREGNING_UFORE (
-                BEREGNING_ID, 
-                BEREGNING_HOVED_ID,
-                BEREGNING_HOVED_YTTERLIGERE_ID,
-                TYPE,
-                G_UNIT,
-                UFOREGRAD,
-                UFORE_YTTERLIGERE_NEDSATT_ARBEIDSEVNE_AR
-                )VALUES (?, ?, ?, ?, ?, ?, ?)"""
+INSERT INTO BEREGNING_UFORE (BEREGNING_ID,
+                             BEREGNING_HOVED_ID,
+                             BEREGNING_HOVED_YTTERLIGERE_ID,
+                             TYPE,
+                             G_UNIT,
+                             UFOREGRAD,
+                             UFORE_YTTERLIGERE_NEDSATT_ARBEIDSEVNE_AR)
+VALUES (?, ?, ?, ?, ?, ?, ?)"""
         ) {
             setParams {
                 setLong(1, beregningsId)
@@ -337,8 +336,9 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
     private fun lagreUføreInntekt(uføreId: Long, inntekter: List<UføreInntekt>) {
         connection.executeBatch(
             """INSERT INTO BEREGNING_UFORE_INNTEKT
-                     (BEREGNING_UFORE_ID, ARSTALL, INNTEKT_I_KRONER, UFOREGRAD, ARBEIDSGRAD, INNTEKT_JUSTERT_FOR_UFOREGRAD, INNTEKT_I_G, GRUNNBELOP, inntekt_justert_ufore_g)
-                     VALUES (?, ?, ?, ?, ?, ?,?, ?, ?)
+(BEREGNING_UFORE_ID, ARSTALL, INNTEKT_I_KRONER, UFOREGRAD, ARBEIDSGRAD,
+ INNTEKT_JUSTERT_FOR_UFOREGRAD, INNTEKT_I_G, GRUNNBELOP, inntekt_justert_ufore_g)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
             inntekter
         ) {

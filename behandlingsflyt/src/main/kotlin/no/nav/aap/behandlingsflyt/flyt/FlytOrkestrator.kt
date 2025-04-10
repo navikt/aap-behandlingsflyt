@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegKonstruktør
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
@@ -13,16 +14,13 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Transisjon
 import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererService
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.httpklient.auth.Bruker
@@ -44,11 +42,11 @@ import org.slf4j.LoggerFactory
 class FlytOrkestrator(
     private val stegKonstruktør: StegKonstruktør,
     private val perioderTilVurderingService: PerioderTilVurderingService,
+    private val sakOgBehandlingService: SakOgBehandlingService,
     private val informasjonskravGrunnlag: InformasjonskravGrunnlag,
     private val sakRepository: SakRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val behandlingRepository: BehandlingRepository,
-    private val behandlingFlytRepository: BehandlingFlytRepository,
     private val behandlingHendelseService: BehandlingHendelseService,
     private val ventebehovEvaluererService: VentebehovEvaluererService
 ) {
@@ -164,7 +162,7 @@ class FlytOrkestrator(
             val result = StegOrkestrator(
                 aktivtSteg = gjeldendeSteg,
                 informasjonskravGrunnlag = informasjonskravGrunnlag,
-                behandlingFlytRepository = behandlingFlytRepository,
+                behandlingRepository = behandlingRepository,
                 avklaringsbehovRepository = avklaringsbehovRepository,
                 perioderTilVurderingService = perioderTilVurderingService,
                 stegKonstruktør = stegKonstruktør
@@ -196,16 +194,11 @@ class FlytOrkestrator(
 
             if (!result.kanFortsette() || neste == null) {
                 if (neste == null) {
-                    // Valider siste stegstatus behandlingen
-                    validerAtSisteStegstatusErAvsluttet(behandling)
-
-                    // Avslutter behandling
-                    behandlingFlytRepository.oppdaterBehandlingStatus(
-                        behandlingId = behandling.id,
-                        status = Status.AVSLUTTET
-                    )
-                    validerAtAvklaringsBehovErLukkede(avklaringsbehovene)
                     log.info("Behandlingen har nådd slutten, avslutter behandling")
+                    
+                    sakOgBehandlingService.lukkBehandling(behandling.id)
+
+                    validerAtAvklaringsBehovErLukkede(avklaringsbehovene)
                 } else {
                     // Prosessen har stoppet opp, slipp ut hendelse om at den har stoppet opp og hvorfor?
                     loggStopp(behandling, avklaringsbehovene)
@@ -218,12 +211,6 @@ class FlytOrkestrator(
             }
             gjeldendeSteg = neste
         }
-    }
-
-    private fun validerAtSisteStegstatusErAvsluttet(behandling: Behandling) {
-        val oppdatertBehandling = behandlingRepository.hent(behandling.id)
-        val sisteSteg = oppdatertBehandling.aktivtStegTilstand()
-        require(sisteSteg.status() == StegStatus.AVSLUTTER)
     }
 
     private fun validerAtAvklaringsBehovErLukkede(avklaringsbehovene: Avklaringsbehovene) {
@@ -307,7 +294,7 @@ class FlytOrkestrator(
             }
             StegOrkestrator(
                 aktivtSteg = neste, informasjonskravGrunnlag = informasjonskravGrunnlag,
-                behandlingFlytRepository = behandlingFlytRepository,
+                behandlingRepository = behandlingRepository,
                 avklaringsbehovRepository = avklaringsbehovRepository,
                 perioderTilVurderingService = perioderTilVurderingService,
                 stegKonstruktør = stegKonstruktør

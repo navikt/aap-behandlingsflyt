@@ -57,8 +57,11 @@ class StegOrkestratorTest {
 
             val resultat = StegOrkestrator(
                 aktivtSteg = TestFlytSteg,
-                informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), connection),
-                behandlingFlytRepository = BehandlingRepositoryImpl(connection),
+                informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
+                    InformasjonskravRepositoryImpl(connection),
+                    connection
+                ),
+                behandlingRepository = BehandlingRepositoryImpl(connection),
                 avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection),
                 perioderTilVurderingService = PerioderTilVurderingService(
                     SakService(SakRepositoryImpl(connection)),

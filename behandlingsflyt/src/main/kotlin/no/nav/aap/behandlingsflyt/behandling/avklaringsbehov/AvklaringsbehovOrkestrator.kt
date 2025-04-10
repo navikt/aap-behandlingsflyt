@@ -2,7 +2,9 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.steg.internal.StegKonstruktørImpl
 import no.nav.aap.behandlingsflyt.flyt.utledType
@@ -13,7 +15,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
@@ -100,7 +101,6 @@ class AvklaringsbehovOrkestrator(
             stegKonstruktør = StegKonstruktørImpl(connection),
             ventebehovEvaluererService = VentebehovEvaluererServiceImpl(connection),
             behandlingRepository = behandlingRepository,
-            behandlingFlytRepository = repositoryProvider.provide<BehandlingFlytRepository>(),
             avklaringsbehovRepository = avklaringsbehovRepository,
             informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                 repositoryProvider.provide(),
@@ -111,6 +111,11 @@ class AvklaringsbehovOrkestrator(
                 SakService(sakRepository),
                 behandlingRepository,
                 repositoryProvider.provide()
+            ),
+            sakOgBehandlingService = SakOgBehandlingService(
+                GrunnlagKopiererImpl(connection),
+                sakRepository,
+                behandlingRepository
             ),
             behandlingHendelseService = behandlingHendelseService
         )

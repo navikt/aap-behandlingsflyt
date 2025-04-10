@@ -7,8 +7,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -33,7 +33,7 @@ import org.slf4j.MDC
 class StegOrkestrator(
     private val aktivtSteg: FlytSteg,
     private val informasjonskravGrunnlag: InformasjonskravGrunnlag,
-    private val behandlingFlytRepository: BehandlingFlytRepository,
+    private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val perioderTilVurderingService: PerioderTilVurderingService,
     private val stegKonstruktør: StegKonstruktør
@@ -234,10 +234,10 @@ class StegOrkestrator(
     ) {
         val førStatus = behandling.status()
         behandling.oppdaterSteg(nyStegTilstand)
-        behandlingFlytRepository.leggTilNyttAktivtSteg(behandlingId = behandling.id, nyStegTilstand)
+        behandlingRepository.leggTilNyttAktivtSteg(behandlingId = behandling.id, nyStegTilstand)
         val etterStatus = nyStegTilstand.steg().status
         if (førStatus != etterStatus) {
-            behandlingFlytRepository.oppdaterBehandlingStatus(behandlingId = behandling.id, status = etterStatus)
+            behandlingRepository.oppdaterBehandlingStatus(behandlingId = behandling.id, status = etterStatus)
         }
     }
 }
