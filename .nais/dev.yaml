@@ -207,6 +207,6 @@ spec:
     - name: INTEGRASJON_DATADELING_SCOPE
       value: api://dev-gcp.aap.api-intern/.default
     - name: INTEGRASJON_TJENESTEPENSJON_URL
-      value: https://tp-api.dev-fss-pub.nais.io
+      value: https://tp-api-q2.dev-fss-pub.nais.io
     - name: INTEGRASJON_TJENESTEPENSJON_SCOPE
-      value: api://dev-fss.pensjonsamhandling.tp/.default
+      value: api://dev-fss.pensjonsamhandling.tp-q2/.default
