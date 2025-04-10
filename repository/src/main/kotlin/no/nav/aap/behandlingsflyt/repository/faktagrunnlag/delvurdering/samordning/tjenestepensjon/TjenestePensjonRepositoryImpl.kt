@@ -105,7 +105,6 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
                 setLong(1, tilBehandling.id)
                 setLong(2, fraBehandling.id)
             }
-            setResultValidator { require(it == 1) }
             log.info("Kopiert tjenestepensjon fra behandling $fraBehandling til $tilBehandling")
         }
     }
