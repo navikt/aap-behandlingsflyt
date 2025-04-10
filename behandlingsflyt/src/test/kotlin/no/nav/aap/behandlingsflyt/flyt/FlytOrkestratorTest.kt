@@ -2527,7 +2527,7 @@ class FlytOrkestratorTest {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        val sak = InitTestDatabase.dataSource.transaction { connection ->
+        val sak = dataSource.transaction { connection ->
 
             val sak = hentSak(ident, periode)
             val førstegangbehandling = opprettBehandling(
