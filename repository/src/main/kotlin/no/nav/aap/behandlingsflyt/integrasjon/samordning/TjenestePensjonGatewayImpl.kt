@@ -41,8 +41,7 @@ class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
             uri = URI.create("${url}?fomDate=${periode.fom}&tomDate=${periode.tom}"),
             request = httpRequest,
             mapper = { body, _ ->
-                val list = fromJson<List<String>>(body)
-                TjenestePensjon(list)
+                fromJson<TjenestePensjon>(body)
             }
         ))
     }
