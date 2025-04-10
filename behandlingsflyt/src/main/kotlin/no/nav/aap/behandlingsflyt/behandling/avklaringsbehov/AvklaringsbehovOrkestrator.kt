@@ -181,4 +181,13 @@ class AvklaringsbehovOrkestrator(
 
         behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
     }
+
+    fun opprettBestillBrevAvklaringsbehov(behandlingId: BehandlingId) {
+        val behandling = behandlingRepository.hent(behandlingId)
+
+        val avklaringsbehovene =
+            avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = behandlingId)
+        avklaringsbehovene.leggTil(listOf(Definisjon.SKRIV_BREV), behandling.aktivtSteg())
+        behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
+    }
 }
