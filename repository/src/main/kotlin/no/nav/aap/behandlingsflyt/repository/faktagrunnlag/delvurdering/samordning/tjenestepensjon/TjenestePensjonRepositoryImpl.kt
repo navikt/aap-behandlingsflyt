@@ -90,7 +90,6 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
                 setString(2, it)
             }
         }
-
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
@@ -114,7 +113,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
             setParams {
                 setLong(1, behandlingId.toLong())
             }
-            setResultValidator { require(it == 1) }
+            setResultValidator { require(it == 1){"UPDATE må oppdatere minst en linje i tjenestePensjon_Grunnlag"} }
         }
     }
 }
