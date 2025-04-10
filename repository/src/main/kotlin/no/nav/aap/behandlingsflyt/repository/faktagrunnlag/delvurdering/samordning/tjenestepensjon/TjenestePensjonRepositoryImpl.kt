@@ -16,8 +16,9 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
         }
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId):TjenestePensjon?{
-        val tyIdSql = """SELECT TJENESTEPENSJON_YTELSER_ID FROM TJENESTEPENSJON_GRUNNLAG WHERE BEHANDLING_ID = ? AND AKTIV = true""".trimIndent()
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): TjenestePensjon? {
+        val tyIdSql =
+            """SELECT TJENESTEPENSJON_YTELSER_ID FROM TJENESTEPENSJON_GRUNNLAG WHERE BEHANDLING_ID = ? AND AKTIV = true""".trimIndent()
 
         val tyId = dbConnection.queryFirstOrNull(
             tyIdSql,
@@ -29,7 +30,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
             }
         )
 
-        if(tyId==null) return null
+        if (tyId == null) return null
 
         val sql = """
             SELECT t.TP_NUMMER
@@ -52,7 +53,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
     }
 
     override fun hent(behandlingId: BehandlingId): TjenestePensjon {
-        return  requireNotNull(hentHvisEksisterer(behandlingId))
+        return requireNotNull(hentHvisEksisterer(behandlingId))
     }
 
     override fun lagre(
@@ -64,27 +65,31 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
             deaktiverGrunnlag(behandlingId)
         }
 
-        val tyId = dbConnection.executeReturnKey("""
+        val tyId = dbConnection.executeReturnKey(
+            """
             INSERT INTO TJENESTEPENSJON_YTELSER DEFAULT VALUES 
         """.trimIndent()
         )
 
-        val tgId = dbConnection.executeReturnKey("""
+        val tgId = dbConnection.executeReturnKey(
+            """
             INSERT INTO TJENESTEPENSJON_GRUNNLAG (BEHANDLING_ID, AKTIV, TJENESTEPENSJON_YTELSER_ID)
             VALUES (?, true, ?)
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLong(2, tyId)
             }
         }
 
-        dbConnection.executeBatch("""
-            INSERT INTO TJENESTEPENSJON_YTELSE (TJENESTEPENSJON_YTELSER_ID,TP_NUMMER)
+        dbConnection.executeBatch(
+            """
+            INSERT INTO TJENESTEPENSJON_YTELSE (TJENESTEPENSJON_YTELSER_ID, TP_NUMMER)
             VALUES (?, ?)
         """.trimIndent(),
             tjenestePensjon.tpNr
-            ) {
+        ) {
             setParams {
                 setLong(1, tyId)
                 setString(2, it)
@@ -97,7 +102,8 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
             INSERT INTO TJENESTEPENSJON_GRUNNLAG (BEHANDLING_ID, AKTIV, TJENESTEPENSJON_YTELSER_ID)
             SELECT ?, true, TJENESTEPENSJON_YTELSER_ID
             FROM TJENESTEPENSJON_GRUNNLAG
-            WHERE BEHANDLING_ID = ? AND AKTIV = true;
+            WHERE BEHANDLING_ID = ?
+              AND AKTIV = true;
         """.trimIndent()
         dbConnection.execute(sql) {
             setParams {
@@ -113,7 +119,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
             setParams {
                 setLong(1, behandlingId.toLong())
             }
-            setResultValidator { require(it == 1){"UPDATE må oppdatere minst en linje i tjenestePensjon_Grunnlag"} }
+            setResultValidator { require(it == 1) { "UPDATE må oppdatere minst en linje i tjenestePensjon_Grunnlag" } }
         }
     }
 }

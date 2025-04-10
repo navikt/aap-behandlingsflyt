@@ -27,20 +27,20 @@ class TjenestePensjonRepositoryImplTest() {
     private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
 
     @Test
-    fun `kan lagre og hente tp ytelser`(){
+    fun `kan lagre og hente tp ytelser`() {
         //lag testen for meg
         val dataSource = InitTestDatabase.dataSource
         dataSource.transaction { dbConnect ->
-                val sak = sak(dbConnect)
-                val behandling = behandling(dbConnect, sak)
+            val sak = sak(dbConnect)
+            val behandling = behandling(dbConnect, sak)
 
-                val tjenestePensjon = TjenestePensjon(listOf("12345678901", "09876543210"))
+            val tjenestePensjon = TjenestePensjon(listOf("12345678901", "09876543210"))
 
-                TjenestePensjonRepositoryImpl(dbConnect).lagre(behandling.id, tjenestePensjon)
+            TjenestePensjonRepositoryImpl(dbConnect).lagre(behandling.id, tjenestePensjon)
 
-                val hentetTjenestePensjon = TjenestePensjonRepositoryImpl(dbConnect).hent(behandling.id)
+            val hentetTjenestePensjon = TjenestePensjonRepositoryImpl(dbConnect).hent(behandling.id)
 
-                assertThat(hentetTjenestePensjon).isEqualTo(tjenestePensjon)
+            assertThat(hentetTjenestePensjon).isEqualTo(tjenestePensjon)
         }
     }
 

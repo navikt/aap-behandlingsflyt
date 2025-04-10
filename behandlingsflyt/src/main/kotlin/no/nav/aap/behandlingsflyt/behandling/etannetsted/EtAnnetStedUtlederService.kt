@@ -292,7 +292,7 @@ class EtAnnetStedUtlederService(
                 segment.periode,
                 true
             )
-        }.fold(Tidslinje<Boolean>()) { acc, tidslinje ->
+        }.fold(Tidslinje()) { acc, tidslinje ->
             acc.kombiner(tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
         }
     }
