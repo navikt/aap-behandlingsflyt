@@ -201,7 +201,6 @@ class StatistikkJobbUtfører(
                 ?.map { Segment(it.periode, it.tilkjent) }
                 ?.let(::Tidslinje)?.mapValue { it }
                 ?.komprimer()
-                ?.disjoint(Periode(LocalDate.MIN, LocalDate.now())) // TODO: vedtaktidspunkt
                 ?.map {
                     val verdi = it.verdi
                     TilkjentYtelsePeriodeDTO(
