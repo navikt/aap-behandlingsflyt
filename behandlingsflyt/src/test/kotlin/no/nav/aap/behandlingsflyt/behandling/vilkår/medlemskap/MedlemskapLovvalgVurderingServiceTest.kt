@@ -36,36 +36,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                 manuellVurdering = null
             ),
             personopplysningGrunnlag = PersonopplysningGrunnlag(
-                brukerPersonopplysning = Personopplysning(Fødselsdato(LocalDate.now().minusYears(18)), 1, null, EØSLand.NOR.toString(), LocalDate.now().minusMonths(1), null, PersonStatus.bosatt),
-                relatertePersonopplysninger = null
-            ),
-            nyeSoknadGrunnlag = UtenlandsOppholdData(true, true, false, false, null)
-        )
-
-        val resultat = service.vurderTilhørighet(grunnlag, Periode(LocalDate.now().minusYears(1), LocalDate.now()))
-        assertEquals(true, resultat.kanBehandlesAutomatisk)
-    }
-
-    @Test
-    fun kanHåndtereGammeltStatsborgerskapFormat() {
-        val grunnlag = MedlemskapLovvalgGrunnlag(
-            medlemskapArbeidInntektGrunnlag = MedlemskapArbeidInntektGrunnlag(
-                medlemskapGrunnlag = MedlemskapUnntakGrunnlag(
-                    unntak = listOf(
-                        Segment(
-                            periode = Periode(LocalDate.now().minusMonths(1), LocalDate.now()),
-                            verdi = Unntak("unntak", "statusaarsak", true, "grunnlag", "lovvalg", false, EØSLand.NOR.toString())
-                        )
-                    )
-                ),
-                inntekterINorgeGrunnlag = emptyList(),
-                arbeiderINorgeGrunnlag = emptyList(),
-                manuellVurdering = null
-            ),
-            personopplysningGrunnlag = PersonopplysningGrunnlag(
-                brukerPersonopplysning = Personopplysning(Fødselsdato(LocalDate.now().minusYears(18)), 1, null, "NOR", LocalDate.now().minusMonths(1), null, PersonStatus.bosatt,
-                    listOf(
-                    )),
+                brukerPersonopplysning = Personopplysning(Fødselsdato(LocalDate.now().minusYears(18)), 1, null, PersonStatus.bosatt, listOf(Statsborgerskap("NOR"))),
                 relatertePersonopplysninger = null
             ),
             nyeSoknadGrunnlag = UtenlandsOppholdData(true, true, false, false, null)
@@ -92,7 +63,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                 manuellVurdering = null
             ),
             personopplysningGrunnlag = PersonopplysningGrunnlag(
-                brukerPersonopplysning = Personopplysning(Fødselsdato(LocalDate.now().minusYears(18)), 1, null, "XUK", LocalDate.now().minusMonths(1), null, PersonStatus.bosatt,
+                brukerPersonopplysning = Personopplysning(Fødselsdato(LocalDate.now().minusYears(18)), 1, null,PersonStatus.bosatt,
                     listOf(
                         Statsborgerskap("XUK"),
                         Statsborgerskap("NOR"),
@@ -123,7 +94,9 @@ class MedlemskapLovvalgVurderingServiceTest {
                 manuellVurdering = null
             ),
             personopplysningGrunnlag = PersonopplysningGrunnlag(
-                brukerPersonopplysning = Personopplysning(Fødselsdato(LocalDate.now().minusYears(18)), 1, null, EØSLand.NOR.toString(), LocalDate.now().minusMonths(1), null, PersonStatus.bosatt),
+                brukerPersonopplysning = Personopplysning(Fødselsdato(LocalDate.now().minusYears(18)), 1, null, PersonStatus.bosatt, listOf(
+                    Statsborgerskap("XUK"),
+                )),
                 relatertePersonopplysninger = null
             ),
             nyeSoknadGrunnlag = UtenlandsOppholdData(true, true, false, false, null)

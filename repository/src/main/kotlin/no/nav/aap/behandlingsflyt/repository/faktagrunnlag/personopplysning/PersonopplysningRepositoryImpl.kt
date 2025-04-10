@@ -94,18 +94,23 @@ class PersonopplysningRepositoryImpl(
                     id = id,
                     fødselsdato = Fødselsdato(row.getLocalDate("FODSELSDATO")),
                     dødsdato = row.getLocalDateOrNull("dodsdato")?.let { Dødsdato(it) },
-                    land = row.getString("LAND"),
-                    gyldigFraOgMed = row.getLocalDateOrNull("GYLDIGFRAOGMED"),
-                    gyldigTilOgMed = row.getLocalDateOrNull("GYLDIGTILOGMED"),
-                    statsborgerskap = hentStatsborgerskap(row.getLongOrNull("LANDKODER_ID")),
+                    statsborgerskap = hentStatsborgerskap(row),
                     status = row.getEnum("STATUS")
                 )
             }
         }
     }
 
-    private fun hentStatsborgerskap(id: Long?): List<Statsborgerskap> {
-        if (id == null) return emptyList()
+    private fun hentStatsborgerskap(row: Row): List<Statsborgerskap> {
+        val gyldigFraOgMedDeprecated = row.getLocalDateOrNull("GYLDIGFRAOGMED")
+        val gyldigTilOgMedDeprecated = row.getLocalDateOrNull("GYLDIGTILOGMED")
+        val landDeprecated = row.getString("LAND")
+
+        val landKoderId = row.getLongOrNull("LANDKODER_ID") ?: return listOf(Statsborgerskap(
+            land = landDeprecated,
+            gyldigFraOgMed = gyldigFraOgMedDeprecated,
+            gyldigTilOgMed = gyldigTilOgMedDeprecated,
+        ))
 
         return connection.queryList(
             """
@@ -114,7 +119,7 @@ class PersonopplysningRepositoryImpl(
             """.trimIndent()
         ) {
             setParams {
-                setLong(1, id)
+                setLong(1, landKoderId)
             }
             setRowMapper { row ->
                 Statsborgerskap(
