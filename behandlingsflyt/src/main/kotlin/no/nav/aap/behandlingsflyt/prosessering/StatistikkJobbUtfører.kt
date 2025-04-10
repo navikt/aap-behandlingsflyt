@@ -199,15 +199,20 @@ class StatistikkJobbUtfører(
         val tilkjentYtelse =
             tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
                 ?.map { Segment(it.periode, it.tilkjent) }
-                ?.let(::Tidslinje)?.mapValue { Pair(it.dagsats, it.gradering.endeligGradering.prosentverdi()) }
+                ?.let(::Tidslinje)?.mapValue { it }
                 ?.komprimer()
                 ?.disjoint(Periode(LocalDate.MIN, LocalDate.now())) // TODO: vedtaktidspunkt
                 ?.map {
+                    val verdi = it.verdi
                     TilkjentYtelsePeriodeDTO(
                         fraDato = it.periode.fom,
                         tilDato = it.periode.tom,
-                        dagsats = it.verdi.first.verdi().toDouble(),
-                        gradering = it.verdi.second.toDouble()
+                        dagsats = verdi.dagsats.verdi().toDouble(),
+                        gradering = verdi.gradering.endeligGradering.prosentverdi().toDouble(),
+                        redusertDagsats = verdi.redusertDagsats().verdi().toDouble(),
+                        antallBarn = verdi.antallBarn,
+                        barnetilleggSats = verdi.barnetilleggsats.verdi().toDouble(),
+                        barnetillegg = verdi.barnetillegg.verdi().toDouble(),
                     )
                 }
 

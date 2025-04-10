@@ -40,6 +40,10 @@ public data class TilkjentYtelsePeriodeDTO(
     val tilDato: LocalDate,
     val dagsats: Double,
     val gradering: Double,
+    val redusertDagsats: Double,
+    val antallBarn: Int,
+    val barnetilleggSats: Double,
+    val barnetillegg: Double
 )
 
 public data class VilkårsResultatDTO(

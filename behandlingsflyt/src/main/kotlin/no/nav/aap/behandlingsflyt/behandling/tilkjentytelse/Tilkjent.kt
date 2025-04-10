@@ -26,7 +26,10 @@ class Tilkjent(
      * Hent ut full dagsats etter reduksjon.
      */
     fun redusertDagsats(): Beløp {
-        return Beløp(dagsats.multiplisert(gradering.endeligGradering).pluss(barnetillegg.multiplisert(gradering.endeligGradering)).verdi().setScale(0, RoundingMode.HALF_UP))
+        return Beløp(
+            dagsats.multiplisert(gradering.endeligGradering)
+                .pluss(barnetillegg.multiplisert(gradering.endeligGradering)).verdi().setScale(0, RoundingMode.HALF_UP)
+        )
     }
 
     override fun toString(): String {
