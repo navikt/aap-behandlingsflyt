@@ -8,10 +8,11 @@ class Personopplysning(
     val fødselsdato: Fødselsdato,
     val id: Long? = null,
     val dødsdato: Dødsdato? = null,
-    val land: String,
+    val land: String = "XUK",
     val gyldigFraOgMed: LocalDate? = null,
     val gyldigTilOgMed: LocalDate? = null,
-    val status: PersonStatus
+    val status: PersonStatus,
+    val statsborgerskap: List<Statsborgerskap> = emptyList(),
 ) {
 
     // Denne skal kun sammenlikne data og ikke tidspunkter

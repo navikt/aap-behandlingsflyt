@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.RelatertPersonopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.RelatertePersonopplysninger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
@@ -96,7 +97,30 @@ class PersonopplysningRepositoryImpl(
                     land = row.getString("LAND"),
                     gyldigFraOgMed = row.getLocalDateOrNull("GYLDIGFRAOGMED"),
                     gyldigTilOgMed = row.getLocalDateOrNull("GYLDIGTILOGMED"),
+                    statsborgerskap = hentStatsborgerskap(row.getLongOrNull("LANDKODER_ID")),
                     status = row.getEnum("STATUS")
+                )
+            }
+        }
+    }
+
+    private fun hentStatsborgerskap(id: Long?): List<Statsborgerskap> {
+        if (id == null) return emptyList()
+
+        return connection.queryList(
+            """
+                SELECT * FROM BRUKER_LAND
+                WHERE LANDKODER_ID = ?
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, id)
+            }
+            setRowMapper { row ->
+                Statsborgerskap(
+                    land = row.getString("LAND"),
+                    gyldigFraOgMed = row.getLocalDateOrNull("GYLDIGFRAOGMED"),
+                    gyldigTilOgMed = row.getLocalDateOrNull("GYLDIGTILOGMED"),
                 )
             }
         }
@@ -111,15 +135,23 @@ class PersonopplysningRepositoryImpl(
             deaktiverEksisterende(behandlingId)
         }
 
+        val landkoderId = connection.executeReturnKey("INSERT INTO BRUKER_LAND_AGGREGAT DEFAULT VALUES"){}
+        connection.executeBatch("INSERT INTO BRUKER_LAND (LAND, GYLDIGFRAOGMED, GYLDIGTILOGMED, LANDKODER_ID) VALUES (?, ?, ?, ?)", personopplysning.statsborgerskap){
+            setParams {
+                setString(1, it.land)
+                setLocalDate(2, it.gyldigFraOgMed)
+                setLocalDate(3, it.gyldigTilOgMed)
+                setLong(4, landkoderId)
+            }
+        }
+
         val personopplysningId =
-            connection.executeReturnKey("INSERT INTO BRUKER_PERSONOPPLYSNING (FODSELSDATO, dodsdato, LAND, GYLDIGFRAOGMED, GYLDIGTILOGMED, STATUS) VALUES (?, ?, ?, ?, ?, ?)") {
+            connection.executeReturnKey("INSERT INTO BRUKER_PERSONOPPLYSNING (FODSELSDATO, dodsdato, LANDKODER_ID, STATUS) VALUES (?, ?, ?, ?)") {
                 setParams {
                     setLocalDate(1, personopplysning.fødselsdato.toLocalDate())
                     setLocalDate(2, personopplysning.dødsdato?.toLocalDate())
-                    setString(3, personopplysning.land)
-                    setLocalDate(4, personopplysning.gyldigFraOgMed)
-                    setLocalDate(5, personopplysning.gyldigTilOgMed)
-                    setEnumName(6, personopplysning.status)
+                    setLong(3, landkoderId)
+                    setEnumName(4, personopplysning.status)
                 }
             }
 
