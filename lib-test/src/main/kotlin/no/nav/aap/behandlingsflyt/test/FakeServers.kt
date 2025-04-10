@@ -1684,6 +1684,13 @@ object FakeServers : AutoCloseable {
         //tjenestepensjon
         System.setProperty("integrasjon.tjenestepensjon.url", "http://localhost:${tjenestePensjon.port()}")
         System.setProperty("integrasjon.tjenestepensjon.scope", "tjenestepensjon")
+        
+        //Azp
+        System.setProperty("integrasjon.tilgang.azp", UUID.randomUUID().toString())
+        System.setProperty("integrasjon.brev.azp", UUID.randomUUID().toString())
+        System.setProperty("integrasjon.dokumentinnhenting.azp", UUID.randomUUID().toString())
+        System.setProperty("integrasjon.postmottak.azp", UUID.randomUUID().toString())
+        System.setProperty("integrasjon.saksbehandling.azp", UUID.randomUUID().toString())
     }
 
     override fun close() {

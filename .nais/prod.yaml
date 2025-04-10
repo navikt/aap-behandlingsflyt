@@ -148,14 +148,10 @@ spec:
       value: http://tilgang
     - name: INTEGRASJON_TILGANG_SCOPE
       value: api://prod-gcp.aap.tilgang/.default
-    - name: INTEGRASJON_TILGANG_AZP
-      value: prod-gcp:aap:tilgang
     - name: INTEGRASJON_MEDL_URL
       value: https://medlemskap-medl-api.prod-fss-pub.nais.io/api/v1/medlemskapsunntak
     - name: INTEGRASJON_MEDL_SCOPE
       value: api://prod-fss.team-rocket.medlemskap-medl-api/.default
-    - name: INTEGRASJON_POSTMOTTAK_AZP
-      value: prod-gcp:aap:postmottak-backend
     - name: INTEGRASJON_FORELDREPENGER_URL
       value: https://fpabakus.prod-fss-pub.nais.io/fpabakus/ekstern/api/ytelse/v1
     - name: INTEGRASJON_FORELDREPENGER_SCOPE
@@ -168,8 +164,6 @@ spec:
       value: http://brev
     - name: INTEGRASJON_BREV_SCOPE
       value: api://prod-gcp.aap.brev/.default
-    - name: INTEGRASJON_BREV_AZP
-      value: prod-gcp:aap:brev
     - name: INTEGRASJON_MELDEKORT_URL
       value: http://meldekort-backend
     - name: INTEGRASJON_MELDEKORT_SCOPE
@@ -178,16 +172,10 @@ spec:
       value: http://utbetal
     - name: INTEGRASJON_UTBETAL_SCOPE
       value: api://prod-gcp.aap.utbetal/.default
-    - name: INTEGRASJON_UTBETAL_AZP
-      value: prod-gcp:aap:utbetal
     - name: INTEGRASJON_DOKUMENTINNHENTING_URL
       value: http://dokumentinnhenting
     - name: INTEGRASJON_DOKUMENTINNHENTING_SCOPE
       value: api://prod-gcp.aap.dokumentinnhenting/.default
-    - name: INTEGRASJON_DOKUMENTINNHENTING_AZP
-      value: prod-gcp:aap:dokumentinnhenting
-    - name: INTEGRASJON_SAKSBEHANDLING_AZP
-      value: prod-gcp:aap:saksbehandling
     - name: INTEGRASJON_AAREG_URL
       value: https://aareg-services.prod-fss-pub.nais.io
     - name: INTEGRASJON_AAREG_SCOPE
@@ -204,3 +192,13 @@ spec:
       value: https://tp-api.prod-fss-pub.nais.io
     - name: INTEGRASJON_TJENESTEPENSJON_SCOPE
       value: api://prod-fss.pensjonsamhandling.tp/.default
+    - name: INTEGRASJON_BREV_AZP
+      value: d48a6100-7e6a-41a5-ab75-3ebea8c6e6d1
+    - name: INTEGRASJON_TILGANG_AZP
+      value: cb03bc77-e6da-468f-99ff-abb4b406b7f0
+    - name: INTEGRASJON_POSTMOTTAK_AZP
+      value: 7f9044f1-fa3a-4356-9062-05035400fd6a
+    - name: INTEGRASJON_DOKUMENTINNHENTING_AZP
+      value: 785e7a77-8976-4e4e-b620-d7b3731076aa
+    - name: INTEGRASJON_SAKSBEHANDLING_AZP
+      value: 10269c6f-313a-44d0-9145-c4ba26177928
