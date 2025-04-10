@@ -189,6 +189,7 @@ class BistandsvilkåretTest {
         RepositoryRegistry.register(VilkårsresultatRepositoryImpl::class)
         RepositoryRegistry.register(AvklaringsbehovRepositoryImpl::class)
         RepositoryRegistry.register(BehandlingRepositoryImpl::class)
+        val dataSource = InitTestDatabase.freshDatabase()
 
 
         val bistandsvurdering1 = BistandVurdering(
@@ -203,7 +204,7 @@ class BistandsvilkåretTest {
             overgangBegrunnelse = null,
         )
 
-        val (førstegangsbehandling, sak) = InitTestDatabase.dataSource.transaction { connection ->
+        val (førstegangsbehandling, sak) = dataSource.transaction { connection ->
             val repo = BistandRepositoryImpl(connection)
             val sak = sak(connection)
             val førstegangsbehandling = behandling(connection, sak)
@@ -212,7 +213,7 @@ class BistandsvilkåretTest {
             Pair(førstegangsbehandling, sak)
         }
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val vilkårsresultat = VilkårsresultatRepositoryImpl(connection).hent(førstegangsbehandling.id)
             val rettighetsperiode = sak.rettighetsperiode
             Vilkårtype
@@ -228,7 +229,7 @@ class BistandsvilkåretTest {
 
         }
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             VurderBistandsbehovSteg.konstruer(connection).utfør(
                 FlytKontekstMedPerioder(
                     sakId = sak.id,
@@ -248,13 +249,13 @@ class BistandsvilkåretTest {
             assertThat(vilkåret.vilkårsperioder()).hasSize(1)
         }
 
-        val revurdering = InitTestDatabase.dataSource.transaction { connection ->
+        val revurdering = dataSource.transaction { connection ->
             val revurdering = revurdering(connection, førstegangsbehandling, sak)
             revurdering
         }
 
         // Send inn revurderingsløsning
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             // Må lagre ned sykdomsvurdering for behandlingen da vurderingenGjelderFra for 11-6 skal være lik den for 11-5 i samme behandling
             val sykdomsvurdering = sykdomsvurdering(vurderingenGjelderFra = now.plusDays(10))
             RepositoryProvider(connection).provide<SykdomRepository>().lagre(revurdering.id, listOf(sykdomsvurdering))
@@ -283,7 +284,7 @@ class BistandsvilkåretTest {
         }
 
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             VurderBistandsbehovSteg.konstruer(connection).utfør(
                 FlytKontekstMedPerioder(
                     sakId = sak.id,
@@ -299,7 +300,7 @@ class BistandsvilkåretTest {
             )
         }
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val vilkåret =
                 VilkårsresultatRepositoryImpl(connection).hent(revurdering.id).finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
             assertThat(vilkåret.vilkårsperioder()).hasSize(2)
