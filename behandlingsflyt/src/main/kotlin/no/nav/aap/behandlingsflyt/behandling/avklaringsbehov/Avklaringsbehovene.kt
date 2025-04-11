@@ -206,10 +206,6 @@ class Avklaringsbehovene(
         return alle().any { avklaringsbehov -> avklaringsbehov.harVærtSendtTilbakeFraBeslutterTidligere() }
     }
 
-    fun harVærtSendtTilbakeFraKvalitetssikringTidligere(): Boolean {
-        return alle().any { avklaringsbehov -> avklaringsbehov.harVærtSendtTilbakeFraKvalitetssikrerTidligere() }
-    }
-
     fun validateTilstand(behandling: Behandling, avklaringsbehov: Definisjon? = null) {
         ValiderBehandlingTilstand.validerTilstandBehandling(
             behandling = behandling,

@@ -4,20 +4,17 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriod
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
@@ -48,6 +45,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Diagnoser
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetstypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelseDTO
@@ -82,11 +80,12 @@ import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
@@ -134,7 +133,8 @@ class StatistikkJobbUtførerTest {
     @Test
     fun `mottatt tidspunkt er korrekt når revurdering`(hendelser: List<StoppetBehandling>) {
         var opprettetTidspunkt: LocalDateTime? = null
-        val (behandling, sak, ident) = InitTestDatabase.dataSource.transaction { connection ->
+        val dataSource = InitTestDatabase.freshDatabase()
+        val (behandling, sak, ident) = dataSource.transaction { connection ->
             val behandlingRepository = BehandlingRepositoryImpl(connection)
 
             val ident = Ident(
@@ -203,7 +203,7 @@ class StatistikkJobbUtførerTest {
 
         // Act
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val sakService = SakService(SakRepositoryImpl(connection))
             val vilkårsResultatRepository = VilkårsresultatRepositoryImpl(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
@@ -241,7 +241,8 @@ class StatistikkJobbUtførerTest {
             fom = LocalDate.now().minusDays(1),
             tom = LocalDate.now().plusDays(1)
         )
-        val (behandling, sak, ident) = InitTestDatabase.dataSource.transaction { connection ->
+        val dataSource = InitTestDatabase.freshDatabase()
+        val (behandling, sak, ident) = dataSource.transaction { connection ->
             val vilkårsResultatRepository = VilkårsresultatRepositoryImpl(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
 
@@ -386,7 +387,7 @@ class StatistikkJobbUtførerTest {
 
         // Act
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val sakService = SakService(SakRepositoryImpl(connection))
             val vilkårsResultatRepository = VilkårsresultatRepositoryImpl(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
@@ -449,27 +450,15 @@ class StatistikkJobbUtførerTest {
                         tilDato = periode.tom,
                         rettighetstype = no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.STUDENT
                     )
-                )
+                ),
+                resultat = ResultatKode.INNVILGET,
             ).toString()
         )
     }
 
     @Test
     fun `prosesserings-kall avgir statistikk korrekt`(hendelser: List<StoppetBehandling>) {
-        // Blir ikke kalt i denne metoden, så derfor bare mock
-        val vilkårsResultatRepository = object : VilkårsresultatRepository {
-            override fun lagre(behandlingId: BehandlingId, vilkårsresultat: Vilkårsresultat) {
-                TODO("Not yet implemented")
-            }
-
-            override fun hent(behandlingId: BehandlingId): Vilkårsresultat {
-                TODO("Not yet implemented")
-            }
-
-            override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-                TODO("Not yet implemented")
-            }
-        }
+        val vilkårsResultatRepository = InMemoryVilkårsresultatRepository
         val behandlingRepository = InMemoryBehandlingRepository
 
         val sak = InMemorySakRepository.finnEllerOpprett(
@@ -625,27 +614,7 @@ class StatistikkJobbUtførerTest {
                 pipRepository,
                 dokumentRepository,
                 sykdomRepository = sykdomRepository,
-                underveisRepository = object : UnderveisRepository {
-                    override fun hent(behandlingId: BehandlingId): UnderveisGrunnlag {
-                        TODO("Not yet implemented")
-                    }
-
-                    override fun hentHvisEksisterer(behandlingId: BehandlingId): UnderveisGrunnlag? {
-                        TODO("Not yet implemented")
-                    }
-
-                    override fun lagre(
-                        behandlingId: BehandlingId,
-                        underveisperioder: List<Underveisperiode>,
-                        input: Faktagrunnlag
-                    ) {
-                        TODO("Not yet implemented")
-                    }
-
-                    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-                        TODO("Not yet implemented")
-                    }
-                }
+                underveisRepository = InMemoryUnderveisRepository
             )
 
         val avklaringsbehov = listOf(

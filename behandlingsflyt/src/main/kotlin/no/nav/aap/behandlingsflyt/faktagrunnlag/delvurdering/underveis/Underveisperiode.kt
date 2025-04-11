@@ -31,6 +31,7 @@ data class Underveisperiode(
 ) : Comparable<Underveisperiode> {
     init {
         if (utfall == Utfall.IKKE_OPPFYLT) requireNotNull(avslagsårsak)
+        if (utfall == Utfall.OPPFYLT) requireNotNull(rettighetsType)
     }
 
     override fun compareTo(other: Underveisperiode): Int {

@@ -7,6 +7,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 
+// Denne ser ubrukt ut, men er ikke det pga reflection
+@Suppress("unused")
 class TrukketSøknadVisningUtleder(
     connection: DBConnection,
 ) : StegGruppeVisningUtleder {

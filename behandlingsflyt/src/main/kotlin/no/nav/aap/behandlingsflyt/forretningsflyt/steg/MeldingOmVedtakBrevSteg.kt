@@ -63,7 +63,7 @@ class MeldingOmVedtakBrevSteg private constructor(
             return MeldingOmVedtakBrevSteg(
                 BrevUtlederService(
                     behandlingRepository = behandlingRepository,
-                    resultatUtleder = ResultatUtleder(underveisRepository),
+                    resultatUtleder = ResultatUtleder(underveisRepository, behandlingRepository),
                 ),
                 BrevbestillingService(
                     signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository),
