@@ -5,6 +5,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -20,12 +22,14 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class RefusjonkravSteg private constructor(
     private val refusjonkravRepository: RefusjonkravRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val sykdomRepository: SykdomRepository
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        val sykdomsvurderinger = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.sykdomsvurderinger ?: emptyList()
 
-        if (!erIkkeAvslagPåVilkårTidligere(vilkårsresultat)) {
+        if (!erIkkeAvslagPåVilkårTidligere(vilkårsresultat, sykdomsvurderinger)) {
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
             val refusjonBehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.REFUSJON_KRAV)
             if (refusjonBehov != null && refusjonBehov.erÅpent()) {
@@ -56,10 +60,12 @@ class RefusjonkravSteg private constructor(
     }
 
     private fun erIkkeAvslagPåVilkårTidligere(
-        vilkårsresultat: Vilkårsresultat
+        vilkårsresultat: Vilkårsresultat, sykdomsvurderinger: List<Sykdomsvurdering>
     ): Boolean {
         return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()
             && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
+            && sykdomsvurderinger.any { it.erOppfyltSettBortIfraVissVarighet() }
+            && vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET).harPerioderSomErOppfylt()
     }
 
     companion object : FlytSteg {
@@ -68,7 +74,8 @@ class RefusjonkravSteg private constructor(
             val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
             val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
             val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-            return RefusjonkravSteg(refusjonkravRepository, vilkårsresultatRepository, avklaringsbehovRepository)
+            val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
+            return RefusjonkravSteg(refusjonkravRepository, vilkårsresultatRepository, avklaringsbehovRepository, sykdomRepository)
         }
 
         override fun type(): StegType {
