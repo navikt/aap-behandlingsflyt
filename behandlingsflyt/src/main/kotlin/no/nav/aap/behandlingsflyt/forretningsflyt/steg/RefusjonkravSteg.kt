@@ -62,10 +62,16 @@ class RefusjonkravSteg private constructor(
     private fun erIkkeAvslagPåVilkårTidligere(
         vilkårsresultat: Vilkårsresultat, sykdomsvurderinger: List<Sykdomsvurdering>
     ): Boolean {
+        val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+        val bistandsvilkåretEllerSykepengerErstatningHvisIkke = if (!bistandsvilkåret.harPerioderSomErOppfylt()) {
+            vilkårsresultat.optionalVilkår(Vilkårtype.SYKEPENGEERSTATNING)?.harPerioderSomErOppfylt() == true
+        } else {
+            bistandsvilkåret.harPerioderSomErOppfylt()
+        }
         return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()
             && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
             && sykdomsvurderinger.any { it.erOppfyltSettBortIfraVissVarighet() }
-            && vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET).harPerioderSomErOppfylt()
+            && bistandsvilkåretEllerSykepengerErstatningHvisIkke
     }
 
     companion object : FlytSteg {
