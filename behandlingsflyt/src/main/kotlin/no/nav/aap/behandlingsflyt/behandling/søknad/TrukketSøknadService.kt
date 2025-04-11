@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -19,9 +20,11 @@ import no.nav.aap.lookup.repository.RepositoryProvider
  */
 class TrukketSøknadService(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val trukketSøknadRepository: TrukketSøknadRepository,
 ): Informasjonskrav {
     constructor(repositoryProvider: RepositoryProvider): this(
         avklaringsbehovRepository = repositoryProvider.provide(),
+        trukketSøknadRepository = repositoryProvider.provide(),
     )
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
@@ -32,6 +35,10 @@ class TrukketSøknadService(
             ENDRET
         else
             IKKE_ENDRET
+    }
+
+    fun søknadErTrukket(behandlingId: BehandlingId): Boolean {
+        return trukketSøknadRepository.hentTrukketSøknadVurderinger(behandlingId).isNotEmpty()
     }
 
     companion object: Informasjonskravkonstruktør {

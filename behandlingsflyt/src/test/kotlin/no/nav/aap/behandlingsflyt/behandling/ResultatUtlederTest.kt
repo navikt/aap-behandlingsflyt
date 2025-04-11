@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling
 
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
@@ -18,9 +19,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.type.Periode
@@ -33,6 +36,15 @@ import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 
 class ResultatUtlederTest {
+    private val resultatUtleder = ResultatUtleder(
+        underveisRepository = InMemoryUnderveisRepository,
+        InMemoryBehandlingRepository,
+        trukketSøknadService = TrukketSøknadService(
+            InMemoryAvklaringsbehovRepository,
+            InMemoryTrukketSøknadRepository,
+        )
+    )
+
     @Test
     fun `innvilgelse betyr minst en periode med oppfylt`() {
         val sak = nySak(Periode(1 januar 2023, 31 desember 2023))
@@ -47,10 +59,7 @@ class ResultatUtlederTest {
             input = object : Faktagrunnlag {}
         )
 
-        val resultat = ResultatUtleder(
-            InMemoryUnderveisRepository,
-            InMemoryBehandlingRepository
-        ).utledResultat(behandling.behandling.id)
+        val resultat = resultatUtleder.utledResultat(behandling.behandling.id)
 
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
     }
@@ -69,10 +78,7 @@ class ResultatUtlederTest {
             input = object : Faktagrunnlag {}
         )
 
-        val resultat = ResultatUtleder(
-            InMemoryUnderveisRepository,
-            InMemoryBehandlingRepository
-        ).utledResultat(behandling.behandling.id)
+        val resultat = resultatUtleder.utledResultat(behandling.behandling.id)
 
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
     }
@@ -96,10 +102,7 @@ class ResultatUtlederTest {
         )
 
         assertThrows<IllegalArgumentException> {
-            ResultatUtleder(
-                InMemoryUnderveisRepository,
-                InMemoryBehandlingRepository
-            ).utledResultat(behandling2.behandling.id)
+            resultatUtleder.utledResultat(behandling2.behandling.id)
         }
     }
 

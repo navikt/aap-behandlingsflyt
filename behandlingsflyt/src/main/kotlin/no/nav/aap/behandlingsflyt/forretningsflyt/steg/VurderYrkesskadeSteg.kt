@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -27,12 +29,14 @@ class VurderYrkesskadeSteg private constructor(
     private val sykdomRepository: SykdomRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -45,6 +49,12 @@ class VurderYrkesskadeSteg private constructor(
 
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+                        .avbrytForSteg(type())
+                    return Fullført
+                }
+
                 val erBehovForAvklaring = erBehovForAvklaring(vilkårsresultat, yrkesskader, sykdomsvurderingTidslinje)
                 if (erBehovForAvklaring && sykdomsgrunnlag?.yrkesskadevurdering == null) {
                     return FantAvklaringsbehov(Definisjon.AVKLAR_YRKESSKADE)

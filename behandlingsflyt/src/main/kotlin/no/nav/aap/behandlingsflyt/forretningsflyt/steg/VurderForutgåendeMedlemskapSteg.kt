@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.ForutgåendeMedlemskapvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -30,6 +32,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val personopplysningForutgåendeRepository: PersonopplysningForutgåendeRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
@@ -38,6 +41,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         medlemskapArbeidInntektRepository = repositoryProvider.provide(),
         personopplysningForutgåendeRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -53,6 +57,12 @@ class VurderForutgåendeMedlemskapSteg private constructor(
 
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+                        .avbrytForSteg(type())
+                    return Fullført
+                }
+
                 val vilkårsVurdering = vurderVilkår(kontekst)
                 if (vilkårsVurdering != null) return vilkårsVurdering
             }

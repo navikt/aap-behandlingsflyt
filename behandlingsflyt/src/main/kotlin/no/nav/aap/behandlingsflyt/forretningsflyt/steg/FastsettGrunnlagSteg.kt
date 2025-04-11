@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.beregning.AvklarFaktaBeregningService
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
@@ -24,12 +26,15 @@ class FastsettGrunnlagSteg(
     private val beregningService: BeregningService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avklarFaktaBeregningService: AvklarFaktaBeregningService,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         beregningService = BeregningService(repositoryProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
         avklarFaktaBeregningService = AvklarFaktaBeregningService(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
     )
+
     private val log = LoggerFactory.getLogger(javaClass)
 
 
@@ -40,6 +45,9 @@ class FastsettGrunnlagSteg(
 
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    return Fullført
+                }
                 vurderVilkåret(kontekst, vilkår, rettighetsperiode, vilkårsresultat)
             }
 

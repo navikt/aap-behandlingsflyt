@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
@@ -45,6 +46,7 @@ class SamordningAvslagStegTest {
         avklaringsbehovRepository = avklaringsbehovRepository,
         vilkårsresultatRepository = vilkårsresultatRepository,
         sakRepository = sakRepository,
+        tidligereVurderinger = FakeTidligereVurderinger(),
     )
     val periode = Periode(1 februar 2025, 31 mars 2025)
     val rettighetsperiode = Periode(1 januar 2025, 31 desember 2025)

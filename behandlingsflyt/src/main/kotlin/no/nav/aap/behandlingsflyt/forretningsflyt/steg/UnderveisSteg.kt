@@ -1,23 +1,36 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
-class UnderveisSteg(private val underveisService: UnderveisService) : BehandlingSteg {
+class UnderveisSteg(
+    private val underveisService: UnderveisService,
+    private val tidligereVurderinger: TidligereVurderinger,
+) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider): this(
         underveisService = UnderveisService(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
     )
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (kontekst.vurdering.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
+            if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                return Fullført
+            }
+        }
+
         // Skal alltid kjøres uavhengig av vurderingstype
         underveisService.vurder(kontekst.sakId, kontekst.behandlingId)
         return Fullført

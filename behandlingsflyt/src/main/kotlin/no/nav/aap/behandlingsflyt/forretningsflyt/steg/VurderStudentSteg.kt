@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
@@ -15,25 +18,31 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderStudentSteg private constructor(
     private val studentRepository: StudentRepository,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider): this(
         studentRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
-                val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+                        .avbrytForSteg(type())
+                    return Fullført
+                }
 
+                val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
                 if (studentGrunnlag != null && !studentGrunnlag.erKonsistent()) {
                     return FantAvklaringsbehov(Definisjon.AVKLAR_STUDENT)
                 }
             }
-
             VurderingType.REVURDERING -> {
                 val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
-
                 if (studentGrunnlag != null && !studentGrunnlag.erKonsistent()) {
                     return FantAvklaringsbehov(Definisjon.AVKLAR_STUDENT)
                 }
@@ -47,7 +56,6 @@ class VurderStudentSteg private constructor(
                 // Do nothing
             }
         }
-
 
         return Fullført
     }

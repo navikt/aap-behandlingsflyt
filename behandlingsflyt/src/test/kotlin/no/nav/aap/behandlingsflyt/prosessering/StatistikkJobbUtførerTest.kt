@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
@@ -64,6 +65,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårs
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -77,9 +79,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -92,6 +96,7 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.lookup.gateway.GatewayRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.dokument.Kanal
@@ -122,6 +127,7 @@ class StatistikkJobbUtførerTest {
             .register(AktivitetspliktRepositoryImpl::class)
             .register(BrevbestillingRepositoryImpl::class)
             .register<PersonopplysningForutgåendeRepositoryImpl>()
+            .register<TrukketSøknadRepositoryImpl>()
             .status()
         GatewayRegistry.register<PdlBarnGateway>()
             .register<PdlIdentGateway>()
@@ -218,7 +224,8 @@ class StatistikkJobbUtførerTest {
                 dokumentRepository = MottattDokumentRepositoryImpl(connection),
                 pipRepository = PipRepositoryImpl(connection),
                 sykdomRepository = SykdomRepositoryImpl(connection),
-                underveisRepository = UnderveisRepositoryImpl(connection)
+                underveisRepository = UnderveisRepositoryImpl(connection),
+                trukketSøknadService = TrukketSøknadService(RepositoryProvider(connection)),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -402,7 +409,8 @@ class StatistikkJobbUtførerTest {
                 PipRepositoryImpl(connection),
                 MottattDokumentRepositoryImpl(connection),
                 sykdomRepository = SykdomRepositoryImpl(connection),
-                underveisRepository = UnderveisRepositoryImpl(connection)
+                underveisRepository = UnderveisRepositoryImpl(connection),
+                trukketSøknadService = TrukketSøknadService(RepositoryProvider(connection)),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -614,7 +622,8 @@ class StatistikkJobbUtførerTest {
                 pipRepository,
                 dokumentRepository,
                 sykdomRepository = sykdomRepository,
-                underveisRepository = InMemoryUnderveisRepository
+                underveisRepository = InMemoryUnderveisRepository,
+                trukketSøknadService = TrukketSøknadService(InMemoryAvklaringsbehovRepository, InMemoryTrukketSøknadRepository),
             )
 
         val avklaringsbehov = listOf(

@@ -28,6 +28,7 @@ class BrevUtlederService(
                 return when (resultat) {
                     Resultat.INNVILGELSE -> BrevBehov(TypeBrev.VEDTAK_INNVILGELSE)
                     Resultat.AVSLAG -> BrevBehov(TypeBrev.VEDTAK_AVSLAG)
+                    Resultat.TRUKKET -> BrevBehov(null)
                 }
             }
 

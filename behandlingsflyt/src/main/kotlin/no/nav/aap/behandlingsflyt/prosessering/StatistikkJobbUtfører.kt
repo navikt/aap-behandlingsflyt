@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
@@ -66,7 +67,10 @@ class StatistikkJobbUtfører(
     private val dokumentRepository: MottattDokumentRepository,
     private val sykdomRepository: SykdomRepository,
     private val underveisRepository: UnderveisRepository,
+    private val trukketSøknadService: TrukketSøknadService,
 ) : JobbUtfører {
+
+    private val resultatUtleder = ResultatUtleder(underveisRepository, behandlingRepository, trukketSøknadService)
 
     private val log = LoggerFactory.getLogger(javaClass)
     override fun utfør(input: JobbInput) {
@@ -276,6 +280,7 @@ class StatistikkJobbUtfører(
                 when (it) {
                     Resultat.INNVILGELSE -> ResultatKode.INNVILGET
                     Resultat.AVSLAG -> ResultatKode.AVSLAG
+                    Resultat.TRUKKET -> TODO()
                     null -> null
                 }
             },
@@ -286,9 +291,7 @@ class StatistikkJobbUtfører(
     private fun hentResultat(behandling: Behandling): Resultat? {
         return when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> {
-                ResultatUtleder(underveisRepository, behandlingRepository)
-                    .utledResultat(behandling.id)
-                    .let { return it }
+                resultatUtleder.utledResultat(behandling.id)
             }
 
             TypeBehandling.Revurdering -> {
@@ -395,7 +398,8 @@ class StatistikkJobbUtfører(
                 pipRepository = pipRepository,
                 dokumentRepository = mottattDokumentRepository,
                 sykdomRepository = repositoryProvider.provide(),
-                underveisRepository = repositoryProvider.provide()
+                underveisRepository = repositoryProvider.provide(),
+                trukketSøknadService = TrukketSøknadService(repositoryProvider),
             )
         }
 
