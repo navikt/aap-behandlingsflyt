@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
@@ -9,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -16,14 +19,10 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class AktivitetspliktInformasjonskrav (
     private val mottaDokumentService: MottaDokumentService,
     private val aktivitetspliktRepository: AktivitetspliktRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav {
-
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.AKTIVITETSPLIKT
-
-        override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
-            return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse()
-        }
 
         override fun konstruer(connection: DBConnection): AktivitetspliktInformasjonskrav {
             val mottattDokumentRepository =
@@ -31,9 +30,17 @@ class AktivitetspliktInformasjonskrav (
 
             return AktivitetspliktInformasjonskrav(
                 MottaDokumentService(mottattDokumentRepository),
-                AktivitetspliktRepositoryImpl(connection)
+                AktivitetspliktRepositoryImpl(connection),
+                TidligereVurderingerImpl(RepositoryProvider(connection)),
             )
         }
+    }
+
+    override val navn = Companion.navn
+
+    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+        return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse() &&
+                tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {

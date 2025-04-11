@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgService
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
@@ -10,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Stat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeService
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.aaregisteret.AARegisterGateway
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -20,6 +22,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.Pers
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -71,6 +74,7 @@ class InformasjonskravGrunnlagTest {
             .register<MedlemskapArbeidInntektForutgåendeRepositoryImpl>()
             .register<PersonopplysningForutgåendeRepositoryImpl>()
             .register<RefusjonkravRepositoryImpl>()
+            .register<TrukketSøknadRepositoryImpl>()
 
         GatewayRegistry.register<MedlemskapGateway>().register<AARegisterGateway>()
             .register<YrkesskadeRegisterGatewayImpl>()
@@ -91,7 +95,7 @@ class InformasjonskravGrunnlagTest {
             )
 
             val initiell = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(YrkesskadeService),
+                listOf(StegType.VURDER_YRKESSKADE to YrkesskadeService),
                 kontekst
             )
 
@@ -100,7 +104,7 @@ class InformasjonskravGrunnlagTest {
                 .allMatch { it === YrkesskadeService }
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(YrkesskadeService),
+                listOf(StegType.VURDER_YRKESSKADE to YrkesskadeService),
                 kontekst
             )
 
@@ -123,7 +127,7 @@ class InformasjonskravGrunnlagTest {
             )
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(YrkesskadeService),
+                listOf(StegType.VURDER_YRKESSKADE to YrkesskadeService),
                 kontekst
             )
 
@@ -140,7 +144,7 @@ class InformasjonskravGrunnlagTest {
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), connection)
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(YrkesskadeService),
+                listOf(StegType.VURDER_YRKESSKADE to YrkesskadeService),
                 kontekst
             )
 
@@ -163,7 +167,7 @@ class InformasjonskravGrunnlagTest {
             )
 
             val initiell = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(LovvalgService),
+                listOf(StegType.VURDER_LOVVALG to LovvalgService),
                 kontekst
             )
 
@@ -172,7 +176,7 @@ class InformasjonskravGrunnlagTest {
                 .allMatch { it === LovvalgService }
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(LovvalgService),
+                listOf(StegType.VURDER_LOVVALG to LovvalgService),
                 kontekst
             )
 

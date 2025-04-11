@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn
 
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
@@ -12,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.RelatertPersonopplysning
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -31,8 +34,17 @@ class BarnService private constructor(
     private val personRepository: PersonRepository,
     private val barnGateway: BarnGateway,
     private val pdlGateway: IdentGateway,
-    private val vilkårsresultatRepository: VilkårsresultatRepository
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav {
+
+    override val navn = Companion.navn
+
+    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+        return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse() &&
+                oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
+                tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
+    }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val behandlingId = kontekst.behandlingId
@@ -109,11 +121,6 @@ class BarnService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.BARN
 
-        override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
-            return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse() &&
-                    oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
-        }
-
         override fun konstruer(connection: DBConnection): BarnService {
             val repositoryProvider = RepositoryProvider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()
@@ -131,7 +138,8 @@ class BarnService private constructor(
                 personRepository,
                 barnGateway,
                 identGateway,
-                vilkårsresultatRepository
+                vilkårsresultatRepository,
+                TidligereVurderingerImpl(repositoryProvider),
             )
         }
     }

@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade
 
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
@@ -14,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.Yrke
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -33,10 +36,19 @@ class YrkesskadeService private constructor(
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val personopplysningRepository: PersonopplysningRepository,
     private val yrkesskadeRegisterGateway: YrkesskadeRegisterGateway,
-    private val mottattDokumentRepository: MottattDokumentRepository
+    private val mottattDokumentRepository: MottattDokumentRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav {
+    override val navn = Companion.navn
 
     private val log = LoggerFactory.getLogger(javaClass)
+
+    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+        return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
+                oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
+                tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
+    }
+
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
@@ -113,11 +125,6 @@ class YrkesskadeService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.YRKESSKADE
 
-        override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
-            return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
-                    oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
-        }
-
         override fun konstruer(connection: DBConnection): YrkesskadeService {
             val repositoryProvider = RepositoryProvider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()
@@ -131,6 +138,7 @@ class YrkesskadeService private constructor(
                 personopplysningRepository,
                 GatewayProvider.provide(),
                 mottattDokumentRepository,
+                TidligereVurderingerImpl(repositoryProvider),
             )
         }
     }

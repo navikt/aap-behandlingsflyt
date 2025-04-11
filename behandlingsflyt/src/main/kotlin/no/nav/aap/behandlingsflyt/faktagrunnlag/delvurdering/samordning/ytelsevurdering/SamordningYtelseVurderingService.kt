@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
@@ -13,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -29,10 +32,19 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 class SamordningYtelseVurderingService(
     private val samordningYtelseRepository: SamordningYtelseRepository,
     private val sakService: SakService,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav {
     private val fpGateway = GatewayProvider.provide<ForeldrepengerGateway>()
     private val spGateway = GatewayProvider.provide<SykepengerGateway>()
     private val log = LoggerFactory.getLogger(javaClass)
+
+    override val navn = Companion.navn
+
+    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+        return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse() &&
+                oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
+                tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
+    }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
@@ -139,13 +151,9 @@ class SamordningYtelseVurderingService(
         }
     }
 
+
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.SAMORDNING_YTELSE
-
-        override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
-            return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse() &&
-                    oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
-        }
 
         override fun konstruer(connection: DBConnection): SamordningYtelseVurderingService {
             val repositoryProvider = RepositoryProvider(connection)
@@ -153,6 +161,7 @@ class SamordningYtelseVurderingService(
             return SamordningYtelseVurderingService(
                 repositoryProvider.provide(),
                 SakService(sakRepository),
+                TidligereVurderingerImpl(repositoryProvider),
             )
         }
     }

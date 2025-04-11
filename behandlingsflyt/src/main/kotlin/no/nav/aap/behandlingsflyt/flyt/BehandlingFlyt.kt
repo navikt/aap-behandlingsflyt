@@ -41,8 +41,10 @@ class BehandlingFlyt private constructor(
         parent = null
     )
 
-    fun faktagrunnlagForGjeldendeSteg(): List<Informasjonskravkonstruktør> {
-        return aktivtSteg?.kravliste ?: emptyList()
+    fun faktagrunnlagForGjeldendeSteg(): List<Pair<StegType, Informasjonskravkonstruktør>> {
+        return aktivtSteg
+            ?.let { steg -> steg.kravliste.map { steg.steg.type() to it } }
+            ?: emptyList()
     }
 
     /**
@@ -50,14 +52,14 @@ class BehandlingFlyt private constructor(
      *
      * @return Alle faktagrunnlag, i form av en liste av [Informasjonskravkonstruktør].
      */
-    fun alleFaktagrunnlagFørGjeldendeSteg(): List<Informasjonskravkonstruktør> {
+    fun alleFaktagrunnlagFørGjeldendeSteg(): List<Pair<StegType, Informasjonskravkonstruktør>> {
         if (aktivtSteg?.oppdaterFaktagrunnlag != true) {
             return emptyList()
         }
 
         return flyt
             .takeWhile { it != aktivtSteg }
-            .flatMap { it.kravliste }
+            .flatMap { steg -> steg.kravliste.map { steg.steg.type() to it } }
     }
 
     fun forberedFlyt(aktivtSteg: StegType): FlytSteg {

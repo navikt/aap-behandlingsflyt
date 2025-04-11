@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
@@ -27,6 +28,12 @@ class TrukketSøknadService(
         trukketSøknadRepository = repositoryProvider.provide(),
     )
 
+    override val navn = Companion.navn
+
+    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+        return ÅrsakTilBehandling.SØKNAD_TRUKKET in kontekst.vurdering.årsakerTilBehandling
+    }
+
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val vurderTrekkAvklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VURDER_TREKK_AV_SØKNAD)
@@ -43,10 +50,6 @@ class TrukketSøknadService(
 
     companion object: Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.TRUKKET_SØKNAD
-
-        override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
-            return ÅrsakTilBehandling.SØKNAD_TRUKKET in kontekst.vurdering.årsakerTilBehandling
-        }
 
         override fun konstruer(connection: DBConnection): Informasjonskrav {
             return TrukketSøknadService(RepositoryProvider(connection))

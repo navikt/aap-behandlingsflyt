@@ -23,6 +23,10 @@ interface TidligereVurderinger {
     fun girAvslagEllerIngenBehandlingsgrunnlag(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean
 
     fun girIngenBehandlingsgrunnlag(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean
+
+    fun harBehandlingsgrunnlag(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean {
+        return !girIngenBehandlingsgrunnlag(kontekst, førSteg)
+    }
 }
 
 class TidligereVurderingerImpl(

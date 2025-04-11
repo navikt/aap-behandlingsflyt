@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
 import no.nav.aap.behandlingsflyt.behandling.beregning.AvklarFaktaBeregningService
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
@@ -18,6 +20,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -37,8 +40,17 @@ class InntektService private constructor(
     private val studentRepository: StudentRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
-    private val inntektRegisterGateway: InntektRegisterGateway
+    private val inntektRegisterGateway: InntektRegisterGateway,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav {
+
+    override val navn = Companion.navn
+
+    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+        return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
+                oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
+                tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
+    }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val behandlingId = kontekst.behandlingId
@@ -95,11 +107,6 @@ class InntektService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.INNTEKT
 
-        override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
-            return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
-                    oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
-        }
-
         override fun konstruer(connection: DBConnection): InntektService {
             val repositoryProvider = RepositoryProvider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()
@@ -115,7 +122,8 @@ class InntektService private constructor(
                 studentRepository = repositoryProvider.provide(),
                 beregningVurderingRepository = beregningVurderingRepository,
                 yrkesskadeRepository = repositoryProvider.provide(),
-                inntektRegisterGateway = GatewayProvider.provide()
+                inntektRegisterGateway = GatewayProvider.provide(),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
             )
         }
     }

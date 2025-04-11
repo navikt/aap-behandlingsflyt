@@ -47,7 +47,7 @@ class StegOrkestrator(
     fun utfør(
         kontekst: FlytKontekst,
         behandling: Behandling,
-        faktagrunnlagForGjeldendeSteg: List<Informasjonskravkonstruktør>
+        faktagrunnlagForGjeldendeSteg: List<Pair<StegType, Informasjonskravkonstruktør>>,
     ): Transisjon {
         val stegSpan = tracer.spanBuilder("utfør ${aktivtSteg.type().name}")
             .setAttribute("steg", aktivtSteg.type().name)
@@ -141,7 +141,7 @@ class StegOrkestrator(
         kontekst: FlytKontekstMedPerioder,
         gjeldendeStegStatus: StegStatus,
         behandling: Behandling,
-        faktagrunnlagForGjeldendeSteg: List<Informasjonskravkonstruktør>
+        faktagrunnlagForGjeldendeSteg: List<Pair<StegType, Informasjonskravkonstruktør>>
     ): Transisjon {
         log.debug(
             "Behandler steg({}) med status({})",
@@ -166,7 +166,7 @@ class StegOrkestrator(
 
     private fun oppdaterFaktagrunnlag(
         kontekstMedPerioder: FlytKontekstMedPerioder,
-        faktagrunnlagForGjeldendeSteg: List<Informasjonskravkonstruktør>
+        faktagrunnlagForGjeldendeSteg: List<Pair<StegType, Informasjonskravkonstruktør>>,
     ): Fortsett {
         informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
             faktagrunnlagForGjeldendeSteg,
