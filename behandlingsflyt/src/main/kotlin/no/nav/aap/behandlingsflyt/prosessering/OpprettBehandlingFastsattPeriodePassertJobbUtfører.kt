@@ -16,7 +16,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
-import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -26,7 +25,6 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
     private val underveisRepository: UnderveisRepository,
     private val sakOgBehandlingService: SakOgBehandlingService,
 ) : JobbUtfører {
-    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
         val sak = sakService.hent(SakId(input.sakId()))

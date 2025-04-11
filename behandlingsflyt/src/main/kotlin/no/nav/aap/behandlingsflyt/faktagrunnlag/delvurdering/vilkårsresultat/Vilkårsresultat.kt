@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 
 class Vilkårsresultat(
@@ -70,9 +71,8 @@ class Vilkårsresultat(
      * Default-verdien er [RettighetsType.BISTANDSBEHOV] (normal § 11-6).
      */
     private fun prioriterVilkår(vilkårPar: Set<Pair<Vilkårtype, Innvilgelsesårsak?>>): RettighetsType {
-        val (_, bistandsvurderingen) =
-            requireNotNull(vilkårPar.firstOrNull { it.first == Vilkårtype.BISTANDSVILKÅRET })
-            { "Bistandsvilkåret må være oppfylt for å regne ut rettighetstype." }
+        val (_, bistandsvurderingen) = vilkårPar.firstOrNull { it.first == Vilkårtype.BISTANDSVILKÅRET }
+            ?: throw UgyldigForespørselException("Bistandsvilkåret må være oppfylt for å regne ut rettighetstype.")
 
         when (bistandsvurderingen) {
             Innvilgelsesårsak.STUDENT -> return RettighetsType.STUDENT
