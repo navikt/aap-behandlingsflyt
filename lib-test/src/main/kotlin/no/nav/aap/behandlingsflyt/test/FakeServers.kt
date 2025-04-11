@@ -1351,7 +1351,7 @@ object FakeServers : AutoCloseable {
                 val token = AzureTokenGen(
                     issuer = "behandlingsflyt",
                     audience = "behandlingsflyt"
-                ).generate(body.contains("grant_type=client_credentials"))
+                ).generate(body.contains("grant_type=client_credentials"), azp = "behandlingsflyt")
                 call.respond(TestToken(access_token = token))
             }
             get("/jwks") {

@@ -18,7 +18,7 @@ class SafListDokumentGatewayTest {
         val tokenString = AzureTokenGen(
             issuer = "xdf",
             audience = "xxx"
-        ).generate(true)
+        ).generate(true, "behandlingsflyt")
 
         val token = OidcToken(tokenString)
 
