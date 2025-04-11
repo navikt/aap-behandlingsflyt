@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 enum class Resultat {
     INNVILGELSE,
@@ -16,6 +17,11 @@ class ResultatUtleder(
     private val underveisRepository: UnderveisRepository,
     private val behandlingRepository: BehandlingRepository
 ) {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        underveisRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+    )
+
     fun utledResultat(behandlingId: BehandlingId): Resultat {
         val behandling = behandlingRepository.hent(behandlingId)
 
@@ -32,5 +38,4 @@ class ResultatUtleder(
             Resultat.AVSLAG
         }
     }
-
 }

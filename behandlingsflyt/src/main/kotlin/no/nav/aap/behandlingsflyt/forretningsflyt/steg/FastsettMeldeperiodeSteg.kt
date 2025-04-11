@@ -19,6 +19,11 @@ class FastsettMeldeperiodeSteg(
     private val sakRepository: SakRepository,
     private val meldeperiodeRepository: MeldeperiodeRepository,
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        sakRepository = repositoryProvider.provide(),
+        meldeperiodeRepository = repositoryProvider.provide(),
+    )
+
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val rettighetsperiode = sakRepository.hent(kontekst.sakId).rettighetsperiode
         oppdaterMeldeperioder(kontekst.behandlingId, rettighetsperiode)
@@ -37,10 +42,7 @@ class FastsettMeldeperiodeSteg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val sakRepository = repositoryProvider.provide<SakRepository>()
-            val meldeperiodeRepository = repositoryProvider.provide<MeldeperiodeRepository>()
-            return FastsettMeldeperiodeSteg(sakRepository, meldeperiodeRepository)
+            return FastsettMeldeperiodeSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

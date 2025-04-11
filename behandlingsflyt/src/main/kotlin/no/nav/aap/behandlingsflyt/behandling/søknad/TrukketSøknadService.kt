@@ -20,6 +20,10 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class TrukketSøknadService(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ): Informasjonskrav {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        avklaringsbehovRepository = repositoryProvider.provide(),
+    )
+
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val vurderTrekkAvklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VURDER_TREKK_AV_SØKNAD)
@@ -38,7 +42,7 @@ class TrukketSøknadService(
         }
 
         override fun konstruer(connection: DBConnection): Informasjonskrav {
-            return TrukketSøknadService(RepositoryProvider(connection).provide())
+            return TrukketSøknadService(RepositoryProvider(connection))
         }
     }
 }

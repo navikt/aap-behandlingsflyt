@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Vedlegg
 import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.lookup.gateway.GatewayProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
 import java.util.*
 
 class BrevbestillingService(
@@ -17,6 +19,13 @@ class BrevbestillingService(
     private val behandlingRepository: BehandlingRepository,
     private val sakRepository: SakRepository,
 ) {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        signaturService = SignaturService(repositoryProvider),
+        brevbestillingGateway = GatewayProvider.provide(),
+        brevbestillingRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
+    )
 
     fun harBestillingOmVedtak(behandlingId: BehandlingId): Boolean {
         return brevbestillingRepository.hent(behandlingId).any { it.typeBrev.erVedtak() }

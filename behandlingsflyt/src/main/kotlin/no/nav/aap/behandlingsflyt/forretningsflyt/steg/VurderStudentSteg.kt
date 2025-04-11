@@ -14,8 +14,12 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderStudentSteg private constructor(
-    private val studentRepository: StudentRepository
+    private val studentRepository: StudentRepository,
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        studentRepository = repositoryProvider.provide(),
+    )
+
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
 
         when (kontekst.vurdering.vurderingType) {
@@ -50,7 +54,7 @@ class VurderStudentSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return VurderStudentSteg(RepositoryProvider(connection).provide())
+            return VurderStudentSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

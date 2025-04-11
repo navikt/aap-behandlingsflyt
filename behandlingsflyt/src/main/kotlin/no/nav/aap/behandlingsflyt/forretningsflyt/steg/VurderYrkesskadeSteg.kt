@@ -26,8 +26,14 @@ class VurderYrkesskadeSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sykdomRepository: SykdomRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        sykdomRepository = repositoryProvider.provide(),
+        yrkesskadeRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+    )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val behandlingId = kontekst.behandlingId
@@ -88,15 +94,7 @@ class VurderYrkesskadeSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
-            return VurderYrkesskadeSteg(
-                vilkårsresultatRepository,
-                repositoryProvider.provide(),
-                repositoryProvider.provide(),
-                avklaringsbehovRepository
-            )
+            return VurderYrkesskadeSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

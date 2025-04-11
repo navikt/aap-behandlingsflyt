@@ -29,10 +29,17 @@ class VurderLovvalgSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val personopplysningRepository: PersonopplysningRepository,
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
-    private val sakRepository: SakRepository
+    private val sakRepository: SakRepository,
 ) : BehandlingSteg {
-    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        personopplysningRepository = repositoryProvider.provide(),
+        medlemskapArbeidInntektRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
+    )
 
+
+    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 val vurdering = vurderVilkår(kontekst)
@@ -121,17 +128,7 @@ class VurderLovvalgSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
-            val personopplysningRepository = repositoryProvider.provide<PersonopplysningRepository>()
-            val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
-            val sakRepository = repositoryProvider.provide<SakRepository>()
-            return VurderLovvalgSteg(
-                vilkårsresultatRepository,
-                personopplysningRepository,
-                medlemskapArbeidInntektRepository,
-                sakRepository
-            )
+            return VurderLovvalgSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

@@ -23,8 +23,15 @@ class RefusjonkravSteg private constructor(
     private val refusjonkravRepository: RefusjonkravRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val sykdomRepository: SykdomRepository
+    private val sykdomRepository: SykdomRepository,
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        refusjonkravRepository = repositoryProvider.provide(),
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        sykdomRepository = repositoryProvider.provide(),
+    )
+
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val sykdomsvurderinger = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.sykdomsvurderinger ?: emptyList()
@@ -40,7 +47,9 @@ class RefusjonkravSteg private constructor(
 
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
-                refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId) ?: return FantAvklaringsbehov(Definisjon.REFUSJON_KRAV)
+                refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId) ?: return FantAvklaringsbehov(
+                    Definisjon.REFUSJON_KRAV
+                )
             }
 
             VurderingType.REVURDERING -> {
@@ -72,19 +81,14 @@ class RefusjonkravSteg private constructor(
         }
 
         return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()
-            && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
-            && sykdomsvurderinger.any { it.erOppfyltSettBortIfraVissVarighet() }
-            && bistandsvilkåretErOppfyltEllerIkkeVissVarighet
+             && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
+             && sykdomsvurderinger.any { it.erOppfyltSettBortIfraVissVarighet() }
+             && bistandsvilkåretErOppfyltEllerIkkeVissVarighet
     }
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
-            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
-            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-            val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
-            return RefusjonkravSteg(refusjonkravRepository, vilkårsresultatRepository, avklaringsbehovRepository, sykdomRepository)
+            return RefusjonkravSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

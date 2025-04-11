@@ -20,9 +20,10 @@ interface GrunnlagKopierer {
  *
  * Knytter alle opplysninger fra forrige til den nye i en immutable state
  */
-class GrunnlagKopiererImpl(connection: DBConnection): GrunnlagKopierer {
-
-    private val repositoryProvider = RepositoryProvider(connection)
+class GrunnlagKopiererImpl(
+    private val repositoryProvider: RepositoryProvider,
+) : GrunnlagKopierer {
+    constructor(connection: DBConnection) : this(RepositoryProvider(connection))
 
     override fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
         require(fraBehandlingId != tilBehandlingId)

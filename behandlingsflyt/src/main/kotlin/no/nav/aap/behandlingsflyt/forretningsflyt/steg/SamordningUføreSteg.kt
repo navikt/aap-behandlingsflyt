@@ -24,6 +24,13 @@ class SamordningUføreSteg(
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        samordningUføreRepository = repositoryProvider.provide(),
+        uføreRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+    )
+
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
@@ -76,17 +83,7 @@ class SamordningUføreSteg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val uføreRepository = repositoryProvider.provide<UføreRepository>()
-            val samordningUførRepository = repositoryProvider.provide<SamordningUføreRepository>()
-            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-            return SamordningUføreSteg(
-                samordningUførRepository,
-                uføreRepository,
-                behandlingRepository,
-                avklaringsbehovRepository
-            )
+            return SamordningUføreSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

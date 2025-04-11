@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriod
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
@@ -31,6 +30,17 @@ class BeregnTilkjentYtelseSteg private constructor(
     private val samordningRepository: SamordningRepository,
     private val samordningUføreRepository: SamordningUføreRepository,
 ) : BehandlingSteg {
+
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        underveisRepository = repositoryProvider.provide(),
+        beregningsgrunnlagRepository = repositoryProvider.provide(),
+        personopplysningRepository = repositoryProvider.provide(),
+        barnetilleggRepository = repositoryProvider.provide(),
+        tilkjentYtelseRepository = repositoryProvider.provide(),
+        samordningRepository = repositoryProvider.provide(),
+        samordningUføreRepository = repositoryProvider.provide(),
+    )
+
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -63,21 +73,7 @@ class BeregnTilkjentYtelseSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val personopplysningRepository = repositoryProvider.provide<PersonopplysningRepository>()
-            val tilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>()
-            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
-            val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
-
-            return BeregnTilkjentYtelseSteg(
-                underveisRepository,
-                BeregningsgrunnlagRepositoryImpl(connection),
-                personopplysningRepository,
-                barnetilleggRepository,
-                tilkjentYtelseRepository,
-                repositoryProvider.provide(),
-                repositoryProvider.provide()
-            )
+            return BeregnTilkjentYtelseSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

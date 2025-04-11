@@ -15,8 +15,11 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class KvalitetssikringsSteg private constructor(
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        avklaringsbehovRepository = repositoryProvider.provide(),
+    )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (kontekst.behandlingType != TypeBehandling.Førstegangsbehandling) {
@@ -36,9 +39,7 @@ class KvalitetssikringsSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-            return KvalitetssikringsSteg(avklaringsbehovRepository)
+            return KvalitetssikringsSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

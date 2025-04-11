@@ -20,10 +20,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
-import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 @Suppress("unused")
@@ -40,6 +38,13 @@ class SamordningAvslagSteg(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sakRepository: SakRepository,
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        samordningService = SamordningService(repositoryProvider),
+        uføreService = UføreService(repositoryProvider),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        vilkårsresultatRepository  = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
+    )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val sak = sakRepository.hent(kontekst.sakId)
@@ -103,25 +108,7 @@ class SamordningAvslagSteg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-            return SamordningAvslagSteg(
-                samordningService = SamordningService(
-                    repositoryProvider.provide(),
-                    repositoryProvider.provide()
-                ),
-                avklaringsbehovRepository = avklaringsbehovRepository,
-                vilkårsresultatRepository = repositoryProvider.provide(),
-                sakRepository = repositoryProvider.provide(),
-                uføreService = UføreService(
-                    sakService = SakService(
-                        sakRepository = repositoryProvider.provide(),
-                    ),
-                    uføreRepository = repositoryProvider.provide(),
-                    samordningUføreRepository = repositoryProvider.provide(),
-                    uføreRegisterGateway = GatewayProvider.provide(),
-                ),
-            )
+            return SamordningAvslagSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

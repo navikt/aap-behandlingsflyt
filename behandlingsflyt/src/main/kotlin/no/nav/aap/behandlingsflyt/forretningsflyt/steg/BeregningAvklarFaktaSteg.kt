@@ -30,8 +30,16 @@ class BeregningAvklarFaktaSteg private constructor(
     private val vilkårsresultatRepository1: VilkårsresultatRepository,
     private val avklarFaktaBeregningService: AvklarFaktaBeregningService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val yrkesskadeRepository: YrkesskadeRepository
+    private val yrkesskadeRepository: YrkesskadeRepository,
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        beregningVurderingRepository = repositoryProvider.provide(),
+        sykdomRepository = repositoryProvider.provide(),
+        vilkårsresultatRepository1 = repositoryProvider.provide(),
+        avklarFaktaBeregningService = AvklarFaktaBeregningService(repositoryProvider),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        yrkesskadeRepository = repositoryProvider.provide(),
+    )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val behandlingId = kontekst.behandlingId
@@ -140,18 +148,7 @@ class BeregningAvklarFaktaSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
-            val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
-            return BeregningAvklarFaktaSteg(
-                beregningVurderingRepository,
-                repositoryProvider.provide(),
-                vilkårsresultatRepository,
-                AvklarFaktaBeregningService(vilkårsresultatRepository),
-                avklaringsbehovRepository,
-                repositoryProvider.provide()
-            )
+            return BeregningAvklarFaktaSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

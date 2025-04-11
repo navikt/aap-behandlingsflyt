@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 
 class SakOgBehandlingService(
@@ -24,6 +25,11 @@ class SakOgBehandlingService(
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository
 ) {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        grunnlagKopierer = GrunnlagKopiererImpl(repositoryProvider),
+        sakRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+    )
 
     fun finnEllerOpprettBehandling(sakId: SakId, årsaker: List<Årsak>): BeriketBehandling {
         val sisteBehandlingForSak = behandlingRepository.finnSisteBehandlingFor(

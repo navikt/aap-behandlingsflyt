@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -26,6 +25,13 @@ class UføreService(
     private val samordningUføreRepository: SamordningUføreRepository,
     private val uføreRegisterGateway: UføreRegisterGateway
 ) : Informasjonskrav {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        sakService = SakService(repositoryProvider),
+        uføreRepository = repositoryProvider.provide(),
+        samordningUføreRepository = repositoryProvider.provide(),
+        uføreRegisterGateway = GatewayProvider.provide(),
+    )
+
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
         val uføregrader = uføreRegisterGateway.innhentMedHistorikk(sak.person, sak.rettighetsperiode.fom)
@@ -72,14 +78,7 @@ class UføreService(
         }
 
         override fun konstruer(connection: DBConnection): UføreService {
-            val repositoryProvider = RepositoryProvider(connection)
-            val sakRepository = repositoryProvider.provide<SakRepository>()
-            return UføreService(
-                sakService = SakService(sakRepository),
-                uføreRegisterGateway = GatewayProvider.provide<UføreRegisterGateway>(),
-                uføreRepository = repositoryProvider.provide(),
-                samordningUføreRepository = repositoryProvider.provide()
-            )
+            return UføreService(RepositoryProvider(connection))
         }
     }
 }

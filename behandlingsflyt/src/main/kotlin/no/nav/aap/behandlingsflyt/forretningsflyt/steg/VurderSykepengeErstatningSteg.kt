@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -27,8 +26,14 @@ class VurderSykepengeErstatningSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sykepengerErstatningRepository: SykepengerErstatningRepository,
     private val sakService: SakService,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        sykepengerErstatningRepository = repositoryProvider.provide(),
+        sakService = SakService(repositoryProvider),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+    )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
@@ -122,19 +127,7 @@ class VurderSykepengeErstatningSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val sakRepository = repositoryProvider.provide<SakRepository>()
-            val avklaringsbehovRepository =
-                repositoryProvider.provide<AvklaringsbehovRepository>()
-            val vilkårsresultatRepository =
-                repositoryProvider.provide<VilkårsresultatRepository>()
-
-            return VurderSykepengeErstatningSteg(
-                vilkårsresultatRepository,
-                repositoryProvider.provide(),
-                SakService(sakRepository),
-                avklaringsbehovRepository
-            )
+            return VurderSykepengeErstatningSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

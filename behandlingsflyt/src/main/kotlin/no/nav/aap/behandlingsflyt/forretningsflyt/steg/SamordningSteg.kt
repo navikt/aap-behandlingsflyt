@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -24,6 +23,12 @@ class SamordningSteg(
     private val samordningRepository: SamordningRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        samordningService = SamordningService(repositoryProvider),
+        samordningRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+    )
+
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -101,17 +106,7 @@ class SamordningSteg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-            val samordningRepository = repositoryProvider.provide<SamordningRepository>()
-            return SamordningSteg(
-                samordningService = SamordningService(
-                    repositoryProvider.provide(),
-                    repositoryProvider.provide()
-                ),
-                samordningRepository = samordningRepository,
-                avklaringsbehovRepository = avklaringsbehovRepository,
-            )
+            return SamordningSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

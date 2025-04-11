@@ -30,6 +30,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.lookup.repository.RepositoryProvider
 import kotlin.reflect.KClass
 
 class UnderveisService(
@@ -44,6 +45,18 @@ class UnderveisService(
     private val meldeperiodeRepository: MeldeperiodeRepository,
     private val vedtakService: VedtakService,
 ) {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        behandlingService = SakOgBehandlingService(repositoryProvider),
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        meldekortRepository = repositoryProvider.provide(),
+        underveisRepository = repositoryProvider.provide(),
+        aktivitetspliktRepository = repositoryProvider.provide(),
+        etAnnetStedUtlederService = EtAnnetStedUtlederService(repositoryProvider),
+        arbeidsevneRepository = repositoryProvider.provide(),
+        meldepliktRepository = repositoryProvider.provide(),
+        meldeperiodeRepository = repositoryProvider.provide(),
+        vedtakService = VedtakService(repositoryProvider),
+    )
 
     private val kvoteService = KvoteService()
 

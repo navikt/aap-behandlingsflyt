@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 class BarnetilleggService(
     private val sakOgBehandlingService: SakOgBehandlingService,
@@ -19,6 +20,13 @@ class BarnetilleggService(
     private val personopplysningRepository: PersonopplysningRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository
 ) {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
+        barnRepository = repositoryProvider.provide(),
+        personopplysningRepository = repositoryProvider.provide(),
+        vilkårsresultatRepository = repositoryProvider.provide(),
+    )
+
     fun beregn(behandlingId: BehandlingId): Tidslinje<RettTilBarnetillegg> {
         val sak = sakOgBehandlingService.hentSakFor(behandlingId)
         var resultat: Tidslinje<RettTilBarnetillegg> =

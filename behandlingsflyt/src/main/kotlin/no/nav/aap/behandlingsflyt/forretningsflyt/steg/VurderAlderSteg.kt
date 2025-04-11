@@ -17,8 +17,13 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderAlderSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val personopplysningRepository: PersonopplysningRepository
+    private val personopplysningRepository: PersonopplysningRepository,
 ) : BehandlingSteg {
+
+    constructor(repositoryProvider: RepositoryProvider): this(
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        personopplysningRepository = repositoryProvider.provide(),
+    )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
 
@@ -59,15 +64,7 @@ class VurderAlderSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val personopplysningRepository =
-                repositoryProvider.provide<PersonopplysningRepository>()
-            val vilkårsresultatRepository =
-                repositoryProvider.provide<VilkårsresultatRepository>()
-            return VurderAlderSteg(
-                vilkårsresultatRepository,
-                personopplysningRepository
-            )
+            return VurderAlderSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårs
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -189,6 +190,7 @@ class BistandsvilkåretTest {
         RepositoryRegistry.register(VilkårsresultatRepositoryImpl::class)
         RepositoryRegistry.register(AvklaringsbehovRepositoryImpl::class)
         RepositoryRegistry.register(BehandlingRepositoryImpl::class)
+        RepositoryRegistry.register(TrukketSøknadRepositoryImpl::class)
         val dataSource = InitTestDatabase.freshDatabase()
 
 

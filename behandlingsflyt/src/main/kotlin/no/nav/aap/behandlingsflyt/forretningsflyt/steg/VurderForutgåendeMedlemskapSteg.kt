@@ -29,8 +29,17 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     private val forutgåendeMedlemskapArbeidInntektRepository: MedlemskapArbeidInntektForutgåendeRepository,
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val personopplysningForutgåendeRepository: PersonopplysningForutgåendeRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) : BehandlingSteg {
+
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        forutgåendeMedlemskapArbeidInntektRepository = repositoryProvider.provide(),
+        medlemskapArbeidInntektRepository = repositoryProvider.provide(),
+        personopplysningForutgåendeRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+    )
+
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val ingenAvslag = harIkkeTidligereAvslag(kontekst.behandlingId)
         if (!ingenAvslag) {
@@ -45,7 +54,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 val vilkårsVurdering = vurderVilkår(kontekst)
-                if (vilkårsVurdering != null ) return vilkårsVurdering
+                if (vilkårsVurdering != null) return vilkårsVurdering
             }
 
             VurderingType.REVURDERING -> {
@@ -72,38 +81,60 @@ class VurderForutgåendeMedlemskapSteg private constructor(
 
     private fun vurderVilkår(kontekst: FlytKontekstMedPerioder): StegResultat? {
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        val manuellVurdering = forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)?.manuellVurdering
+        val manuellVurdering =
+            forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)?.manuellVurdering
 
-        if (vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).vilkårsperioder().any { it.innvilgelsesårsak == Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG }){
-            ForutgåendeMedlemskapvilkåret(vilkårsresultat, kontekst.vurdering.rettighetsperiode).leggTilYrkesskadeVurdering()
+        if (vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).vilkårsperioder()
+                .any { it.innvilgelsesårsak == Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG }
+        ) {
+            ForutgåendeMedlemskapvilkåret(
+                vilkårsresultat,
+                kontekst.vurdering.rettighetsperiode
+            ).leggTilYrkesskadeVurdering()
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
             return Fullført
         }
 
         if (kontekst.vurdering.skalVurdereNoe()) {
-            val personopplysningForutgåendeGrunnlag = personopplysningForutgåendeRepository.hentHvisEksisterer(kontekst.behandlingId)
-                ?: throw IllegalStateException("Forventet å finne personopplysninger")
+            val personopplysningForutgåendeGrunnlag =
+                personopplysningForutgåendeRepository.hentHvisEksisterer(kontekst.behandlingId)
+                    ?: throw IllegalStateException("Forventet å finne personopplysninger")
 
-            val forutgåendeMedlemskapArbeidInntektGrunnlag = forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
-            val oppgittUtenlandsOppholdGrunnlag = medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(kontekst.behandlingId)
-                ?: medlemskapArbeidInntektRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(kontekst.sakId)
+            val forutgåendeMedlemskapArbeidInntektGrunnlag =
+                forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
+            val oppgittUtenlandsOppholdGrunnlag =
+                medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(kontekst.behandlingId)
+                    ?: medlemskapArbeidInntektRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(
+                        kontekst.sakId
+                    )
 
             ForutgåendeMedlemskapvilkåret(vilkårsresultat, kontekst.vurdering.rettighetsperiode).vurder(
-                ForutgåendeMedlemskapGrunnlag(forutgåendeMedlemskapArbeidInntektGrunnlag, personopplysningForutgåendeGrunnlag, oppgittUtenlandsOppholdGrunnlag)
+                ForutgåendeMedlemskapGrunnlag(
+                    forutgåendeMedlemskapArbeidInntektGrunnlag,
+                    personopplysningForutgåendeGrunnlag,
+                    oppgittUtenlandsOppholdGrunnlag
+                )
             )
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         }
-        val alleVilkårOppfylt = vilkårsresultatRepository.hent(kontekst.behandlingId).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder().all{it.erOppfylt()}
+        val alleVilkårOppfylt =
+            vilkårsresultatRepository.hent(kontekst.behandlingId).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
+                .all { it.erOppfylt() }
 
         if ((!alleVilkårOppfylt && manuellVurdering == null)
-            || spesifiktTriggetRevurderMedlemskapUtenManuellVurdering(kontekst, manuellVurdering)) {
+            || spesifiktTriggetRevurderMedlemskapUtenManuellVurdering(kontekst, manuellVurdering)
+        ) {
             return FantAvklaringsbehov(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
         }
         return null
     }
 
-    private fun spesifiktTriggetRevurderMedlemskapUtenManuellVurdering(kontekst: FlytKontekstMedPerioder, manuellVurdering: ManuellVurderingForForutgåendeMedlemskap?): Boolean {
-        val erSpesifiktTriggetRevurderMedlemskap = kontekst.vurdering.årsakerTilBehandling.any{it == ÅrsakTilBehandling.REVURDER_MEDLEMSKAP}
+    private fun spesifiktTriggetRevurderMedlemskapUtenManuellVurdering(
+        kontekst: FlytKontekstMedPerioder,
+        manuellVurdering: ManuellVurderingForForutgåendeMedlemskap?
+    ): Boolean {
+        val erSpesifiktTriggetRevurderMedlemskap =
+            kontekst.vurdering.årsakerTilBehandling.any { it == ÅrsakTilBehandling.REVURDER_MEDLEMSKAP }
         return erSpesifiktTriggetRevurderMedlemskap && manuellVurdering == null
     }
 
@@ -119,25 +150,13 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             bistandsvilkåret.harPerioderSomErOppfylt()
         }
         return sykdomsvilkåret.harPerioderSomErOppfylt()
-            && bistandsvilkåretEllerSykepengerErstatningHvisIkke
-            && lovvalgvilkåret.harPerioderSomErOppfylt()
+                && bistandsvilkåretEllerSykepengerErstatningHvisIkke
+                && lovvalgvilkåret.harPerioderSomErOppfylt()
     }
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
-            val forutgåendeRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
-            val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
-            val personopplysningForutgåendeRepository = repositoryProvider.provide<PersonopplysningForutgåendeRepository>()
-            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-            return VurderForutgåendeMedlemskapSteg(
-                vilkårsresultatRepository,
-                forutgåendeRepository,
-                medlemskapArbeidInntektRepository,
-                personopplysningForutgåendeRepository,
-                avklaringsbehovRepository
-            )
+            return VurderForutgåendeMedlemskapSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

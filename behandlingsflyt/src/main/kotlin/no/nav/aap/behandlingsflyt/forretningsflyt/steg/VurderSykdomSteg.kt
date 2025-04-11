@@ -27,6 +27,12 @@ class VurderSykdomSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        studentRepository = repositoryProvider.provide(),
+        sykdomRepository = repositoryProvider.provide(),
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+    )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
@@ -110,22 +116,12 @@ class VurderSykdomSteg private constructor(
 
     private fun erIkkeAvslagPåVilkårTidligere(vilkårsresultat: Vilkårsresultat): Boolean {
         return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()
-            && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
+                && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
     }
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
-            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
-
-            return VurderSykdomSteg(
-                repositoryProvider.provide(),
-                sykdomRepository,
-                vilkårsresultatRepository,
-                avklaringsbehovRepository,
-            )
+            return VurderSykdomSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {
