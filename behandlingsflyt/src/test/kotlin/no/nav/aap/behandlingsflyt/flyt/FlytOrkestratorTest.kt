@@ -142,6 +142,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.refusjo
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -250,6 +251,7 @@ class FlytOrkestratorTest {
                 .register<RefusjonkravRepositoryImpl>()
                 .register<InformasjonskravRepositoryImpl>()
                 .register<TjenestePensjonRepositoryImpl>()
+                .register<TrukketSøknadRepositoryImpl>()
                 .status()
             GatewayRegistry
                 .register<PdlBarnGateway>()

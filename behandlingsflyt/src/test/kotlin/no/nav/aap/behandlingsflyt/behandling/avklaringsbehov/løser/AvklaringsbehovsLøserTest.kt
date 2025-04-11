@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
@@ -25,6 +26,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.refusjo
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -66,6 +68,8 @@ class AvklaringsbehovsLøserTest {
         RepositoryRegistry.register<RefusjonkravRepositoryImpl>()
         RepositoryRegistry.register<UføreRepositoryImpl>()
         RepositoryRegistry.register<SamordningYtelseRepositoryImpl>()
+        RepositoryRegistry.register<TrukketSøknadRepositoryImpl>()
+        RepositoryRegistry.register<MottattDokumentRepositoryImpl>()
     }
 
     @Test

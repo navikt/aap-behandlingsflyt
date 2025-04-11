@@ -150,6 +150,7 @@ class EnklereFlytOrkestratorTest {
             .distinct()).containsExactlyElementsOf(
             listOf(
                 StegType.START_BEHANDLING,
+                StegType.SØKNAD,
                 StegType.VURDER_LOVVALG,
                 StegType.FASTSETT_MELDEPERIODER,
                 StegType.VURDER_ALDER,
@@ -169,6 +170,7 @@ class EnklereFlytOrkestratorTest {
             .distinct()).containsExactlyElementsOf(
             listOf(
                 StegType.START_BEHANDLING,
+                StegType.SØKNAD,
                 StegType.VURDER_LOVVALG,
                 StegType.FASTSETT_MELDEPERIODER,
                 StegType.VURDER_ALDER,
@@ -236,6 +238,11 @@ class EnklereFlytOrkestratorTest {
                     aktiv = false
                 ),
                 StegTilstand(stegType = StegType.START_BEHANDLING, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
+                StegTilstand(stegType = StegType.SØKNAD, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(stegType = StegType.SØKNAD, stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG, aktiv = false),
+                StegTilstand(stegType = StegType.SØKNAD, stegStatus = StegStatus.UTFØRER, aktiv = false),
+                StegTilstand(stegType = StegType.SØKNAD, stegStatus = StegStatus.AVKLARINGSPUNKT, aktiv = false),
+                StegTilstand(stegType = StegType.SØKNAD, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
                 StegTilstand(stegType = StegType.VURDER_LOVVALG, stegStatus = StegStatus.START, aktiv = false),
                 StegTilstand(
                     stegType = StegType.VURDER_LOVVALG,
@@ -330,6 +337,11 @@ class EnklereFlytOrkestratorTest {
                     aktiv = false
                 ),
                 StegTilstand(stegType = StegType.START_BEHANDLING, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
+                StegTilstand(stegType = StegType.SØKNAD, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(stegType = StegType.SØKNAD, stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG, aktiv = false),
+                StegTilstand(stegType = StegType.SØKNAD, stegStatus = StegStatus.UTFØRER, aktiv = false),
+                StegTilstand(stegType = StegType.SØKNAD, stegStatus = StegStatus.AVKLARINGSPUNKT, aktiv = false),
+                StegTilstand(stegType = StegType.SØKNAD, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
                 StegTilstand(stegType = StegType.VURDER_LOVVALG, stegStatus = StegStatus.START, aktiv = false),
                 StegTilstand(
                     stegType = StegType.VURDER_LOVVALG,
