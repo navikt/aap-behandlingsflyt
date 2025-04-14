@@ -61,7 +61,9 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 } else {
                     repositoryProvider.provide<SakRepository>().finnSakerFor(person)
                         .map { sak ->
-                            val førstegangsbehandling = behandlingRepository.hentAlleFor(sak.id).first{it.typeBehandling() == TypeBehandling.Førstegangsbehandling}
+                            val førstegangsbehandling = behandlingRepository.hentAlleFor(sak.id).first{
+                                it.typeBehandling() == TypeBehandling.Førstegangsbehandling
+                            }
                             SaksinfoDTO(
                                 saksnummer = sak.saksnummer.toString(),
                                 opprettetTidspunkt = sak.opprettetTidspunkt,
