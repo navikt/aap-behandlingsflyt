@@ -49,6 +49,8 @@ class Vilkårsresultat(
             .filter { vilkåreneSegment ->
                 val vurderinger = vilkåreneSegment.verdi
                 vurderinger.isNotEmpty() && vurderinger
+                    // Vi filtrerer bort vurderinger hvor noen vilkår er avslått, bortsett fra sykdomsvilkåret,
+                    // som har unntak: om sykepengeerstatning er innvilget.
                     .filter { (vilkår, _) -> vilkår.type != Vilkårtype.SYKDOMSVILKÅRET }
                     .none { (_, vurdering) -> vurdering.utfall == Utfall.IKKE_OPPFYLT }
             }
@@ -57,10 +59,9 @@ class Vilkårsresultat(
                     vilkårene
                         .filter { (_, vurdering) -> vurdering.erVurdert() }
                         .map { (vilkår, vurdering) ->
-                            Triple(
+                            Pair(
                                 vilkår.type,
-                                vurdering.innvilgelsesårsak,
-                                vurdering.utfall
+                                vurdering
                             )
                         }
                         .toSet()
@@ -78,25 +79,32 @@ class Vilkårsresultat(
      *
      * Default-verdien er [RettighetsType.BISTANDSBEHOV] (normal § 11-6).
      */
-    private fun prioriterVilkår(vilkårPar: Set<Triple<Vilkårtype, Innvilgelsesårsak?, Utfall>>): RettighetsType {
-        val (_, bistandsvurderingen, _) = vilkårPar.firstOrNull { it.first == Vilkårtype.BISTANDSVILKÅRET }
+    private fun prioriterVilkår(vilkårPar: Set<Pair<Vilkårtype, Vilkårsvurdering>>): RettighetsType {
+        val (_, bistandsvurderingen) = vilkårPar.firstOrNull { it.first == Vilkårtype.BISTANDSVILKÅRET }
             ?: throw UgyldigForespørselException("Bistandsvilkåret må være til stede for å regne ut rettighetstype.")
 
-        val (_, _, sykdomsUtfall) = requireNotNull(vilkårPar.firstOrNull { it.first == Vilkårtype.SYKDOMSVILKÅRET })
+        val (_, vilkårsVurdering) = requireNotNull(vilkårPar.firstOrNull { it.first == Vilkårtype.SYKDOMSVILKÅRET })
+        val sykdomsUtfall = vilkårsVurdering.utfall
+
+        // Hvis sykdomsvilkåret ikke er oppfylt, så kan man få rettighet om sykepengervilkåret er oppfylt
         if (sykdomsUtfall == Utfall.IKKE_OPPFYLT) {
             val sykepengervilkåret =
-                vilkårPar.find { it.first == Vilkårtype.SYKEPENGEERSTATNING && it.third == Utfall.OPPFYLT }
+                vilkårPar.find { it.first == Vilkårtype.SYKEPENGEERSTATNING && it.second.utfall == Utfall.OPPFYLT }
 
             if (sykepengervilkåret != null) {
                 return RettighetsType.SYKEPENGEERSTATNING
             }
         }
 
+        // Vi har tatt hånd om sykepengervilkåret, og da må vi anta at 11-5 er oppfylt.
         require(sykdomsUtfall == Utfall.OPPFYLT) {
             "Sykepengeerstatning må være oppfylt om ikke 11-5 er oppfylt."
         }
 
-        when (bistandsvurderingen) {
+        val bistandsvurderingInnvilgelsesårsak = bistandsvurderingen.innvilgelsesårsak
+
+        // Gitt at 11-6 er innvilget, prioriter hvilket grunnlag det er gitt på.
+        when (bistandsvurderingInnvilgelsesårsak) {
             Innvilgelsesårsak.STUDENT -> return RettighetsType.STUDENT
             Innvilgelsesårsak.ARBEIDSSØKER -> return RettighetsType.ARBEIDSSØKER
             Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD -> return RettighetsType.VURDERES_FOR_UFØRETRYGD
@@ -110,6 +118,7 @@ class Vilkårsresultat(
             return RettighetsType.SYKEPENGEERSTATNING
         }
 
+        // Med mindre noen annen innvilgelsesårsak er gitt, er grunntilfellet 11-6 (bistandsbehov).
         return RettighetsType.BISTANDSBEHOV
     }
 

@@ -233,7 +233,7 @@ class VilkårsresultatTest {
         }
 
         @Test
-        fun `om sykdoms-vilkået er avslått, kan man få rett ved 11-13`() {
+        fun `om sykdoms-vilkåret er avslått, kan man få rett ved 11-13`() {
             val v = tomVurdering()
             val nå = LocalDate.now()
             // Bistandsvilkåret er oppfylt hele perioden (30 dager)
