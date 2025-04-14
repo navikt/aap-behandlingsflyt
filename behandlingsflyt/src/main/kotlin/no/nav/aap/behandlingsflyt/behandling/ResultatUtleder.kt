@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -38,6 +39,27 @@ class ResultatUtleder(
         }
 
         val underveisGrunnlag = underveisRepository.hent(behandlingId)
+
+        val oppfyltePerioder = underveisGrunnlag.perioder.filter { it.utfall == Utfall.OPPFYLT }
+
+        return if (oppfyltePerioder.isNotEmpty()) {
+            Resultat.INNVILGELSE
+        } else {
+            Resultat.AVSLAG
+        }
+    }
+
+    fun utledResultatFørstegangsBehandling(behandling: Behandling): Resultat {
+
+        require(behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
+            "Kan ikke utlede resultat for ${behandling.typeBehandling()} ennå."
+        }
+
+        if (trukketSøknadService.søknadErTrukket(behandling.id)) {
+            return Resultat.TRUKKET
+        }
+
+        val underveisGrunnlag = underveisRepository.hent(behandling.id)
 
         val oppfyltePerioder = underveisGrunnlag.perioder.filter { it.utfall == Utfall.OPPFYLT }
 
