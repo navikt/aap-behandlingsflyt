@@ -55,7 +55,10 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                         repositoryProvider.provide<VilkårsresultatRepository>()
 
                     val behandling = behandling(behandlingRepository, req)
-                    val virkningstidspunkt = VirkningstidspunktUtleder(vilkårsresultatRepository = vilkårsresultatRepository).utledVirkningsTidspunkt(behandling.id)
+                    val virkningstidspunkt =
+                        VirkningstidspunktUtleder(vilkårsresultatRepository = vilkårsresultatRepository).utledVirkningsTidspunkt(
+                            behandling.id
+                        )
                     val flyt = utledType(behandling.typeBehandling()).flyt()
                     DetaljertBehandlingDTO(
                         referanse = behandling.referanse.referanse,

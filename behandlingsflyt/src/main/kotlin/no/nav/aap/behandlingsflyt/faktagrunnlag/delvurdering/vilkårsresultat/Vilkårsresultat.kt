@@ -53,6 +53,7 @@ class Vilkårsresultat(
                     // som har unntak: om sykepengeerstatning er innvilget.
                     .filter { (vilkår, _) -> vilkår.type != Vilkårtype.SYKDOMSVILKÅRET }
                     .none { (_, vurdering) -> vurdering.utfall == Utfall.IKKE_OPPFYLT }
+                        && vurderinger.any { (vilkår, vurdering) -> vilkår.type == Vilkårtype.BISTANDSVILKÅRET && vurdering.erOppfylt() }
             }
             .mapValue { vilkårene ->
                 prioriterVilkår(
