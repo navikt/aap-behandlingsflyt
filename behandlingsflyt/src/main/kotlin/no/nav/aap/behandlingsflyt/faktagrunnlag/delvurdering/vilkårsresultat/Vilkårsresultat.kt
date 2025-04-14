@@ -54,6 +54,7 @@ class Vilkårsresultat(
                     .filter { (vilkår, _) -> vilkår.type != Vilkårtype.SYKDOMSVILKÅRET }
                     .none { (_, vurdering) -> vurdering.utfall == Utfall.IKKE_OPPFYLT }
                         && vurderinger.any { (vilkår, vurdering) -> vilkår.type == Vilkårtype.BISTANDSVILKÅRET && vurdering.erOppfylt() }
+                        && vurderinger.any { (vilkår, vurdering) -> vilkår.type == Vilkårtype.SYKDOMSVILKÅRET && vurdering.erVurdert() }
             }
             .mapValue { vilkårene ->
                 prioriterVilkår(
