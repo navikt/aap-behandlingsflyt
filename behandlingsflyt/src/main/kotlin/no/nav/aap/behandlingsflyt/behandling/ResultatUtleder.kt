@@ -29,24 +29,7 @@ class ResultatUtleder(
 
     fun utledResultat(behandlingId: BehandlingId): Resultat {
         val behandling = behandlingRepository.hent(behandlingId)
-
-        require(behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
-            "Kan ikke utlede resultat for ${behandling.typeBehandling()} ennå."
-        }
-
-        if (trukketSøknadService.søknadErTrukket(behandlingId)) {
-            return Resultat.TRUKKET
-        }
-
-        val underveisGrunnlag = underveisRepository.hent(behandlingId)
-
-        val oppfyltePerioder = underveisGrunnlag.perioder.filter { it.utfall == Utfall.OPPFYLT }
-
-        return if (oppfyltePerioder.isNotEmpty()) {
-            Resultat.INNVILGELSE
-        } else {
-            Resultat.AVSLAG
-        }
+        return utledResultatFørstegangsBehandling(behandling)
     }
 
     fun utledResultatFørstegangsBehandling(behandling: Behandling): Resultat {
