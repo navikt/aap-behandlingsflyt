@@ -91,15 +91,17 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     val saker = repositoryProvider.provide<SakRepository>().finnSakerFor(person)
 
                     saker.map { sak ->
-                        val førstegangsbehandling = behandlingRepository.hentAlleFor(sak.id).first{it.typeBehandling() == TypeBehandling.Førstegangsbehandling}
-                            SaksinfoDTO(
-                                saksnummer = sak.saksnummer.toString(),
-                                opprettetTidspunkt = sak.opprettetTidspunkt,
-                                periode = sak.rettighetsperiode,
-                                ident = sak.person.aktivIdent().identifikator,
-                                resultat = resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
-                            )
+                        val førstegangsbehandling = behandlingRepository.hentAlleFor(sak.id).first{
+                            it.typeBehandling() == TypeBehandling.Førstegangsbehandling
                         }
+                        SaksinfoDTO(
+                            saksnummer = sak.saksnummer.toString(),
+                            opprettetTidspunkt = sak.opprettetTidspunkt,
+                            periode = sak.rettighetsperiode,
+                            ident = sak.person.aktivIdent().identifikator,
+                            resultat = resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
+                        )
+                    }
                 }
 
             }
