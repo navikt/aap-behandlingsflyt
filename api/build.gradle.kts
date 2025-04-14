@@ -5,7 +5,7 @@ plugins {
 val komponenterVersjon = "1.0.211"
 val ktorVersion = "3.1.2"
 val tilgangVersjon = "1.0.46"
-val junitVersjon = "5.12.1"
+val junitVersjon = "5.12.2"
 val mockOAuth2ServerVersion = "2.1.10"
 
 dependencies {

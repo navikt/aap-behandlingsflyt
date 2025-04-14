@@ -3,7 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val ktorVersion = "3.1.2"
 val komponenterVersjon = "1.0.211"
-val junitVersjon = "5.12.1"
+val junitVersjon = "5.12.2"
 
 plugins {
     id("behandlingsflyt.conventions")
