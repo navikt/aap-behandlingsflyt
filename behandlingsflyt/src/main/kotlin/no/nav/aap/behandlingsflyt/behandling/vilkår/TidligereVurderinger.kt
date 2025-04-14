@@ -97,7 +97,9 @@ class TidligereVurderingerImpl(
             return UKJENT
         }
 
-        require(kontekst.behandlingType in listOf(TypeBehandling.Førstegangsbehandling))
+        if (kontekst.behandlingType != TypeBehandling.Førstegangsbehandling) {
+            return UKJENT
+        }
 
         return sjekkerFørstegangsbehandling
             .asSequence()
