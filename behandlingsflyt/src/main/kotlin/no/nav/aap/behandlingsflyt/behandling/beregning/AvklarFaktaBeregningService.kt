@@ -8,7 +8,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class AvklarFaktaBeregningService(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
 ) {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
     )
 
@@ -20,11 +20,8 @@ class AvklarFaktaBeregningService(
         val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
         val lovvalgvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG)
         val bistandsvilkåretEllerSykepengerErstatningHvisIkke =
-            if (!(bistandsvilkåret.harPerioderSomErOppfylt() && sykdomsvilkåret.harPerioderSomErOppfylt())) {
-                vilkårsresultat.optionalVilkår(Vilkårtype.SYKEPENGEERSTATNING)?.harPerioderSomErOppfylt() == true
-            } else {
-                bistandsvilkåret.harPerioderSomErOppfylt() && sykdomsvilkåret.harPerioderSomErOppfylt()
-            }
+            (bistandsvilkåret.harPerioderSomErOppfylt() && sykdomsvilkåret.harPerioderSomErOppfylt()) ||
+                    vilkårsresultat.optionalVilkår(Vilkårtype.SYKEPENGEERSTATNING)?.harPerioderSomErOppfylt() == true
 
         return bistandsvilkåretEllerSykepengerErstatningHvisIkke
                 && lovvalgvilkåret.harPerioderSomErOppfylt()

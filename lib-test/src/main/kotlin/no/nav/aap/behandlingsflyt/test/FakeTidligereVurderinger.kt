@@ -9,6 +9,10 @@ class FakeTidligereVurderinger: TidligereVurderinger {
         return false
     }
 
+    override fun girAvslag(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean {
+        return false
+    }
+
     override fun girIngenBehandlingsgrunnlag(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean {
         return false
     }

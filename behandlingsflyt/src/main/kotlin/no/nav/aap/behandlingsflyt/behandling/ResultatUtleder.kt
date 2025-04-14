@@ -21,7 +21,7 @@ class ResultatUtleder(
     private val behandlingRepository: BehandlingRepository,
     private val trukketSøknadService: TrukketSøknadService,
 ) {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         underveisRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
@@ -42,11 +42,12 @@ class ResultatUtleder(
             return Resultat.TRUKKET
         }
 
-        val underveisGrunnlag = underveisRepository.hent(behandling.id)
+        val harOppfyltPeriode = underveisRepository.hentHvisEksisterer(behandling.id)
+            ?.perioder
+            .orEmpty()
+            .any { it.utfall == Utfall.OPPFYLT }
 
-        val oppfyltePerioder = underveisGrunnlag.perioder.filter { it.utfall == Utfall.OPPFYLT }
-
-        return if (oppfyltePerioder.isNotEmpty()) {
+        return if (harOppfyltPeriode) {
             Resultat.INNVILGELSE
         } else {
             Resultat.AVSLAG
