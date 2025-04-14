@@ -100,7 +100,7 @@ spec:
         - host: aareg-services-q1.dev-fss-pub.nais.io
         - host: pensjon-pen-q2.dev-fss-pub.nais.io
         - host: tp-api.dev-fss-pub.nais.io
-        - host: etterlatte-unleash-api.nav.cloud.nais.io
+        - host: aap-unleash-api.nav.cloud.nais.io
       rules:
         - application: brev
         - application: tilgang

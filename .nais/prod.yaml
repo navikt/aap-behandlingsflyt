@@ -59,6 +59,8 @@ spec:
           - "azp_name"
   secureLogs:
     enabled: true
+  envFrom:
+    - secret: kelvin-unleash-api-token
   accessPolicy:
     inbound:
       rules:
@@ -92,6 +94,7 @@ spec:
         - host: aareg-services.prod-fss-pub.nais.io
         - host: pensjon-pen.prod-fss-pub.nais.io
         - host: tp-api.prod-fss-pub.nais.io
+        - host: aap-unleash-api.nav.cloud.nais.io
       rules:
         - application: brev
         - application: tilgang
