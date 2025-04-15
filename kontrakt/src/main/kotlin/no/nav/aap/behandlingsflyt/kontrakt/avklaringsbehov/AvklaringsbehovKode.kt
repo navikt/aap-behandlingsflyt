@@ -7,6 +7,7 @@ public const val MANUELT_SATT_PÅ_VENT_KODE: String = "9001"
 public const val BESTILL_BREV_KODE: String = "9002"
 public const val BESTILL_LEGEERKLÆRING_KODE: String = "9003"
 public const val OPPRETT_HENDELSE_PÅ_SAK_KODE: String = "9004"
+public const val VURDER_RETTIGHETSPERIODE_KODE: String = "5029"
 public const val AVKLAR_STUDENT_KODE: String = "5001"
 public const val AVKLAR_SYKDOM_KODE: String = "5003"
 public const val FASTSETT_ARBEIDSEVNE_KODE: String = "5004"
@@ -59,6 +60,11 @@ public enum class AvklaringsbehovKode {
      * [OPPRETT_HENDELSE_PÅ_SAK_KODE]
      */
     `9004`,
+
+    /**
+     * [VURDER_RETTIGHETSPERIODE_KODE]
+     */
+    `5029`,
 
     /**
      * [AVKLAR_STUDENT_KODE]
