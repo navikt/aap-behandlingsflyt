@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.VurderRettighetsperiodeLøser
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_RETTIGHETSPERIODE_KODE
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -13,9 +13,9 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 @JsonTypeName(value = VURDER_RETTIGHETSPERIODE_KODE)
 class VurderRettighetsperiodeLøsning(
     @JsonProperty(
-        "oppdatertRettighetsperiode",
+        "rettighetsperiodeVurdering",
         required = true
-    ) val nyRettighetsperiodeDto: RettighetsperiodeDto,
+    ) val rettighetsperiodeVurdering: RettighetsperiodeVurdering,
     @JsonProperty("behovstype", required = true, defaultValue = VURDER_RETTIGHETSPERIODE_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5029`
 ) : AvklaringsbehovLøsning {

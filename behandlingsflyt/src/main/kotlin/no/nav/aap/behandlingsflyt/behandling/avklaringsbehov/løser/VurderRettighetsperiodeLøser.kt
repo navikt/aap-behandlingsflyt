@@ -39,7 +39,7 @@ class VurderRettighetsperiodeLøser(connection: DBConnection) :
             throw UgyldigForespørselException("Kan ikke oppdatere rettighetsperioden etter at saken er avsluttet")
         }
         val sluttDato = if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
-            løsning.nyRettighetsperiodeDto.startDato.plusYears(1).minusDays(1)
+            løsning.rettighetsperiodeVurdering.startDato.plusYears(1).minusDays(1)
         } else {
             sak.rettighetsperiode.tom
         }
@@ -47,7 +47,7 @@ class VurderRettighetsperiodeLøser(connection: DBConnection) :
         // TODO: Persistere ned begrunnelsen for å oppdatere rettighetsperioden
         sakOgBehandlingService.overstyrRettighetsperioden(
             sakId = sak.id,
-            startDato = løsning.nyRettighetsperiodeDto.startDato,
+            startDato = løsning.rettighetsperiodeVurdering.startDato,
             sluttDato = sluttDato
         )
 

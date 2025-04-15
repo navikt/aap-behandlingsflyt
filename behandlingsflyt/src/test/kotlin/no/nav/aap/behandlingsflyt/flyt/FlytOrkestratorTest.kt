@@ -63,7 +63,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Yrkesska
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
@@ -210,7 +210,7 @@ class FlytOrkestratorTest {
         @BeforeAll
         @JvmStatic
         internal fun beforeAll() {
-            System.setProperty("NAIS_CLUSTER_NAME", "dev-gcp")
+            System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
             RepositoryRegistry
                 .register<BehandlingRepositoryImpl>()
                 .register<PersonRepositoryImpl>()
@@ -2603,7 +2603,7 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling = behandling,
             avklaringsBehovLøsning = VurderRettighetsperiodeLøsning(
-                nyRettighetsperiodeDto = RettighetsperiodeDto(
+                rettighetsperiodeVurdering = RettighetsperiodeVurdering(
                     nyStartDato, "En begrunnelse"
                 )
             )
