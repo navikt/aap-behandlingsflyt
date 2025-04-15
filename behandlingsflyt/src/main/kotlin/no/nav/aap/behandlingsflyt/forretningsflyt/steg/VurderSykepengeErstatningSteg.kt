@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningVilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
@@ -18,7 +20,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -27,8 +28,16 @@ class VurderSykepengeErstatningSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sykepengerErstatningRepository: SykepengerErstatningRepository,
     private val sakService: SakService,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        sykepengerErstatningRepository = repositoryProvider.provide(),
+        sakService = SakService(repositoryProvider),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+    )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
@@ -37,6 +46,12 @@ class VurderSykepengeErstatningSteg private constructor(
 
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+                        .avbrytForSteg(type())
+                    return Fullført
+                }
+
                 // TODO: Dette må gjøres mye mer robust og sjekkes konsistent mot 11-6...
                 if (bistandsvilkåret.vilkårsperioder().all { !it.erOppfylt() } && (
                             sykdomsvilkåret.vilkårsperioder()
@@ -122,19 +137,7 @@ class VurderSykepengeErstatningSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val sakRepository = repositoryProvider.provide<SakRepository>()
-            val avklaringsbehovRepository =
-                repositoryProvider.provide<AvklaringsbehovRepository>()
-            val vilkårsresultatRepository =
-                repositoryProvider.provide<VilkårsresultatRepository>()
-
-            return VurderSykepengeErstatningSteg(
-                vilkårsresultatRepository,
-                repositoryProvider.provide(),
-                SakService(sakRepository),
-                avklaringsbehovRepository
-            )
+            return VurderSykepengeErstatningSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

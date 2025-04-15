@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
@@ -25,11 +26,16 @@ class OpprettRevurderingSteg(
     private val samordningYtelseVurderingRepository: SamordningVurderingRepository,
     private val låsRepository: TaSkriveLåsRepository,
     private val prosesserBehandling: ProsesserBehandlingService,
+    private val trukketSøknadService: TrukketSøknadService,
 ) : BehandlingSteg {
     private val logger = LoggerFactory.getLogger(javaClass)
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         return when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
+                if (trukketSøknadService.søknadErTrukket(kontekst.behandlingId)) {
+                    return Fullført
+                }
+
                 val samordningVurdering =
                     samordningYtelseVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
                         ?: return Fullført
@@ -80,7 +86,8 @@ class OpprettRevurderingSteg(
                 ),
                 samordningYtelseVurderingRepository = repositoryProvider.provide(),
                 låsRepository = repositoryProvider.provide(),
-                prosesserBehandling = ProsesserBehandlingService(FlytJobbRepository(connection))
+                prosesserBehandling = ProsesserBehandlingService(FlytJobbRepository(connection)),
+                trukketSøknadService = TrukketSøknadService(repositoryProvider),
             )
         }
 

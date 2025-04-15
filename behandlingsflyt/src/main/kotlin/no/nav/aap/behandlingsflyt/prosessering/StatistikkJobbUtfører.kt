@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.Resultat
+import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
@@ -14,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -23,6 +27,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Diagnoser
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagUføreDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagYrkesskadeDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetstypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelseDTO
@@ -42,7 +47,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.Jobb
@@ -50,7 +54,6 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 
@@ -64,7 +67,10 @@ class StatistikkJobbUtfører(
     private val dokumentRepository: MottattDokumentRepository,
     private val sykdomRepository: SykdomRepository,
     private val underveisRepository: UnderveisRepository,
+    private val trukketSøknadService: TrukketSøknadService,
 ) : JobbUtfører {
+
+    private val resultatUtleder = ResultatUtleder(underveisRepository, behandlingRepository, trukketSøknadService)
 
     private val log = LoggerFactory.getLogger(javaClass)
     override fun utfør(input: JobbInput) {
@@ -137,6 +143,7 @@ class StatistikkJobbUtfører(
                     ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT
                     ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.MELDEKORT /* TODO: mer spesifikk? er pga fravær av meldekort */
                     ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE
+                    ÅrsakTilBehandling.SØKNAD_TRUKKET -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.SØKNAD_TRUKKET
                 }
             }.distinct()
         )
@@ -202,7 +209,6 @@ class StatistikkJobbUtfører(
                 ?.map { Segment(it.periode, it.tilkjent) }
                 ?.let(::Tidslinje)?.mapValue { it }
                 ?.komprimer()
-                ?.disjoint(Periode(LocalDate.MIN, LocalDate.now())) // TODO: vedtaktidspunkt
                 ?.map {
                     val verdi = it.verdi
                     TilkjentYtelsePeriodeDTO(
@@ -270,9 +276,32 @@ class StatistikkJobbUtfører(
             tilkjentYtelse = TilkjentYtelseDTO(perioder = tilkjentYtelse.orEmpty()),
             beregningsGrunnlag = beregningsGrunnlagDTO,
             diagnoser = hentDiagnose(behandling),
-            rettighetstypePerioder = rettighetstypePerioder
+            rettighetstypePerioder = rettighetstypePerioder,
+            resultat = hentResultat(behandling).let {
+                when (it) {
+                    Resultat.INNVILGELSE -> ResultatKode.INNVILGET
+                    Resultat.AVSLAG -> ResultatKode.AVSLAG
+                    Resultat.TRUKKET -> TODO()
+                    null -> null
+                }
+            },
         )
         return avsluttetBehandlingDTO
+    }
+
+    private fun hentResultat(behandling: Behandling): Resultat? {
+        return when (behandling.typeBehandling()) {
+            TypeBehandling.Førstegangsbehandling -> {
+                resultatUtleder.utledResultat(behandling.id)
+            }
+
+            TypeBehandling.Revurdering -> {
+                null
+            }
+
+            TypeBehandling.Tilbakekreving -> null
+            TypeBehandling.Klage -> null
+        }
     }
 
     private fun hentDiagnose(behandling: Behandling): Diagnoser? {
@@ -370,7 +399,8 @@ class StatistikkJobbUtfører(
                 pipRepository = pipRepository,
                 dokumentRepository = mottattDokumentRepository,
                 sykdomRepository = repositoryProvider.provide(),
-                underveisRepository = repositoryProvider.provide()
+                underveisRepository = repositoryProvider.provide(),
+                trukketSøknadService = TrukketSøknadService(repositoryProvider),
             )
         }
 

@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
@@ -14,7 +16,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -23,7 +24,15 @@ class SamordningSteg(
     private val samordningService: SamordningService,
     private val samordningRepository: SamordningRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        samordningService = SamordningService(repositoryProvider),
+        samordningRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+    )
+
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -37,6 +46,12 @@ class SamordningSteg(
 
         return when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+                        .avbrytForSteg(type())
+                    return Fullført
+                }
+
                 vurdervilkår(kontekst)
             }
 
@@ -101,17 +116,7 @@ class SamordningSteg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-            val samordningRepository = repositoryProvider.provide<SamordningRepository>()
-            return SamordningSteg(
-                samordningService = SamordningService(
-                    repositoryProvider.provide(),
-                    repositoryProvider.provide()
-                ),
-                samordningRepository = samordningRepository,
-                avklaringsbehovRepository = avklaringsbehovRepository,
-            )
+            return SamordningSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

@@ -2,15 +2,9 @@
 
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
-import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -21,9 +15,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.BESTILL_BR
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -34,6 +26,11 @@ class MeldingOmVedtakBrevSteg private constructor(
     private val brevbestillingService: BrevbestillingService,
     private val behandlingRepository: BehandlingRepository
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        brevUtlederService = BrevUtlederService(repositoryProvider),
+        brevbestillingService = BrevbestillingService(repositoryProvider),
+        behandlingRepository = repositoryProvider.provide(),
+    )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
@@ -53,27 +50,7 @@ class MeldingOmVedtakBrevSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val sakRepository = repositoryProvider.provide<SakRepository>()
-            val brevbestillingRepository = repositoryProvider.provide<BrevbestillingRepository>()
-            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
-            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-
-            return MeldingOmVedtakBrevSteg(
-                BrevUtlederService(
-                    behandlingRepository = behandlingRepository,
-                    resultatUtleder = ResultatUtleder(underveisRepository),
-                ),
-                BrevbestillingService(
-                    signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository),
-                    brevbestillingGateway = GatewayProvider.provide<BrevbestillingGateway>(),
-                    brevbestillingRepository = brevbestillingRepository,
-                    behandlingRepository = behandlingRepository,
-                    sakRepository = sakRepository
-                ),
-                repositoryProvider.provide<BehandlingRepository>()
-            )
+            return MeldingOmVedtakBrevSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

@@ -31,6 +31,10 @@ class Vilkårsvurdering(
         return utfall == Utfall.OPPFYLT
     }
 
+    fun erVurdert(): Boolean {
+        return utfall != Utfall.IKKE_VURDERT
+    }
+
     fun faktagrunnlag(): Faktagrunnlag? {
         return faktagrunnlag
     }

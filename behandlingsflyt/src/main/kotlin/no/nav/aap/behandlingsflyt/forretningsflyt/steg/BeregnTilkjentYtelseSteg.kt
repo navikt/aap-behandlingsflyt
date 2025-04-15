@@ -3,9 +3,10 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
@@ -15,8 +16,10 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -30,10 +33,27 @@ class BeregnTilkjentYtelseSteg private constructor(
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val samordningRepository: SamordningRepository,
     private val samordningUføreRepository: SamordningUføreRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
+
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        underveisRepository = repositoryProvider.provide(),
+        beregningsgrunnlagRepository = repositoryProvider.provide(),
+        personopplysningRepository = repositoryProvider.provide(),
+        barnetilleggRepository = repositoryProvider.provide(),
+        tilkjentYtelseRepository = repositoryProvider.provide(),
+        samordningRepository = repositoryProvider.provide(),
+        samordningUføreRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+    )
+
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (kontekst.vurdering.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+            return Fullført
+        }
+
         val beregningsgrunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
         val underveisgrunnlag = underveisRepository.hent(kontekst.behandlingId)
         val fødselsdato =
@@ -63,21 +83,7 @@ class BeregnTilkjentYtelseSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val personopplysningRepository = repositoryProvider.provide<PersonopplysningRepository>()
-            val tilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>()
-            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
-            val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
-
-            return BeregnTilkjentYtelseSteg(
-                underveisRepository,
-                BeregningsgrunnlagRepositoryImpl(connection),
-                personopplysningRepository,
-                barnetilleggRepository,
-                tilkjentYtelseRepository,
-                repositoryProvider.provide(),
-                repositoryProvider.provide()
-            )
+            return BeregnTilkjentYtelseSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

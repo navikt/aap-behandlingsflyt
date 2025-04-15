@@ -42,6 +42,15 @@ public enum class Definisjon(
         defaultFrist = Period.ofDays(1),
         løsesAv = listOf()
     ),
+    VURDER_TREKK_AV_SØKNAD(
+        kode = AvklaringsbehovKode.`5028`,
+        løsesISteg = StegType.SØKNAD,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_OPPFOLGING,
+            Rolle.SAKSBEHANDLER_NASJONAL
+        ),
+    ),
     BESTILL_LEGEERKLÆRING(
         kode = AvklaringsbehovKode.`9003`,
         løsesISteg = StegType.UDEFINERT,

@@ -8,6 +8,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -52,17 +53,23 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 val repositoryProvider = RepositoryProvider(connection)
                 val ident = Ident(dto.ident)
                 val person = repositoryProvider.provide<PersonRepository>().finn(ident)
+                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                val resultatUtleder = ResultatUtleder(repositoryProvider)
 
                 if (person == null) {
                     emptyList()
                 } else {
                     repositoryProvider.provide<SakRepository>().finnSakerFor(person)
                         .map { sak ->
+                            val førstegangsbehandling = behandlingRepository.hentAlleFor(sak.id).first{
+                                it.typeBehandling() == TypeBehandling.Førstegangsbehandling
+                            }
                             SaksinfoDTO(
                                 saksnummer = sak.saksnummer.toString(),
                                 opprettetTidspunkt = sak.opprettetTidspunkt,
                                 periode = sak.rettighetsperiode,
-                                ident = sak.person.aktivIdent().identifikator
+                                ident = sak.person.aktivIdent().identifikator,
+                                resultat = resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
                             )
                         }
                 }
@@ -76,23 +83,30 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 val repositoryProvider = RepositoryProvider(connection)
                 val ident = Ident(dto.ident)
                 val person = repositoryProvider.provide<PersonRepository>().finn(ident)
+                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                val resultatUtleder = ResultatUtleder(repositoryProvider)
 
                 if (person == null) {
                     emptyList()
                 } else {
-                    repositoryProvider.provide<SakRepository>().finnSakerFor(person)
-                        .map { sak ->
-                            SaksinfoDTO(
-                                saksnummer = sak.saksnummer.toString(),
-                                opprettetTidspunkt = sak.opprettetTidspunkt,
-                                periode = sak.rettighetsperiode,
-                                ident = sak.person.aktivIdent().identifikator
-                            )
+                    // Her skal vi strengt tatt bare ha én sak?
+                    val saker = repositoryProvider.provide<SakRepository>().finnSakerFor(person)
+
+                    saker.map { sak ->
+                        val førstegangsbehandling = behandlingRepository.hentAlleFor(sak.id).first{
+                            it.typeBehandling() == TypeBehandling.Førstegangsbehandling
                         }
+                        SaksinfoDTO(
+                            saksnummer = sak.saksnummer.toString(),
+                            opprettetTidspunkt = sak.opprettetTidspunkt,
+                            periode = sak.rettighetsperiode,
+                            ident = sak.person.aktivIdent().identifikator,
+                            resultat = resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
+                        )
+                    }
                 }
 
             }
-
             // Midlertidig fiks for ikke å brekke postmottak
             if (token().isClientCredentials()) {
                 respond(saker)

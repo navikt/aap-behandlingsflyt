@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DatadelingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.RettighetsTypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisDTO
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -19,7 +18,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.gateway.Factory
@@ -59,11 +57,19 @@ class ApiInternGatewayImpl() : ApiInternGateway {
             })
     }
 
-    override fun sendBehandling(sak: Sak, behandling: Behandling, tilkjent: List<TilkjentYtelsePeriode>?, underveis: List<Underveisperiode>, vedtaksDato: LocalDate, rettighetsTypeTidslinje: Tidslinje<no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType>) {
+    override fun sendBehandling(
+        sak: Sak,
+        behandling: Behandling,
+        tilkjent: List<TilkjentYtelsePeriode>?,
+        underveis: List<Underveisperiode>,
+        vedtaksDato: LocalDate,
+        rettighetsTypeTidslinje: Tidslinje<no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType>
+    ) {
         if (tilkjent != null) {
             restClient.post(
                 uri = uri.resolve("/api/insert/vedtak"),
-                request = PostRequest(body = DatadelingDTO(
+                request = PostRequest(
+                    body = DatadelingDTO(
                     behandlingsId = behandling.id.id.toString(),
                     behandlingsReferanse = behandling.referanse.toString(),
                     underveisperiode = underveis.map {
@@ -84,7 +90,7 @@ class ApiInternGatewayImpl() : ApiInternGateway {
                     sak = SakDTO(
                         saksnummer = sak.saksnummer.toString(),
                         status = sak.status(),
-                        fnr = sak.person.identer().map { ident -> ident.identifikator},
+                        fnr = sak.person.identer().map { ident -> ident.identifikator },
                         opprettetTidspunkt = sak.opprettetTidspunkt
                     ),
                     tilkjent = tilkjent.map { tilkjentPeriode ->

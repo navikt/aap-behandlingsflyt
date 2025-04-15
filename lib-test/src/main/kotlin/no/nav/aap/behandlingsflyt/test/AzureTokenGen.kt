@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.test
 
+import ch.qos.logback.core.util.OptionHelper.getEnv
 import com.nimbusds.jose.JOSEObjectType
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
@@ -9,6 +10,7 @@ import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
 import org.intellij.lang.annotations.Language
+import java.lang.System.getProperty
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
@@ -24,7 +26,7 @@ class AzureTokenGen(private val issuer: String, private val audience: String) {
         return signedJWT
     }
 
-    private fun claims(isApp: Boolean): JWTClaimsSet {
+    private fun claims(isApp: Boolean, azp: String?): JWTClaimsSet {
         val builder = JWTClaimsSet
             .Builder()
             .subject(UUID.randomUUID().toString())
@@ -36,8 +38,7 @@ class AzureTokenGen(private val issuer: String, private val audience: String) {
             builder
                 .claim("idtyp", "app")
                 .claim(
-                    "roles",
-                    listOf(
+                    "roles", listOf(
                         "opprett-sak",
                         "hent-personinfo",
                         "bestill-varselbrev",
@@ -45,6 +46,9 @@ class AzureTokenGen(private val issuer: String, private val audience: String) {
                         "pip-api",
                         "medlemskaplovvalg-api"
                     )
+                )
+                .claim(
+                    "azp", azp
                 )
         } else {
             builder.claim("NAVident", "Lokalsaksbehandler")
@@ -57,8 +61,8 @@ class AzureTokenGen(private val issuer: String, private val audience: String) {
         return Date.from(this.atZone(ZoneId.systemDefault()).toInstant())
     }
 
-    fun generate(isApp: Boolean): String {
-        return signed(claims(isApp)).serialize()
+    fun generate(isApp: Boolean, azp: String): String {
+        return signed(claims(isApp, azp)).serialize()
     }
 }
 

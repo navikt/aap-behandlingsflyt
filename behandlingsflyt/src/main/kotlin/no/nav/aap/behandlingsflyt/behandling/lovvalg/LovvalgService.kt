@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.lovvalg
 
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
@@ -16,6 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapAr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -31,9 +34,19 @@ import java.time.YearMonth
 class LovvalgService private constructor(
     private val sakService: SakService,
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
-    private val medlemskapRepository: MedlemskapRepository
+    private val medlemskapRepository: MedlemskapRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav {
+    override val navn = Companion.navn
+
     private val medlemskapGateway = GatewayProvider.provide<MedlemskapGateway>()
+
+    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+        return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
+                oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
+                tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
+    }
+
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
@@ -88,11 +101,6 @@ class LovvalgService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.LOVVALG
 
-        override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
-            return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
-                    oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
-        }
-
         override fun konstruer(connection: DBConnection): LovvalgService {
             val repositoryProvider = RepositoryProvider(connection)
             val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
@@ -100,7 +108,8 @@ class LovvalgService private constructor(
             return LovvalgService(
                 SakService(sakRepository),
                 medlemskapArbeidInntektRepository,
-                MedlemskapRepository(connection)
+                MedlemskapRepository(connection),
+                TidligereVurderingerImpl(repositoryProvider),
             )
         }
     }

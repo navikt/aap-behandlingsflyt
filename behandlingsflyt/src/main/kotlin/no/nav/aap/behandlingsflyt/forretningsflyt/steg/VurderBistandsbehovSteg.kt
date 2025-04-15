@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.bistand.BistandFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.bistand.Bistandsvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
@@ -33,20 +35,36 @@ class VurderBistandsbehovSteg private constructor(
     private val studentRepository: StudentRepository,
     private val sykdomsRepository: SykdomRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        bistandRepository = repositoryProvider.provide(),
+        studentRepository = repositoryProvider.provide(),
+        sykdomsRepository = repositoryProvider.provide(),
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+    )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
 
         val bistandsGrunnlag = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
         val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
-        val sykdomsvurderinger = sykdomsRepository.hentHvisEksisterer(kontekst.behandlingId)?.sykdomsvurderinger ?: emptyList()
+        val sykdomsvurderinger =
+            sykdomsRepository.hentHvisEksisterer(kontekst.behandlingId)?.sykdomsvurderinger ?: emptyList()
 
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+                        .avbrytForSteg(type())
+                    return Fullført
+                }
+
                 // sjekk behovet for avklaring for periode
                 if (erBehovForAvklarForPerioden(
                         kontekst.vurdering.rettighetsperiode,
@@ -183,8 +201,8 @@ class VurderBistandsbehovSteg private constructor(
         sykdomsvurderinger: List<Sykdomsvurdering>
     ): Boolean {
         return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()
-            && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
-            && sykdomsvurderinger.any { it.erOppfylt() }
+                && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
+                && sykdomsvurderinger.any { it.erOppfylt() }
     }
 
 
@@ -196,17 +214,7 @@ class VurderBistandsbehovSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
-            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-            val bistandRepository = repositoryProvider.provide<BistandRepository>()
-            return VurderBistandsbehovSteg(
-                bistandRepository,
-                repositoryProvider.provide(),
-                repositoryProvider.provide(),
-                vilkårsresultatRepository,
-                avklaringsbehovRepository
-            )
+            return VurderBistandsbehovSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

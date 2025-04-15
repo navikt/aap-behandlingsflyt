@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
@@ -19,11 +21,10 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
-import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 @Suppress("unused")
@@ -39,9 +40,26 @@ class SamordningAvslagSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sakRepository: SakRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        samordningService = SamordningService(repositoryProvider),
+        uføreService = UføreService(repositoryProvider),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        vilkårsresultatRepository  = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+    )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (kontekst.vurdering.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
+            if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+                    .avbrytForSteg(type())
+                return Fullført
+            }
+        }
+
         val sak = sakRepository.hent(kontekst.sakId)
 
         val samordningTidslinje = samordningService.tidslinje(kontekst.behandlingId)
@@ -103,25 +121,7 @@ class SamordningAvslagSteg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-            return SamordningAvslagSteg(
-                samordningService = SamordningService(
-                    repositoryProvider.provide(),
-                    repositoryProvider.provide()
-                ),
-                avklaringsbehovRepository = avklaringsbehovRepository,
-                vilkårsresultatRepository = repositoryProvider.provide(),
-                sakRepository = repositoryProvider.provide(),
-                uføreService = UføreService(
-                    sakService = SakService(
-                        sakRepository = repositoryProvider.provide(),
-                    ),
-                    uføreRepository = repositoryProvider.provide(),
-                    samordningUføreRepository = repositoryProvider.provide(),
-                    uføreRegisterGateway = GatewayProvider.provide(),
-                ),
-            )
+            return SamordningAvslagSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

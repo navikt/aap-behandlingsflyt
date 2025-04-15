@@ -71,6 +71,7 @@ public enum class ÅrsakTilBehandling {
     REFUSJONSKRAV,              // Refusjonskrav
     UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT, // Utenlandsopphold før søknadstidspunkt
     VURDER_RETTIGHETSPERIODE, // Må ta stilling til rettighetsperioden
+    SØKNAD_TRUKKET,
 }
 
 /**

@@ -52,6 +52,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.util.*
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.Effektuer11_7Steg
+import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 
 class Effektuer11_7StegTest {
     @Test
@@ -118,6 +119,7 @@ class Effektuer11_7StegTest {
             behandlingRepository = InMemoryBehandlingRepository,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
             effektuer117repository = InMemoryEffektuer117Repository,
+            tidligereVurderinger = FakeTidligereVurderinger(),
             clock = clock,
         )
 
@@ -192,6 +194,7 @@ class Effektuer11_7StegTest {
             behandlingRepository = InMemoryBehandlingRepository,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
             effektuer117repository = InMemoryEffektuer117Repository,
+            tidligereVurderinger = FakeTidligereVurderinger(),
             clock = clock,
         )
 
@@ -281,6 +284,7 @@ class Effektuer11_7StegTest {
         ),
         behandlingRepository = InMemoryBehandlingRepository,
         avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+        tidligereVurderinger = FakeTidligereVurderinger(),
         effektuer117repository = InMemoryEffektuer117Repository,
     )
 

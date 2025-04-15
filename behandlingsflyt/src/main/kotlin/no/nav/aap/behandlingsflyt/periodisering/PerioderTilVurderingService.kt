@@ -148,6 +148,7 @@ class PerioderTilVurderingService(
             ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT -> VurderingType.REVURDERING
             ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT -> VurderingType.REVURDERING
             ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE -> VurderingType.REVURDERING
+            ÅrsakTilBehandling.SØKNAD_TRUKKET -> VurderingType.REVURDERING
         }
     }
 }

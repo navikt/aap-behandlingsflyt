@@ -15,6 +15,10 @@ public enum class StegType(
         gruppe = StegGruppe.RETTIGHETSPERIODE,
         status = Status.UTREDES,
     ),
+    SØKNAD(
+        gruppe = StegGruppe.SØKNAD,
+        status = Status.UTREDES,
+    ),
     VURDER_ALDER(
         gruppe = StegGruppe.ALDER,
         status = Status.UTREDES,

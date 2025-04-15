@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldeperiodeRepository
@@ -20,6 +21,7 @@ class FastsettMeldeperiodeStegTest {
         val steg = FastsettMeldeperiodeSteg(
             sakRepository = InMemorySakRepository,
             meldeperiodeRepository = InMemoryMeldeperiodeRepository,
+            tidligereVurderinger = FakeTidligereVurderinger(),
         )
 
 

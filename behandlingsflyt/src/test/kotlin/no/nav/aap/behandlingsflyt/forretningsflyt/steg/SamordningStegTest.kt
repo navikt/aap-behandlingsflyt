@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -25,6 +24,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -388,6 +388,7 @@ class SamordningStegTest {
             ),
             samordningRepository = InMemorySamordningRepository,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            tidligereVurderinger = FakeTidligereVurderinger(),
         )
 
         InMemorySamordningVurderingRepository.lagreVurderinger(
@@ -444,6 +445,7 @@ class SamordningStegTest {
             ),
             samordningRepository = InMemorySamordningRepository,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            tidligereVurderinger = FakeTidligereVurderinger(),
         )
 
         lagreYtelseGrunnlag(behandlingId, ytelse, periode)

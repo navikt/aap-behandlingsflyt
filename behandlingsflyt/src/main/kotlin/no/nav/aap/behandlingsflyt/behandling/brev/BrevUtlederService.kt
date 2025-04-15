@@ -7,11 +7,17 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 class BrevUtlederService(
     private val behandlingRepository: BehandlingRepository,
     private val resultatUtleder: ResultatUtleder,
 ) {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        behandlingRepository = repositoryProvider.provide(),
+        resultatUtleder = ResultatUtleder(repositoryProvider),
+    )
+
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov {
         val behandling = behandlingRepository.hent(behandlingId)
 
@@ -22,6 +28,7 @@ class BrevUtlederService(
                 return when (resultat) {
                     Resultat.INNVILGELSE -> BrevBehov(TypeBrev.VEDTAK_INNVILGELSE)
                     Resultat.AVSLAG -> BrevBehov(TypeBrev.VEDTAK_AVSLAG)
+                    Resultat.TRUKKET -> BrevBehov(null)
                 }
             }
 

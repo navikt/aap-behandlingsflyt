@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapAr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStudent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -27,10 +28,6 @@ class SøknadService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.SØKNAD
 
-        override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
-            return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse()
-        }
-
         override fun konstruer(connection: DBConnection): SøknadService {
             val repositoryProvider = RepositoryProvider(connection)
             val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
@@ -42,6 +39,12 @@ class SøknadService private constructor(
                 medlemskapArbeidInntektRepository
             )
         }
+    }
+
+    override val navn = Companion.navn
+
+    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+        return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse()
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {

@@ -1,7 +1,10 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.Medlemskapvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -29,19 +32,33 @@ class VurderLovvalgSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val personopplysningRepository: PersonopplysningRepository,
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
-    private val sakRepository: SakRepository
+    private val sakRepository: SakRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) : BehandlingSteg {
-    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        personopplysningRepository = repositoryProvider.provide(),
+        medlemskapArbeidInntektRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+    )
 
+
+    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
-                val vurdering = vurderVilkår(kontekst)
-                if (vurdering != null) return vurdering
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+                    avklaringsbehovene.avbrytForSteg(type())
+                    return Fullført
+                }
+                return vurderVilkår(kontekst)
             }
 
             VurderingType.REVURDERING -> {
-                val vurdering = vurderVilkår(kontekst)
-                if (vurdering != null) return vurdering
+                return vurderVilkår(kontekst)
             }
 
             VurderingType.FORLENGELSE -> {
@@ -51,16 +68,17 @@ class VurderLovvalgSteg private constructor(
                     forlengensePeriode
                 )
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+                return Fullført
             }
 
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
+                return Fullført
             }
         }
-        return Fullført
     }
 
-    private fun vurderVilkår(kontekst: FlytKontekstMedPerioder): StegResultat? {
+    private fun vurderVilkår(kontekst: FlytKontekstMedPerioder): StegResultat {
         val manuellVurdering =
             medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)?.manuellVurdering
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
@@ -107,7 +125,7 @@ class VurderLovvalgSteg private constructor(
         ) {
             return FantAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
         }
-        return null
+        return Fullført
     }
 
     private fun spesifiktTriggetRevurderLovvalgUtenManuellVurdering(
@@ -121,17 +139,7 @@ class VurderLovvalgSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
-            val personopplysningRepository = repositoryProvider.provide<PersonopplysningRepository>()
-            val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
-            val sakRepository = repositoryProvider.provide<SakRepository>()
-            return VurderLovvalgSteg(
-                vilkårsresultatRepository,
-                personopplysningRepository,
-                medlemskapArbeidInntektRepository,
-                sakRepository
-            )
+            return VurderLovvalgSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

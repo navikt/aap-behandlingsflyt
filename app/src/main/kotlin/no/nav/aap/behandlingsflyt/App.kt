@@ -34,6 +34,7 @@ import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringAp
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.forutgåendeMedlemskapAPI
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.lovvalgMedlemskapGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskapAPI
+import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerAPI
 import no.nav.aap.behandlingsflyt.drift.driftAPI
@@ -106,6 +107,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.refusjo
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.log.ContextRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
@@ -204,6 +206,7 @@ internal fun Application.server(dbConfig: DbConfig) {
                 institusjonAPI(dataSource)
                 avklaringsbehovApi(dataSource)
                 tilkjentYtelseAPI(dataSource)
+                trukketSøknadGrunnlagAPI(dataSource)
                 beregningVurderingAPI(dataSource)
                 beregningsGrunnlagApi(dataSource)
                 aldersGrunnlagApi(dataSource)
@@ -298,6 +301,7 @@ private fun registerRepositories() {
         .register<RefusjonkravRepositoryImpl>()
         .register<InformasjonskravRepositoryImpl>()
         .register<TjenestePensjonRepositoryImpl>()
+        .register<TrukketSøknadRepositoryImpl>()
         .status()
 }
 

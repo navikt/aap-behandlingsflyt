@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -50,6 +51,7 @@ class SamordningYtelseVurderingServiceTest {
             val service = SamordningYtelseVurderingService(
                 SamordningYtelseRepositoryImpl(connection),
                 SakService(sakRepository),
+                FakeTidligereVurderinger(),
             )
             val kontekst = opprettSakdata(connection)
 

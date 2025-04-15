@@ -1,81 +1,45 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
 import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
-import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
-class UnderveisSteg(private val underveisService: UnderveisService) : BehandlingSteg {
+class UnderveisSteg(
+    private val underveisService: UnderveisService,
+    private val tidligereVurderinger: TidligereVurderinger,
+) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        underveisService = UnderveisService(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+    )
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (kontekst.vurdering.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
+            if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                return Fullført
+            }
+        }
+
         // Skal alltid kjøres uavhengig av vurderingstype
-        val underveisTidslinje = underveisService.vurder(kontekst.sakId, kontekst.behandlingId)
-
-        log.debug("Underveis tidslinje {}", underveisTidslinje)
-
+        underveisService.vurder(kontekst.sakId, kontekst.behandlingId)
         return Fullført
     }
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
-            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val sakRepository = repositoryProvider.provide<SakRepository>()
-            val vilkårsresultatRepository =
-                repositoryProvider.provide<VilkårsresultatRepository>()
-            val behandlingService =
-                SakOgBehandlingService(
-                    GrunnlagKopierer(connection),
-                    sakRepository,
-                    behandlingRepository
-                )
-            val aktivitetspliktRepository =
-                repositoryProvider.provide<AktivitetspliktRepository>()
-            val plikortkortRepository = repositoryProvider.provide<MeldekortRepository>()
-            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
-            val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
-
-            return UnderveisSteg(
-                UnderveisService(
-                    behandlingService = behandlingService,
-                    vilkårsresultatRepository = vilkårsresultatRepository,
-                    meldekortRepository = plikortkortRepository,
-                    underveisRepository = underveisRepository,
-                    aktivitetspliktRepository = aktivitetspliktRepository,
-                    etAnnetStedUtlederService = EtAnnetStedUtlederService(
-                        barnetilleggRepository,
-                        repositoryProvider.provide(),
-                        sakRepository,
-                        behandlingRepository
-                    ),
-                    arbeidsevneRepository = repositoryProvider.provide<ArbeidsevneRepository>(),
-                    meldepliktRepository = repositoryProvider.provide(),
-                    meldeperiodeRepository = repositoryProvider.provide(),
-                    vedtakService = VedtakService(
-                        vedtakRepository = repositoryProvider.provide(),
-                        behandlingRepository = behandlingRepository,
-                    )
-                )
-            )
+            return UnderveisSteg(repositoryProvider)
         }
 
         override fun type(): StegType {

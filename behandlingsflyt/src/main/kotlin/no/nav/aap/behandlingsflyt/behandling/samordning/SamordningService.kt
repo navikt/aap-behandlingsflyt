@@ -13,12 +13,17 @@ import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere.slåSammenTilListe
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.lookup.repository.RepositoryProvider
 import kotlin.math.min
 
 class SamordningService(
     private val samordningVurderingRepository: SamordningVurderingRepository,
     private val samordningYtelseRepository: SamordningYtelseRepository,
 ) {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        samordningVurderingRepository = repositoryProvider.provide(),
+        samordningYtelseRepository = repositoryProvider.provide(),
+    )
 
     fun hentVurderinger(behandlingId: BehandlingId): SamordningVurderingGrunnlag? {
         return samordningVurderingRepository.hentHvisEksisterer(behandlingId)

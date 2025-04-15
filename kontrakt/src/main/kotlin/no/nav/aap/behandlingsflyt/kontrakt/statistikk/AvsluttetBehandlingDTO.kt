@@ -12,8 +12,14 @@ public data class AvsluttetBehandlingDTO(
     val vilkårsResultat: VilkårsResultatDTO,
     val beregningsGrunnlag: BeregningsgrunnlagDTO?,
     val diagnoser: Diagnoser? = null,
-    val rettighetstypePerioder: List<RettighetstypePeriode>
+    val rettighetstypePerioder: List<RettighetstypePeriode>,
+    val resultat: ResultatKode?,
 )
+
+public enum class ResultatKode {
+    INNVILGET,
+    AVSLAG
+}
 
 public data class Diagnoser(
     val kodeverk: String,

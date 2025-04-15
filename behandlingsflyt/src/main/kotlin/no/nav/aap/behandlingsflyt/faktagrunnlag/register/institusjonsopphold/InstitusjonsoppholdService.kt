@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
 
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
@@ -8,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdGateway
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -20,8 +23,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 class InstitusjonsoppholdService private constructor(
     private val sakService: SakService,
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
-    private val institusjonsoppholdRegisterGateway: IInstitusjonsoppholdGateway
+    private val institusjonsoppholdRegisterGateway: IInstitusjonsoppholdGateway,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav {
+    override val navn = Companion.navn
+
+    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+        return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse() &&
+                oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
+                tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
+    }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val behandlingId = kontekst.behandlingId
@@ -53,18 +64,14 @@ class InstitusjonsoppholdService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.INSTITUSJONSOPPHOLD
 
-        override fun erRelevant(kontekst: FlytKontekstMedPerioder, oppdatert: InformasjonskravOppdatert?): Boolean {
-            return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse() &&
-                    oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
-        }
-
         override fun konstruer(connection: DBConnection): InstitusjonsoppholdService {
             val repositoryProvider = RepositoryProvider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()
             return InstitusjonsoppholdService(
                 SakService(sakRepository),
                 repositoryProvider.provide(),
-                InstitusjonsoppholdGateway
+                InstitusjonsoppholdGateway,
+                TidligereVurderingerImpl(repositoryProvider),
             )
         }
     }

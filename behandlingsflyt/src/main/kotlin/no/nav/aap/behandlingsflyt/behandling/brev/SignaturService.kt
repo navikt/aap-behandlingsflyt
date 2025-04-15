@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.Rolle
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 import no.nav.aap.brev.kontrakt.Rolle as SignaturRolle
@@ -15,6 +16,10 @@ import no.nav.aap.brev.kontrakt.Rolle as SignaturRolle
 class SignaturService(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        avklaringsbehovRepository = repositoryProvider.provide(),
+    )
+
     fun finnSignaturGrunnlag(brevbestilling: Brevbestilling, bruker: Bruker): List<SignaturGrunnlag> {
         require(brevbestilling.status == Status.FORHÅNDSVISNING_KLAR) {
             "Kan ikke utlede signaturer på brev i status ${brevbestilling.status}"
@@ -74,5 +79,5 @@ class SignaturService(
 }
 
 private fun String.erNavIdent(): Boolean {
-    return this.matches(Regex("\\w\\d{6}"));
+    return this.matches(Regex("\\w\\d{6}"))
 }

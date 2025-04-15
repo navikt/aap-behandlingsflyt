@@ -18,7 +18,8 @@ class Avklaringsbehovene(
     private val behandlingId: BehandlingId
 ) : AvklaringsbehoveneDecorator {
     private val log = LoggerFactory.getLogger(javaClass)
-    private var avklaringsbehovene: MutableList<Avklaringsbehov> = repository.hent(behandlingId).toMutableList()
+    private val avklaringsbehovene: List<Avklaringsbehov>
+        get() = repository.hent(behandlingId)
 
     fun ingenEndring(avklaringsbehov: Avklaringsbehov, bruker: String) {
         løsAvklaringsbehov(
@@ -140,6 +141,15 @@ class Avklaringsbehovene(
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
+    fun avbrytForSteg(steg: StegType) {
+        for (avklaringsbehov in åpne()) {
+            if (avklaringsbehov.skalLøsesISteg(steg)) {
+                avklaringsbehov.avbryt()
+                repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
+            }
+        }
+    }
+
     fun reåpne(definisjon: Definisjon) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.reåpne()
@@ -147,8 +157,7 @@ class Avklaringsbehovene(
     }
 
     override fun alle(): List<Avklaringsbehov> {
-        avklaringsbehovene = repository.hent(behandlingId).toMutableList()
-        return avklaringsbehovene.toList()
+        return avklaringsbehovene
     }
 
     fun åpne(): List<Avklaringsbehov> {
@@ -206,10 +215,6 @@ class Avklaringsbehovene(
         return alle().any { avklaringsbehov -> avklaringsbehov.harVærtSendtTilbakeFraBeslutterTidligere() }
     }
 
-    fun harVærtSendtTilbakeFraKvalitetssikringTidligere(): Boolean {
-        return alle().any { avklaringsbehov -> avklaringsbehov.harVærtSendtTilbakeFraKvalitetssikrerTidligere() }
-    }
-
     fun validateTilstand(behandling: Behandling, avklaringsbehov: Definisjon? = null) {
         ValiderBehandlingTilstand.validerTilstandBehandling(
             behandling = behandling,
@@ -244,5 +249,9 @@ class Avklaringsbehovene(
 
     override fun harÅpentBrevVentebehov(): Boolean {
         return alle().any { avklaringsbehov -> avklaringsbehov.erBrevVentebehov() && avklaringsbehov.erÅpent() }
+    }
+
+    override fun toString(): String {
+        return avklaringsbehovene.joinToString { it.toString() }
     }
 }

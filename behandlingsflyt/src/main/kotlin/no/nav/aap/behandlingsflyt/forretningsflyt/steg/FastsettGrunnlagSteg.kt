@@ -2,15 +2,14 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.beregning.AvklarFaktaBeregningService
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -26,8 +25,16 @@ import org.slf4j.LoggerFactory
 class FastsettGrunnlagSteg(
     private val beregningService: BeregningService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val avklarFaktaBeregningService: AvklarFaktaBeregningService
+    private val avklarFaktaBeregningService: AvklarFaktaBeregningService,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        beregningService = BeregningService(repositoryProvider),
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        avklarFaktaBeregningService = AvklarFaktaBeregningService(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+    )
+
     private val log = LoggerFactory.getLogger(javaClass)
 
 
@@ -38,6 +45,9 @@ class FastsettGrunnlagSteg(
 
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    return Fullført
+                }
                 vurderVilkåret(kontekst, vilkår, rettighetsperiode, vilkårsresultat)
             }
 
@@ -102,22 +112,7 @@ class FastsettGrunnlagSteg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
-            val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
-            return FastsettGrunnlagSteg(
-                BeregningService(
-                    repositoryProvider.provide(),
-                    repositoryProvider.provide<SykdomRepository>(),
-                    repositoryProvider.provide(),
-                    repositoryProvider.provide(),
-                    BeregningsgrunnlagRepositoryImpl(connection),
-                    beregningVurderingRepository,
-                    repositoryProvider.provide()
-                ),
-                vilkårsresultatRepository,
-                AvklarFaktaBeregningService(vilkårsresultatRepository)
-            )
+            return FastsettGrunnlagSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

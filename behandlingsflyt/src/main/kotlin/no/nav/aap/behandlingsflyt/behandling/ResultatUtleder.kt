@@ -1,19 +1,48 @@
 package no.nav.aap.behandlingsflyt.behandling
 
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 enum class Resultat {
     INNVILGELSE,
-    AVSLAG
+    AVSLAG,
+    TRUKKET,
 }
+
 
 class ResultatUtleder(
     private val underveisRepository: UnderveisRepository,
+    private val behandlingRepository: BehandlingRepository,
+    private val trukketSøknadService: TrukketSøknadService,
 ) {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        underveisRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+        trukketSøknadService = TrukketSøknadService(repositoryProvider),
+    )
+
     fun utledResultat(behandlingId: BehandlingId): Resultat {
-        val underveisGrunnlag = underveisRepository.hent(behandlingId)
+        val behandling = behandlingRepository.hent(behandlingId)
+        return utledResultatFørstegangsBehandling(behandling)
+    }
+
+    fun utledResultatFørstegangsBehandling(behandling: Behandling): Resultat {
+
+        require(behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
+            "Kan ikke utlede resultat for ${behandling.typeBehandling()} ennå."
+        }
+
+        if (trukketSøknadService.søknadErTrukket(behandling.id)) {
+            return Resultat.TRUKKET
+        }
+
+        val underveisGrunnlag = underveisRepository.hent(behandling.id)
 
         val oppfyltePerioder = underveisGrunnlag.perioder.filter { it.utfall == Utfall.OPPFYLT }
 

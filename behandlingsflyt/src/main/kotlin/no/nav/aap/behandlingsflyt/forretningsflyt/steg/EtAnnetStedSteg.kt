@@ -3,7 +3,8 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -11,22 +12,34 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
 class EtAnnetStedSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val etAnnetStedUtlederService: EtAnnetStedUtlederService
+    private val etAnnetStedUtlederService: EtAnnetStedUtlederService,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        etAnnetStedUtlederService = EtAnnetStedUtlederService(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+    )
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+
+        if (kontekst.vurdering.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
+            if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                avklaringsbehovene.avbrytForSteg(type())
+                return Fullført
+            }
+        }
 
         val avklaringsbehov = mutableListOf<Definisjon>()
 
@@ -66,21 +79,7 @@ class EtAnnetStedSteg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val sakRepository = repositoryProvider.provide<SakRepository>()
-            val avklaringsbehovRepository =
-                repositoryProvider.provide<AvklaringsbehovRepository>()
-            val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
-
-            return EtAnnetStedSteg(
-                avklaringsbehovRepository, EtAnnetStedUtlederService(
-                    barnetilleggRepository,
-                    repositoryProvider.provide(),
-                    sakRepository,
-                    behandlingRepository
-                )
-            )
+            return EtAnnetStedSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

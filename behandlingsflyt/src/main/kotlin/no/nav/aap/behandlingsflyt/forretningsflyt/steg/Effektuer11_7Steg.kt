@@ -3,12 +3,12 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
-import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Forhåndsvarsel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Repository
@@ -31,14 +31,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -49,11 +47,33 @@ class Effektuer11_7Steg(
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val effektuer117repository: Effektuer11_7Repository,
+    private val tidligereVurderinger: TidligereVurderinger,
     private val clock: Clock = Clock.systemDefaultZone(),
 ) : BehandlingSteg {
     private val typeBrev = TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT
 
+    constructor(
+        repositoryProvider: RepositoryProvider,
+        clock: Clock = Clock.systemDefaultZone(),
+    ) : this(
+        underveisRepository = repositoryProvider.provide(),
+        brevbestillingService = BrevbestillingService(repositoryProvider),
+        behandlingRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        effektuer117repository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        clock = clock,
+    )
+
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (kontekst.vurdering.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
+            if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+                    .avbrytForSteg(type())
+                return Fullført
+            }
+        }
+
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val bruddSomSkalSanksjoneres = bruddSomSkalSanksjoneres(kontekst, behandling)
 
@@ -149,7 +169,8 @@ class Effektuer11_7Steg(
             .map { Segment(it.periode, it) }
             .let { Tidslinje(it) }
 
-        val dagerIkkeVarslet = perioderSomSkalSanksjoneres.kombiner(perioderAlleredeVarslet, StandardSammenslåere.minus())
+        val dagerIkkeVarslet =
+            perioderSomSkalSanksjoneres.kombiner(perioderAlleredeVarslet, StandardSammenslåere.minus())
         return dagerIkkeVarslet.isNotEmpty()
     }
 
@@ -172,31 +193,7 @@ class Effektuer11_7Steg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val sakRepository = repositoryProvider.provide<SakRepository>()
-            val brevbestillingRepository =
-                repositoryProvider.provide<BrevbestillingRepository>()
-            val effektuer117repository = repositoryProvider.provide<Effektuer11_7Repository>()
-            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-
-            val brevbestillingService =
-                BrevbestillingService(
-                    signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository),
-                    brevbestillingGateway = GatewayProvider.provide(),
-                    brevbestillingRepository = brevbestillingRepository,
-                    behandlingRepository = behandlingRepository,
-                    sakRepository = sakRepository
-                )
-
-            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
-            return Effektuer11_7Steg(
-                underveisRepository,
-                brevbestillingService,
-                behandlingRepository = behandlingRepository,
-                avklaringsbehovRepository = avklaringsbehovRepository,
-                effektuer117repository = effektuer117repository
-            )
+            return Effektuer11_7Steg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

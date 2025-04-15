@@ -17,6 +17,7 @@ import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.util.stream.IntStream
@@ -28,6 +29,13 @@ class EtAnnetStedUtlederService(
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository
 ) {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        barnetilleggRepository = repositoryProvider.provide(),
+        institusjonsoppholdRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+    )
+
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun utled(
@@ -292,7 +300,7 @@ class EtAnnetStedUtlederService(
                 segment.periode,
                 true
             )
-        }.fold(Tidslinje<Boolean>()) { acc, tidslinje ->
+        }.fold(Tidslinje()) { acc, tidslinje ->
             acc.kombiner(tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
         }
     }

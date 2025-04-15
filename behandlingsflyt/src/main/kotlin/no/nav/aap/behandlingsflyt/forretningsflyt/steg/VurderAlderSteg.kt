@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.Aldersgrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.Aldersvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -17,14 +19,30 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderAlderSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val personopplysningRepository: PersonopplysningRepository
+    private val personopplysningRepository: PersonopplysningRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
 
-    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        personopplysningRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+    )
 
+    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         when (kontekst.vurdering.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING -> vurderVilkår(kontekst)
-            VurderingType.REVURDERING -> vurderVilkår(kontekst)
+            VurderingType.FØRSTEGANGSBEHANDLING -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    /* ikke vurder noe */
+                } else {
+                    vurderVilkår(kontekst)
+                }
+            }
+
+            VurderingType.REVURDERING -> {
+                vurderVilkår(kontekst)
+            }
+
             VurderingType.FORLENGELSE -> {
                 // Forleng vilkåret
                 val forlengensePeriode = requireNotNull(kontekst.vurdering.forlengelsePeriode)
@@ -59,15 +77,7 @@ class VurderAlderSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val personopplysningRepository =
-                repositoryProvider.provide<PersonopplysningRepository>()
-            val vilkårsresultatRepository =
-                repositoryProvider.provide<VilkårsresultatRepository>()
-            return VurderAlderSteg(
-                vilkårsresultatRepository,
-                personopplysningRepository
-            )
+            return VurderAlderSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

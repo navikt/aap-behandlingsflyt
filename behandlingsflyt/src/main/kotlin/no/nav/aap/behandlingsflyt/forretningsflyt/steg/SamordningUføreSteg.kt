@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -23,12 +25,26 @@ class SamordningUføreSteg(
     private val uføreRepository: UføreRepository,
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        samordningUføreRepository = repositoryProvider.provide(),
+        uføreRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+    )
+
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    avklaringsbehovene.avbrytForSteg(type())
+                    return Fullført
+                }
+
                 if (erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene) || !harVurdertAllePerioder(kontekst.behandlingId)) {
                     val uføreGrunnlag = uføreRepository.hentHvisEksisterer(kontekst.behandlingId)
                     if (uføreGrunnlag != null) {
@@ -76,17 +92,7 @@ class SamordningUføreSteg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val uføreRepository = repositoryProvider.provide<UføreRepository>()
-            val samordningUførRepository = repositoryProvider.provide<SamordningUføreRepository>()
-            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-            return SamordningUføreSteg(
-                samordningUførRepository,
-                uføreRepository,
-                behandlingRepository,
-                avklaringsbehovRepository
-            )
+            return SamordningUføreSteg(RepositoryProvider(connection))
         }
 
         override fun type(): StegType {

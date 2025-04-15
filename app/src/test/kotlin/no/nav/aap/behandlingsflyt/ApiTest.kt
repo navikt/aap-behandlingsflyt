@@ -39,6 +39,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.FinnEllerOpprettSakDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksinfoDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.UtvidetSaksinfoDTO
+import no.nav.aap.behandlingsflyt.test.AzureTokenGen
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.Fakes
@@ -47,6 +48,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
+import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
 import no.nav.aap.komponenter.httpklient.httpclient.get
@@ -100,6 +102,12 @@ class ApiTest {
         private val ccClient: RestClient<InputStream> = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
             tokenProvider = ClientCredentialsTokenProvider,
+            responseHandler = DefaultResponseHandler()
+        )
+
+        private val noTokenClient: RestClient<InputStream> = RestClient(
+            config = ClientConfig(scope = "behandlingsflyt"),
+            tokenProvider = NoTokenTokenProvider(),
             responseHandler = DefaultResponseHandler()
         )
 
@@ -306,13 +314,12 @@ class ApiTest {
             URI.create("http://localhost:$port/").resolve("api/sak/finnEllerOpprett"),
             PostRequest(
                 body = FinnEllerOpprettSakDTO("12345678910", LocalDate.now()),
-                currentToken = getToken()
             )
         )
 
         requireNotNull(responseSak)
 
-        ccClient.post<_, Unit>(
+        noTokenClient.post<_, Unit>(
             URI.create("http://localhost:$port/").resolve("api/hendelse/send"),
             PostRequest(
                 body = Innsending(
@@ -327,7 +334,9 @@ class ApiTest {
                         medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
                     )
                 ),
-                currentToken = getToken()
+                additionalHeaders = listOf(
+                    azpAuth(Azp.Postmottak)
+                ),
             )
         )
 
@@ -462,6 +471,16 @@ class ApiTest {
         }
         return null
     }
+    
+    private fun azpAuth(azp: Azp) = Header(
+            "Authorization",
+            "Bearer ${
+                AzureTokenGen("behandlingsflyt", "behandlingsflyt").generate(
+                    true,
+                    azp.uuid.toString()
+                )
+            }"
+        )
 }
 
 
