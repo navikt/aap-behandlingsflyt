@@ -18,7 +18,8 @@ public data class AvsluttetBehandlingDTO(
 
 public enum class ResultatKode {
     INNVILGET,
-    AVSLAG
+    AVSLAG,
+    TRUKKET
 }
 
 public data class Diagnoser(

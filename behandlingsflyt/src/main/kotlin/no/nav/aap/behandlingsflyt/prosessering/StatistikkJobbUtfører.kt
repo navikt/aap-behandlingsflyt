@@ -281,7 +281,7 @@ class StatistikkJobbUtfører(
                 when (it) {
                     Resultat.INNVILGELSE -> ResultatKode.INNVILGET
                     Resultat.AVSLAG -> ResultatKode.AVSLAG
-                    Resultat.TRUKKET -> TODO()
+                    Resultat.TRUKKET -> ResultatKode.TRUKKET
                     null -> null
                 }
             },
