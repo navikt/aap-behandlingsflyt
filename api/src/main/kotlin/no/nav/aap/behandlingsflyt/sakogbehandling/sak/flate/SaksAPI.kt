@@ -61,15 +61,18 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 } else {
                     repositoryProvider.provide<SakRepository>().finnSakerFor(person)
                         .map { sak ->
-                            val førstegangsbehandling = behandlingRepository.hentAlleFor(sak.id).first{
+                            val førstegangsbehandling = behandlingRepository.hentAlleFor(sak.id).firstOrNull{
                                 it.typeBehandling() == TypeBehandling.Førstegangsbehandling
                             }
+                            val resultat = if (førstegangsbehandling != null) {
+                                resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
+                            } else null
                             SaksinfoDTO(
                                 saksnummer = sak.saksnummer.toString(),
                                 opprettetTidspunkt = sak.opprettetTidspunkt,
                                 periode = sak.rettighetsperiode,
                                 ident = sak.person.aktivIdent().identifikator,
-                                resultat = resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
+                                resultat = resultat
                             )
                         }
                 }
@@ -93,15 +96,19 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     val saker = repositoryProvider.provide<SakRepository>().finnSakerFor(person)
 
                     saker.map { sak ->
-                        val førstegangsbehandling = behandlingRepository.hentAlleFor(sak.id).first{
+                        val førstegangsbehandling = behandlingRepository.hentAlleFor(sak.id).firstOrNull{
                             it.typeBehandling() == TypeBehandling.Førstegangsbehandling
                         }
+                        val resultat = if (førstegangsbehandling != null) {
+                            resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
+                        } else null
+
                         SaksinfoDTO(
                             saksnummer = sak.saksnummer.toString(),
                             opprettetTidspunkt = sak.opprettetTidspunkt,
                             periode = sak.rettighetsperiode,
                             ident = sak.person.aktivIdent().identifikator,
-                            resultat = resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
+                            resultat = resultat
                         )
                     }
                 }
