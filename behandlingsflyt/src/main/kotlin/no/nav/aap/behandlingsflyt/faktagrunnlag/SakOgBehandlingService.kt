@@ -141,6 +141,18 @@ class SakOgBehandlingService(
         }
     }
 
+    fun overstyrRettighetsperioden(sakId: SakId, startDato: LocalDate, sluttDato: LocalDate) {
+        val rettighetsperiode = sakRepository.hent(sakId).rettighetsperiode
+        val periode = Periode(
+            startDato,
+            sluttDato
+        )
+        if (periode != rettighetsperiode) {
+            sakRepository.oppdaterRettighetsperiode(sakId, periode)
+        }
+    }
+
+
     private fun validerStegStatus(behandling: Behandling) {
         val flyt = utledType(behandling.typeBehandling()).flyt()
         // TODO Utvide med regler for hva som kan knyttes til en behandling og når den eventuelt skal tilbake likevel

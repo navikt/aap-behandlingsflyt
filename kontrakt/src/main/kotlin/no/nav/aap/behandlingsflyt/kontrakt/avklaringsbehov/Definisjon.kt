@@ -71,6 +71,15 @@ public enum class Definisjon(
             Rolle.BESLUTTER
         )
     ),
+    VURDER_RETTIGHETSPERIODE(
+        kode = AvklaringsbehovKode.`5029`,
+        løsesISteg = StegType.VURDER_RETTIGHETSPERIODE,
+        type = BehovType.MANUELT_FRIVILLIG,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_NASJONAL,
+            Rolle.BESLUTTER
+        )
+    ),
     AVKLAR_STUDENT(
         kode = AvklaringsbehovKode.`5001`,
         type = BehovType.MANUELT_PÅKREVD,

@@ -16,4 +16,5 @@ enum class InformasjonskravNavn {
     PERSONOPPLYSNING_FORUTGÅENDE,
     PERSONOPPLYSNING,
     UFØRE,
+    RETTIGHETSPERIODE
 }

@@ -31,6 +31,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Kvalitetss
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SamordningVentPaVirkningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
@@ -62,6 +63,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Yrkesska
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
@@ -207,6 +209,7 @@ class FlytOrkestratorTest {
         @BeforeAll
         @JvmStatic
         internal fun beforeAll() {
+            System.setProperty("NAIS_CLUSTER_NAME", "dev-gcp")
             RepositoryRegistry
                 .register<BehandlingRepositoryImpl>()
                 .register<PersonRepositoryImpl>()
@@ -2563,6 +2566,57 @@ class FlytOrkestratorTest {
             assertThat(avklaringsbehov.erÅpent())
             assertThat(avklaringsbehov.erVentepunkt())
             assertThat(avklaringsbehov.definisjon == Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON)
+        }
+    }
+
+    @Test
+    fun `Skal kunne overstyre rettighetsperioden`() {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+        val nyStartDato = periode.fom.minusDays(7)
+
+        dataSource.transaction { connection ->
+
+            // Oppretter vanlig søknad
+            hendelsesMottak.håndtere(
+                ident, DokumentMottattPersonHendelse(
+                    journalpost = JournalpostId("10212345"),
+                    mottattTidspunkt = LocalDateTime.now(),
+                    strukturertDokument = StrukturertDokument(
+                        SøknadV0(
+                            student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                            medlemskap = SøknadMedlemskapDto(
+                                "JA", "JA", "NEI", null, emptyList()
+                            ),
+                        ),
+                    ),
+                    periode = periode
+                )
+            )
+
+            util.ventPåSvar()
+
+            val sak = hentSak(ident, periode)
+            val behandling = hentBehandling(sak.id)
+
+            løsAvklaringsBehov(
+                behandling = behandling,
+                avklaringsBehovLøsning = VurderRettighetsperiodeLøsning(
+                    nyRettighetsperiodeDto = RettighetsperiodeDto(
+                        nyStartDato, "En begrunnelse"
+                    )
+                )
+            )
+
+            val oppdatertSak = hentSak(ident, periode)
+
+            assertThat(oppdatertSak.rettighetsperiode).isNotEqualTo(periode)
+            assertThat(oppdatertSak.rettighetsperiode).isEqualTo(
+                Periode(
+                    nyStartDato,
+                    nyStartDato.plusYears(1).minusDays(1)
+                )
+            )
         }
     }
 

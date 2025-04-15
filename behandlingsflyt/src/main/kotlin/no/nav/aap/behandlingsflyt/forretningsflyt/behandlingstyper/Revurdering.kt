@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgService
+import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktInformasjonskrav
@@ -35,6 +36,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OpprettRevurderingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RefusjonkravSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RettighetsperiodeSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningAndreStatligeYtelserSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningAvslagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningSteg
@@ -57,6 +59,11 @@ object Revurdering : BehandlingType {
     override fun flyt(): BehandlingFlyt {
         return BehandlingFlytBuilder()
             .medSteg(steg = StartBehandlingSteg, informasjonskrav = listOf(SøknadService))
+            .medSteg(
+                steg = RettighetsperiodeSteg,
+                informasjonskrav = listOf(VurderRettighetsperiodeService),
+                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE)
+            )
             .medSteg(
                 steg = VurderLovvalgSteg,
                 informasjonskrav = listOf(PersonopplysningService, LovvalgService),
