@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 
+@Suppress("unused")
 class BarnetilleggVisningUtleder(connection: DBConnection) : StegGruppeVisningUtleder {
 
     private val barnRepository = RepositoryProvider(connection).provide<BarnRepository>()

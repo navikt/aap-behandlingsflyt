@@ -9,6 +9,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 
+@Suppress("unused")
 class StudentVisningUtleder(connection: DBConnection) : StegGruppeVisningUtleder {
 
     private val repositoryProvider = RepositoryProvider(connection)

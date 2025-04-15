@@ -2,9 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplik
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
-import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktFritaksperioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
@@ -63,11 +61,7 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: DataSource) {
                 )
             }
 
-            if (meldepliktGrunnlag != null) {
-                respond(meldepliktGrunnlag)
-            } else {
-                respondWithStatus(HttpStatusCode.NoContent)
-            }
+            respond(meldepliktGrunnlag)
         }
     }
     route("/api/behandling/{referanse}/grunnlag/fritak-meldeplikt/simulering") {
