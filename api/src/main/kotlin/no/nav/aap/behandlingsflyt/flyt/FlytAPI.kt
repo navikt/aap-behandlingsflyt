@@ -339,7 +339,7 @@ private fun utledVisning(
     status: ProsesseringStatus,
     typeBehandling: TypeBehandling
 ): Visning {
-    val jobber = status in listOf(ProsesseringStatus.JOBBER, ProsesseringStatus.FEILET)
+    val jobberEllerFeilet = status in listOf(ProsesseringStatus.JOBBER, ProsesseringStatus.FEILET)
     val påVent = alleAvklaringsbehovInkludertFrivillige.erSattPåVent()
     val beslutterReadOnly = aktivtSteg != StegType.FATTE_VEDTAK
     val erTilKvalitetssikring =
@@ -352,7 +352,7 @@ private fun utledVisning(
     val visBrevkort =
         alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_BREV)?.erÅpent() == true
 
-    if (jobber) {
+    if (jobberEllerFeilet) {
         return Visning(
             saksbehandlerReadOnly = true,
             beslutterReadOnly = true,
