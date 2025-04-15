@@ -65,7 +65,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                                 it.typeBehandling() == TypeBehandling.Førstegangsbehandling
                             }
                             val resultat = if (førstegangsbehandling != null) {
-                                resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
+                                null//resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
                             } else null
                             SaksinfoDTO(
                                 saksnummer = sak.saksnummer.toString(),
@@ -100,7 +100,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                             it.typeBehandling() == TypeBehandling.Førstegangsbehandling
                         }
                         val resultat = if (førstegangsbehandling != null) {
-                            resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
+                            null//resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
                         } else null
 
                         SaksinfoDTO(
