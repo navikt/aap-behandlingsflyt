@@ -2577,49 +2577,47 @@ class FlytOrkestratorTest {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
         val nyStartDato = periode.fom.minusDays(7)
 
-        dataSource.transaction { connection ->
 
-            // Oppretter vanlig søknad
-            hendelsesMottak.håndtere(
-                ident, DokumentMottattPersonHendelse(
-                    journalpost = JournalpostId("10212345"),
-                    mottattTidspunkt = LocalDateTime.now(),
-                    strukturertDokument = StrukturertDokument(
-                        SøknadV0(
-                            student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
-                            medlemskap = SøknadMedlemskapDto(
-                                "JA", "JA", "NEI", null, emptyList()
-                            ),
+        // Oppretter vanlig søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("10212345"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto(
+                            "JA", "JA", "NEI", null, emptyList()
                         ),
                     ),
-                    periode = periode
+                ),
+                periode = periode
+            )
+        )
+
+        util.ventPåSvar()
+
+        val sak = hentSak(ident, periode)
+        val behandling = hentBehandling(sak.id)
+
+        løsAvklaringsBehov(
+            behandling = behandling,
+            avklaringsBehovLøsning = VurderRettighetsperiodeLøsning(
+                nyRettighetsperiodeDto = RettighetsperiodeDto(
+                    nyStartDato, "En begrunnelse"
                 )
             )
+        )
 
-            util.ventPåSvar()
+        val oppdatertSak = hentSak(ident, periode)
 
-            val sak = hentSak(ident, periode)
-            val behandling = hentBehandling(sak.id)
-
-            løsAvklaringsBehov(
-                behandling = behandling,
-                avklaringsBehovLøsning = VurderRettighetsperiodeLøsning(
-                    nyRettighetsperiodeDto = RettighetsperiodeDto(
-                        nyStartDato, "En begrunnelse"
-                    )
-                )
+        assertThat(oppdatertSak.rettighetsperiode).isNotEqualTo(periode)
+        assertThat(oppdatertSak.rettighetsperiode).isEqualTo(
+            Periode(
+                nyStartDato,
+                nyStartDato.plusYears(1).minusDays(1)
             )
-
-            val oppdatertSak = hentSak(ident, periode)
-
-            assertThat(oppdatertSak.rettighetsperiode).isNotEqualTo(periode)
-            assertThat(oppdatertSak.rettighetsperiode).isEqualTo(
-                Periode(
-                    nyStartDato,
-                    nyStartDato.plusYears(1).minusDays(1)
-                )
-            )
-        }
+        )
     }
 
     /**
