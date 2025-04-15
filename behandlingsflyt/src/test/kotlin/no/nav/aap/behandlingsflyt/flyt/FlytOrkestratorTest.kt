@@ -174,6 +174,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -567,7 +568,7 @@ class FlytOrkestratorTest {
         assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
 
         // Skal feile dersom man prøver å sende til beslutter etter at vedtaket er fattet
-        val avklaringsbehovFeil = assertThrows<IllegalArgumentException> {
+        val avklaringsbehovFeil = assertThrows<UgyldigForespørselException> {
             løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
         }
         assertThat(avklaringsbehovFeil.message).contains("Forsøker å løse avklaringsbehov FORESLÅ_VEDTAK(kode='5098') som er definert i et steg før nåværende steg[BREV]")
