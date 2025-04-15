@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 
-import no.nav.aap.behandlingsflyt.behandling.Resultat
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDateTime
 
@@ -9,5 +9,5 @@ data class SaksinfoDTO(
     val opprettetTidspunkt: LocalDateTime,
     val periode: Periode,
     val ident: String,
-    val resultat: Resultat? = null
+    val resultat: ResultatKode? = null
 )

@@ -8,10 +8,12 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
@@ -76,7 +78,14 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                                 opprettetTidspunkt = sak.opprettetTidspunkt,
                                 periode = sak.rettighetsperiode,
                                 ident = sak.person.aktivIdent().identifikator,
-                                resultat = resultat
+                                resultat = resultat.let {
+                                    when (it) {
+                                        Resultat.INNVILGELSE -> ResultatKode.INNVILGET
+                                        Resultat.AVSLAG -> ResultatKode.AVSLAG
+                                        Resultat.TRUKKET -> ResultatKode.TRUKKET
+                                        null -> null
+                                    }
+                                }
                             )
                         }
                 }
@@ -115,7 +124,14 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                             opprettetTidspunkt = sak.opprettetTidspunkt,
                             periode = sak.rettighetsperiode,
                             ident = sak.person.aktivIdent().identifikator,
-                            resultat = resultat
+                            resultat = resultat.let {
+                                when (it) {
+                                    Resultat.INNVILGELSE -> ResultatKode.INNVILGET
+                                    Resultat.AVSLAG -> ResultatKode.AVSLAG
+                                    Resultat.TRUKKET -> ResultatKode.TRUKKET
+                                    null -> null
+                                }
+                            }
                         )
                     }
                 }
