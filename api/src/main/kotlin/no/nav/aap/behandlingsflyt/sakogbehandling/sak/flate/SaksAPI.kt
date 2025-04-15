@@ -61,12 +61,16 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 } else {
                     repositoryProvider.provide<SakRepository>().finnSakerFor(person)
                         .map { sak ->
-                            val førstegangsbehandling = behandlingRepository.hentAlleFor(sak.id).firstOrNull{
-                                it.typeBehandling() == TypeBehandling.Førstegangsbehandling
-                            }
-                            val resultat = if (førstegangsbehandling != null) {
-                                null//resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
+                            val førstegangsbehandling = if (sak.status() == Status.AVSLUTTET) {
+                                behandlingRepository.hentAlleFor(sak.id).first{
+                                    it.typeBehandling() == TypeBehandling.Førstegangsbehandling
+                                }
                             } else null
+
+                            val resultat = if (førstegangsbehandling != null) {
+                                resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
+                            } else null
+
                             SaksinfoDTO(
                                 saksnummer = sak.saksnummer.toString(),
                                 opprettetTidspunkt = sak.opprettetTidspunkt,
@@ -96,11 +100,14 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     val saker = repositoryProvider.provide<SakRepository>().finnSakerFor(person)
 
                     saker.map { sak ->
-                        val førstegangsbehandling = behandlingRepository.hentAlleFor(sak.id).firstOrNull{
-                            it.typeBehandling() == TypeBehandling.Førstegangsbehandling
-                        }
+                        val førstegangsbehandling = if (sak.status() == Status.AVSLUTTET) {
+                            behandlingRepository.hentAlleFor(sak.id).first{
+                                it.typeBehandling() == TypeBehandling.Førstegangsbehandling
+                            }
+                        } else null
+
                         val resultat = if (førstegangsbehandling != null) {
-                            null//resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
+                            resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
                         } else null
 
                         SaksinfoDTO(
