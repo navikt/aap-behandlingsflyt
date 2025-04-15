@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
@@ -25,7 +26,7 @@ class ForeslåVedtakStegTest {
     private val random = Random(1235123)
 
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
-    private val steg = ForeslåVedtakSteg(avklaringsbehovRepository)
+    private val steg = ForeslåVedtakSteg(avklaringsbehovRepository, FakeTidligereVurderinger())
     private val sakRepository = InMemorySakRepository
 
 
