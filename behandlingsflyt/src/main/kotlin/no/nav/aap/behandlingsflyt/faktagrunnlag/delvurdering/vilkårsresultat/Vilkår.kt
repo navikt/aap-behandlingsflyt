@@ -80,7 +80,7 @@ class Vilkår(
         )
     }
 
-    fun leggTilIkkeVurdertPeriode(rettighetsperiode: Periode) {
+    fun leggTilIkkeVurdertPeriode(rettighetsperiode: Periode): Vilkår {
         this.leggTilVurdering(
             Vilkårsperiode(
                 periode = rettighetsperiode,
@@ -90,6 +90,12 @@ class Vilkår(
                 faktagrunnlag = null
             )
         )
+        return this
+    }
+
+    fun fjernHvisUtenforRettighetsperiode(rettighetsperiode: Periode): Vilkår {
+        vilkårTidslinje = vilkårTidslinje.disjoint(rettighetsperiode)
+        return this
     }
 
     fun harPerioderSomIkkeErVurdert(periodeTilVurdering: Set<Periode>): Boolean {

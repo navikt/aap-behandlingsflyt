@@ -74,6 +74,8 @@ class RettighetsperiodeSteg private constructor(
                 vilkårsresultat
                     .leggTilHvisIkkeEksisterer(vilkårstype)
                     .leggTilIkkeVurdertPeriode(rettighetsperiode)
+                    .fjernHvisUtenforRettighetsperiode(rettighetsperiode)
+
             }
 
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
