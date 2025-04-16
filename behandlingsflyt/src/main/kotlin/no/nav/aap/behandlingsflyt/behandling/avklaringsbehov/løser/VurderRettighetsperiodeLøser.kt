@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
+import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -22,6 +23,7 @@ class VurderRettighetsperiodeLøser(connection: DBConnection) :
     private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
     private val sakRepository = repositoryProvider.provide<SakRepository>()
     private val grunnlagKopierer = GrunnlagKopiererImpl(connection)
+    private val rettighetsperiodeRepository = repositoryProvider.provide<VurderRettighetsperiodeRepository>()
 
     private val sakOgBehandlingService = SakOgBehandlingService(grunnlagKopierer, sakRepository, behandlingRepository)
 
@@ -45,6 +47,10 @@ class VurderRettighetsperiodeLøser(connection: DBConnection) :
         }
 
         // TODO: Persistere ned begrunnelsen for å oppdatere rettighetsperioden
+        rettighetsperiodeRepository.lagreVurdering(
+            behandlingId = behandling.id,
+            vurdering = løsning.rettighetsperiodeVurdering
+        )
         sakOgBehandlingService.overstyrRettighetsperioden(
             sakId = sak.id,
             startDato = løsning.rettighetsperiodeVurdering.startDato,
