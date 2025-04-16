@@ -122,7 +122,7 @@ class UnderveisService(
 
     internal fun vurderRegler(input: UnderveisInput): Tidslinje<Vurdering> {
         return regelset.fold(Tidslinje()) { resultat, regel ->
-            regel.vurder(input, resultat).kryss(input.rettighetsperiode)
+            regel.vurder(input, resultat).begrensetTil(input.rettighetsperiode)
         }
     }
 

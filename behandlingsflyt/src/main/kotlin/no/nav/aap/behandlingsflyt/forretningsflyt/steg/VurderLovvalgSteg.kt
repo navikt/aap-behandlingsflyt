@@ -1,12 +1,13 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.Medlemskapvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
@@ -34,7 +35,8 @@ class VurderLovvalgSteg private constructor(
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val sakRepository: SakRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val vilkårService: VilkårService,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
@@ -42,7 +44,8 @@ class VurderLovvalgSteg private constructor(
         medlemskapArbeidInntektRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
-        avklaringsbehovRepository = repositoryProvider.provide(),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        vilkårService = VilkårService(repositoryProvider),
     )
 
 
@@ -50,8 +53,12 @@ class VurderLovvalgSteg private constructor(
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-                    avklaringsbehovene.avbrytForSteg(type())
+                    avklaringsbehovService.avbrytForSteg(kontekst.behandlingId, type())
+                    vilkårService.ingenNyeVurderinger(
+                        kontekst,
+                        Vilkårtype.LOVVALG,
+                        "mangler behandlingsgrunnlag",
+                    )
                     return Fullført
                 }
                 return vurderVilkår(kontekst)
@@ -62,12 +69,7 @@ class VurderLovvalgSteg private constructor(
             }
 
             VurderingType.FORLENGELSE -> {
-                val forlengensePeriode = requireNotNull(kontekst.vurdering.forlengelsePeriode)
-                val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-                vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).forleng(
-                    forlengensePeriode
-                )
-                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+                vilkårService.forleng(kontekst, Vilkårtype.LOVVALG)
                 return Fullført
             }
 

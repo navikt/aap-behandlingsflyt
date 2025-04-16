@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -27,12 +28,14 @@ class FastsettGrunnlagSteg(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avklarFaktaBeregningService: AvklarFaktaBeregningService,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val vilkårService: VilkårService,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         beregningService = BeregningService(repositoryProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
         avklarFaktaBeregningService = AvklarFaktaBeregningService(repositoryProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        vilkårService = VilkårService(repositoryProvider),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -46,6 +49,7 @@ class FastsettGrunnlagSteg(
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    vilkårService.ingenNyeVurderinger(kontekst, Vilkårtype.GRUNNLAGET, "mangler behandlingsgrunnlag")
                     return Fullført
                 }
                 vurderVilkåret(kontekst, vilkår, rettighetsperiode, vilkårsresultat)

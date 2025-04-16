@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -18,7 +17,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
@@ -37,7 +35,6 @@ class SamordningAvslagGrunnlag(
 class SamordningAvslagSteg(
     private val samordningService: SamordningService,
     private val uføreService: UføreService,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sakRepository: SakRepository,
     private val tidligereVurderinger: TidligereVurderinger,
@@ -45,7 +42,6 @@ class SamordningAvslagSteg(
     constructor(repositoryProvider: RepositoryProvider): this(
         samordningService = SamordningService(repositoryProvider),
         uføreService = UføreService(repositoryProvider),
-        avklaringsbehovRepository = repositoryProvider.provide(),
         vilkårsresultatRepository  = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
@@ -54,8 +50,6 @@ class SamordningAvslagSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (kontekst.vurdering.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
             if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-                avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-                    .avbrytForSteg(type())
                 return Fullført
             }
         }
@@ -96,7 +90,7 @@ class SamordningAvslagSteg(
 
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SAMORDNING)
-        vilkår.leggTilVurderinger(samordningsVurderinger.kryss(sak.rettighetsperiode))
+        vilkår.leggTilVurderinger(samordningsVurderinger.begrensetTil(sak.rettighetsperiode))
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         return Fullført
     }
@@ -110,14 +104,6 @@ class SamordningAvslagSteg(
             uføreRegisterGrunnlag = uføreService.hentRegisterGrunnlagHvisEksisterer(kontekst.behandlingId),
             uføreVurderingGrunnlag = uføreService.hentVurderingGrunnlagHvisEksisterer(kontekst.behandlingId),
         )
-
-    override fun vedTilbakeføring(kontekst: FlytKontekstMedPerioder) {
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_GRADERING)
-        if (avklaringsbehov != null && avklaringsbehov.erÅpent()) {
-            avklaringsbehovene.avbryt(Definisjon.AVKLAR_SAMORDNING_GRADERING)
-        }
-    }
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {

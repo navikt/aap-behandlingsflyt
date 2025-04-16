@@ -87,7 +87,7 @@ class BarnetilleggService(
                 })
         }
 
-        return resultat.kryss(sak.rettighetsperiode)
+        return resultat.begrensetTil(sak.rettighetsperiode)
     }
 
     private fun skalIkkeBeregneBarnetilegg(behandlingId: BehandlingId): Boolean {

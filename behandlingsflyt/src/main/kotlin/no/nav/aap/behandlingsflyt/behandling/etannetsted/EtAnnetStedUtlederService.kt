@@ -57,7 +57,7 @@ class EtAnnetStedUtlederService(
 
         var perioderSomTrengerVurdering =
             Tidslinje(soningsOppgold)
-                .kryss(input.rettighetsperiode)
+                .begrensetTil(input.rettighetsperiode)
                 .mapValue { InstitusjonsOpphold(soning = SoningOpphold(vurdering = OppholdVurdering.UAVKLART)) }
                 .kombiner(soningsvurderingTidslinje, JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
                     val venstreVerdi = venstreSegment?.verdi
@@ -70,7 +70,7 @@ class EtAnnetStedUtlederService(
                     Segment(periode, verdi)
                 })
 
-        val helseOpphold = opprettTidslinje(helseopphold).kryss(input.rettighetsperiode)
+        val helseOpphold = opprettTidslinje(helseopphold).begrensetTil(input.rettighetsperiode)
 
         val barnetilleggTidslinje =
             opprettTidslinje(barnetillegg.filter { it.personIdenter.isNotEmpty() }.map { segment ->

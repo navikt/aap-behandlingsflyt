@@ -52,9 +52,10 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                 .map { Segment(it.periode, it) }
                 .let(::Tidslinje)
 
-            val fritaksvurderinger: Tidslinje<no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering.FritaksvurderingData> = meldepliktRepository.hentHvisEksisterer(behandlingId)
-                ?.tilTidslinje()
-                ?: Tidslinje()
+            val fritaksvurderinger: Tidslinje<no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering.FritaksvurderingData> =
+                meldepliktRepository.hentHvisEksisterer(behandlingId)
+                    ?.tilTidslinje()
+                    ?: Tidslinje()
 
             meldekortGateway.oppdaterMeldeperioder(
                 MeldeperioderV0(
@@ -93,12 +94,12 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
         }
     }
 
-    fun mapStatusTilMeldekortSakStatus(status: Status): SakStatus? {
-        when (status) {
-            Status.OPPRETTET -> return null
-            Status.UTREDES -> return SakStatus.UTREDES
-            Status.LØPENDE -> return SakStatus.LØPENDE
-            Status.AVSLUTTET -> return SakStatus.AVSLUTTET
+    private fun mapStatusTilMeldekortSakStatus(status: Status): SakStatus? {
+        return when (status) {
+            Status.OPPRETTET -> null
+            Status.UTREDES -> SakStatus.UTREDES
+            Status.LØPENDE -> SakStatus.LØPENDE
+            Status.AVSLUTTET -> SakStatus.AVSLUTTET
         }
     }
 

@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.outerJoinNotNull
 
 class Vilkårsresultat(
     internal var id: Long? = null,
@@ -45,20 +46,37 @@ class Vilkårsresultat(
 
         return vilkår
             .map { vilkår -> vilkår.tidslinje().mapValue { vurdering -> vilkår to vurdering } }
-            .outerJoin()
-            .filter { vilkåreneSegment ->
-                val vurderinger = vilkåreneSegment.verdi
-                vurderinger.isNotEmpty() && vurderinger
-                    // Vi filtrerer bort vurderinger hvor noen vilkår er avslått, bortsett fra sykdomsvilkåret,
-                    // som har unntak: om sykepengeerstatning er innvilget.
-                    .filter { (vilkår, _) -> vilkår.type != Vilkårtype.SYKDOMSVILKÅRET }
-                    .none { (_, vurdering) -> vurdering.utfall == Utfall.IKKE_OPPFYLT }
-                        && vurderinger.any { (vilkår, vurdering) -> vilkår.type == Vilkårtype.BISTANDSVILKÅRET && vurdering.erOppfylt() }
-                        && vurderinger.any { (vilkår, vurdering) -> vilkår.type == Vilkårtype.SYKDOMSVILKÅRET && vurdering.erVurdert() }
-            }
-            .mapValue { vilkårene ->
+            .outerJoinNotNull { vurderinger ->
+                if (vurderinger.isEmpty()) {
+                    return@outerJoinNotNull null
+                }
+
+                // Vi filtrerer bort vurderinger hvor noen vilkår er avslått, bortsett fra sykdomsvilkåret,
+                // som har unntak: om sykepengeerstatning er innvilget.
+                val harVilkårIkkeOppfylt = vurderinger.any { (vilkår, vurdering) ->
+                    vurdering.utfall == Utfall.IKKE_OPPFYLT && vilkår.type != Vilkårtype.SYKDOMSVILKÅRET
+                }
+                if (harVilkårIkkeOppfylt) {
+                    return@outerJoinNotNull null
+                }
+
+                val bistandsvilkåretErIkkeOppfylt = vurderinger.none { (vilkår, vurdering) ->
+                    vilkår.type == Vilkårtype.BISTANDSVILKÅRET && vurdering.erOppfylt()
+                }
+                if (bistandsvilkåretErIkkeOppfylt) {
+                    return@outerJoinNotNull null
+                }
+
+                val sykdomsvilkåretErIkkeVurdert = vurderinger.none { (vilkår, vurdering) ->
+                    vilkår.type == Vilkårtype.SYKDOMSVILKÅRET && vurdering.erVurdert()
+                }
+
+                if (sykdomsvilkåretErIkkeVurdert) {
+                    return@outerJoinNotNull null
+                }
+
                 prioriterVilkår(
-                    vilkårene
+                    vurderinger
                         .filter { (_, vurdering) -> vurdering.erVurdert() }
                         .map { (vilkår, vurdering) ->
                             Pair(
@@ -124,6 +142,10 @@ class Vilkårsresultat(
         return RettighetsType.BISTANDSBEHOV
     }
 
+    fun tidslinjeFor(vilkårstype: Vilkårtype): Tidslinje<Vilkårsvurdering> {
+        return optionalVilkår(vilkårstype)?.tidslinje() ?: Tidslinje()
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -141,12 +163,3 @@ class Vilkårsresultat(
         return "Vilkårsresultat(id=$id, vilkår=$vilkår)"
     }
 }
-
-private fun <T : Any> List<Tidslinje<T>>.outerJoin(): Tidslinje<List<T>> {
-    return this.fold(Tidslinje()) { listeTidslinje, elementTidslinje ->
-        listeTidslinje.outerJoin(elementTidslinje) { liste, element ->
-            liste.orEmpty() + listOfNotNull(element)
-        }
-    }
-}
-

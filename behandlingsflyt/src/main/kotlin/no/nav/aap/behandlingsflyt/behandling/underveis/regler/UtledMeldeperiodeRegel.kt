@@ -25,7 +25,7 @@ class UtledMeldeperiodeRegel : UnderveisRegel {
 
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         val meldeperiodeTidslinje = Tidslinje(input.meldeperioder.map { Segment(it, it) })
-            .kryss(input.rettighetsperiode)
+            .begrensetTil(input.rettighetsperiode)
 
         return resultat.leggTilVurderinger(meldeperiodeTidslinje, Vurdering::leggTilMeldeperiode)
     }
