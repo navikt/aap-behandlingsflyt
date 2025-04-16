@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.Aldersgrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.Aldersvilkåret
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
@@ -19,12 +20,14 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderAlderSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val vilkårService: VilkårService,
     private val personopplysningRepository: PersonopplysningRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
+        vilkårService = VilkårService(repositoryProvider),
         personopplysningRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
     )
@@ -33,7 +36,12 @@ class VurderAlderSteg private constructor(
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-                    /* ikke vurder noe */
+                    vilkårService.ingenNyeVurderinger(
+                        kontekst.behandlingId,
+                        Vilkårtype.ALDERSVILKÅRET,
+                        kontekst.vurdering.rettighetsperiode,
+                        begrunnelse = "mangler behandlingsgrunnlag"
+                    )
                 } else {
                     vurderVilkår(kontekst)
                 }
@@ -44,13 +52,8 @@ class VurderAlderSteg private constructor(
             }
 
             VurderingType.FORLENGELSE -> {
-                // Forleng vilkåret
-                val forlengensePeriode = requireNotNull(kontekst.vurdering.forlengelsePeriode)
-                val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-                vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).forleng(
-                    forlengensePeriode
-                )
-                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+                /* TODO: Virker ikke så riktig å bare forlenge siste aldersvilkår ... plutselig er hen for gammel */
+                vilkårService.forleng(kontekst, Vilkårtype.ALDERSVILKÅRET)
             }
 
             VurderingType.IKKE_RELEVANT -> {

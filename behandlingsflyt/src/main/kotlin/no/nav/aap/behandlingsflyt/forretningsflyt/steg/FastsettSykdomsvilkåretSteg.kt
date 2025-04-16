@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykdomsFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.Sykdomsvilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
@@ -23,12 +24,14 @@ class FastsettSykdomsvilkåretSteg private constructor(
     private val sykdomRepository: SykdomRepository,
     private val studentRepository: StudentRepository,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val vilkårService: VilkårService,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         studentRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        vilkårService = VilkårService(repositoryProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -36,6 +39,11 @@ class FastsettSykdomsvilkåretSteg private constructor(
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    vilkårService.ingenNyeVurderinger(
+                        kontekst,
+                        Vilkårtype.SYKDOMSVILKÅRET,
+                        "mangler behandlingsgrunnlag",
+                    )
                     return Fullført
                 }
                 vurderVilkåret(kontekst)
@@ -46,13 +54,7 @@ class FastsettSykdomsvilkåretSteg private constructor(
             }
 
             VurderingType.FORLENGELSE -> {
-                // Forleng vilkåret
-                val forlengensePeriode = requireNotNull(kontekst.vurdering.forlengelsePeriode)
-                val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-                vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).forleng(
-                    forlengensePeriode
-                )
-                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+                vilkårService.forleng(kontekst, Vilkårtype.SYKDOMSVILKÅRET)
             }
 
             VurderingType.IKKE_RELEVANT -> {

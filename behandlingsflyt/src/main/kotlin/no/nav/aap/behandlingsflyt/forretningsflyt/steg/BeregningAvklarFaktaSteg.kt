@@ -29,7 +29,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class BeregningAvklarFaktaSteg private constructor(
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val sykdomRepository: SykdomRepository,
-    private val vilkårsresultatRepository1: VilkårsresultatRepository,
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avklarFaktaBeregningService: AvklarFaktaBeregningService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
@@ -38,7 +38,7 @@ class BeregningAvklarFaktaSteg private constructor(
     constructor(repositoryProvider: RepositoryProvider) : this(
         beregningVurderingRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
-        vilkårsresultatRepository1 = repositoryProvider.provide(),
+        vilkårsresultatRepository = repositoryProvider.provide(),
         avklarFaktaBeregningService = AvklarFaktaBeregningService(repositoryProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
@@ -55,7 +55,7 @@ class BeregningAvklarFaktaSteg private constructor(
 
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
-                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, BarnetilleggSteg.type())) {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
                         .avbrytForSteg(type())
                     return Fullført
@@ -63,7 +63,7 @@ class BeregningAvklarFaktaSteg private constructor(
 
                 val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
 
-                val vilkårsresultat = vilkårsresultatRepository1.hent(behandlingId)
+                val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
                 val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
                 if (beregningVurdering == null && erIkkeStudent(vilkårsresultat)) {
                     return FantAvklaringsbehov(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
@@ -79,7 +79,7 @@ class BeregningAvklarFaktaSteg private constructor(
             VurderingType.REVURDERING -> {
                 val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
 
-                val vilkårsresultat = vilkårsresultatRepository1.hent(behandlingId)
+                val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
                 val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
                 if ((beregningVurdering == null || erIkkeVurdertTidligereIBehandlingen(
                         avklaringsbehovene,

@@ -43,7 +43,6 @@ class SamordningAvslagStegTest {
     val steg = SamordningAvslagSteg(
         samordningService = samordningService,
         uføreService = uføreService,
-        avklaringsbehovRepository = avklaringsbehovRepository,
         vilkårsresultatRepository = vilkårsresultatRepository,
         sakRepository = sakRepository,
         tidligereVurderinger = FakeTidligereVurderinger(),

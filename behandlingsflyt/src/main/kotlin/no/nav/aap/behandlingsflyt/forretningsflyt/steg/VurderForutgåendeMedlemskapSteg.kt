@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.ForutgåendeMedlemskapvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
@@ -33,6 +34,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     private val personopplysningForutgåendeRepository: PersonopplysningForutgåendeRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val vilkårService: VilkårService,
 ) : BehandlingSteg {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
@@ -42,6 +44,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         personopplysningForutgåendeRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        vilkårService = VilkårService(repositoryProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -60,16 +63,15 @@ class VurderForutgåendeMedlemskapSteg private constructor(
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
                         .avbrytForSteg(type())
+                    vilkårService.ingenNyeVurderinger(kontekst, Vilkårtype.MEDLEMSKAP, "mangler behandlingsgrunnlag")
                     return Fullført
                 }
 
-                val vilkårsVurdering = vurderVilkår(kontekst)
-                if (vilkårsVurdering != null) return vilkårsVurdering
+                return vurderVilkår(kontekst)
             }
 
             VurderingType.REVURDERING -> {
-                val vilkårsVurdering = vurderVilkår(kontekst)
-                if (vilkårsVurdering != null) return vilkårsVurdering
+                return vurderVilkår(kontekst)
             }
 
             VurderingType.FORLENGELSE -> {
@@ -89,7 +91,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         return Fullført
     }
 
-    private fun vurderVilkår(kontekst: FlytKontekstMedPerioder): StegResultat? {
+    private fun vurderVilkår(kontekst: FlytKontekstMedPerioder): StegResultat {
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val manuellVurdering =
             forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)?.manuellVurdering
@@ -136,7 +138,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         ) {
             return FantAvklaringsbehov(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
         }
-        return null
+        return Fullført
     }
 
     private fun spesifiktTriggetRevurderMedlemskapUtenManuellVurdering(

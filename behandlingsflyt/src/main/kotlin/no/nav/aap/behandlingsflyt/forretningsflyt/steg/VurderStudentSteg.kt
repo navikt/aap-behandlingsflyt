@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
@@ -18,21 +18,20 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderStudentSteg private constructor(
     private val studentRepository: StudentRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val avklaringsbehovService: AvklaringsbehovService,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider): this(
         studentRepository = repositoryProvider.provide(),
-        avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-                    avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-                        .avbrytForSteg(type())
+                    avklaringsbehovService.avbrytForSteg(kontekst.behandlingId, type())
                     return Fullført
                 }
 

@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.bistand.BistandFaktagrunnla
 import no.nav.aap.behandlingsflyt.behandling.vilkår.bistand.Bistandsvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -37,6 +38,7 @@ class VurderBistandsbehovSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val vilkårService: VilkårService,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         bistandRepository = repositoryProvider.provide(),
@@ -45,6 +47,7 @@ class VurderBistandsbehovSteg private constructor(
         vilkårsresultatRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        vilkårService = VilkårService(repositoryProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -60,8 +63,13 @@ class VurderBistandsbehovSteg private constructor(
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-                    avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-                        .avbrytForSteg(type())
+                    avklaringsbehovene.avbrytForSteg(type())
+                    vilkårService.ingenNyeVurderinger(
+                        kontekst.behandlingId,
+                        Vilkårtype.BISTANDSVILKÅRET,
+                        kontekst.vurdering.rettighetsperiode,
+                        "mangler behandlingsgrunnlag",
+                    )
                     return Fullført
                 }
 
