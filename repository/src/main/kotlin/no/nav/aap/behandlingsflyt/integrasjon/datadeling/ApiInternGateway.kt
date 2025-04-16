@@ -44,7 +44,6 @@ class ApiInternGatewayImpl() : ApiInternGateway {
             uri = uri.resolve("/api/insert/meldeperioder"),
             request = PostRequest(body = MeldekortPerioderDTO(ident, perioder)),
             mapper = { _, _ ->
-                Unit
             })
     }
 
@@ -53,7 +52,6 @@ class ApiInternGatewayImpl() : ApiInternGateway {
             uri = uri.resolve("/api/insert/sakStatus"),
             request = PostRequest(body = SakStatusDTO(ident, sakStatus)),
             mapper = { _, _ ->
-                Unit
             })
     }
 
@@ -70,51 +68,51 @@ class ApiInternGatewayImpl() : ApiInternGateway {
                 uri = uri.resolve("/api/insert/vedtak"),
                 request = PostRequest(
                     body = DatadelingDTO(
-                    behandlingsId = behandling.id.id.toString(),
-                    behandlingsReferanse = behandling.referanse.toString(),
-                    underveisperiode = underveis.map {
-                        UnderveisDTO(
-                            underveisFom = it.periode.fom,
-                            underveisTom = it.periode.tom,
-                            meldeperiodeFom = it.meldePeriode.fom,
-                            meldeperiodeTom = it.meldePeriode.tom,
-                            utfall = it.utfall.name,
-                            rettighetsType = it.rettighetsType?.name,
-                            avslagsårsak = it.avslagsårsak?.name
-                        )
-                    },
-                    rettighetsPeriodeFom = sak.rettighetsperiode.fom,
-                    rettighetsPeriodeTom = sak.rettighetsperiode.tom,
-                    behandlingStatus = behandling.status(),
-                    vedtaksDato = vedtaksDato,
-                    sak = SakDTO(
-                        saksnummer = sak.saksnummer.toString(),
-                        status = sak.status(),
-                        fnr = sak.person.identer().map { ident -> ident.identifikator },
-                        opprettetTidspunkt = sak.opprettetTidspunkt
-                    ),
-                    tilkjent = tilkjent.map { tilkjentPeriode ->
-                        no.nav.aap.behandlingsflyt.kontrakt.datadeling.TilkjentDTO(
-                            tilkjentFom = tilkjentPeriode.periode.fom,
-                            tilkjentTom = tilkjentPeriode.periode.tom,
-                            dagsats = tilkjentPeriode.tilkjent.dagsats.verdi.toInt(),
-                            gradering = tilkjentPeriode.tilkjent.gradering.endeligGradering.prosentverdi(),
-                            grunnlag = tilkjentPeriode.tilkjent.grunnlag.verdi,
-                            grunnlagsfaktor = tilkjentPeriode.tilkjent.grunnlagsfaktor.verdi(),
-                            grunnbeløp = tilkjentPeriode.tilkjent.grunnbeløp.verdi,
-                            antallBarn = tilkjentPeriode.tilkjent.antallBarn,
-                            barnetilleggsats = tilkjentPeriode.tilkjent.barnetilleggsats.verdi,
-                            barnetillegg = tilkjentPeriode.tilkjent.barnetillegg.verdi
-                        )
-                    },
-                    rettighetsTypeTidsLinje = rettighetsTypeTidslinje.map { segment ->
-                        RettighetsTypePeriode(
-                            segment.periode.fom,
-                            segment.periode.tom,
-                            segment.verdi.toString()
-                        )
-                    }
-                )),
+                        behandlingsId = behandling.id.id.toString(),
+                        behandlingsReferanse = behandling.referanse.toString(),
+                        underveisperiode = underveis.map {
+                            UnderveisDTO(
+                                underveisFom = it.periode.fom,
+                                underveisTom = it.periode.tom,
+                                meldeperiodeFom = it.meldePeriode.fom,
+                                meldeperiodeTom = it.meldePeriode.tom,
+                                utfall = it.utfall.name,
+                                rettighetsType = it.rettighetsType?.name,
+                                avslagsårsak = it.avslagsårsak?.name
+                            )
+                        },
+                        rettighetsPeriodeFom = sak.rettighetsperiode.fom,
+                        rettighetsPeriodeTom = sak.rettighetsperiode.tom,
+                        behandlingStatus = behandling.status(),
+                        vedtaksDato = vedtaksDato,
+                        sak = SakDTO(
+                            saksnummer = sak.saksnummer.toString(),
+                            status = sak.status(),
+                            fnr = sak.person.identer().map { ident -> ident.identifikator },
+                            opprettetTidspunkt = sak.opprettetTidspunkt
+                        ),
+                        tilkjent = tilkjent.map { tilkjentPeriode ->
+                            no.nav.aap.behandlingsflyt.kontrakt.datadeling.TilkjentDTO(
+                                tilkjentFom = tilkjentPeriode.periode.fom,
+                                tilkjentTom = tilkjentPeriode.periode.tom,
+                                dagsats = tilkjentPeriode.tilkjent.dagsats.verdi.toInt(),
+                                gradering = tilkjentPeriode.tilkjent.gradering.endeligGradering.prosentverdi(),
+                                grunnlag = tilkjentPeriode.tilkjent.grunnlag.verdi,
+                                grunnlagsfaktor = tilkjentPeriode.tilkjent.grunnlagsfaktor.verdi(),
+                                grunnbeløp = tilkjentPeriode.tilkjent.grunnbeløp.verdi,
+                                antallBarn = tilkjentPeriode.tilkjent.antallBarn,
+                                barnetilleggsats = tilkjentPeriode.tilkjent.barnetilleggsats.verdi,
+                                barnetillegg = tilkjentPeriode.tilkjent.barnetillegg.verdi
+                            )
+                        },
+                        rettighetsTypeTidsLinje = rettighetsTypeTidslinje.map { segment ->
+                            RettighetsTypePeriode(
+                                segment.periode.fom,
+                                segment.periode.tom,
+                                segment.verdi.toString()
+                            )
+                        }
+                    )),
                 mapper = { _, _ ->
                     Unit
                 })

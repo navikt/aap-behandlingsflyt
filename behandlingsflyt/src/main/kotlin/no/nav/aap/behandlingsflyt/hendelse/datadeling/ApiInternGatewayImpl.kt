@@ -14,6 +14,13 @@ import java.time.LocalDate
 interface ApiInternGateway : Gateway {
     fun sendPerioder(ident: String, perioder: List<Periode>)
     fun sendSakStatus(ident: String, sakStatus: SakStatus)
-    fun sendBehandling(sak: Sak, behandling: Behandling, tilkjent: List<TilkjentYtelsePeriode>?, underveis: List<Underveisperiode>, vedtaksDato: LocalDate, rettighetsTypeTidslinje: Tidslinje<RettighetsType>)
+    fun sendBehandling(
+        sak: Sak,
+        behandling: Behandling,
+        tilkjent: List<TilkjentYtelsePeriode>?,
+        underveis: List<Underveisperiode>,
+        vedtaksDato: LocalDate,
+        rettighetsTypeTidslinje: Tidslinje<RettighetsType>
+    )
 }
 

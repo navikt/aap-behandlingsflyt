@@ -18,13 +18,16 @@ class DatadelingSakStatusJobbUtfører(
     private val apiInternGateway: ApiInternGateway,
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository,
-):JobbUtfører {
+) : JobbUtfører {
     override fun utfør(input: JobbInput) {
         val hendelse = input.payload<BehandlingFlytStoppetHendelse>()
         val behandling = behandlingRepository.hent(hendelse.referanse)
         val sak = sakRepository.hent(behandling.sakId)
 
-        apiInternGateway.sendSakStatus(sak.person.aktivIdent().identifikator, SakStatus.fromKelvin(sak.saksnummer.toString(), sak.status(), sak.rettighetsperiode))
+        apiInternGateway.sendSakStatus(
+            sak.person.aktivIdent().identifikator,
+            SakStatus.fromKelvin(sak.saksnummer.toString(), sak.status(), sak.rettighetsperiode)
+        )
     }
 
     companion object : Jobb {

@@ -14,15 +14,14 @@ import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 
-class DatadelingBehandlingJobbUtfører (
+class DatadelingBehandlingJobbUtfører(
     private val apiInternGateway: ApiInternGateway,
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository,
     private val tilkjentRepository: TilkjentYtelseRepository,
     private val underveisRepository: UnderveisRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository
-    ) : JobbUtfører
-{
+) : JobbUtfører {
     override fun utfør(input: JobbInput) {
         val hendelse = input.payload<BehandlingFlytStoppetHendelse>()
         val behandling = behandlingRepository.hent(hendelse.referanse)
@@ -31,7 +30,14 @@ class DatadelingBehandlingJobbUtfører (
         val underveis = underveisRepository.hent(behandling.id)
         val vilkårsresultatTidslinje = vilkårsresultatRepository.hent(behandling.id).rettighetstypeTidslinje()
 
-        apiInternGateway.sendBehandling(sak, behandling, tilkjentYtelse, underveis.perioder, hendelse.hendelsesTidspunkt.toLocalDate(), vilkårsresultatTidslinje)
+        apiInternGateway.sendBehandling(
+            sak,
+            behandling,
+            tilkjentYtelse,
+            underveis.perioder,
+            hendelse.hendelsesTidspunkt.toLocalDate(),
+            vilkårsresultatTidslinje
+        )
     }
 
     companion object : Jobb {
@@ -45,7 +51,8 @@ class DatadelingBehandlingJobbUtfører (
             val sakRepository: SakRepository = repositoryProvider.provide<SakRepository>()
             val tilkjentRepository: TilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>()
             val underveisRepository: UnderveisRepository = repositoryProvider.provide<UnderveisRepository>()
-            val vilkårsresultatRepository: VilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
+            val vilkårsresultatRepository: VilkårsresultatRepository =
+                repositoryProvider.provide<VilkårsresultatRepository>()
 
             return DatadelingBehandlingJobbUtfører(
                 apiInternGateway = GatewayProvider.provide(),
