@@ -179,7 +179,7 @@ class TidligereVurderingerImpl(
             .map { it.sjekk(vilkårsresultat, kontekst) }
             .asIterable()
             .outerJoin { it.minOrNull() ?: UKJENT }
-            .begrensTil(kontekst.vurdering.rettighetsperiode)
+            .begrensetTil(kontekst.vurdering.rettighetsperiode)
 
         return when {
             utfall.isEmpty() || !utfall.erSammenhengende() -> UKJENT

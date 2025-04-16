@@ -61,7 +61,7 @@ class Vilkår(
     }
 
     fun forleng(periode: Periode) {
-        val eksisterendeVurdering = vilkårTidslinje.kryss(periode)
+        val eksisterendeVurdering = vilkårTidslinje.begrensetTil(periode)
         if (eksisterendeVurdering.isEmpty() || eksisterendeVurdering.maxDato().isAfter(periode.tom)) {
             return
         }
@@ -94,7 +94,7 @@ class Vilkår(
     }
 
     fun fjernHvisUtenforRettighetsperiode(rettighetsperiode: Periode): Vilkår {
-        vilkårTidslinje = vilkårTidslinje.disjoint(rettighetsperiode)
+        vilkårTidslinje = vilkårTidslinje.begrensetTil(rettighetsperiode)
         return this
     }
 

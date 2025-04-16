@@ -96,7 +96,7 @@ class SamordningAvslagSteg(
 
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SAMORDNING)
-        vilkår.leggTilVurderinger(samordningsVurderinger.kryss(sak.rettighetsperiode))
+        vilkår.leggTilVurderinger(samordningsVurderinger.begrensetTil(sak.rettighetsperiode))
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         return Fullført
     }

@@ -126,7 +126,7 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
                         .map {
                             Helseopphold(
                                 periode = it.periode,
-                                vurderinger = vurderinger.kryss(it.periode).segmenter()
+                                vurderinger = vurderinger.begrensetTil(it.periode).segmenter()
                                     .map { helseinstitusjonsvurdering ->
                                         HelseinstitusjonVurdering(
                                             helseinstitusjonsvurdering.verdi.begrunnelse,
