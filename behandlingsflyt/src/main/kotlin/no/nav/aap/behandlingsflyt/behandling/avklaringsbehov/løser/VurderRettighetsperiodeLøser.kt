@@ -46,7 +46,6 @@ class VurderRettighetsperiodeLøser(connection: DBConnection) :
             sak.rettighetsperiode.tom
         }
 
-        // TODO: Persistere ned begrunnelsen for å oppdatere rettighetsperioden
         rettighetsperiodeRepository.lagreVurdering(
             behandlingId = behandling.id,
             vurdering = løsning.rettighetsperiodeVurdering
