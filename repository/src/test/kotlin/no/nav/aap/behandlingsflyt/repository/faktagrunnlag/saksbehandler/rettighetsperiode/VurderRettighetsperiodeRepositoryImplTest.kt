@@ -30,7 +30,7 @@ class VurderRettighetsperiodeRepositoryImplTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val vurderingerFørLagring = repo.hentVurderinger(behandling.id)
+            val vurderingerFørLagring = repo.hentVurdering(behandling.id)
 
             val vurdering = RettighetsperiodeVurdering(
                 startDato = LocalDate.now().minusDays(10),
@@ -40,10 +40,10 @@ class VurderRettighetsperiodeRepositoryImplTest {
             )
             repo.lagreVurdering(behandling.id, vurdering)
 
-            val vurderingerEtterLagring = repo.hentVurderinger(behandling.id)
-            assertThat(vurderingerFørLagring).hasSize(0)
-            assertThat(vurderingerEtterLagring).hasSize(1)
-            assertThat(vurderingerEtterLagring.first()).isEqualTo(vurdering)
+            val vurderingerEtterLagring = repo.hentVurdering(behandling.id)
+            assertThat(vurderingerFørLagring).isNull()
+            assertThat(vurderingerEtterLagring).isNotNull()
+            assertThat(vurderingerEtterLagring).isEqualTo(vurdering)
 
         }
     }
@@ -55,7 +55,7 @@ class VurderRettighetsperiodeRepositoryImplTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val vurderingerFørLagring = repo.hentVurderinger(behandling.id)
+            val vurderingerFørLagring = repo.hentVurdering(behandling.id)
 
             val vurdering = RettighetsperiodeVurdering(
                 startDato = null,
@@ -65,10 +65,10 @@ class VurderRettighetsperiodeRepositoryImplTest {
             )
             repo.lagreVurdering(behandling.id, vurdering)
 
-            val vurderingerEtterLagring = repo.hentVurderinger(behandling.id)
-            assertThat(vurderingerFørLagring).hasSize(0)
-            assertThat(vurderingerEtterLagring).hasSize(1)
-            assertThat(vurderingerEtterLagring.first()).isEqualTo(vurdering)
+            val vurderingerEtterLagring = repo.hentVurdering(behandling.id)
+            assertThat(vurderingerFørLagring).isNull()
+            assertThat(vurderingerEtterLagring).isNotNull()
+            assertThat(vurderingerEtterLagring).isEqualTo(vurdering)
 
         }
     }
