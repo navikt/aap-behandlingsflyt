@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class Sak(
@@ -12,6 +13,7 @@ class Sak(
     val rettighetsperiode: Periode,
     private val status: Status = Status.OPPRETTET,
     val opprettetTidspunkt: LocalDateTime = LocalDateTime.now(),
+    val søknadstidspunkt: LocalDate,
 ) {
 
     fun status(): Status {

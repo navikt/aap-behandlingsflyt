@@ -46,18 +46,25 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         val saksnummer = Saksnummer.valueOf(sakId)
         val keys = connection.executeReturnKey(
             "INSERT INTO " +
-                    "SAK (saksnummer, person_id, rettighetsperiode, status) " +
-                    "VALUES (?, ?, ?::daterange, ?)"
+                    "SAK (saksnummer, person_id, rettighetsperiode, status, soknadstidspunkt) " +
+                    "VALUES (?, ?, ?::daterange, ?, ?)"
         ) {
             setParams {
                 setString(1, saksnummer.toString())
                 setLong(2, person.id)
                 setPeriode(3, periode)
                 setEnumName(4, Status.OPPRETTET)
+                setLocalDate(5, periode.fom)
             }
         }
         log.info("Opprettet sak med ID: $keys. Saksnummer: $saksnummer")
-        return Sak(SakId(keys), saksnummer, person, periode)
+        return Sak(
+            id = SakId(keys),
+            saksnummer = saksnummer,
+            person = person,
+            rettighetsperiode = periode,
+            søknadstidspunkt = periode.fom
+        )
     }
 
     override fun oppdaterSakStatus(sakId: SakId, status: Status) {
@@ -102,7 +109,8 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
                     rettighetsperiode = row.getPeriode("rettighetsperiode"),
                     saksnummer = Saksnummer(row.getString("saksnummer")),
                     status = row.getEnum<Status>("status"),
-                    opprettetTidspunkt = row.getLocalDateTime("opprettet_tid")
+                    opprettetTidspunkt = row.getLocalDateTime("opprettet_tid"),
+                    søknadstidspunkt = row.getLocalDate("soknadstidspunkt")
                 )
             }
         }
@@ -201,7 +209,8 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         rettighetsperiode = row.getPeriode("rettighetsperiode"),
         saksnummer = Saksnummer(row.getString("saksnummer")),
         status = row.getEnum("status"),
-        opprettetTidspunkt = row.getLocalDateTime("opprettet_tid")
+        opprettetTidspunkt = row.getLocalDateTime("opprettet_tid"),
+        søknadstidspunkt = row.getLocalDate("soknadstidspunkt")
     )
 
     override fun oppdaterRettighetsperiode(sakId: SakId, periode: Periode) {

@@ -28,7 +28,8 @@ object InMemorySakRepository : SakRepository {
                         id = id,
                         saksnummer = Saksnummer.valueOf(id.id),
                         person = person,
-                        rettighetsperiode = periode
+                        rettighetsperiode = periode,
+                        søknadstidspunkt = periode.fom
                     )
                 memory.put(id, sak)
 
