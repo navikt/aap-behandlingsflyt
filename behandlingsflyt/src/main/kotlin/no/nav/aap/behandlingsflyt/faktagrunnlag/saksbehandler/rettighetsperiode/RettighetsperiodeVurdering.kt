@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode
 
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import java.time.LocalDate
 
 data class RettighetsperiodeVurdering(
@@ -10,12 +11,20 @@ data class RettighetsperiodeVurdering(
 ) {
     init {
         if (harRettUtoverSøknadsdato == true) {
-            require(startDato != null) { "Må sette startdato når bruker har rett utover søknadsdatoen" }
-            require(harKravPåRenter != null) { "Må vurdere renter når bruker har rett utover søknadsdatoen" }
+            if (startDato == null) {
+                throw UgyldigForespørselException("Må sette startdato når bruker har rett utover søknadsdatoen")
+            }
+            if (harKravPåRenter == null) {
+                throw UgyldigForespørselException("Må vurdere renter når bruker har rett utover søknadsdatoen")
+            }
         }
         if (harRettUtoverSøknadsdato == false) {
-            require(startDato == null) { "Kan ikke sette startdato når bruker ikke har rett utover søknadsdatoen" }
-            require(harKravPåRenter == null) { "Kan ikke vurdere renter når bruker ikke har rett utover søknadsdatoen" }
+            if (startDato != null) {
+                throw UgyldigForespørselException("Kan ikke sette startdato når bruker ikke har rett utover søknadsdatoen")
+            }
+            if (harKravPåRenter != null) {
+                throw UgyldigForespørselException("Kan ikke vurdere renter når bruker ikke har rett utover søknadsdatoen")
+            }
         }
     }
 }
