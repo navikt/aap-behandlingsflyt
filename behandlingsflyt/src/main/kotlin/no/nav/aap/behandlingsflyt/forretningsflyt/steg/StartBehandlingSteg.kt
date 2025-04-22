@@ -48,7 +48,8 @@ class StartBehandlingSteg private constructor(
         if (kontekst.behandlingType == TypeBehandling.Revurdering) {
             if (kontekst.vurdering.årsakerTilBehandling.contains(ÅrsakTilBehandling.REVURDER_SAMORDNING)) {
                 val ventTil =
-                    requireNotNull(samordningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)) { "Forventet å finne samordning vurdering ved revurdering med årsak ${ÅrsakTilBehandling.REVURDER_SAMORDNING}" }
+                    requireNotNull(samordningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId))
+                    { "Forventet å finne samordningvurdering ved revurdering med årsak ${ÅrsakTilBehandling.REVURDER_SAMORDNING}" }
                 logger.info("Fant samordningdato, setter på vent.")
                 return FantVentebehov(
                     Ventebehov(

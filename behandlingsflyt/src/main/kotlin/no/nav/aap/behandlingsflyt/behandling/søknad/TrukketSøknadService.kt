@@ -22,15 +22,19 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class TrukketSøknadService(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val trukketSøknadRepository: TrukketSøknadRepository,
-): Informasjonskrav {
-    constructor(repositoryProvider: RepositoryProvider): this(
+) : Informasjonskrav {
+    constructor(repositoryProvider: RepositoryProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
         trukketSøknadRepository = repositoryProvider.provide(),
     )
 
     override val navn = Companion.navn
 
-    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+    override fun erRelevant(
+        kontekst: FlytKontekstMedPerioder,
+        steg: StegType,
+        oppdatert: InformasjonskravOppdatert?
+    ): Boolean {
         return ÅrsakTilBehandling.SØKNAD_TRUKKET in kontekst.vurdering.årsakerTilBehandling
     }
 
@@ -48,7 +52,7 @@ class TrukketSøknadService(
         return trukketSøknadRepository.hentTrukketSøknadVurderinger(behandlingId).isNotEmpty()
     }
 
-    companion object: Informasjonskravkonstruktør {
+    companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.TRUKKET_SØKNAD
 
         override fun konstruer(connection: DBConnection): Informasjonskrav {
