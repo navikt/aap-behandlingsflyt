@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.rettighetsperiode
 
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeEndringsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -45,16 +44,17 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
         connection.executeBatch(
             """
             insert into rettighetsperiode_vurdering
-                (vurderinger_id, begrunnelse, start_dato, aarsak)
+                (vurderinger_id, begrunnelse, start_dato, har_rett_utover_soknadsdato, har_krav_paa_renter)
             values
-                (?, ?, ?, ?)
+                (?, ?, ?, ?, ?)
         """.trimIndent(), grunnlag.vurderinger
         ) {
             setParams { vurdering ->
                 setLong(1, vurderingerId)
                 setString(2, vurdering.begrunnelse)
                 setLocalDate(3, vurdering.startDato)
-                setEnumName(4, vurdering.årsak)
+                setBoolean(4, vurdering.harRettUtoverSøknadsdato)
+                setBoolean(5, vurdering.harKravPåRenter)
             }
         }
     }
@@ -92,7 +92,9 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
                     RettighetsperiodeVurdering(
                         begrunnelse = it.getString("begrunnelse"),
                         startDato = it.getLocalDate("start_dato"),
-                        årsak = it.getEnum<RettighetsperiodeEndringsårsak>("aarsak"),
+                        harRettUtoverSøknadsdato = it.getBoolean("har_rett_utover_soknadsdato"),
+                        harKravPåRenter = it.getBoolean("har_krav_paa_renter")
+
                     )
                 }
             })

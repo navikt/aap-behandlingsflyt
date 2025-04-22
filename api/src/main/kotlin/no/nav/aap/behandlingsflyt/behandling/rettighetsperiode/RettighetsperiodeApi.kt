@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.rettighetsperiode
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeEndringsårsak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -24,7 +23,8 @@ class RettighetsperiodeGrunnlagDto(
 class RettighetsperiodeVurderingDto(
     val begrunnelse: String,
     val startDato: LocalDate,
-    val årsak: RettighetsperiodeEndringsårsak,
+    val harRettUtoverSøknadsdato: Boolean,
+    val harKravPåRenter: Boolean,
 )
 
 
@@ -47,7 +47,8 @@ fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(dataSource: DataSource) {
                         RettighetsperiodeVurderingDto(
                             begrunnelse = it.begrunnelse,
                             startDato = it.startDato,
-                            årsak = it.årsak
+                            harRettUtoverSøknadsdato = it.harRettUtoverSøknadsdato,
+                            harKravPåRenter = it.harKravPåRenter,
                         )
                     }
             )

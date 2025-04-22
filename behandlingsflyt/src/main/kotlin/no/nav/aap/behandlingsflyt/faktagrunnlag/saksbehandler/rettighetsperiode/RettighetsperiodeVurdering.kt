@@ -5,10 +5,6 @@ import java.time.LocalDate
 data class RettighetsperiodeVurdering(
     val startDato: LocalDate,
     val begrunnelse: String,
-    val årsak: RettighetsperiodeEndringsårsak
+    val harRettUtoverSøknadsdato: Boolean,
+    val harKravPåRenter: Boolean,
 )
-
-enum class RettighetsperiodeEndringsårsak {
-    ANNEN,
-    SØKT_PÅ_ANNEN_MÅTE
-}
