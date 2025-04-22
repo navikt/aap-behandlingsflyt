@@ -34,6 +34,7 @@ import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringAp
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.forutgåendeMedlemskapAPI
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.lovvalgMedlemskapGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskapAPI
+import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerAPI
@@ -105,6 +106,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregni
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.rettighetsperiode.VurderRettighetsperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepositoryImpl
@@ -208,6 +210,7 @@ internal fun Application.server(dbConfig: DbConfig) {
                 avklaringsbehovApi(dataSource)
                 tilkjentYtelseAPI(dataSource)
                 trukketSøknadGrunnlagAPI(dataSource)
+                rettighetsperiodeGrunnlagAPI(dataSource)
                 beregningVurderingAPI(dataSource)
                 beregningsGrunnlagApi(dataSource)
                 aldersGrunnlagApi(dataSource)
@@ -304,6 +307,7 @@ private fun registerRepositories() {
         .register<InformasjonskravRepositoryImpl>()
         .register<TjenestePensjonRepositoryImpl>()
         .register<TrukketSøknadRepositoryImpl>()
+        .register<VurderRettighetsperiodeRepositoryImpl>()
         .status()
 }
 

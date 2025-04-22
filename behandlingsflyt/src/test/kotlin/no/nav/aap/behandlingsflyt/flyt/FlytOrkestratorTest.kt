@@ -141,6 +141,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregni
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.rettighetsperiode.VurderRettighetsperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepositoryImpl
@@ -256,6 +257,7 @@ class FlytOrkestratorTest {
                 .register<InformasjonskravRepositoryImpl>()
                 .register<TjenestePensjonRepositoryImpl>()
                 .register<TrukketSøknadRepositoryImpl>()
+                .register<VurderRettighetsperiodeRepositoryImpl>()
                 .status()
             GatewayRegistry
                 .register<PdlBarnGateway>()
@@ -2605,7 +2607,10 @@ class FlytOrkestratorTest {
             behandling = behandling,
             avklaringsBehovLøsning = VurderRettighetsperiodeLøsning(
                 rettighetsperiodeVurdering = RettighetsperiodeVurdering(
-                    nyStartDato, "En begrunnelse"
+                    startDato = nyStartDato,
+                    begrunnelse = "En begrunnelse",
+                    harRettUtoverSøknadsdato = true,
+                    harKravPåRenter = false,
                 )
             )
         )
