@@ -91,9 +91,9 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
                 setRowMapper {
                     RettighetsperiodeVurdering(
                         begrunnelse = it.getString("begrunnelse"),
-                        startDato = it.getLocalDate("start_dato"),
+                        startDato = it.getLocalDateOrNull("start_dato"),
                         harRettUtoverSøknadsdato = it.getBoolean("har_rett_utover_soknadsdato"),
-                        harKravPåRenter = it.getBoolean("har_krav_paa_renter")
+                        harKravPåRenter = it.getBooleanOrNull("har_krav_paa_renter")
 
                     )
                 }

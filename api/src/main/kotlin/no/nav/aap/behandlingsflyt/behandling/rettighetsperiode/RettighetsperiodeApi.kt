@@ -22,9 +22,9 @@ class RettighetsperiodeGrunnlagDto(
 
 class RettighetsperiodeVurderingDto(
     val begrunnelse: String,
-    val startDato: LocalDate,
     val harRettUtoverSøknadsdato: Boolean,
-    val harKravPåRenter: Boolean,
+    val startDato: LocalDate?,
+    val harKravPåRenter: Boolean?,
 )
 
 

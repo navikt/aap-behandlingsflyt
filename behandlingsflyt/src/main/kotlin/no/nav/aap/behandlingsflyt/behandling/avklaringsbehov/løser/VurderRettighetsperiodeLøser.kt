@@ -8,13 +8,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDate
 
 class VurderRettighetsperiodeLøser(connection: DBConnection) :
     AvklaringsbehovsLøser<VurderRettighetsperiodeLøsning> {
@@ -40,23 +43,33 @@ class VurderRettighetsperiodeLøser(connection: DBConnection) :
         if (sak.status() == Status.AVSLUTTET) {
             throw UgyldigForespørselException("Kan ikke oppdatere rettighetsperioden etter at saken er avsluttet")
         }
-        val sluttDato = if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
-            løsning.rettighetsperiodeVurdering.startDato.plusYears(1).minusDays(1)
-        } else {
-            sak.rettighetsperiode.tom
-        }
 
         rettighetsperiodeRepository.lagreVurdering(
             behandlingId = behandling.id,
             vurdering = løsning.rettighetsperiodeVurdering
         )
-        sakOgBehandlingService.overstyrRettighetsperioden(
-            sakId = sak.id,
-            startDato = løsning.rettighetsperiodeVurdering.startDato,
-            sluttDato = sluttDato
-        )
+
+        if (løsning.rettighetsperiodeVurdering.harRettUtoverSøknadsdato && løsning.rettighetsperiodeVurdering.startDato != null) {
+            val sluttDato = utledNySluttdato(behandling, løsning.rettighetsperiodeVurdering.startDato, sak)
+
+            sakOgBehandlingService.overstyrRettighetsperioden(
+                sakId = sak.id,
+                startDato = løsning.rettighetsperiodeVurdering.startDato,
+                sluttDato = sluttDato
+            )
+        }
 
         return LøsningsResultat("Vurdert rettighetsperiode")
+    }
+
+    private fun utledNySluttdato(
+        behandling: Behandling,
+        startDato: LocalDate,
+        sak: Sak
+    ): LocalDate = if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
+        startDato.plusYears(1).minusDays(1)
+    } else {
+        sak.rettighetsperiode.tom
     }
 
     override fun forBehov(): Definisjon {

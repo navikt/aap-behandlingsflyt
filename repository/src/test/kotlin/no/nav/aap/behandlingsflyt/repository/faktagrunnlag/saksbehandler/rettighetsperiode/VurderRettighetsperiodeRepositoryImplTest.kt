@@ -35,7 +35,33 @@ class VurderRettighetsperiodeRepositoryImplTest {
             val vurdering = RettighetsperiodeVurdering(
                 startDato = LocalDate.now().minusDays(10),
                 begrunnelse = "begrunnelse",
-                årsak = RettighetsperiodeEndringsårsak.ANNEN
+                harRettUtoverSøknadsdato = true,
+                harKravPåRenter = true
+            )
+            repo.lagreVurdering(behandling.id, vurdering)
+
+            val vurderingerEtterLagring = repo.hentVurderinger(behandling.id)
+            assertThat(vurderingerFørLagring).hasSize(0)
+            assertThat(vurderingerEtterLagring).hasSize(1)
+            assertThat(vurderingerEtterLagring.first()).isEqualTo(vurdering)
+
+        }
+    }
+
+    @Test
+    fun `skal lagre vurdering av rettighetsperiode uten ny startdato`() {
+        InitTestDatabase.freshDatabase().transaction { connection ->
+            val repo = VurderRettighetsperiodeRepositoryImpl(connection)
+            val sak = sak(connection)
+            val behandling = behandling(connection, sak)
+
+            val vurderingerFørLagring = repo.hentVurderinger(behandling.id)
+
+            val vurdering = RettighetsperiodeVurdering(
+                startDato = null,
+                begrunnelse = "begrunnelse",
+                harRettUtoverSøknadsdato = false,
+                harKravPåRenter = null
             )
             repo.lagreVurdering(behandling.id, vurdering)
 

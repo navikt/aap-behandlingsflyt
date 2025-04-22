@@ -9,9 +9,9 @@ create table rettighetsperiode_vurdering
     id                          bigserial primary key,
     vurderinger_id              bigint       not null references rettighetsperiode_vurderinger (id),
     begrunnelse                 text         not null,
-    start_dato                  date         not null,
+    start_dato                  date,
     har_rett_utover_soknadsdato boolean      not null,
-    har_krav_paa_renter             boolean      not null,
+    har_krav_paa_renter         boolean,
     opprettet                   timestamp(3) not null default current_timestamp(3)
 );
 
