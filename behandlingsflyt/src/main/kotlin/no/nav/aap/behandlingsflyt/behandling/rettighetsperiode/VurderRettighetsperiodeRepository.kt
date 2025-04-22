@@ -6,7 +6,7 @@ import no.nav.aap.lookup.repository.Repository
 
 interface VurderRettighetsperiodeRepository: Repository {
     fun lagreVurdering(behandlingId: BehandlingId, vurdering: RettighetsperiodeVurdering)
-    fun hentVurderinger(behandlingId: BehandlingId): List<RettighetsperiodeVurdering>
+    fun hentVurdering(behandlingId: BehandlingId): RettighetsperiodeVurdering?
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

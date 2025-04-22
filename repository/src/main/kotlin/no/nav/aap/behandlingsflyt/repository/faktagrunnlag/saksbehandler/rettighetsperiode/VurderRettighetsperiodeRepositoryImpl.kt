@@ -8,11 +8,11 @@ import no.nav.aap.lookup.repository.Factory
 
 class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection) : VurderRettighetsperiodeRepository {
     override fun lagreVurdering(behandlingId: BehandlingId, vurdering: RettighetsperiodeVurdering) {
-        lagreGrunnlag(behandlingId, RettighetsperiodeGrunnlag(listOf(vurdering)))
+        lagreGrunnlag(behandlingId, RettighetsperiodeGrunnlag(vurdering))
     }
 
-    override fun hentVurderinger(behandlingId: BehandlingId): List<RettighetsperiodeVurdering> {
-        return hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
+    override fun hentVurdering(behandlingId: BehandlingId): RettighetsperiodeVurdering? {
+        return hentHvisEksisterer(behandlingId)?.vurdering
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
@@ -41,20 +41,20 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
             }
         }
 
-        connection.executeBatch(
+        connection.execute(
             """
             insert into rettighetsperiode_vurdering
                 (vurderinger_id, begrunnelse, start_dato, har_rett_utover_soknadsdato, har_krav_paa_renter)
             values
                 (?, ?, ?, ?, ?)
-        """.trimIndent(), grunnlag.vurderinger
+        """.trimIndent()
         ) {
-            setParams { vurdering ->
+            setParams {
                 setLong(1, vurderingerId)
-                setString(2, vurdering.begrunnelse)
-                setLocalDate(3, vurdering.startDato)
-                setBoolean(4, vurdering.harRettUtoverSøknadsdato)
-                setBoolean(5, vurdering.harKravPåRenter)
+                setString(2, grunnlag.vurdering.begrunnelse)
+                setLocalDate(3, grunnlag.vurdering.startDato)
+                setBoolean(4, grunnlag.vurdering.harRettUtoverSøknadsdato)
+                setBoolean(5, grunnlag.vurdering.harKravPåRenter)
             }
         }
     }
@@ -77,7 +77,7 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
         } ?: return null
 
         return RettighetsperiodeGrunnlag(
-            connection.queryList(
+            connection.queryFirst(
                 """
             select vurdering.* 
             from rettighetsperiode_vurdering vurdering
@@ -109,7 +109,7 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
         }
     }
 
-    private data class RettighetsperiodeGrunnlag(val vurderinger: List<RettighetsperiodeVurdering>)
+    private data class RettighetsperiodeGrunnlag(val vurdering: RettighetsperiodeVurdering)
 
     companion object : Factory<VurderRettighetsperiodeRepository> {
         override fun konstruer(connection: DBConnection): VurderRettighetsperiodeRepository {
