@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.integrasjon.samordning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.SamhandlerForholdDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensonRespons
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -59,7 +59,7 @@ class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
             uri = URI.create("${url}?fomDate=${periode.fom}&tomDate=${periode.tom}"),
             request = httpRequest,
             mapper = { body, _ ->
-                fromJson<TjenestePensonRespons>(body)
+                fromJson<TjenestePensjonRespons>(body)
             }
         )).forhold
     }

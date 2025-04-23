@@ -174,9 +174,9 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         val sql = """
-            INSERT INTO TJENESTEPENSJON_GRUNNLAG (BEHANDLING_ID, AKTIV, TJENESTEPENSJON_YTELSER_ID)
-            SELECT ?, true, TJENESTEPENSJON_YTELSER_ID
-            FROM TJENESTEPENSJON_GRUNNLAG
+            INSERT INTO TJENESTEPENSJON_FORHOLD_GRUNNLAG (BEHANDLING_ID, AKTIV, TJENESTEPENSJON_ORDNINGER_ID)
+            SELECT ?, true, TJENESTEPENSJON_ORDNINGER_ID
+            FROM TJENESTEPENSJON_FORHOLD_GRUNNLAG
             WHERE BEHANDLING_ID = ?
               AND AKTIV = true;
         """.trimIndent()
@@ -190,7 +190,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
     }
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
-        dbConnection.execute("UPDATE TJENESTEPENSJON_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
+        dbConnection.execute("UPDATE TJENESTEPENSJON_FORHOLD_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
             setParams {
                 setLong(1, behandlingId.toLong())
             }

@@ -7,7 +7,7 @@ data class TjenestePensjon(
     val tpNr: List<String>
 )
 
-data class TjenestePensonRespons(
+data class TjenestePensjonRespons(
     val fnr: String,
     val forhold: List<SamhandlerForholdDto> = emptyList(),
     val changeStamp: ChangeStampDateDto? = null

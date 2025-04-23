@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrev
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.HentStatusLegeerklæring
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.PurringLegeerklæringRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Anvist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerResponse
@@ -327,7 +328,9 @@ object FakeServers : AutoCloseable {
                 val fomDate = call.request.queryParameters["fomDate"]
                 val tomDate = call.request.queryParameters["tomDate"]
 
-                val response = TjenestePensjon(emptyList())
+                val response = TjenestePensjonRespons(
+                    call.parameters["fnr"] ?: "",
+                )
 
                 call.respond(response)
             }
