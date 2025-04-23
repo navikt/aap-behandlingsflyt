@@ -49,6 +49,8 @@ data class ChangeStampDateDto(
     val updatedDate: LocalDateTime
 )
 
+
+// https://github.com/navikt/tp/blob/e99c670da41c23172e2ccc3a3e8dff4c7870fa82/tp-api/src/main/kotlin/no/nav/samhandling/tp/domain/codestable/YtelseTypeCode.kt#L6
 enum class YtelseTypeCode(val isSamordningspliktig: Boolean) {
     ALDER(true),
     UFORE(true),
