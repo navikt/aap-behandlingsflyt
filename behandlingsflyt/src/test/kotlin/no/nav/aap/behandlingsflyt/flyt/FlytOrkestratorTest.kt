@@ -2534,25 +2534,15 @@ class FlytOrkestratorTest {
     fun `Skal sette behandling på vent hvis man mottar klage`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val sak = hentSak(ident, periode)
 
-        val sak = dataSource.transaction { connection ->
+        opprettBehandling(
+            sak.id,
+            årsaker = listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD)),
+            forrigeBehandlingId = null,
+            typeBehandling = TypeBehandling.Førstegangsbehandling
+        )
 
-            val sak = hentSak(ident, periode)
-            val førstegangbehandling = opprettBehandling(
-                sak.id,
-                årsaker = listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD)),
-                forrigeBehandlingId = null,
-                typeBehandling = TypeBehandling.Førstegangsbehandling
-            )
-
-            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(
-                behandlingId = førstegangbehandling.id,
-                status = Status.AVSLUTTET
-            )
-
-            assertThat(førstegangbehandling.status().erAvsluttet())
-            sak
-        }
         val nyBehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("21"),
@@ -2563,15 +2553,13 @@ class FlytOrkestratorTest {
             )
         )
 
-        dataSource.transaction { connection ->
-            assertThat(nyBehandling.typeBehandling() == TypeBehandling.Klage)
+        assertThat(nyBehandling.typeBehandling() == TypeBehandling.Klage)
 
-            val avklaringsbehovene = hentAvklaringsbehov(nyBehandling.id, connection)
-            val avklaringsbehov = avklaringsbehovene.hentÅpneVentebehov().first()
-            assertThat(avklaringsbehov.erÅpent())
-            assertThat(avklaringsbehov.erVentepunkt())
-            assertThat(avklaringsbehov.definisjon == Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON)
-        }
+        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(nyBehandling.id).first()
+
+        assertThat(åpneAvklaringsbehov.erÅpent())
+        assertThat(åpneAvklaringsbehov.erVentepunkt())
+        assertThat(åpneAvklaringsbehov.definisjon == Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON)
     }
 
     @Test
