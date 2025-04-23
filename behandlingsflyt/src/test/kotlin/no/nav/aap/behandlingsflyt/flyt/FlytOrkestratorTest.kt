@@ -405,20 +405,7 @@ class FlytOrkestratorTest {
         )
 
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        behandling = løsAvklaringsBehov(
-            behandling,
-            KvalitetssikringLøsning(
-                alleAvklaringsbehov
-                    .filter { behov -> behov.erTotrinn() }
-                    .map { behov ->
-                        TotrinnsVurdering(
-                            behov.definisjon.kode,
-                            true,
-                            "begrunnelse",
-                            emptyList()
-                        )
-                    }),
-        )
+        behandling = kvalitetssikre(behandling, alleAvklaringsbehov)
 
         behandling = løsAvklaringsBehov(
             behandling,
@@ -733,20 +720,7 @@ class FlytOrkestratorTest {
         )
 
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        behandling = løsAvklaringsBehov(
-            behandling,
-            KvalitetssikringLøsning(
-                alleAvklaringsbehov
-                    .filter { behov -> behov.erTotrinn() }
-                    .map { behov ->
-                        TotrinnsVurdering(
-                            behov.definisjon.kode,
-                            true,
-                            "begrunnelse",
-                            emptyList()
-                        )
-                    }),
-        )
+        behandling = kvalitetssikre(behandling, alleAvklaringsbehov)
 
         behandling = løsAvklaringsBehov(
             behandling,
@@ -933,21 +907,7 @@ class FlytOrkestratorTest {
         )
 
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        behandling = løsAvklaringsBehov(
-            behandling,
-            KvalitetssikringLøsning(
-                alleAvklaringsbehov
-                    .filter { behov -> behov.erTotrinn() }
-                    .map { behov ->
-                        TotrinnsVurdering(
-                            behov.definisjon.kode,
-                            true,
-                            "begrunnelse",
-                            emptyList()
-                        )
-                    }),
-
-            )
+        behandling = kvalitetssikre(behandling, alleAvklaringsbehov)
 
         behandling = løsAvklaringsBehov(
             behandling,
@@ -1146,20 +1106,7 @@ class FlytOrkestratorTest {
         )
 
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        behandling = løsAvklaringsBehov(
-            behandling,
-            KvalitetssikringLøsning(
-                alleAvklaringsbehov
-                    .filter { behov -> behov.erTotrinn() }
-                    .map { behov ->
-                        TotrinnsVurdering(
-                            behov.definisjon.kode,
-                            true,
-                            "begrunnelse",
-                            emptyList()
-                        )
-                    }),
-        )
+        behandling = kvalitetssikre(behandling, alleAvklaringsbehov)
 
         behandling = løsAvklaringsBehov(
             behandling,
@@ -2714,20 +2661,9 @@ class FlytOrkestratorTest {
         )
 
         val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        behandling = løsAvklaringsBehov(
-            behandling,
-            KvalitetssikringLøsning(
-                alleAvklaringsbehov
-                    .filter { behov -> behov.erTotrinn() }
-                    .map { behov ->
-                        TotrinnsVurdering(
-                            behov.definisjon.kode,
-                            true,
-                            "begrunnelse",
-                            emptyList()
-                        )
-                    }),
-        )
+
+        behandling = kvalitetssikre(behandling, alleAvklaringsbehov)
+
         if (harYrkesskade) {
             behandling = løsAvklaringsBehov(
                 behandling,
@@ -2754,6 +2690,18 @@ class FlytOrkestratorTest {
             ),
         )
     }
+
+    private fun kvalitetssikre(
+        behandling: Behandling,
+        alleAvklaringsbehov: List<Avklaringsbehov>
+    ): Behandling = løsAvklaringsBehov(
+        behandling,
+        KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() }.map { behov ->
+            TotrinnsVurdering(
+                behov.definisjon.kode, true, "begrunnelse", emptyList()
+            )
+        }),
+    )
 
     private fun fattVedtak(behandling: Behandling): Behandling = løsAvklaringsBehov(
         behandling,
