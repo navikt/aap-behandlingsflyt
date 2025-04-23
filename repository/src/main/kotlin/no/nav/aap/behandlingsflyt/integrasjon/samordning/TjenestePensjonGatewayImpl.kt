@@ -1,8 +1,9 @@
 package no.nav.aap.behandlingsflyt.integrasjon.samordning
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.SamhandlerForholdDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensonRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
@@ -29,7 +30,24 @@ class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
         tokenProvider = ClientCredentialsTokenProvider,
     )
 
-    override fun hentTjenestePensjon(ident: String, periode: Periode): TjenestePensjon {
+    fun hentFullTjenestePensjon(ident: String){
+        val httpRequest = GetRequest(
+            additionalHeaders = listOf(
+                Header("Accept", "application/json"),
+                Header("fnr", ident),
+            )
+        )
+
+        client.get(
+            uri = url,
+            request = httpRequest,
+            mapper = { body, _ ->
+                fromJson<TjenestePensjon>(body)
+            }
+        )
+    }
+
+    override fun hentTjenestePensjon(ident: String, periode: Periode): List<SamhandlerForholdDto> {
         val httpRequest = GetRequest(
             additionalHeaders = listOf(
                 Header("Accept", "application/json"),
@@ -41,8 +59,8 @@ class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
             uri = URI.create("${url}?fomDate=${periode.fom}&tomDate=${periode.tom}"),
             request = httpRequest,
             mapper = { body, _ ->
-                fromJson<TjenestePensjon>(body)
+                fromJson<TjenestePensonRespons>(body)
             }
-        ))
+        )).forhold
     }
 }

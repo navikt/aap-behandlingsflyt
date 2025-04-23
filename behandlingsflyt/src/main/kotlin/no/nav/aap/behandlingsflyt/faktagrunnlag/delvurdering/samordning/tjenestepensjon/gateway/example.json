@@ -1,0 +1,54 @@
+{
+    "fnr": "***********",
+    "forhold": [
+        {
+            "samtykkeSimulering": false,
+            "kilde": "PP01",
+            "tpNr": "3010",
+            "ordning": {
+                "navn": "Statens Pensjon Kasse",
+                "tpNr": "3010",
+                "orgNr": "123445675645",
+                "tssId": "8000123455666",
+                "alias": []
+            },
+            "harSimulering": false,
+            "harUtlandsPensjon": false,
+            "datoSamtykkeGitt": null,
+            "ytelser": [
+                {
+                    "datoInnmeldtYtelseFom": null,
+                    "ytelseType": "ALDER",
+                    "datoYtelseIverksattFom": "2020-01-01",
+                    "datoYtelseIverksattTom": "2025-04-22",
+                    "changeStamp": {
+                        "createdBy": "DEFAULT_USER_ID",
+                        "createdDate": "2025-04-22T10:40:06.269049700",
+                        "updatedBy": "DEFAULT_USER_ID",
+                        "updatedDate": "2025-04-22T10:40:06.269049700"
+                    },
+                    "ytelseId": 123
+                },
+                {
+                    "datoInnmeldtYtelseFom": null,
+                    "ytelseType": "BETINGET_TP",
+                    "datoYtelseIverksattFom": "2020-01-01",
+                    "datoYtelseIverksattTom": null,
+                    "changeStamp": {
+                        "createdBy": "DEFAULT_USER_ID",
+                        "createdDate": "2025-04-22T10:40:06.269049700",
+                        "updatedBy": "DEFAULT_USER_ID",
+                        "updatedDate": "2025-04-22T10:40:06.269049700"
+                    },
+                    "ytelseId": 222
+                }
+            ],
+            "changeStampDate": {
+                "createdBy": "DEFAULT_USER_ID",
+                "createdDate": "2025-04-22T10:40:06.301355200",
+                "updatedBy": "DEFAULT_USER_ID",
+                "updatedDate": "2025-04-22T10:40:06.301355200"
+            }
+        }
+    ]
+}
