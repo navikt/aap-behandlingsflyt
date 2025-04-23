@@ -46,7 +46,7 @@ class SamordningSteg(
 
         return when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
-                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
                     avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
                         .avbrytForSteg(type())
                     return Fullført

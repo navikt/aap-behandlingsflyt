@@ -40,7 +40,7 @@ class SamordningUføreSteg(
 
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
-                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
                     avklaringsbehovene.avbrytForSteg(type())
                     return Fullført
                 }

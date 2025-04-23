@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.Samordni
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -39,10 +40,10 @@ class SamordningAvslagSteg(
     private val sakRepository: SakRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         samordningService = SamordningService(repositoryProvider),
         uføreService = UføreService(repositoryProvider),
-        vilkårsresultatRepository  = repositoryProvider.provide(),
+        vilkårsresultatRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
     )
@@ -52,6 +53,23 @@ class SamordningAvslagSteg(
             if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                 return Fullført
             }
+        }
+
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+
+        if (tidligereVurderinger.girAvslag(kontekst, type())) {
+            vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SAMORDNING).leggTilVurdering(
+                Vilkårsperiode(
+                    kontekst.vurdering.rettighetsperiode,
+                    Vilkårsvurdering(
+                        utfall = Utfall.IKKE_VURDERT,
+                        manuellVurdering = false,
+                        begrunnelse = "Avslag tidligere i flyt",
+                        faktagrunnlag = null,
+                    )
+                )
+            )
+            return Fullført
         }
 
         val sak = sakRepository.hent(kontekst.sakId)
@@ -76,7 +94,6 @@ class SamordningAvslagSteg(
                         avslagsårsak = null,
                         faktagrunnlag = utledFaktagrunnlag(kontekst),
                     )
-
                 else
                     Vilkårsvurdering(
                         utfall = Utfall.IKKE_OPPFYLT,
@@ -88,7 +105,6 @@ class SamordningAvslagSteg(
             }
 
 
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SAMORDNING)
         vilkår.leggTilVurderinger(samordningsVurderinger.begrensetTil(sak.rettighetsperiode))
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)

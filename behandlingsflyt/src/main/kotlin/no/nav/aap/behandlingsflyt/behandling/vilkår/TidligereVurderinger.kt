@@ -99,19 +99,6 @@ class TidligereVurderingerImpl(
                 }
             }
         },
-        /**
-        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-        val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-        val bistandsvilkåretEllerSykepengerErstatningHvisIkke =
-            if (!(bistandsvilkåret.harPerioderSomErOppfylt() && sykdomsvilkåret.harPerioderSomErOppfylt())) {
-                vilkårsresultat.optionalVilkår(Vilkårtype.SYKEPENGEERSTATNING)?.harPerioderSomErOppfylt() == true
-            } else {
-                bistandsvilkåret.harPerioderSomErOppfylt() && sykdomsvilkåret.harPerioderSomErOppfylt()
-            }
-
-        return bistandsvilkåretEllerSykepengerErstatningHvisIkke
-                && lovvalgvilkåret.harPerioderSomErOppfylt()
-         */
 
         Sjekk(StegType.FASTSETT_GRUNNLAG) { vilkårsresultat, _ ->
             ikkeOppfyltFørerTilAvslag(Vilkårtype.GRUNNLAGET, vilkårsresultat)
