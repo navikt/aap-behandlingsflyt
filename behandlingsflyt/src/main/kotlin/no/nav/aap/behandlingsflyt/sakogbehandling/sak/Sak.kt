@@ -13,7 +13,7 @@ class Sak(
     val rettighetsperiode: Periode,
     private val status: Status = Status.OPPRETTET,
     val opprettetTidspunkt: LocalDateTime = LocalDateTime.now(),
-    val søknadstidspunkt: LocalDate,
+    val søknadsdato: LocalDate,
 ) {
 
     fun status(): Status {

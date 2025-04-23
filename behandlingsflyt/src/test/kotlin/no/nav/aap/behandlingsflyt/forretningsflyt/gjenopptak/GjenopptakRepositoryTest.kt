@@ -72,13 +72,15 @@ class GjenopptakRepositoryTest {
     }
 
     private fun sak(connection: DBConnection): Sak {
+        val periode = Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
         return PersonOgSakService(
             FakePdlGateway,
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(
             ident(),
-            Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
+            periode,
+            søknadsdato = periode.fom
         )
     }
 

@@ -32,7 +32,7 @@ class MedlemskapArbeidInntektRepositoryImplTest {
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val repo = MedlemskapArbeidInntektRepositoryImpl(connection)
 
-            val sak = personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            val sak = personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)), søknadsdato = LocalDate.now())
             val behandling = behandlingRepo.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
             lagNyFullVurdering(behandling.id, repo, "Første begrunnelse")
 

@@ -154,7 +154,8 @@ class BarnetilleggRepositoryImplTest {
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(
             ident(),
-            periode
+            periode,
+            periode.fom
         )
     }
 

@@ -293,7 +293,8 @@ class SamordningVurderingRepositoryImplTest {
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(
             ident(),
-            periode
+            periode,
+            periode.fom
         )
     }
 

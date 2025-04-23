@@ -192,7 +192,8 @@ class SamordningServiceTest {
         val person = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("ident", true)))
         val sakId = SakRepositoryImpl(connection).finnEllerOpprett(
             person,
-            Periode(LocalDate.now(), LocalDate.now().plusDays(5))
+            Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
+            søknadsdato = LocalDate.now(),
         ).id
         return BehandlingRepositoryImpl(connection).opprettBehandling(
             sakId,

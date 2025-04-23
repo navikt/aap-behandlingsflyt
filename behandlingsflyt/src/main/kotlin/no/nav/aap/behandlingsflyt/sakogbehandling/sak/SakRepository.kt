@@ -4,10 +4,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Repository
+import java.time.LocalDate
 
 interface SakRepository : Repository {
 
-    fun finnEllerOpprett(person: Person, periode: Periode): Sak
+    fun finnEllerOpprett(person: Person, periode: Periode, søknadsdato: LocalDate): Sak
 
     fun finnSakerFor(person: Person): List<Sak>
 

@@ -323,7 +323,7 @@ class MeldepliktRepositoryImplTest {
             FakePdlGateway,
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), periode)
+        ).finnEllerOpprett(ident(), periode, periode.fom)
     }
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {

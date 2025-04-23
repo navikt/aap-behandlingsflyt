@@ -272,11 +272,12 @@ class SamordningPeriodeSammenlignerTest {
     }
 
     private fun nySak(): Sak {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
         return PersonOgSakService(
             FakePdlGateway,
             InMemoryPersonRepository,
             InMemorySakRepository,
-        ).finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        ).finnEllerOpprett(ident(), periode, periode.fom)
     }
 
     private fun opprettBehandling(sak: Sak, typeBehandling: TypeBehandling): Behandling {

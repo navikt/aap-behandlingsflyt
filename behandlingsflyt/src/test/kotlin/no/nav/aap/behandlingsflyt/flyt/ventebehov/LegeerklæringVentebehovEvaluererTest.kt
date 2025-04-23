@@ -200,12 +200,13 @@ class LegeerklæringVentebehovEvaluererTest {
     }
 
     private fun opprettSak(connection: DBConnection): Sak {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         return PersonOgSakService(
             FakePdlGateway,
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(
-            ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+            ident(), periode, periode.fom
         )
     }
 

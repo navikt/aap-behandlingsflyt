@@ -32,12 +32,12 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     fun kanHenteSisteRelevanteUtenlandsopplysning() {
         val sak = InitTestDatabase.dataSource.transaction { connection ->
             val personOgSakService = PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
-            personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)), søknadsdato = LocalDate.now())
         }
 
         val sak2 = InitTestDatabase.dataSource.transaction { connection ->
             val personOgSakService = PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
-            personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)), søknadsdato = LocalDate.now())
         }
 
         InitTestDatabase.dataSource.transaction { connection ->
@@ -60,12 +60,12 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     fun henterRelaterteHistoriskeVurderinger() {
         val sak = InitTestDatabase.dataSource.transaction { connection ->
             val personOgSakService = PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
-            personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)), søknadsdato = LocalDate.now())
         }
 
         val sak2 = InitTestDatabase.dataSource.transaction { connection ->
             val personOgSakService = PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
-            personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)), søknadsdato = LocalDate.now())
         }
 
         InitTestDatabase.dataSource.transaction { connection ->

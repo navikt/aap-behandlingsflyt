@@ -121,7 +121,8 @@ class SamordningYtelseVurderingServiceTest {
         val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusDays(5))
         val sakId = SakRepositoryImpl(connection).finnEllerOpprett(
             person,
-            rettighetsperiode
+            rettighetsperiode,
+            søknadsdato = LocalDate.now(),
         ).id
         val behandlingId = BehandlingRepositoryImpl(connection).opprettBehandling(
             sakId,

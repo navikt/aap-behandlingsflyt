@@ -19,13 +19,15 @@ class BehandlingRepositoryImplTest {
     @Test
     fun `kan lagre og hente ut behandling med uuid`() {
         val skapt = InitTestDatabase.dataSource.transaction { connection ->
+            val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             val sak = PersonOgSakService(
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection)
             ).finnEllerOpprett(
                 ident(),
-                Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+                periode,
+                periode.fom
             )
             val repo = BehandlingRepositoryImpl(connection)
 
@@ -54,13 +56,15 @@ class BehandlingRepositoryImplTest {
     @Test
     fun `oppretet dato lagres på behandling og hentes ut korrekt`() {
         val skapt = InitTestDatabase.dataSource.transaction { connection ->
+            val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             val sak = PersonOgSakService(
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection)
             ).finnEllerOpprett(
                 ident(),
-                Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+                periode,
+                periode.fom
             )
             val repo = BehandlingRepositoryImpl(connection)
 

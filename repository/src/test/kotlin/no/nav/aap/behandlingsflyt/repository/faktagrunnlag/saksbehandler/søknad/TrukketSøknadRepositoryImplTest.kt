@@ -80,7 +80,7 @@ class TrukketSøknadRepositoryImplTest {
     fun behandling(): BehandlingId {
         return dataSource.transaction { connection ->
             val person = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("0".repeat(11))))
-            val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, Periode(1 januar 2025, 1 januar 2028))
+            val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, Periode(1 januar 2025, 1 januar 2028), søknadsdato = 1 januar 2025)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sakId = sak.id,
                 årsaker = listOf(

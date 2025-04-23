@@ -51,7 +51,8 @@ class TjenestePensjonRepositoryImplTest() {
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(
             ident(),
-            periode
+            periode,
+            periode.fom
         )
     }
 

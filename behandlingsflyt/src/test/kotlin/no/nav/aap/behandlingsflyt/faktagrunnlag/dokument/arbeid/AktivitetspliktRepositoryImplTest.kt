@@ -166,6 +166,7 @@ class AktivitetspliktRepositoryImplTest {
 }
 
 fun nySak(connection: DBConnection): Sak {
+    val periode = Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2020, 2, 2))
     return PersonOgSakService(
         FakePdlGateway,
         PersonRepositoryImpl(connection),
@@ -173,7 +174,8 @@ fun nySak(connection: DBConnection): Sak {
     )
         .finnEllerOpprett(
             ident(),
-            Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2020, 2, 2))
+            periode,
+            periode.fom
         )
 }
 

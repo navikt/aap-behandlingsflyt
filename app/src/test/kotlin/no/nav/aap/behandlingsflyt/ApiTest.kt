@@ -161,7 +161,7 @@ class ApiTest {
             val behandlingRepo = BehandlingRepositoryImpl(connection)
 
             val sak =
-                personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+                personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)), søknadsdato = LocalDate.now())
             val behandling = behandlingRepo.opprettBehandling(
                 sak.id,
                 listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
@@ -210,7 +210,7 @@ class ApiTest {
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val sak =
-                personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+                personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)), søknadsdato = LocalDate.now())
             val behandling = behandlingRepo.opprettBehandling(
                 sak.id,
                 listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),

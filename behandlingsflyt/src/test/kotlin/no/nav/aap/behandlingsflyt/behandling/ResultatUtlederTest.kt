@@ -136,7 +136,7 @@ class ResultatUtlederTest {
             FakePdlGateway,
             InMemoryPersonRepository,
             InMemorySakRepository,
-        ).finnEllerOpprett(ident(), periode)
+        ).finnEllerOpprett(ident(), periode, periode.fom)
     }
 
     private fun opprettBehandling(sak: Sak): BeriketBehandling {

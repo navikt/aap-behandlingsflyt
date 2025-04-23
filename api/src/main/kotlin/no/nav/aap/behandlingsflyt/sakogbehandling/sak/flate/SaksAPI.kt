@@ -77,7 +77,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                                 saksnummer = sak.saksnummer.toString(),
                                 opprettetTidspunkt = sak.opprettetTidspunkt,
                                 periode = sak.rettighetsperiode,
-                                søknadstidspunkt = sak.søknadstidspunkt,
+                                søknadsdato = sak.søknadsdato,
                                 ident = sak.person.aktivIdent().identifikator,
                                 resultat = resultat.let {
                                     when (it) {
@@ -124,7 +124,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                             saksnummer = sak.saksnummer.toString(),
                             opprettetTidspunkt = sak.opprettetTidspunkt,
                             periode = sak.rettighetsperiode,
-                            søknadstidspunkt = sak.søknadstidspunkt,
+                            søknadsdato = sak.søknadsdato,
                             ident = sak.person.aktivIdent().identifikator,
                             resultat = resultat.let {
                                 when (it) {
@@ -226,13 +226,13 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                         pdlGateway = GatewayProvider.provide(IdentGateway::class),
                         personRepository = repositoryProvider.provide<PersonRepository>(),
                         sakRepository = repositoryProvider.provide<SakRepository>()
-                    ).finnEllerOpprett(ident = ident, periode = periode)
+                    ).finnEllerOpprett(ident = ident, periode = periode, søknadsdato = dto.søknadsdato)
 
                     SaksinfoDTO(
                         saksnummer = sak.saksnummer.toString(),
                         opprettetTidspunkt = sak.opprettetTidspunkt,
                         periode = periode,
-                        søknadstidspunkt = sak.søknadstidspunkt,
+                        søknadsdato = sak.søknadsdato,
                         ident = sak.person.aktivIdent().identifikator
                     )
                 }
@@ -251,7 +251,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                                 saksnummer = sak.saksnummer.toString(),
                                 opprettetTidspunkt = sak.opprettetTidspunkt,
                                 periode = sak.rettighetsperiode,
-                                søknadstidspunkt = sak.søknadstidspunkt,
+                                søknadsdato = sak.søknadsdato,
                                 ident = sak.person.aktivIdent().identifikator
                             )
                         }

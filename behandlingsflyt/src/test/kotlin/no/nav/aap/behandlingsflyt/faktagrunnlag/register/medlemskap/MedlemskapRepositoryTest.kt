@@ -24,13 +24,15 @@ class MedlemskapRepositoryTest {
     fun `lagre og hente inn unntak`() {
         val behandlingId = InitTestDatabase.dataSource.transaction { connection ->
             // SETUP
+            val periode = Periode(fom = LocalDate.now().minusYears(2), tom = LocalDate.now())
             val sak = PersonOgSakService(
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection)
             ).finnEllerOpprett(
                 ident(),
-                Periode(fom = LocalDate.now().minusYears(2), tom = LocalDate.now())
+                periode,
+                periode.fom
             )
             val behandling = SakOgBehandlingService(
                 GrunnlagKopierer(connection), SakRepositoryImpl(connection),

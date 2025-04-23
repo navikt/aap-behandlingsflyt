@@ -70,7 +70,8 @@ class SamordningAndreStatligeYtelserRepositoryImplTest {
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(
             ident(),
-            periode
+            periode,
+            periode.fom
         )
     }
 

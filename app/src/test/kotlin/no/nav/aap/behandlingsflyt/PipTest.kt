@@ -87,7 +87,7 @@ class PipTest {
                     Ident("endaeldreident", false)
                 )
             )
-            val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, periode)
+            val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, periode, periode.fom)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sak.id,
                 listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD, periode)),
@@ -139,7 +139,7 @@ class PipTest {
                     Ident("endaeldreident", false)
                 )
             )
-            val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, periode)
+            val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, periode, periode.fom)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sak.id,
                 listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD, periode)),

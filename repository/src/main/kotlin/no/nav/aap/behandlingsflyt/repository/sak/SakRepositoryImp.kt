@@ -12,6 +12,7 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 
 class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -24,11 +25,11 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
 
     private val personRepository = PersonRepositoryImpl(connection)
 
-    override fun finnEllerOpprett(person: Person, periode: Periode): Sak {
+    override fun finnEllerOpprett(person: Person, periode: Periode, søknadsdato: LocalDate): Sak {
         val relevantesaker = finnSakerFor(person, periode)
 
         if (relevantesaker.isEmpty()) {
-            return opprett(person, periode)
+            return opprett(person, periode, søknadsdato)
         }
 
         if (relevantesaker.size != 1) {
@@ -37,7 +38,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         return relevantesaker.first()
     }
 
-    private fun opprett(person: Person, periode: Periode): Sak {
+    private fun opprett(person: Person, periode: Periode, søknadsdato: LocalDate): Sak {
         val sakId = connection.queryFirst("SELECT nextval('SEQ_SAKSNUMMER') as nextval") {
             setRowMapper { row ->
                 row.getLong("nextval")
@@ -46,7 +47,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         val saksnummer = Saksnummer.valueOf(sakId)
         val keys = connection.executeReturnKey(
             "INSERT INTO " +
-                    "SAK (saksnummer, person_id, rettighetsperiode, status, soknadstidspunkt) " +
+                    "SAK (saksnummer, person_id, rettighetsperiode, status, soknadsdato) " +
                     "VALUES (?, ?, ?::daterange, ?, ?)"
         ) {
             setParams {
@@ -54,7 +55,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
                 setLong(2, person.id)
                 setPeriode(3, periode)
                 setEnumName(4, Status.OPPRETTET)
-                setLocalDate(5, periode.fom)
+                setLocalDate(5, søknadsdato)
             }
         }
         log.info("Opprettet sak med ID: $keys. Saksnummer: $saksnummer")
@@ -63,7 +64,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
             saksnummer = saksnummer,
             person = person,
             rettighetsperiode = periode,
-            søknadstidspunkt = periode.fom
+            søknadsdato = periode.fom
         )
     }
 
@@ -110,7 +111,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
                     saksnummer = Saksnummer(row.getString("saksnummer")),
                     status = row.getEnum<Status>("status"),
                     opprettetTidspunkt = row.getLocalDateTime("opprettet_tid"),
-                    søknadstidspunkt = row.getLocalDate("soknadstidspunkt")
+                    søknadsdato = row.getLocalDate("soknadsdato")
                 )
             }
         }
@@ -210,7 +211,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         saksnummer = Saksnummer(row.getString("saksnummer")),
         status = row.getEnum("status"),
         opprettetTidspunkt = row.getLocalDateTime("opprettet_tid"),
-        søknadstidspunkt = row.getLocalDate("soknadstidspunkt")
+        søknadsdato = row.getLocalDate("soknadsdato")
     )
 
     override fun oppdaterRettighetsperiode(sakId: SakId, periode: Periode) {

@@ -2707,7 +2707,8 @@ class FlytOrkestratorTest {
         return dataSource.transaction { connection ->
             SakRepositoryImpl(connection).finnEllerOpprett(
                 PersonRepositoryImpl(connection).finnEllerOpprett(listOf(ident)),
-                periode
+                periode,
+                periode.fom
             )
         }
     }

@@ -36,7 +36,11 @@ class ForeslåVedtakStegTest {
     fun `hvis ingen avklaringsbehov skal det ikke gi foreslå vedtak`() {
         val person = Person(random.nextLong(), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
-        val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val sak = sakRepository.finnEllerOpprett(
+            person,
+            Periode(LocalDate.now(), LocalDate.now().plusYears(1)),
+            søknadsdato = LocalDate.now()
+        )
         val behandling =
             behandlingRepository.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
         val kontekstMedPerioder = FlytKontekstMedPerioder(
@@ -56,7 +60,11 @@ class ForeslåVedtakStegTest {
     fun `hvis avklaringsbehov skal det gi foreslå vedtak`() {
         val person = Person(random.nextLong(), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
-        val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val sak = sakRepository.finnEllerOpprett(
+            person,
+            Periode(LocalDate.now(), LocalDate.now().plusYears(1)),
+            søknadsdato = LocalDate.now()
+        )
         val behandling =
             behandlingRepository.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
@@ -82,7 +90,11 @@ class ForeslåVedtakStegTest {
     fun `hvis avklaringsbehov skal det gi foreslå vedtak også etter tilbakehopp`() {
         val person = Person(random.nextLong(), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
-        val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val sak = sakRepository.finnEllerOpprett(
+            person,
+            Periode(LocalDate.now(), LocalDate.now().plusYears(1)),
+            søknadsdato = LocalDate.now()
+        )
         val behandling =
             behandlingRepository.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)

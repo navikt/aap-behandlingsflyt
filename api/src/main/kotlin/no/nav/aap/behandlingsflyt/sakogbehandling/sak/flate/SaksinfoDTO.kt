@@ -11,5 +11,5 @@ data class SaksinfoDTO(
     val periode: Periode,
     val ident: String,
     val resultat: ResultatKode? = null,
-    val søknadstidspunkt: LocalDate,
+    val søknadsdato: LocalDate,
 )

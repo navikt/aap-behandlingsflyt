@@ -304,7 +304,7 @@ class SamordningStegTest {
                 sakId = behandling.sakId,
                 behandlingId = behandling.id,
                 forrigeBehandlingId = behandling.forrigeBehandlingId,
-                behandlingType =behandling.typeBehandling(),
+                behandlingType = behandling.typeBehandling(),
                 vurdering = VurderingTilBehandling(
                     vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
                     årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
@@ -479,7 +479,11 @@ class SamordningStegTest {
             FakePdlGateway,
             InMemoryPersonRepository,
             InMemorySakRepository,
-        ).finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        ).finnEllerOpprett(
+            ident(),
+            Periode(LocalDate.now(), LocalDate.now().plusYears(1)),
+            søknadsdato = LocalDate.now()
+        )
     }
 
     private fun opprettBehandling(sak: Sak): Behandling {

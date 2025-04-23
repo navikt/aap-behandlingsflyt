@@ -108,7 +108,7 @@ fun main() {
                                 PersonRepositoryImpl(connection),
                                 SakRepositoryImpl(connection)
                             )
-                            val sak = sakService.finnEllerOpprett(ident, periode)
+                            val sak = sakService.finnEllerOpprett(ident, periode, søknadsdato = dto.søknadsdato ?: periode.fom)
 
                             val flytJobbRepository = FlytJobbRepository(connection)
 

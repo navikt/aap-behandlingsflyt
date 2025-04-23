@@ -153,12 +153,13 @@ class StatistikkJobbUtførerTest {
                 }
             }
 
+            val rettighetsperiode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
             val sak = PersonOgSakService(
                 identGateway,
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection)
             ).finnEllerOpprett(
-                ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
+                ident, periode = rettighetsperiode, søknadsdato = rettighetsperiode.fom
             )
 
             val opprettetBehandling = behandlingRepository.opprettBehandling(
@@ -265,12 +266,13 @@ class StatistikkJobbUtførerTest {
                 }
             }
 
+            val rettighetsperiode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
             val sak = PersonOgSakService(
                 identGateway,
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection)
             ).finnEllerOpprett(
-                ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
+                ident, periode = rettighetsperiode, søknadsdato = rettighetsperiode.fom
             )
 
             val opprettetBehandling = behandlingRepository.opprettBehandling(
@@ -479,7 +481,8 @@ class StatistikkJobbUtførerTest {
                         aktivIdent = true
                     )
                 )
-            ), Periode(LocalDate.now(), LocalDate.now().plusDays(1))
+            ), Periode(LocalDate.now(), LocalDate.now().plusDays(1)),
+            søknadsdato = LocalDate.now()
         )
         InMemorySakRepository.oppdaterSakStatus(sak.id, UTREDES)
         val sakId = sak.id

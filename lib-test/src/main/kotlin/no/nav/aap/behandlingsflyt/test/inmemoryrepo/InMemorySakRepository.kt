@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.*
 import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicLong
 
 object InMemorySakRepository : SakRepository {
@@ -14,7 +15,8 @@ object InMemorySakRepository : SakRepository {
 
     override fun finnEllerOpprett(
         person: Person,
-        periode: Periode
+        periode: Periode,
+        søknadsdato: LocalDate,
     ): Sak {
         synchronized(lock) {
             val eksisterendeSak = memory.values.filter { sak -> sak.person == person }
@@ -29,7 +31,7 @@ object InMemorySakRepository : SakRepository {
                         saksnummer = Saksnummer.valueOf(id.id),
                         person = person,
                         rettighetsperiode = periode,
-                        søknadstidspunkt = periode.fom
+                        søknadsdato = søknadsdato
                     )
                 memory.put(id, sak)
 

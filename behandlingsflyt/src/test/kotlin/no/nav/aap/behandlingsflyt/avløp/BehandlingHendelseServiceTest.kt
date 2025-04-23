@@ -49,7 +49,7 @@ class BehandlingHendelseServiceTest {
             saksnummer = Saksnummer("1"),
             person = Person(0, UUID.randomUUID(), listOf(Ident("123", true))),
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now()),
-            søknadstidspunkt = LocalDate.now(),
+            søknadsdato = LocalDate.now(),
         )
 
         val avklaringsbehovene = mockk<Avklaringsbehovene>()

@@ -111,7 +111,8 @@ class TilkjentYtelseRepositoryImplTest {
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(
             ident(),
-            periode
+            periode,
+            periode.fom
         )
     }
 

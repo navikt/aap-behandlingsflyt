@@ -154,7 +154,8 @@ class TilkjentYtelseAPITest {
             identifikator = UUID.randomUUID(),
             identer = listOf(Ident("0".repeat(11)))
         ),
-        periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+        periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1)),
+        søknadsdato = LocalDate.now(),
     )
 
     private fun ApplicationTestBuilder.createClient() = createClient {

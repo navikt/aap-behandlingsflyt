@@ -35,7 +35,7 @@ class VilkårsresultatRepositoryImplTest {
             val repo = VilkårsresultatRepositoryImpl(connection)
 
             val sak =
-                personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+                personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)), søknadsdato = LocalDate.now())
             val behandling = behandlingRepo.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
             val behandlingId = behandling.id
 

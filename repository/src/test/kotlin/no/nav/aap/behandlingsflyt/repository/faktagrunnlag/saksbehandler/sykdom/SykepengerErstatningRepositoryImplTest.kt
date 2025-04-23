@@ -47,11 +47,12 @@ class SykepengerErstatningRepositoryImplTest {
     }
 
     private fun sak(connection: DBConnection): Sak {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
         return PersonOgSakService(
             FakePdlGateway,
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        ).finnEllerOpprett(ident(), periode, periode.fom)
     }
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {

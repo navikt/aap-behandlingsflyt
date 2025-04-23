@@ -190,7 +190,7 @@ class InformasjonskravGrunnlagTest {
             FakePdlGateway,
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident, periode)
+        ).finnEllerOpprett(ident, periode, periode.fom)
         val behandling = SakOgBehandlingService(
             GrunnlagKopierer(connection), SakRepositoryImpl(connection),
             BehandlingRepositoryImpl(connection)

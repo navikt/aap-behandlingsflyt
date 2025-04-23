@@ -108,6 +108,7 @@ class FatteVedtakLøserTest {
         val sak = InMemorySakRepository.finnEllerOpprett(
             person,
             periode = Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
+            søknadsdato = LocalDate.now(),
         )
         val behandling = InMemoryBehandlingRepository.opprettBehandling(
             sakId = sak.id,

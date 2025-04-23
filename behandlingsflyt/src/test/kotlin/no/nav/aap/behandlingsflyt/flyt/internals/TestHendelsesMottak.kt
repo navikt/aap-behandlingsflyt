@@ -29,7 +29,7 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
                 PdlIdentGateway,
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection)
-            ).finnEllerOpprett(key, hendelse.periode())
+            ).finnEllerOpprett(key, hendelse.periode(), hendelse.periode().fom)
             sak.saksnummer
         }
         // Legg til kø for sak, men mocker ved å kalle videre bare

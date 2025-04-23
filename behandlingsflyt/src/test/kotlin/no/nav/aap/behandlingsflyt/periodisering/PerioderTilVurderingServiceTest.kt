@@ -36,7 +36,8 @@ class PerioderTilVurderingServiceTest {
                 identifikator = UUID.randomUUID(),
                 identer = listOf(),
                 id = 0
-            ), periode
+            ), periode,
+            søknadsdato = LocalDate.now()
         )
 
         val behandling = InMemoryBehandlingRepository.opprettBehandling(
@@ -83,7 +84,8 @@ class PerioderTilVurderingServiceTest {
                 identifikator = UUID.randomUUID(),
                 identer = listOf(),
                 id = 0
-            ), oppdatertRettighetsperiode
+            ), oppdatertRettighetsperiode,
+            søknadsdato = LocalDate.now()
         )
 
         val behandling = InMemoryBehandlingRepository.opprettBehandling(

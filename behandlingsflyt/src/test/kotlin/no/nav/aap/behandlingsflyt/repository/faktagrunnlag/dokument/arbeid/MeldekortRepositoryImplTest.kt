@@ -116,7 +116,7 @@ class MeldekortRepositoryImplTest {
             FakePdlGateway,
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), periode)
+        ).finnEllerOpprett(ident(), periode, periode.fom)
     }
 
     private fun behandling(connection: DBConnection, sak: Sak, årsak: ÅrsakTilBehandling = MOTTATT_SØKNAD): Behandling {

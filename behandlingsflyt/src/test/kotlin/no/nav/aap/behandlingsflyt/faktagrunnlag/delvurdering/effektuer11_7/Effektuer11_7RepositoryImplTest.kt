@@ -131,11 +131,12 @@ class Effektuer11_7RepositoryImplTest {
     }
 
     private fun sak(connection: DBConnection): Sak {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         return PersonOgSakService(
             FakePdlGateway,
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+        ).finnEllerOpprett(ident(), periode, periode.fom)
     }
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {
