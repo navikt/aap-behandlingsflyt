@@ -168,7 +168,6 @@ class AvklaringsbehovOrkestrator(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
         avklaringsbehovene.validateTilstand(behandling = behandling)
 
-
         avklaringsbehovene.leggTil(
             definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
             funnetISteg = behandling.aktivtSteg(),
