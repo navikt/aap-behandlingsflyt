@@ -2463,63 +2463,64 @@ class FlytOrkestratorTest {
 
     @Test
     fun `kan tilbakeføre behandling til start`() {
-        dataSource.transaction { connection ->
-            val ident = ident()
-            val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-            val behandlingRepo = BehandlingRepositoryImpl(connection)
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-            // Oppretter vanlig søknad
-            hendelsesMottak.håndtere(
-                ident, DokumentMottattPersonHendelse(
-                    journalpost = JournalpostId("1021234"),
-                    mottattTidspunkt = LocalDateTime.now(),
-                    strukturertDokument = StrukturertDokument(
-                        SøknadV0(
-                            student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
-                            medlemskap = SøknadMedlemskapDto(
-                                "JA", null, "JA", null,
-                                listOf(
-                                    UtenlandsPeriodeDto(
-                                        "SWE",
-                                        LocalDate.now().plusMonths(1),
-                                        LocalDate.now().minusMonths(1),
-                                        "JA",
-                                        null,
-                                        LocalDate.now().plusMonths(1),
-                                        LocalDate.now().minusMonths(1),
-                                    )
+        // Oppretter vanlig søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("1021234"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto(
+                            "JA", null, "JA", null,
+                            listOf(
+                                UtenlandsPeriodeDto(
+                                    "SWE",
+                                    LocalDate.now().plusMonths(1),
+                                    LocalDate.now().minusMonths(1),
+                                    "JA",
+                                    null,
+                                    LocalDate.now().plusMonths(1),
+                                    LocalDate.now().minusMonths(1),
                                 )
-                            ),
+                            )
                         ),
                     ),
-                    periode = periode
-                )
+                ),
+                periode = periode
             )
+        )
 
-            util.ventPåSvar()
+        util.ventPåSvar()
 
-            val sak = hentSak(ident, periode)
-            var behandling = hentBehandling(sak.id)
-            val behandlingId = behandling.id
+        val sak = hentSak(ident, periode)
+        var behandling = hentBehandling(sak.id)
+        val behandlingId = behandling.id
 
-            // Validér avklaring
-            var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandlingId)
-            assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
+        // Validér avklaring
+        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandlingId)
+        assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
 
-            // Trigger manuell vurdering
-            behandling = løsAvklaringsBehov(
-                behandling, AvklarLovvalgMedlemskapLøsning(
-                    manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                        LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", EØSLand.NOR),
-                        MedlemskapVedSøknadsTidspunktDto(null, true)
-                    ),
-                    behovstype = AvklaringsbehovKode.`5017`
-                )
+        // Trigger manuell vurdering
+        løsAvklaringsBehov(
+            behandling, AvklarLovvalgMedlemskapLøsning(
+                manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
+                    LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", EØSLand.NOR),
+                    MedlemskapVedSøknadsTidspunktDto(null, true)
+                ),
+                behovstype = AvklaringsbehovKode.`5017`
             )
+        )
 
-            // Validér avklaring
-            åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandlingId)
-            assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_SYKDOM })
+        // Validér avklaring
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandlingId)
+        assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_SYKDOM })
+
+        dataSource.transaction { connection ->
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
             assertTrue(behandlingRepo.hent(behandlingId).aktivtSteg() == StegType.AVKLAR_SYKDOM)
 
             // Tilbakefør med hjelpefunksjon
