@@ -19,6 +19,7 @@ data class TjenestePensjonYtelse(
     val ytelseType: YtelseTypeCode,
     val datoYtelseIverksattFom: LocalDate,
     val datoYtelseIverksattTom: LocalDate?, // Nullable to handle null values
+    val ytelseId: Long
 )
 
 
@@ -40,7 +41,8 @@ data class TjenestePensjonRespons(
                         datoInnmeldtYtelseFom = ytelse.datoInnmeldtYtelseFom,
                         ytelseType = ytelse.ytelseType,
                         datoYtelseIverksattFom = ytelse.datoYtelseIverksattFom,
-                        datoYtelseIverksattTom = ytelse.datoYtelseIverksattTom
+                        datoYtelseIverksattTom = ytelse.datoYtelseIverksattTom,
+                        ytelseId = ytelse.ytelseId
                     )
                 }
             )

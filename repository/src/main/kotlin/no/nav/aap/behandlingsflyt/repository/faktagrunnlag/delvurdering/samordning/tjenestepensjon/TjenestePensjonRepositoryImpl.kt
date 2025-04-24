@@ -88,7 +88,8 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
                         datoInnmeldtYtelseFom = it.getLocalDateOrNull("INNMELDT_FOM"),
                         datoYtelseIverksattFom = it.getLocalDate("IVERKSATT_FOM"),
                         datoYtelseIverksattTom = it.getLocalDateOrNull("IVERKSATT_TOM"),
-                        ytelseType = YtelseTypeCode.valueOf(it.getString("YTELSE_TYPE"))
+                        ytelseType = YtelseTypeCode.valueOf(it.getString("YTELSE_TYPE")),
+                        ytelseId = it.getLong("EXTERN_ID")
                     )
                 }
             }
@@ -143,8 +144,8 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
 
     private fun lagreYtelse(ytelseDto: List<TjenestePensjonYtelse>, forholdKey: Long) {
         val sql = """
-            INSERT INTO TJENESTEPENSJON_YTELSE (TJENESTEPENSJON_ORDNING_ID, YTELSE_TYPE, INNMELDT_FOM, IVERKSATT_FOM, IVERKSATT_TOM)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO TJENESTEPENSJON_YTELSE (TJENESTEPENSJON_ORDNING_ID, YTELSE_TYPE, INNMELDT_FOM, IVERKSATT_FOM, IVERKSATT_TOM, EXTERN_ID)
+            VALUES (?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         dbConnection.executeBatch(sql, ytelseDto) {
@@ -154,6 +155,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
                 setLocalDate(3, it.datoInnmeldtYtelseFom)
                 setLocalDate(4, it.datoYtelseIverksattFom)
                 setLocalDate(5, it.datoYtelseIverksattTom)
+                setLong(6, it.ytelseId)
             }
         }
     }
