@@ -46,7 +46,7 @@ data class TjenestePensjonRespons(
                     )
                 }
             )
-        }
+        }.filter { it.ytelser.isNotEmpty() }
     }
 }
 
