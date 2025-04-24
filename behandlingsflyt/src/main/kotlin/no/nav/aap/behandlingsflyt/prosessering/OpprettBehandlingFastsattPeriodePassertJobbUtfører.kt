@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
@@ -33,10 +32,6 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
             return
         }
 
-        if (sak.status() != Status.LØPENDE) {
-            return
-        }
-
         val behandling = behandlingRepository.finnSisteBehandlingFor(
             sak.id, listOf(
                 TypeBehandling.Førstegangsbehandling,
@@ -44,7 +39,7 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
             )
         ) ?: return
 
-        if (!behandling.status().erAvsluttet() && ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT in behandling.årsaker().map { it.type }) {
+        if (behandling.status().erÅpen() && ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT in behandling.årsaker().map { it.type }) {
             return
         }
 

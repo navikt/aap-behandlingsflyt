@@ -30,22 +30,14 @@ class OpprettJobbForFastsattPeriodeJobbUtfører(
             )
         }
 
-        override fun type(): String {
-            return "batch.OpprettJobbForFastsattPeriode"
-        }
+        override fun type() = "batch.OpprettJobbForFastsattPeriode"
 
-        override fun navn(): String {
-            return "Start jobb for å sjekke behov for revurdering pga manglende meldekort"
-        }
+        override fun navn() = "Start jobb for å sjekke behov for revurdering pga manglende meldekort"
 
-        override fun beskrivelse(): String {
-            return """
-                Start jobb for å sjekke om fastsatt dager er passert.
-                """.trimIndent()
-        }
+        override fun beskrivelse() = """
+            Start jobb for å sjekke om fastsatt dager er passert.
+            """.trimIndent()
 
-        override fun cron(): CronExpression {
-            return CronExpression.createWithoutSeconds("10 * * * *")
-        }
+        override fun cron() = CronExpression.createWithoutSeconds("10 2 * * 2")
     }
 }
