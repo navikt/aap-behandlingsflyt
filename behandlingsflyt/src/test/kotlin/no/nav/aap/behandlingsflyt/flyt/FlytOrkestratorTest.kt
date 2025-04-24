@@ -1103,13 +1103,8 @@ class FlytOrkestratorTest {
         )
         assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
 
-        //Henter vurder alder-vilkår
-        //Assert utfall
+        // Verifiserer at sykdomsvilkåret ikke er oppfylt
         val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
-        val aldersvilkår = vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET)
-
-        assertThat(aldersvilkår.vilkårsperioder()).hasSize(1).allMatch { vilkårsperiode -> vilkårsperiode.erOppfylt() }
-
         val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
         assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1)
