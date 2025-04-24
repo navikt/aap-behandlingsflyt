@@ -4,7 +4,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.SamhandlerForholdDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.SamhandlerYtelseDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonOrdning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TpOrdning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
@@ -38,39 +40,27 @@ class TjenestePensjonRepositoryImplTest() {
             val sak = sak(dbConnect)
             val behandling = behandling(dbConnect, sak)
 
-            val tjenestePensjon = listOf(SamhandlerForholdDto(
-                samtykkeSimulering = false,
-                kilde = "PP10",
-                tpNr = "3010",
-                ordning = TpOrdning(
+            val tjenestePensjon = listOf(TjenestePensjonForhold(
+                ordning = TjenestePensjonOrdning(
                     navn = "Statens Pensjon Kasse",
                     tpNr = "3010",
-                    orgNr = "123445675645",
-                    tssId = "8000123455666",
-                    alias = emptyList()
+                    orgNr = "123445675645"
                 ),
-                harSimulering = false,
-                harUtlandsPensjon = false,
-                datoSamtykkeGitt = null,
                 ytelser = listOf(
-                    SamhandlerYtelseDto(
+                    TjenestePensjonYtelse(
                         datoInnmeldtYtelseFom = null,
                         ytelseType = YtelseTypeCode.ALDER,
                         datoYtelseIverksattFom = LocalDate.of(2020, 1, 1),
                         datoYtelseIverksattTom = LocalDate.of(2025,4,22),
-                        changeStamp = null,
-                        ytelseId = 123
+
                     ),
-                    SamhandlerYtelseDto(
+                    TjenestePensjonYtelse(
                         datoInnmeldtYtelseFom = null,
                         ytelseType = YtelseTypeCode.BETINGET_TP,
                         datoYtelseIverksattFom = LocalDate.of(2020, 1, 1),
                         datoYtelseIverksattTom = null,
-                        changeStamp = null,
-                        ytelseId = 222
                     )
-                ),
-                changeStampDate = null
+                )
             ))
 
             TjenestePensjonRepositoryImpl(dbConnect).lagre(behandling.id, tjenestePensjon)

@@ -22,21 +22,14 @@ CREATE TABLE TJENESTEPENSJON_ORDNING
 (
     ID                           BIGSERIAL PRIMARY KEY,
     TJENESTEPENSJON_ORDNINGER_ID BIGINT NOT NULL REFERENCES TJENESTEPENSJON_ORDNINGER (ID),
-    samtykkeSimulering           BOOL   NOT NULL,
-    harUtlandsPensjon            BOOL   NOT NULL,
-    datoSamtykkeGitt             DATE,
-    navn                         TEXT   NOT NULL,
+    NAVN                         TEXT   NOT NULL,
     tpNr                         TEXT   NOT NULL,
-    orgNr                        TEXT   NOT NULL,
-    tssId                        TEXT   NOT NULL,
-    harSimulering                BOOL   NOT NULL,
-    kilde                        TEXT   NOT NULL
+    orgNr                        TEXT   NOT NULL
 );
 
-CREATE TABLE TJENESTEPENSJON_YTELSE_2
+CREATE TABLE TJENESTEPENSJON_YTELSE
 (
     ID                         BIGSERIAL PRIMARY KEY,
-    ytelseId_extern            BIGINT NOT NULL,
     TJENESTEPENSJON_ORDNING_ID BIGINT NOT NULL REFERENCES TJENESTEPENSJON_ORDNING (ID),
     YTELSE_TYPE                TEXT   NOT NULL,
     INNMELDT_FOM               DATE,

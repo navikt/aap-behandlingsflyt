@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.samordning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.SamhandlerForholdDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -30,24 +30,7 @@ class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
         tokenProvider = ClientCredentialsTokenProvider,
     )
 
-    fun hentFullTjenestePensjon(ident: String){
-        val httpRequest = GetRequest(
-            additionalHeaders = listOf(
-                Header("Accept", "application/json"),
-                Header("fnr", ident),
-            )
-        )
-
-        client.get(
-            uri = url,
-            request = httpRequest,
-            mapper = { body, _ ->
-                fromJson<TjenestePensjon>(body)
-            }
-        )
-    }
-
-    override fun hentTjenestePensjon(ident: String, periode: Periode): List<SamhandlerForholdDto> {
+    override fun hentTjenestePensjon(ident: String, periode: Periode): List<TjenestePensjonForhold> {
         val httpRequest = GetRequest(
             additionalHeaders = listOf(
                 Header("Accept", "application/json"),
@@ -59,8 +42,8 @@ class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
             uri = URI.create("${url}?fomDate=${periode.fom}&tomDate=${periode.tom}"),
             request = httpRequest,
             mapper = { body, _ ->
-                fromJson<TjenestePensjonRespons>(body)
+                fromJson<TjenestePensjonRespons>(body).toIntern()
             }
-        )).forhold
+        ))
     }
 }

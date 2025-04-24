@@ -77,7 +77,7 @@ class TjenestePensjonService(
     private fun hentTjenestePensjon(
         personIdent: String,
         rettigetsperiode: Periode
-    ): List<SamhandlerForholdDto> {
+    ): List<TjenestePensjonForhold> {
         return tpGateway.hentTjenestePensjon(
                 personIdent,
                 rettigetsperiode
@@ -85,8 +85,8 @@ class TjenestePensjonService(
     }
 
     private fun harEndringerITjenestePensjon(
-        eksisterendeData: List<SamhandlerForholdDto>?,
-        tjenestePensjon: List<SamhandlerForholdDto>
+        eksisterendeData: List<TjenestePensjonForhold>?,
+        tjenestePensjon: List<TjenestePensjonForhold>
     ): Boolean {
         return  eksisterendeData.isNullOrEmpty() || eksisterendeData != tjenestePensjon
     }
