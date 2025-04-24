@@ -9,6 +9,7 @@ data class ManuellVurderingForLovvalgMedlemskap(
     val lovvalgVedSøknadsTidspunkt: LovvalgVedSøknadsTidspunktDto,
     val medlemskapVedSøknadsTidspunkt: MedlemskapVedSøknadsTidspunktDto?,
     val vurdertAv: String,
+    val vurdertDato: LocalDate,
     val overstyrt: Boolean = false
 )
 

@@ -61,7 +61,8 @@ class MedlemskapArbeidInntektRepositoryImplTest {
             ManuellVurderingForLovvalgMedlemskap(
                 LovvalgVedSøknadsTidspunktDto(begrunnelse, EØSLand.NOR),
                 MedlemskapVedSøknadsTidspunktDto(begrunnelse, true),
-                "SAKSBEHANDLER"
+                "SAKSBEHANDLER",
+                LocalDate.now()
             )
         )
         repo.lagreOppgittUtenlandsOppplysninger(behandlingId, JournalpostId("1"), UtenlandsOppholdData(true, false, false, false, null))

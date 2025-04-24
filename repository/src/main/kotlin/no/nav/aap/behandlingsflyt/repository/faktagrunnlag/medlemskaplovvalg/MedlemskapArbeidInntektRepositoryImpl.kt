@@ -78,7 +78,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
 
         val manuellVurderingQuery = """
-            INSERT INTO LOVVALG_MEDLEMSKAP_MANUELL_VURDERING (tekstvurdering_lovvalg, lovvalgs_land, tekstvurdering_medlemskap, var_medlem_i_folketrygden, overstyrt, vurdert_av) VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO LOVVALG_MEDLEMSKAP_MANUELL_VURDERING (tekstvurdering_lovvalg, lovvalgs_land, tekstvurdering_medlemskap, var_medlem_i_folketrygden, overstyrt, vurdert_av, opprettet_tid) VALUES (?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         val manuellVurderingId = connection.executeReturnKey(manuellVurderingQuery) {
@@ -89,6 +89,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setBoolean(4, manuellVurdering.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd)
                 setBoolean(5, overstyrt)
                 setString(6, manuellVurdering.vurdertAv)
+                setLocalDate(7, manuellVurdering.vurdertDato)
             }
         }
 
@@ -164,7 +165,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                             varMedlemIFolketrygd = it.getBooleanOrNull("var_medlem_i_folketrygden")
                         ),
                         overstyrt = it.getBoolean("overstyrt"),
-                        vurdertAv = it.getString("vurdert_av")
+                        vurdertAv = it.getString("vurdert_av"),
+                        vurdertDato = it.getLocalDate("opprettet_tid")
                     ),
                     vurdertDato = it.getLocalDate("opprettet_tid")
                 )
@@ -322,7 +324,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                         varMedlemIFolketrygd = it.getBooleanOrNull("var_medlem_i_folketrygden")
                     ),
                     overstyrt = it.getBoolean("overstyrt"),
-                    vurdertAv = it.getString("vurdert_av")
+                    vurdertAv = it.getString("vurdert_av"),
+                    vurdertDato = it.getLocalDate("opprettet_tid"),
                 )
             }
         }

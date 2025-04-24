@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapAr
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDate
 
 class AvklarLovvalgMedlemskapLøser(connection: DBConnection): AvklaringsbehovsLøser<AvklarLovvalgMedlemskapLøsning> {
     private val repositoryProvider = RepositoryProvider(connection)
@@ -18,6 +19,7 @@ class AvklarLovvalgMedlemskapLøser(connection: DBConnection): AvklaringsbehovsL
                 lovvalgVedSøknadsTidspunkt = løsning.manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt,
                 medlemskapVedSøknadsTidspunkt = løsning.manuellVurderingForLovvalgMedlemskap.medlemskapVedSøknadsTidspunkt,
                 vurdertAv = kontekst.bruker.ident,
+                vurdertDato = LocalDate.now(),
                 overstyrt = false
             )
         )

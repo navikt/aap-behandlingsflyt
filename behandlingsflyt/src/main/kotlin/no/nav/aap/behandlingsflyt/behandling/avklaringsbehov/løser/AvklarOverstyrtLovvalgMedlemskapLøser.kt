@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDate
 
 class AvklarOverstyrtLovvalgMedlemskapLøser(connection: DBConnection): AvklaringsbehovsLøser<AvklarOverstyrtLovvalgMedlemskapLøsning> {
     private val repositoryProvider = RepositoryProvider(connection)
@@ -26,6 +27,7 @@ class AvklarOverstyrtLovvalgMedlemskapLøser(connection: DBConnection): Avklarin
                 lovvalgVedSøknadsTidspunkt = løsning.manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt,
                 medlemskapVedSøknadsTidspunkt = løsning.manuellVurderingForLovvalgMedlemskap.medlemskapVedSøknadsTidspunkt,
                 vurdertAv = kontekst.bruker.ident,
+                vurdertDato = LocalDate.now(),
                 overstyrt = true
             )
         )
