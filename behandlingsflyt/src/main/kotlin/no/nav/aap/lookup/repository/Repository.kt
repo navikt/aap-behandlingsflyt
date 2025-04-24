@@ -13,6 +13,6 @@ private val logger = LoggerFactory.getLogger("no.nav.aap.lookup.repository")
  */
 interface Repository {
     fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        logger.info("kopier-metoden er ikke implementert for ${this::class.simpleName}. Er dette korrekt? Hvis ikke, implementer dummy-metode.")
+        logger.warn("kopier-metoden er ikke implementert for ${this::class.simpleName}. Er dette korrekt? Hvis ikke, implementer dummy-metode.")
     }
 }

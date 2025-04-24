@@ -123,14 +123,6 @@ data class Vurdering(
         return requireNotNull(meldeperiode)
     }
 
-    fun arbeidsGradering(): ArbeidsGradering {
-        return when {
-            gradering == null -> error("gradering er ikke lagt til enda")
-            harRett() -> gradering
-            else -> gradering.copy(gradering = Prosent.`0_PROSENT`)
-        }
-    }
-
     fun arbeidsgradering(): ArbeidsGradering {
         return when {
             gradering == null -> error("gradering er ikke lagt til enda")
@@ -167,14 +159,6 @@ data class Vurdering(
             return UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP
         }
         throw IllegalStateException("Ukjent avslagsårsak")
-    }
-
-    internal fun meldepliktUtfall(): Utfall {
-        return meldepliktVurdering?.utfall ?: Utfall.IKKE_VURDERT
-    }
-
-    internal fun meldepliktAvslagsårsak(): UnderveisÅrsak? {
-        return meldepliktVurdering?.årsak
     }
 
     fun skalReduseresDagsatser(): Boolean {
