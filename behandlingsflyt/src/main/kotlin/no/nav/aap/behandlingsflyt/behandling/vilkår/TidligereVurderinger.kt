@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsb
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.outerJoin
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -150,10 +149,6 @@ class TidligereVurderingerImpl(
         kontekst: FlytKontekstMedPerioder,
         førSteg: StegType
     ): UtfallForFørstegangsbehandling {
-        if (Miljø.erProd()) {
-            return UKJENT
-        }
-
         if (kontekst.behandlingType != TypeBehandling.Førstegangsbehandling) {
             return UKJENT
         }
