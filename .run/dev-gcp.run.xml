@@ -25,17 +25,17 @@
       <env name="INTEGRASJON_PESYS_SCOPE" value="api://dev-fss.pensjon-q2.pensjon-pen-q2/.default" />
       <env name="INTEGRASJON_TILGANG_URL" value="https://aap-tilgang.intern.dev.nav.no" />
       <env name="INTEGRASJON_TILGANG_SCOPE" value="api://dev-gcp.aap.tilgang/.default" />
-      <env name="INTEGRASJON_TILGANG_AZP" value="dev-gcp:aap:tilgang" />
+      <env name="INTEGRASJON_TILGANG_AZP" value="0612f13d-08fb-44ff-a5ac-1233e2fec0fc" />
       <env name="INTEGRASJON_MEDL_URL" value="https://medlemskap-medl-api.dev-fss-pub.nais.io/api/v1/medlemskapsunntak" />
       <env name="INTEGRASJON_MEDL_SCOPE" value="api://dev-fss.team-rocket.medlemskap-medl-api/.default" />
-      <env name="INTEGRASJON_POSTMOTTAK_AZP" value="dev-gcp:aap:postmottak-backend" />
+      <env name="INTEGRASJON_POSTMOTTAK_AZP" value="68642ce3-a231-4c82-b106-7a2f4ed899bc" />
       <env name="INTEGRASJON_FORELDREPENGER_URL" value="https://fpabakus.dev-fss-pub.nais.io/fpabakus/ekstern/api/ytelse/v1" />
       <env name="INTEGRASJON_FORELDREPENGER_SCOPE" value="api://dev-fss.teamforeldrepenger.fpabakus/.default" />
       <env name="INTEGRASJON_SYKEPENGER_URL" value="http://spokelse.tbd" />
       <env name="INTEGRASJON_SYKEPENGER_SCOPE" value="api://dev-gcp.tbd.spokelse/.default" />
       <env name="INTEGRASJON_BREV_URL" value="http://brev" />
       <env name="INTEGRASJON_BREV_SCOPE" value="api://dev-gcp.aap.brev/.default" />
-      <env name="INTEGRASJON_BREV_AZP" value="dev-gcp:aap:brev" />
+      <env name="INTEGRASJON_BREV_AZP" value="d1c38f80-8965-4e41-8831-8a81052ac1e9" />
       <env name="INTEGRASJON_MELDEKORT_URL" value="http://meldekort-backend" />
       <env name="INTEGRASJON_MELDEKORT_SCOPE" value="api://dev-gcp.aap.meldekort-backend/.default" />
       <env name="INTEGRASJON_UTBETAL_URL" value="http://utbetal" />
@@ -43,8 +43,8 @@
       <env name="INTEGRASJON_UTBETAL_AZP" value="dev-gcp:aap:utbetal" />
       <env name="INTEGRASJON_DOKUMENTINNHENTING_URL" value="https://aap-dokumentinnhenting.intern.dev.nav.no" />
       <env name="INTEGRASJON_DOKUMENTINNHENTING_SCOPE" value="api://dev-gcp.aap.dokumentinnhenting/.default" />
-      <env name="INTEGRASJON_DOKUMENTINNHENTING_AZP" value="dev-gcp:aap:dokumentinnhenting" />
-      <env name="INTEGRASJON_SAKSBEHANDLING_AZP" value="dev-gcp:aap:saksbehandling" />
+      <env name="INTEGRASJON_DOKUMENTINNHENTING_AZP" value="4745039f-999c-476d-805f-c4c1f23b8188" />
+      <env name="INTEGRASJON_SAKSBEHANDLING_AZP" value="4920ff1d-0f6b-407f-8630-695e3360d3d3" />
       <env name="INTEGRASJON_AAREG_URL" value="https://aareg-services-q2.dev-fss-pub.nais.io" />
       <env name="INTEGRASJON_AAREG_SCOPE" value="api://dev-fss.arbeidsforhold.aareg-services-nais/.default" />
       <env name="INTEGRASJON_INNTEKTSKOMPONENTEN_URL" value="https://team-inntekt-proxy.dev-fss-pub.nais.io/proxy/inntektskomponenten-q2/rs/api/v1" />
