@@ -44,17 +44,17 @@ class TjenestePensjonRepositoryImplTest() {
                 ),
                 ytelser = listOf(
                     TjenestePensjonYtelse(
-                        datoInnmeldtYtelseFom = null,
+                        innmeldtYtelseFom = null,
                         ytelseType = YtelseTypeCode.ALDER,
-                        datoYtelseIverksattFom = LocalDate.of(2020, 1, 1),
-                        datoYtelseIverksattTom = LocalDate.of(2025,4,22),
+                        ytelseIverksattFom = LocalDate.of(2020, 1, 1),
+                        ytelseIverksattTom = LocalDate.of(2025,4,22),
                         ytelseId = 1234L
                     ),
                     TjenestePensjonYtelse(
-                        datoInnmeldtYtelseFom = null,
+                        innmeldtYtelseFom = null,
                         ytelseType = YtelseTypeCode.BETINGET_TP,
-                        datoYtelseIverksattFom = LocalDate.of(2020, 1, 1),
-                        datoYtelseIverksattTom = null,
+                        ytelseIverksattFom = LocalDate.of(2020, 1, 1),
+                        ytelseIverksattTom = null,
                         ytelseId = 1235L
                     )
                 )

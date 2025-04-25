@@ -22,10 +22,10 @@ data class TjenestePensjonRespons(
                 ),
                 ytelser = it.ytelser.filter { it.ytelseType.isSamordningspliktigForAAP }.map { ytelse ->
                     TjenestePensjonYtelse(
-                        datoInnmeldtYtelseFom = ytelse.datoInnmeldtYtelseFom,
+                        innmeldtYtelseFom = ytelse.datoInnmeldtYtelseFom,
                         ytelseType = ytelse.ytelseType,
-                        datoYtelseIverksattFom = ytelse.datoYtelseIverksattFom,
-                        datoYtelseIverksattTom = ytelse.datoYtelseIverksattTom,
+                        ytelseIverksattFom = ytelse.datoYtelseIverksattFom,
+                        ytelseIverksattTom = ytelse.datoYtelseIverksattTom,
                         ytelseId = ytelse.ytelseId
                     )
                 }

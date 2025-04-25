@@ -82,9 +82,9 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
                 setParams { setLong(1, ordningId) }
                 setRowMapper {
                     TjenestePensjonYtelse(
-                        datoInnmeldtYtelseFom = it.getLocalDateOrNull("INNMELDT_FOM"),
-                        datoYtelseIverksattFom = it.getLocalDate("IVERKSATT_FOM"),
-                        datoYtelseIverksattTom = it.getLocalDateOrNull("IVERKSATT_TOM"),
+                        innmeldtYtelseFom = it.getLocalDateOrNull("INNMELDT_FOM"),
+                        ytelseIverksattFom = it.getLocalDate("IVERKSATT_FOM"),
+                        ytelseIverksattTom = it.getLocalDateOrNull("IVERKSATT_TOM"),
                         ytelseType = YtelseTypeCode.valueOf(it.getString("YTELSE_TYPE")),
                         ytelseId = it.getLong("EXTERN_ID")
                     )
@@ -149,9 +149,9 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
             setParams {
                 setLong(1, forholdKey)
                 setEnumName(2, it.ytelseType)
-                setLocalDate(3, it.datoInnmeldtYtelseFom)
-                setLocalDate(4, it.datoYtelseIverksattFom)
-                setLocalDate(5, it.datoYtelseIverksattTom)
+                setLocalDate(3, it.innmeldtYtelseFom)
+                setLocalDate(4, it.ytelseIverksattFom)
+                setLocalDate(5, it.ytelseIverksattTom)
                 setLong(6, it.ytelseId)
             }
         }

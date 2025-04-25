@@ -14,10 +14,10 @@ data class TjenestePensjonOrdning(
 )
 
 data class TjenestePensjonYtelse(
-    val datoInnmeldtYtelseFom: LocalDate?, // Nullable to handle null values
+    val innmeldtYtelseFom: LocalDate?, // Nullable to handle null values
     val ytelseType: YtelseTypeCode,
-    val datoYtelseIverksattFom: LocalDate,
-    val datoYtelseIverksattTom: LocalDate?, // Nullable to handle null values
+    val ytelseIverksattFom: LocalDate,
+    val ytelseIverksattTom: LocalDate?, // Nullable to handle null values
     val ytelseId: Long,
 )
 
