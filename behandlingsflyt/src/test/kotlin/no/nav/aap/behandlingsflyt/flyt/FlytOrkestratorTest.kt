@@ -176,6 +176,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -183,7 +184,6 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.lookup.gateway.GatewayRegistry
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository

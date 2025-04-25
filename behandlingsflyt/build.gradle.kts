@@ -19,6 +19,7 @@ dependencies {
     api("no.nav.aap.brev:kontrakt:0.0.102")
     api("no.nav.aap.meldekort:kontrakt:0.0.31")
     api("no.nav.aap.kelvin:motor:$komponenterVersjon")
+    api("no.nav.aap.kelvin:gateway:$komponenterVersjon")
     api("no.nav.aap.utbetal:api-kontrakt:$utbetalVersjon")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
     // TODO: fjern denne avhengigheten når alle RestClient-instanser er i repository-modulen

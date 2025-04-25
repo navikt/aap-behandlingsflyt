@@ -28,12 +28,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokumentGa
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig

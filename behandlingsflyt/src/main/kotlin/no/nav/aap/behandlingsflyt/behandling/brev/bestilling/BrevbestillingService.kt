@@ -7,8 +7,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Vedlegg
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.Bruker
-import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.util.*
 

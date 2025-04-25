@@ -28,12 +28,12 @@ import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.brev.kontrakt.Status
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationParamPathConfig

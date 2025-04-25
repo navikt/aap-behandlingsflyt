@@ -14,13 +14,13 @@ import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.gateway.Factory
 import java.net.URI
 import java.time.LocalDate
 

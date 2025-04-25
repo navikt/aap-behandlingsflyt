@@ -23,10 +23,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.Duration

@@ -23,6 +23,7 @@ import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.brev.kontrakt.Språk
 import no.nav.aap.brev.kontrakt.Vedlegg
 import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -34,7 +35,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PutRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.lookup.gateway.Factory
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.net.URI
