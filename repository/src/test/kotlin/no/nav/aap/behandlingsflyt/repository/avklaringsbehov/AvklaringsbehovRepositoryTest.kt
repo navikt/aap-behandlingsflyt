@@ -29,7 +29,7 @@ class AvklaringsbehovRepositoryTest {
 
     @Test
     fun `løs avklaringsbehov skal avslutte avklaringsbehovet`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
             val repository = AvklaringsbehovRepositoryImpl(connection)

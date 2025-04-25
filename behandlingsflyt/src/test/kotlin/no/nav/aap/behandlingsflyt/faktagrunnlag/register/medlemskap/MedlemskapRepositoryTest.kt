@@ -19,10 +19,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class MedlemskapRepositoryTest {
+internal class MedlemskapRepositoryTest {
+    private val dataSource = InitTestDatabase.freshDatabase()
+
     @Test
     fun `lagre og hente inn unntak`() {
-        val behandlingId = InitTestDatabase.dataSource.transaction { connection ->
+        val behandlingId = dataSource.transaction { connection ->
             // SETUP
             val sak = PersonOgSakService(
                 FakePdlGateway,
@@ -63,7 +65,7 @@ class MedlemskapRepositoryTest {
             behandling.id
         }
 
-        val uthentet = InitTestDatabase.dataSource.transaction { connection ->
+        val uthentet = dataSource.transaction { connection ->
             val repo = MedlemskapRepository(connection)
 
             repo.hentHvisEksisterer(behandlingId = behandlingId)

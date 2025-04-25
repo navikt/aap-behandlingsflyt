@@ -23,7 +23,7 @@ import java.time.LocalDate
 class VilkårsresultatRepositoryImplTest {
     @Test
     fun `Test oprett vilkårsresultat og hent ut igjen`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             // SETUP
             // Opprett person, sak og behandling
             val personOgSakService = PersonOgSakService(

@@ -45,7 +45,7 @@ class Effektuer11_7RepositoryImplTest {
 
     @Test
     fun `Finner ikke grunnlag hvis ikke lagret`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
@@ -56,7 +56,7 @@ class Effektuer11_7RepositoryImplTest {
 
     @Test
     fun `Lagrer og henter varsel`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val effektuer11_7Repository = Effektuer11_7RepositoryImpl(connection)
             val underveisRepository = UnderveisRepositoryImpl(connection)
 
@@ -87,7 +87,7 @@ class Effektuer11_7RepositoryImplTest {
 
     @Test
     fun `Ny vurdering når grunnlag allerede finnes`(){
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val effektuer11_7Repository = Effektuer11_7RepositoryImpl(connection)
             val underveisRepository = UnderveisRepositoryImpl(connection)
 

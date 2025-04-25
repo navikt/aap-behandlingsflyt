@@ -49,7 +49,7 @@ class AktivitetspliktInformasjonskravTest {
 
     @Test
     fun `detekterer nye dokumenter og legger dem til i grunnlaget`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = nySak(connection)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sak.id,

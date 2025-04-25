@@ -51,7 +51,7 @@ class MeldekortRepositoryImplTest {
 
     @Test
     fun `Skal lagre ned meldekort på sak`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 

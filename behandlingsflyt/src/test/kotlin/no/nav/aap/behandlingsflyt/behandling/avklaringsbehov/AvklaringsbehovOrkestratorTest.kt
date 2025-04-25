@@ -44,7 +44,7 @@ class AvklaringsbehovOrkestratorTest {
 
     @Test
     fun `behandlingHendelseService dot stoppet blir kalt når en behandling er satt på vent`() {
-        val uthentedeJobber = InitTestDatabase.dataSource.transaction { connection ->
+        val uthentedeJobber = InitTestDatabase.freshDatabase().transaction { connection ->
             val behandlingHendelseService =
                 BehandlingHendelseServiceImpl(
                     FlytJobbRepository(connection),

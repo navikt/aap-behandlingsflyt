@@ -12,7 +12,7 @@ import java.util.*
 class BehandlingReferanseServiceTest {
     @Test
     fun `kaster NoSuchElementException hvis behandling ikke funnet`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val repo = BehandlingRepositoryImpl(connection)
             val service = BehandlingReferanseService(repo)
             assertThrows<VerdiIkkeFunnetException> {

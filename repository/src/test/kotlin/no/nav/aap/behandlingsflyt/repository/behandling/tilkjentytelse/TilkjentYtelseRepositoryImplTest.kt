@@ -34,7 +34,7 @@ import java.time.LocalDate
 class TilkjentYtelseRepositoryImplTest {
     @Test
     fun `kan lagre og hente tilkjentYtelse`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
@@ -89,7 +89,7 @@ class TilkjentYtelseRepositoryImplTest {
 
     @Test
     fun `finner ingen tilkjentYtelse hvis den ikke eksisterer`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 

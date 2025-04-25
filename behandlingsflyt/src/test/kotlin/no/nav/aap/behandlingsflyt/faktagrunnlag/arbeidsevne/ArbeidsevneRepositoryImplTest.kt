@@ -45,7 +45,7 @@ class ArbeidsevneRepositoryImplTest {
 
     @Test
     fun `Finner ikke arbeidsevne hvis ikke lagret`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
@@ -57,7 +57,7 @@ class ArbeidsevneRepositoryImplTest {
 
     @Test
     fun `Lagrer og henter arbeidsevne`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
             val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null)
@@ -72,7 +72,7 @@ class ArbeidsevneRepositoryImplTest {
 
     @Test
     fun `Kopierer arbeidsevne fra en behandling til en annen`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
@@ -95,7 +95,7 @@ class ArbeidsevneRepositoryImplTest {
 
     @Test
     fun `Kopiering av arbeidsevne fra en behandling uten opplysningene skal ikke føre til feil`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             assertDoesNotThrow {
                 arbeidsevneRepository.kopier(BehandlingId(Long.MAX_VALUE - 1), BehandlingId(Long.MAX_VALUE))
@@ -105,7 +105,7 @@ class ArbeidsevneRepositoryImplTest {
 
     @Test
     fun `Kopierer arbeidsevne fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
@@ -130,7 +130,7 @@ class ArbeidsevneRepositoryImplTest {
 
     @Test
     fun `Lagrer nye arbeidsevneopplysninger som ny rad og deaktiverer forrige versjon av opplysningene`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
@@ -191,7 +191,7 @@ class ArbeidsevneRepositoryImplTest {
 
     @Test
     fun `Ved kopiering av arbeidsevneopplysninger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
 
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)

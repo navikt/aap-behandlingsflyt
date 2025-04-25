@@ -23,11 +23,13 @@ import org.junit.jupiter.api.Test
 
 import java.time.LocalDate
 
-class MedlemskapArbeidInntektRepositoryImplTest {
+internal class MedlemskapArbeidInntektRepositoryImplTest {
+    private val dataSource = InitTestDatabase.freshDatabase()
+
     @Test
     fun henterRelaterteHistoriskeVurderinger() {
         // Førstegangsbehandling
-        val behandling = InitTestDatabase.dataSource.transaction { connection ->
+        val behandling = dataSource.transaction { connection ->
             val personOgSakService = PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val repo = MedlemskapArbeidInntektRepositoryImpl(connection)
@@ -43,7 +45,7 @@ class MedlemskapArbeidInntektRepositoryImplTest {
         }
 
         // Revurdering
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val repo = MedlemskapArbeidInntektRepositoryImpl(connection)
 

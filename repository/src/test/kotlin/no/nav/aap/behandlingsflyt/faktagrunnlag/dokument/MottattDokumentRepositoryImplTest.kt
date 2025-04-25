@@ -25,12 +25,14 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class MottattDokumentRepositoryImplTest {
+internal class MottattDokumentRepositoryImplTest {
+
+    private val dataSource = InitTestDatabase.freshDatabase()
 
     @Test
     fun `lagre og hent ut igjen`() {
         // SETUP
-        val (sak, behandling) = InitTestDatabase.dataSource.transaction {
+        val (sak, behandling) = dataSource.transaction {
             val sak = sak(it)
             val behandling = behandling(it, sak)
             Pair(sak, behandling)
@@ -66,7 +68,7 @@ class MottattDokumentRepositoryImplTest {
     @Test
     fun oppdaterStatus() {
         // SETUP
-        val (sak, behandling) = InitTestDatabase.dataSource.transaction {
+        val (sak, behandling) = dataSource.transaction {
             val sak = sak(it)
             val behandling = behandling(it, sak)
             Pair(sak, behandling)
@@ -87,7 +89,7 @@ class MottattDokumentRepositoryImplTest {
         settInnDokument(mottattDokument)
 
         // VERIFY
-        InitTestDatabase.dataSource.transaction {
+        dataSource.transaction {
             MottattDokumentRepositoryImpl(it).oppdaterStatus(
                 dokumentReferanse = mottattDokument.referanse,
                 behandlingId = behandling.id,
@@ -108,7 +110,7 @@ class MottattDokumentRepositoryImplTest {
     @Test
     fun hentDokumenterAvType() {
         // SETUP
-        val (sak, _) = InitTestDatabase.dataSource.transaction {
+        val (sak, _) = dataSource.transaction {
             val sak = sak(it)
             val behandling = behandling(it, sak)
             Pair(sak, behandling)
@@ -162,7 +164,7 @@ class MottattDokumentRepositoryImplTest {
     }
 
     private fun settInnDokument(mottattDokument: MottattDokument) {
-        InitTestDatabase.dataSource.transaction {
+        dataSource.transaction {
             MottattDokumentRepositoryImpl(it).lagre(
                 mottattDokument
             )
@@ -170,7 +172,7 @@ class MottattDokumentRepositoryImplTest {
     }
 
     private fun hentDokumenterAvType(sak: Sak, brevkategori: InnsendingType): Set<MottattDokument> {
-        val res = InitTestDatabase.dataSource.transaction {
+        val res = dataSource.transaction {
             MottattDokumentRepositoryImpl(it).hentDokumenterAvType(sak.id, brevkategori)
         }
         return res
