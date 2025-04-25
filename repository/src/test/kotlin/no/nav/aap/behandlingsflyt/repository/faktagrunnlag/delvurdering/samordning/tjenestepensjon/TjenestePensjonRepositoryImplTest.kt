@@ -25,8 +25,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 
-class TjenestePensjonRepositoryImplTest() {
-
+class TjenestePensjonRepositoryImplTest {
     private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
 
     @Test
