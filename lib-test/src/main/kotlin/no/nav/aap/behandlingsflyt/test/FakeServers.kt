@@ -323,7 +323,7 @@ object FakeServers : AutoCloseable {
         }
         //create route
         routing {
-            get("/api/tjenestepensjon/tpNrWithYtelse") {
+            get("/api/tjenestepensjon/aktiveOrdninger") {
                 val fomDate = call.request.queryParameters["fomDate"]
                 val tomDate = call.request.queryParameters["tomDate"]
 
