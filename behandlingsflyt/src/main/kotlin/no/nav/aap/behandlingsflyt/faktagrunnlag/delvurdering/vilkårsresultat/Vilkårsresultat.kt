@@ -106,12 +106,16 @@ class Vilkårsresultat(
         val (_, vilkårsVurdering) = requireNotNull(vilkårPar.firstOrNull { it.first == Vilkårtype.SYKDOMSVILKÅRET })
         val sykdomsUtfall = vilkårsVurdering.utfall
 
-        // Hvis sykdomsvilkåret ikke er oppfylt, så kan man få rettighet om sykepengervilkåret er oppfylt
-        if (sykdomsUtfall == Utfall.IKKE_OPPFYLT) {
-            val sykepengervilkåret =
-                vilkårPar.find { it.first == Vilkårtype.SYKEPENGEERSTATNING && it.second.utfall == Utfall.OPPFYLT }
+        // Hvis sykdomsvilkåret ikke er oppfylt, så kan man få rettighet om bistandsvilkåret har sykepenger som innvilgelsesårsak
+        if (sykdomsUtfall == Utfall.IKKE_OPPFYLT && vilkårsVurdering.avslagsårsak == Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET) {
+            val sykepengerErstatning =
+                vilkårPar.find {
+                    it.first == Vilkårtype.BISTANDSVILKÅRET
+                            && it.second.utfall == Utfall.OPPFYLT
+                            && it.second.innvilgelsesårsak == Innvilgelsesårsak.SYKEPENGEERSTATNING
+                }
 
-            if (sykepengervilkåret != null) {
+            if (sykepengerErstatning != null) {
                 return RettighetsType.SYKEPENGEERSTATNING
             }
         }
@@ -128,14 +132,9 @@ class Vilkårsresultat(
             Innvilgelsesårsak.STUDENT -> return RettighetsType.STUDENT
             Innvilgelsesårsak.ARBEIDSSØKER -> return RettighetsType.ARBEIDSSØKER
             Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD -> return RettighetsType.VURDERES_FOR_UFØRETRYGD
+            Innvilgelsesårsak.SYKEPENGEERSTATNING -> return RettighetsType.SYKEPENGEERSTATNING
             Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG -> {}
             null -> {}
-        }
-
-        val sykepengervilkåret = vilkårPar.find { it.first == Vilkårtype.SYKEPENGEERSTATNING }
-
-        if (sykepengervilkåret != null) {
-            return RettighetsType.SYKEPENGEERSTATNING
         }
 
         // Med mindre noen annen innvilgelsesårsak er gitt, er grunntilfellet 11-6 (bistandsbehov).

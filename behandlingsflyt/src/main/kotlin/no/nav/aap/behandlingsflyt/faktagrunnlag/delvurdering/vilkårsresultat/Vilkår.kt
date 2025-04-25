@@ -20,12 +20,15 @@ class Vilkår(
     ) {
         require(
             vilkårsperioder.mapNotNull { it.innvilgelsesårsak }.all { it in type.spesielleInnvilgelsesÅrsaker }) {
-            "Spesielle innvilgelsesårsaker må være definert i VilkårType."
+            "Spesielle innvilgelsesårsaker må være definert i VilkårType. " +
+                    "Gyldige innvilgelsesårsaker: ${type.spesielleInnvilgelsesÅrsaker.joinToString { it.name }} for vilkår $type"
         }
         require(vilkårsperioder.mapNotNull { it.avslagsårsak }
             .all { it in type.avslagsårsaker }) {
-            "Ugyldig avslagsårsak for $type, avslagsårsak: ${vilkårsperioder.mapNotNull { it.avslagsårsak }
-                .filterNot { it in type.avslagsårsaker }}. " +
+            "Ugyldig avslagsårsak for $type, avslagsårsak: ${
+                vilkårsperioder.mapNotNull { it.avslagsårsak }
+                    .filterNot { it in type.avslagsårsaker }
+            }. " +
                     "Gyldige avslagsårsaker: ${type.avslagsårsaker.joinToString { it.name }}"
         }
     }

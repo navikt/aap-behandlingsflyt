@@ -46,7 +46,8 @@ enum class Vilkårtype(
         spesielleInnvilgelsesÅrsaker = listOf(
             Innvilgelsesårsak.STUDENT,
             Innvilgelsesårsak.ARBEIDSSØKER,
-            Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD
+            Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD,
+            Innvilgelsesårsak.SYKEPENGEERSTATNING
         ),
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON,
@@ -71,15 +72,6 @@ enum class Vilkårtype(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON
         ),
         hjemmel = "§ 11-19"
-    ),
-    SYKEPENGEERSTATNING(
-        kode = "AAP-13",
-        spesielleInnvilgelsesÅrsaker = listOf(),
-        avslagsårsaker = listOf(
-            Avslagsårsak.MANGLENDE_DOKUMENTASJON
-        ),
-        hjemmel = "§ 11-13",
-        obligatorisk = false
     ),
     SAMORDNING(
         kode = "AAP-27",

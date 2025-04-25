@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl.UtfallForFørstegangsbehandling.IKKE_BEHANDLINGSGRUNNLAG
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl.UtfallForFørstegangsbehandling.UKJENT
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl.UtfallForFørstegangsbehandling.UUNGÅELIG_AVSLAG
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -15,6 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.outerJoin
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 
 /** Når kan vi definitivt si at det er avslag, slik
  * at vi ikke trenger å vurdere flere vilkår.
@@ -39,6 +41,8 @@ class TidligereVurderingerImpl(
     private val trukketSøknadService: TrukketSøknadService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
 ) : TidligereVurderinger {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     /* Kan være vi kan generalisere til revurdering også, men begynner med førstegangsbehandling. */
     enum class UtfallForFørstegangsbehandling {
@@ -89,7 +93,9 @@ class TidligereVurderingerImpl(
 
         Sjekk(StegType.VURDER_SYKEPENGEERSTATNING) { vilkårsresultat, _ ->
             val sykdomstidslinje = vilkårsresultat.tidslinjeFor(Vilkårtype.SYKDOMSVILKÅRET)
-            val erstatningstidslinje = vilkårsresultat.tidslinjeFor(Vilkårtype.SYKEPENGEERSTATNING)
+            val erstatningstidslinje = vilkårsresultat.tidslinjeFor(Vilkårtype.BISTANDSVILKÅRET)
+                .filter { it.verdi.innvilgelsesårsak == Innvilgelsesårsak.SYKEPENGEERSTATNING }
+
             sykdomstidslinje.outerJoin(erstatningstidslinje) { sykdomsvilkåret, sykepengeerstatning ->
                 if (sykdomsvilkåret?.utfall == IKKE_OPPFYLT && sykepengeerstatning?.utfall == IKKE_OPPFYLT) {
                     UUNGÅELIG_AVSLAG
@@ -101,6 +107,7 @@ class TidligereVurderingerImpl(
 
         Sjekk(StegType.FASTSETT_GRUNNLAG) { vilkårsresultat, _ ->
             ikkeOppfyltFørerTilAvslag(Vilkårtype.GRUNNLAGET, vilkårsresultat)
+            Tidslinje()
         },
 
         Sjekk(StegType.VURDER_MEDLEMSKAP) { vilkårsresultat, _ ->
@@ -177,11 +184,23 @@ class TidligereVurderingerImpl(
     }
 
     override fun girAvslag(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean {
-        return gir(kontekst, førSteg) == UUNGÅELIG_AVSLAG
+        return (gir(kontekst, førSteg) == UUNGÅELIG_AVSLAG).also {
+            if (it) {
+                log.info("Gir avslag i steg: $førSteg.")
+            }
+        }
     }
 
+
     override fun girIngenBehandlingsgrunnlag(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean {
-        return gir(kontekst, førSteg) == IKKE_BEHANDLINGSGRUNNLAG
+        return (gir(
+            kontekst,
+            førSteg
+        ) == IKKE_BEHANDLINGSGRUNNLAG).also {
+            if (it) {
+                log.info("Gir ingen behandlingsgrunnlag i steg: $førSteg.")
+            }
+        }
     }
 
     private fun ikkeOppfyltFørerTilAvslag(

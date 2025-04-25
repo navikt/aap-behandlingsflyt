@@ -5,8 +5,9 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningFaktagrunnlag
-import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningVilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
@@ -24,6 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderSykepengeErstatningSteg private constructor(
@@ -46,83 +48,24 @@ class VurderSykepengeErstatningSteg private constructor(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-        val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-
-        when (kontekst.vurdering.vurderingType) {
+        return when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     avklaringsbehovService.avbrytForSteg(kontekst.behandlingId, type())
                     vilkårService.ingenNyeVurderinger(
                         kontekst,
-                        Vilkårtype.SYKEPENGEERSTATNING,
+                        Vilkårtype.BISTANDSVILKÅRET,
                         "mangler behandlingsgrunnlag",
                     )
                     return Fullført
                 }
 
-                // TODO: Dette må gjøres mye mer robust og sjekkes konsistent mot 11-6...
-                if (bistandsvilkåret.vilkårsperioder().all { !it.erOppfylt() } && (
-                            sykdomsvilkåret.vilkårsperioder()
-                                .any { it.erOppfylt() || avslagPåVissVarighet(it) })) {
-
-                    val grunnlag = sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
-
-                    if (grunnlag?.vurdering != null) {
-                        val sak = sakService.hent(kontekst.sakId)
-                        val vurderingsdato = sak.rettighetsperiode.fom
-                        val faktagrunnlag = SykepengerErstatningFaktagrunnlag(
-                            vurderingsdato,
-                            sak.rettighetsperiode.tom, // TODO: Trenger å finne en god løsning for hvordan vi setter slutt på dette vilkåret ved tom kvote
-                            grunnlag.vurdering()!!
-                        )
-                        SykepengerErstatningVilkår(vilkårsresultat).vurder(faktagrunnlag)
-                        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
-                    } else {
-                        return FantAvklaringsbehov(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
-                    }
-                } else {
-                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-                    val sykepengeerstatningsBehov =
-                        avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
-
-                    if (sykepengeerstatningsBehov?.erÅpent() == true) {
-                        avklaringsbehovene.avbryt(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
-                    }
-                }
+                vurder(kontekst)
             }
 
             VurderingType.REVURDERING -> {
                 // TODO: Dette må gjøres mye mer robust og sjekkes konsistent mot 11-6...
-                if (bistandsvilkåret.vilkårsperioder().all { !it.erOppfylt() } && (
-                            sykdomsvilkåret.vilkårsperioder()
-                                .any { it.erOppfylt() || avslagPåVissVarighet(it) })) {
-
-                    val grunnlag = sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
-
-                    if (grunnlag?.vurdering != null) {
-                        val sak = sakService.hent(kontekst.sakId)
-                        val vurderingsdato = sak.rettighetsperiode.fom
-                        val faktagrunnlag = SykepengerErstatningFaktagrunnlag(
-                            vurderingsdato,
-                            sak.rettighetsperiode.tom, // TODO: Trenger å finne en god løsning for hvordan vi setter slutt på dette vilkåret ved tom kvote
-                            grunnlag.vurdering()!!
-                        )
-                        SykepengerErstatningVilkår(vilkårsresultat).vurder(faktagrunnlag)
-                        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
-                    } else {
-                        return FantAvklaringsbehov(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
-                    }
-                } else {
-                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-                    val sykepengeerstatningsBehov =
-                        avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
-
-                    if (sykepengeerstatningsBehov?.erÅpent() == true) {
-                        avklaringsbehovene.avbryt(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
-                    }
-                }
+                vurder(kontekst)
             }
 
             VurderingType.FORLENGELSE -> {
@@ -130,15 +73,74 @@ class VurderSykepengeErstatningSteg private constructor(
                 // !!! RIP !!!
                 // Her blir det en del logikk for å vite om dette vilkåret faktisk skal forlengelse
                 // Er kvoten tom? osv osv
+                Fullført
             }
+
 
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
+                Fullført
             }
         }
+    }
 
+    private fun vurder(kontekst: FlytKontekstMedPerioder): StegResultat {
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+        val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
+        if (bistandsvilkåret.vilkårsperioder().all { !it.erOppfylt() } && (
+                    sykdomsvilkåret.vilkårsperioder()
+                        .any { it.erOppfylt() || avslagPåVissVarighet(it) })) {
 
+            val grunnlag = sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+            if (grunnlag?.vurdering != null) {
+                val sak = sakService.hent(kontekst.sakId)
+                val vurderingsdato = sak.rettighetsperiode.fom
+                val faktagrunnlag = SykepengerErstatningFaktagrunnlag(
+                    vurderingsdato,
+                    // TODO: Trenger å finne en god løsning for hvordan vi setter slutt på dette vilkåret ved tom kvote
+                    sak.rettighetsperiode.tom,
+                    grunnlag.vurdering
+                )
+
+                if (grunnlag.vurdering.harRettPå) {
+                    vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET).leggTilVurdering(
+                        Vilkårsperiode(
+                            Periode(faktagrunnlag.vurderingsdato, faktagrunnlag.sisteDagMedMuligYtelse),
+                            Utfall.OPPFYLT,
+                            begrunnelse = null,
+                            innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING,
+                            faktagrunnlag = faktagrunnlag,
+                            versjon = ApplikasjonsVersjon.versjon
+                        )
+                    )
+                } else {
+                    vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET).leggTilVurdering(
+                        Vilkårsperiode(
+                            Periode(faktagrunnlag.vurderingsdato, faktagrunnlag.sisteDagMedMuligYtelse),
+                            Utfall.IKKE_OPPFYLT,
+                            begrunnelse = null,
+                            avslagsårsak = Avslagsårsak.MANGLENDE_DOKUMENTASJON, // TODO noe mer rett
+                            faktagrunnlag = faktagrunnlag,
+                            versjon = ApplikasjonsVersjon.versjon
+                        )
+                    )
+                }
+                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+            } else {
+                return FantAvklaringsbehov(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
+            }
+        } else {
+            val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+            val sykepengeerstatningsBehov =
+                avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
+
+            if (sykepengeerstatningsBehov?.erÅpent() == true) {
+                avklaringsbehovene.avbryt(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
+            }
+        }
         return Fullført
     }
 

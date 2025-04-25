@@ -104,11 +104,13 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
         if (sykdomsvurdering == null) {
             return false
         }
-        return sykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel == true &&
-                sykdomsvurdering.erArbeidsevnenNedsatt == true &&
-                (sykdomsvurdering.erNedsettelseIArbeidsevneAvEnVissVarighet == null || sykdomsvurdering.erNedsettelseIArbeidsevneAvEnVissVarighet == true) &&
-                (sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnHalvparten == true ||
-                        (sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true && yrkesskadevurdering?.erÅrsakssammenheng == true))
+        return sykdomsvurdering.run {
+            erSkadeSykdomEllerLyteVesentligdel == true &&
+                    erArbeidsevnenNedsatt == true &&
+                    (erNedsettelseIArbeidsevneAvEnVissVarighet == null || erNedsettelseIArbeidsevneAvEnVissVarighet == true) &&
+                    (erNedsettelseIArbeidsevneMerEnnHalvparten == true ||
+                            (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true && yrkesskadevurdering?.erÅrsakssammenheng == true))
+        }
     }
 
 

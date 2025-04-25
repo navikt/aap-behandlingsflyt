@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
@@ -48,8 +47,9 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val ingenAvslag = harIkkeTidligereAvslag(kontekst.behandlingId)
-        if (!ingenAvslag) {
+        val girAvslag = tidligereVurderinger.girAvslag(kontekst, type())
+
+        if (girAvslag) {
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
             val medlemskapBehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
             if (medlemskapBehov != null && medlemskapBehov.erÅpent()) {
@@ -148,22 +148,6 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         val erSpesifiktTriggetRevurderMedlemskap =
             kontekst.vurdering.årsakerTilBehandling.any { it == ÅrsakTilBehandling.REVURDER_MEDLEMSKAP }
         return erSpesifiktTriggetRevurderMedlemskap && manuellVurdering == null
-    }
-
-    private fun harIkkeTidligereAvslag(behandlingId: BehandlingId): Boolean {
-        val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
-
-        val lovvalgvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG)
-        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-        val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-        val bistandsvilkåretEllerSykepengerErstatningHvisIkke = if (!bistandsvilkåret.harPerioderSomErOppfylt()) {
-            vilkårsresultat.optionalVilkår(Vilkårtype.SYKEPENGEERSTATNING)?.harPerioderSomErOppfylt() == true
-        } else {
-            bistandsvilkåret.harPerioderSomErOppfylt()
-        }
-        return sykdomsvilkåret.harPerioderSomErOppfylt()
-                && bistandsvilkåretEllerSykepengerErstatningHvisIkke
-                && lovvalgvilkåret.harPerioderSomErOppfylt()
     }
 
     companion object : FlytSteg {
