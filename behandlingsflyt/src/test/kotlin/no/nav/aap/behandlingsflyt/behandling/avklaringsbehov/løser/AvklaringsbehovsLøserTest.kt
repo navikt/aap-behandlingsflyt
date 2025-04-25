@@ -38,7 +38,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class AvklaringsbehovsLøserTest {
+internal class AvklaringsbehovsLøserTest {
 
     @BeforeEach
     fun setUp() {
@@ -77,7 +77,7 @@ class AvklaringsbehovsLøserTest {
     @Test
     fun `alle subtyper skal ha unik verdi`() {
         val utledSubtypes = AvklaringsbehovsLøser::class.sealedSubclasses
-        InitTestDatabase.dataSource.transaction { dbConnection ->
+        InitTestDatabase.freshDatabase().transaction { dbConnection ->
             val løsningSubtypes = utledSubtypes.map {
                 it.constructors
                     .find { it.parameters.singleOrNull()?.type?.classifier == DBConnection::class }!!

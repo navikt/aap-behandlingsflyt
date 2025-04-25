@@ -15,10 +15,13 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class BehandlingRepositoryImplTest {
+internal class BehandlingRepositoryImplTest {
+
+    private val dataSource = InitTestDatabase.freshDatabase()
+
     @Test
     fun `kan lagre og hente ut behandling med uuid`() {
-        val skapt = InitTestDatabase.dataSource.transaction { connection ->
+        val skapt = dataSource.transaction { connection ->
             val sak = PersonOgSakService(
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
@@ -38,7 +41,7 @@ class BehandlingRepositoryImplTest {
             )
         }
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val repo = BehandlingRepositoryImpl(connection)
 
             // Hent ut igjen
@@ -53,7 +56,7 @@ class BehandlingRepositoryImplTest {
 
     @Test
     fun `oppretet dato lagres på behandling og hentes ut korrekt`() {
-        val skapt = InitTestDatabase.dataSource.transaction { connection ->
+        val skapt = dataSource.transaction { connection ->
             val sak = PersonOgSakService(
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
@@ -73,7 +76,7 @@ class BehandlingRepositoryImplTest {
             )
         }
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val repo = BehandlingRepositoryImpl(connection)
 
             // Hent ut igjen

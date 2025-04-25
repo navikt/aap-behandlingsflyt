@@ -25,10 +25,12 @@ import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
 
-class SykdomRepositoryImplTest {
+internal class SykdomRepositoryImplTest {
+    private val dataSource = InitTestDatabase.freshDatabase()
+
     @Test
     fun `kan lagre tom liste`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val repo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
@@ -40,7 +42,7 @@ class SykdomRepositoryImplTest {
 
     @Test
     fun `kan lagre singleton-liste`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val repo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
@@ -52,7 +54,7 @@ class SykdomRepositoryImplTest {
 
     @Test
     fun `kan lagre to elementer`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val repo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
@@ -64,7 +66,7 @@ class SykdomRepositoryImplTest {
 
     @Test
     fun `historikk viser kun vurderinger fra tidligere behandlinger`() {
-        val førstegangsbehandling = InitTestDatabase.dataSource.transaction { connection ->
+        val førstegangsbehandling = dataSource.transaction { connection ->
             val repo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
             val førstegangsbehandling = behandling(connection, sak)
@@ -73,7 +75,7 @@ class SykdomRepositoryImplTest {
             førstegangsbehandling
         }
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val repo = SykdomRepositoryImpl(connection)
             val revurdering = revurdering(connection, førstegangsbehandling)
 

@@ -26,21 +26,22 @@ import org.junit.jupiter.api.Test
 
 import java.time.LocalDate
 
-class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
+internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
+    private val dataSource = InitTestDatabase.freshDatabase()
 
     @Test
     fun kanHenteSisteRelevanteUtenlandsopplysning() {
-        val sak = InitTestDatabase.dataSource.transaction { connection ->
+        val sak = dataSource.transaction { connection ->
             val personOgSakService = PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
 
-        val sak2 = InitTestDatabase.dataSource.transaction { connection ->
+        val sak2 = dataSource.transaction { connection ->
             val personOgSakService = PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val arbeidInntektRepo = MedlemskapArbeidInntektRepositoryImpl(connection)
 
@@ -58,17 +59,17 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
 
     @Test
     fun henterRelaterteHistoriskeVurderinger() {
-        val sak = InitTestDatabase.dataSource.transaction { connection ->
+        val sak = dataSource.transaction { connection ->
             val personOgSakService = PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
 
-        val sak2 = InitTestDatabase.dataSource.transaction { connection ->
+        val sak2 = dataSource.transaction { connection ->
             val personOgSakService = PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val forutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
 
             val førstegangsBehandling = opprettBehandlingMedVurdering(TypeBehandling.Førstegangsbehandling, sak.id, null, listOf(), null)
@@ -90,7 +91,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
         årsaker: List<Årsak>,
         utenlandsOppholdData: UtenlandsOppholdData?)
     : Behandling {
-        return InitTestDatabase.dataSource.transaction { connection ->
+        return dataSource.transaction { connection ->
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val forutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
             val behandling = behandlingRepo.opprettBehandling(sakId, årsaker, typeBehandling, forrigeBehandlingId)

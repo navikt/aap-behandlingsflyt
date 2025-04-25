@@ -54,7 +54,7 @@ class BarnetilleggRepositoryImplTest {
 
     @Test
     fun `Lagrer og henter barnetilleggGrunnlag`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
@@ -84,7 +84,7 @@ class BarnetilleggRepositoryImplTest {
 
     @Test
     fun `lager nytt deaktiverer og lager nytt grunnlag ved ny lagring`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
@@ -116,7 +116,7 @@ class BarnetilleggRepositoryImplTest {
 
     @Test
     fun `Kopierer barnetilleggGrunnlag fra en behandling til en annen`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val barnetilleggRepository = BarnetilleggRepositoryImpl(connection)

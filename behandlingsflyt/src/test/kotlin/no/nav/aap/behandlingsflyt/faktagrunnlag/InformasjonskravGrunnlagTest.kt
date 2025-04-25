@@ -82,7 +82,7 @@ class InformasjonskravGrunnlagTest {
 
     @Test
     fun `Yrkesskadedata er oppdatert`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), connection)
 
@@ -114,7 +114,7 @@ class InformasjonskravGrunnlagTest {
 
     @Test
     fun `Yrkesskadedata er ikke oppdatert`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), connection)
 
@@ -139,7 +139,7 @@ class InformasjonskravGrunnlagTest {
 
     @Test
     fun `Yrkesskadedata er utdatert, men har ingen endring fra registeret`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val (_, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), connection)
 
@@ -154,7 +154,7 @@ class InformasjonskravGrunnlagTest {
 
     @Test
     fun LovvalgMedlemskapErOppdatert() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), connection)
 

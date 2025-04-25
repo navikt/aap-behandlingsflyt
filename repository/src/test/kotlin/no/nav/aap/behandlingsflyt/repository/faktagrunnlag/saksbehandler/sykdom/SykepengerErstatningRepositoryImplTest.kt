@@ -22,11 +22,13 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class SykepengerErstatningRepositoryImplTest {
+internal class SykepengerErstatningRepositoryImplTest {
+
+    private val dataSource = InitTestDatabase.freshDatabase()
 
     @Test
     fun `lagre og hente ut igjen`() {
-        val behandling = InitTestDatabase.dataSource.transaction { connection ->
+        val behandling = dataSource.transaction { connection ->
             behandling(connection, sak(connection))
         }
         val vurdering = SykepengerVurdering(
@@ -35,11 +37,11 @@ class SykepengerErstatningRepositoryImplTest {
             harRettPå = true,
             grunn = null
         )
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             SykepengerErstatningRepositoryImpl(connection).lagre(behandling.id, vurdering)
         }
 
-        val res = InitTestDatabase.dataSource.transaction {
+        val res = dataSource.transaction {
             SykepengerErstatningRepositoryImpl(it).hent(behandling.id)
         }
 

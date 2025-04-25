@@ -44,7 +44,7 @@ class SamordningYtelseVurderingServiceTest {
 
     @Test
     fun `krever avklaring når endringer kommer`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val ytelseRepo = SamordningYtelseRepositoryImpl(connection)
             val repo = SamordningVurderingRepositoryImpl(connection)
             val sakRepository = SakRepositoryImpl(connection)
