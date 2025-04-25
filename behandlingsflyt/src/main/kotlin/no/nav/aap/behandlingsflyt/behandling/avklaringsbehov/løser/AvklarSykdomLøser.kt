@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -54,7 +55,7 @@ class AvklarSykdomLøser(connection: DBConnection) : AvklaringsbehovsLøser<Avkl
             .toList()
             .map { it.verdi }
 
-        validerSykdomOgYrkesskadeKonsistens(nyeSykdomsvurderinger, yrkesskadeGrunnlag)
+        validerSykdomOgYrkesskadeKonsistens(nyeSykdomsvurderinger, yrkesskadeGrunnlag, behandling.typeBehandling())
 
         sykdomRepository.lagre(
             behandlingId = behandling.id,
@@ -68,11 +69,12 @@ class AvklarSykdomLøser(connection: DBConnection) : AvklaringsbehovsLøser<Avkl
 
     private fun validerSykdomOgYrkesskadeKonsistens(
         sykdomLøsning: Tidslinje<Sykdomsvurdering>,
-        yrkesskadeGrunnlag: YrkesskadeGrunnlag?
+        yrkesskadeGrunnlag: YrkesskadeGrunnlag?,
+        typeBehandling: TypeBehandling
     ) {
         val harYrkesskade = yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
         sykdomLøsning.forEach {
-            if (!it.verdi.erKonsistentForSykdom(harYrkesskade)) {
+            if (!it.verdi.erKonsistentForSykdom(harYrkesskade, typeBehandling)) {
                 log.info(
                     "Sykdomsvurderingen er ikke konsistent med yrkesskade sykdomsvurdering=[{}] harYrkesskade=[{}]",
                     it.verdi,

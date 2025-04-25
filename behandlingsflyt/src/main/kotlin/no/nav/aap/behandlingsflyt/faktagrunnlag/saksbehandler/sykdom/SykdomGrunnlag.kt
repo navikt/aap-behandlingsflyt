@@ -14,13 +14,6 @@ class SykdomGrunnlag(
             this(id, yrkesskadevurdering, listOfNotNull(sykdomsvurdering))
 
 
-    fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean): Boolean {
-        if (sykdomsvurderinger.isEmpty()) {
-            return false
-        }
-        return sykdomsvurderinger.all { it.erKonsistentForSykdom(harYrkesskadeRegistrert) }
-    }
-
     fun somSykdomsvurderingstidslinje(startDato: LocalDate): Tidslinje<Sykdomsvurdering> {
         return sykdomsvurderinger
             .sortedBy { it.vurderingenGjelderFra ?: startDato }
