@@ -51,7 +51,12 @@ internal object ValiderBehandlingTilstand {
     ): Boolean {
         val forsøkerÅLøseAvklaringsbehovFørGjeldendeSteg = flyt.erStegFør(avklaringsbehov.løsesISteg, behandling.aktivtSteg())
         val erGjeldendeStegLåstForOppdateringAvOpplysninger = !flyt.skalOppdatereFaktagrunnlagForSteg(behandling.aktivtSteg())
-        val erAvklaringsbehovUnntattForSjekk =  avklaringsbehov.kode in listOf(AvklaringsbehovKode.`9002`, AvklaringsbehovKode.`5050`)
+        val erAvklaringsbehovUnntattForSjekk =  avklaringsbehov.kode in listOf(
+            AvklaringsbehovKode.`9001`,
+            AvklaringsbehovKode.`9002`,
+            AvklaringsbehovKode.`9003`,
+            AvklaringsbehovKode.`5050`,
+            )
         return forsøkerÅLøseAvklaringsbehovFørGjeldendeSteg && erGjeldendeStegLåstForOppdateringAvOpplysninger && !erAvklaringsbehovUnntattForSjekk
     }
 
