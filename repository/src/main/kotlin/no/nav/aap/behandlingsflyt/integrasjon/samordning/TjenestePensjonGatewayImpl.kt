@@ -14,8 +14,11 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper.fromJson
 import no.nav.aap.komponenter.type.Periode
 import java.net.URI
 
+/**
+ * Se https://github.com/navikt/tp/blob/e99c670da41c23172e2ccc3a3e8dff4c7870fa82/tp-api/src/main/kotlin/no/nav/samhandling/tp/controller/TjenestepensjonController.kt#L117
+ */
 class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.tjenestepensjon.url") + "/api/tjenestepensjon/tpNrWithYtelse")
+    private val url = URI.create(requiredConfigForKey("integrasjon.tjenestepensjon.url") + "/api/tjenestepensjon/aktiveOrdninger")
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.tjenestepensjon.scope"))
 
     companion object : Factory<TjenestePensjonGateway> {
