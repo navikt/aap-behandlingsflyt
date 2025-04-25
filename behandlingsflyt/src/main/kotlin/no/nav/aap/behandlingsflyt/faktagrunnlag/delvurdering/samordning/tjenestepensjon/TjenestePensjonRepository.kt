@@ -4,11 +4,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.lookup.repository.Repository
 
 interface TjenestePensjonRepository : Repository {
-    fun hentHvisEksisterer(behandlingId: BehandlingId): TjenestePensjon?
-    fun hent(behandlingId: BehandlingId): TjenestePensjon
+    fun hentHvisEksisterer(behandlingId: BehandlingId): List<TjenestePensjonForhold>?
+    fun hent(behandlingId: BehandlingId): List<TjenestePensjonForhold>
     fun lagre(
         behandlingId: BehandlingId,
-        tjenestePensjon: TjenestePensjon
+        tjenestePensjon: List<TjenestePensjonForhold>
     )
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)

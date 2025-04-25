@@ -2,7 +2,10 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordn
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonOrdning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonYtelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -28,13 +31,34 @@ class TjenestePensjonRepositoryImplTest() {
 
     @Test
     fun `kan lagre og hente tp ytelser`() {
-        //lag testen for meg
-        val dataSource = InitTestDatabase.dataSource
+        val dataSource = InitTestDatabase.freshDatabase()
         dataSource.transaction { dbConnect ->
             val sak = sak(dbConnect)
             val behandling = behandling(dbConnect, sak)
 
-            val tjenestePensjon = TjenestePensjon(listOf("12345678901", "09876543210"))
+            val tjenestePensjon = listOf(TjenestePensjonForhold(
+                ordning = TjenestePensjonOrdning(
+                    navn = "Statens Pensjon Kasse",
+                    tpNr = "3010",
+                    orgNr = "123445675645"
+                ),
+                ytelser = listOf(
+                    TjenestePensjonYtelse(
+                        innmeldtYtelseFom = null,
+                        ytelseType = YtelseTypeCode.ALDER,
+                        ytelseIverksattFom = LocalDate.of(2020, 1, 1),
+                        ytelseIverksattTom = LocalDate.of(2025,4,22),
+                        ytelseId = 1234L
+                    ),
+                    TjenestePensjonYtelse(
+                        innmeldtYtelseFom = null,
+                        ytelseType = YtelseTypeCode.BETINGET_TP,
+                        ytelseIverksattFom = LocalDate.of(2020, 1, 1),
+                        ytelseIverksattTom = null,
+                        ytelseId = 1235L
+                    )
+                )
+            ))
 
             TjenestePensjonRepositoryImpl(dbConnect).lagre(behandling.id, tjenestePensjon)
 

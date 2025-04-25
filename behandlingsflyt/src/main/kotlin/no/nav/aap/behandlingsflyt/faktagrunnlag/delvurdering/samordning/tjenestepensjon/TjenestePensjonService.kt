@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -60,12 +61,12 @@ class TjenestePensjonService(
             sak.rettighetsperiode
         )
 
-        log.info("hentet tjeneste pensjon for person i sak ${sak.saksnummer}. Antall: ${tjenestePensjon.tpNr.size}")
+        log.info("hentet tjeneste pensjon for person i sak ${sak.saksnummer}. Antall: ${tjenestePensjon.size}")
 
         val eksisterendeData = tjenestePensjonRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         if (harEndringerITjenestePensjon(eksisterendeData, tjenestePensjon)) {
-            log.info("Oppdaterer tjeneste pensjon for behandling ${kontekst.behandlingId}. Tjeneste pensjon funnet: ${tjenestePensjon.tpNr}")
+            log.info("Oppdaterer tjeneste pensjon for behandling ${kontekst.behandlingId}. Tjeneste pensjon funnet: ${tjenestePensjon.size}")
             tjenestePensjonRepository.lagre(kontekst.behandlingId, tjenestePensjon)
             return Informasjonskrav.Endret.ENDRET
         }
@@ -76,18 +77,17 @@ class TjenestePensjonService(
     private fun hentTjenestePensjon(
         personIdent: String,
         rettigetsperiode: Periode
-    ): TjenestePensjon {
+    ): List<TjenestePensjonForhold> {
         return tpGateway.hentTjenestePensjon(
                 personIdent,
                 rettigetsperiode
-
         )
     }
 
     private fun harEndringerITjenestePensjon(
-        eksisterendeData: TjenestePensjon?,
-        tjenestePensjon: TjenestePensjon
+        eksisterendeData: List<TjenestePensjonForhold>?,
+        tjenestePensjon: List<TjenestePensjonForhold>
     ): Boolean {
-        return eksisterendeData == null || eksisterendeData.tpNr != tjenestePensjon.tpNr
+        return  eksisterendeData.isNullOrEmpty() || eksisterendeData != tjenestePensjon
     }
 }

@@ -1,7 +1,10 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.tjenestepensjon
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonOrdning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonYtelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
@@ -16,49 +19,83 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
         }
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): TjenestePensjon? {
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): List<TjenestePensjonForhold>? {
         val tyIdSql =
-            """SELECT TJENESTEPENSJON_YTELSER_ID FROM TJENESTEPENSJON_GRUNNLAG WHERE BEHANDLING_ID = ? AND AKTIV = true""".trimIndent()
+            """SELECT TJENESTEPENSJON_ORDNINGER_ID FROM TJENESTEPENSJON_FORHOLD_GRUNNLAG WHERE BEHANDLING_ID = ? AND AKTIV = true""".trimIndent()
 
-        val tyId = dbConnection.queryFirstOrNull(
-            tyIdSql,
-            {
-                setParams { setLong(1, behandlingId.id) }
-                setRowMapper {
-                    it.getLong("TJENESTEPENSJON_YTELSER_ID")
-                }
+        val tpOrdningId = dbConnection.queryFirstOrNull(
+            tyIdSql
+        ) {
+            setParams { setLong(1, behandlingId.id) }
+            setRowMapper {
+                it.getLong("TJENESTEPENSJON_ORDNINGER_ID")
             }
-        )
+        }
 
-        if (tyId == null) return null
+        if (tpOrdningId == null) return null
 
-        val sql = """
-            SELECT t.TP_NUMMER
-                FROM TJENESTEPENSJON_YTELSE t
-                JOIN TJENESTEPENSJON_YTELSER ty ON t.TJENESTEPENSJON_YTELSER_ID = ty.ID
-            WHERE ty.ID=?
-        """.trimIndent()
+        val ordninger = hentOrdning(tpOrdningId)
 
-        val tpnummer = dbConnection.queryList<String>(
-            sql,
-            {
-                setParams { setLong(1, tyId) }
-                setRowMapper {
-                    it.getString("TP_NUMMER")
-                }
-            }
-        )
-
-        return TjenestePensjon(tpnummer)
+        return ordninger
     }
 
-    override fun hent(behandlingId: BehandlingId): TjenestePensjon {
+    override fun hent(behandlingId: BehandlingId): List<TjenestePensjonForhold> {
         return requireNotNull(hentHvisEksisterer(behandlingId))
+    }
+
+    private fun hentOrdning(ordningerId: Long): List<TjenestePensjonForhold> {
+        val sql = """
+            SELECT *
+                FROM TJENESTEPENSJON_ORDNING WHERE TJENESTEPENSJON_ORDNINGER_ID = ?
+        """.trimIndent()
+
+        val ordning = dbConnection.queryList(
+            sql
+        ) {
+            setParams {
+                setLong(1, ordningerId)
+            }
+            setRowMapper {
+                TjenestePensjonForhold(
+                    ordning = TjenestePensjonOrdning(
+                        navn = it.getString("navn"),
+                        tpNr = it.getString("tpNr"),
+                        orgNr = it.getString("orgNr"),
+                    ),
+                    ytelser = hentYtelse(it.getLong("ID")),
+                )
+
+            }
+        }
+        return ordning
+    }
+
+    private fun hentYtelse(ordningId: Long): List<TjenestePensjonYtelse> {
+        val sql = """
+            SELECT *
+                FROM TJENESTEPENSJON_YTELSE WHERE TJENESTEPENSJON_ORDNING_ID = ?
+        """.trimIndent()
+
+        return dbConnection.queryList(
+            sql,
+            {
+                setParams { setLong(1, ordningId) }
+                setRowMapper {
+                    TjenestePensjonYtelse(
+                        innmeldtYtelseFom = it.getLocalDateOrNull("INNMELDT_FOM"),
+                        ytelseIverksattFom = it.getLocalDate("IVERKSATT_FOM"),
+                        ytelseIverksattTom = it.getLocalDateOrNull("IVERKSATT_TOM"),
+                        ytelseType = YtelseTypeCode.valueOf(it.getString("YTELSE_TYPE")),
+                        ytelseId = it.getLong("EXTERN_ID")
+                    )
+                }
+            }
+        )
     }
 
     override fun lagre(
         behandlingId: BehandlingId,
-        tjenestePensjon: TjenestePensjon
+        tjenestePensjon: List<TjenestePensjonForhold>
     ) {
         val eksisterende = hentHvisEksisterer(behandlingId)
         if (eksisterende != null) {
@@ -67,13 +104,13 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
 
         val tyId = dbConnection.executeReturnKey(
             """
-            INSERT INTO TJENESTEPENSJON_YTELSER DEFAULT VALUES 
+            INSERT INTO TJENESTEPENSJON_ORDNINGER DEFAULT VALUES 
         """.trimIndent()
         )
 
         val tgId = dbConnection.executeReturnKey(
             """
-            INSERT INTO TJENESTEPENSJON_GRUNNLAG (BEHANDLING_ID, AKTIV, TJENESTEPENSJON_YTELSER_ID)
+            INSERT INTO TJENESTEPENSJON_FORHOLD_GRUNNLAG (BEHANDLING_ID, AKTIV, TJENESTEPENSJON_ORDNINGER_ID)
             VALUES (?, true, ?)
         """.trimIndent()
         ) {
@@ -83,25 +120,48 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
             }
         }
 
-        dbConnection.executeBatch(
-            """
-            INSERT INTO TJENESTEPENSJON_YTELSE (TJENESTEPENSJON_YTELSER_ID, TP_NUMMER)
-            VALUES (?, ?)
-        """.trimIndent(),
-            tjenestePensjon.tpNr
-        ) {
+        tjenestePensjon.forEach {
+            val forholdKey = dbConnection.executeReturnKey(
+                """
+                    INSERT INTO TJENESTEPENSJON_ORDNING (TJENESTEPENSJON_ORDNINGER_ID, navn, tpNr, orgNr)
+                    VALUES (?, ?, ?, ?)
+                """.trimIndent(),
+
+                ) {
+                setParams {
+                    setLong(1, tyId)
+                    setString(2, it.ordning.navn)
+                    setString(3, it.ordning.tpNr)
+                    setString(4, it.ordning.orgNr)
+                }
+            }
+            lagreYtelse(it.ytelser, forholdKey)
+        }
+    }
+
+    private fun lagreYtelse(ytelseDto: List<TjenestePensjonYtelse>, forholdKey: Long) {
+        val sql = """
+            INSERT INTO TJENESTEPENSJON_YTELSE (TJENESTEPENSJON_ORDNING_ID, YTELSE_TYPE, INNMELDT_FOM, IVERKSATT_FOM, IVERKSATT_TOM, EXTERN_ID)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """.trimIndent()
+
+        dbConnection.executeBatch(sql, ytelseDto) {
             setParams {
-                setLong(1, tyId)
-                setString(2, it)
+                setLong(1, forholdKey)
+                setEnumName(2, it.ytelseType)
+                setLocalDate(3, it.innmeldtYtelseFom)
+                setLocalDate(4, it.ytelseIverksattFom)
+                setLocalDate(5, it.ytelseIverksattTom)
+                setLong(6, it.ytelseId)
             }
         }
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         val sql = """
-            INSERT INTO TJENESTEPENSJON_GRUNNLAG (BEHANDLING_ID, AKTIV, TJENESTEPENSJON_YTELSER_ID)
-            SELECT ?, true, TJENESTEPENSJON_YTELSER_ID
-            FROM TJENESTEPENSJON_GRUNNLAG
+            INSERT INTO TJENESTEPENSJON_FORHOLD_GRUNNLAG (BEHANDLING_ID, AKTIV, TJENESTEPENSJON_ORDNINGER_ID)
+            SELECT ?, true, TJENESTEPENSJON_ORDNINGER_ID
+            FROM TJENESTEPENSJON_FORHOLD_GRUNNLAG
             WHERE BEHANDLING_ID = ?
               AND AKTIV = true;
         """.trimIndent()
@@ -115,7 +175,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
     }
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
-        dbConnection.execute("UPDATE TJENESTEPENSJON_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
+        dbConnection.execute("UPDATE TJENESTEPENSJON_FORHOLD_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
