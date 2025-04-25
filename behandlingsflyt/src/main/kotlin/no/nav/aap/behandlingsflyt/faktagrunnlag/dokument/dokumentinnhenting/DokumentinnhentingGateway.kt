@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting
 
-import no.nav.aap.lookup.gateway.Gateway
+import no.nav.aap.komponenter.gateway.Gateway
 
 interface DokumentinnhentingGateway : Gateway {
     fun bestillLegeerklæring(request: LegeerklæringBestillingRequest): String

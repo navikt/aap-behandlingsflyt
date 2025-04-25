@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.Medl
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -13,7 +14,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.gateway.Factory
 import java.net.URI
 
 class MedlemskapGateway : MedlemskapGateway {
@@ -26,7 +26,7 @@ class MedlemskapGateway : MedlemskapGateway {
         prometheus = prometheus
     )
 
-    companion object : Factory<MedlemskapGateway>{
+    companion object : Factory<MedlemskapGateway> {
         override fun konstruer(): MedlemskapGateway {
             return MedlemskapGateway()
         }

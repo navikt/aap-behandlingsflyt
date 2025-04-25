@@ -8,7 +8,7 @@ import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.brev.kontrakt.Vedlegg
-import no.nav.aap.lookup.gateway.Gateway
+import no.nav.aap.komponenter.gateway.Gateway
 import java.io.InputStream
 
 interface BrevbestillingGateway : Gateway {

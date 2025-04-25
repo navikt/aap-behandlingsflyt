@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.tilgang
 
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.komponenter.gateway.Gateway
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.lookup.gateway.Gateway
 import no.nav.aap.tilgang.Operasjon
 import java.util.*
 
