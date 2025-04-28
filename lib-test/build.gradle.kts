@@ -7,6 +7,8 @@ plugins {
     id("behandlingsflyt.conventions")
 }
 
+val jacksonVersjon = "2.18.3"
+
 dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
@@ -30,8 +32,8 @@ dependencies {
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
 
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.3")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.3")
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersjon")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersjon")
 
     implementation("ch.qos.logback:logback-classic:1.5.18")
 
