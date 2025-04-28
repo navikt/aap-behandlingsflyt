@@ -8,7 +8,7 @@ import java.time.LocalDate
 
 data class TjenestePensjonRespons(
     val fnr: String,
-    val forhold: List<SamhandlerForholdDto> = emptyList(),
+    val forhold: List<SamhandlerForholdDto> = emptyList()
 ) {
     fun toIntern(): List<TjenestePensjonForhold> {
         return this.forhold.map {
