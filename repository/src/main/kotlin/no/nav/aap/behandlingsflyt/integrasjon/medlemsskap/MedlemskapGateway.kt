@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDa
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.Sporingsinformasjon
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -17,11 +18,14 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
+import org.slf4j.LoggerFactory
 import java.net.URI
 
 class MedlemskapGateway : MedlemskapGateway {
     private val url = requiredConfigForKey("integrasjon.medl.url")
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.medl.scope"))
+    private val log = LoggerFactory.getLogger(javaClass)
+
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
@@ -77,12 +81,16 @@ class MedlemskapGateway : MedlemskapGateway {
                 lovvalg = it.lovvalg,
                 helsedel = it.helsedel,
                 lovvalgsland = it.lovvalgsland?.uppercase(),
-                kilde = mapTilKildenavn(it.sporingsinformasjon?.kilde)
+                kilde = mapTilKildenavn(it.sporingsinformasjon)
             )
         }
     }
 
-    private fun mapTilKildenavn(kilde: String?): KildesystemMedl? {
+    private fun mapTilKildenavn(sporing: Sporingsinformasjon?): KildesystemMedl? {
+        val kilde = sporing?.kilde
+        log.info("mottok medl: $sporing ")
+        log.info("kilde medl: $kilde")
+
         return when (kilde) {
             "APPBRK" -> KildesystemMedl(KildesystemKode.APPBRK, "Applikasjonsbruker")
             "AVGSYS" -> KildesystemMedl(KildesystemKode.AVGSYS, "Avgiftsystemet")
