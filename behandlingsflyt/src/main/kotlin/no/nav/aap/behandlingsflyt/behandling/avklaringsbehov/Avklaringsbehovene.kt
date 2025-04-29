@@ -235,7 +235,7 @@ class Avklaringsbehovene(
                 )
             }
         if (uhåndterteBehov.isNotEmpty()) {
-            throw IllegalStateException("Har uhåndterte behov som skulle vært håndtert før nåværende steg = '$nesteSteg'")
+            throw IllegalStateException("Har uhåndterte behov som skulle vært håndtert før nåværende steg = '$nesteSteg'. Behov: ${uhåndterteBehov.map { it.definisjon }}")
         }
     }
 

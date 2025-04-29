@@ -195,7 +195,7 @@ class FlytOrkestrator(
             if (!result.kanFortsette() || neste == null) {
                 if (neste == null) {
                     log.info("Behandlingen har nådd slutten, avslutter behandling")
-                    
+
                     sakOgBehandlingService.lukkBehandling(behandling.id)
 
                     validerAtAvklaringsBehovErLukkede(avklaringsbehovene)
@@ -330,7 +330,7 @@ class FlytOrkestrator(
                 )
             }
         if (uhåndterteBehov.isNotEmpty()) {
-            throw IllegalStateException("Har uhåndterte behov som skulle vært håndtert før nåværende steg = '$nesteSteg'")
+            throw IllegalStateException("Har uhåndterte behov som skulle vært håndtert før nåværende steg = '$nesteSteg'. Behov: ${uhåndterteBehov.map { it.definisjon }}")
         }
     }
 
