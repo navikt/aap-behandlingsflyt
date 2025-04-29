@@ -15,9 +15,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.adapter.Ar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -82,7 +82,7 @@ class LovvalgService private constructor(
 
     private fun lagre(
         behandlingId: BehandlingId,
-        medlemskapGrunnlag: List<MedlemskapResponse>,
+        medlemskapGrunnlag: List<MedlemskapDataIntern>,
         arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
         inntektGrunnlag: List<ArbeidsInntektMaaned>
     ) {

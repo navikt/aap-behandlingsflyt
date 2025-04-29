@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -47,7 +46,7 @@ internal class MedlemskapRepositoryTest {
             repo.lagreUnntakMedlemskap(
                 behandlingId = behandling.id,
                 listOf(
-                    MedlemskapResponse(
+                    MedlemskapDataIntern(
                         unntakId = 1234,
                         ident = "13028911111",
                         fraOgMed = "1989-02-13",

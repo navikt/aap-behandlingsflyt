@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.Arbeidsfor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.adapter.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -77,7 +76,7 @@ class ForutgåendeMedlemskapService private constructor(
         ).arbeidsInntektMaaned
     }
 
-    private fun lagre(behandlingId: BehandlingId, medlemskapGrunnlag: List<MedlemskapResponse>, arbeidGrunnlag: List<ArbeidINorgeGrunnlag>, inntektGrunnlag: List<ArbeidsInntektMaaned>) {
+    private fun lagre(behandlingId: BehandlingId, medlemskapGrunnlag: List<MedlemskapDataIntern>, arbeidGrunnlag: List<ArbeidINorgeGrunnlag>, inntektGrunnlag: List<ArbeidsInntektMaaned>) {
         val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapForutgåendeRepository.lagreUnntakMedlemskap(behandlingId, medlemskapGrunnlag) else null
         grunnlagRepository.lagreArbeidsforholdOgInntektINorge(behandlingId, arbeidGrunnlag, inntektGrunnlag, medlId)
     }

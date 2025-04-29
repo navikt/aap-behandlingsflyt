@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -8,7 +7,7 @@ import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
 class MedlemskapForutgåendeRepository(private val connection: DBConnection) {
-    fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapResponse>): Long {
+    fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapDataIntern>): Long {
         if (hentHvisEksisterer(behandlingId) != null) {
             deaktiverEksisterendeGrunnlag(behandlingId)
         }

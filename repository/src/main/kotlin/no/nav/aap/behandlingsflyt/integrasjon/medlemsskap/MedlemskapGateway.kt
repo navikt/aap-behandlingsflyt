@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.integrasjon.medlemsskap
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
@@ -54,7 +57,7 @@ class MedlemskapGateway : MedlemskapGateway {
         )
     }
 
-    override fun innhent(person: Person, periode: Periode): List<MedlemskapResponse> {
+    override fun innhent(person: Person, periode: Periode): List<MedlemskapDataIntern> {
         val request = MedlemskapRequest(
             ident = person.aktivIdent().identifikator,
             periode = periode
@@ -62,7 +65,7 @@ class MedlemskapGateway : MedlemskapGateway {
         val medlemskapResultat = query(request)
 
         return medlemskapResultat.map {
-            MedlemskapResponse(
+            MedlemskapDataIntern(
                 unntakId = it.unntakId,
                 ident = it.ident,
                 fraOgMed = it.fraOgMed,
@@ -74,7 +77,25 @@ class MedlemskapGateway : MedlemskapGateway {
                 lovvalg = it.lovvalg,
                 helsedel = it.helsedel,
                 lovvalgsland = it.lovvalgsland?.uppercase(),
+                kilde = mapTilKildenavn(it.sporingsinformasjon?.kilde)
             )
+        }
+    }
+
+    private fun mapTilKildenavn(kilde: String?): KildesystemMedl? {
+        return when (kilde) {
+            "APPBRK" -> KildesystemMedl(KildesystemKode.APPBRK, "Applikasjonsbruker")
+            "AVGSYS" -> KildesystemMedl(KildesystemKode.AVGSYS, "Avgiftsystemet")
+            "E500" -> KildesystemMedl(KildesystemKode.E500, "E-500")
+            "INFOTR" -> KildesystemMedl(KildesystemKode.INFOTR, "Infotrygd")
+            "LAANEKASSEN" -> KildesystemMedl(KildesystemKode.LAANEKASSEN, "Laanekassen")
+            "MEDL" -> KildesystemMedl(KildesystemKode.MEDL, "MEDL")
+            "PP01" -> KildesystemMedl(KildesystemKode.PP01, "Pensjon")
+            "srvgosys" -> KildesystemMedl(KildesystemKode.srvgosys, "Gosys")
+            "srvmelosys" -> KildesystemMedl(KildesystemKode.srvmelosys, "Melosys")
+            "TP" -> KildesystemMedl(KildesystemKode.TP, "TP")
+            "TPS" -> KildesystemMedl(KildesystemKode.TPS, "TPS")
+            else -> null
         }
     }
 }

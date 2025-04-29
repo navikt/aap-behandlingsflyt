@@ -14,8 +14,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.flate.MedlemskapGrunnlagDto
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
@@ -171,7 +171,7 @@ class ApiTest {
             medlRepo.lagreUnntakMedlemskap(
                 behandlingId = behandling.id,
                 listOf(
-                    MedlemskapResponse(
+                    MedlemskapDataIntern(
                         unntakId = 123,
                         fraOgMed = "2017-02-13",
                         tilOgMed = "2018-02-13",

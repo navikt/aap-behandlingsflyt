@@ -8,8 +8,6 @@ data class MedlemskapRequest(
 )
 
 // Swagger-doc her: https://medlemskap-medl-api.dev.intern.nav.no/swagger-ui/index.html
-// TODO: IKKE bruk samme objekt i database som respons fra API...
-//       Veldig fyfy.
 data class MedlemskapResponse(
     val unntakId: Number,
     val ident: String,
@@ -21,5 +19,10 @@ data class MedlemskapResponse(
     val grunnlag: String,
     val lovvalg: String,
     val helsedel: Boolean,
-    val lovvalgsland: String?
+    val lovvalgsland: String?,
+    val sporingsinformasjon: Sporingsinformasjon?
+)
+
+data class Sporingsinformasjon(
+    val kilde: String?
 )
