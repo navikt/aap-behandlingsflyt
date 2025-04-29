@@ -51,17 +51,17 @@ class Vilkårsresultat(
                     return@outerJoinNotNull null
                 }
 
-                // Vi filtrerer bort vurderinger hvor noen vilkår er avslått, bortsett fra sykdomsvilkåret,
-                // som har unntak: om sykepengeerstatning er innvilget.
+                // Vi filtrerer bort vurderinger hvor noen vilkår er avslått
                 val harVilkårIkkeOppfylt = vurderinger.any { (vilkår, vurdering) ->
-                    vurdering.utfall == Utfall.IKKE_OPPFYLT && vilkår.type != Vilkårtype.SYKDOMSVILKÅRET
+                    vurdering.utfall == Utfall.IKKE_OPPFYLT
                 }
                 if (harVilkårIkkeOppfylt) {
                     return@outerJoinNotNull null
                 }
 
+                // Bistandsvilkåret kan være merket som ikke relevant ved sykepengeerstatning
                 val bistandsvilkåretErIkkeOppfylt = vurderinger.none { (vilkår, vurdering) ->
-                    vilkår.type == Vilkårtype.BISTANDSVILKÅRET && vurdering.erOppfylt()
+                    vilkår.type == Vilkårtype.BISTANDSVILKÅRET && (vurdering.erOppfylt() || vurdering.erIkkeRelevant())
                 }
                 if (bistandsvilkåretErIkkeOppfylt) {
                     return@outerJoinNotNull null
@@ -106,12 +106,16 @@ class Vilkårsresultat(
         val (_, vilkårsVurdering) = requireNotNull(vilkårPar.firstOrNull { it.first == Vilkårtype.SYKDOMSVILKÅRET })
         val sykdomsUtfall = vilkårsVurdering.utfall
 
-        // Hvis sykdomsvilkåret ikke er oppfylt, så kan man få rettighet om sykepengervilkåret er oppfylt
-        if (sykdomsUtfall == Utfall.IKKE_OPPFYLT) {
-            val sykepengervilkåret =
-                vilkårPar.find { it.first == Vilkårtype.SYKEPENGEERSTATNING && it.second.utfall == Utfall.OPPFYLT }
+        // Hvis bistandsvurderingen ikke er relevant, kan det være fordi det er sykepengeerstatning
+        if (bistandsvurderingen.erIkkeRelevant()) {
+            val sykepengerErstatning =
+                vilkårPar.find {
+                    it.first == Vilkårtype.SYKDOMSVILKÅRET
+                            && it.second.utfall == Utfall.OPPFYLT
+                            && it.second.innvilgelsesårsak == Innvilgelsesårsak.SYKEPENGEERSTATNING
+                }
 
-            if (sykepengervilkåret != null) {
+            if (sykepengerErstatning != null) {
                 return RettighetsType.SYKEPENGEERSTATNING
             }
         }
@@ -128,14 +132,9 @@ class Vilkårsresultat(
             Innvilgelsesårsak.STUDENT -> return RettighetsType.STUDENT
             Innvilgelsesårsak.ARBEIDSSØKER -> return RettighetsType.ARBEIDSSØKER
             Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD -> return RettighetsType.VURDERES_FOR_UFØRETRYGD
+            Innvilgelsesårsak.SYKEPENGEERSTATNING -> return RettighetsType.SYKEPENGEERSTATNING
             Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG -> {}
             null -> {}
-        }
-
-        val sykepengervilkåret = vilkårPar.find { it.first == Vilkårtype.SYKEPENGEERSTATNING }
-
-        if (sykepengervilkåret != null) {
-            return RettighetsType.SYKEPENGEERSTATNING
         }
 
         // Med mindre noen annen innvilgelsesårsak er gitt, er grunntilfellet 11-6 (bistandsbehov).

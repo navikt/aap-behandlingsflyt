@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -23,6 +24,7 @@ class FastsettSykdomsvilkåretSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sykdomRepository: SykdomRepository,
     private val studentRepository: StudentRepository,
+    private val sykepengerErstatningRepository: SykepengerErstatningRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårService: VilkårService,
 ) : BehandlingSteg {
@@ -30,6 +32,7 @@ class FastsettSykdomsvilkåretSteg private constructor(
         vilkårsresultatRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         studentRepository = repositoryProvider.provide(),
+        sykepengerErstatningRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         vilkårService = VilkårService(repositoryProvider),
     )
@@ -72,12 +75,14 @@ class FastsettSykdomsvilkåretSteg private constructor(
         val vilkårResultat = vilkårsresultatRepository.hent(behandlingId)
         val sykdomsGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
         val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
+        val sykepengerErstatningGrunnlag = sykepengerErstatningRepository.hentHvisEksisterer(behandlingId)
 
         val rettighetsperiode = kontekst.vurdering.rettighetsperiode
         val faktagrunnlag = SykdomsFaktagrunnlag(
             rettighetsperiode.fom,
             rettighetsperiode.tom,
             sykdomsGrunnlag?.yrkesskadevurdering,
+            sykepengerErstatningGrunnlag?.vurdering,
             sykdomsGrunnlag?.sykdomsvurderinger ?: emptyList(),
             studentGrunnlag?.studentvurdering
         )

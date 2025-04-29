@@ -30,6 +30,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 
 class VurderBistandsbehovSteg private constructor(
     private val bistandRepository: BistandRepository,
@@ -50,6 +51,8 @@ class VurderBistandsbehovSteg private constructor(
         vilkårService = VilkårService(repositoryProvider),
     )
 
+    private val log = LoggerFactory.getLogger(javaClass)
+
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
 
         val bistandsGrunnlag = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
@@ -63,6 +66,7 @@ class VurderBistandsbehovSteg private constructor(
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    log.info("Ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.BISTANDSVILKÅRET} for behandlingId ${kontekst.behandlingId}. Avbryter steg.")
                     avklaringsbehovene.avbrytForSteg(type())
                     vilkårService.ingenNyeVurderinger(
                         kontekst.behandlingId,

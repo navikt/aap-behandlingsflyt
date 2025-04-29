@@ -20,12 +20,15 @@ class Vilkår(
     ) {
         require(
             vilkårsperioder.mapNotNull { it.innvilgelsesårsak }.all { it in type.spesielleInnvilgelsesÅrsaker }) {
-            "Spesielle innvilgelsesårsaker må være definert i VilkårType."
+            "Spesielle innvilgelsesårsaker må være definert i VilkårType. " +
+                    "Gyldige innvilgelsesårsaker: ${type.spesielleInnvilgelsesÅrsaker.joinToString { it.name }} for vilkår $type"
         }
         require(vilkårsperioder.mapNotNull { it.avslagsårsak }
             .all { it in type.avslagsårsaker }) {
-            "Ugyldig avslagsårsak for $type, avslagsårsak: ${vilkårsperioder.mapNotNull { it.avslagsårsak }
-                .filterNot { it in type.avslagsårsaker }}. " +
+            "Ugyldig avslagsårsak for $type, avslagsårsak: ${
+                vilkårsperioder.mapNotNull { it.avslagsårsak }
+                    .filterNot { it in type.avslagsårsaker }
+            }. " +
                     "Gyldige avslagsårsaker: ${type.avslagsårsaker.joinToString { it.name }}"
         }
     }
@@ -119,9 +122,7 @@ class Vilkår(
         return vilkårTidslinje.segmenter().any { it.verdi.erOppfylt() }
     }
 
-    override fun toString(): String {
-        return "Vilkår(type=$type)"
-    }
+
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -139,5 +140,9 @@ class Vilkår(
         var result = type.hashCode()
         result = 31 * result + vilkårTidslinje.hashCode()
         return result
+    }
+
+    override fun toString(): String {
+        return "Vilkår(type=$type, vilkårTidslinje=$vilkårTidslinje)"
     }
 }

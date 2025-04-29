@@ -90,6 +90,9 @@ public enum class AvklaringsbehovKode {
      * [AVKLAR_BISTANDSBEHOV_KODE]
      */
     `5006`,
+    /**
+     * [VURDER_SYKEPENGEERSTATNING_KODE]
+     */
     `5007`,
     `5008`,
     `5009`,

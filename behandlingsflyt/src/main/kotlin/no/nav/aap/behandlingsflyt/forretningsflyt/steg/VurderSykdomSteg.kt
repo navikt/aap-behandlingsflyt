@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 
 class VurderSykdomSteg private constructor(
     private val studentRepository: StudentRepository,
@@ -38,16 +39,18 @@ class VurderSykdomSteg private constructor(
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
     )
 
+    private val log = LoggerFactory.getLogger(javaClass)
+
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    log.info("Tidligere vurderinger gir ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.SYKDOMSVILKÅRET} for behandlingId ${kontekst.behandlingId}")
                     avklaringsbehovene.avbrytForSteg(type())
                     return Fullført
                 }
-
 
                 val vilkårResultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
                 val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)

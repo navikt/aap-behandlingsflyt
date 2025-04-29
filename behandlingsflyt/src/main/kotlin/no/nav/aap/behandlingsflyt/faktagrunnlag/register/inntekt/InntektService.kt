@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
-import no.nav.aap.behandlingsflyt.behandling.beregning.AvklarFaktaBeregningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
@@ -20,6 +19,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettGrunnlagSteg
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -34,7 +34,6 @@ import java.time.LocalDate
 class InntektService private constructor(
     private val sakService: SakService,
     private val inntektGrunnlagRepository: InntektGrunnlagRepository,
-    private val avklarFaktaBeregningService: AvklarFaktaBeregningService,
     private val sykdomRepository: SykdomRepository,
     private val uføreRepository: UføreRepository,
     private val studentRepository: StudentRepository,
@@ -46,7 +45,11 @@ class InntektService private constructor(
 
     override val navn = Companion.navn
 
-    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+    override fun erRelevant(
+        kontekst: FlytKontekstMedPerioder,
+        steg: StegType,
+        oppdatert: InformasjonskravOppdatert?
+    ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
                 oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
                 tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
@@ -57,31 +60,32 @@ class InntektService private constructor(
 
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
-        val inntekter = if (avklarFaktaBeregningService.skalFastsetteGrunnlag(behandlingId)) {
-            val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
-            val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
-            val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-            val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
-            val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
+        val inntekter =
+            if (!tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, FastsettGrunnlagSteg.type())) {
+                val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
+                val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
+                val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+                val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
+                val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
 
-            val sak = sakService.hent(kontekst.sakId)
-            val nedsettelsesDato = utledNedsettelsesdato(beregningVurdering?.tidspunktVurdering, studentGrunnlag)
-            val behov = Inntektsbehov(
-                Input(
-                    nedsettelsesDato = nedsettelsesDato,
-                    inntekter = setOf(),
-                    uføregrad = uføreGrunnlag?.vurderinger ?: emptyList(),
-                    yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
-                    registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
-                    beregningGrunnlag = beregningVurdering
+                val sak = sakService.hent(kontekst.sakId)
+                val nedsettelsesDato = utledNedsettelsesdato(beregningVurdering?.tidspunktVurdering, studentGrunnlag)
+                val behov = Inntektsbehov(
+                    Input(
+                        nedsettelsesDato = nedsettelsesDato,
+                        inntekter = setOf(),
+                        uføregrad = uføreGrunnlag?.vurderinger ?: emptyList(),
+                        yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
+                        registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
+                        beregningGrunnlag = beregningVurdering
+                    )
                 )
-            )
-            val inntektsBehov = behov.utledAlleRelevanteÅr()
+                val inntektsBehov = behov.utledAlleRelevanteÅr()
 
-            inntektRegisterGateway.innhent(sak.person, inntektsBehov)
-        } else {
-            emptySet()
-        }
+                inntektRegisterGateway.innhent(sak.person, inntektsBehov)
+            } else {
+                emptySet()
+            }
 
         inntektGrunnlagRepository.lagre(behandlingId, inntekter)
 
@@ -116,7 +120,6 @@ class InntektService private constructor(
             return InntektService(
                 sakService = SakService(sakRepository),
                 inntektGrunnlagRepository = repositoryProvider.provide(),
-                avklarFaktaBeregningService = AvklarFaktaBeregningService(vilkårsresultatRepository),
                 sykdomRepository = repositoryProvider.provide(),
                 uføreRepository = repositoryProvider.provide(),
                 studentRepository = repositoryProvider.provide(),
