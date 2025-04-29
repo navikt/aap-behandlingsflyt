@@ -119,7 +119,8 @@ object Revurdering : BehandlingType {
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
                     ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING,
-                    ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+                    ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE,
                 )
             )
             .medSteg(
