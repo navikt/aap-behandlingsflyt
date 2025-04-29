@@ -37,11 +37,11 @@ class Vilkårsresultat(
      * @return En tidslinje med [RettighetsType].
      */
     fun rettighetstypeTidslinje(): Tidslinje<RettighetsType> {
-        require(vilkår.any { it.type == Vilkårtype.ALDERSVILKÅRET })
-        require(vilkår.any { it.type == Vilkårtype.BISTANDSVILKÅRET })
-        require(vilkår.any { it.type == Vilkårtype.MEDLEMSKAP })
-        require(vilkår.any { it.type == Vilkårtype.LOVVALG })
-        require(vilkår.any { it.type == Vilkårtype.SYKDOMSVILKÅRET })
+        require(vilkår.any { it.type == Vilkårtype.ALDERSVILKÅRET }) { "Aldersvilkåret må være vurdert." }
+        require(vilkår.any { it.type == Vilkårtype.BISTANDSVILKÅRET }) { "Bistandsvilkåret må være vurdert." }
+        require(vilkår.any { it.type == Vilkårtype.MEDLEMSKAP }) { "Medlemskap må være vurdert." }
+        require(vilkår.any { it.type == Vilkårtype.LOVVALG }) { "Lovvalg må være vurdert."}
+        require(vilkår.any { it.type == Vilkårtype.SYKDOMSVILKÅRET }) { "Sykdomsvilkåret må være vurdert." }
         require(vilkår.distinctBy { it.type }.size == vilkår.size)
 
         return vilkår
