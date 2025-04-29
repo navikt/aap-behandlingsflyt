@@ -49,7 +49,10 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
+import org.slf4j.LoggerFactory
 import javax.sql.DataSource
+
+private val log = LoggerFactory.getLogger("flytApi")
 
 fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
     route("/api/behandling") {
@@ -114,6 +117,16 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                         utledVurdertGruppe(prosessering, aktivtSteg, flyt, avklaringsbehovene)
                     val vilkårsresultat = vilkårResultat(vilkårsresultatRepository, behandling.id)
                     val alleAvklaringsbehov = alleAvklaringsbehovInkludertFrivillige.alle()
+
+                    LoggingKontekst(
+                        repositoryProvider,
+                        LogKontekst(referanse = BehandlingReferanse(req.referanse))
+                    ).use {
+                        val behandlingVersjon = behandling.versjon
+                        log.info("Henter flyt med behandlingversjon: ${behandlingVersjon}")
+                    }
+
+
                     BehandlingFlytOgTilstandDto(
                         flyt = stegGrupper.map { (gruppe, steg) ->
                             erFullført = erFullført && gruppe != aktivtSteg.gruppe

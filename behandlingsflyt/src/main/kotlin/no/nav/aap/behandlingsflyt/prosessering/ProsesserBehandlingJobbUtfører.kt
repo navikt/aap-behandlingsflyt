@@ -22,11 +22,15 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import org.slf4j.LoggerFactory
+
 
 class ProsesserBehandlingJobbUtfører(
     private val låsRepository: TaSkriveLåsRepository,
     private val kontroller: FlytOrkestrator
 ) : JobbUtfører {
+
+private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
@@ -36,6 +40,8 @@ class ProsesserBehandlingJobbUtfører(
         val kontekst = kontroller.opprettKontekst(sakId, behandlingId)
 
         kontroller.forberedOgProsesserBehandling(kontekst)
+
+        log.info("Prosesserer behandling for jobb ${input.type()} med behandlingId ${behandlingId}")
 
         låsRepository.verifiserSkrivelås(skrivelås)
     }
