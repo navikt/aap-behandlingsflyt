@@ -129,6 +129,7 @@ import no.nav.aap.komponenter.server.AZURE
 import no.nav.aap.komponenter.server.commonKtorModule
 import no.nav.aap.komponenter.server.plugins.NavIdentInterceptor
 import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.motor.FlytJobbRepositoryImpl
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
@@ -308,6 +309,7 @@ private fun registerRepositories() {
         .register<TjenestePensjonRepositoryImpl>()
         .register<TrukketSøknadRepositoryImpl>()
         .register<VurderRettighetsperiodeRepositoryImpl>()
+        .register<FlytJobbRepositoryImpl>()
         .status()
 }
 

@@ -65,13 +65,13 @@ private fun registrerMottattHendelse(
             val repositoryProvider = RepositoryRegistry.provider(connection)
             val sak = repositoryProvider.provide<SakRepository>().hent(dto.saksnummer)
             val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
+            val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
 
             log.info("Mottok dokumenthendelse. Brevkategori: ${dto.type} Mottattdato: ${dto.mottattTidspunkt}")
 
             if (kjennerTilDokumentFraFør(dto, sak, mottattDokumentRepository)) {
                 log.warn("Allerede håndtert dokument med referanse {}", dto.referanse)
             } else {
-                val flytJobbRepository = FlytJobbRepository(connection)
                 flytJobbRepository.leggTil(
                     HendelseMottattHåndteringJobbUtfører.nyJobb(
                         sakId = sak.id,

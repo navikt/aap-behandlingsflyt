@@ -191,7 +191,7 @@ private fun registrerDokumentjobb(
     val tom = bruddAktivitetsplikt.maxOf { dokument -> dokument.brudd.periode.tom }
     val fom = bruddAktivitetsplikt.minOf { dokument -> dokument.brudd.periode.fom }
 
-    val flytJobbRepository = FlytJobbRepository(connection)
+    val flytJobbRepository = RepositoryRegistry.provider(connection).provide<FlytJobbRepository>()
     flytJobbRepository.leggTil(
         HendelseMottattHåndteringJobbUtfører.nyJobb(
             sakId = sak.id,

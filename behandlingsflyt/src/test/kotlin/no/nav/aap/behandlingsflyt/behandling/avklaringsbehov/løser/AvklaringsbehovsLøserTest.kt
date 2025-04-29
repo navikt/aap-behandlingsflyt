@@ -34,6 +34,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.motor.FlytJobbRepositoryImpl
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -72,6 +73,7 @@ internal class AvklaringsbehovsLøserTest {
         RepositoryRegistry.register<TrukketSøknadRepositoryImpl>()
         RepositoryRegistry.register<MottattDokumentRepositoryImpl>()
         RepositoryRegistry.register<VurderRettighetsperiodeRepositoryImpl>()
+        RepositoryRegistry.register<FlytJobbRepositoryImpl>()
     }
 
     @Test

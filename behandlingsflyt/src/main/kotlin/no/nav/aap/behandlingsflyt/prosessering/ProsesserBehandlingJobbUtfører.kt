@@ -74,7 +74,7 @@ private val log = LoggerFactory.getLogger(javaClass)
                         behandlingRepository
                     ),
                     behandlingHendelseService = BehandlingHendelseServiceImpl(
-                        FlytJobbRepository(connection),
+                        repositoryProvider.provide<FlytJobbRepository>(),
                         repositoryProvider.provide<BrevbestillingRepository>(),
                         SakService(sakRepository)
                     ),

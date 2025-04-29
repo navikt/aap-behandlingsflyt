@@ -219,9 +219,10 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                         val behandlingRepository =
                             repositoryProvider.provide<BehandlingRepository>()
                         val sakRepository = repositoryProvider.provide<SakRepository>()
+                        val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
                         BehandlingTilstandValidator(
                             BehandlingReferanseService(behandlingRepository),
-                            FlytJobbRepository(connection)
+                            flytJobbRepository
                         ).validerTilstand(
                             request,
                             body.behandlingVersjon
@@ -230,7 +231,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                         AvklaringsbehovOrkestrator(
                             connection,
                             BehandlingHendelseServiceImpl(
-                                FlytJobbRepository(connection),
+                                flytJobbRepository,
                                 repositoryProvider.provide<BrevbestillingRepository>(),
                                 SakService(sakRepository)
                             )

@@ -266,6 +266,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                         val behandlingRepository =
                             repositoryProvider.provide<BehandlingRepository>()
                         val sakRepository = repositoryProvider.provide<SakRepository>()
+                        val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
 
                         MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
                             MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString())
@@ -277,7 +278,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                         AvklaringsbehovOrkestrator(
                                             connection,
                                             BehandlingHendelseServiceImpl(
-                                                FlytJobbRepository(connection),
+                                                flytJobbRepository,
                                                 repositoryProvider.provide(),
                                                 SakService(sakRepository)
                                             )

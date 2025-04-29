@@ -68,7 +68,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                         val sakService = SakService(repositoryProvider.provide<SakRepository>())
                         val behandlingHendelseService =
                             BehandlingHendelseServiceImpl(
-                                FlytJobbRepository(connection),
+                                repositoryProvider.provide<FlytJobbRepository>(),
                                 repositoryProvider.provide<BrevbestillingRepository>(),
                                 sakService
                             )

@@ -130,7 +130,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                         repositoryProvider.provide<BehandlingRepository>()
                     val lås = taSkriveLåsRepository.lås(req.referanse)
                     val behandling = behandling(behandlingRepository, req)
-                    val flytJobbRepository = FlytJobbRepository(connection)
+                    val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
                     if (!behandling.status().erAvsluttet()
                         && behandling.harIkkeVærtAktivitetIDetSiste()
                         && flytJobbRepository.hentJobberForBehandling(behandling.id.toLong()).isEmpty()

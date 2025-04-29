@@ -192,6 +192,7 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.FlytJobbRepositoryImpl
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.testutil.TestUtil
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -266,6 +267,7 @@ class FlytOrkestratorTest {
                 .register<TjenestePensjonRepositoryImpl>()
                 .register<TrukketSøknadRepositoryImpl>()
                 .register<VurderRettighetsperiodeRepositoryImpl>()
+                .register<FlytJobbRepositoryImpl>()
                 .status()
             GatewayRegistry
                 .register<PdlBarnGateway>()

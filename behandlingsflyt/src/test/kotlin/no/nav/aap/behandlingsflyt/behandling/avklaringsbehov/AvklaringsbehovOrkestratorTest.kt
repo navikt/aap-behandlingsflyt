@@ -26,6 +26,7 @@ import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.FlytJobbRepositoryImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Condition
 import org.junit.jupiter.api.BeforeEach
@@ -40,6 +41,7 @@ class AvklaringsbehovOrkestratorTest {
         RepositoryRegistry.register(SakRepositoryImpl::class)
         RepositoryRegistry.register(BehandlingRepositoryImpl::class)
         RepositoryRegistry.register(AvklaringsbehovRepositoryImpl::class)
+        RepositoryRegistry.register(FlytJobbRepositoryImpl::class)
     }
 
     @Test

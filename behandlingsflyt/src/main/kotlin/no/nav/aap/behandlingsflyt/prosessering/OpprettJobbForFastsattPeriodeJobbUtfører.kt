@@ -24,9 +24,10 @@ class OpprettJobbForFastsattPeriodeJobbUtfører(
 
     companion object : Jobb {
         override fun konstruer(connection: DBConnection): JobbUtfører {
+            val provider = RepositoryRegistry.provider(connection)
             return OpprettJobbForFastsattPeriodeJobbUtfører(
-                FlytJobbRepository(connection),
-                RepositoryRegistry.provider(connection).provide(),
+                provider.provide(),
+                provider.provide(),
             )
         }
 

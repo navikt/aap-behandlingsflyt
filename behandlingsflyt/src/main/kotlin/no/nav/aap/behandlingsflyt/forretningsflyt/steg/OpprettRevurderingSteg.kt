@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryRegistry
-import no.nav.aap.motor.FlytJobbRepository
 import org.slf4j.LoggerFactory
 
 class OpprettRevurderingSteg(
@@ -86,7 +85,7 @@ class OpprettRevurderingSteg(
                 ),
                 samordningYtelseVurderingRepository = repositoryProvider.provide(),
                 låsRepository = repositoryProvider.provide(),
-                prosesserBehandling = ProsesserBehandlingService(FlytJobbRepository(connection)),
+                prosesserBehandling = ProsesserBehandlingService(repositoryProvider.provide()),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
             )
         }

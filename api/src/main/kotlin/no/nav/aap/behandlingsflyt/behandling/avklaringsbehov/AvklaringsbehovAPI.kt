@@ -43,13 +43,13 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                         repositoryProvider.provide<TaSkriveLåsRepository>()
                     val avklaringsbehovRepository =
                         repositoryProvider.provide<AvklaringsbehovRepository>()
+                    val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
 
                     LoggingKontekst(
                         repositoryProvider,
                         LogKontekst(referanse = BehandlingReferanse(request.referanse))
                     ).use {
                         val lås = taSkriveLåsRepository.lås(request.referanse)
-                        val flytJobbRepository = FlytJobbRepository(connection)
                         BehandlingTilstandValidator(
                             BehandlingReferanseService(behandlingRepository),
                             flytJobbRepository

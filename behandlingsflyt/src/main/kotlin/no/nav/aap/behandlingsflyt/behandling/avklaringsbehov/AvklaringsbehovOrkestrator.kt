@@ -36,7 +36,8 @@ class AvklaringsbehovOrkestrator(
     private val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
     private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
     private val sakRepository = repositoryProvider.provide<SakRepository>()
-    private val prosesserBehandling = ProsesserBehandlingService(FlytJobbRepository(connection))
+    val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
+    private val prosesserBehandling = ProsesserBehandlingService(flytJobbRepository)
 
     private val log = LoggerFactory.getLogger(javaClass)
 

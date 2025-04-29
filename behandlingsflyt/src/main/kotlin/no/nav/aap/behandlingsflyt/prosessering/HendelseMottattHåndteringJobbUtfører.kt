@@ -116,6 +116,7 @@ class HendelseMottattHåndteringJobbUtfører(
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val mottattDokumentRepository =
                 repositoryProvider.provide<MottattDokumentRepository>()
+            val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
             return HendelseMottattHåndteringJobbUtfører(
                 låsRepository,
                 HåndterMottattDokumentService(
@@ -126,7 +127,7 @@ class HendelseMottattHåndteringJobbUtfører(
                         behandlingRepository
                     ),
                     låsRepository,
-                    ProsesserBehandlingService(FlytJobbRepository(connection))
+                    ProsesserBehandlingService(flytJobbRepository)
                 ),
                 MottaDokumentService(mottattDokumentRepository),
                 mottattDokumentRepository

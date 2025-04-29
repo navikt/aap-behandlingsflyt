@@ -25,7 +25,7 @@ class BrevbestillingLøser(val connection: DBConnection) :
     private val sakRepository = repositoryProvider.provide<SakRepository>()
     private val avklaringsbehovOrkestrator = AvklaringsbehovOrkestrator(
         connection, BehandlingHendelseServiceImpl(
-            FlytJobbRepository(connection),
+            repositoryProvider.provide<FlytJobbRepository>(),
             repositoryProvider.provide<BrevbestillingRepository>(),
             SakService(sakRepository),
         )
