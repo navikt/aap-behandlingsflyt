@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import org.slf4j.LoggerFactory
@@ -52,7 +53,7 @@ class MedlemskapRepository(private val connection: DBConnection) {
                     setBoolean(7, it.helsedel)
                     setLong(8, medlemskapUnntakPersonId)
                     setString(9, it.lovvalgsland)
-                    setEnumName(10, it.kilde?.kilde)
+                    setEnumName(10, it.kilde?.kildesystemKode)
                     setString(11, it.kilde?.kildeNavn)
                 }
             }
@@ -76,6 +77,7 @@ class MedlemskapRepository(private val connection: DBConnection) {
                     lovvalg = it.getString("LOVVALG"),
                     helsedel = it.getBoolean("HELSEDEL"),
                     lovvalgsland = it.getStringOrNull("LOVVALGSLAND"),
+                    kilde = hentKildesystem(it)
                 )
                 Segment(
                     it.getPeriode("PERIODE"),
@@ -83,6 +85,15 @@ class MedlemskapRepository(private val connection: DBConnection) {
                 )
             }
         }.toList()
+    }
+
+    private fun hentKildesystem(row: Row): KildesystemMedl? {
+        val kildesystemKode: KildesystemKode? = row.getEnumOrNull("KILDESYSTEM")
+        val kildeNavn = row.getStringOrNull("KILDENAVN")
+
+        return if (kildesystemKode != null && kildeNavn != null) {
+            KildesystemMedl(kildesystemKode, kildeNavn)
+        } else null
     }
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapUnntakGrunnlag? {

@@ -10,6 +10,7 @@ data class Unntak(
     val lovvalg: String,
     val helsedel: Boolean,
     val lovvalgsland: String?,
+    val kilde: KildesystemMedl?
 )
 
 data class MedlemskapDataIntern(
@@ -28,7 +29,7 @@ data class MedlemskapDataIntern(
 )
 
 data class KildesystemMedl(
-    val kilde: KildesystemKode,
+    val kildesystemKode: KildesystemKode,
     val kildeNavn: String
 )
 

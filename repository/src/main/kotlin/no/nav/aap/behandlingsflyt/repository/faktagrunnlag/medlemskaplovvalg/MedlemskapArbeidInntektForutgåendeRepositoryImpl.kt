@@ -6,12 +6,15 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.HistoriskManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
@@ -240,6 +243,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                     lovvalg = it.getString("LOVVALG"),
                     helsedel = it.getBoolean("HELSEDEL"),
                     lovvalgsland = it.getStringOrNull("LOVVALGSLAND"),
+                    kilde = hentKildesystem(it)
                 )
                 Segment(
                     it.getPeriode("PERIODE"),
@@ -248,6 +252,15 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             }
         }.toList()
        return MedlemskapUnntakGrunnlag(data)
+    }
+
+    private fun hentKildesystem(row: Row): KildesystemMedl? {
+        val kildesystemKode: KildesystemKode? = row.getEnumOrNull("KILDESYSTEM")
+        val kildeNavn = row.getStringOrNull("KILDENAVN")
+
+        return if (kildesystemKode != null && kildeNavn != null) {
+            KildesystemMedl(kildesystemKode, kildeNavn)
+        } else null
     }
 
     private fun hentArbeiderINorgeGrunnlag(arbeiderINorgeId: Long?): List<ArbeidINorgeGrunnlag> {

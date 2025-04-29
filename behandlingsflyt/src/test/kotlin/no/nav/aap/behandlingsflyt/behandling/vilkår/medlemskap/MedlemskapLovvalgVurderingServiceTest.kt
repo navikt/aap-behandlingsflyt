@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -27,7 +29,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                     unntak = listOf(
                         Segment(
                             periode = Periode(LocalDate.now().minusMonths(1), LocalDate.now()),
-                            verdi = Unntak("unntak", "statusaarsak", true, "grunnlag", "lovvalg", false, EØSLand.NOR.toString())
+                            verdi = Unntak("unntak", "statusaarsak", true, "grunnlag", "lovvalg", false, EØSLand.NOR.toString(), null)
                         )
                     )
                 ),
@@ -54,7 +56,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                     unntak = listOf(
                         Segment(
                             periode = Periode(LocalDate.now().minusMonths(1), LocalDate.now()),
-                            verdi = Unntak("unntak", "statusaarsak", true, "grunnlag", "lovvalg", false, EØSLand.NOR.toString())
+                            verdi = Unntak("unntak", "statusaarsak", true, "grunnlag", "lovvalg", false, EØSLand.NOR.toString(), null)
                         )
                     )
                 ),
@@ -85,7 +87,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                     unntak = listOf(
                         Segment(
                             periode = Periode(LocalDate.now().minusMonths(1), LocalDate.now()),
-                            verdi = Unntak("unntak", "statusaarsak", true, "grunnlag", "lovvalg", false, EØSLand.SWE.toString())
+                            verdi = Unntak("unntak", "statusaarsak", true, "grunnlag", "lovvalg", false, EØSLand.SWE.toString(), KildesystemMedl(KildesystemKode.MEDL, "MEDL"))
                         )
                     )
                 ),
