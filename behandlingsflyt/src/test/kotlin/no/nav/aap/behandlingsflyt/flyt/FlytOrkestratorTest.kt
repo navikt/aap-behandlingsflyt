@@ -830,10 +830,10 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `ikke sykdom viss varighet, men skal få innvilget sykepengererstatning`() {
+    fun `ikke sykdom viss varighet, men skal få innvilget 11-13 sykepengererstatning`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val person = TestPerson(
-            fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
+            fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
         )
         FakePersoner.leggTil(person)
         val ident = person.aktivIdent()
@@ -888,8 +888,9 @@ class FlytOrkestratorTest {
 
         behandling = kvalitetssikre(behandling)
 
-        val åpneAvslagsårsak = hentÅpneAvklaringsbehov(behandling.id)
-        assertThat(åpneAvslagsårsak).anySatisfy { assertThat(it.definisjon.kode).isEqualTo(AvklaringsbehovKode.`5007`) }
+
+        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon.kode).isEqualTo(AvklaringsbehovKode.`5007`) }
 
         behandling = løsAvklaringsBehov(
             behandling, AvklarSykepengerErstatningLøsning(
@@ -901,6 +902,7 @@ class FlytOrkestratorTest {
                 ),
             )
         )
+
 
         behandling = løsAvklaringsBehov(
             behandling,
@@ -930,6 +932,9 @@ class FlytOrkestratorTest {
 
         assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
 
+        var resultat = dataSource.transaction { ResultatUtleder(RepositoryProvider(it)).utledResultat(behandling.id) }
+        assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
+
         var brevBestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
 
         behandling = løsAvklaringsBehov(
@@ -945,13 +950,13 @@ class FlytOrkestratorTest {
         assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
 
         val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
-        val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
-        assertThat(bistandsvilkåret.vilkårsperioder())
+        assertThat(sykdomsvilkåret.vilkårsperioder())
             .hasSize(1)
             .allMatch { vilkårsperiode -> vilkårsperiode.erOppfylt() && vilkårsperiode.innvilgelsesårsak == Innvilgelsesårsak.SYKEPENGEERSTATNING }
 
-        val resultat = dataSource.transaction { ResultatUtleder(RepositoryProvider(it)).utledResultat(behandling.id) }
+        resultat = dataSource.transaction { ResultatUtleder(RepositoryProvider(it)).utledResultat(behandling.id) }
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
 
         assertTidslinje(

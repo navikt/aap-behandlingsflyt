@@ -51,17 +51,17 @@ class Vilkårsresultat(
                     return@outerJoinNotNull null
                 }
 
-                // Vi filtrerer bort vurderinger hvor noen vilkår er avslått, bortsett fra sykdomsvilkåret,
-                // som har unntak: om sykepengeerstatning er innvilget.
+                // Vi filtrerer bort vurderinger hvor noen vilkår er avslått
                 val harVilkårIkkeOppfylt = vurderinger.any { (vilkår, vurdering) ->
-                    vurdering.utfall == Utfall.IKKE_OPPFYLT && vilkår.type != Vilkårtype.SYKDOMSVILKÅRET
+                    vurdering.utfall == Utfall.IKKE_OPPFYLT
                 }
                 if (harVilkårIkkeOppfylt) {
                     return@outerJoinNotNull null
                 }
 
+                // Bistandsvilkåret kan være merket som ikke relevant ved sykepengeerstatning
                 val bistandsvilkåretErIkkeOppfylt = vurderinger.none { (vilkår, vurdering) ->
-                    vilkår.type == Vilkårtype.BISTANDSVILKÅRET && vurdering.erOppfylt()
+                    vilkår.type == Vilkårtype.BISTANDSVILKÅRET && (vurdering.erOppfylt() || vurdering.erIkkeRelevant())
                 }
                 if (bistandsvilkåretErIkkeOppfylt) {
                     return@outerJoinNotNull null
@@ -106,11 +106,11 @@ class Vilkårsresultat(
         val (_, vilkårsVurdering) = requireNotNull(vilkårPar.firstOrNull { it.first == Vilkårtype.SYKDOMSVILKÅRET })
         val sykdomsUtfall = vilkårsVurdering.utfall
 
-        // Hvis sykdomsvilkåret ikke er oppfylt, så kan man få rettighet om bistandsvilkåret har sykepenger som innvilgelsesårsak
-        if (sykdomsUtfall == Utfall.IKKE_OPPFYLT && vilkårsVurdering.avslagsårsak == Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET) {
+        // Hvis bistandsvurderingen ikke er relevant, kan det være fordi det er sykepengeerstatning
+        if (bistandsvurderingen.erIkkeRelevant()) {
             val sykepengerErstatning =
                 vilkårPar.find {
-                    it.first == Vilkårtype.BISTANDSVILKÅRET
+                    it.first == Vilkårtype.SYKDOMSVILKÅRET
                             && it.second.utfall == Utfall.OPPFYLT
                             && it.second.innvilgelsesårsak == Innvilgelsesårsak.SYKEPENGEERSTATNING
                 }

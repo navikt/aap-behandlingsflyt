@@ -80,7 +80,7 @@ class FastsettGrunnlagSteg(
         rettighetsperiode: Periode,
         vilkårsresultat: Vilkårsresultat
     ) {
-        if (avklarFaktaBeregningService.skalFastsetteGrunnlag(kontekst.behandlingId)) {
+        if (!tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
             val beregningsgrunnlag = beregningService.beregnGrunnlag(kontekst.behandlingId)
 
             vilkår.leggTilVurdering(

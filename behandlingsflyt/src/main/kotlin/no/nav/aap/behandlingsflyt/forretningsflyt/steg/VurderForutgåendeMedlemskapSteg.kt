@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 
 class VurderForutgåendeMedlemskapSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -35,6 +36,8 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårService: VilkårService,
 ) : BehandlingSteg {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
@@ -50,6 +53,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         val girAvslag = tidligereVurderinger.girAvslag(kontekst, type())
 
         if (girAvslag) {
+            log.info("Gir avslag pga. tidligere vurderinger. Avbryter avklaringsbehov. BehandlingId: ${kontekst.behandlingId}")
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
             val medlemskapBehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
             if (medlemskapBehov != null && medlemskapBehov.erÅpent()) {

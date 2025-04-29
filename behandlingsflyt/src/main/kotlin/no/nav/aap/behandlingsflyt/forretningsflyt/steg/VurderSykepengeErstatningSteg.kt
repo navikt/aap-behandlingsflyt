@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 
 class VurderSykepengeErstatningSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -47,10 +48,13 @@ class VurderSykepengeErstatningSteg private constructor(
         vilkårService = VilkårService(repositoryProvider),
     )
 
+    private val log = LoggerFactory.getLogger(javaClass)
+
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         return when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    log.info("Ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.BISTANDSVILKÅRET} for behandlingId ${kontekst.behandlingId}")
                     avklaringsbehovService.avbrytForSteg(kontekst.behandlingId, type())
                     vilkårService.ingenNyeVurderinger(
                         kontekst,
@@ -87,11 +91,8 @@ class VurderSykepengeErstatningSteg private constructor(
     private fun vurder(kontekst: FlytKontekstMedPerioder): StegResultat {
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-        val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
-        if (bistandsvilkåret.vilkårsperioder().all { !it.erOppfylt() } && (
-                    sykdomsvilkåret.vilkårsperioder()
-                        .any { it.erOppfylt() || avslagPåVissVarighet(it) })) {
+        if (sykdomsvilkåret.vilkårsperioder().all { !it.erOppfylt() && avslagPåVissVarighet(it) }) {
 
             val grunnlag = sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
 
@@ -106,23 +107,21 @@ class VurderSykepengeErstatningSteg private constructor(
                 )
 
                 if (grunnlag.vurdering.harRettPå) {
-                    vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET).leggTilVurdering(
+                    vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).leggTilVurdering(
                         Vilkårsperiode(
-                            Periode(faktagrunnlag.vurderingsdato, faktagrunnlag.sisteDagMedMuligYtelse),
-                            Utfall.OPPFYLT,
+                            periode = Periode(faktagrunnlag.vurderingsdato, faktagrunnlag.sisteDagMedMuligYtelse),
+                            utfall = Utfall.OPPFYLT,
                             begrunnelse = null,
                             innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING,
                             faktagrunnlag = faktagrunnlag,
                             versjon = ApplikasjonsVersjon.versjon
                         )
                     )
-                } else {
                     vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET).leggTilVurdering(
                         Vilkårsperiode(
-                            Periode(faktagrunnlag.vurderingsdato, faktagrunnlag.sisteDagMedMuligYtelse),
-                            Utfall.IKKE_OPPFYLT,
+                            periode = Periode(faktagrunnlag.vurderingsdato, faktagrunnlag.sisteDagMedMuligYtelse),
+                            utfall = Utfall.IKKE_RELEVANT,
                             begrunnelse = null,
-                            avslagsårsak = Avslagsårsak.MANGLENDE_DOKUMENTASJON, // TODO noe mer rett
                             faktagrunnlag = faktagrunnlag,
                             versjon = ApplikasjonsVersjon.versjon
                         )

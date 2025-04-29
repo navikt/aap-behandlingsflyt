@@ -48,7 +48,7 @@ class BeregningAvklarFaktaSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val behandlingId = kontekst.behandlingId
 
-        if (!avklarFaktaBeregningService.skalFastsetteGrunnlag(behandlingId)) {
+        if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
             // TODO: Avbryte eventuelle avklaringsbehov som henger her hvis de er aktive
             return Fullført
         }

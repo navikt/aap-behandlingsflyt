@@ -30,6 +30,7 @@ class BeregningService(
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val yrkesskadeRepository: YrkesskadeRepository
 ) {
+
     constructor(repositoryProvider: RepositoryProvider) : this(
         inntektGrunnlagRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),

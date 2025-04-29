@@ -96,6 +96,8 @@ class TidligereVurderingerImpl(
             val erstatningstidslinje = vilkårsresultat.tidslinjeFor(Vilkårtype.BISTANDSVILKÅRET)
                 .filter { it.verdi.innvilgelsesårsak == Innvilgelsesårsak.SYKEPENGEERSTATNING }
 
+            println("VILKÅRSRESULTAT: $vilkårsresultat")
+
             sykdomstidslinje.outerJoin(erstatningstidslinje) { sykdomsvilkåret, sykepengeerstatning ->
                 if (sykdomsvilkåret?.utfall == IKKE_OPPFYLT && sykepengeerstatning?.utfall == IKKE_OPPFYLT) {
                     UUNGÅELIG_AVSLAG

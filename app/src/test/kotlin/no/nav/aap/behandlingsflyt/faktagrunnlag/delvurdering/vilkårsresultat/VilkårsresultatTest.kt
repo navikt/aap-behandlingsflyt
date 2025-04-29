@@ -104,33 +104,34 @@ class VilkårsresultatTest {
         fun `overlapp mellom vilkår (sykepenge-erstatning først, så student)`() {
             val v = tomVurdering()
             val dagensDato = LocalDate.now()
+            val førstePeriode = Periode(dagensDato.minusDays(5), dagensDato)
             v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
-                    Periode(dagensDato.minusDays(5), dagensDato),
+                    førstePeriode,
+                    utfall = Utfall.IKKE_RELEVANT,
+                    begrunnelse = null
+                )
+            )
+            v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    førstePeriode,
                     utfall = Utfall.OPPFYLT,
                     innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING,
                     begrunnelse = null,
                 )
             )
-            v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
+            val andrePeriode = Periode(dagensDato.plusDays(1), dagensDato.plusDays(15))
+            v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
-                    Periode(dagensDato.minusDays(5), dagensDato),
-                    utfall = Utfall.IKKE_OPPFYLT,
-                    avslagsårsak = Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
+                    andrePeriode,
+                    utfall = Utfall.OPPFYLT,
+                    innvilgelsesårsak = Innvilgelsesårsak.STUDENT,
                     begrunnelse = null
                 )
             )
-            v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
-                Vilkårsperiode(
-                    Periode(dagensDato.plusDays(1), dagensDato.plusDays(15)),
-                    utfall = Utfall.OPPFYLT,
-                    innvilgelsesårsak = Innvilgelsesårsak.STUDENT,
-                    begrunnelse = null,
-                )
-            )
             v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
-                    Periode(dagensDato.plusDays(1), dagensDato.plusDays(15)),
+                    andrePeriode,
                     utfall = Utfall.OPPFYLT,
                     innvilgelsesårsak = Innvilgelsesårsak.STUDENT,
                     begrunnelse = null,
@@ -140,11 +141,11 @@ class VilkårsresultatTest {
             val res = v.rettighetstypeTidslinje()
             assertTidslinje(
                 res,
-                Periode(dagensDato.minusDays(5), dagensDato) to {
+                førstePeriode to {
                     assertThat(it).`as`(dagensDato.toString()).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
                 },
 
-                Periode(dagensDato.plusDays(1), dagensDato.plusDays(15)) to {
+                andrePeriode to {
                     assertThat(it).isEqualTo(RettighetsType.STUDENT)
                 }
             )
@@ -209,33 +210,34 @@ class VilkårsresultatTest {
         fun `om sykdoms-vilkåret er avslått, kan man få rett ved 11-13`() {
             val v = tomVurdering()
             val nå = LocalDate.now()
-            // Bistandsvilkåret er oppfylt hele perioden (30 dager)
-            v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
-                Vilkårsperiode(
-                    Periode(nå, nå.plusDays(30)),
-                    utfall = Utfall.OPPFYLT,
-                    begrunnelse = null,
-                )
-            )
+
+            val sykepengerPeriode = nå.plusDays(5)
             v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
-                    Periode(nå, nå.plusDays(5)),
-                    utfall = Utfall.IKKE_OPPFYLT,
-                    avslagsårsak = Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
+                    Periode(nå, sykepengerPeriode),
+                    utfall = Utfall.OPPFYLT,
+                    innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING,
                     begrunnelse = null
                 )
             )
             v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
-                    Periode(nå, nå.plusDays(5)),
+                    Periode(nå, sykepengerPeriode),
+                    utfall = Utfall.IKKE_RELEVANT,
+                    begrunnelse = null,
+                )
+            )
+            val andrePeriode = Periode(nå.plusDays(6), nå.plusDays(30))
+            v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    andrePeriode,
                     utfall = Utfall.OPPFYLT,
-                    innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING,
                     begrunnelse = null,
                 )
             )
             v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
-                    Periode(nå.plusDays(6), nå.plusDays(30)),
+                    andrePeriode,
                     utfall = Utfall.OPPFYLT,
                     begrunnelse = null
                 )
@@ -244,11 +246,11 @@ class VilkårsresultatTest {
             val res = v.rettighetstypeTidslinje().komprimer()
             assertTidslinje(
                 res,
-                Periode(nå, nå.plusDays(5)) to {
+                Periode(nå, sykepengerPeriode) to {
                     assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
                 },
 
-                Periode(nå.plusDays(6), nå.plusDays(30)) to {
+                andrePeriode to {
                     assertThat(it).isEqualTo(RettighetsType.BISTANDSBEHOV)
                 }
             )
