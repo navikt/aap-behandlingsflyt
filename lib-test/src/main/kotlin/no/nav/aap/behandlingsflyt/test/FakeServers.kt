@@ -1085,7 +1085,18 @@ object FakeServers : AutoCloseable {
     "medlem": false,
     "grunnlag": "grunnlag",
     "lovvalg": "lovvalg",
-    "lovvalgsland": "NOR"
+    "lovvalgsland": "NOR",
+    "sporingsinformasjon": {
+      "versjon": 1073741824,
+      "registrert": "2025-04-25",
+      "besluttet": "2025-04-25",
+      "kilde": "TP",
+      "kildedokument": "string",
+      "opprettet": "2025-04-25T09:21:22.041Z",
+      "opprettetAv": "string",
+      "sistEndret": "2025-04-25T09:21:22.041Z",
+      "sistEndretAv": "string"
+    }
   }
 ]"""
                 } else {
