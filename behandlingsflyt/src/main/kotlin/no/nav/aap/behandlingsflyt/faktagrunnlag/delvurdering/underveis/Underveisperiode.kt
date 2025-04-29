@@ -30,8 +30,8 @@ data class Underveisperiode(
     val id: UnderveisperiodeId? = null,
 ) : Comparable<Underveisperiode> {
     init {
-        if (utfall == Utfall.IKKE_OPPFYLT) requireNotNull(avslagsårsak)
-        if (utfall == Utfall.OPPFYLT) requireNotNull(rettighetsType)
+        if (utfall == Utfall.IKKE_OPPFYLT) requireNotNull(avslagsårsak) { "Må ha avslagsårsak om utfall ikke oppfylt." }
+        if (utfall == Utfall.OPPFYLT) requireNotNull(rettighetsType) { "Må ha rettighetsType om utfall oppfylt." }
     }
 
     override fun compareTo(other: Underveisperiode): Int {
