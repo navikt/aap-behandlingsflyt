@@ -27,14 +27,14 @@ class DatadelingBehandlingJobbUtfører(
         val behandling = behandlingRepository.hent(hendelse.referanse)
         val sak = sakRepository.hent(behandling.sakId)
         val tilkjentYtelse = tilkjentRepository.hentHvisEksisterer(behandling.id)
-        val underveis = underveisRepository.hent(behandling.id)
+        val underveis = underveisRepository.hentHvisEksisterer(behandling.id)
         val vilkårsresultatTidslinje = vilkårsresultatRepository.hent(behandling.id).rettighetstypeTidslinje()
 
         apiInternGateway.sendBehandling(
             sak,
             behandling,
             tilkjentYtelse,
-            underveis.perioder,
+            underveis?.perioder.orEmpty(),
             hendelse.hendelsesTidspunkt.toLocalDate(),
             vilkårsresultatTidslinje
         )
