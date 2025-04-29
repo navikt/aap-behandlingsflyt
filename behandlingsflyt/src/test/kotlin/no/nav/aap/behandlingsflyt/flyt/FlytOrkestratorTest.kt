@@ -190,7 +190,6 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Motor
@@ -932,7 +931,7 @@ class FlytOrkestratorTest {
 
         assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
 
-        var resultat = dataSource.transaction { ResultatUtleder(RepositoryProvider(it)).utledResultat(behandling.id) }
+        var resultat = dataSource.transaction { ResultatUtleder(RepositoryRegistry.provider(it)).utledResultat(behandling.id) }
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
 
         var brevBestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
@@ -956,7 +955,7 @@ class FlytOrkestratorTest {
             .hasSize(1)
             .allMatch { vilkårsperiode -> vilkårsperiode.erOppfylt() && vilkårsperiode.innvilgelsesårsak == Innvilgelsesårsak.SYKEPENGEERSTATNING }
 
-        resultat = dataSource.transaction { ResultatUtleder(RepositoryProvider(it)).utledResultat(behandling.id) }
+        resultat = dataSource.transaction { ResultatUtleder(RepositoryRegistry.provider(it)).utledResultat(behandling.id) }
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
 
         assertTidslinje(
@@ -1231,7 +1230,7 @@ class FlytOrkestratorTest {
         assertThat(alleAvklaringsbehov).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.BESTILL_BREV) }
 
         val resultat = dataSource.transaction {
-            ResultatUtleder(RepositoryProvider(it)).utledResultat(behandling.id)
+            ResultatUtleder(RepositoryRegistry.provider(it)).utledResultat(behandling.id)
         }
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
         var brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)

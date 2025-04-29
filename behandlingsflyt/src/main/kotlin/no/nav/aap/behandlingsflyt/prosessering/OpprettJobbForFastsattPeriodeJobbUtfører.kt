@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
@@ -26,7 +26,7 @@ class OpprettJobbForFastsattPeriodeJobbUtfører(
         override fun konstruer(connection: DBConnection): JobbUtfører {
             return OpprettJobbForFastsattPeriodeJobbUtfører(
                 FlytJobbRepository(connection),
-                RepositoryProvider(connection).provide(),
+                RepositoryRegistry.provider(connection).provide(),
             )
         }
 

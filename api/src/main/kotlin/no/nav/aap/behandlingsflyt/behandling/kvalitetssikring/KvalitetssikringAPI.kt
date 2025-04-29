@@ -21,12 +21,12 @@ import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.verdityper.Interval
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import java.time.LocalDateTime
 import javax.sql.DataSource
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 fun NormalOpenAPIRoute.kvalitetssikringApi(dataSource: DataSource) {
     route("/api/behandling") {
@@ -38,7 +38,7 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(dataSource: DataSource) {
             ) { req ->
 
                 val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val avklaringsbehovRepository =
                         repositoryProvider.provide<AvklaringsbehovRepository>()

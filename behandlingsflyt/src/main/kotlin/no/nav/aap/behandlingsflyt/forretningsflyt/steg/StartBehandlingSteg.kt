@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.slf4j.LoggerFactory
 
 class StartBehandlingSteg private constructor(
@@ -75,7 +75,7 @@ class StartBehandlingSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
+            val repositoryProvider = RepositoryRegistry.provider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val vilkårsresultatRepository =
                 repositoryProvider.provide<VilkårsresultatRepository>()

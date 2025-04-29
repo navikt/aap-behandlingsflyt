@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
@@ -46,7 +46,7 @@ class DatadelingBehandlingJobbUtfører(
         }
 
         override fun konstruer(connection: DBConnection): JobbUtfører {
-            val repositoryProvider = RepositoryProvider(connection)
+            val repositoryProvider = RepositoryRegistry.provider(connection)
             val behandlingRepository: BehandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val sakRepository: SakRepository = repositoryProvider.provide<SakRepository>()
             val tilkjentRepository: TilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>()

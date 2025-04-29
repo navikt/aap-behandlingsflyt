@@ -12,13 +12,14 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class AvklarSamordningGraderingLøser(connection: DBConnection) :
     AvklaringsbehovsLøser<AvklarSamordningGraderingLøsning> {
     private val samordningYtelseVurderingRepository =
-        RepositoryProvider(connection).provide<SamordningVurderingRepository>()
-    private val samordningYtelseRepository = RepositoryProvider(connection).provide<SamordningYtelseRepository>()
+        RepositoryRegistry.provider(connection).provide<SamordningVurderingRepository>()
+    private val samordningYtelseRepository =
+        RepositoryRegistry.provider(connection).provide<SamordningYtelseRepository>()
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarSamordningGraderingLøsning): LøsningsResultat {
         val samordningService = SamordningService(samordningYtelseVurderingRepository, samordningYtelseRepository)

@@ -11,11 +11,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class AvklarOverstyrtLovvalgMedlemskapLøser(connection: DBConnection): AvklaringsbehovsLøser<AvklarOverstyrtLovvalgMedlemskapLøsning> {
-    private val repositoryProvider = RepositoryProvider(connection)
+    private val repositoryProvider = RepositoryRegistry.provider(connection)
     private val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
     private val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
     private val sakRepository = repositoryProvider.provide<SakRepository>()

@@ -3,15 +3,13 @@ package no.nav.aap.behandlingsflyt.behandling.underveis
 import com.papsign.ktor.openapigen.route.info
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
-import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
@@ -31,7 +29,7 @@ fun NormalOpenAPIRoute.underveisVurderingerAPI(datasource: DataSource) {
         )
     ) { behandlingReferanse ->
         val underveisGrunnlag = datasource.transaction(readOnly = true) { conn ->
-            val repositoryProvider = RepositoryProvider(conn)
+            val repositoryProvider = RepositoryRegistry.provider(conn)
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val behandling =
                 BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)

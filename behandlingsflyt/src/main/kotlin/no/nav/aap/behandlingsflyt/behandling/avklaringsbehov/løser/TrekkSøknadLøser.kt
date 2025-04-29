@@ -5,18 +5,17 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TrekkSøkn
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import java.time.Instant
 
 class TrekkSøknadLøser(connection: DBConnection) : AvklaringsbehovsLøser<TrekkSøknadLøsning> {
-    private val repositoryProvider = RepositoryProvider(connection)
+    private val repositoryProvider = RepositoryRegistry.provider(connection)
     private val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
     private val trekkSøknadRepository = repositoryProvider.provide<TrukketSøknadRepository>()
     private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()

@@ -27,7 +27,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.slf4j.LoggerFactory
 import java.time.Duration
 
@@ -126,7 +126,7 @@ class YrkesskadeService private constructor(
         override val navn = InformasjonskravNavn.YRKESSKADE
 
         override fun konstruer(connection: DBConnection): YrkesskadeService {
-            val repositoryProvider = RepositoryProvider(connection)
+            val repositoryProvider = RepositoryRegistry.provider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val personopplysningRepository =
                 repositoryProvider.provide<PersonopplysningRepository>()

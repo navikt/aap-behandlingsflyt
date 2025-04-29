@@ -26,6 +26,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class VurderForutgåendeMedlemskapSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -156,7 +157,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return VurderForutgåendeMedlemskapSteg(RepositoryProvider(connection))
+            return VurderForutgåendeMedlemskapSteg(RepositoryRegistry.provider(connection))
         }
 
         override fun type(): StegType {

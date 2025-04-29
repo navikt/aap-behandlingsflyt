@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class VurderLovvalgSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -141,7 +142,7 @@ class VurderLovvalgSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return VurderLovvalgSteg(RepositoryProvider(connection))
+            return VurderLovvalgSteg(RepositoryRegistry.provider(connection))
         }
 
         override fun type(): StegType {

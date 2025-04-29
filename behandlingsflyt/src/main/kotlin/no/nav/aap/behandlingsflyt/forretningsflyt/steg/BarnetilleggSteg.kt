@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.slf4j.LoggerFactory
 
 class BarnetilleggSteg(
@@ -67,7 +68,7 @@ class BarnetilleggSteg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return BarnetilleggSteg(RepositoryProvider(connection))
+            return BarnetilleggSteg(RepositoryRegistry.provider(connection))
         }
 
         override fun type(): StegType {

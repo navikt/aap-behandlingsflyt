@@ -41,7 +41,6 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -260,7 +259,7 @@ class BistandsvilkåretTest {
         dataSource.transaction { connection ->
             // Må lagre ned sykdomsvurdering for behandlingen da vurderingenGjelderFra for 11-6 skal være lik den for 11-5 i samme behandling
             val sykdomsvurdering = sykdomsvurdering(vurderingenGjelderFra = now.plusDays(10))
-            RepositoryProvider(connection).provide<SykdomRepository>().lagre(revurdering.id, listOf(sykdomsvurdering))
+            RepositoryRegistry.provider(connection).provide<SykdomRepository>().lagre(revurdering.id, listOf(sykdomsvurdering))
 
             val bistandsvurdering2 = BistandVurderingLøsningDto(
                 begrunnelse = "Begrunnelse",

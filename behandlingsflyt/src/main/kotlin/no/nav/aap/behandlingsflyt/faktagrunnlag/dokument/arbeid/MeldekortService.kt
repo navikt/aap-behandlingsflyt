@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class MeldekortService private constructor(
     private val mottaDokumentService: MottaDokumentService,
@@ -27,7 +27,7 @@ class MeldekortService private constructor(
         override val navn = InformasjonskravNavn.MELDEKORT
 
         override fun konstruer(connection: DBConnection): MeldekortService {
-            val repositoryProvider = RepositoryProvider(connection)
+            val repositoryProvider = RepositoryRegistry.provider(connection)
             return MeldekortService(
                 MottaDokumentService(repositoryProvider.provide<MottattDokumentRepository>()),
                 repositoryProvider.provide<MeldekortRepository>(),

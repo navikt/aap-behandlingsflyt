@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 @Suppress("unused")
 class SamordningAvslagGrunnlag(
@@ -123,7 +124,7 @@ class SamordningAvslagSteg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return SamordningAvslagSteg(RepositoryProvider(connection))
+            return SamordningAvslagSteg(RepositoryRegistry.provider(connection))
         }
 
         override fun type(): StegType {

@@ -29,7 +29,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -51,7 +51,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
             )
             { _, req ->
                 val bestillingUuid = dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
 
                     LoggingKontekst(
                         repositoryProvider,
@@ -126,7 +126,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                 )
             ) { _, req ->
                 val brevPreview = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryProvider(connection).provide<SakRepository>()
+                    val repositoryProvider = RepositoryRegistry.provider(connection).provide<SakRepository>()
                     val sak = repositoryProvider.hent((Saksnummer(req.saksnummer)))
 
                     val personIdent = sak.person.aktivIdent()

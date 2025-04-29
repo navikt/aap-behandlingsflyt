@@ -23,6 +23,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class VurderYrkesskadeSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -104,7 +105,7 @@ class VurderYrkesskadeSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return VurderYrkesskadeSteg(RepositoryProvider(connection))
+            return VurderYrkesskadeSteg(RepositoryRegistry.provider(connection))
         }
 
         override fun type(): StegType {

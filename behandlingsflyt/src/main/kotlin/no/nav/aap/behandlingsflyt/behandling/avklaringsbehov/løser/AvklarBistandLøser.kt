@@ -10,13 +10,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class AvklarBistandLøser(val connection: DBConnection) :
     AvklaringsbehovsLøser<AvklarBistandsbehovLøsning> {
 
-    private val repositoryProvider = RepositoryProvider(connection)
+    private val repositoryProvider = RepositoryRegistry.provider(connection)
     private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
     private val bistandRepository = repositoryProvider.provide<BistandRepository>()
 

@@ -22,7 +22,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.auth.Bruker
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -32,7 +32,7 @@ class AvklaringsbehovOrkestrator(
     private val connection: DBConnection, private val behandlingHendelseService: BehandlingHendelseService
 ) {
     // TODO flytt?
-    private val repositoryProvider = RepositoryProvider(connection)
+    private val repositoryProvider = RepositoryRegistry.provider(connection)
     private val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
     private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
     private val sakRepository = repositoryProvider.provide<SakRepository>()

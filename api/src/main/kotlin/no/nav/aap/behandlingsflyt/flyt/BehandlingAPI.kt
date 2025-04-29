@@ -28,13 +28,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 import kotlin.collections.set
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
     route("/api/behandling").tag(Tags.Behandling) {
@@ -47,7 +47,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                 )
             ) { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val avklaringsbehovRepository =
                         repositoryProvider.provide<AvklaringsbehovRepository>()
@@ -120,7 +120,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                 )
             ) { req ->
                 dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val behandlingFørLås = behandling(repositoryProvider.provide(), req)
                     if (behandlingFørLås.status().erAvsluttet()) {
                         return@transaction
@@ -156,7 +156,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                 val referanse = req.referanse
 
                 val identer = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val pipRepository = repositoryProvider.provide<PipRepository>()
                     pipRepository.finnIdenterPåBehandling(BehandlingReferanse(referanse))
                 }

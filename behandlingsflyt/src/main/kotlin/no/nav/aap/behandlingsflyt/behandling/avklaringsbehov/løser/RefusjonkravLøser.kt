@@ -7,10 +7,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class RefusjonkravLøser(val connection: DBConnection) : AvklaringsbehovsLøser<RefusjonkravLøsning> {
-    private val repositoryProvider = RepositoryProvider(connection)
+    private val repositoryProvider = RepositoryRegistry.provider(connection)
     private val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
     private val sakRepository = repositoryProvider.provide<SakRepository>()
 

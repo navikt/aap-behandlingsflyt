@@ -14,11 +14,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource) {
     route("/api/behandling") {
@@ -31,7 +31,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource) {
                 )
             ) { req ->
                 val respons = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val bistandRepository = repositoryProvider.provide<BistandRepository>()
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()

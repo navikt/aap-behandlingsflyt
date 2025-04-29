@@ -14,10 +14,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class AvklarOverstyrtForutgåendeMedlemskapLøser(connection: DBConnection): AvklaringsbehovsLøser<AvklarOverstyrtForutgåendeMedlemskapLøsning> {
-    private val repositoryProvider = RepositoryProvider(connection)
+    private val repositoryProvider = RepositoryRegistry.provider(connection)
     private val forutgåendeMedlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
     private val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
     private val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()

@@ -15,8 +15,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class LegeerklæringService private constructor(
     private val mottaDokumentService: MottaDokumentService,
@@ -26,7 +26,7 @@ class LegeerklæringService private constructor(
         override val navn = InformasjonskravNavn.LEGEERKLÆRING
 
         override fun konstruer(connection: DBConnection): LegeerklæringService {
-            val repositoryProvider = RepositoryProvider(connection)
+            val repositoryProvider = RepositoryRegistry.provider(connection)
             val mottattDokumentRepository =
                 repositoryProvider.provide<MottattDokumentRepository>()
             return LegeerklæringService(

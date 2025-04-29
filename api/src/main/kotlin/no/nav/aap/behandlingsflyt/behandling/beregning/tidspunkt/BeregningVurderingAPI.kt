@@ -16,11 +16,11 @@ import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.verdityper.Beløp
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
     route("/api/behandling") {
@@ -31,7 +31,7 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
                 )
             ) { req ->
                 val responsDto = dataSource.transaction(readOnly = true) {
-                    val repositoryProvider = RepositoryProvider(it)
+                    val repositoryProvider = RepositoryRegistry.provider(it)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val uføreRepository = repositoryProvider.provide<UføreRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
@@ -67,7 +67,7 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
                 )
             ) { req ->
                 val responsDto = dataSource.transaction(readOnly = true) {
-                    val repositoryProvider = RepositoryProvider(it)
+                    val repositoryProvider = RepositoryRegistry.provider(it)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
                     val yrkesskadeRepository = repositoryProvider.provide<YrkesskadeRepository>()

@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.slf4j.LoggerFactory
 
 class SamordningSteg(
@@ -116,7 +117,7 @@ class SamordningSteg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return SamordningSteg(RepositoryProvider(connection))
+            return SamordningSteg(RepositoryRegistry.provider(connection))
         }
 
         override fun type(): StegType {

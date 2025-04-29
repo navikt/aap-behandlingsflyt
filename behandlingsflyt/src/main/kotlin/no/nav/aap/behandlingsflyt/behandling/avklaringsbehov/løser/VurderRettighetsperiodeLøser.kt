@@ -16,13 +16,13 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import java.time.LocalDate
 
 class VurderRettighetsperiodeLøser(connection: DBConnection) :
     AvklaringsbehovsLøser<VurderRettighetsperiodeLøsning> {
 
-    private val repositoryProvider = RepositoryProvider(connection)
+    private val repositoryProvider = RepositoryRegistry.provider(connection)
     private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
     private val sakRepository = repositoryProvider.provide<SakRepository>()
     private val grunnlagKopierer = GrunnlagKopiererImpl(connection)

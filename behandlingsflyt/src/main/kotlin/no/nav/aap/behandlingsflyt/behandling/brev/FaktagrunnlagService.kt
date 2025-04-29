@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.FaktagrunnlagType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class FaktagrunnlagService(
     private val behandlingRepository: BehandlingRepository,
@@ -24,7 +24,7 @@ class FaktagrunnlagService(
 
     companion object {
         fun konstruer(connection: DBConnection): FaktagrunnlagService {
-            val repositoryProvider = RepositoryProvider(connection)
+            val repositoryProvider = RepositoryRegistry.provider(connection)
             return FaktagrunnlagService(
                 behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
                 effektuer117repository = repositoryProvider.provide<Effektuer11_7Repository>(),

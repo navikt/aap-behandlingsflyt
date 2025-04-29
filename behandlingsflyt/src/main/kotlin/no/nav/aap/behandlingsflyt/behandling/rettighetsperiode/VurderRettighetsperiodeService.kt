@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.rettighetsperiode
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService.Companion
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
@@ -15,6 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class VurderRettighetsperiodeService(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
@@ -45,7 +45,7 @@ class VurderRettighetsperiodeService(
         override val navn = InformasjonskravNavn.RETTIGHETSPERIODE
 
         override fun konstruer(connection: DBConnection): Informasjonskrav {
-            return VurderRettighetsperiodeService(RepositoryProvider(connection))
+            return VurderRettighetsperiodeService(RepositoryRegistry.provider(connection))
         }
     }
 }

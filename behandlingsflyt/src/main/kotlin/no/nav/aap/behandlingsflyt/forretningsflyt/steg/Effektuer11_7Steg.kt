@@ -40,6 +40,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDateTime
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class Effektuer11_7Steg(
     private val underveisRepository: UnderveisRepository,
@@ -193,7 +194,7 @@ class Effektuer11_7Steg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return Effektuer11_7Steg(RepositoryProvider(connection))
+            return Effektuer11_7Steg(RepositoryRegistry.provider(connection))
         }
 
         override fun type(): StegType {

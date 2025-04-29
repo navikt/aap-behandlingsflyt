@@ -23,7 +23,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDate
@@ -156,7 +156,7 @@ class SamordningYtelseVurderingService(
         override val navn = InformasjonskravNavn.SAMORDNING_YTELSE
 
         override fun konstruer(connection: DBConnection): SamordningYtelseVurderingService {
-            val repositoryProvider = RepositoryProvider(connection)
+            val repositoryProvider = RepositoryRegistry.provider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()
             return SamordningYtelseVurderingService(
                 repositoryProvider.provide(),

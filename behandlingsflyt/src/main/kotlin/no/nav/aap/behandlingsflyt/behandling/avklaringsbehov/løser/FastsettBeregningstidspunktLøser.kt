@@ -6,12 +6,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class FastsettBeregningstidspunktLøser(connection: DBConnection) :
     AvklaringsbehovsLøser<FastsettBeregningstidspunktLøsning> {
 
-    private val repositoryProvider = RepositoryProvider(connection)
+    private val repositoryProvider = RepositoryRegistry.provider(connection)
     private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
     private val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
 

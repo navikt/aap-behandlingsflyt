@@ -24,8 +24,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class BarnService private constructor(
     private val sakService: SakService,
@@ -122,7 +122,7 @@ class BarnService private constructor(
         override val navn = InformasjonskravNavn.BARN
 
         override fun konstruer(connection: DBConnection): BarnService {
-            val repositoryProvider = RepositoryProvider(connection)
+            val repositoryProvider = RepositoryRegistry.provider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val personRepository = repositoryProvider.provide<PersonRepository>()
             val personopplysningRepository =

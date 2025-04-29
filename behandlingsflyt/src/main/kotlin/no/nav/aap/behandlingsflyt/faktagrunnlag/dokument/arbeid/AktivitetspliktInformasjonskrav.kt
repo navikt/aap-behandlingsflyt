@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class AktivitetspliktInformasjonskrav (
     private val mottaDokumentService: MottaDokumentService,
@@ -26,12 +26,12 @@ class AktivitetspliktInformasjonskrav (
 
         override fun konstruer(connection: DBConnection): AktivitetspliktInformasjonskrav {
             val mottattDokumentRepository =
-                RepositoryProvider(connection).provide<MottattDokumentRepository>()
+                RepositoryRegistry.provider(connection).provide<MottattDokumentRepository>()
 
             return AktivitetspliktInformasjonskrav(
                 MottaDokumentService(mottattDokumentRepository),
                 AktivitetspliktRepositoryImpl(connection),
-                TidligereVurderingerImpl(RepositoryProvider(connection)),
+                TidligereVurderingerImpl(RepositoryRegistry.provider(connection)),
             )
         }
     }

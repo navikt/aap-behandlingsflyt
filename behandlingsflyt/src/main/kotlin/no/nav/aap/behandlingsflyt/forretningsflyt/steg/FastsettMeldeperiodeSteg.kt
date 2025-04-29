@@ -17,6 +17,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.DayOfWeek
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class FastsettMeldeperiodeSteg(
     private val sakRepository: SakRepository,
@@ -64,7 +65,7 @@ class FastsettMeldeperiodeSteg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return FastsettMeldeperiodeSteg(RepositoryProvider(connection))
+            return FastsettMeldeperiodeSteg(RepositoryRegistry.provider(connection))
         }
 
         override fun type(): StegType {

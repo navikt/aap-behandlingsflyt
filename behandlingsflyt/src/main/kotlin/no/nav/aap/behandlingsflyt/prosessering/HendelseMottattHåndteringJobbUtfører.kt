@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
@@ -24,6 +23,7 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 private const val BREVKODE = "brevkode"
 private const val KANAL = "kanal"
@@ -110,7 +110,7 @@ class HendelseMottattHåndteringJobbUtfører(
             }
 
         override fun konstruer(connection: DBConnection): JobbUtfører {
-            val repositoryProvider = RepositoryProvider(connection)
+            val repositoryProvider = RepositoryRegistry.provider(connection)
             val låsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val sakRepository = repositoryProvider.provide<SakRepository>()

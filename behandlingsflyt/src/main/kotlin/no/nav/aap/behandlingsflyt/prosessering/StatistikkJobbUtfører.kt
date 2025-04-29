@@ -48,7 +48,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
@@ -381,7 +381,7 @@ class StatistikkJobbUtfører(
 
     companion object : Jobb {
         override fun konstruer(connection: DBConnection): JobbUtfører {
-            val repositoryProvider = RepositoryProvider(connection)
+            val repositoryProvider = RepositoryRegistry.provider(connection)
             val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val sakRepository = repositoryProvider.provide<SakRepository>()

@@ -11,7 +11,7 @@ private val logger = LoggerFactory.getLogger("no.nav.aap.lookup.repository")
  * PS: Hver gang denne implementeres, må også App.kt oppdateres for at implementasjonene
  * skal lastes i [RepositoryRegistry].
  */
-interface Repository {
+interface Repository: no.nav.aap.komponenter.repository.Repository {
     fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         logger.warn("kopier-metoden er ikke implementert for ${this::class.simpleName}. Er dette korrekt? Hvis ikke, implementer dummy-metode.")
     }

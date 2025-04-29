@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger("BrevSteg")
@@ -50,7 +51,7 @@ class MeldingOmVedtakBrevSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return MeldingOmVedtakBrevSteg(RepositoryProvider(connection))
+            return MeldingOmVedtakBrevSteg(RepositoryRegistry.provider(connection))
         }
 
         override fun type(): StegType {

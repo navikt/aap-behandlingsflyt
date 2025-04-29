@@ -17,7 +17,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.meldekort.kontrakt.Periode
 import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
 import no.nav.aap.meldekort.kontrakt.sak.SakStatus
@@ -111,7 +111,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
         }
 
         override fun konstruer(connection: DBConnection): JobbUtfører {
-            val repositoryProvider = RepositoryProvider(connection)
+            val repositoryProvider = RepositoryRegistry.provider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()
 
             return MeldeperiodeTilMeldekortBackendJobbUtfører(

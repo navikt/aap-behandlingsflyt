@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 /* Burde flytorkestratoren oppdage at det har kommet en ny årsak til behandling,
  * og derfor tilbakeføre aktivt steg til første steg som har denne årsaken knyttet
@@ -56,7 +57,7 @@ class TrukketSøknadService(
         override val navn = InformasjonskravNavn.TRUKKET_SØKNAD
 
         override fun konstruer(connection: DBConnection): Informasjonskrav {
-            return TrukketSøknadService(RepositoryProvider(connection))
+            return TrukketSøknadService(RepositoryRegistry.provider(connection))
         }
     }
 }

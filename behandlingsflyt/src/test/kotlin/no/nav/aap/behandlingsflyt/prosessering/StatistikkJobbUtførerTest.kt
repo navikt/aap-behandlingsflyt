@@ -96,7 +96,6 @@ import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.dokument.Kanal
@@ -225,7 +224,7 @@ class StatistikkJobbUtførerTest {
                 pipRepository = PipRepositoryImpl(connection),
                 sykdomRepository = SykdomRepositoryImpl(connection),
                 underveisRepository = UnderveisRepositoryImpl(connection),
-                trukketSøknadService = TrukketSøknadService(RepositoryProvider(connection)),
+                trukketSøknadService = TrukketSøknadService(RepositoryRegistry.provider(connection)),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -410,7 +409,7 @@ class StatistikkJobbUtførerTest {
                 MottattDokumentRepositoryImpl(connection),
                 sykdomRepository = SykdomRepositoryImpl(connection),
                 underveisRepository = UnderveisRepositoryImpl(connection),
-                trukketSøknadService = TrukketSøknadService(RepositoryProvider(connection)),
+                trukketSøknadService = TrukketSøknadService(RepositoryRegistry.provider(connection)),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )

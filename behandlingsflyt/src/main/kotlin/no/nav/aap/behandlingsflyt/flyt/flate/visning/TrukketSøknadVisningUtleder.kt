@@ -5,14 +5,14 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 // Denne ser ubrukt ut, men er ikke det pga reflection
 @Suppress("unused")
 class TrukketSøknadVisningUtleder(
     connection: DBConnection,
 ) : StegGruppeVisningUtleder {
-    private val behandlingRepository = RepositoryProvider(connection).provide<BehandlingRepository>()
+    private val behandlingRepository = RepositoryRegistry.provider(connection).provide<BehandlingRepository>()
 
     override fun skalVises(behandlingId: BehandlingId): Boolean {
         val behandling = behandlingRepository.hent(behandlingId)

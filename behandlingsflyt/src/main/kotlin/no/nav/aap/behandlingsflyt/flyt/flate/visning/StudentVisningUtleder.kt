@@ -6,13 +6,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 
 @Suppress("unused")
 class StudentVisningUtleder(connection: DBConnection) : StegGruppeVisningUtleder {
 
-    private val repositoryProvider = RepositoryProvider(connection)
+    private val repositoryProvider = RepositoryRegistry.provider(connection)
     private val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
     private val studentRepository = repositoryProvider.provide<StudentRepository>()
 

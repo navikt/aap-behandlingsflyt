@@ -34,7 +34,6 @@ import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -44,6 +43,7 @@ import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDateTime
 import javax.sql.DataSource
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
     route("/api").tag(Tags.Aktivitetsplikt) {
@@ -51,7 +51,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
             AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
         ) { behandlingReferanse ->
             val respons = dataSource.transaction(readOnly = true) { conn ->
-                val repositoryProvider = RepositoryProvider(conn)
+                val repositoryProvider = RepositoryRegistry.provider(conn)
                 val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val brevGateway = GatewayProvider.provide<BrevbestillingGateway>()
@@ -146,7 +146,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                 )
             ) { params ->
                 val response = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val aktivitetspliktRepository =
                         repositoryProvider.provide<AktivitetspliktRepository>()
@@ -168,7 +168,7 @@ private fun opprettDokument(
     saksnummer: Saksnummer,
     req: AktivitetspliktDTO
 ) {
-    val repositoryProvider = RepositoryProvider(connection)
+    val repositoryProvider = RepositoryRegistry.provider(connection)
     val sakRepository = repositoryProvider.provide<SakRepository>()
     val repository = repositoryProvider.provide<AktivitetspliktRepository>()
 

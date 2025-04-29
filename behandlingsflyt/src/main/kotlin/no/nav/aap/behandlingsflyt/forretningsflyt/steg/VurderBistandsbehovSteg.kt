@@ -31,6 +31,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class VurderBistandsbehovSteg private constructor(
     private val bistandRepository: BistandRepository,
@@ -226,7 +227,7 @@ class VurderBistandsbehovSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return VurderBistandsbehovSteg(RepositoryProvider(connection))
+            return VurderBistandsbehovSteg(RepositoryRegistry.provider(connection))
         }
 
         override fun type(): StegType {

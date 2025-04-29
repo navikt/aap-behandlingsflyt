@@ -28,7 +28,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
@@ -119,7 +119,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
             )
             { behandlingReferanse ->
                 val (registerGrunnlag, vurdering) = dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val samordningUføreRepository = repositoryProvider.provide<SamordningUføreRepository>()
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val uføreRepository = repositoryProvider.provide<UføreRepository>()
@@ -162,7 +162,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
             )
             { req ->
                 val (registerYtelser, samordning, tp) = dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val samordningRepository = repositoryProvider.provide<SamordningVurderingRepository>()
                     val samordningYtelseRepository = repositoryProvider.provide<SamordningYtelseRepository>()
                     val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
@@ -234,7 +234,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                 )
                 { behandlingReferanse ->
                     val samordningAndreStatligeYtelserVurdering = dataSource.transaction { connection ->
-                        val repositoryProvider = RepositoryProvider(connection)
+                        val repositoryProvider = RepositoryRegistry.provider(connection)
                         val samordningAndreStatligeYtelserRepository =
                             repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>()
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()

@@ -23,11 +23,11 @@ import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
     route("/api/behandling") {
@@ -40,7 +40,7 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
                 )
             ) { req ->
                 val soningsgrunnlag = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
@@ -98,7 +98,7 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
                 )
             ) { req ->
                 val grunnlagDto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)

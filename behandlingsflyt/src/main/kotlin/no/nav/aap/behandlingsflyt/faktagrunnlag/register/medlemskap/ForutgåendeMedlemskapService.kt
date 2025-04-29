@@ -23,9 +23,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
 import java.time.YearMonth
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class ForutgåendeMedlemskapService private constructor(
     private val sakService: SakService,
@@ -85,7 +85,7 @@ class ForutgåendeMedlemskapService private constructor(
         override val navn = InformasjonskravNavn.FORUTGÅENDE_MEDLEMSKAP
 
         override fun konstruer(connection: DBConnection): ForutgåendeMedlemskapService {
-            val repositoryProvider = RepositoryProvider(connection)
+            val repositoryProvider = RepositoryRegistry.provider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val grunnlagRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
             return ForutgåendeMedlemskapService(
