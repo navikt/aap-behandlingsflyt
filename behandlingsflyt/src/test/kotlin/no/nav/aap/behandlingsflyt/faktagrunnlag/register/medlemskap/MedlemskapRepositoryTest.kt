@@ -57,7 +57,8 @@ internal class MedlemskapRepositoryTest {
                         grunnlag = "FLK-TRGD",
                         lovvalg = "FLK_TRGD",
                         helsedel = true,
-                        lovvalgsland = "NOR"
+                        lovvalgsland = "NOR",
+                        kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
                     )
                 )
             )

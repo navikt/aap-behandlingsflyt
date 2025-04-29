@@ -32,7 +32,9 @@ class MedlemskapForutgåendeRepository(private val connection: DBConnection) {
         unntak.forEach {
             connection.execute(
                 """
-                INSERT INTO MEDLEMSKAP_FORUTGAAENDE_UNNTAK (STATUS, STATUS_ARSAK, MEDLEM, PERIODE, GRUNNLAG, LOVVALG, HELSEDEL, MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON_ID, LOVVALGSLAND) VALUES (?, ?, ?, ?::daterange ,?, ?, ?, ?, ?)
+                INSERT INTO MEDLEMSKAP_FORUTGAAENDE_UNNTAK (
+                STATUS, STATUS_ARSAK, MEDLEM, PERIODE, GRUNNLAG, LOVVALG, HELSEDEL, MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON_ID, LOVVALGSLAND, KILDESYSTEM, KILDENAVN
+                ) VALUES (?, ?, ?, ?::daterange ,?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
             ) {
                 setParams {
@@ -45,6 +47,8 @@ class MedlemskapForutgåendeRepository(private val connection: DBConnection) {
                     setBoolean(7, it.helsedel)
                     setLong(8, medlemskapUnntakPersonId)
                     setString(9, it.lovvalgsland)
+                    setEnumName(10, it.kilde?.kilde)
+                    setString(11, it.kilde?.kildeNavn)
                 }
             }
         }

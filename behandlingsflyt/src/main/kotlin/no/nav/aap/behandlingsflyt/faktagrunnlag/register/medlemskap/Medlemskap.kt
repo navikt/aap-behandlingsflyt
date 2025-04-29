@@ -24,7 +24,7 @@ data class MedlemskapDataIntern(
     val lovvalg: String,
     val helsedel: Boolean,
     val lovvalgsland: String?,
-    val kilde: KildesystemMedl? = null
+    val kilde: KildesystemMedl?
 )
 
 data class KildesystemMedl(
