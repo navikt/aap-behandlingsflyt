@@ -236,7 +236,8 @@ class StatistikkJobbUtfører(
         log.info("Kaller aap-statistikk for sak ${sak.saksnummer} og behandling ${behandling.referanse}")
 
         val rettighetstypePerioder =
-            underveisRepository.hent(behandling.id).perioder.filter { it.rettighetsType != null }
+            underveisRepository.hentHvisEksisterer(behandling.id)?.perioder.orEmpty()
+                .filter { it.rettighetsType != null }
                 .map { Segment(it.periode, it.rettighetsType) }
                 .let(::Tidslinje)
                 .komprimer()
