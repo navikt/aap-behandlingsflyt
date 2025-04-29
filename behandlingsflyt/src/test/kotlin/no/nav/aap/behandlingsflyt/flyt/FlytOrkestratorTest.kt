@@ -866,6 +866,7 @@ class FlytOrkestratorTest {
                     harSkadeSykdomEllerLyte = true,
                     erSkadeSykdomEllerLyteVesentligdel = true,
                     erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                    // Nei på denne gir mulighet til å innvilge på 11-13
                     erNedsettelseIArbeidsevneAvEnVissVarighet = false,
                     erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                     erArbeidsevnenNedsatt = true,
@@ -888,9 +889,8 @@ class FlytOrkestratorTest {
 
         behandling = kvalitetssikre(behandling)
 
-
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon.kode).isEqualTo(AvklaringsbehovKode.`5007`) }
+        assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
 
         behandling = løsAvklaringsBehov(
             behandling, AvklarSykepengerErstatningLøsning(

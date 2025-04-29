@@ -6,13 +6,12 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningFaktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
@@ -32,6 +31,7 @@ import org.slf4j.LoggerFactory
 class VurderSykepengeErstatningSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sykepengerErstatningRepository: SykepengerErstatningRepository,
+    private val sykdomRepository: SykdomRepository,
     private val sakService: SakService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
@@ -41,6 +41,7 @@ class VurderSykepengeErstatningSteg private constructor(
     constructor(repositoryProvider: RepositoryProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
         sykepengerErstatningRepository = repositoryProvider.provide(),
+        sykdomRepository = repositoryProvider.provide(),
         sakService = SakService(repositoryProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
@@ -54,7 +55,7 @@ class VurderSykepengeErstatningSteg private constructor(
         return when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-                    log.info("Ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.BISTANDSVILKÅRET} for behandlingId ${kontekst.behandlingId}")
+                    log.info("Ingen behandlingsgrunnlag for behandlingId ${kontekst.behandlingId}, avbryter steg ${type()}")
                     avklaringsbehovService.avbrytForSteg(kontekst.behandlingId, type())
                     vilkårService.ingenNyeVurderinger(
                         kontekst,
@@ -90,9 +91,11 @@ class VurderSykepengeErstatningSteg private constructor(
 
     private fun vurder(kontekst: FlytKontekstMedPerioder): StegResultat {
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
-        if (sykdomsvilkåret.vilkårsperioder().all { !it.erOppfylt() && avslagPåVissVarighet(it) }) {
+        val erRelevantÅVurdereSykepengererstatning =
+            sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.sykdomsvurderinger.orEmpty()
+                .any { it.erOppfyltSettBortIfraVissVarighet() && !it.erOppfylt() }
+        if (erRelevantÅVurdereSykepengererstatning) {
 
             val grunnlag = sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
 
@@ -107,16 +110,8 @@ class VurderSykepengeErstatningSteg private constructor(
                 )
 
                 if (grunnlag.vurdering.harRettPå) {
-                    vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).leggTilVurdering(
-                        Vilkårsperiode(
-                            periode = Periode(faktagrunnlag.vurderingsdato, faktagrunnlag.sisteDagMedMuligYtelse),
-                            utfall = Utfall.OPPFYLT,
-                            begrunnelse = null,
-                            innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING,
-                            faktagrunnlag = faktagrunnlag,
-                            versjon = ApplikasjonsVersjon.versjon
-                        )
-                    )
+                    // TODO her bør vi finne en bedre løsning på sikt
+                    //      Vi bør sentralisere behandling av vilkår til én vurderer-klasse.
                     vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET).leggTilVurdering(
                         Vilkårsperiode(
                             periode = Periode(faktagrunnlag.vurderingsdato, faktagrunnlag.sisteDagMedMuligYtelse),
@@ -127,6 +122,7 @@ class VurderSykepengeErstatningSteg private constructor(
                         )
                     )
                 }
+                log.info("Merket bistand som ikke relevant pga innvilget sykepengevilkår.")
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
             } else {
                 return FantAvklaringsbehov(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
@@ -142,9 +138,6 @@ class VurderSykepengeErstatningSteg private constructor(
         }
         return Fullført
     }
-
-    private fun avslagPåVissVarighet(vilkårsperiode: Vilkårsperiode): Boolean =
-        vilkårsperiode.utfall == Utfall.IKKE_OPPFYLT && vilkårsperiode.avslagsårsak == Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {

@@ -85,12 +85,6 @@ class TidligereVurderingerImpl(
             ikkeOppfyltFørerTilAvslag(Vilkårtype.BISTANDSVILKÅRET, vilkårsresultat)
         },
 
-        Sjekk(StegType.FASTSETT_SYKDOMSVILKÅRET) { _, _ ->
-            /* Det finnes unntak til sykdomsvilkåret, så selv om vilkåret ikke er oppfylt, så
-             * vet vi ikke her om det blir avslag eller ei. */
-            Tidslinje()
-        },
-
         Sjekk(StegType.VURDER_SYKEPENGEERSTATNING) { vilkårsresultat, _ ->
             val sykdomstidslinje = vilkårsresultat.tidslinjeFor(Vilkårtype.SYKDOMSVILKÅRET)
             val erstatningstidslinje = vilkårsresultat.tidslinjeFor(Vilkårtype.BISTANDSVILKÅRET)
@@ -103,6 +97,12 @@ class TidligereVurderingerImpl(
                     UKJENT
                 }
             }
+        },
+
+        Sjekk(StegType.FASTSETT_SYKDOMSVILKÅRET) { vilkårsresultat, _ ->
+            /* Det finnes unntak til sykdomsvilkåret, så selv om vilkåret ikke er oppfylt, så
+             * vet vi ikke her om det blir avslag eller ei. */
+            Tidslinje()
         },
 
         Sjekk(StegType.FASTSETT_GRUNNLAG) { vilkårsresultat, _ ->

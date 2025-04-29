@@ -138,7 +138,6 @@ object Revurdering : BehandlingType {
                     ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
                 )
             )
-            .medSteg(steg = FastsettSykdomsvilkåretSteg)
             .medSteg(
                 steg = VurderSykepengeErstatningSteg, årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
@@ -147,6 +146,7 @@ object Revurdering : BehandlingType {
                     ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
                 )
             )
+            .medSteg(steg = FastsettSykdomsvilkåretSteg)
             .medSteg(
                 steg = BeregningAvklarFaktaSteg, årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,

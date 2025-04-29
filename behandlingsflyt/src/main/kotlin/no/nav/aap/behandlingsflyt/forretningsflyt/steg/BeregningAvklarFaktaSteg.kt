@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.behandling.beregning.AvklarFaktaBeregningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
@@ -30,7 +29,6 @@ class BeregningAvklarFaktaSteg private constructor(
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val sykdomRepository: SykdomRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val avklarFaktaBeregningService: AvklarFaktaBeregningService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val tidligereVurderinger: TidligereVurderinger,
@@ -39,7 +37,6 @@ class BeregningAvklarFaktaSteg private constructor(
         beregningVurderingRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        avklarFaktaBeregningService = AvklarFaktaBeregningService(repositoryProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
