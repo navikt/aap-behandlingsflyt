@@ -17,9 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class SamordningUføreSteg(
     private val samordningUføreRepository: SamordningUføreRepository,
@@ -92,8 +90,8 @@ class SamordningUføreSteg(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return SamordningUføreSteg(RepositoryRegistry.provider(connection))
+        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
+            return SamordningUføreSteg(repositoryProvider)
         }
 
         override fun type(): StegType {

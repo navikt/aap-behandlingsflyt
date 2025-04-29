@@ -32,7 +32,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -40,7 +39,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDateTime
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class Effektuer11_7Steg(
     private val underveisRepository: UnderveisRepository,
@@ -193,8 +191,8 @@ class Effektuer11_7Steg(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return Effektuer11_7Steg(RepositoryRegistry.provider(connection))
+        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
+            return Effektuer11_7Steg(repositoryProvider)
         }
 
         override fun type(): StegType {

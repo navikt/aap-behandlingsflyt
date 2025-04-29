@@ -11,8 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling.SØKNAD_TRUKKET
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 /** Formål: Hvilke søknader skal vi saksbehandle?
  *
@@ -42,9 +41,9 @@ class SøknadSteg(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(connection: DBConnection): BehandlingSteg {
+        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
             return SøknadSteg(
-                RepositoryRegistry.provider(connection).provide()
+                repositoryProvider.provide()
             )
         }
 

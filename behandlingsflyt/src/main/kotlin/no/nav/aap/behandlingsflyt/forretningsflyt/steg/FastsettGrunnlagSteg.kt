@@ -18,10 +18,8 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
-import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.slf4j.LoggerFactory
 
 class FastsettGrunnlagSteg(
@@ -116,8 +114,8 @@ class FastsettGrunnlagSteg(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return FastsettGrunnlagSteg(RepositoryRegistry.provider(connection))
+        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
+            return FastsettGrunnlagSteg(repositoryProvider)
         }
 
         override fun type(): StegType {

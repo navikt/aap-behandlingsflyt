@@ -20,10 +20,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class VurderSykdomSteg private constructor(
     private val studentRepository: StudentRepository,
@@ -131,8 +129,8 @@ class VurderSykdomSteg private constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return VurderSykdomSteg(RepositoryRegistry.provider(connection))
+        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
+            return VurderSykdomSteg(repositoryProvider)
         }
 
         override fun type(): StegType {

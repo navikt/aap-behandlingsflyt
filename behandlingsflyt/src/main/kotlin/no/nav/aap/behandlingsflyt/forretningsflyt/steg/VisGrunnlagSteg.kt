@@ -6,14 +6,14 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VisGrunnlagSteg private constructor() : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         return Fullført
     }
     companion object : FlytSteg {
-        override fun konstruer(connection: DBConnection): BehandlingSteg {
+        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
             return VisGrunnlagSteg()
         }
 

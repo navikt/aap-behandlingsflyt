@@ -231,7 +231,7 @@ class BistandsvilkåretTest {
         }
 
         dataSource.transaction { connection ->
-            VurderBistandsbehovSteg.konstruer(connection).utfør(
+            VurderBistandsbehovSteg.konstruer(RepositoryRegistry.provider(connection)).utfør(
                 FlytKontekstMedPerioder(
                     sakId = sak.id,
                     behandlingId = førstegangsbehandling.id,
@@ -286,7 +286,7 @@ class BistandsvilkåretTest {
 
 
         dataSource.transaction { connection ->
-            VurderBistandsbehovSteg.konstruer(connection).utfør(
+            VurderBistandsbehovSteg.konstruer(RepositoryRegistry.provider(connection)).utfør(
                 FlytKontekstMedPerioder(
                     sakId = sak.id,
                     behandlingId = revurdering.id,

@@ -4,10 +4,11 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegKonstruktør
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class StegKonstruktørImpl(private val connection: DBConnection) : StegKonstruktør {
     override fun konstruer(steg: FlytSteg): BehandlingSteg {
-        return steg.konstruer(connection)
+        return steg.konstruer(RepositoryRegistry.provider(connection))
     }
 
     override fun markerSavepoint() {

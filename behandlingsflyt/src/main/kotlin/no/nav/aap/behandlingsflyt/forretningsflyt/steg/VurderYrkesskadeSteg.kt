@@ -19,11 +19,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class VurderYrkesskadeSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -104,8 +102,8 @@ class VurderYrkesskadeSteg private constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return VurderYrkesskadeSteg(RepositoryRegistry.provider(connection))
+        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
+            return VurderYrkesskadeSteg(repositoryProvider)
         }
 
         override fun type(): StegType {
