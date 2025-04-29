@@ -1,17 +1,19 @@
 val ktorVersion = "3.1.2"
-val komponenterVersjon = "1.0.228"
-val tilgangVersjon = "1.0.53"
+val komponenterVersjon = "1.0.232"
+val tilgangVersjon = "1.0.57"
 val junitVersjon = "5.12.2"
 
 plugins {
     id("behandlingsflyt.conventions")
 }
 
+val jacksonVersjon = "2.19.0"
+
 dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation(project(":kontrakt"))
-    implementation("no.nav.aap.brev:kontrakt:0.0.102")
+    implementation("no.nav.aap.brev:kontrakt:0.0.103")
     implementation("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
@@ -30,8 +32,8 @@ dependencies {
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
 
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.3")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.3")
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersjon")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersjon")
 
     implementation("ch.qos.logback:logback-classic:1.5.18")
 

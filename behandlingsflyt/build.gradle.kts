@@ -2,9 +2,9 @@ plugins {
     id("behandlingsflyt.conventions")
 }
 
-val komponenterVersjon = "1.0.228"
+val komponenterVersjon = "1.0.232"
 val ktorVersion = "3.1.2"
-val tilgangVersjon = "1.0.53"
+val tilgangVersjon = "1.0.57"
 val utbetalVersjon = "0.0.34"
 val junitVersjon = "5.12.2"
 
@@ -16,7 +16,7 @@ dependencies {
 
     api("no.nav.aap.tilgang:plugin:$tilgangVersjon")
     api("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
-    api("no.nav.aap.brev:kontrakt:0.0.102")
+    api("no.nav.aap.brev:kontrakt:0.0.103")
     api("no.nav.aap.meldekort:kontrakt:0.0.31")
     api("no.nav.aap.kelvin:motor:$komponenterVersjon")
     api("no.nav.aap.kelvin:gateway:$komponenterVersjon")

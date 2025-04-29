@@ -66,7 +66,7 @@ internal object ValiderBehandlingTilstand {
     fun validerTilstandBehandling(behandling: Behandling, versjon: Long) {
         validerStatus(behandling.status())
         if (behandling.versjon != versjon) {
-            log.warn("Behandlingen har blitt oppdatert. Versjonsnummer[$versjon] ulikt fra siste[${behandling.versjon}]")
+            log.warn("Behandlingen har blitt oppdatert. Versjonsnummer[$versjon] ulikt fra siste[${behandling.versjon}]. Behandlingreferanse: ${behandling.referanse}")
             throw OutdatedBehandlingException("Behandlingen har blitt oppdatert. Versjonsnummer[$versjon] ulikt fra siste[${behandling.versjon}]")
         }
     }

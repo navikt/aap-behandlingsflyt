@@ -5,12 +5,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjeneste
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 data class TjenestePensjonRespons(
     val fnr: String,
-    val forhold: List<SamhandlerForholdDto> = emptyList(),
-    val changeStamp: ChangeStampDateDto? = null
+    val forhold: List<SamhandlerForholdDto> = emptyList()
 ) {
     fun toIntern(): List<TjenestePensjonForhold> {
         return this.forhold.map {
@@ -35,23 +33,13 @@ data class TjenestePensjonRespons(
 }
 
 data class SamhandlerForholdDto(
-    val samtykkeSimulering: Boolean,
-    val kilde: String,
-    val tpNr: String,
-    val ordning: TpOrdning,
-    val harSimulering: Boolean,
-    val harUtlandsPensjon: Boolean,
-    val datoSamtykkeGitt: LocalDate?, // Nullable to handle null values
-    val ytelser: List<SamhandlerYtelseDto>,
-    val changeStampDate: ChangeStampDateDto?
+    val ordning: TpOrdning, val ytelser: List<SamhandlerYtelseDto>,
 )
 
 data class TpOrdning(
     val navn: String,
     val tpNr: String,
     val orgNr: String,
-    val tssId: String,
-    val alias: List<String>
 )
 
 data class SamhandlerYtelseDto(
@@ -59,14 +47,5 @@ data class SamhandlerYtelseDto(
     val ytelseType: YtelseTypeCode,
     val datoYtelseIverksattFom: LocalDate,
     val datoYtelseIverksattTom: LocalDate?, // Nullable to handle null values
-    val changeStamp: ChangeStampDateDto?,
     val ytelseId: Long
 )
-
-data class ChangeStampDateDto(
-    val createdBy: String,
-    val createdDate: LocalDateTime,
-    val updatedBy: String,
-    val updatedDate: LocalDateTime
-)
-
