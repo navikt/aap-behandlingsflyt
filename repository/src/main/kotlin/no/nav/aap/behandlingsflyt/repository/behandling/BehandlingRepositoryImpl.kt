@@ -324,6 +324,11 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         connection.markerSavepoint()
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+        // Ved sletting av behandling beholdes innholdet i alle relevante tabeller her. Det er ikke personopplysninger,
+        // og er kritisk til at flyten skal kjøre.
+    }
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         // Trengs ikke implementeres
     }

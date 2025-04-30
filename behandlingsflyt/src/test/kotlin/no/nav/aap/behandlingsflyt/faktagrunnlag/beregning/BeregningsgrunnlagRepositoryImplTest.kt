@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInn
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
@@ -415,4 +416,11 @@ internal class BeregningsgrunnlagRepositoryImplTest {
             )
         )
     }
+}
+
+// Midlertidig test
+fun main()
+{
+    InitTestDatabase.dataSource.transaction { connection -> BeregningsgrunnlagRepositoryImpl(connection).slett(
+        BehandlingId(1L)) }
 }

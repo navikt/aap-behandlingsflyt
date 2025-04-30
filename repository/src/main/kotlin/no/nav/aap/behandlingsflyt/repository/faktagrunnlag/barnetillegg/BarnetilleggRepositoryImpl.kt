@@ -45,6 +45,37 @@ class BarnetilleggRepositoryImpl(private val connection: DBConnection) : Barneti
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+
+        val barnetilleggPerioderIds = getBarnetilleggPeriodeIds(behandlingId)
+
+        connection.execute("""
+            delete from barnetillegg_periode where id = ANY(?::bigint[]);
+            delete from barn_tillegg where id = ANY(?::bigint[]);
+            delete from barnetillegg_grunnlag where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, barnetilleggPerioderIds)
+                setLongArray(2, barnetilleggPerioderIds)
+                setLong(3, behandlingId.toLong())
+            }
+        }
+    }
+
+    private fun getBarnetilleggPeriodeIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT perioder_id
+                    FROM barnetillegg_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("perioder_id")
+        }
+    }
+
     private fun lagreNyttGrunnlag(behandlingId: BehandlingId, barnetilleggPerioder: List<BarnetilleggPeriode>) {
         val barnetilleggPeriodeQuery = """
             INSERT INTO BARNETILLEGG_PERIODER DEFAULT VALUES

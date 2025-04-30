@@ -176,4 +176,52 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
             }
         }
     }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val meldekorteneIds = getMeldekorteneIds(behandlingId)
+        val meldekortIds = getMeldekortIds(meldekorteneIds)
+        connection.execute("""
+            delete from meldekort_periode where id = ANY(?::bigint[]);
+            delete from meldekort where id = ANY(?::bigint[]);
+            delete from meldekortene where id = ANY(?::bigint[]);
+            delete from meldekort_grunnlag where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, meldekortIds)
+                setLongArray(2, meldekorteneIds)
+                setLongArray(3, meldekorteneIds)
+                setLong(4, behandlingId.toLong())
+            }
+        }
+    }
+
+    private fun getMeldekorteneIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT meldekortene_id
+                    FROM meldekort_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("meldekortene_id")
+        }
+    }
+
+    private fun getMeldekortIds(meldekorteneId: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM meldekort
+                    WHERE meldekorteneId = ANY(?::bigint[])
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, meldekorteneId) }
+        setRowMapper { row ->
+            row.getLong("meldekortene_id")
+        }
+    }
+
 }

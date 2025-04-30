@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.undervei
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
+import kotlin.collections.List
 
 class Effektuer11_7RepositoryImpl(private val connection: DBConnection) : Effektuer11_7Repository {
     companion object : Factory<Effektuer11_7RepositoryImpl> {
@@ -110,6 +111,27 @@ class Effektuer11_7RepositoryImpl(private val connection: DBConnection) : Effekt
                 )
             }
         }
+    }
+
+    override fun slett(behandlingId: BehandlingId)  {
+      // Ikke relevant for trukkede søknader, da man ikke vil ha fått aktivitetsplikt
+        // Vi sjekker om det finnes innhold i effektuer_11_7_grunnlag. Vi forventer ikke innhold her av en trukket søknad.
+         val aktivitetsbrudd = connection.queryList(
+            """
+                    SELECT id
+                    FROM effektuer_11_7_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+        ) {
+            setParams { setLong(1, behandlingId.id) }
+            setRowMapper { row ->
+                row.getLong("id")
+            }
+        }
+       if (aktivitetsbrudd.isNotEmpty()) { // Her må vi enten feile hardt siden det ikke er forventet at det skal være noe}
+          // innhold i tabellene, evt som minimum logge at det skjedde, så vi kan rydde manuelt
+       }
     }
 
     private fun hentVarslinger(varslingerId: Long): List<Effektuer11_7Forhåndsvarsel> {

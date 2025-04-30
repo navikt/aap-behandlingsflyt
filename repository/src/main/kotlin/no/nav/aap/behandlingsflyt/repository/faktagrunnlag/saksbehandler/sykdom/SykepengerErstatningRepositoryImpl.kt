@@ -157,7 +157,38 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
+
     override fun hent(behandlingId: BehandlingId): SykepengerErstatningGrunnlag {
         return requireNotNull(hentHvisEksisterer(behandlingId))
     }
+
+    override fun slett(behandlingId: BehandlingId) {
+        val sykepengeVurderingIds = getSykepengeVurderingIds(behandlingId)
+        connection.execute("""
+            delete from sykepenge_vurdering where id = ANY(?::bigint[]);
+            delete from sykepenge_vurdering_dokumenter where id = ANY(?::bigint[]);
+            delete from sykepenge_erstatning_grunnlag where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, sykepengeVurderingIds)
+                setLongArray(2, sykepengeVurderingIds)
+                setLong(3, behandlingId.toLong())
+            }
+        }
+    }
+
+    private fun getSykepengeVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT vurdering_id
+                    FROM sykepenge_erstatning_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("vurdering_id")
+        }
+    }
+
 }

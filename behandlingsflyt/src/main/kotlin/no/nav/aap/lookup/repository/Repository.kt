@@ -27,7 +27,5 @@ interface Repository: no.nav.aap.komponenter.repository.Repository {
      *
      * Metoden skal kunne kalles flere ganger på en behandling (idempotent).
      **/
-    fun slett(behandlingId: BehandlingId) {
-        TODO()
-    }
+    fun slett(behandlingId: BehandlingId)
 }

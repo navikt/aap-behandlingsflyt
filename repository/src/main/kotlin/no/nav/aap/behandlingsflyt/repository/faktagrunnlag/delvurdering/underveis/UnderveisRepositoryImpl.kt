@@ -120,6 +120,53 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+
+        val sporingIds = getSporingIds(behandlingId)
+        val periodeIds = getPerioderIds(behandlingId)
+        connection.execute("""
+            delete from underveis_periode where perioder_id = ANY(?::bigint[]);
+            delete from underveis_perioder where id = ANY(?::bigint[]);
+            delete from underveis_sporing where id = ANY(?::bigint[]);
+            delete from underveis_grunnlag where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, periodeIds)
+                setLongArray(2, periodeIds)
+                setLongArray(3, sporingIds)
+                setLong(4, behandlingId.toLong())
+            }
+        }
+    }
+
+    private fun getSporingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT sporing_id
+                    FROM underveis_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("sporing_id")
+        }
+    }
+
+    private fun getPerioderIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT perioder_id
+                    FROM underveis_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("perioder_id")
+        }
+    }
+
     private fun lagreNyttGrunnlag(
         behandlingId: BehandlingId,
         underveisperioder: List<Underveisperiode>,

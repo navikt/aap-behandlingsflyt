@@ -80,6 +80,16 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
         }.toSet()
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+        connection.execute("""
+            delete from mottatt_dokument where behandling_id = ?;
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+        }
+    }
+
     private fun mapMottattDokument(row: Row): MottattDokument {
         val brevkategori: InnsendingType = row.getEnum("type")
         val referanse = mapDokumentReferanse(row)

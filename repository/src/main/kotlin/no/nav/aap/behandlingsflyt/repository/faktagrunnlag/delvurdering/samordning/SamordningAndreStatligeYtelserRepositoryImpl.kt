@@ -120,6 +120,9 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+        // Ikke relevant for trukkede søknader, da man ikke vil ha fått meldeperioder
+    }
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
         connection.execute("UPDATE SAMORDNING_ANDRE_STATLIGE_YTELSER_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {

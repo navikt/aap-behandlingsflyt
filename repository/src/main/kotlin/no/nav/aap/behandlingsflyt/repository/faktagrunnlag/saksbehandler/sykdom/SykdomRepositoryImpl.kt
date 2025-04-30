@@ -71,6 +71,55 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+        val sykdomVurderingerIds = getSykdomVurderingerIds(behandlingId)
+        val sykdomVurderingIds = getSykdomVurderingIds(sykdomVurderingerIds)
+        connection.execute("""
+            delete from sykdom_vurdering_bidiagnoser where vurdering_id = ANY(?::bigint[]);
+            delete from sykdom_vurdering_dokumenter where vurdering_id = ANY(?::bigint[]);
+            delete from sykdom_vurdering where sykdom_vurderinger_id = ANY(?::bigint[]);
+            delete from sykdom_vurderinger where id = ANY(?::bigint[]);
+            delete from sykdom_grunnlag where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, sykdomVurderingIds)
+                setLongArray(2, sykdomVurderingIds)
+                setLongArray(3, sykdomVurderingerIds)
+                setLongArray(4, sykdomVurderingerIds)
+                setLong(5, behandlingId.toLong())
+            }
+        }
+    }
+
+    private fun getSykdomVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT sykdom_vurderinger_id
+                    FROM sykdom_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("sykdom_vurderinger_id")
+        }
+    }
+
+    private fun getSykdomVurderingIds(sykdomVurderingerIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM sykdom_vurdering
+                    WHERE sykdom_vurderinger_id = ANY(?::bigint[]);
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, sykdomVurderingerIds) }
+        setRowMapper { row ->
+            row.getLong("id")
+        }
+    }
+
+
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: SykdomGrunnlag) {
         val sykdomsvurderingerId = lagreSykdom(nyttGrunnlag.sykdomsvurderinger)
         val yrkesskadeId = lagreYrkesskade(nyttGrunnlag.yrkesskadevurdering)

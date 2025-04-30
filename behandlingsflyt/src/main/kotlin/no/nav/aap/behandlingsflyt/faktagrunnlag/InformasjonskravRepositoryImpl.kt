@@ -50,6 +50,16 @@ class InformasjonskravRepositoryImpl(
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+        connection.execute("""
+            delete from informasjonskrav_oppdatert where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+        }
+    }
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         // Denne trengs ikke implementeres
     }

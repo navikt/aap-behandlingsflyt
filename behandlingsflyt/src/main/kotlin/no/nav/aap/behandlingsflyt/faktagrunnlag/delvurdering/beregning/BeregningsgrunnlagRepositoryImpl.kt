@@ -23,6 +23,79 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
         YRKESSKADE_UFØRE
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+
+        val beregningIds = getBeregningIds(behandlingId)
+
+        val beregningHovedIds = getBeregningHovedIds(beregningIds)
+
+        val beregningUforeIds = getBeregningUforeIds(beregningIds)
+
+        connection.execute("""
+            delete from beregning_hoved where beregning_id = ANY(?::BIGINT[]);
+            delete from beregning_yrkesskade where beregning_id = ANY(?::BIGINT[]);
+        
+            delete from beregning_inntekt where beregning_hoved_id = ANY(?::BIGINT[]);
+            delete from beregning_ufore_inntekt where beregning_ufore_id = ANY(?::BIGINT[]);
+        
+            delete from beregning_ufore where beregning_id = ANY(?::BIGINT[]);
+            delete from beregningsgrunnlag where behandling_id = ?;  
+            delete from beregning where id = ANY(?::BIGINT[]);
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, beregningIds)
+                setLongArray(2, beregningIds)
+                setLongArray(3, beregningHovedIds)
+                setLongArray(4, beregningUforeIds)
+                setLongArray(5, beregningIds)
+                setLong(6, behandlingId.id)
+                setLongArray(7, beregningIds)
+            }
+        }
+    }
+
+    private fun getBeregningUforeIds(beregningIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM beregning_ufore
+                    WHERE beregning_id = ANY(?::BIGINT[])
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, beregningIds) }
+        setRowMapper { row ->
+            row.getLong("id")
+        }
+    }
+
+    private fun getBeregningHovedIds(beregningIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM beregning_hoved
+                    WHERE beregning_id = ANY(?::BIGINT[])
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, beregningIds) }
+        setRowMapper { row ->
+            row.getLong("id")
+        }
+    }
+
+    private fun getBeregningIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT beregning_id
+                    FROM beregningsgrunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("beregning_id")
+        }
+    }
+
     private fun hentInntekt(beregningsId: Long): List<GrunnlagInntekt> {
         return connection.queryList(
             """
@@ -487,4 +560,6 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             deaktiverEksisterende(behandlingId)
         }
     }
+
 }
+

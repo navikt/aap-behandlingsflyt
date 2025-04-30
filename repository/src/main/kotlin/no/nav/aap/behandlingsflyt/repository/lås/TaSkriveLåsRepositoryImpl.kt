@@ -123,6 +123,10 @@ class TaSkriveLåsRepositoryImpl(private val connection: DBConnection): TaSkrive
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+        // Sletting av behandling gjøres i BehandlingRepository
+    }
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         // Trengs ikke implementeres
     }
