@@ -268,15 +268,17 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 TagModule(listOf(Tags.Sak)),
             ) { req ->
                 val saksnummer = req.saksnummer
-
+                var resultatForFørstegangsbehandling: Resultat? = null
                 val (sak, behandlinger) = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val resultatUtleder = ResultatUtleder(repositoryProvider)
                     val sak = repositoryProvider.provide<SakRepository>()
                         .hent(saksnummer = Saksnummer(saksnummer))
 
                     val behandlinger =
                         repositoryProvider.provide<BehandlingRepository>().hentAlleFor(sak.id)
                             .map { behandling ->
+                                if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) resultatForFørstegangsbehandling = resultatUtleder.utledResultatFørstegangsBehandling(behandling)
                                 BehandlinginfoDTO(
                                     referanse = behandling.referanse.referanse,
                                     type = behandling.typeBehandling().identifikator(),
@@ -296,7 +298,8 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                         periode = sak.rettighetsperiode,
                         ident = sak.person.aktivIdent().identifikator,
                         behandlinger = behandlinger,
-                        status = sak.status()
+                        status = sak.status(),
+                        resultatForFørstegangsbehandling = resultatForFørstegangsbehandling
                     )
                 )
             }
