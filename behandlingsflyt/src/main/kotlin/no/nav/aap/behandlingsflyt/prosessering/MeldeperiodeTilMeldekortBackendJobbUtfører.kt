@@ -1,17 +1,18 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -33,7 +34,9 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
     private val underveisRepository: UnderveisRepository,
     private val meldepliktRepository: MeldepliktRepository,
     private val vedtakRepository: VedtakRepository,
+    private val trukketSøknadService: TrukketSøknadService,
 ) : JobbUtfører {
+
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
         val behandlingId = BehandlingId(input.behandlingId())
@@ -44,14 +47,26 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
         val meldeperioder = meldeperiodeRepository.hent(behandlingId)
         val sakenGjelderFor = Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
 
-        if (behandling.status().erAvsluttet()) {
+        if (trukketSøknadService.søknadErTrukket(behandlingId)) {
+            meldekortGateway.oppdaterMeldeperioder(
+                MeldeperioderV0(
+                    identer = identer,
+                    saksnummer = sak.saksnummer.toString(),
+                    sakStatus = SakStatus.AVSLUTTET,
+                    sakenGjelderFor = sakenGjelderFor,
+                    meldeperioder = listOf(),
+                    meldeplikt = listOf(),
+                    opplysningsbehov = listOf(),
+                )
+            )
+        } else if (behandling.status().erAvsluttet()) {
             val underveisperioder = underveisRepository.hentHvisEksisterer(behandlingId)
                 ?.perioder
                 .orEmpty()
                 .map { Segment(it.periode, it) }
                 .let(::Tidslinje)
 
-            val fritaksvurderinger: Tidslinje<no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering.FritaksvurderingData> =
+            val fritaksvurderinger: Tidslinje<Fritaksvurdering.FritaksvurderingData> =
                 meldepliktRepository.hentHvisEksisterer(behandlingId)
                     ?.tilTidslinje()
                     ?: Tidslinje()
@@ -112,18 +127,16 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
 
         override fun konstruer(connection: DBConnection): JobbUtfører {
             val repositoryProvider = RepositoryRegistry.provider(connection)
-            val sakRepository = repositoryProvider.provide<SakRepository>()
 
             return MeldeperiodeTilMeldekortBackendJobbUtfører(
-                sakService = SakService(
-                    sakRepository = sakRepository,
-                ),
+                sakService = SakService(repositoryProvider),
                 meldekortGateway = GatewayProvider.provide(),
                 behandlingRepository = repositoryProvider.provide(),
                 meldeperiodeRepository = repositoryProvider.provide(),
                 underveisRepository = repositoryProvider.provide(),
                 meldepliktRepository = repositoryProvider.provide(),
                 vedtakRepository = repositoryProvider.provide(),
+                trukketSøknadService = TrukketSøknadService(repositoryProvider),
             )
         }
 
