@@ -40,7 +40,7 @@ class MedlemskapGateway : MedlemskapGateway {
     }
 
     private fun query(request: MedlemskapRequest): List<MedlemskapResponse> {
-        val urlWithParam = URI.create(url+"?fraOgMed=${request.periode.fom}&tilOgMed=${request.periode.tom}")
+        val urlWithParam = URI.create(url+"?fraOgMed=${request.periode.fom}&tilOgMed=${request.periode.tom}&inkluderSporingsinfo=true")
 
         val httpRequest = GetRequest(
             additionalHeaders = listOf(
