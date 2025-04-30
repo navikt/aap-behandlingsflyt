@@ -16,4 +16,18 @@ interface Repository: no.nav.aap.komponenter.repository.Repository {
      * kan man så legge til nye vurderinger uten at den gamle behandlingen blir påvirket.
      **/
     fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
+
+    /**  Slett personopplysninger for en behandling.
+     *
+     * Brukes f.eks. når vi ikke lenger har behandlingsgrunnlag for å vurdere søknaden til medlemmet.
+     *
+     * Forventer at personopplysninger faktisk blir slettet slik at vi overholder GDPR.
+     *
+     * Soft-delete er ikke tilstrekkelig. Opplysningene må nulles ut eller radene må slette.
+     *
+     * Metoden skal kunne kalles flere ganger på en behandling (idempotent).
+     **/
+    fun slett(behandlingId: BehandlingId) {
+        TODO()
+    }
 }
