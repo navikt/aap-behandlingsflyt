@@ -38,9 +38,9 @@ import java.time.LocalDateTime
 import kotlin.test.Test
 
 @Fakes
-class LegeerklæringVentebehovEvaluererTest {
+internal class LegeerklæringVentebehovEvaluererTest {
     companion object {
-        private val dataSource = InitTestDatabase.dataSource
+        private val dataSource = InitTestDatabase.freshDatabase()
         private val util = TestUtil(dataSource, ProsesseringsJobber.alle().filter { it.cron() != null }.map { it.type() })
         @JvmStatic
         @BeforeAll

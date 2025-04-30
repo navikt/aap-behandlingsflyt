@@ -24,9 +24,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class BarnRepositoryImplTest {
+internal class BarnRepositoryImplTest {
 
-    private val dataSource = InitTestDatabase.dataSource
+    private val dataSource = InitTestDatabase.freshDatabase()
 
     @Test
     fun `Finner ikke barn hvis det ikke finnes barn`() {

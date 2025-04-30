@@ -23,12 +23,13 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class SamordningUføreRepositoryImplTest {
+internal class SamordningUføreRepositoryImplTest {
+    private val dataSource = InitTestDatabase.freshDatabase()
+
     private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
 
     @Test
     fun `skal lagre ned en helt ny vurdering og hente den opp igjen`() {
-        val dataSource = InitTestDatabase.dataSource
         val behandling = dataSource.transaction {
             behandling(it, sak(it))
         }
