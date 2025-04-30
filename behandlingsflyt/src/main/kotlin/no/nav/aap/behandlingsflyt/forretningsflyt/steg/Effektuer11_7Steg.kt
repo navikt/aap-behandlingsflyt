@@ -36,6 +36,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -63,6 +64,8 @@ class Effektuer11_7Steg(
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         clock = clock,
     )
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (kontekst.vurdering.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
@@ -119,6 +122,7 @@ class Effektuer11_7Steg(
 
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         if (avklaringsbehov.åpne().any { it.definisjon == SKRIV_BREV && it.skalStoppeHer(type()) }) {
+            log.info("Fant åpent avklaringsbehov ${SKRIV_BREV} (kode ${SKRIV_BREV.kode}). Avgir avklaringsbehov.")
             return FantAvklaringsbehov(SKRIV_BREV)
         }
         check(eksisterendeBrevBestilling.status == FULLFØRT) {
@@ -128,6 +132,7 @@ class Effektuer11_7Steg(
         val brev = brevbestillingService.hentBrevbestilling(eksisterendeBrevBestilling.referanse)
         val venteBehov = avklaringsbehov.hentBehovForDefinisjon(VENTE_PÅ_FRIST_EFFEKTUER_11_7)
         val frist = requireNotNull(effektuer117grunnlag?.varslinger?.lastOrNull()?.frist)
+
         if (skalVentePåSvar(venteBehov, brev.opprettet) && LocalDate.now(clock) <= frist) {
             return FantVentebehov(
                 Ventebehov(

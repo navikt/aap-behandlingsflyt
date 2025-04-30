@@ -177,6 +177,7 @@ class StegOrkestrator(
 
     private fun behandleSteg(kontekstMedPerioder: FlytKontekstMedPerioder): Transisjon {
         val stegResultat = behandlingSteg.utfør(kontekstMedPerioder)
+        log.info("Fullført steg av type {}", behandlingSteg::javaClass)
 
         val resultat = stegResultat.transisjon()
 

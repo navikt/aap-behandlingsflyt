@@ -16,21 +16,31 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryRegistry
 
-class AvklarOverstyrtForutgåendeMedlemskapLøser(connection: DBConnection): AvklaringsbehovsLøser<AvklarOverstyrtForutgåendeMedlemskapLøsning> {
+class AvklarOverstyrtForutgåendeMedlemskapLøser(connection: DBConnection) :
+    AvklaringsbehovsLøser<AvklarOverstyrtForutgåendeMedlemskapLøsning> {
+
     private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val forutgåendeMedlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
+    private val forutgåendeMedlemskapArbeidInntektRepository =
+        repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
     private val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
     private val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
     private val sakRepository = repositoryProvider.provide<SakRepository>()
-    private val personopplysningForutgåendeRepository = repositoryProvider.provide<PersonopplysningForutgåendeRepository>()
+    private val personopplysningForutgåendeRepository =
+        repositoryProvider.provide<PersonopplysningForutgåendeRepository>()
 
-    override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarOverstyrtForutgåendeMedlemskapLøsning): LøsningsResultat {
+    override fun løs(
+        kontekst: AvklaringsbehovKontekst,
+        løsning: AvklarOverstyrtForutgåendeMedlemskapLøsning
+    ): LøsningsResultat {
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId())
-        if (vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).vilkårsperioder().any { it.innvilgelsesårsak == Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG }){
+        if (vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).vilkårsperioder()
+                .any { it.innvilgelsesårsak == Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG }
+        ) {
             return LøsningsResultat("OVERSTYRT: Fant yrkesskade, overstyring ikke tillat.")
         }
 
-        forutgåendeMedlemskapArbeidInntektRepository.lagreManuellVurdering(kontekst.behandlingId(),
+        forutgåendeMedlemskapArbeidInntektRepository.lagreManuellVurdering(
+            kontekst.behandlingId(),
             ManuellVurderingForForutgåendeMedlemskap(
                 løsning.manuellVurderingForForutgåendeMedlemskap.begrunnelse,
                 løsning.manuellVurderingForForutgåendeMedlemskap.harForutgåendeMedlemskap,
@@ -43,11 +53,17 @@ class AvklarOverstyrtForutgåendeMedlemskapLøser(connection: DBConnection): Avk
         val sak = sakRepository.hent(kontekst.kontekst.sakId)
         val personopplysningGrunnlag = personopplysningForutgåendeRepository.hentHvisEksisterer(kontekst.behandlingId())
             ?: throw IllegalStateException("Forventet å finne personopplysninger")
-        val medlemskapArbeidInntektGrunnlag = forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId())
-        val oppgittUtenlandsOppholdGrunnlag = medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(kontekst.behandlingId())
+        val medlemskapArbeidInntektGrunnlag =
+            forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId())
+        val oppgittUtenlandsOppholdGrunnlag =
+            medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(kontekst.behandlingId())
 
         ForutgåendeMedlemskapvilkåret(vilkårsresultat, sak.rettighetsperiode).vurderOverstyrt(
-            ForutgåendeMedlemskapGrunnlag(medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag)
+            ForutgåendeMedlemskapGrunnlag(
+                medlemskapArbeidInntektGrunnlag,
+                personopplysningGrunnlag,
+                oppgittUtenlandsOppholdGrunnlag
+            )
         )
         vilkårsresultatRepository.lagre(kontekst.behandlingId(), vilkårsresultat)
         return LøsningsResultat("OVERSTYRT: Vurdert forutgående medlemskap manuelt.")
