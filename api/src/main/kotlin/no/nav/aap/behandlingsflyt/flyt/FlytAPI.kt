@@ -96,7 +96,8 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                                         flytJobbRepository
                                     ),
                                     beskrivelse = it.beskrivelse(),
-                                    navn = it.navn()
+                                    navn = it.navn(),
+                                    opprettetTidspunkt = it.opprettetTidspunkt(),
                                 )
                             })
                     // Henter denne ut etter status er utledet for å være sikker på at dataene er i rett tilstand
