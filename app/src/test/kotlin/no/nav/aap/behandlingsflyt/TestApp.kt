@@ -61,7 +61,6 @@ fun main() {
     // Starter server
     embeddedServer(Netty, port = 8080, watchPaths = listOf("classes")) {
         val dbConfig = DbConfig(
-            database = "sdf",
             url = postgres.jdbcUrl,
             username = postgres.username,
             password = postgres.password

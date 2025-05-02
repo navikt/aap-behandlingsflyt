@@ -341,9 +341,6 @@ fun Application.startMotor(dataSource: DataSource): Motor {
 }
 
 class DbConfig(
-    val database: String = if (Miljø.er() == MiljøKode.DEV) System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_DATABASE") else System.getenv(
-        "NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_JDBC_URL"
-    ),
     val url: String = System.getenv(
         "NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_JDBC_URL"
     ),

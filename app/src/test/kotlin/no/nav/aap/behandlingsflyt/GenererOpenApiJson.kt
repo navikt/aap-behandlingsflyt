@@ -41,7 +41,6 @@ fun main() {
     lateinit var port: Number
 
     val dbConfig = DbConfig(
-        database = "sdf",
         url = postgres.jdbcUrl,
         username = postgres.username,
         password = postgres.password

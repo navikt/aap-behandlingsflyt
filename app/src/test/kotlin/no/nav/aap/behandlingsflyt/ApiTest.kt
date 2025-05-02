@@ -89,7 +89,6 @@ class ApiTest {
         private lateinit var port: Number
 
         private val dbConfig = DbConfig(
-            database = "sdf",
             url = postgres.jdbcUrl,
             username = postgres.username,
             password = postgres.password
