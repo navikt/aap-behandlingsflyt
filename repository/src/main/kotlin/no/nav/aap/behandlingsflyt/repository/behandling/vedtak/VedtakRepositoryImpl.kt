@@ -48,4 +48,8 @@ class VedtakRepositoryImpl(private val connection: DBConnection) : VedtakReposit
             }
         }
     }
+
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        // Denne trengs ikke implementeres
+    }
 }

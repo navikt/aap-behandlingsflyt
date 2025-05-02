@@ -4,13 +4,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andresta
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
 
 class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBConnection) : SamordningAndreStatligeYtelserRepository {
@@ -41,10 +36,12 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
             }
         }
     }
+
     private data class BegrunnelseOgVurdertAv(
         val begrunnelse: String,
         val vurdertAv: String,
     )
+
     private fun hentSamordningAndreStatligeYtelserVurderingBegrunnelseOgVurdertAv(vurderingId: Long): BegrunnelseOgVurdertAv {
         val query = """
             SELECT * FROM SAMORDNING_ANDRE_STATLIGE_YTELSER_VURDERING WHERE id = ?

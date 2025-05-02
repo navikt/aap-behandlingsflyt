@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.sak
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -190,5 +191,9 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
                 mapPerson(row)
             }
         }
+    }
+
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        // Denne trengs ikke implementeres
     }
 }

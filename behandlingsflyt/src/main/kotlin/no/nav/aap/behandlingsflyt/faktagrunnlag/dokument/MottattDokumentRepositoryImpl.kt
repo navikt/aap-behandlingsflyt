@@ -152,4 +152,8 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
             }
         }.toSet()
     }
+
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        // Denne trengs ikke implementeres
+    }
 }

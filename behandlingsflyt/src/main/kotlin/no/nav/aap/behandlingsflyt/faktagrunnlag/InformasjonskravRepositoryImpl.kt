@@ -50,6 +50,10 @@ class InformasjonskravRepositoryImpl(
         }
     }
 
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        // Denne trengs ikke implementeres
+    }
+
     companion object: Factory<InformasjonskravRepositoryImpl> {
         override fun konstruer(connection: DBConnection): InformasjonskravRepositoryImpl {
             return InformasjonskravRepositoryImpl(connection)
