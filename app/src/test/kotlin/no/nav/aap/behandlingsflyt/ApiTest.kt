@@ -135,7 +135,6 @@ class ApiTest {
         @JvmStatic
         @BeforeAll
         fun beforeall() {
-            System.setProperty("NAIS_CLUSTER_NAME", "dev-gcp")
             server.start()
             port =
                 runBlocking { server.engine.resolvedConnectors().first { it.type == ConnectorType.HTTP }.port }
