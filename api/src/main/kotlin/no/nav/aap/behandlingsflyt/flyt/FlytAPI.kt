@@ -358,7 +358,7 @@ private fun utledVisning(
     val påVent = alleAvklaringsbehovInkludertFrivillige.erSattPåVent()
     val beslutterReadOnly = aktivtSteg != StegType.FATTE_VEDTAK
     val erTilKvalitetssikring =
-        alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.erÅpent() == true
+        harÅpentKvalitetssikringsAvklaringsbehov(alleAvklaringsbehovInkludertFrivillige) && aktivtSteg == StegType.KVALITETSSIKRING
     val saksbehandlerReadOnly = erTilKvalitetssikring || !flyt.erStegFør(aktivtSteg, StegType.FATTE_VEDTAK)
     val visBeslutterKort =
         !beslutterReadOnly || (!saksbehandlerReadOnly && alleAvklaringsbehovInkludertFrivillige.harVærtSendtTilbakeFraBeslutterTidligere())
@@ -398,11 +398,14 @@ private fun utledVisningAvKvalitetsikrerKort(
     if (avklaringsbehovene.skalTilbakeføresEtterKvalitetssikring()) {
         return true
     }
-    if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.erÅpent() == true) {
+    if (harÅpentKvalitetssikringsAvklaringsbehov(avklaringsbehovene)) {
         return true
     }
     return false
 }
+
+private fun harÅpentKvalitetssikringsAvklaringsbehov(avklaringsbehovene: FrivilligeAvklaringsbehov): Boolean =
+    avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.erÅpent() == true
 
 private fun alleVilkår(vilkårResultat: Vilkårsresultat): List<VilkårDTO> {
     return vilkårResultat.alle().map { vilkår ->
