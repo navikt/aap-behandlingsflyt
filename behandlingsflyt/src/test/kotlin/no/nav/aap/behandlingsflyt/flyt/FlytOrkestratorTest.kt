@@ -2630,6 +2630,10 @@ class FlytOrkestratorTest {
             // Validér avklaring
             assertThat(behandlingRepo.hent(behandlingId).aktivtSteg()).isEqualTo(StegType.START_BEHANDLING)
         }
+
+        util.ventPåSvar()
+        val b = hentBehandling(sak.id)
+        assertThat(b.aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
     }
 
     @Test
