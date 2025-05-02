@@ -70,6 +70,7 @@ public enum class Definisjon(
             Rolle.SAKSBEHANDLER_OPPFOLGING,
         )
     ),
+    @Deprecated("Bruk egne definisjoner for forskjellige brev")
     SKRIV_BREV(
         kode = AvklaringsbehovKode.`5050`,
         løsesISteg = StegType.UDEFINERT,
