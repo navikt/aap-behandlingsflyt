@@ -336,6 +336,25 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         }
     }
 
+    override fun kopier(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
+        hentHvisEksisterer(fraBehandlingId) ?: return
+
+        val query = """
+            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
+                (behandling_id, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id) 
+            SELECT ?, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id
+                from FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
+                where behandling_id = ? and aktiv
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setLong(1, tilBehandlingId.toLong())
+                setLong(2, fraBehandlingId.toLong())
+            }
+        }
+    }
+
     internal data class GrunnlagOppslag(
         val medlId: Long?,
         val inntektINorgeId: Long?,

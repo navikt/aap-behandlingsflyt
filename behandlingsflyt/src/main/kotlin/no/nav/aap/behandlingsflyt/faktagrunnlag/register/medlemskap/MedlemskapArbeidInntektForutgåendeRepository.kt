@@ -14,4 +14,5 @@ interface MedlemskapArbeidInntektForutgåendeRepository : Repository {
     fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<HistoriskManuellVurderingForForutgåendeMedlemskap>
     fun lagreArbeidsforholdOgInntektINorge(behandlingId: BehandlingId, arbeidGrunnlag: List<ArbeidINorgeGrunnlag>, inntektGrunnlag: List<ArbeidsInntektMaaned>, medlId: Long?)
     fun lagreManuellVurdering(behandlingId: BehandlingId, manuellVurdering: ManuellVurderingForForutgåendeMedlemskap)
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }
