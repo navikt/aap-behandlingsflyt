@@ -317,4 +317,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
     )
 
     internal class ÅrsakInternal(val endringId: Long, val årsak: ÅrsakTilReturKode, val årsakFritekst: String?)
+
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        // Denne trengs ikke implementeres
+    }
 }
