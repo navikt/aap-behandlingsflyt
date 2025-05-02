@@ -116,7 +116,8 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                             .filter { it.erÅpent() }
 
                         if (skrivBrevAvklaringsbehov.size > 1) {
-                            log.warn("Fant flere avklaringsbehov for SKRIV_BREV/SKRIV_VEDTAKSBREV")
+                            log.warn("Fant flere avklaringsbehov for å skrive brev for behandling ${behandling.id}: "
+                            + skrivBrevAvklaringsbehov.joinToString { it.toString() })
                         }
 
                         brevbestillinger.map { brevbestilling ->
@@ -162,9 +163,12 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                         token()
                     )
 
-                    respond(BrevGrunnlag(
-                        harTilgangTilÅSaksbehandle,
-                        grunnlag))
+                    respond(
+                        BrevGrunnlag(
+                            harTilgangTilÅSaksbehandle,
+                            grunnlag
+                        )
+                    )
                 }
             }
         }
