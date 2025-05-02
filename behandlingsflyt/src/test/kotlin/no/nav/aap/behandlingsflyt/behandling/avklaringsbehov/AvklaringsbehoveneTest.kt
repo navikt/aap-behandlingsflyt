@@ -3,13 +3,14 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
 
 class AvklaringsbehoveneTest {
 
-    private val avklaringsbehovRepository = FakeAvklaringsbehovRepository()
+    private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
 
     @Test
     fun `skal kunne legge til nytt avklaringsbehov`() {
@@ -29,7 +30,7 @@ class AvklaringsbehoveneTest {
 
     @Test
     fun `skal ikke legge til duplikate avklaringsbehov`() {
-        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(5))
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(6))
         val avklaringsbehov = Avklaringsbehov(
             definisjon = Definisjon.AVKLAR_SYKDOM,
             funnetISteg = StegType.AVKLAR_SYKDOM,
@@ -54,7 +55,7 @@ class AvklaringsbehoveneTest {
 
     @Test
     fun `skal løse avklaringsbehov`() {
-        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(5))
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(8))
         val avklaringsbehov = Avklaringsbehov(
             definisjon = Definisjon.AVKLAR_SYKDOM,
             funnetISteg = StegType.AVKLAR_SYKDOM,
@@ -97,7 +98,7 @@ class AvklaringsbehoveneTest {
 
     @Test
     fun `skal returnere alle åpne avklaringsbehov`() {
-        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(5))
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(599))
         val avklaringsbehov = Avklaringsbehov(
             definisjon = Definisjon.AVKLAR_SYKDOM,
             funnetISteg = StegType.AVKLAR_SYKDOM,

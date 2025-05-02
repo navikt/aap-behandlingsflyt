@@ -122,7 +122,7 @@ class Effektuer11_7Steg(
 
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         if (avklaringsbehov.åpne().any { it.definisjon == SKRIV_BREV && it.skalStoppeHer(type()) }) {
-            log.info("Fant åpent avklaringsbehov ${SKRIV_BREV} (kode ${SKRIV_BREV.kode}). Avgir avklaringsbehov.")
+            log.info("Fant åpent avklaringsbehov $SKRIV_BREV (kode ${SKRIV_BREV.kode}). Avgir avklaringsbehov.")
             return FantAvklaringsbehov(SKRIV_BREV)
         }
         check(eksisterendeBrevBestilling.status == FULLFØRT) {
