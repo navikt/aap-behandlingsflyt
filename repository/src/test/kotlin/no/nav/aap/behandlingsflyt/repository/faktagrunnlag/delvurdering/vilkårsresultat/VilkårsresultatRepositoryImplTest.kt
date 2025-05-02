@@ -23,8 +23,9 @@ import java.time.LocalDate
 class VilkårsresultatRepositoryImplTest {
     @Test
     fun `Test oprett vilkårsresultat og hent ut igjen`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
-            // SETUP
+        val dataSource = InitTestDatabase.freshDatabase()
+
+        val behandling = dataSource.transaction { connection ->
             // Opprett person, sak og behandling
             val personOgSakService = PersonOgSakService(
                 FakePdlGateway,
@@ -32,45 +33,68 @@ class VilkårsresultatRepositoryImplTest {
                 SakRepositoryImpl(connection)
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
-            val repo = VilkårsresultatRepositoryImpl(connection)
 
             val sak =
                 personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
-            val behandling = behandlingRepo.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
-            val behandlingId = behandling.id
+            val behandling =
+                behandlingRepo.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+            behandling
+        }
 
-            // Opprett vilkårsresultat
-            val søknadsdato = LocalDate.now().minusDays(29)
-            val resultat = Vilkårsresultat(
-                null,
-                listOf(
-                    Vilkår(
-                        Vilkårtype.SYKDOMSVILKÅRET,
-                        setOf(
-                            Vilkårsperiode(
-                                Periode(
-                                    søknadsdato.plusYears(3).minusMonths(4).plusDays(1),
-                                    søknadsdato.plusYears(3)
-                                ),
-                                Utfall.IKKE_OPPFYLT,
-                                false,
-                                null,
-                                avslagsårsak = Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
-                                faktagrunnlag = null
-                            )
+        // Opprett vilkårsresultat
+        val søknadsdato = LocalDate.now().minusDays(29)
+        val resultat = Vilkårsresultat(
+            null,
+            listOf(
+                Vilkår(
+                    Vilkårtype.SYKDOMSVILKÅRET,
+                    setOf(
+                        Vilkårsperiode(
+                            Periode(
+                                søknadsdato.plusYears(3).minusMonths(4).plusDays(1),
+                                søknadsdato.plusYears(3)
+                            ),
+                            Utfall.IKKE_OPPFYLT,
+                            false,
+                            null,
+                            avslagsårsak = Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
+                            faktagrunnlag = null
                         )
                     )
+                ),
+                Vilkår(
+                    Vilkårtype.BISTANDSVILKÅRET,
+                    setOf(
+                        Vilkårsperiode(
+                            periode = Periode(
+                                søknadsdato.plusYears(1).minusMonths(4).plusDays(1),
+                                søknadsdato.plusYears(6)
+                            ),
+                            utfall = Utfall.OPPFYLT,
+                            manuellVurdering = false,
+                            begrunnelse = null,
+                            faktagrunnlag = null
+                        )
+                    )
+                ),
+                Vilkår(
+                    Vilkårtype.SAMORDNING,
+                    setOf()
                 )
             )
-            repo.lagre(behandlingId, resultat)
-
-            val uthentetVilkårsResultat = repo.hent(behandlingId)
-
-            assertThat(uthentetVilkårsResultat.alle().first().type).isEqualTo(resultat.alle().first().type)
-            assertThat(uthentetVilkårsResultat.alle().first().vilkårsperioder()).isEqualTo(resultat.alle().first().vilkårsperioder())
-            assertThat(uthentetVilkårsResultat.alle().size).isEqualTo(1)
-            assertThat(uthentetVilkårsResultat.alle().first()).isEqualTo(resultat.alle().first())
+        )
+        dataSource.transaction { connection ->
+            val repo = VilkårsresultatRepositoryImpl(connection)
+            repo.lagre(behandling.id, resultat)
         }
-    }
 
+        val uthentetVilkårsResultat = dataSource.transaction { connection ->
+            val behandlingId = behandling.id
+            val repo = VilkårsresultatRepositoryImpl(connection)
+            repo.hent(behandlingId)
+        }
+
+        assertThat(uthentetVilkårsResultat.alle().size).isEqualTo(3)
+        assertThat(uthentetVilkårsResultat.alle()).containsExactlyInAnyOrder(*(resultat.alle()).toTypedArray())
+    }
 }
