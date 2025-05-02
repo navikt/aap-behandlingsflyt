@@ -97,4 +97,8 @@ class BrevbestillingRepositoryImpl(private val connection: DBConnection) :
             }
         }
     }
+
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        // Trengs ikke implementeres
+    }
 }
