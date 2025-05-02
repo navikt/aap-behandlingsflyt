@@ -1,6 +1,12 @@
 package no.nav.aap.behandlingsflyt.kontrakt.behandling
 
-public enum class TypeBehandling(private var identifikator: String) {
+public enum class TypeBehandling(
+    /** Kodene følger kodeverket Behandlingstyper.
+     *
+     * Se https://kodeverk.ansatt.nav.no/kodeverk/Behandlingstyper
+     **/
+    private var identifikator: String,
+) {
 
     Førstegangsbehandling("ae0034"),
     Revurdering("ae0028"),
