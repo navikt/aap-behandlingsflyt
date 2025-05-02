@@ -74,7 +74,6 @@ class HendelseMottattHåndteringJobbUtfører(
             mottattTidspunkt,
             innsendingType,
             parsedMelding,
-            mottattTidspunkt.toLocalDate()
         )
 
         låsRepository.verifiserSkrivelås(sakSkrivelås)

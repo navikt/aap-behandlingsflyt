@@ -50,11 +50,7 @@ class VurderAlderSteg private constructor(
                 vurderVilkår(kontekst)
             }
 
-            VurderingType.FORLENGELSE -> {
-                /* TODO: Virker ikke så riktig å bare forlenge siste aldersvilkår ... plutselig er hen for gammel */
-                vilkårService.forleng(kontekst, Vilkårtype.ALDERSVILKÅRET)
-            }
-
+            VurderingType.FORLENGELSE,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
             }

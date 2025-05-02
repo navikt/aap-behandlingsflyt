@@ -46,10 +46,7 @@ class VurderStudentSteg private constructor(
                 }
             }
 
-            VurderingType.FORLENGELSE -> {
-                // Do nothing
-            }
-
+            VurderingType.FORLENGELSE,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
             }
