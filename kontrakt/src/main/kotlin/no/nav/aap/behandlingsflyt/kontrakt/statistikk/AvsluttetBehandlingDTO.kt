@@ -71,6 +71,7 @@ public enum class Vilkårtype {
     MEDLEMSKAP,
     LOVVALG,
     GRUNNLAGET,
+    @Deprecated("Skal fases ut.")
     SYKEPENGEERSTATNING,
     SAMORDNING,
 }
