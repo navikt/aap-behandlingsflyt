@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import io.mockk.Runs
 import io.mockk.every
+import io.mockk.junit5.MockKExtension
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
@@ -29,22 +30,22 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 
+@ExtendWith(MockKExtension::class)
+@MockKExtension.CheckUnnecessaryStub
 class SamordningAvslagStegTest {
 
     val samordningService = mockk<SamordningService>()
     val uføreService = mockk<UføreService>()
     val avklaringsbehovRepository = mockk<AvklaringsbehovRepository>()
     val vilkårsresultatRepository = mockk<VilkårsresultatRepository>()
-    val sakRepository = mockk<SakRepository>()
     val kontekst = mockk<FlytKontekstMedPerioder>(relaxed = true)
-    val mockSak = mockk<Sak>(relaxed = true)
 
     val steg = SamordningAvslagSteg(
         samordningService = samordningService,
         uføreService = uføreService,
         vilkårsresultatRepository = vilkårsresultatRepository,
-        sakRepository = sakRepository,
         tidligereVurderinger = FakeTidligereVurderinger(),
     )
     val periode = Periode(1 februar 2025, 31 mars 2025)
@@ -52,8 +53,7 @@ class SamordningAvslagStegTest {
 
     @BeforeEach
     fun setUp() {
-        every { sakRepository.hent(kontekst.sakId) } returns mockSak
-        every { mockSak.rettighetsperiode } returns rettighetsperiode
+        every { kontekst.vurdering.rettighetsperiode } returns rettighetsperiode
         every { vilkårsresultatRepository.hent(any()) } returns Vilkårsresultat(id = 1L, vilkår = emptyList())
         every { samordningService.hentYtelser(any()) } returns null
         every { samordningService.hentVurderinger(any()) } returns null

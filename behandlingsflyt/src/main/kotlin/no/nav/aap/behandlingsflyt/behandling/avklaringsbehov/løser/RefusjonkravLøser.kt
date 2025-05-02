@@ -25,7 +25,10 @@ class RefusjonkravLøser(val connection: DBConnection) : AvklaringsbehovsLøser<
         return Definisjon.REFUSJON_KRAV
     }
 
-    private fun validerRefusjonDato (kontekst: AvklaringsbehovKontekst, løsning: RefusjonkravLøsning): RefusjonkravVurdering {
+    private fun validerRefusjonDato(
+        kontekst: AvklaringsbehovKontekst,
+        løsning: RefusjonkravLøsning
+    ): RefusjonkravVurdering {
         if (løsning.refusjonkravVurdering.harKrav) {
             val sak = sakRepository.hent(kontekst.kontekst.sakId)
             val kravDato = sak.rettighetsperiode.fom
