@@ -282,4 +282,8 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             }
         }
     }
+
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        // Trengs ikke implementeres
+    }
 }
