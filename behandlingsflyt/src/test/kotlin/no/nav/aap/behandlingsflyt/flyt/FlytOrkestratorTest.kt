@@ -33,7 +33,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FritakMeld
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SamordningVentPaVirkningstidspunktLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
@@ -576,13 +576,16 @@ class FlytOrkestratorTest {
 
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         // Venter på at brevet skal fullføres
-        assertThat(alleAvklaringsbehov).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.SKRIV_BREV) }
+        assertThat(alleAvklaringsbehov).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.SKRIV_VEDTAKSBREV) }
 
         brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
 
         behandling = løsAvklaringsBehov(
             behandling,
-            SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse),
+            SkrivVedtaksbrevLøsning(
+                brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
+                handling = SkrivVedtaksbrevLøsning.Handling.FERDIGSTILL
+            ),
         )
 
         brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
@@ -795,11 +798,14 @@ class FlytOrkestratorTest {
 
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         // Venter på at brevet skal fullføres
-        assertThat(alleAvklaringsbehov).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.SKRIV_BREV) }
+        assertThat(alleAvklaringsbehov).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.SKRIV_VEDTAKSBREV) }
 
         brevBestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
         behandling = løsAvklaringsBehov(
-            behandling, SkrivBrevLøsning(brevbestillingReferanse = brevBestilling.referanse.brevbestillingReferanse),
+            behandling,
+            SkrivVedtaksbrevLøsning(
+                brevbestillingReferanse = brevBestilling.referanse.brevbestillingReferanse,
+                handling = SkrivVedtaksbrevLøsning.Handling.FERDIGSTILL),
         )
 
         brevBestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
@@ -945,7 +951,9 @@ class FlytOrkestratorTest {
 
         brevBestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
         behandling = løsAvklaringsBehov(
-            behandling, SkrivBrevLøsning(brevbestillingReferanse = brevBestilling.referanse.brevbestillingReferanse),
+            behandling, SkrivVedtaksbrevLøsning(
+                brevbestillingReferanse = brevBestilling.referanse.brevbestillingReferanse,
+                handling = SkrivVedtaksbrevLøsning.Handling.FERDIGSTILL),
         )
 
         assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
@@ -1137,7 +1145,10 @@ class FlytOrkestratorTest {
         brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
         val behandlingReferanse = behandling.referanse
         behandling = løsAvklaringsBehov(
-            behandling, SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse)
+            behandling, SkrivVedtaksbrevLøsning(
+                brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
+                handling = SkrivVedtaksbrevLøsning.Handling.FERDIGSTILL
+            )
         )
 
         // Siden samordning overlappet, skal en revurdering opprettes med en gang
@@ -1243,7 +1254,10 @@ class FlytOrkestratorTest {
 
         behandling = løsAvklaringsBehov(
             behandling,
-            SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse),
+            SkrivVedtaksbrevLøsning(
+                brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
+                handling = SkrivVedtaksbrevLøsning.Handling.FERDIGSTILL
+            ),
         )
         assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
 
@@ -1400,7 +1414,10 @@ class FlytOrkestratorTest {
         brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
         val behandlingReferanse = behandling.referanse
         behandling = løsAvklaringsBehov(
-            behandling, SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse)
+            behandling, SkrivVedtaksbrevLøsning(
+                brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
+                handling = SkrivVedtaksbrevLøsning.Handling.FERDIGSTILL
+            )
         )
 
         // Siden samordning overlappet, skal en revurdering opprettes med en gang
@@ -1713,7 +1730,10 @@ class FlytOrkestratorTest {
 
         brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
         behandling = løsAvklaringsBehov(
-            behandling, SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse)
+            behandling, SkrivVedtaksbrevLøsning(
+                brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
+                handling = SkrivVedtaksbrevLøsning.Handling.FERDIGSTILL
+            )
         )
 
         val behov = hentÅpneAvklaringsbehov(behandling.id)
