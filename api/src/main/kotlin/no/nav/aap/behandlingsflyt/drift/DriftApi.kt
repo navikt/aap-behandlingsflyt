@@ -7,12 +7,12 @@ import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedPost
 import javax.sql.DataSource
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 /**
  * API for å utføre manuelle operasjoner med forsøk på å rette opp i låste saker av varierende grunn.
@@ -31,7 +31,7 @@ fun NormalOpenAPIRoute.driftAPI(dataSource: DataSource) {
                 )
             ){ req, _ ->
                 dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
 

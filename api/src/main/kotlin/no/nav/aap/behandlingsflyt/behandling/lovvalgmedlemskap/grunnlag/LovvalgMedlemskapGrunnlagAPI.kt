@@ -11,11 +11,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(dataSource: DataSource) {
     route("/api/behandling") {
@@ -24,7 +24,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(dataSource: DataSource) {
                 AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
             ) { req ->
                 val grunnlag = dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val lovvalgMedlemskapRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
@@ -32,9 +32,9 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(dataSource: DataSource) {
                     val gjeldendeManuellVurdering =
                         lovvalgMedlemskapRepository.hentHvisEksisterer(behandling.id)?.manuellVurdering
                     val historiskeManuelleVurderinger =
-                        lovvalgMedlemskapRepository.hentHistoriskeVurderinger(behandling.sakId)
+                        lovvalgMedlemskapRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                         req.referanse,
                         Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP.kode.toString(),
                         token()

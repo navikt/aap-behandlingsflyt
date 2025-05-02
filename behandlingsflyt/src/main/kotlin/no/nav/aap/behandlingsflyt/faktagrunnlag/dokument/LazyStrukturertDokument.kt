@@ -11,7 +11,7 @@ class LazyStrukturertDokument(
 ) : StrukturerteData {
 
     inline fun <reified T : Melding> hentReified(): T {
-        return hent() as T
+        return requireNotNull(hent()) { "Fant ingen strukturert data" } as T
     }
 
     fun hent(): Melding? {
@@ -31,5 +31,9 @@ class LazyStrukturertDokument(
         }
 
         return DefaultJsonMapper.fromJson(strukturerteData, Melding::class.java)
+    }
+
+    override fun toString(): String {
+        return "LazyStrukturertDokument(connection=$connection, referanse=$referanse)"
     }
 }

@@ -1,12 +1,14 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -16,14 +18,11 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
-import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 @Suppress("unused")
@@ -36,12 +35,42 @@ class SamordningAvslagGrunnlag(
 class SamordningAvslagSteg(
     private val samordningService: SamordningService,
     private val uføreService: UføreService,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sakRepository: SakRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        samordningService = SamordningService(repositoryProvider),
+        uføreService = UføreService(repositoryProvider),
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+    )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (kontekst.vurdering.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
+            if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                return Fullført
+            }
+        }
+
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+
+        if (tidligereVurderinger.girAvslag(kontekst, type())) {
+            vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SAMORDNING).leggTilVurdering(
+                Vilkårsperiode(
+                    kontekst.vurdering.rettighetsperiode,
+                    Vilkårsvurdering(
+                        utfall = Utfall.IKKE_VURDERT,
+                        manuellVurdering = false,
+                        begrunnelse = "Avslag tidligere i flyt",
+                        faktagrunnlag = null,
+                    )
+                )
+            )
+            return Fullført
+        }
+
         val sak = sakRepository.hent(kontekst.sakId)
 
         val samordningTidslinje = samordningService.tidslinje(kontekst.behandlingId)
@@ -57,61 +86,43 @@ class SamordningAvslagSteg(
                     .filter { (_, prosent) -> prosent == `100_PROSENT` }
 
                 if (samordninger.isEmpty())
-                    null
+                    Vilkårsvurdering(
+                        utfall = Utfall.IKKE_VURDERT,
+                        manuellVurdering = false,
+                        begrunnelse = "Ikke full ytelse av samordninger",
+                        avslagsårsak = null,
+                        faktagrunnlag = utledFaktagrunnlag(kontekst),
+                    )
                 else
                     Vilkårsvurdering(
                         utfall = Utfall.IKKE_OPPFYLT,
                         manuellVurdering = false,
                         begrunnelse = "Full ytelse ${samordninger.joinToString { (navn, _) -> navn }}",
                         avslagsårsak = Avslagsårsak.ANNEN_FULL_YTELSE,
-                        faktagrunnlag = SamordningAvslagGrunnlag(
-                            samordningGrunnlag = SamordningYtelseVurderingGrunnlag(
-                                ytelseGrunnlag = samordningService.hentYtelser(kontekst.behandlingId),
-                                vurderingGrunnlag = samordningService.hentVurderinger(kontekst.behandlingId),
-                            ),
-                            uføreRegisterGrunnlag = uføreService.hentRegisterGrunnlagHvisEksisterer(kontekst.behandlingId),
-                            uføreVurderingGrunnlag = uføreService.hentVurderingGrunnlagHvisEksisterer(kontekst.behandlingId),
-                        ),
+                        faktagrunnlag = utledFaktagrunnlag(kontekst),
                     )
             }
 
 
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SAMORDNING)
-        vilkår.leggTilVurderinger(samordningsVurderinger.kryss(sak.rettighetsperiode))
+        vilkår.leggTilVurderinger(samordningsVurderinger.begrensetTil(sak.rettighetsperiode))
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         return Fullført
     }
 
-    override fun vedTilbakeføring(kontekst: FlytKontekstMedPerioder) {
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_GRADERING)
-        if (avklaringsbehov != null && avklaringsbehov.erÅpent()) {
-            avklaringsbehovene.avbryt(Definisjon.AVKLAR_SAMORDNING_GRADERING)
-        }
-    }
+    private fun utledFaktagrunnlag(kontekst: FlytKontekstMedPerioder) =
+        SamordningAvslagGrunnlag(
+            samordningGrunnlag = SamordningYtelseVurderingGrunnlag(
+                ytelseGrunnlag = samordningService.hentYtelser(kontekst.behandlingId),
+                vurderingGrunnlag = samordningService.hentVurderinger(kontekst.behandlingId),
+            ),
+            uføreRegisterGrunnlag = uføreService.hentRegisterGrunnlagHvisEksisterer(kontekst.behandlingId),
+            uføreVurderingGrunnlag = uføreService.hentVurderingGrunnlagHvisEksisterer(kontekst.behandlingId),
+        )
 
     companion object : FlytSteg {
-        override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-            return SamordningAvslagSteg(
-                samordningService = SamordningService(
-                    repositoryProvider.provide(),
-                    repositoryProvider.provide()
-                ),
-                avklaringsbehovRepository = avklaringsbehovRepository,
-                vilkårsresultatRepository = repositoryProvider.provide(),
-                sakRepository = repositoryProvider.provide(),
-                uføreService = UføreService(
-                    sakService = SakService(
-                        sakRepository = repositoryProvider.provide(),
-                    ),
-                    uføreRepository = repositoryProvider.provide(),
-                    samordningUføreRepository = repositoryProvider.provide(),
-                    uføreRegisterGateway = GatewayProvider.provide(),
-                ),
-            )
+        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
+            return SamordningAvslagSteg(repositoryProvider)
         }
 
         override fun type(): StegType {

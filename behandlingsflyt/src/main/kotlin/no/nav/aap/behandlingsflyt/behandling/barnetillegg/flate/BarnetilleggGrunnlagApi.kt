@@ -21,11 +21,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
     route("/api/barnetillegg") {
@@ -38,7 +38,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
                 )
             ) { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val vilkårsresultatRepository =
                         repositoryProvider.provide<VilkårsresultatRepository>()
@@ -72,7 +72,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
                     val personopplysningGrunnlag =
                         requireNotNull(personopplysningRepository.hentHvisEksisterer(behandling.id))
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                         req.referanse,
                         Definisjon.AVKLAR_BARNETILLEGG.kode.toString(),
                         token()

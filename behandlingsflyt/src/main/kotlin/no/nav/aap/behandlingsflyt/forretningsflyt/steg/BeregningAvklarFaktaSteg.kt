@@ -2,7 +2,8 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.behandling.beregning.AvklarFaktaBeregningService
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -21,31 +22,44 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class BeregningAvklarFaktaSteg private constructor(
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val sykdomRepository: SykdomRepository,
-    private val vilkårsresultatRepository1: VilkårsresultatRepository,
-    private val avklarFaktaBeregningService: AvklarFaktaBeregningService,
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val yrkesskadeRepository: YrkesskadeRepository
+    private val yrkesskadeRepository: YrkesskadeRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        beregningVurderingRepository = repositoryProvider.provide(),
+        sykdomRepository = repositoryProvider.provide(),
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        yrkesskadeRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+    )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val behandlingId = kontekst.behandlingId
 
-        if (!avklarFaktaBeregningService.skalFastsetteGrunnlag(behandlingId)) {
+        if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
             // TODO: Avbryte eventuelle avklaringsbehov som henger her hvis de er aktive
             return Fullført
         }
 
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+                        .avbrytForSteg(type())
+                    return Fullført
+                }
+
                 val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
 
-                val vilkårsresultat = vilkårsresultatRepository1.hent(behandlingId)
+                val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
                 val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
                 if (beregningVurdering == null && erIkkeStudent(vilkårsresultat)) {
                     return FantAvklaringsbehov(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
@@ -61,7 +75,7 @@ class BeregningAvklarFaktaSteg private constructor(
             VurderingType.REVURDERING -> {
                 val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
 
-                val vilkårsresultat = vilkårsresultatRepository1.hent(behandlingId)
+                val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
                 val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
                 if ((beregningVurdering == null || erIkkeVurdertTidligereIBehandlingen(
                         avklaringsbehovene,
@@ -139,19 +153,8 @@ class BeregningAvklarFaktaSteg private constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
-            val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
-            return BeregningAvklarFaktaSteg(
-                beregningVurderingRepository,
-                repositoryProvider.provide(),
-                vilkårsresultatRepository,
-                AvklarFaktaBeregningService(vilkårsresultatRepository),
-                avklaringsbehovRepository,
-                repositoryProvider.provide()
-            )
+        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
+            return BeregningAvklarFaktaSteg(repositoryProvider)
         }
 
         override fun type(): StegType {

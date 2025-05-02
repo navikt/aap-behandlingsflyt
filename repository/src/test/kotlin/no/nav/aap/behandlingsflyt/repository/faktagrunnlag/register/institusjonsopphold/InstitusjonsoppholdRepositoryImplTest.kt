@@ -27,7 +27,7 @@ import java.time.LocalDate
 class InstitusjonsoppholdRepositoryImplTest {
     @Test
     fun `Tom tidslinje dersom ingen opphold finnes`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
@@ -39,7 +39,7 @@ class InstitusjonsoppholdRepositoryImplTest {
 
     @Test
     fun `kan lagre og hente fra raw data fra gateway`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
@@ -74,7 +74,7 @@ class InstitusjonsoppholdRepositoryImplTest {
 
     @Test
     fun kopier() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 

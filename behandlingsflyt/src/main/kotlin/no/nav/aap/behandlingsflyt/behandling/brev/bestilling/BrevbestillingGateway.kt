@@ -5,11 +5,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
-import no.nav.aap.brev.kontrakt.Brevtype
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.brev.kontrakt.Vedlegg
-import no.nav.aap.lookup.gateway.Gateway
+import no.nav.aap.komponenter.gateway.Gateway
+import java.io.InputStream
 
 interface BrevbestillingGateway : Gateway {
     fun bestillBrev(
@@ -29,5 +29,11 @@ interface BrevbestillingGateway : Gateway {
 
     fun avbryt(bestillingReferanse: BrevbestillingReferanse)
 
-    fun hentSignaturForhåndsvisning(signaturer: List<SignaturGrunnlag>, brukerIdent: String, brevtype: Brevtype): List<Signatur>
+    fun hentSignaturForhåndsvisning(
+        signaturer: List<SignaturGrunnlag>,
+        brukerIdent: String,
+        typeBrev: TypeBrev
+    ): List<Signatur>
+
+    fun forhåndsvis(bestillingReferanse: BrevbestillingReferanse, signaturer: List<SignaturGrunnlag>): InputStream
 }

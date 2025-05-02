@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -60,10 +62,58 @@ class AldersvilkåretTest {
     }
 
     @Test
-    fun `vilkåret er ikke oppfylt hvis bruker søker på 67-årsdagen`() {
+    fun `vilkåret er oppfylt siste dag i måneden etter 67-årsdagen`() {
+        val fødselsdato = 16 april 1958 // 67-år-dagen er 16 april 2025
+        val rettighetsperiode = Periode(30 april 2025, 30 april 2028)
+        val aldersgrunnlaget = Aldersgrunnlag(
+            periode = rettighetsperiode,
+            fødselsdato = Fødselsdato(fødselsdato)
+        )
+
+        val vilkårsresultat = Vilkårsresultat()
+        Aldersvilkåret(vilkårsresultat).vurder(aldersgrunnlaget)
+        val vilkåret = vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET)
+
+        assertThat(vilkåret.vilkårsperioder().first().utfall).isEqualTo(Utfall.OPPFYLT)
+    }
+
+    @Test
+    fun `vilkåret er ikke oppfylt første dag i måneden etter 67-årsdagen`() {
+        val fødselsdato = 16 april 1958 // 67-år-dagen er 16 april 2025
+        val rettighetsperiode = Periode(1 mai 2025, 1 mai 2028)
+        val aldersgrunnlaget = Aldersgrunnlag(
+            periode = rettighetsperiode,
+            fødselsdato = Fødselsdato(fødselsdato)
+        )
+
+        val vilkårsresultat = Vilkårsresultat()
+        Aldersvilkåret(vilkårsresultat).vurder(aldersgrunnlaget)
+        val vilkåret = vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET)
+
+        assertThat(vilkåret.vilkårsperioder().first().utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+    }
+
+    @Test
+    fun `vilkåret er ikke oppfylt dagen etter 67-årsdagen hvis bursdag er siste dag i måneden`() {
+        val fødselsdato = 30 april 1958 // 67-år-dagen er 16 april 2025
+        val rettighetsperiode = Periode(1 mai 2025, 1 mai 2028)
+        val aldersgrunnlaget = Aldersgrunnlag(
+            periode = rettighetsperiode,
+            fødselsdato = Fødselsdato(fødselsdato)
+        )
+
+        val vilkårsresultat = Vilkårsresultat()
+        Aldersvilkåret(vilkårsresultat).vurder(aldersgrunnlaget)
+        val vilkåret = vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET)
+
+        assertThat(vilkåret.vilkårsperioder().first().utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+    }
+
+    @Test
+    fun `vilkåret er ikke oppfylt hvis bruker søker måneden etter 67-årsdagen`() {
         val fødselsdato = LocalDate.now().minusYears(67)
-        val dagenManFyller67år = LocalDate.now()
-        val rettighetsperiode = Periode(dagenManFyller67år, dagenManFyller67år.plusYears(3))
+        val månendenEtterFylte67år = LocalDate.now().plusMonths(1)
+        val rettighetsperiode = Periode(månendenEtterFylte67år, månendenEtterFylte67år.plusYears(3))
         val aldersgrunnlaget = Aldersgrunnlag(
             periode = rettighetsperiode,
             fødselsdato = Fødselsdato(fødselsdato)

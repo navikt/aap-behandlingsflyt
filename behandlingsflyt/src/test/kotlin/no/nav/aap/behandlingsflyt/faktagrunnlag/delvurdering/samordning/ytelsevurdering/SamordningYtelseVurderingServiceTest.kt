@@ -16,13 +16,14 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.lookup.gateway.GatewayRegistry
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -43,13 +44,14 @@ class SamordningYtelseVurderingServiceTest {
 
     @Test
     fun `krever avklaring når endringer kommer`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val ytelseRepo = SamordningYtelseRepositoryImpl(connection)
             val repo = SamordningVurderingRepositoryImpl(connection)
             val sakRepository = SakRepositoryImpl(connection)
             val service = SamordningYtelseVurderingService(
                 SamordningYtelseRepositoryImpl(connection),
                 SakService(sakRepository),
+                FakeTidligereVurderinger(),
             )
             val kontekst = opprettSakdata(connection)
 
@@ -128,7 +130,7 @@ class SamordningYtelseVurderingServiceTest {
             null
         ).id
         return FlytKontekstMedPerioder(
-            sakId, behandlingId, TypeBehandling.Førstegangsbehandling,
+            sakId, behandlingId, null, TypeBehandling.Førstegangsbehandling,
             VurderingTilBehandling(VurderingType.FØRSTEGANGSBEHANDLING, rettighetsperiode, null, setOf())
         )
     }

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
+import com.papsign.ktor.openapigen.content.type.binary.BinaryResponse
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
@@ -32,10 +33,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
-import no.nav.aap.lookup.gateway.GatewayProvider
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -46,11 +47,34 @@ import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.authorizedPut
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
+import java.io.InputStream
 import java.util.*
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("BrevAPI")
 fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
+    val authorizationParamPathConfig = AuthorizationParamPathConfig(
+        operasjon = Operasjon.SAKSBEHANDLE,
+        avklaringsbehovKode = SKRIV_BREV_KODE,
+        behandlingPathParam = BehandlingPathParam(
+            param = "brevbestillingReferanse",
+            resolver = {
+                val brevbestillingReferanse = BrevbestillingReferanse(UUID.fromString(it))
+                dataSource.transaction { connection ->
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val brevbestillingRepository =
+                        repositoryProvider.provide<BrevbestillingRepository>()
+                    val behandlingRepository =
+                        repositoryProvider.provide<BehandlingRepository>()
+
+                    val behandlingId =
+                        brevbestillingRepository.hent(brevbestillingReferanse).behandlingId
+
+                    behandlingRepository.hent(behandlingId).referanse.referanse
+                }
+            })
+    )
+
 
     val brevbestillingGateway = GatewayProvider.provide<BrevbestillingGateway>()
     route("/api") {
@@ -64,7 +88,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                     )
                 ) { behandlingReferanse ->
                     val grunnlag = dataSource.transaction(readOnly = true) { connection ->
-                        val repositoryProvider = RepositoryProvider(connection)
+                        val repositoryProvider = RepositoryRegistry.provider(connection)
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                         val sakRepository = repositoryProvider.provide<SakRepository>()
                         val brevbestillingRepository = repositoryProvider.provide<BrevbestillingRepository>()
@@ -103,7 +127,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                 brevbestillingGateway.hentSignaturForhåndsvisning(
                                     signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),
                                     personIdent.identifikator,
-                                    brevbestillingResponse.brevtype
+                                    brevbestilling.typeBrev
                                 )
                             } else {
                                 emptyList()
@@ -132,7 +156,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                         }
                     }
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                         behandlingReferanse.referanse,
                         Definisjon.SKRIV_BREV.kode.toString(),
                         token()
@@ -154,7 +178,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                     )
                 ) { _, req ->
                     dataSource.transaction { connection ->
-                        val repositoryProvider = RepositoryProvider(connection)
+                        val repositoryProvider = RepositoryRegistry.provider(connection)
 
                         val taSkriveLåsRepository =
                             repositoryProvider.provide<TaSkriveLåsRepository>()
@@ -209,33 +233,29 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                     respond("{}", HttpStatusCode.Accepted)
                 }
             }
-
             route("/{brevbestillingReferanse}/oppdater") {
-                authorizedPut<BrevbestillingReferanse, String, Brev>(
-                    AuthorizationParamPathConfig(
-                        operasjon = Operasjon.SAKSBEHANDLE,
-                        avklaringsbehovKode = SKRIV_BREV_KODE,
-                        behandlingPathParam = BehandlingPathParam(
-                            "brevbestillingReferanse",
-                            {
-                                val brevbestillingReferanse = BrevbestillingReferanse(UUID.fromString(it))
-                                dataSource.transaction { connection ->
-                                    val repositoryProvider = RepositoryProvider(connection)
-                                    val brevbestillingRepository =
-                                        repositoryProvider.provide<BrevbestillingRepository>()
-                                    val behandlingRepository =
-                                        repositoryProvider.provide<BehandlingRepository>()
-
-                                    val behandlingId =
-                                        brevbestillingRepository.hent(brevbestillingReferanse).behandlingId
-
-                                    behandlingRepository.hent(behandlingId).referanse.referanse
-                                }
-                            })
-                    )
-                ) { brevbestillingReferanse, brev ->
+                authorizedPut<BrevbestillingReferanse, String, Brev>(authorizationParamPathConfig) { brevbestillingReferanse, brev ->
                     brevbestillingGateway.oppdater(brevbestillingReferanse, brev)
                     respond("{}", HttpStatusCode.Accepted)
+                }
+            }
+            route("/{brevbestillingReferanse}/forhandsvis") {
+                authorizedGet<BrevbestillingReferanse, DokumentResponsDTO>(authorizationParamPathConfig) { brevbestillingReferanse ->
+                    val pdf = dataSource.transaction { connection ->
+                        val repositoryProvider = RepositoryRegistry.provider(connection)
+                        val brevbestillingRepository =
+                            repositoryProvider.provide<BrevbestillingRepository>()
+                        val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+
+                        val brevbestilling = brevbestillingRepository.hent(brevbestillingReferanse)
+
+                        val signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository)
+                        brevbestillingGateway.forhåndsvis(
+                            bestillingReferanse = brevbestillingReferanse,
+                            signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),
+                        )
+                    }
+                    respond(DokumentResponsDTO(pdf))
                 }
             }
             route("/los-bestilling") {
@@ -247,7 +267,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                     )
                 ) { _, request ->
                     dataSource.transaction { connection ->
-                        val repositoryProvider = RepositoryProvider(connection)
+                        val repositoryProvider = RepositoryRegistry.provider(connection)
                         val avklaringsbehovRepository =
                             repositoryProvider.provide<AvklaringsbehovRepository>()
                         val taSkriveLåsRepository =
@@ -258,6 +278,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                         val behandlingRepository =
                             repositoryProvider.provide<BehandlingRepository>()
                         val sakRepository = repositoryProvider.provide<SakRepository>()
+                        val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
 
                         MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
                             MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString())
@@ -269,7 +290,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                         AvklaringsbehovOrkestrator(
                                             connection,
                                             BehandlingHendelseServiceImpl(
-                                                FlytJobbRepository(connection),
+                                                flytJobbRepository,
                                                 repositoryProvider.provide(),
                                                 SakService(sakRepository)
                                             )
@@ -307,12 +328,13 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                 faktagrunnlag = request.faktagrunnlag
                             )
                     }
-                    log.info("Ber om faktagrunnlag for " + request.faktagrunnlag.joinToString(","))
-                    respond(FaktagrunnlagDto(faktagrunnlag)).also {
-                        log.info("Fant faktagrunnlag for " + faktagrunnlag.map { it.type }.joinToString(","))
-                    }
+                    respond(FaktagrunnlagDto(faktagrunnlag))
                 }
             }
         }
     }
 }
+
+// TODO duplisert og kan slettes når denne filen er flyttet til api-modulen
+@BinaryResponse(contentTypes = ["application/pdf"])
+data class DokumentResponsDTO(val stream: InputStream)

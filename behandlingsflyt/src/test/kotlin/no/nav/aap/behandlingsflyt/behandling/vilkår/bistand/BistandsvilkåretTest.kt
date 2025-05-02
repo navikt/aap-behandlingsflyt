@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårs
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -40,7 +41,6 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -189,6 +189,8 @@ class BistandsvilkåretTest {
         RepositoryRegistry.register(VilkårsresultatRepositoryImpl::class)
         RepositoryRegistry.register(AvklaringsbehovRepositoryImpl::class)
         RepositoryRegistry.register(BehandlingRepositoryImpl::class)
+        RepositoryRegistry.register(TrukketSøknadRepositoryImpl::class)
+        val dataSource = InitTestDatabase.freshDatabase()
 
 
         val bistandsvurdering1 = BistandVurdering(
@@ -203,7 +205,7 @@ class BistandsvilkåretTest {
             overgangBegrunnelse = null,
         )
 
-        val (førstegangsbehandling, sak) = InitTestDatabase.dataSource.transaction { connection ->
+        val (førstegangsbehandling, sak) = dataSource.transaction { connection ->
             val repo = BistandRepositoryImpl(connection)
             val sak = sak(connection)
             val førstegangsbehandling = behandling(connection, sak)
@@ -212,7 +214,7 @@ class BistandsvilkåretTest {
             Pair(førstegangsbehandling, sak)
         }
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val vilkårsresultat = VilkårsresultatRepositoryImpl(connection).hent(førstegangsbehandling.id)
             val rettighetsperiode = sak.rettighetsperiode
             Vilkårtype
@@ -228,11 +230,12 @@ class BistandsvilkåretTest {
 
         }
 
-        InitTestDatabase.dataSource.transaction { connection ->
-            VurderBistandsbehovSteg.konstruer(connection).utfør(
+        dataSource.transaction { connection ->
+            VurderBistandsbehovSteg.konstruer(RepositoryRegistry.provider(connection)).utfør(
                 FlytKontekstMedPerioder(
                     sakId = sak.id,
                     behandlingId = førstegangsbehandling.id,
+                    forrigeBehandlingId = førstegangsbehandling.forrigeBehandlingId,
                     behandlingType = TypeBehandling.Førstegangsbehandling,
                     vurdering = VurderingTilBehandling(
                         vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
@@ -247,16 +250,16 @@ class BistandsvilkåretTest {
             assertThat(vilkåret.vilkårsperioder()).hasSize(1)
         }
 
-        val revurdering = InitTestDatabase.dataSource.transaction { connection ->
+        val revurdering = dataSource.transaction { connection ->
             val revurdering = revurdering(connection, førstegangsbehandling, sak)
             revurdering
         }
 
         // Send inn revurderingsløsning
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             // Må lagre ned sykdomsvurdering for behandlingen da vurderingenGjelderFra for 11-6 skal være lik den for 11-5 i samme behandling
             val sykdomsvurdering = sykdomsvurdering(vurderingenGjelderFra = now.plusDays(10))
-            RepositoryProvider(connection).provide<SykdomRepository>().lagre(revurdering.id, listOf(sykdomsvurdering))
+            RepositoryRegistry.provider(connection).provide<SykdomRepository>().lagre(revurdering.id, listOf(sykdomsvurdering))
 
             val bistandsvurdering2 = BistandVurderingLøsningDto(
                 begrunnelse = "Begrunnelse",
@@ -272,18 +275,22 @@ class BistandsvilkåretTest {
                 AvklaringsbehovKontekst(
                     bruker = Bruker(sak.person.aktivIdent().identifikator),
                     kontekst = FlytKontekst(
-                        behandlingId = revurdering.id, sakId = sak.id, behandlingType = TypeBehandling.Revurdering
+                        behandlingId = revurdering.id,
+                        forrigeBehandlingId = revurdering.forrigeBehandlingId,
+                        sakId = sak.id,
+                        behandlingType = TypeBehandling.Revurdering
                     ),
                 ), løsning = AvklarBistandsbehovLøsning(bistandsVurdering = bistandsvurdering2)
             )
         }
 
 
-        InitTestDatabase.dataSource.transaction { connection ->
-            VurderBistandsbehovSteg.konstruer(connection).utfør(
+        dataSource.transaction { connection ->
+            VurderBistandsbehovSteg.konstruer(RepositoryRegistry.provider(connection)).utfør(
                 FlytKontekstMedPerioder(
                     sakId = sak.id,
                     behandlingId = revurdering.id,
+                    forrigeBehandlingId = revurdering.forrigeBehandlingId,
                     behandlingType = TypeBehandling.Revurdering,
                     vurdering = VurderingTilBehandling(
                         vurderingType = VurderingType.REVURDERING,
@@ -294,7 +301,7 @@ class BistandsvilkåretTest {
             )
         }
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val vilkåret =
                 VilkårsresultatRepositoryImpl(connection).hent(revurdering.id).finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
             assertThat(vilkåret.vilkårsperioder()).hasSize(2)

@@ -1,9 +1,8 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
@@ -25,28 +24,21 @@ class OpprettJobbForFastsattPeriodeJobbUtfører(
 
     companion object : Jobb {
         override fun konstruer(connection: DBConnection): JobbUtfører {
+            val provider = RepositoryRegistry.provider(connection)
             return OpprettJobbForFastsattPeriodeJobbUtfører(
-                FlytJobbRepository(connection),
-                RepositoryProvider(connection).provide(),
+                provider.provide(),
+                provider.provide(),
             )
         }
 
-        override fun type(): String {
-            return "batch.OpprettJobbForFastsattPeriode"
-        }
+        override fun type() = "batch.OpprettJobbForFastsattPeriode"
 
-        override fun navn(): String {
-            return "Start jobb for å sjekke behov for revurdering pga manglende meldekort"
-        }
+        override fun navn() = "Start jobb for å sjekke behov for revurdering pga manglende meldekort"
 
-        override fun beskrivelse(): String {
-            return """
-                Start jobb for å sjekke om fastsatt dager er passert.
-                """.trimIndent()
-        }
+        override fun beskrivelse() = """
+            Start jobb for å sjekke om fastsatt dager er passert.
+            """.trimIndent()
 
-        override fun cron(): CronExpression {
-            return CronExpression.createWithoutSeconds("10 * * * *")
-        }
+        override fun cron() = CronExpression.createWithoutSeconds("10 2 * * 2")
     }
 }

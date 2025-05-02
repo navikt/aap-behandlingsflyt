@@ -6,12 +6,15 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.HistoriskManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
@@ -44,18 +47,20 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         }
     }
 
-    override fun hentHistoriskeVurderinger(sakId: SakId): List<HistoriskManuellVurderingForForutgåendeMedlemskap> {
+    override fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<HistoriskManuellVurderingForForutgåendeMedlemskap> {
         val query = """
             SELECT vurdering.*
             FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG grunnlag
             INNER JOIN FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING vurdering ON grunnlag.MANUELL_VURDERING_ID = vurdering.ID
             JOIN BEHANDLING behandling ON grunnlag.BEHANDLING_ID = behandling.ID
             WHERE grunnlag.AKTIV AND behandling.SAK_ID = ?
+              AND behandling.opprettet_tid < (SELECT a.opprettet_tid from behandling a where id = ?)
         """.trimIndent()
 
         return connection.queryList(query) {
             setParams {
                 setLong(1, sakId.id)
+                setLong(2, behandlingId.id)
             }
             setRowMapper {
                 HistoriskManuellVurderingForForutgåendeMedlemskap(
@@ -77,7 +82,9 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         val eksisterendeManuellVurdering = hentManuellVurdering(grunnlagOppslag?.manuellVurderingId)
         val overstyrt = manuellVurdering.overstyrt || eksisterendeManuellVurdering?.overstyrt == true
 
-        deaktiverGrunnlag(behandlingId)
+        if (grunnlagOppslag != null) {
+            deaktiverGrunnlag(behandlingId)
+        }
 
         val manuellVurderingQuery = """
             INSERT INTO FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING (BEGRUNNELSE, HAR_FORUTGAAENDE_MEDLEMSKAP, VAR_MEDLEM_MED_NEDSATT_ARBEIDSEVNE, MEDLEM_MED_UNNTAK_AV_MAKS_FEM_AAR, OVERSTYRT) VALUES (?, ?, ?, ?, ?)
@@ -236,6 +243,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                     lovvalg = it.getString("LOVVALG"),
                     helsedel = it.getBoolean("HELSEDEL"),
                     lovvalgsland = it.getStringOrNull("LOVVALGSLAND"),
+                    kilde = hentKildesystem(it)
                 )
                 Segment(
                     it.getPeriode("PERIODE"),
@@ -244,6 +252,15 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             }
         }.toList()
        return MedlemskapUnntakGrunnlag(data)
+    }
+
+    private fun hentKildesystem(row: Row): KildesystemMedl? {
+        val kildesystemKode: KildesystemKode? = row.getEnumOrNull("KILDESYSTEM")
+        val kildeNavn = row.getStringOrNull("KILDENAVN")
+
+        return if (kildesystemKode != null && kildeNavn != null) {
+            KildesystemMedl(kildesystemKode, kildeNavn)
+        } else null
     }
 
     private fun hentArbeiderINorgeGrunnlag(arbeiderINorgeId: Long?): List<ArbeidINorgeGrunnlag> {

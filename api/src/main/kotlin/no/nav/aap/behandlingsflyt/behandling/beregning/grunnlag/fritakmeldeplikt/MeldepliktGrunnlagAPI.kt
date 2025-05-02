@@ -2,9 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplik
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
-import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktFritaksperioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
@@ -16,13 +14,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import java.time.LocalDateTime
 import javax.sql.DataSource
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: DataSource) {
     route("/api/behandling/{referanse}/grunnlag/fritak-meldeplikt") {
@@ -30,7 +28,7 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: DataSource) {
             AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
         ) { req ->
             val meldepliktGrunnlag = dataSource.transaction(readOnly = true) { connection ->
-                val repositoryProvider = RepositoryProvider(connection)
+                val repositoryProvider = RepositoryRegistry.provider(connection)
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val meldepliktRepository = repositoryProvider.provide<MeldepliktRepository>()
 
@@ -45,13 +43,11 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: DataSource) {
                 val historikk =
                     meldepliktRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
 
-                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                     req.referanse,
                     Definisjon.FRITAK_MELDEPLIKT.kode.toString(),
                     token()
                 )
-
-
 
                 FritakMeldepliktGrunnlagDto(
                     harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
@@ -65,11 +61,7 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: DataSource) {
                 )
             }
 
-            if (meldepliktGrunnlag != null) {
-                respond(meldepliktGrunnlag)
-            } else {
-                respondWithStatus(HttpStatusCode.NoContent)
-            }
+            respond(meldepliktGrunnlag)
         }
     }
     route("/api/behandling/{referanse}/grunnlag/fritak-meldeplikt/simulering") {
@@ -77,7 +69,7 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: DataSource) {
             routeConfig = AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
         ) { req, dto ->
             val meldepliktGrunnlag = dataSource.transaction(readOnly = true) { connection ->
-                val repositoryProvider = RepositoryProvider(connection)
+                val repositoryProvider = RepositoryRegistry.provider(connection)
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val meldepliktRepository = repositoryProvider.provide<MeldepliktRepository>()
                 val behandling: Behandling =

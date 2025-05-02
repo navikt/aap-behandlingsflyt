@@ -2,9 +2,10 @@ package no.nav.aap.behandlingsflyt.flyt.steg
 
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 interface FlytSteg {
-    fun konstruer(connection: DBConnection): BehandlingSteg
+    fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg
 
     fun type(): StegType
 }

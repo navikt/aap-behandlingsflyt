@@ -1,17 +1,19 @@
 val ktorVersion = "3.1.2"
-val komponenterVersjon = "1.0.193"
-val tilgangVersjon = "1.0.29"
-val junitVersjon = "5.12.1"
+val komponenterVersjon = "1.0.236"
+val tilgangVersjon = "1.0.58"
+val junitVersjon = "5.12.2"
 
 plugins {
     id("behandlingsflyt.conventions")
 }
 
+val jacksonVersjon = "2.19.0"
+
 dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation(project(":kontrakt"))
-    implementation("no.nav.aap.brev:kontrakt:0.0.87")
+    implementation("no.nav.aap.brev:kontrakt:0.0.105")
     implementation("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
@@ -24,18 +26,18 @@ dependencies {
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     constraints {
-        implementation("io.netty:netty-common:4.1.119.Final")
+        implementation("io.netty:netty-common:4.2.0.Final")
     }
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
 
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.3")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.3")
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersjon")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersjon")
 
     implementation("ch.qos.logback:logback-classic:1.5.18")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:10.0.2")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.2")
 
     implementation("org.junit.jupiter:junit-jupiter-api:$junitVersjon")
     testImplementation("org.assertj:assertj-core:3.27.3")

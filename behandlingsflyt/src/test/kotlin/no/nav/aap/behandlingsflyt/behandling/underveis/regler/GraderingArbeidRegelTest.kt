@@ -178,7 +178,7 @@ class GraderingArbeidRegelTest {
         )
         val vurdering = vurder(input)
 
-        assertEquals(Prosent(44), vurdering.segment(rettighetsperiode.fom)?.verdi?.arbeidsGradering()?.gradering)
+        assertEquals(Prosent(44), vurdering.segment(rettighetsperiode.fom)?.verdi?.arbeidsgradering()?.gradering)
     }
 
     @Test
@@ -233,12 +233,38 @@ class GraderingArbeidRegelTest {
         assertEquals(Prosent.`50_PROSENT`, vurdering.segment(meldeperiode2.fom)?.verdi?.arbeidsgradering()?.gradering)
     }
 
+    @Test
+    fun `korrigering av meldekort på samme dag`() {
+        val rettighetsperiode = Periode(LocalDate.parse("2022-10-31"), LocalDate.parse("2023-10-31"))
+        val meldeperiode1 = Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusDays(13))
+        val meldeperiode2 = Periode(meldeperiode1.tom.plusDays(1), meldeperiode1.tom.plusDays(14))
+        val meldekortPeriode1 = meldeperiode1 to BigDecimal.ZERO
+        val meldekortPeriode2 = meldeperiode2 to BigDecimal(3)
+        val korrigertMeldekortPeriode1 = meldeperiode1 to BigDecimal(3)
+        val korrigertMeldekortPeriode2 = meldeperiode2 to BigDecimal(5)
+        val allemeldekort = meldekort(
+            meldekortPeriode1,
+            meldekortPeriode2,
+            korrigertMeldekortPeriode1,
+            korrigertMeldekortPeriode2,
+        )
+        val input = underveisInput(
+            rettighetsperiode = rettighetsperiode,
+            fastsattArbeidsevne = Prosent.`30_PROSENT`,
+            meldekort = allemeldekort
+        ).copy(innsendingsTidspunkt = allemeldekort.associate { it.mottattTidspunkt.toLocalDate() to it.journalpostId })
+        val vurdering = vurder(input)
+
+        assertEquals(Prosent.`70_PROSENT`, vurdering.segment(meldeperiode1.fom)?.verdi?.arbeidsgradering()?.gradering)
+        assertEquals(Prosent.`70_PROSENT`, vurdering.segment(meldeperiode2.fom)?.verdi?.arbeidsgradering()?.gradering)
+    }
+
     private fun underveisInput(
         rettighetsperiode: Periode,
         fastsattArbeidsevne: Prosent?,
         meldekort: List<Meldekort>
     ) = tomUnderveisInput(
-        innsendingsTidspunkt = meldekort.associate { it.timerArbeidPerPeriode.first().periode.fom.minusDays(1) to it.journalpostId },
+        innsendingsTidspunkt = meldekort.associate { it.mottattTidspunkt.toLocalDate() to it.journalpostId },
         rettighetsperiode = rettighetsperiode,
         meldekort = meldekort,
         arbeidsevneGrunnlag = ArbeidsevneGrunnlag(
@@ -262,7 +288,8 @@ class GraderingArbeidRegelTest {
                         periode = periode,
                         timerArbeid = TimerArbeid(timerArbeidet)
                     )
-                )
+                ),
+                mottattTidspunkt = LocalDateTime.now().plusMinutes(i.toLong()),
             )
         }
     }

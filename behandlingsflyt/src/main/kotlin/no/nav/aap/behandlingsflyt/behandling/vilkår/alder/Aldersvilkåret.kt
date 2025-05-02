@@ -7,95 +7,61 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.komponenter.tidslinje.JoinStyle
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
-import java.time.LocalDate
+import no.nav.aap.komponenter.verdityper.Tid
+import java.time.YearMonth
 
 class Aldersvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Aldersgrunnlag> {
     private val vilkår: Vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.ALDERSVILKÅRET)
 
-    // TODO Det må avklares hva som er riktig adferd dersom bruker søker før fylte 18
     override fun vurder(grunnlag: Aldersgrunnlag) {
-        val utfall: Utfall
-        val avslagsårsak: Avslagsårsak?
-
-        val alderPåSøknadsdato = grunnlag.alderPåSøknadsdato()
-
-        if (alderPåSøknadsdato < 18) {
-            utfall = Utfall.IKKE_OPPFYLT
-            avslagsårsak = Avslagsårsak.BRUKER_UNDER_18
-            lagre(
-                grunnlag.periode, grunnlag, VurderingsResultat(
-                    utfall = utfall,
-                    avslagsårsak = avslagsårsak,
-                    innvilgelsesårsak = null
-                )
-            )
-            return
-        } else if (alderPåSøknadsdato >= 67) {
-            utfall = Utfall.IKKE_OPPFYLT
-            avslagsårsak = Avslagsårsak.BRUKER_OVER_67
-            lagre(
-                grunnlag.periode, grunnlag, VurderingsResultat(
-                    utfall = utfall,
-                    avslagsårsak = avslagsårsak,
-                    innvilgelsesårsak = null
+        // TODO Det må avklares hvordan vi skal håndtere søknader som er sendt inn for tidlig
+        if (grunnlag.alderPåSøknadsdato() < 18) {
+            vilkår.leggTilVurdering(
+                Vilkårsperiode(
+                    periode = grunnlag.periode,
+                    utfall = Utfall.IKKE_OPPFYLT,
+                    manuellVurdering = false,
+                    avslagsårsak = Avslagsårsak.BRUKER_UNDER_18,
+                    begrunnelse = null,
+                    faktagrunnlag = grunnlag,
                 )
             )
             return
         }
 
-        val alderstidslinje = Tidslinje(grunnlag.periode, Utfall.OPPFYLT).kombiner(Tidslinje(
-            Periode(
-                grunnlag.sisteDagMedYtelse(),
-                LocalDate.MAX
-            ), Utfall.IKKE_OPPFYLT
-        ), JoinStyle.LEFT_JOIN { periode, venstre, høyre ->
-            Segment(
-                periode, VurderingMedÅrsak(
-                    høyre?.verdi ?: venstre.verdi, utledÅrsak(høyre)
-                )
-            )
-        })
+        val sisteDagAldersvilkåretErOppfylt =
+            YearMonth.from(grunnlag.fyller(67)).atEndOfMonth()
 
-        for (segment in alderstidslinje) {
-            lagre(
-                segment.periode,
-                grunnlag, VurderingsResultat(
-                    utfall = segment.verdi.utfall,
-                    avslagsårsak = segment.verdi.avslagsårsak,
-                    innvilgelsesårsak = null
-                )
-            )
-        }
-    }
-
-    private fun utledÅrsak(høyre: Segment<Utfall>?): Avslagsårsak? {
-        return if (høyre?.verdi == Utfall.IKKE_OPPFYLT) {
-            Avslagsårsak.BRUKER_OVER_67
-        } else {
-            null
-        }
-    }
-
-    private fun lagre(
-        periode: Periode,
-        grunnlag: Aldersgrunnlag,
-        vurderingsResultat: VurderingsResultat
-    ) {
-        vilkår.leggTilVurdering(
-            Vilkårsperiode(
-                periode = periode,
-                utfall = vurderingsResultat.utfall,
-                avslagsårsak = vurderingsResultat.avslagsårsak,
+        val aldersvurderinger = tidslinjeOf(
+            Periode(Tid.MIN, grunnlag.fyller(18).minusDays(1)) to Vilkårsvurdering(
+                utfall = Utfall.IKKE_OPPFYLT,
+                avslagsårsak = Avslagsårsak.BRUKER_UNDER_18,
+                manuellVurdering = false,
                 begrunnelse = null,
                 faktagrunnlag = grunnlag,
-                versjon = vurderingsResultat.versjon()
-            )
-        )
-    }
+            ),
 
+            Periode(grunnlag.fyller(18), sisteDagAldersvilkåretErOppfylt) to Vilkårsvurdering(
+                utfall = Utfall.OPPFYLT,
+                manuellVurdering = false,
+                begrunnelse = null,
+                faktagrunnlag = grunnlag,
+            ),
+
+            Periode(sisteDagAldersvilkåretErOppfylt.plusDays(1), Tid.MAKS) to Vilkårsvurdering(
+                utfall = Utfall.IKKE_OPPFYLT,
+                avslagsårsak = Avslagsårsak.BRUKER_OVER_67,
+                manuellVurdering = false,
+                begrunnelse = null,
+                faktagrunnlag = grunnlag,
+            ),
+        )
+            .begrensetTil(grunnlag.periode)
+
+        vilkår.leggTilVurderinger(aldersvurderinger)
+    }
 }

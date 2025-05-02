@@ -39,7 +39,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.bruker
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbStatus
@@ -49,7 +48,11 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
+import org.slf4j.LoggerFactory
 import javax.sql.DataSource
+import no.nav.aap.lookup.repository.RepositoryRegistry
+
+private val log = LoggerFactory.getLogger("flytApi")
 
 fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
     route("/api/behandling") {
@@ -60,7 +63,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                 )
             ) { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val vilkårsresultatRepository =
                         repositoryProvider.provide<VilkårsresultatRepository>()
@@ -93,7 +96,8 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                                         flytJobbRepository
                                     ),
                                     beskrivelse = it.beskrivelse(),
-                                    navn = it.navn()
+                                    navn = it.navn(),
+                                    opprettetTidspunkt = it.opprettetTidspunkt(),
                                 )
                             })
                     // Henter denne ut etter status er utledet for å være sikker på at dataene er i rett tilstand
@@ -114,6 +118,16 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                         utledVurdertGruppe(prosessering, aktivtSteg, flyt, avklaringsbehovene)
                     val vilkårsresultat = vilkårResultat(vilkårsresultatRepository, behandling.id)
                     val alleAvklaringsbehov = alleAvklaringsbehovInkludertFrivillige.alle()
+
+                    LoggingKontekst(
+                        repositoryProvider,
+                        LogKontekst(referanse = BehandlingReferanse(req.referanse))
+                    ).use {
+                        val behandlingVersjon = behandling.versjon
+                        log.info("Henter flyt med behandlingversjon: ${behandlingVersjon}")
+                    }
+
+
                     BehandlingFlytOgTilstandDto(
                         flyt = stegGrupper.map { (gruppe, steg) ->
                             erFullført = erFullført && gruppe != aktivtSteg.gruppe
@@ -171,7 +185,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                 ),
             ) { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val vilkårsresultatRepository =
                         repositoryProvider.provide<VilkårsresultatRepository>()
@@ -194,7 +208,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                 )
             ) { request, body ->
                 dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     LoggingKontekst(
                         repositoryProvider,
                         LogKontekst(referanse = BehandlingReferanse(request.referanse))
@@ -206,9 +220,10 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                         val behandlingRepository =
                             repositoryProvider.provide<BehandlingRepository>()
                         val sakRepository = repositoryProvider.provide<SakRepository>()
+                        val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
                         BehandlingTilstandValidator(
                             BehandlingReferanseService(behandlingRepository),
-                            FlytJobbRepository(connection)
+                            flytJobbRepository
                         ).validerTilstand(
                             request,
                             body.behandlingVersjon
@@ -217,7 +232,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                         AvklaringsbehovOrkestrator(
                             connection,
                             BehandlingHendelseServiceImpl(
-                                FlytJobbRepository(connection),
+                                flytJobbRepository,
                                 repositoryProvider.provide<BrevbestillingRepository>(),
                                 SakService(sakRepository)
                             )
@@ -245,7 +260,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                 )
             ) { request ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val avklaringsbehovRepository =
                         repositoryProvider.provide<AvklaringsbehovRepository>()
@@ -339,11 +354,11 @@ private fun utledVisning(
     status: ProsesseringStatus,
     typeBehandling: TypeBehandling
 ): Visning {
-    val jobber = status in listOf(ProsesseringStatus.JOBBER, ProsesseringStatus.FEILET)
+    val jobberEllerFeilet = status in listOf(ProsesseringStatus.JOBBER, ProsesseringStatus.FEILET)
     val påVent = alleAvklaringsbehovInkludertFrivillige.erSattPåVent()
     val beslutterReadOnly = aktivtSteg != StegType.FATTE_VEDTAK
     val erTilKvalitetssikring =
-        alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.erÅpent() == true
+        harÅpentKvalitetssikringsAvklaringsbehov(alleAvklaringsbehovInkludertFrivillige) && aktivtSteg == StegType.KVALITETSSIKRING
     val saksbehandlerReadOnly = erTilKvalitetssikring || !flyt.erStegFør(aktivtSteg, StegType.FATTE_VEDTAK)
     val visBeslutterKort =
         !beslutterReadOnly || (!saksbehandlerReadOnly && alleAvklaringsbehovInkludertFrivillige.harVærtSendtTilbakeFraBeslutterTidligere())
@@ -352,7 +367,7 @@ private fun utledVisning(
     val visBrevkort =
         alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_BREV)?.erÅpent() == true
 
-    if (jobber) {
+    if (jobberEllerFeilet) {
         return Visning(
             saksbehandlerReadOnly = true,
             beslutterReadOnly = true,
@@ -383,11 +398,14 @@ private fun utledVisningAvKvalitetsikrerKort(
     if (avklaringsbehovene.skalTilbakeføresEtterKvalitetssikring()) {
         return true
     }
-    if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.erÅpent() == true) {
+    if (harÅpentKvalitetssikringsAvklaringsbehov(avklaringsbehovene)) {
         return true
     }
     return false
 }
+
+private fun harÅpentKvalitetssikringsAvklaringsbehov(avklaringsbehovene: FrivilligeAvklaringsbehov): Boolean =
+    avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.erÅpent() == true
 
 private fun alleVilkår(vilkårResultat: Vilkårsresultat): List<VilkårDTO> {
     return vilkårResultat.alle().map { vilkår ->

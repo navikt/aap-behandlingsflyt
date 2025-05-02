@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -30,5 +31,9 @@ interface BehandlingRepository : Repository {
     fun oppdaterÅrsaker(behandling: Behandling, årsaker: List<Årsak>)
 
     fun finnSøker(referanse: BehandlingReferanse): Person
+
+    fun oppdaterBehandlingStatus(behandlingId: BehandlingId, status: Status)
+
+    fun leggTilNyttAktivtSteg(behandlingId: BehandlingId, tilstand: StegTilstand)
 }
 

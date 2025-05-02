@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
@@ -29,21 +28,22 @@ import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.brev.kontrakt.Status
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.lookup.gateway.GatewayProvider
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDateTime
 import javax.sql.DataSource
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
     route("/api").tag(Tags.Aktivitetsplikt) {
@@ -51,7 +51,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
             AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
         ) { behandlingReferanse ->
             val respons = dataSource.transaction(readOnly = true) { conn ->
-                val repositoryProvider = RepositoryProvider(conn)
+                val repositoryProvider = RepositoryRegistry.provider(conn)
                 val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val brevGateway = GatewayProvider.provide<BrevbestillingGateway>()
@@ -86,7 +86,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                     ?.takeIf { it.status == Status.FERDIGSTILT }
                     ?.oppdatert?.toLocalDate()
 
-                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                     behandlingReferanse.referanse,
                     Definisjon.EFFEKTUER_11_7.kode.toString(),
                     token()
@@ -106,24 +106,38 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
         }
 
         route("/sak/{saksnummer}/aktivitetsplikt") {
-            route("/opprett").post<SaksnummerParameter, String, OpprettAktivitetspliktDTO>(
-            ) { params, req ->
-                val navIdent = bruker()
-                dataSource.transaction { connection ->
-                    opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
+            route("/opprett") {
+                authorizedPost<SaksnummerParameter, String, OpprettAktivitetspliktDTO>(
+                    AuthorizationParamPathConfig(
+                        sakPathParam = SakPathParam(
+                            "saksnummer"
+                        )
+                    )
+                ) { params, req ->
+                    val navIdent = bruker()
+                    dataSource.transaction { connection ->
+                        opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
+                    }
+                    respond("{}", HttpStatusCode.Accepted)
                 }
-                respond("{}", HttpStatusCode.Accepted)
             }
 
-            // TODO !! Denne må tilgangskontrollers. Men hva er nødvendig kontekst?
-            route("/oppdater").post<SaksnummerParameter, String, OppdaterAktivitetspliktDTOV2> { params, req ->
-                val navIdent = bruker()
-                dataSource.transaction { connection ->
-                    opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
+            route("/oppdater") {
+                authorizedPost<SaksnummerParameter, String, OppdaterAktivitetspliktDTOV2>(
+                    AuthorizationParamPathConfig(
+                        sakPathParam = SakPathParam(
+                            "saksnummer"
+                        )
+                    )
+                )
+                { params, req ->
+                    val navIdent = bruker()
+                    dataSource.transaction { connection ->
+                        opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
+                    }
+                    respond("{}", HttpStatusCode.Accepted)
                 }
-                respond("{}", HttpStatusCode.Accepted)
             }
-
             authorizedGet<SaksnummerParameter, BruddAktivitetspliktResponse>(
                 AuthorizationParamPathConfig(
                     sakPathParam = SakPathParam(
@@ -132,7 +146,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                 )
             ) { params ->
                 val response = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val aktivitetspliktRepository =
                         repositoryProvider.provide<AktivitetspliktRepository>()
@@ -154,7 +168,7 @@ private fun opprettDokument(
     saksnummer: Saksnummer,
     req: AktivitetspliktDTO
 ) {
-    val repositoryProvider = RepositoryProvider(connection)
+    val repositoryProvider = RepositoryRegistry.provider(connection)
     val sakRepository = repositoryProvider.provide<SakRepository>()
     val repository = repositoryProvider.provide<AktivitetspliktRepository>()
 
@@ -177,7 +191,7 @@ private fun registrerDokumentjobb(
     val tom = bruddAktivitetsplikt.maxOf { dokument -> dokument.brudd.periode.tom }
     val fom = bruddAktivitetsplikt.minOf { dokument -> dokument.brudd.periode.fom }
 
-    val flytJobbRepository = FlytJobbRepository(connection)
+    val flytJobbRepository = RepositoryRegistry.provider(connection).provide<FlytJobbRepository>()
     flytJobbRepository.leggTil(
         HendelseMottattHåndteringJobbUtfører.nyJobb(
             sakId = sak.id,

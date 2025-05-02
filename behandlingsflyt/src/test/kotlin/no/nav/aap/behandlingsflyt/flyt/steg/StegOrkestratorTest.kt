@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.flyt.steg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.flyt.steg.internal.StegKonstruktørImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -25,10 +26,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class StegOrkestratorTest {
+internal class StegOrkestratorTest {
 
     companion object {
-        val dataSource = InitTestDatabase.dataSource
+        private val dataSource = InitTestDatabase.freshDatabase()
     }
 
     @Test
@@ -56,8 +57,11 @@ class StegOrkestratorTest {
 
             val resultat = StegOrkestrator(
                 aktivtSteg = TestFlytSteg,
-                informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection),
-                behandlingFlytRepository = BehandlingRepositoryImpl(connection),
+                informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
+                    InformasjonskravRepositoryImpl(connection),
+                    connection
+                ),
+                behandlingRepository = BehandlingRepositoryImpl(connection),
                 avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection),
                 perioderTilVurderingService = PerioderTilVurderingService(
                     SakService(SakRepositoryImpl(connection)),

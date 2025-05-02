@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.BestillLegeerkl�
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.HentStatusLegeerklæring
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.PurringLegeerklæringRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Anvist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerResponse
@@ -65,6 +66,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdenterData
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdenterDataResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlNavn
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlNavnData
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlNavnDataBolk
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersonBolk
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersonNavnDataResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfo
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoData
@@ -136,6 +139,7 @@ object FakeServers : AutoCloseable {
     private val datadeling = embeddedServer(Netty, port = 0, module = { datadelingFake() })
     private val utbetal = embeddedServer(Netty, port = 0, module = { utbetalFake() })
     private val meldekort = embeddedServer(Netty, port = 0, module = { meldekortFake() })
+    private val tjenestePensjon = embeddedServer(Netty, port = 0, module = { tjenestePensjonFake() })
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
@@ -298,6 +302,36 @@ object FakeServers : AutoCloseable {
                     PERSON_BOLK_QUERY -> call.respond(barn(req))
                     else -> call.respond(HttpStatusCode.BadRequest)
                 }
+            }
+        }
+    }
+
+    private fun Application.tjenestePensjonFake(){
+        install(ContentNegotiation) {
+            jackson {
+                registerModule(JavaTimeModule())
+            }
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@tjenestePensjonFake.log.info("TP :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                call.respond(
+                    status = HttpStatusCode.InternalServerError,
+                    message = ErrorRespons(cause.message)
+                )
+            }
+        }
+        //create route
+        routing {
+            get("/api/tjenestepensjon/getActiveForholdMedActiveYtelser") {
+                val fomDate = call.request.queryParameters["fomDate"]
+                val tomDate = call.request.queryParameters["tomDate"]
+
+                val response = TjenestePensjonRespons(
+                    call.parameters["fnr"] ?: "",
+                )
+
+                call.respond(response)
             }
         }
     }
@@ -1051,7 +1085,18 @@ object FakeServers : AutoCloseable {
     "medlem": false,
     "grunnlag": "grunnlag",
     "lovvalg": "lovvalg",
-    "lovvalgsland": "NOR"
+    "lovvalgsland": "NOR",
+    "sporingsinformasjon": {
+      "versjon": 1073741824,
+      "registrert": "2025-04-25",
+      "besluttet": "2025-04-25",
+      "kilde": "TP",
+      "kildedokument": "string",
+      "opprettet": "2025-04-25T09:21:22.041Z",
+      "opprettetAv": "string",
+      "sistEndret": "2025-04-25T09:21:22.041Z",
+      "sistEndretAv": "string"
+    }
   }
 ]"""
                 } else {
@@ -1279,13 +1324,15 @@ object FakeServers : AutoCloseable {
     private fun bolknavn(req: PdlRequest): PdlPersonNavnDataResponse {
         val navnData = req.variables.identer?.map {
             val testPerson = hentEllerGenererTestPerson(it)
-            PdlNavnData(
+            PdlNavnDataBolk(
                 ident = testPerson.identer.first().identifikator,
-                navn = listOf(
-                    PdlNavn(
-                        fornavn = testPerson.navn.fornavn,
-                        mellomnavn = null,
-                        etternavn = testPerson.navn.etternavn
+                person =
+                    PdlPersonBolk(
+                        navn = listOf(PdlNavn(
+                            fornavn = testPerson.navn.fornavn,
+                            mellomnavn = null,
+                            etternavn = testPerson.navn.etternavn
+                        )
                     )
                 )
             )
@@ -1317,7 +1364,7 @@ object FakeServers : AutoCloseable {
                 val token = AzureTokenGen(
                     issuer = "behandlingsflyt",
                     audience = "behandlingsflyt"
-                ).generate(body.contains("grant_type=client_credentials"))
+                ).generate(body.contains("grant_type=client_credentials"), azp = "behandlingsflyt")
                 call.respond(TestToken(access_token = token))
             }
             get("/jwks") {
@@ -1412,6 +1459,7 @@ object FakeServers : AutoCloseable {
                         brevStore += BrevbestillingResponse(
                             referanse = brevbestillingReferanse,
                             brev = Brev(
+                                kanSendesAutomatisk = false,
                                 journalpostTittel = "En tittel",
                                 overskrift = "Overskrift", tekstbolker = listOf(
                                     Tekstbolk(
@@ -1470,6 +1518,11 @@ object FakeServers : AutoCloseable {
                             synchronized(mutex) {
                                 brevStore.find { it.referanse == ref }!!
                             }
+                        )
+                    }
+                    post("/forhandsvis") {
+                        call.respond(
+                            this.javaClass.classLoader.getResourceAsStream("sample.pdf")?.readAllBytes() ?: ByteArray(0)
                         )
                     }
                     put("/oppdater") {
@@ -1543,6 +1596,7 @@ object FakeServers : AutoCloseable {
         datadeling.start()
         utbetal.start()
         meldekort.start()
+        tjenestePensjon.start()
 
         println("AZURE PORT ${azure.port()}")
 
@@ -1639,6 +1693,17 @@ object FakeServers : AutoCloseable {
         // Meldekort
         System.setProperty("integrasjon.meldekort.url", "http://localhost:${meldekort.port()}")
         System.setProperty("integrasjon.meldekort.scope", "meldekort")
+
+        //tjenestepensjon
+        System.setProperty("integrasjon.tjenestepensjon.url", "http://localhost:${tjenestePensjon.port()}")
+        System.setProperty("integrasjon.tjenestepensjon.scope", "tjenestepensjon")
+        
+        //Azp
+        System.setProperty("integrasjon.tilgang.azp", UUID.randomUUID().toString())
+        System.setProperty("integrasjon.brev.azp", UUID.randomUUID().toString())
+        System.setProperty("integrasjon.dokumentinnhenting.azp", UUID.randomUUID().toString())
+        System.setProperty("integrasjon.postmottak.azp", UUID.randomUUID().toString())
+        System.setProperty("integrasjon.saksbehandling.azp", UUID.randomUUID().toString())
     }
 
     override fun close() {
@@ -1664,6 +1729,7 @@ object FakeServers : AutoCloseable {
         datadeling.stop(0L, 0L)
         utbetal.stop(0L, 0L)
         meldekort.stop(0L, 0L)
+        tjenestePensjon.stop(0L, 0L)
     }
 }
 

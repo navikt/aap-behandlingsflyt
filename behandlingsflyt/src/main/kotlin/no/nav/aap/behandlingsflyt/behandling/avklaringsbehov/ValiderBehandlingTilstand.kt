@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import org.slf4j.LoggerFactory
 
 internal object ValiderBehandlingTilstand {
@@ -22,7 +23,7 @@ internal object ValiderBehandlingTilstand {
             if (!eksisterendeAvklaringsbehov.map { a -> a.definisjon }
                     .contains(avklaringsbehov) && !avklaringsbehov.erFrivillig() && !avklaringsbehov.erOverstyring()) {
                 log.warn("Forsøker å løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen, har $eksisterendeAvklaringsbehov")
-                throw IllegalArgumentException("Forsøker å løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen, har $eksisterendeAvklaringsbehov")
+                throw UgyldigForespørselException("Forsøker å løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen, har $eksisterendeAvklaringsbehov")
             }
             val flyt = utledType(behandling.typeBehandling()).flyt()
             if (!flyt.erStegFørEllerLik(avklaringsbehov.løsesISteg, behandling.aktivtSteg())) {
@@ -30,7 +31,7 @@ internal object ValiderBehandlingTilstand {
                         "nåværende steg[${behandling.aktivtSteg()}] ${behandling.typeBehandling().toLogString()}"
 
                 log.warn(errorMsg)
-                throw IllegalArgumentException(errorMsg)
+                throw UgyldigForespørselException(errorMsg)
             }
             if (løserAvklaringsbehovForTidligereStegEtterAtBehandlingenErLåst(flyt, avklaringsbehov, behandling)) {
                 val errorMsg = "Forsøker å løse avklaringsbehov $avklaringsbehov som er definert i et steg før " +
@@ -38,7 +39,7 @@ internal object ValiderBehandlingTilstand {
                         "gjeldende steg ${behandling.typeBehandling().toLogString()}"
 
                 log.warn(errorMsg)
-                throw IllegalArgumentException(errorMsg)
+                throw UgyldigForespørselException(errorMsg)
             }
         }
     }
@@ -50,7 +51,13 @@ internal object ValiderBehandlingTilstand {
     ): Boolean {
         val forsøkerÅLøseAvklaringsbehovFørGjeldendeSteg = flyt.erStegFør(avklaringsbehov.løsesISteg, behandling.aktivtSteg())
         val erGjeldendeStegLåstForOppdateringAvOpplysninger = !flyt.skalOppdatereFaktagrunnlagForSteg(behandling.aktivtSteg())
-        val erAvklaringsbehovUnntattForSjekk =  avklaringsbehov.kode in listOf(AvklaringsbehovKode.`9002`, AvklaringsbehovKode.`5051`)
+        val erAvklaringsbehovUnntattForSjekk =  avklaringsbehov.kode in listOf(
+            AvklaringsbehovKode.`9001`,
+            AvklaringsbehovKode.`9002`,
+            AvklaringsbehovKode.`9003`,
+            AvklaringsbehovKode.`5050`,
+            AvklaringsbehovKode.`5051`,
+            )
         return forsøkerÅLøseAvklaringsbehovFørGjeldendeSteg && erGjeldendeStegLåstForOppdateringAvOpplysninger && !erAvklaringsbehovUnntattForSjekk
     }
 
@@ -60,7 +67,7 @@ internal object ValiderBehandlingTilstand {
     fun validerTilstandBehandling(behandling: Behandling, versjon: Long) {
         validerStatus(behandling.status())
         if (behandling.versjon != versjon) {
-            log.warn("Behandlingen har blitt oppdatert. Versjonsnummer[$versjon] ulikt fra siste[${behandling.versjon}]")
+            log.warn("Behandlingen har blitt oppdatert. Versjonsnummer[$versjon] ulikt fra siste[${behandling.versjon}]. Behandlingreferanse: ${behandling.referanse}")
             throw OutdatedBehandlingException("Behandlingen har blitt oppdatert. Versjonsnummer[$versjon] ulikt fra siste[${behandling.versjon}]")
         }
     }

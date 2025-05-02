@@ -55,7 +55,7 @@ class MeldepliktRegel(
                     forrigeSegmentOppfylt = meldeperioderVurdert.lastOrNull()?.verdi?.utfall == OPPFYLT
                 )
                 meldeperioderVurdert.kombiner(neste, StandardSammenslåere.xor())
-            }.kryss(input.rettighetsperiode)
+            }.begrensetTil(input.rettighetsperiode)
 
         return resultat.leggTilVurderinger(meldepliktVurderinger, Vurdering::leggTilMeldepliktVurdering)
     }
@@ -79,8 +79,8 @@ class MeldepliktRegel(
             .asSequence()
             .map { Periode(it.fom, it.fom.plusDays(7)) }
             .filter { fastsatteDager -> meldepliktFraOgMed <= fastsatteDager.fom }
-            .filter { fastsatteDager -> fritak.kryss(fastsatteDager).none { it.verdi.harFritak } }
-            .filter { fastsatteDager -> harRett.kryss(fastsatteDager).any { harRett -> harRett.verdi } }
+            .filter { fastsatteDager -> fritak.begrensetTil(fastsatteDager).none { it.verdi.harFritak } }
+            .filter { fastsatteDager -> harRett.begrensetTil(fastsatteDager).any { harRett -> harRett.verdi } }
             .toList()
     }
 

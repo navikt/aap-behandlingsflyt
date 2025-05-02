@@ -12,8 +12,15 @@ public data class AvsluttetBehandlingDTO(
     val vilkårsResultat: VilkårsResultatDTO,
     val beregningsGrunnlag: BeregningsgrunnlagDTO?,
     val diagnoser: Diagnoser? = null,
-    val rettighetstypePerioder: List<RettighetstypePeriode>
+    val rettighetstypePerioder: List<RettighetstypePeriode>,
+    val resultat: ResultatKode?,
 )
+
+public enum class ResultatKode {
+    INNVILGET,
+    AVSLAG,
+    TRUKKET
+}
 
 public data class Diagnoser(
     val kodeverk: String,
@@ -40,6 +47,10 @@ public data class TilkjentYtelsePeriodeDTO(
     val tilDato: LocalDate,
     val dagsats: Double,
     val gradering: Double,
+    val redusertDagsats: Double,
+    val antallBarn: Int,
+    val barnetilleggSats: Double,
+    val barnetillegg: Double
 )
 
 public data class VilkårsResultatDTO(

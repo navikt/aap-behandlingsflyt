@@ -2,31 +2,35 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.steg.internal.StegKonstruktørImpl
 import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import org.slf4j.LoggerFactory
+
 
 class ProsesserBehandlingJobbUtfører(
     private val låsRepository: TaSkriveLåsRepository,
     private val kontroller: FlytOrkestrator
 ) : JobbUtfører {
+
+private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
@@ -37,17 +41,16 @@ class ProsesserBehandlingJobbUtfører(
 
         kontroller.forberedOgProsesserBehandling(kontekst)
 
+        log.info("Prosesserer behandling for jobb ${input.type()} med behandlingId ${behandlingId}")
+
         låsRepository.verifiserSkrivelås(skrivelås)
     }
 
     companion object : Jobb {
         override fun konstruer(connection: DBConnection): JobbUtfører {
-            val repositoryProvider = RepositoryProvider(connection)
+            val repositoryProvider = RepositoryRegistry.provider(connection)
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val behandlingFlytRepository =
-                repositoryProvider.provide<BehandlingFlytRepository>()
             val sakRepository = repositoryProvider.provide<SakRepository>()
-            val sakFlytRepository = repositoryProvider.provide<SakFlytRepository>()
             val låsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
             val avklaringsbehovRepository =
                 repositoryProvider.provide<AvklaringsbehovRepository>()
@@ -57,17 +60,21 @@ class ProsesserBehandlingJobbUtfører(
                     stegKonstruktør = StegKonstruktørImpl(connection),
                     ventebehovEvaluererService = VentebehovEvaluererServiceImpl(connection),
                     behandlingRepository = behandlingRepository,
-                    behandlingFlytRepository = behandlingFlytRepository,
                     avklaringsbehovRepository = avklaringsbehovRepository,
-                    informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection),
-                    sakRepository = sakFlytRepository,
+                    informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(repositoryProvider.provide(), connection),
+                    sakRepository = sakRepository,
                     perioderTilVurderingService = PerioderTilVurderingService(
                         SakService(sakRepository),
                         behandlingRepository,
                         repositoryProvider.provide()
                     ),
+                    sakOgBehandlingService = SakOgBehandlingService(
+                        GrunnlagKopiererImpl(connection),
+                        sakRepository,
+                        behandlingRepository
+                    ),
                     behandlingHendelseService = BehandlingHendelseServiceImpl(
-                        FlytJobbRepository(connection),
+                        repositoryProvider.provide<FlytJobbRepository>(),
                         repositoryProvider.provide<BrevbestillingRepository>(),
                         SakService(sakRepository)
                     ),

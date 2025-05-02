@@ -1,6 +1,9 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgService
+import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeService
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortService
@@ -34,11 +37,14 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OpprettRevurderingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RefusjonkravSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RettighetsperiodeSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningAndreStatligeYtelserSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningAvslagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningUføreSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SimulerUtbetalingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SøknadSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.UnderveisSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VisGrunnlagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderAlderSteg
@@ -49,13 +55,26 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderStudentSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningUføreSteg
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 
 object Revurdering : BehandlingType {
     override fun flyt(): BehandlingFlyt {
         return BehandlingFlytBuilder()
             .medSteg(steg = StartBehandlingSteg, informasjonskrav = listOf(SøknadService))
+            .medSteg(
+                steg = RettighetsperiodeSteg,
+                informasjonskrav = listOf(VurderRettighetsperiodeService),
+                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE)
+            )
+            .medSteg(
+                steg = SøknadSteg,
+                årsakRelevanteForSteg = listOf(
+                    ÅrsakTilBehandling.SØKNAD_TRUKKET,
+                ),
+                informasjonskrav = listOf(
+                    TrukketSøknadService,
+                ),
+            )
             .medSteg(
                 steg = VurderLovvalgSteg,
                 informasjonskrav = listOf(PersonopplysningService, LovvalgService),
@@ -70,7 +89,8 @@ object Revurdering : BehandlingType {
             .medSteg(steg = VurderStudentSteg)
             .medSteg(
                 steg = VurderSykdomSteg,
-                informasjonskrav = listOf(YrkesskadeService, LegeerklæringService, UføreService), // UføreService trengs her for å trigge ytterligere nedsatt arbeidsevne vurdering
+                // UføreService trengs her for å trigge ytterligere nedsatt arbeidsevne-vurdering
+                informasjonskrav = listOf(YrkesskadeService, LegeerklæringService, UføreService),
                 årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
@@ -99,7 +119,8 @@ object Revurdering : BehandlingType {
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
                     ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING,
-                    ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+                    ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE,
                 )
             )
             .medSteg(
@@ -118,7 +139,6 @@ object Revurdering : BehandlingType {
                     ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
                 )
             )
-            .medSteg(steg = FastsettSykdomsvilkåretSteg)
             .medSteg(
                 steg = VurderSykepengeErstatningSteg, årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
@@ -127,6 +147,7 @@ object Revurdering : BehandlingType {
                     ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
                 )
             )
+            .medSteg(steg = FastsettSykdomsvilkåretSteg)
             .medSteg(
                 steg = BeregningAvklarFaktaSteg, årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
@@ -164,7 +185,7 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = SamordningSteg,
-                informasjonskrav = listOf(SamordningYtelseVurderingService),
+                informasjonskrav = listOf(SamordningYtelseVurderingService, TjenestePensjonService),
                 årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING)
             )
             .medSteg(steg = SamordningUføreSteg, informasjonskrav = listOf(UføreService))

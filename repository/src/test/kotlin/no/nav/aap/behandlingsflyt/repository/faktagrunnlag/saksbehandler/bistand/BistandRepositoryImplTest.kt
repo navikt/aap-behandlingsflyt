@@ -26,7 +26,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
-class BistandRepositoryImplTest {
+internal class BistandRepositoryImplTest {
+    private val dataSource = InitTestDatabase.freshDatabase()
 
     @BeforeEach
     fun setUp() {
@@ -35,7 +36,7 @@ class BistandRepositoryImplTest {
 
     @Test
     fun `Finner ikke bistand hvis ikke lagret`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
@@ -47,7 +48,7 @@ class BistandRepositoryImplTest {
 
     @Test
     fun `Lagrer og henter bistand`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
@@ -89,7 +90,7 @@ class BistandRepositoryImplTest {
 
     @Test
     fun `Lagrer ikke like bistand flere ganger`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
@@ -166,7 +167,7 @@ class BistandRepositoryImplTest {
 
     @Test
     fun `Kopierer bistand fra en behandling til en annen`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val bistandRepository = BistandRepositoryImpl(connection)
@@ -215,7 +216,7 @@ class BistandRepositoryImplTest {
 
     @Test
     fun `Kopiering av bistand fra en behandling uten opplysningene skal ikke føre til feil`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val bistandRepository = BistandRepositoryImpl(connection)
             assertDoesNotThrow {
                 bistandRepository.kopier(BehandlingId(Long.MAX_VALUE - 1), BehandlingId(Long.MAX_VALUE))
@@ -225,7 +226,7 @@ class BistandRepositoryImplTest {
 
     @Test
     fun `Kopierer bistand fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val bistandRepository = BistandRepositoryImpl(connection)
@@ -290,7 +291,7 @@ class BistandRepositoryImplTest {
 
     @Test
     fun `Lagrer nye bistandsopplysninger som ny rad og deaktiverer forrige versjon av opplysningene`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
             val bistandRepository = BistandRepositoryImpl(connection)
@@ -398,7 +399,7 @@ class BistandRepositoryImplTest {
 
     @Test
     fun `Ved kopiering av bistandsopplysninger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val bistandRepository = BistandRepositoryImpl(connection)
@@ -523,7 +524,7 @@ class BistandRepositoryImplTest {
             overgangBegrunnelse = null,
         )
 
-        val (førstegangsbehandling, sak) = InitTestDatabase.dataSource.transaction { connection ->
+        val (førstegangsbehandling, sak) = dataSource.transaction { connection ->
             val repo = BistandRepositoryImpl(connection)
             val sak = sak(connection)
             val førstegangsbehandling = behandling(connection, sak)
@@ -533,7 +534,7 @@ class BistandRepositoryImplTest {
             Pair(førstegangsbehandling, sak)
         }
 
-        val revurderingUtenOppdatertBistandsvurdering = InitTestDatabase.dataSource.transaction { connection ->
+        val revurderingUtenOppdatertBistandsvurdering = dataSource.transaction { connection ->
             val repo = BistandRepositoryImpl(connection)
             val revurdering = revurdering(connection, førstegangsbehandling, sak)
             val historikk = repo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id)
@@ -541,7 +542,7 @@ class BistandRepositoryImplTest {
             revurdering
         }
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val repo = BistandRepositoryImpl(connection)
             val revurdering = revurdering(connection, revurderingUtenOppdatertBistandsvurdering, sak)
             val bistandsvurdering3 = BistandVurdering(

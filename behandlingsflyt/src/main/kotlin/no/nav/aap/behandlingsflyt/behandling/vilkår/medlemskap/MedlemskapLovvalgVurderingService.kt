@@ -82,12 +82,13 @@ class MedlemskapLovvalgVurderingService {
 
     private fun lovvalgslandIkkeErNorge(grunnlag: MedlemskapUnntakGrunnlag?): TilhørighetVurdering {
         val lovvalgslandErIkkeNorge = grunnlag?.unntak?.firstOrNull{it.verdi.lovvalgsland != "NOR"}
-        val jsonGrunnlag = grunnlag?.let { DefaultJsonMapper.toJson(it) } // TODO: Her må vi faktisk lande hva vi vil ha ut
+        val jsonGrunnlag = grunnlag?.let { DefaultJsonMapper.toJson(it) }
         return TilhørighetVurdering(listOf(Kilde.MEDL), Indikasjon.UTENFOR_NORGE, "Vedtak om annet lovvalgsland finnes", lovvalgslandErIkkeNorge != null, jsonGrunnlag)
     }
 
     private fun manglerStatsborgerskapIEØS(grunnlag: PersonopplysningGrunnlag): TilhørighetVurdering {
-        val manglerEØS = grunnlag.brukerPersonopplysning.land !in enumValues<EØSLand>().map { it.name }
+        val manglerEØS = grunnlag.brukerPersonopplysning.statsborgerskap.none{it.land in enumValues<EØSLand>().map { eøsLand -> eøsLand.name }}
+
         val jsonGrunnlag = grunnlag.let { DefaultJsonMapper.toJson(it) } // TODO: Her må vi faktisk lande hva vi vil ha ut
         return TilhørighetVurdering(listOf(Kilde.PDL), Indikasjon.UTENFOR_NORGE, "Mangler statsborgerskap i EØS", manglerEØS, jsonGrunnlag)
     }
@@ -115,7 +116,7 @@ class MedlemskapLovvalgVurderingService {
 
     private fun harVedtakIMEDL(grunnlag: MedlemskapUnntakGrunnlag?): TilhørighetVurdering {
         val erMedlem = grunnlag?.unntak?.firstOrNull{it.verdi.medlem}
-        val medlemskapINorgeGrunnlag = grunnlag?.let { DefaultJsonMapper.toJson(it) } // TODO: Her må vi faktisk lande hva vi vil ha ut
+        val medlemskapINorgeGrunnlag = grunnlag?.let { DefaultJsonMapper.toJson(it) }
         return TilhørighetVurdering(listOf(Kilde.MEDL), Indikasjon.I_NORGE, "Vedtak om pliktig eller frivillig medlemskap finnes i MEDL", erMedlem != null, medlemskapINorgeGrunnlag)
     }
 }

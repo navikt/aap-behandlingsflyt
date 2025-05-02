@@ -10,6 +10,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedS
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
@@ -17,6 +19,7 @@ import no.nav.aap.behandlingsflyt.historiskevurderinger.ÅpenPeriodeDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
@@ -73,10 +76,12 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         val eksisterendeManuellVurdering = hentManuellVurdering(grunnlagOppslag?.manuellVurderingId)
         val overstyrt = manuellVurdering.overstyrt || eksisterendeManuellVurdering?.overstyrt == true
 
-        deaktiverGrunnlag(behandlingId)
+        if (grunnlagOppslag != null) {
+            deaktiverGrunnlag(behandlingId)
+        }
 
         val manuellVurderingQuery = """
-            INSERT INTO LOVVALG_MEDLEMSKAP_MANUELL_VURDERING (tekstvurdering_lovvalg, lovvalgs_land, tekstvurdering_medlemskap, var_medlem_i_folketrygden, overstyrt, vurdert_av) VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO LOVVALG_MEDLEMSKAP_MANUELL_VURDERING (tekstvurdering_lovvalg, lovvalgs_land, tekstvurdering_medlemskap, var_medlem_i_folketrygden, overstyrt, vurdert_av, opprettet_tid) VALUES (?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         val manuellVurderingId = connection.executeReturnKey(manuellVurderingQuery) {
@@ -87,6 +92,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setBoolean(4, manuellVurdering.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd)
                 setBoolean(5, overstyrt)
                 setString(6, manuellVurdering.vurdertAv)
+                setLocalDate(7, manuellVurdering.vurdertDato)
             }
         }
 
@@ -135,18 +141,20 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
     }
 
-    override fun hentHistoriskeVurderinger(sakId: SakId): List<HistoriskManuellVurderingForLovvalgMedlemskap> {
+    override fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<HistoriskManuellVurderingForLovvalgMedlemskap> {
         val query = """
             SELECT vurdering.*
             FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG grunnlag
             INNER JOIN LOVVALG_MEDLEMSKAP_MANUELL_VURDERING vurdering ON grunnlag.MANUELL_VURDERING_ID = vurdering.ID
             JOIN BEHANDLING behandling ON grunnlag.BEHANDLING_ID = behandling.ID
-            WHERE grunnlag.AKTIV AND behandling.SAK_ID = ?
+            WHERE grunnlag.AKTIV AND behandling.SAK_ID = ? 
+              AND behandling.opprettet_tid < (SELECT a.opprettet_tid from behandling a where id = ?)
         """.trimIndent()
 
         val vurderinger = connection.queryList(query) {
             setParams {
                 setLong(1, sakId.id)
+                setLong(2, behandlingId.id)
             }
             setRowMapper {
                 InternalHistoriskManuellVurderingForLovvalgMedlemskap(
@@ -160,7 +168,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                             varMedlemIFolketrygd = it.getBooleanOrNull("var_medlem_i_folketrygden")
                         ),
                         overstyrt = it.getBoolean("overstyrt"),
-                        vurdertAv = it.getString("vurdert_av")
+                        vurdertAv = it.getString("vurdert_av"),
+                        vurdertDato = it.getLocalDate("opprettet_tid")
                     ),
                     vurdertDato = it.getLocalDate("opprettet_tid")
                 )
@@ -318,7 +327,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                         varMedlemIFolketrygd = it.getBooleanOrNull("var_medlem_i_folketrygden")
                     ),
                     overstyrt = it.getBoolean("overstyrt"),
-                    vurdertAv = it.getString("vurdert_av")
+                    vurdertAv = it.getString("vurdert_av"),
+                    vurdertDato = it.getLocalDate("opprettet_tid"),
                 )
             }
         }
@@ -398,6 +408,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                     lovvalg = it.getString("LOVVALG"),
                     helsedel = it.getBoolean("HELSEDEL"),
                     lovvalgsland = it.getStringOrNull("LOVVALGSLAND"),
+                    kilde = hentKildesystem(it)
                 )
                 Segment(
                     it.getPeriode("PERIODE"),
@@ -406,6 +417,15 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             }
         }.toList()
         return MedlemskapUnntakGrunnlag(data)
+    }
+
+    private fun hentKildesystem(row: Row): KildesystemMedl? {
+        val kildesystemKode: KildesystemKode? = row.getEnumOrNull("KILDESYSTEM")
+        val kildeNavn = row.getStringOrNull("KILDENAVN")
+
+        return if (kildesystemKode != null && kildeNavn != null) {
+            KildesystemMedl(kildesystemKode, kildeNavn)
+        } else null
     }
 
     private fun hentArbeiderINorgeGrunnlag(arbeiderINorgeId: Long?): List<ArbeidINorgeGrunnlag> {

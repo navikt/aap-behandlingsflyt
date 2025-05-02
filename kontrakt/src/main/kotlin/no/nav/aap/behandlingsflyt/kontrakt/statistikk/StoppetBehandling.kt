@@ -70,6 +70,8 @@ public enum class ÅrsakTilBehandling {
     SAMORDNING_OG_AVREGNING,    // Samordning og avregning
     REFUSJONSKRAV,              // Refusjonskrav
     UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT, // Utenlandsopphold før søknadstidspunkt
+    VURDER_RETTIGHETSPERIODE, // Må ta stilling til rettighetsperioden
+    SØKNAD_TRUKKET,
 }
 
 /**

@@ -1,15 +1,13 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.gateway.GatewayProvider
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
@@ -18,13 +16,16 @@ class DatadelingSakStatusJobbUtfører(
     private val apiInternGateway: ApiInternGateway,
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository,
-):JobbUtfører {
+) : JobbUtfører {
     override fun utfør(input: JobbInput) {
         val hendelse = input.payload<BehandlingFlytStoppetHendelse>()
         val behandling = behandlingRepository.hent(hendelse.referanse)
         val sak = sakRepository.hent(behandling.sakId)
 
-        apiInternGateway.sendSakStatus(sak.person.aktivIdent().identifikator, SakStatus.fromKelvin(sak.saksnummer.toString(), sak.status(), sak.rettighetsperiode))
+        apiInternGateway.sendSakStatus(
+            sak.person.aktivIdent().identifikator,
+            SakStatus.fromKelvin(sak.saksnummer.toString(), sak.status(), sak.rettighetsperiode)
+        )
     }
 
     companion object : Jobb {
@@ -34,7 +35,7 @@ class DatadelingSakStatusJobbUtfører(
         }
 
         override fun konstruer(connection: DBConnection): JobbUtfører {
-            val repositoryProvider = RepositoryProvider(connection)
+            val repositoryProvider = RepositoryRegistry.provider(connection)
             val behandlingRepository: BehandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val sakRepository: SakRepository = repositoryProvider.provide<SakRepository>()
 

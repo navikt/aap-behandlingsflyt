@@ -1,7 +1,10 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.Aldersgrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.Aldersvilkåret
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
@@ -12,27 +15,44 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderAlderSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val personopplysningRepository: PersonopplysningRepository
+    private val vilkårService: VilkårService,
+    private val personopplysningRepository: PersonopplysningRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
 
-    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        vilkårService = VilkårService(repositoryProvider),
+        personopplysningRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+    )
 
+    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         when (kontekst.vurdering.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING -> vurderVilkår(kontekst)
-            VurderingType.REVURDERING -> vurderVilkår(kontekst)
+            VurderingType.FØRSTEGANGSBEHANDLING -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    vilkårService.ingenNyeVurderinger(
+                        kontekst.behandlingId,
+                        Vilkårtype.ALDERSVILKÅRET,
+                        kontekst.vurdering.rettighetsperiode,
+                        begrunnelse = "mangler behandlingsgrunnlag"
+                    )
+                } else {
+                    vurderVilkår(kontekst)
+                }
+            }
+
+            VurderingType.REVURDERING -> {
+                vurderVilkår(kontekst)
+            }
+
             VurderingType.FORLENGELSE -> {
-                // Forleng vilkåret
-                val forlengensePeriode = requireNotNull(kontekst.vurdering.forlengelsePeriode)
-                val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-                vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).forleng(
-                    forlengensePeriode
-                )
-                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+                /* TODO: Virker ikke så riktig å bare forlenge siste aldersvilkår ... plutselig er hen for gammel */
+                vilkårService.forleng(kontekst, Vilkårtype.ALDERSVILKÅRET)
             }
 
             VurderingType.IKKE_RELEVANT -> {
@@ -58,16 +78,8 @@ class VurderAlderSteg private constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
-            val personopplysningRepository =
-                repositoryProvider.provide<PersonopplysningRepository>()
-            val vilkårsresultatRepository =
-                repositoryProvider.provide<VilkårsresultatRepository>()
-            return VurderAlderSteg(
-                vilkårsresultatRepository,
-                personopplysningRepository
-            )
+        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
+            return VurderAlderSteg(repositoryProvider)
         }
 
         override fun type(): StegType {

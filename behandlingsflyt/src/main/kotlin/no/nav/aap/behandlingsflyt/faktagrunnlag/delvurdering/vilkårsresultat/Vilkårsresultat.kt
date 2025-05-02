@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.outerJoinNotNull
 
 class Vilkårsresultat(
     internal var id: Long? = null,
@@ -35,25 +37,53 @@ class Vilkårsresultat(
      * @return En tidslinje med [RettighetsType].
      */
     fun rettighetstypeTidslinje(): Tidslinje<RettighetsType> {
-        require(vilkår.any { it.type == Vilkårtype.ALDERSVILKÅRET })
-        require(vilkår.any { it.type == Vilkårtype.BISTANDSVILKÅRET })
-        require(vilkår.any { it.type == Vilkårtype.MEDLEMSKAP })
-        require(vilkår.any { it.type == Vilkårtype.LOVVALG })
-        require(vilkår.any { it.type == Vilkårtype.SYKDOMSVILKÅRET })
+        require(vilkår.any { it.type == Vilkårtype.ALDERSVILKÅRET }) { "Aldersvilkåret må være vurdert." }
+        require(vilkår.any { it.type == Vilkårtype.BISTANDSVILKÅRET }) { "Bistandsvilkåret må være vurdert." }
+        require(vilkår.any { it.type == Vilkårtype.MEDLEMSKAP }) { "Medlemskap må være vurdert." }
+        require(vilkår.any { it.type == Vilkårtype.LOVVALG }) { "Lovvalg må være vurdert."}
+        require(vilkår.any { it.type == Vilkårtype.SYKDOMSVILKÅRET }) { "Sykdomsvilkåret må være vurdert." }
         require(vilkår.distinctBy { it.type }.size == vilkår.size)
 
         return vilkår
             .map { vilkår -> vilkår.tidslinje().mapValue { vurdering -> vilkår to vurdering } }
-            .outerJoin()
-            .filter { vilkåreneSegment ->
-                val vurderinger = vilkåreneSegment.verdi
-                vurderinger.isNotEmpty() && vurderinger.none { (_, vurdering) -> vurdering.utfall == Utfall.IKKE_OPPFYLT }
-            }
-            .mapValue { vilkårene ->
+            .outerJoinNotNull { vurderinger ->
+                if (vurderinger.isEmpty()) {
+                    return@outerJoinNotNull null
+                }
+
+                // Vi filtrerer bort vurderinger hvor noen vilkår er avslått
+                val harVilkårIkkeOppfylt = vurderinger.any { (vilkår, vurdering) ->
+                    vurdering.utfall == Utfall.IKKE_OPPFYLT
+                }
+                if (harVilkårIkkeOppfylt) {
+                    return@outerJoinNotNull null
+                }
+
+                // Bistandsvilkåret kan være merket som ikke relevant ved sykepengeerstatning
+                val bistandsvilkåretErIkkeOppfylt = vurderinger.none { (vilkår, vurdering) ->
+                    vilkår.type == Vilkårtype.BISTANDSVILKÅRET && (vurdering.erOppfylt() || vurdering.erIkkeRelevant())
+                }
+                if (bistandsvilkåretErIkkeOppfylt) {
+                    return@outerJoinNotNull null
+                }
+
+                val sykdomsvilkåretErIkkeVurdert = vurderinger.none { (vilkår, vurdering) ->
+                    vilkår.type == Vilkårtype.SYKDOMSVILKÅRET && vurdering.erVurdert()
+                }
+
+                if (sykdomsvilkåretErIkkeVurdert) {
+                    return@outerJoinNotNull null
+                }
+
                 prioriterVilkår(
-                    vilkårene
-                        .filter { (_, vurdering) -> vurdering.erOppfylt() }
-                        .map { (vilkår, vurdering) -> Pair(vilkår.type, vurdering.innvilgelsesårsak) }
+                    vurderinger
+                        .filter { (_, vurdering) -> vurdering.erVurdert() }
+                        .map { (vilkår, vurdering) ->
+                            Pair(
+                                vilkår.type,
+                                vurdering
+                            )
+                        }
                         .toSet()
                 )
             }
@@ -69,26 +99,50 @@ class Vilkårsresultat(
      *
      * Default-verdien er [RettighetsType.BISTANDSBEHOV] (normal § 11-6).
      */
-    private fun prioriterVilkår(vilkårPar: Set<Pair<Vilkårtype, Innvilgelsesårsak?>>): RettighetsType {
-        val (_, bistandsvurderingen) =
-            requireNotNull(vilkårPar.firstOrNull { it.first == Vilkårtype.BISTANDSVILKÅRET })
-            { "Bistandsvilkåret må være oppfylt for å regne ut rettighetstype." }
+    private fun prioriterVilkår(vilkårPar: Set<Pair<Vilkårtype, Vilkårsvurdering>>): RettighetsType {
+        val (_, bistandsvurderingen) = vilkårPar.firstOrNull { it.first == Vilkårtype.BISTANDSVILKÅRET }
+            ?: throw UgyldigForespørselException("Bistandsvilkåret må være til stede for å regne ut rettighetstype.")
 
-        when (bistandsvurderingen) {
+        val (_, vilkårsVurdering) = requireNotNull(vilkårPar.firstOrNull { it.first == Vilkårtype.SYKDOMSVILKÅRET })
+        val sykdomsUtfall = vilkårsVurdering.utfall
+
+        // Hvis bistandsvurderingen ikke er relevant, kan det være fordi det er sykepengeerstatning
+        if (bistandsvurderingen.erIkkeRelevant()) {
+            val sykepengerErstatning =
+                vilkårPar.find {
+                    it.first == Vilkårtype.SYKDOMSVILKÅRET
+                            && it.second.utfall == Utfall.OPPFYLT
+                            && it.second.innvilgelsesårsak == Innvilgelsesårsak.SYKEPENGEERSTATNING
+                }
+
+            if (sykepengerErstatning != null) {
+                return RettighetsType.SYKEPENGEERSTATNING
+            }
+        }
+
+        // Vi har tatt hånd om sykepengervilkåret, og da må vi anta at 11-5 er oppfylt.
+        require(sykdomsUtfall == Utfall.OPPFYLT) {
+            "Sykepengeerstatning må være oppfylt om ikke 11-5 er oppfylt."
+        }
+
+        val bistandsvurderingInnvilgelsesårsak = bistandsvurderingen.innvilgelsesårsak
+
+        // Gitt at 11-6 er innvilget, prioriter hvilket grunnlag det er gitt på.
+        when (bistandsvurderingInnvilgelsesårsak) {
             Innvilgelsesårsak.STUDENT -> return RettighetsType.STUDENT
             Innvilgelsesårsak.ARBEIDSSØKER -> return RettighetsType.ARBEIDSSØKER
             Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD -> return RettighetsType.VURDERES_FOR_UFØRETRYGD
+            Innvilgelsesårsak.SYKEPENGEERSTATNING -> return RettighetsType.SYKEPENGEERSTATNING
             Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG -> {}
             null -> {}
         }
 
-        val sykepengervilkåret = vilkårPar.find { it.first == Vilkårtype.SYKEPENGEERSTATNING }
-
-        if (sykepengervilkåret != null) {
-            return RettighetsType.SYKEPENGEERSTATNING
-        }
-
+        // Med mindre noen annen innvilgelsesårsak er gitt, er grunntilfellet 11-6 (bistandsbehov).
         return RettighetsType.BISTANDSBEHOV
+    }
+
+    fun tidslinjeFor(vilkårstype: Vilkårtype): Tidslinje<Vilkårsvurdering> {
+        return optionalVilkår(vilkårstype)?.tidslinje() ?: Tidslinje()
     }
 
     override fun equals(other: Any?): Boolean {
@@ -108,12 +162,3 @@ class Vilkårsresultat(
         return "Vilkårsresultat(id=$id, vilkår=$vilkår)"
     }
 }
-
-private fun <T : Any> List<Tidslinje<T>>.outerJoin(): Tidslinje<List<T>> {
-    return this.fold(Tidslinje()) { listeTidslinje, elementTidslinje ->
-        listeTidslinje.outerJoin(elementTidslinje) { liste, element ->
-            liste.orEmpty() + listOfNotNull(element)
-        }
-    }
-}
-

@@ -31,12 +31,16 @@ class Vilkårsvurdering(
         return utfall == Utfall.OPPFYLT
     }
 
-    fun faktagrunnlag(): Faktagrunnlag? {
-        return faktagrunnlag
+    fun erIkkeRelevant(): Boolean {
+        return utfall == Utfall.IKKE_RELEVANT
     }
 
-    override fun toString(): String {
-        return "Vilkårsvurdering(utfall=$utfall)"
+    fun erVurdert(): Boolean {
+        return utfall != Utfall.IKKE_VURDERT
+    }
+
+    fun faktagrunnlag(): Faktagrunnlag? {
+        return faktagrunnlag
     }
 
     override fun equals(other: Any?): Boolean {
@@ -76,5 +80,9 @@ class Vilkårsvurdering(
         }
 
         return faktagrunnlag.hent()
+    }
+
+    override fun toString(): String {
+        return "Vilkårsvurdering(avslagsårsak=$avslagsårsak, utfall=$utfall, manuellVurdering=$manuellVurdering, begrunnelse=$begrunnelse, innvilgelsesårsak=$innvilgelsesårsak, faktagrunnlag=$faktagrunnlag, versjon='$versjon')"
     }
 }

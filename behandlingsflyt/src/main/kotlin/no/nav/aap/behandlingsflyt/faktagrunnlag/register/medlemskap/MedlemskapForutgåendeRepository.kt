@@ -1,14 +1,14 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
 class MedlemskapForutgåendeRepository(private val connection: DBConnection) {
-    fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapResponse>): Long {
+    fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapDataIntern>): Long {
         if (hentHvisEksisterer(behandlingId) != null) {
             deaktiverEksisterendeGrunnlag(behandlingId)
         }
@@ -33,7 +33,9 @@ class MedlemskapForutgåendeRepository(private val connection: DBConnection) {
         unntak.forEach {
             connection.execute(
                 """
-                INSERT INTO MEDLEMSKAP_FORUTGAAENDE_UNNTAK (STATUS, STATUS_ARSAK, MEDLEM, PERIODE, GRUNNLAG, LOVVALG, HELSEDEL, MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON_ID, LOVVALGSLAND) VALUES (?, ?, ?, ?::daterange ,?, ?, ?, ?, ?)
+                INSERT INTO MEDLEMSKAP_FORUTGAAENDE_UNNTAK (
+                STATUS, STATUS_ARSAK, MEDLEM, PERIODE, GRUNNLAG, LOVVALG, HELSEDEL, MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON_ID, LOVVALGSLAND, KILDESYSTEM, KILDENAVN
+                ) VALUES (?, ?, ?, ?::daterange ,?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
             ) {
                 setParams {
@@ -46,6 +48,8 @@ class MedlemskapForutgåendeRepository(private val connection: DBConnection) {
                     setBoolean(7, it.helsedel)
                     setLong(8, medlemskapUnntakPersonId)
                     setString(9, it.lovvalgsland)
+                    setEnumName(10, it.kilde?.kildesystemKode)
+                    setString(11, it.kilde?.kildeNavn)
                 }
             }
         }
@@ -68,6 +72,7 @@ class MedlemskapForutgåendeRepository(private val connection: DBConnection) {
                     lovvalg = it.getString("LOVVALG"),
                     helsedel = it.getBoolean("HELSEDEL"),
                     lovvalgsland = it.getStringOrNull("LOVVALGSLAND"),
+                    kilde = hentKildesystem(it)
                 )
                 Segment(
                     it.getPeriode("PERIODE"),
@@ -90,6 +95,15 @@ class MedlemskapForutgåendeRepository(private val connection: DBConnection) {
             return null
         }
         return MedlemskapUnntakGrunnlag(hentMedlemskapUnntak(behandlingsMedlemskapUnntak))
+    }
+
+    private fun hentKildesystem(row: Row): KildesystemMedl? {
+        val kildesystemKode: KildesystemKode? = row.getEnumOrNull("KILDESYSTEM")
+        val kildeNavn = row.getStringOrNull("KILDENAVN")
+
+        return if (kildesystemKode != null && kildeNavn != null) {
+            KildesystemMedl(kildesystemKode, kildeNavn)
+        } else null
     }
 
     private fun deaktiverEksisterendeGrunnlag(behandlingId: BehandlingId) {

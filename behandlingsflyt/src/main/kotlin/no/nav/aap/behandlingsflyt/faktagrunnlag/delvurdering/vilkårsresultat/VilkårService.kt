@@ -1,0 +1,58 @@
+package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
+
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.RepositoryProvider
+
+class VilkårService(
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
+) {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        vilkårsresultatRepository = repositoryProvider.provide()
+    )
+
+    fun forleng(kontekst: FlytKontekstMedPerioder, vilkårtype: Vilkårtype) {
+        forleng(kontekst.behandlingId, vilkårtype, requireNotNull(kontekst.vurdering.forlengelsePeriode))
+    }
+
+    fun forleng(behandlingId: BehandlingId, vilkårtype: Vilkårtype, forlengelsePeriode: Periode) {
+        val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
+        vilkårsresultat.finnVilkår(vilkårtype).forleng(forlengelsePeriode)
+        vilkårsresultatRepository.lagre(behandlingId, vilkårsresultat)
+    }
+
+    /** Fyll hull i vilkårsvurderingene for [vilkårtype] som `IKKE_VURDERT`. */
+    fun ingenNyeVurderinger(
+        kontekst: FlytKontekstMedPerioder,
+        vilkårtype: Vilkårtype,
+        begrunnelse: String? = null,
+    ) {
+        ingenNyeVurderinger(kontekst.behandlingId, vilkårtype, kontekst.vurdering.rettighetsperiode, begrunnelse)
+    }
+
+    /** Fyll hull i vilkårsvurderingene for [vilkårtype] som `IKKE_VURDERT`. */
+    fun ingenNyeVurderinger(
+        behandlingId: BehandlingId,
+        vilkårtype: Vilkårtype,
+        periode: Periode,
+        begrunnelse: String? = null,
+    ) {
+        val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
+        val vilkåret = vilkårsresultat.leggTilHvisIkkeEksisterer(vilkårtype)
+
+        val ikkeVurdertePerioder = vilkåret.tidslinje().komplement(periode) {
+            Vilkårsvurdering(
+                utfall = Utfall.IKKE_VURDERT,
+                manuellVurdering = false,
+                begrunnelse = begrunnelse,
+                innvilgelsesårsak = null,
+                avslagsårsak = null,
+                faktagrunnlag = null,
+            )
+        }
+        vilkåret.leggTilVurderinger(ikkeVurdertePerioder)
+
+        vilkårsresultatRepository.lagre(behandlingId, vilkårsresultat)
+    }
+}

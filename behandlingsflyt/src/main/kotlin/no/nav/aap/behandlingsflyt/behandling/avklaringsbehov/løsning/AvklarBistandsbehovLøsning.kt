@@ -24,6 +24,11 @@ class AvklarBistandsbehovLøsning(
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5006`
 ) : AvklaringsbehovLøsning {
     override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
+        if (this.bistandsVurdering.skalVurdereAapIOvergangTilArbeid == true
+            || this.bistandsVurdering.skalVurdereAapIOvergangTilUføre == true
+        ) {
+            TODO("Implementer støtte for oppfylt 11-17 og 11-18 og kvote")
+        }
         return AvklarBistandLøser(connection).løs(kontekst, this)
     }
 }

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.flyt.utledType
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -8,6 +9,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.BehandlingTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.BeriketBehandling
@@ -15,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 
 class SakOgBehandlingService(
@@ -22,6 +25,11 @@ class SakOgBehandlingService(
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository
 ) {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        grunnlagKopierer = GrunnlagKopiererImpl(repositoryProvider),
+        sakRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+    )
 
     fun finnEllerOpprettBehandling(sakId: SakId, årsaker: List<Årsak>): BeriketBehandling {
         val sisteBehandlingForSak = behandlingRepository.finnSisteBehandlingFor(
@@ -95,27 +103,20 @@ class SakOgBehandlingService(
         return finnEllerOpprettBehandling(sak.id, årsaker)
     }
 
-    private fun utledBehandlingstype(sisteBehandlingForSak: Behandling?, årsaker: List<Årsak>): TypeBehandling {
-        return if (årsaker.any { it.type == ÅrsakTilBehandling.MOTATT_KLAGE }) {
-            when (sisteBehandlingForSak) {
-                null -> throw IllegalArgumentException("Mottok klage, men det finnes ingen eksisterende behandling")
-                else -> TypeBehandling.Klage
-            }
-        } else {
-            when (sisteBehandlingForSak) {
-                null -> TypeBehandling.Førstegangsbehandling
-                else -> TypeBehandling.Revurdering
-            }
-        }
+    fun lukkBehandling(behandlingId: BehandlingId) {
+        // Valider siste stegstatus behandlingen
+        validerAtSisteStegstatusErAvsluttet(behandlingId)
+
+        behandlingRepository.oppdaterBehandlingStatus(
+            behandlingId = behandlingId,
+            status = Status.AVSLUTTET
+        )
     }
 
-    private fun validerStegStatus(behandling: Behandling) {
-        val flyt = utledType(behandling.typeBehandling()).flyt()
-        // TODO Utvide med regler for hva som kan knyttes til en behandling og når den eventuelt skal tilbake likevel
-        // Om den skal tilbake krever det endringer for å ta hensyn til disse
-        if (!flyt.skalOppdatereFaktagrunnlag()) {
-            throw IllegalStateException("Behandlingen[${behandling.referanse}] kan ikke motta opplysinger nå, avventer fullføring av steg som ligger etter at oppdatering av faktagrunnlag opphører.")
-        }
+    private fun validerAtSisteStegstatusErAvsluttet(behandlingId: BehandlingId) {
+        val oppdatertBehandling = behandlingRepository.hent(behandlingId)
+        val sisteSteg = oppdatertBehandling.aktivtStegTilstand()
+        require(sisteSteg.status() == StegStatus.AVSLUTTER)
     }
 
     fun hentSakFor(behandlingId: BehandlingId): Sak {
@@ -142,6 +143,41 @@ class SakOgBehandlingService(
             ) // TODO: Usikker på om dette blir helt korrekt..
             if (periode != rettighetsperiode) {
                 sakRepository.oppdaterRettighetsperiode(sakId, periode)
+            }
+        }
+    }
+
+    fun overstyrRettighetsperioden(sakId: SakId, startDato: LocalDate, sluttDato: LocalDate) {
+        val rettighetsperiode = sakRepository.hent(sakId).rettighetsperiode
+        val periode = Periode(
+            startDato,
+            sluttDato
+        )
+        if (periode != rettighetsperiode) {
+            sakRepository.oppdaterRettighetsperiode(sakId, periode)
+        }
+    }
+
+
+    private fun validerStegStatus(behandling: Behandling) {
+        val flyt = utledType(behandling.typeBehandling()).flyt()
+        // TODO Utvide med regler for hva som kan knyttes til en behandling og når den eventuelt skal tilbake likevel
+        // Om den skal tilbake krever det endringer for å ta hensyn til disse
+        if (!flyt.skalOppdatereFaktagrunnlag()) {
+            throw IllegalStateException("Behandlingen[${behandling.referanse}] kan ikke motta opplysinger nå, avventer fullføring av steg som ligger etter at oppdatering av faktagrunnlag opphører.")
+        }
+    }
+
+    private fun utledBehandlingstype(sisteBehandlingForSak: Behandling?, årsaker: List<Årsak>): TypeBehandling {
+        return if (årsaker.any { it.type == ÅrsakTilBehandling.MOTATT_KLAGE }) {
+            when (sisteBehandlingForSak) {
+                null -> throw IllegalArgumentException("Mottok klage, men det finnes ingen eksisterende behandling")
+                else -> TypeBehandling.Klage
+            }
+        } else {
+            when (sisteBehandlingForSak) {
+                null -> TypeBehandling.Førstegangsbehandling
+                else -> TypeBehandling.Revurdering
             }
         }
     }

@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class LegeerklæringVentebehovEvaluerer(private val connection: DBConnection): SpesifikkVentebehovEvaluerer {
     override fun definisjon(): Definisjon {
@@ -20,7 +20,7 @@ class LegeerklæringVentebehovEvaluerer(private val connection: DBConnection): S
         sakId: SakId
     ): Boolean {
         val mottattDokumentRepository =
-            RepositoryProvider(connection).provide<MottattDokumentRepository>()
+            RepositoryRegistry.provider(connection).provide<MottattDokumentRepository>()
         val sisteLegeerklæringBestilling = avklaringsbehov.historikk.maxBy { it.tidsstempel }
 
         val avvistDokumenter =

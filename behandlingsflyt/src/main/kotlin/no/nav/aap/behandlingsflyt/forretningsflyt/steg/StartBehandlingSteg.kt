@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -48,7 +47,8 @@ class StartBehandlingSteg private constructor(
         if (kontekst.behandlingType == TypeBehandling.Revurdering) {
             if (kontekst.vurdering.årsakerTilBehandling.contains(ÅrsakTilBehandling.REVURDER_SAMORDNING)) {
                 val ventTil =
-                    requireNotNull(samordningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)) { "Forventet å finne samordning vurdering ved revurdering med årsak ${ÅrsakTilBehandling.REVURDER_SAMORDNING}" }
+                    requireNotNull(samordningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId))
+                    { "Forventet å finne samordningvurdering ved revurdering med årsak ${ÅrsakTilBehandling.REVURDER_SAMORDNING}" }
                 logger.info("Fant samordningdato, setter på vent.")
                 return FantVentebehov(
                     Ventebehov(
@@ -73,8 +73,7 @@ class StartBehandlingSteg private constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
+        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val vilkårsresultatRepository =
                 repositoryProvider.provide<VilkårsresultatRepository>()
@@ -88,5 +87,10 @@ class StartBehandlingSteg private constructor(
         override fun type(): StegType {
             return StegType.START_BEHANDLING
         }
+
+        override fun toString(): String {
+            return "FlytSteg(type:${type()})"
+        }
+
     }
 }

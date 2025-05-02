@@ -1,0 +1,21 @@
+package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning
+
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonTypeName
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.TrekkSøknadLøser
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_TREKK_AV_SØKNAD_KODE
+import no.nav.aap.komponenter.dbconnect.DBConnection
+
+@JsonTypeName(value = VURDER_TREKK_AV_SØKNAD_KODE)
+class TrekkSøknadLøsning(
+    @JsonProperty("behovstype", required = true, defaultValue = VURDER_TREKK_AV_SØKNAD_KODE)
+    val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5028`,
+    @JsonProperty("begrunnelse", required = true) val begrunnelse: String,
+) : AvklaringsbehovLøsning {
+    override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
+        return TrekkSøknadLøser(connection).løs(kontekst, this)
+    }
+}

@@ -2,16 +2,13 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
-import java.time.LocalDate
 
 class Personopplysning(
     val fødselsdato: Fødselsdato,
     val id: Long? = null,
     val dødsdato: Dødsdato? = null,
-    val land: String,
-    val gyldigFraOgMed: LocalDate? = null,
-    val gyldigTilOgMed: LocalDate? = null,
-    val status: PersonStatus
+    val status: PersonStatus,
+    val statsborgerskap: List<Statsborgerskap>
 ) {
 
     // Denne skal kun sammenlikne data og ikke tidspunkter

@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -25,6 +24,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -36,28 +36,15 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepo
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import java.time.Clock
 import java.time.LocalDate
 import java.util.stream.Stream
 
 class SamordningStegTest {
     companion object {
-        @BeforeEach
-        fun beforeEach() {
-            InMemorySamordningYtelseRepository.setClock(Clock.systemDefaultZone())
-        }
-
-        @AfterEach
-        fun afterEach() {
-            InMemorySamordningYtelseRepository.setClock(Clock.systemDefaultZone())
-        }
-
         @JvmStatic
         fun manuelleYtelserProvider(): Stream<Ytelse> {
             return Ytelse.entries.filter { it.type == AvklaringsType.MANUELL }.stream()
@@ -74,16 +61,17 @@ class SamordningStegTest {
     fun `om det finnes tilfeller av samordning med Sykepenger, Svangerskapspenger, Pleiepenger, skal det opprettes et avklaringsbehov`(
         ytelse: Ytelse
     ) {
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+        val behandling = opprettBehandling(nySak())
         val steg = settOppRessurser(ytelse, behandling.id)
 
         val res = steg.utfør(
             kontekst = FlytKontekstMedPerioder(
                 sakId = behandling.sakId,
                 behandlingId = behandling.id,
-                behandlingType = TypeBehandling.Revurdering,
+                forrigeBehandlingId = behandling.forrigeBehandlingId,
+                behandlingType = behandling.typeBehandling(),
                 vurdering = VurderingTilBehandling(
-                    vurderingType = VurderingType.REVURDERING,
+                    vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
                     årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
                     rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
                 )
@@ -116,9 +104,10 @@ class SamordningStegTest {
             kontekst = FlytKontekstMedPerioder(
                 sakId = behandling.sakId,
                 behandlingId = behandling.id,
-                behandlingType = TypeBehandling.Revurdering,
+                forrigeBehandlingId = behandling.forrigeBehandlingId,
+                behandlingType = behandling.typeBehandling(),
                 vurdering = VurderingTilBehandling(
-                    vurderingType = VurderingType.REVURDERING,
+                    vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
                     årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
                     rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
                 )
@@ -132,14 +121,15 @@ class SamordningStegTest {
     @ParameterizedTest
     @MethodSource("automatiskBehandledeYtelserProvider")
     fun `foreldrepenger, omsorgspenger, opplæringspenger avklares automatisk`(ytelse: Ytelse) {
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+        val behandling = opprettBehandling(nySak())
         val steg = settOppRessurser(ytelse, behandling.id)
 
         val res = steg.utfør(
             kontekst = FlytKontekstMedPerioder(
                 sakId = behandling.sakId,
                 behandlingId = behandling.id,
-                behandlingType = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = behandling.forrigeBehandlingId,
+                behandlingType = behandling.typeBehandling(),
                 vurdering = VurderingTilBehandling(
                     vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
                     årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
@@ -154,7 +144,7 @@ class SamordningStegTest {
 
     @Test
     fun `en fra register og en manuell, ikke overlappende perioder`() {
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+        val behandling = opprettBehandling(nySak())
         val periodeMedSykepenger = Periode(LocalDate.now().minusYears(1), LocalDate.now())
 
         val pleiepengerPeriode = Periode(LocalDate.now().plusDays(1), LocalDate.now().plusWeeks(2))
@@ -199,9 +189,76 @@ class SamordningStegTest {
             FlytKontekstMedPerioder(
                 sakId = behandling.sakId,
                 behandlingId = behandling.id,
-                behandlingType = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = behandling.forrigeBehandlingId,
+                behandlingType = behandling.typeBehandling(),
                 vurdering = VurderingTilBehandling(
-                    vurderingType = VurderingType.REVURDERING,
+                    vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+                    årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                    rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
+                )
+            )
+        )
+
+        val perioderMedSamordning = InMemorySamordningRepository.hentHvisEksisterer(behandling.id)!!
+
+        assertThat(perioderMedSamordning.samordningPerioder).hasSize(2)
+        assertThat(perioderMedSamordning.samordningPerioder.first().periode).isEqualTo(periodeMedSykepenger)
+        assertThat(perioderMedSamordning.samordningPerioder.first().gradering).isEqualTo(Prosent(90))
+        assertThat(perioderMedSamordning.samordningPerioder.last().periode).isEqualTo(pleiepengerPeriode)
+        assertThat(perioderMedSamordning.samordningPerioder.last().gradering).isEqualTo(Prosent(50))
+    }
+
+    @Test
+    fun `en fra register og en manuell, ikke overlappende pdddderioder`() {
+        val behandling = opprettBehandling(nySak())
+        val periodeMedSykepenger = Periode(LocalDate.now().minusYears(1), LocalDate.now())
+
+        val pleiepengerPeriode = Periode(LocalDate.now().plusDays(1), LocalDate.now().plusWeeks(2))
+        InMemorySamordningVurderingRepository.lagreVurderinger(
+            behandling.id, SamordningVurderingGrunnlag(
+                begrunnelse = "En god begrunnelse",
+                maksDatoEndelig = false,
+                maksDato = LocalDate.now().plusYears(1),
+                vurderinger = listOf(
+                    SamordningVurdering(
+                        ytelseType = Ytelse.PLEIEPENGER,
+                        vurderingPerioder = listOf(
+                            SamordningVurderingPeriode(
+                                periode = pleiepengerPeriode,
+                                gradering = Prosent(50),
+                                manuell = false
+                            )
+                        )
+                    ),
+                    SamordningVurdering(
+                        ytelseType = Ytelse.SYKEPENGER,
+                        vurderingPerioder = listOf(
+                            SamordningVurderingPeriode(
+                                periode = periodeMedSykepenger,
+                                gradering = Prosent(90),
+                                manuell = false
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+
+        val steg = settOppRessurser(
+            Ytelse.SYKEPENGER,
+            behandling.id,
+            periode = periodeMedSykepenger
+        )
+
+        steg.utfør(
+            FlytKontekstMedPerioder(
+                sakId = behandling.sakId,
+                behandlingId = behandling.id,
+                forrigeBehandlingId = behandling.forrigeBehandlingId,
+                behandlingType = behandling.typeBehandling(),
+                vurdering = VurderingTilBehandling(
+                    vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
                     årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
                     rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
                 )
@@ -219,7 +276,7 @@ class SamordningStegTest {
 
     @Test
     fun `saksbehandler kan lagre flere perioder enn det vi får fra registre`() {
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+        val behandling = opprettBehandling(nySak())
         val steg = settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
 
         InMemorySamordningVurderingRepository.lagreVurderinger(
@@ -246,9 +303,10 @@ class SamordningStegTest {
             kontekst = FlytKontekstMedPerioder(
                 sakId = behandling.sakId,
                 behandlingId = behandling.id,
-                behandlingType = TypeBehandling.Revurdering,
+                forrigeBehandlingId = behandling.forrigeBehandlingId,
+                behandlingType =behandling.typeBehandling(),
                 vurdering = VurderingTilBehandling(
-                    vurderingType = VurderingType.REVURDERING,
+                    vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
                     årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
                     rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
                 )
@@ -270,14 +328,15 @@ class SamordningStegTest {
 
     @Test
     fun `om det kommer ny informasjon, avklaringsbehov opprettes igjen`() {
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+        val behandling = opprettBehandling(nySak())
         val steg = settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
         val kontekst = FlytKontekstMedPerioder(
             sakId = behandling.sakId,
             behandlingId = behandling.id,
-            behandlingType = TypeBehandling.Revurdering,
+            forrigeBehandlingId = behandling.forrigeBehandlingId,
+            behandlingType = behandling.typeBehandling(),
             vurdering = VurderingTilBehandling(
-                vurderingType = VurderingType.REVURDERING,
+                vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
                 årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
                 rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
             )
@@ -321,7 +380,7 @@ class SamordningStegTest {
 
     @Test
     fun `skal kunne regne ut samordninggrad også uten registeropplysninger, kun vurderinger`() {
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Førstegangsbehandling)
+        val behandling = opprettBehandling(nySak())
         val steg = SamordningSteg(
             samordningService = SamordningService(
                 samordningVurderingRepository = InMemorySamordningVurderingRepository,
@@ -329,6 +388,7 @@ class SamordningStegTest {
             ),
             samordningRepository = InMemorySamordningRepository,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            tidligereVurderinger = FakeTidligereVurderinger(),
         )
 
         InMemorySamordningVurderingRepository.lagreVurderinger(
@@ -354,7 +414,8 @@ class SamordningStegTest {
         val kontekst = FlytKontekstMedPerioder(
             sakId = behandling.sakId,
             behandlingId = behandling.id,
-            behandlingType = TypeBehandling.Førstegangsbehandling,
+            forrigeBehandlingId = behandling.forrigeBehandlingId,
+            behandlingType = behandling.typeBehandling(),
             vurdering = VurderingTilBehandling(
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
                 årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
@@ -384,6 +445,7 @@ class SamordningStegTest {
             ),
             samordningRepository = InMemorySamordningRepository,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            tidligereVurderinger = FakeTidligereVurderinger(),
         )
 
         lagreYtelseGrunnlag(behandlingId, ytelse, periode)
@@ -420,7 +482,7 @@ class SamordningStegTest {
         ).finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
     }
 
-    private fun opprettBehandling(sak: Sak, typeBehandling: TypeBehandling): Behandling {
+    private fun opprettBehandling(sak: Sak): Behandling {
         return SakOgBehandlingService(
             object : GrunnlagKopierer {
                 override fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {

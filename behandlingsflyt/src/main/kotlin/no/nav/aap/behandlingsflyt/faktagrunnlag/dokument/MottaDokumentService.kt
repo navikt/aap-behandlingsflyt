@@ -46,7 +46,7 @@ class MottaDokumentService(
             mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, InnsendingType.MELDEKORT)
 
         return ubehandledeMeldekort
-            .map { UbehandletMeldekort.fraKontrakt(meldekort(it), it.referanse.asJournalpostId) }
+            .map { UbehandletMeldekort.fraKontrakt(meldekort = meldekort(it), journalpostId = it.referanse.asJournalpostId, mottattTidspunkt = it.mottattTidspunkt) }
             .toSet()
     }
 

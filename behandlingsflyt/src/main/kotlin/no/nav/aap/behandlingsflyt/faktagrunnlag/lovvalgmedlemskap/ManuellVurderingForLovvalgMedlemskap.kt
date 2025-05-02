@@ -9,6 +9,7 @@ data class ManuellVurderingForLovvalgMedlemskap(
     val lovvalgVedSøknadsTidspunkt: LovvalgVedSøknadsTidspunktDto,
     val medlemskapVedSøknadsTidspunkt: MedlemskapVedSøknadsTidspunktDto?,
     val vurdertAv: String,
+    val vurdertDato: LocalDate,
     val overstyrt: Boolean = false
 )
 
@@ -18,8 +19,10 @@ data class ManuellVurderingForLovvalgMedlemskapDto(
 )
 
 class HistoriskManuellVurderingForLovvalgMedlemskap(
-    vurdertDato: LocalDate, vurdertAvIdent: String,
-    erGjeldendeVurdering: Boolean, periode: ÅpenPeriodeDto,
+    vurdertDato: LocalDate,
+    vurdertAvIdent: String,
+    erGjeldendeVurdering: Boolean,
+    periode: ÅpenPeriodeDto,
     vurdering: ManuellVurderingForLovvalgMedlemskap
 ) : HistoriskVurderingDto<ManuellVurderingForLovvalgMedlemskap>(
     vurdertDato, vurdertAvIdent, erGjeldendeVurdering, periode, vurdering

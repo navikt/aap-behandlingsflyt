@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -19,10 +18,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class MedlemskapRepositoryTest {
+internal class MedlemskapRepositoryTest {
+    private val dataSource = InitTestDatabase.freshDatabase()
+
     @Test
     fun `lagre og hente inn unntak`() {
-        val behandlingId = InitTestDatabase.dataSource.transaction { connection ->
+        val behandlingId = dataSource.transaction { connection ->
             // SETUP
             val sak = PersonOgSakService(
                 FakePdlGateway,
@@ -45,7 +46,7 @@ class MedlemskapRepositoryTest {
             repo.lagreUnntakMedlemskap(
                 behandlingId = behandling.id,
                 listOf(
-                    MedlemskapResponse(
+                    MedlemskapDataIntern(
                         unntakId = 1234,
                         ident = "13028911111",
                         fraOgMed = "1989-02-13",
@@ -56,14 +57,15 @@ class MedlemskapRepositoryTest {
                         grunnlag = "FLK-TRGD",
                         lovvalg = "FLK_TRGD",
                         helsedel = true,
-                        lovvalgsland = "NOR"
+                        lovvalgsland = "NOR",
+                        kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
                     )
                 )
             )
             behandling.id
         }
 
-        val uthentet = InitTestDatabase.dataSource.transaction { connection ->
+        val uthentet = dataSource.transaction { connection ->
             val repo = MedlemskapRepository(connection)
 
             repo.hentHvisEksisterer(behandlingId = behandlingId)
@@ -82,7 +84,8 @@ class MedlemskapRepositoryTest {
                     lovvalg = "FLK_TRGD",
                     helsedel = true,
                     grunnlag = "FLK-TRGD",
-                    lovvalgsland = "NOR"
+                    lovvalgsland = "NOR",
+                    kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
                 )
             )
         )

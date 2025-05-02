@@ -14,8 +14,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.flate.MedlemskapGrunnlagDto
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
@@ -39,6 +41,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.FinnEllerOpprettSakDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksinfoDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.UtvidetSaksinfoDTO
+import no.nav.aap.behandlingsflyt.test.AzureTokenGen
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.Fakes
@@ -47,6 +50,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
+import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
 import no.nav.aap.komponenter.httpklient.httpclient.get
@@ -100,6 +104,12 @@ class ApiTest {
         private val ccClient: RestClient<InputStream> = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
             tokenProvider = ClientCredentialsTokenProvider,
+            responseHandler = DefaultResponseHandler()
+        )
+
+        private val noTokenClient: RestClient<InputStream> = RestClient(
+            config = ClientConfig(scope = "behandlingsflyt"),
+            tokenProvider = NoTokenTokenProvider(),
             responseHandler = DefaultResponseHandler()
         )
 
@@ -163,7 +173,7 @@ class ApiTest {
             medlRepo.lagreUnntakMedlemskap(
                 behandlingId = behandling.id,
                 listOf(
-                    MedlemskapResponse(
+                    MedlemskapDataIntern(
                         unntakId = 123,
                         fraOgMed = "2017-02-13",
                         tilOgMed = "2018-02-13",
@@ -174,7 +184,8 @@ class ApiTest {
                         medlem = true,
                         status = "GYLD",
                         statusaarsak = null,
-                        lovvalgsland = "NORGE"
+                        lovvalgsland = "NORGE",
+                        kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
                     )
                 )
             )
@@ -258,7 +269,7 @@ class ApiTest {
     "nedsattArbeidsevneÅr": "2024",
     "inntekter": [
       {
-        "år": "2023",
+        "år": "2021",
         "inntektIKroner": 200000.0,
         "inntektIG": 3.0,
         "justertTilMaks6G": 3.0
@@ -270,7 +281,7 @@ class ApiTest {
         "justertTilMaks6G": 3.0
       },
       {
-        "år": "2021",
+        "år": "2023",
         "inntektIKroner": 200000.0,
         "inntektIG": 3.0,
         "justertTilMaks6G": 3.0
@@ -306,13 +317,12 @@ class ApiTest {
             URI.create("http://localhost:$port/").resolve("api/sak/finnEllerOpprett"),
             PostRequest(
                 body = FinnEllerOpprettSakDTO("12345678910", LocalDate.now()),
-                currentToken = getToken()
             )
         )
 
         requireNotNull(responseSak)
 
-        client.post<_, Unit>(
+        noTokenClient.post<_, Unit>(
             URI.create("http://localhost:$port/").resolve("api/hendelse/send"),
             PostRequest(
                 body = Innsending(
@@ -327,7 +337,9 @@ class ApiTest {
                         medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
                     )
                 ),
-                currentToken = getToken()
+                additionalHeaders = listOf(
+                    azpAuth(Azp.Postmottak)
+                ),
             )
         )
 
@@ -462,6 +474,16 @@ class ApiTest {
         }
         return null
     }
+    
+    private fun azpAuth(azp: Azp) = Header(
+            "Authorization",
+            "Bearer ${
+                AzureTokenGen("behandlingsflyt", "behandlingsflyt").generate(
+                    true,
+                    azp.uuid.toString()
+                )
+            }"
+        )
 }
 
 

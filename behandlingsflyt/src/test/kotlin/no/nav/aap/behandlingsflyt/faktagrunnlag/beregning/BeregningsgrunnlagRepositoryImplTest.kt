@@ -29,15 +29,16 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.Year
 
-class BeregningsgrunnlagRepositoryImplTest {
+internal class BeregningsgrunnlagRepositoryImplTest {
+    private val dataSource = InitTestDatabase.freshDatabase()
 
     @Test
     fun `Lagre og hente opp beregningsgrunnlaget med uføre og yrkesskade`() {
-        val sak = InitTestDatabase.dataSource.transaction { sak(it) }
-        val behandling = InitTestDatabase.dataSource.transaction { behandling(it, sak) }
+        val sak = dataSource.transaction { sak(it) }
+        val behandling = dataSource.transaction { behandling(it, sak) }
         val inntektPerÅr = listOf(
             GrunnlagInntekt(
-                år = Year.of(2015),
+                år = Year.of(2013),
                 inntektIKroner = Beløp(400000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(4),
@@ -53,7 +54,7 @@ class BeregningsgrunnlagRepositoryImplTest {
                 er6GBegrenset = false
             ),
             GrunnlagInntekt(
-                år = Year.of(2013),
+                år = Year.of(2015),
                 inntektIKroner = Beløp(200000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(2),
@@ -64,7 +65,7 @@ class BeregningsgrunnlagRepositoryImplTest {
 
         val inntektPerÅrUføre = listOf(
             uføreInntekt(
-                år = 2022,
+                år = 2020,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(300000),
                 grunnbeløp = Beløp(100000),
@@ -82,7 +83,7 @@ class BeregningsgrunnlagRepositoryImplTest {
                 er6GBegrenset = false
             ),
             uføreInntekt(
-                år = 2020,
+                år = 2022,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(350000),
                 grunnbeløp = Beløp(100000),
@@ -113,13 +114,13 @@ class BeregningsgrunnlagRepositoryImplTest {
             uføreInntekterFraForegåendeÅr = inntektPerÅrUføre.map(InntekterForUføre::uføreInntekt),
             uføreYtterligereNedsattArbeidsevneÅr = Year.of(2022)
         )
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
 
             beregningsgrunnlagRepository.lagre(behandling.id, grunnlagUføre)
         }
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val beregningsgrunnlag: GrunnlagUføre =
                 BeregningsgrunnlagRepositoryImpl(connection).hentHvisEksisterer(behandling.id) as GrunnlagUføre
 
@@ -133,12 +134,12 @@ class BeregningsgrunnlagRepositoryImplTest {
 
     @Test
     fun `Lagre og hente opp beregningsgrunnlaget med uføre uten yrkesskade`() {
-        val sak = InitTestDatabase.dataSource.transaction { sak(it) }
-        val behandling = InitTestDatabase.dataSource.transaction { behandling(it, sak) }
+        val sak = dataSource.transaction { sak(it) }
+        val behandling = dataSource.transaction { behandling(it, sak) }
 
         val inntektPerÅr = listOf(
             GrunnlagInntekt(
-                år = Year.of(2015),
+                år = Year.of(2013),
                 inntektIKroner = Beløp(400000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(4),
@@ -154,7 +155,7 @@ class BeregningsgrunnlagRepositoryImplTest {
                 er6GBegrenset = false
             ),
             GrunnlagInntekt(
-                år = Year.of(2013),
+                år = Year.of(2015),
                 inntektIKroner = Beløp(200000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(2),
@@ -172,7 +173,7 @@ class BeregningsgrunnlagRepositoryImplTest {
 
         val inntektPerÅrUføre = listOf(
             uføreInntekt(
-                år = 2022,
+                år = 2020,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(300000),
                 grunnbeløp = Beløp(100000),
@@ -190,7 +191,7 @@ class BeregningsgrunnlagRepositoryImplTest {
                 er6GBegrenset = false
             ),
             uføreInntekt(
-                år = 2020,
+                år = 2022,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(350000),
                 grunnbeløp = Beløp(100000),
@@ -216,13 +217,13 @@ class BeregningsgrunnlagRepositoryImplTest {
             uføreYtterligereNedsattArbeidsevneÅr = Year.of(2022)
         )
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
 
             beregningsgrunnlagRepository.lagre(behandling.id, grunnlagUføre)
         }
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val beregningsgrunnlag = BeregningsgrunnlagRepositoryImpl(connection).hentHvisEksisterer(behandling.id)
 
             assertThat(beregningsgrunnlag).isEqualTo(grunnlagUføre)
@@ -231,8 +232,8 @@ class BeregningsgrunnlagRepositoryImplTest {
 
     @Test
     fun `Lagre og hente opp beregningsgrunnlaget uten uføre og yrkesskade`() {
-        val sak = InitTestDatabase.dataSource.transaction { sak(it) }
-        val behandling = InitTestDatabase.dataSource.transaction {
+        val sak = dataSource.transaction { sak(it) }
+        val behandling = dataSource.transaction {
             behandling(it, sak)
         }
 
@@ -242,12 +243,12 @@ class BeregningsgrunnlagRepositoryImplTest {
             gjennomsnittligInntektIG = GUnit("1.1"),
             inntekter = emptyList()
         )
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
             beregningsgrunnlagRepository.lagre(behandling.id, grunnlag11_19Standard)
         }
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val beregningsgrunnlag = BeregningsgrunnlagRepositoryImpl(connection).hentHvisEksisterer(behandling.id)
             assertThat(beregningsgrunnlag).isEqualTo(grunnlag11_19Standard)
         }
@@ -255,8 +256,8 @@ class BeregningsgrunnlagRepositoryImplTest {
 
     @Test
     fun `lagre flere grunnlag`() {
-        val sak = InitTestDatabase.dataSource.transaction { sak(it) }
-        val behandling = InitTestDatabase.dataSource.transaction {
+        val sak = dataSource.transaction { sak(it) }
+        val behandling = dataSource.transaction {
             behandling(it, sak)
         }
 
@@ -267,16 +268,16 @@ class BeregningsgrunnlagRepositoryImplTest {
             inntekter = emptyList()
         )
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
             beregningsgrunnlagRepository.lagre(behandling.id, grunnlag11_19Standard)
         }
 
-        val sak2 = InitTestDatabase.dataSource.transaction { sak(it) }
-        val behandling2 = InitTestDatabase.dataSource.transaction { behandling(it, sak2) }
+        val sak2 = dataSource.transaction { sak(it) }
+        val behandling2 = dataSource.transaction { behandling(it, sak2) }
         val inntektPerÅr = listOf(
             GrunnlagInntekt(
-                år = Year.of(2015),
+                år = Year.of(2013),
                 inntektIKroner = Beløp(400000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(4),
@@ -292,7 +293,7 @@ class BeregningsgrunnlagRepositoryImplTest {
                 er6GBegrenset = false
             ),
             GrunnlagInntekt(
-                år = Year.of(2013),
+                år = Year.of(2015),
                 inntektIKroner = Beløp(200000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(2),
@@ -303,7 +304,7 @@ class BeregningsgrunnlagRepositoryImplTest {
 
         val inntektPerÅrUføre = listOf(
             uføreInntekt(
-                år = 2022,
+                år = 2020,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(300000),
                 grunnbeløp = Beløp(100000),
@@ -321,7 +322,7 @@ class BeregningsgrunnlagRepositoryImplTest {
                 er6GBegrenset = false
             ),
             uføreInntekt(
-                år = 2020,
+                år = 2022,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(350000),
                 grunnbeløp = Beløp(100000),
@@ -353,17 +354,17 @@ class BeregningsgrunnlagRepositoryImplTest {
             uføreYtterligereNedsattArbeidsevneÅr = Year.of(2022)
         )
 
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
 
             beregningsgrunnlagRepository.lagre(behandling2.id, grunnlagUføre)
         }
 
-        val uthentet = InitTestDatabase.dataSource.transaction {
+        val uthentet = dataSource.transaction {
             BeregningsgrunnlagRepositoryImpl(it).hentHvisEksisterer(behandling.id)
         }
 
-        val uthentet2 = InitTestDatabase.dataSource.transaction {
+        val uthentet2 = dataSource.transaction {
             BeregningsgrunnlagRepositoryImpl(it).hentHvisEksisterer(behandling2.id)
         }
 

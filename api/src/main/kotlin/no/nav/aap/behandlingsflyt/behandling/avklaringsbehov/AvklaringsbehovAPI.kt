@@ -19,12 +19,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.bruker
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedPost
 import javax.sql.DataSource
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
     route("/api/behandling").tag(Tags.Behandling) {
@@ -35,7 +35,7 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                 )
             ) { _, request ->
                 dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val behandlingRepository =
                         repositoryProvider.provide<BehandlingRepository>()
@@ -43,13 +43,13 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                         repositoryProvider.provide<TaSkriveLåsRepository>()
                     val avklaringsbehovRepository =
                         repositoryProvider.provide<AvklaringsbehovRepository>()
+                    val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
 
                     LoggingKontekst(
                         repositoryProvider,
                         LogKontekst(referanse = BehandlingReferanse(request.referanse))
                     ).use {
                         val lås = taSkriveLåsRepository.lås(request.referanse)
-                        val flytJobbRepository = FlytJobbRepository(connection)
                         BehandlingTilstandValidator(
                             BehandlingReferanseService(behandlingRepository),
                             flytJobbRepository

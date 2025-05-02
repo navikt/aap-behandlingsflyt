@@ -42,6 +42,15 @@ public enum class Definisjon(
         defaultFrist = Period.ofDays(1),
         løsesAv = listOf()
     ),
+    VURDER_TREKK_AV_SØKNAD(
+        kode = AvklaringsbehovKode.`5028`,
+        løsesISteg = StegType.SØKNAD,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_OPPFOLGING,
+            Rolle.SAKSBEHANDLER_NASJONAL
+        ),
+    ),
     BESTILL_LEGEERKLÆRING(
         kode = AvklaringsbehovKode.`9003`,
         løsesISteg = StegType.UDEFINERT,
@@ -50,6 +59,15 @@ public enum class Definisjon(
         løsesAv = listOf(
             Rolle.SAKSBEHANDLER_OPPFOLGING,
             Rolle.SAKSBEHANDLER_NASJONAL
+        )
+    ),
+    OPPRETT_HENDELSE_PÅ_SAK(
+        kode = AvklaringsbehovKode.`9004`,
+        type = BehovType.VENTEPUNKT,
+        løsesISteg = StegType.UDEFINERT,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_NASJONAL,
+            Rolle.SAKSBEHANDLER_OPPFOLGING,
         )
     ),
     SKRIV_BREV(
@@ -66,6 +84,15 @@ public enum class Definisjon(
         løsesISteg = StegType.BREV,
         type = BehovType.BREV,
         løsesAv = listOf(
+            Rolle.BESLUTTER
+        )
+    ),
+    VURDER_RETTIGHETSPERIODE(
+        kode = AvklaringsbehovKode.`5029`,
+        løsesISteg = StegType.VURDER_RETTIGHETSPERIODE,
+        type = BehovType.MANUELT_FRIVILLIG,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_NASJONAL,
             Rolle.BESLUTTER
         )
     ),
@@ -366,7 +393,7 @@ public enum class Definisjon(
     }
 
     private fun validerVentepunkt() {
-        if (this in setOf(MANUELT_SATT_PÅ_VENT, BESTILL_LEGEERKLÆRING)) {
+        if (this in setOf(MANUELT_SATT_PÅ_VENT, BESTILL_LEGEERKLÆRING, OPPRETT_HENDELSE_PÅ_SAK)) {
             if (this.løsesISteg != StegType.UDEFINERT) {
                 throw IllegalArgumentException("Ventepunkt er lagt til feil steg")
             }

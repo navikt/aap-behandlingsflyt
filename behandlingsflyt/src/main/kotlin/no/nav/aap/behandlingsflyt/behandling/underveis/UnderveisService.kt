@@ -30,6 +30,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.lookup.repository.RepositoryProvider
 import kotlin.reflect.KClass
 
 class UnderveisService(
@@ -44,6 +45,18 @@ class UnderveisService(
     private val meldeperiodeRepository: MeldeperiodeRepository,
     private val vedtakService: VedtakService,
 ) {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        behandlingService = SakOgBehandlingService(repositoryProvider),
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        meldekortRepository = repositoryProvider.provide(),
+        underveisRepository = repositoryProvider.provide(),
+        aktivitetspliktRepository = repositoryProvider.provide(),
+        etAnnetStedUtlederService = EtAnnetStedUtlederService(repositoryProvider),
+        arbeidsevneRepository = repositoryProvider.provide(),
+        meldepliktRepository = repositoryProvider.provide(),
+        meldeperiodeRepository = repositoryProvider.provide(),
+        vedtakService = VedtakService(repositoryProvider),
+    )
 
     private val kvoteService = KvoteService()
 
@@ -60,7 +73,7 @@ class UnderveisService(
         )
 
         init {
-            fun checkAvhengighet(forventetFør: KClass<*>, forventetEtter: KClass<*>) {
+            fun sjekkAvhengighet(forventetFør: KClass<*>, forventetEtter: KClass<*>) {
                 val offset1 = regelset.indexOfFirst { it::class == forventetFør }
                 val offset2 = regelset.indexOfFirst { it::class == forventetEtter }
                 check(offset1 != -1) { "Regel ${forventetFør.qualifiedName} er ikke med" }
@@ -70,12 +83,12 @@ class UnderveisService(
                 }
             }
 
-            checkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = MeldepliktRegel::class)
-            checkAvhengighet(
+            sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = MeldepliktRegel::class)
+            sjekkAvhengighet(
                 forventetFør = UtledMeldeperiodeRegel::class,
                 forventetEtter = SammenstiltAktivitetspliktRegel::class
             )
-            checkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = GraderingArbeidRegel::class)
+            sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = GraderingArbeidRegel::class)
         }
     }
 
@@ -109,7 +122,7 @@ class UnderveisService(
 
     internal fun vurderRegler(input: UnderveisInput): Tidslinje<Vurdering> {
         return regelset.fold(Tidslinje()) { resultat, regel ->
-            regel.vurder(input, resultat).kryss(input.rettighetsperiode)
+            regel.vurder(input, resultat).begrensetTil(input.rettighetsperiode)
         }
     }
 

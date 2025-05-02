@@ -13,6 +13,10 @@ data class StudentVurdering(
     val avbruddMerEnn6Måneder: Boolean?,
 ) {
     fun erOppfylt(): Boolean {
-        return harAvbruttStudie && godkjentStudieAvLånekassen == true && avbruttPgaSykdomEllerSkade == true && harBehovForBehandling == true && avbruddMerEnn6Måneder == true
+        return harAvbruttStudie &&
+                godkjentStudieAvLånekassen == true &&
+                avbruttPgaSykdomEllerSkade == true &&
+                harBehovForBehandling == true &&
+                avbruddMerEnn6Måneder == true
     }
 }

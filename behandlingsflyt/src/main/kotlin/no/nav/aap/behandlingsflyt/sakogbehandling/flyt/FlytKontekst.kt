@@ -7,5 +7,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 data class FlytKontekst(
     val sakId: SakId,
     val behandlingId: BehandlingId,
+    val forrigeBehandlingId: BehandlingId?,
     val behandlingType: TypeBehandling
 )

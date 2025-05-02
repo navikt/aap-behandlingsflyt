@@ -13,11 +13,11 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class FatteVedtakLøser(dbConnection: DBConnection) : AvklaringsbehovsLøser<FatteVedtakLøsning> {
 
-    private val repositoryProvider = RepositoryProvider(dbConnection)
+    private val repositoryProvider = RepositoryRegistry.provider(dbConnection)
     private val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
     private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
 

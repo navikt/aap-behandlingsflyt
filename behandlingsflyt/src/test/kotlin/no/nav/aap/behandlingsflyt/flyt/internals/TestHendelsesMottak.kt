@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt.internals
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
@@ -49,6 +50,19 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
         }
     }
 
+    fun bestillLegeerklæring(key: BehandlingId) {
+        dataSource.transaction { connection ->
+            AvklaringsbehovOrkestrator(
+                connection,
+                BehandlingHendelseServiceImpl(
+                    FlytJobbRepository(connection),
+                    BrevbestillingRepositoryImpl(connection),
+                    SakService(SakRepositoryImpl(connection))
+                )
+            ).settPåVentMensVentePåMedisinskeOpplysninger(key, SYSTEMBRUKER)
+        }
+    }
+
     private fun håndtere(key: Saksnummer, hendelse: SakHendelse) {
         dataSource.transaction { connection ->
             if (hendelse is DokumentMottattSakHendelse) {
@@ -63,7 +77,8 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
                     HendelseMottattHåndteringJobbUtfører.nyJobb(
                         sakId = sak.id,
                         dokumentReferanse = referanse,
-                        brevkategori = hendelse.innsendingType ?: hendelse.strukturertDokument?.data?.innsendingType()!!,
+                        brevkategori = hendelse.innsendingType
+                            ?: hendelse.strukturertDokument?.data?.innsendingType()!!,
                         kanal = Kanal.DIGITAL,
                         melding = hendelse.strukturertDokument?.data,
                         mottattTidspunkt = LocalDateTime.now()

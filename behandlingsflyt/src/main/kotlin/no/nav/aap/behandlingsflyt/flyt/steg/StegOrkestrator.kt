@@ -7,8 +7,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -33,7 +33,7 @@ import org.slf4j.MDC
 class StegOrkestrator(
     private val aktivtSteg: FlytSteg,
     private val informasjonskravGrunnlag: InformasjonskravGrunnlag,
-    private val behandlingFlytRepository: BehandlingFlytRepository,
+    private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val perioderTilVurderingService: PerioderTilVurderingService,
     private val stegKonstruktør: StegKonstruktør
@@ -47,7 +47,7 @@ class StegOrkestrator(
     fun utfør(
         kontekst: FlytKontekst,
         behandling: Behandling,
-        faktagrunnlagForGjeldendeSteg: List<Informasjonskravkonstruktør>
+        faktagrunnlagForGjeldendeSteg: List<Pair<StegType, Informasjonskravkonstruktør>>,
     ): Transisjon {
         val stegSpan = tracer.spanBuilder("utfør ${aktivtSteg.type().name}")
             .setAttribute("steg", aktivtSteg.type().name)
@@ -60,6 +60,7 @@ class StegOrkestrator(
                 val kontekstMedPerioder = FlytKontekstMedPerioder(
                     sakId = kontekst.sakId,
                     behandlingId = kontekst.behandlingId,
+                    forrigeBehandlingId = behandling.forrigeBehandlingId,
                     behandlingType = kontekst.behandlingType,
                     vurdering = perioderTilVurderingService.utled(
                         kontekst = kontekst,
@@ -117,6 +118,7 @@ class StegOrkestrator(
                         sakId = kontekst.sakId,
                         behandlingId = kontekst.behandlingId,
                         behandlingType = kontekst.behandlingType,
+                        forrigeBehandlingId = kontekst.forrigeBehandlingId,
                         vurdering = perioderTilVurderingService.utled(
                             kontekst = kontekst,
                             stegType = aktivtSteg.type()
@@ -137,16 +139,17 @@ class StegOrkestrator(
 
     private fun utførTilstandsEndring(
         kontekst: FlytKontekstMedPerioder,
-        nesteStegStatus: StegStatus,
+        gjeldendeStegStatus: StegStatus,
         behandling: Behandling,
-        faktagrunnlagForGjeldendeSteg: List<Informasjonskravkonstruktør>
+        faktagrunnlagForGjeldendeSteg: List<Pair<StegType, Informasjonskravkonstruktør>>
     ): Transisjon {
         log.debug(
             "Behandler steg({}) med status({})",
             aktivtSteg.type(),
-            nesteStegStatus
+            gjeldendeStegStatus
         )
-        val transisjon = when (nesteStegStatus) {
+
+        val transisjon = when (gjeldendeStegStatus) {
             StegStatus.UTFØRER -> behandleSteg(kontekst)
             StegStatus.OPPDATER_FAKTAGRUNNLAG -> oppdaterFaktagrunnlag(kontekst, faktagrunnlagForGjeldendeSteg)
             StegStatus.AVKLARINGSPUNKT -> harAvklaringspunkt(aktivtSteg.type(), kontekst.behandlingId)
@@ -155,7 +158,7 @@ class StegOrkestrator(
             else -> Fortsett
         }
 
-        val nyStegTilstand = StegTilstand(stegType = aktivtSteg.type(), stegStatus = nesteStegStatus, aktiv = true)
+        val nyStegTilstand = StegTilstand(stegType = aktivtSteg.type(), stegStatus = gjeldendeStegStatus, aktiv = true)
         oppdaterStegOgStatus(behandling, nyStegTilstand)
 
         return transisjon
@@ -163,7 +166,7 @@ class StegOrkestrator(
 
     private fun oppdaterFaktagrunnlag(
         kontekstMedPerioder: FlytKontekstMedPerioder,
-        faktagrunnlagForGjeldendeSteg: List<Informasjonskravkonstruktør>
+        faktagrunnlagForGjeldendeSteg: List<Pair<StegType, Informasjonskravkonstruktør>>,
     ): Fortsett {
         informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
             faktagrunnlagForGjeldendeSteg,
@@ -174,6 +177,7 @@ class StegOrkestrator(
 
     private fun behandleSteg(kontekstMedPerioder: FlytKontekstMedPerioder): Transisjon {
         val stegResultat = behandlingSteg.utfør(kontekstMedPerioder)
+        log.info("Fullført steg av type {}", behandlingSteg::javaClass)
 
         val resultat = stegResultat.transisjon()
 
@@ -231,10 +235,10 @@ class StegOrkestrator(
     ) {
         val førStatus = behandling.status()
         behandling.oppdaterSteg(nyStegTilstand)
-        behandlingFlytRepository.leggTilNyttAktivtSteg(behandlingId = behandling.id, nyStegTilstand)
+        behandlingRepository.leggTilNyttAktivtSteg(behandlingId = behandling.id, nyStegTilstand)
         val etterStatus = nyStegTilstand.steg().status
         if (førStatus != etterStatus) {
-            behandlingFlytRepository.oppdaterBehandlingStatus(behandlingId = behandling.id, status = etterStatus)
+            behandlingRepository.oppdaterBehandlingStatus(behandlingId = behandling.id, status = etterStatus)
         }
     }
 }

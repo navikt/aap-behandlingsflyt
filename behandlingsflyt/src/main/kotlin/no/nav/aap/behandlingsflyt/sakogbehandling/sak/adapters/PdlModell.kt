@@ -44,10 +44,20 @@ class PdlPersonNavnDataResponse(
 
 data class HentPerson(
     val hentPerson: PdlNavnData? = null,
-    val hentPersonBolk: List<PdlNavnData>? = null
+    val hentPersonBolk: List<PdlNavnDataBolk>? = null
 )
+
 data class PdlNavnData(
     val ident: String?,
+    val navn: List<PdlNavn>?
+)
+
+data class PdlNavnDataBolk(
+    val ident: String?,
+    val person: PdlPersonBolk?
+)
+
+data class PdlPersonBolk(
     val navn: List<PdlNavn>?
 )
 

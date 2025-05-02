@@ -25,7 +25,12 @@ class Behandling(
     fun typeBehandling(): TypeBehandling = typeBehandling
 
     fun flytKontekst(): FlytKontekst {
-        return FlytKontekst(sakId, id, typeBehandling)
+        return FlytKontekst(
+            sakId = sakId,
+            behandlingId = id,
+            forrigeBehandlingId = forrigeBehandlingId,
+            behandlingType = typeBehandling
+        )
     }
 
     fun harBehandlingenStartet(): Boolean {

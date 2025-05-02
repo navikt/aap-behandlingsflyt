@@ -1,34 +1,44 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class MeldekortService private constructor(
     private val mottaDokumentService: MottaDokumentService,
-    private val meldekortRepository: MeldekortRepository
+    private val meldekortRepository: MeldekortRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav {
+    override val navn = Companion.navn
 
     companion object : Informasjonskravkonstruktør {
-        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-            // Skal alltid innhentes
-            return true
-        }
+        override val navn = InformasjonskravNavn.MELDEKORT
 
         override fun konstruer(connection: DBConnection): MeldekortService {
-            val repositoryProvider = RepositoryProvider(connection)
+            val repositoryProvider = RepositoryRegistry.provider(connection)
             return MeldekortService(
                 MottaDokumentService(repositoryProvider.provide<MottattDokumentRepository>()),
-                repositoryProvider.provide<MeldekortRepository>()
+                repositoryProvider.provide<MeldekortRepository>(),
+                TidligereVurderingerImpl(repositoryProvider),
             )
         }
+    }
+
+    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+        return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse() &&
+                tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
@@ -44,7 +54,8 @@ class MeldekortService private constructor(
         for (ubehandletMeldekort in meldekortSomIkkeErBehandlet) {
             val nyttMeldekort = Meldekort(
                 journalpostId = ubehandletMeldekort.journalpostId,
-                timerArbeidPerPeriode = ubehandletMeldekort.timerArbeidPerPeriode
+                timerArbeidPerPeriode = ubehandletMeldekort.timerArbeidPerPeriode,
+                mottattTidspunkt = ubehandletMeldekort.mottattTidspunkt
             )
             mottaDokumentService.knyttTilBehandling(
                 sakId = kontekst.sakId,

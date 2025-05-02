@@ -6,6 +6,8 @@ package no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov
 public const val MANUELT_SATT_PÅ_VENT_KODE: String = "9001"
 public const val BESTILL_BREV_KODE: String = "9002"
 public const val BESTILL_LEGEERKLÆRING_KODE: String = "9003"
+public const val OPPRETT_HENDELSE_PÅ_SAK_KODE: String = "9004"
+public const val VURDER_RETTIGHETSPERIODE_KODE: String = "5029"
 public const val AVKLAR_STUDENT_KODE: String = "5001"
 public const val AVKLAR_SYKDOM_KODE: String = "5003"
 public const val FASTSETT_ARBEIDSEVNE_KODE: String = "5004"
@@ -35,6 +37,7 @@ public const val AVKLAR_UTENLANDSK_MEDLEMSKAP_KODE: String = "5019"
 public const val AVKLAR_FORUTGÅENDE_MEDLEMSKAP_KODE: String = "5020"
 public const val MANUELL_OVERSTYRING_LOVVALG: String = "5021"
 public const val MANUELL_OVERSTYRING_MEDLEMSKAP: String = "5022"
+public const val VURDER_TREKK_AV_SØKNAD_KODE: String = "5028"
 public const val REFUSJON_KRAV: String = "5026"
 
 @Suppress("EnumEntryName")
@@ -53,6 +56,16 @@ public enum class AvklaringsbehovKode {
      * [BESTILL_LEGEERKLÆRING_KODE]
      */
     `9003`,
+
+    /**
+     * [OPPRETT_HENDELSE_PÅ_SAK_KODE]
+     */
+    `9004`,
+
+    /**
+     * [VURDER_RETTIGHETSPERIODE_KODE]
+     */
+    `5029`,
 
     /**
      * [AVKLAR_STUDENT_KODE]
@@ -78,6 +91,9 @@ public enum class AvklaringsbehovKode {
      * [AVKLAR_BISTANDSBEHOV_KODE]
      */
     `5006`,
+    /**
+     * [VURDER_SYKEPENGEERSTATNING_KODE]
+     */
     `5007`,
     `5008`,
     `5009`,
@@ -116,6 +132,11 @@ public enum class AvklaringsbehovKode {
      * [AVKLAR_SAMORDNING_ANDRE_STATLIGE_YTELSER_KODE]
      */
     `5027`,
+
+    /**
+     * [VURDER_TREKK_AV_SØKNAD_KODE]
+     */
+    `5028`,
 
     /**
      * [AVKLAR_UTENLANDSK_MEDLEMSKAP_KODE]

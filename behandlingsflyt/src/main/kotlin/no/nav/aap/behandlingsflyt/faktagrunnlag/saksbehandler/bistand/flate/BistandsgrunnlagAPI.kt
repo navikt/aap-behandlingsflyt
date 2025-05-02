@@ -7,17 +7,18 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource) {
     route("/api/behandling") {
@@ -30,7 +31,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource) {
                 )
             ) { req ->
                 val respons = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val bistandRepository = repositoryProvider.provide<BistandRepository>()
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
@@ -52,14 +53,15 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource) {
                     val gjeldendeSykdomsvurderinger =
                         sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger!!
                     
-                    val harOppfylt11_5 = gjeldendeSykdomsvurderinger.maxBy { it.opprettet }
+                    val sisteSykdomsvurdering = gjeldendeSykdomsvurderinger.maxBy { it.opprettet }
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
                         req.referanse,
                         Definisjon.AVKLAR_BISTANDSBEHOV.kode.toString(),
                         token()
                     )
 
+                    val erOppfylt11_5 = if (behandling.typeBehandling() == TypeBehandling.Revurdering) sisteSykdomsvurdering.erOppfyltSettBortIfraVissVarighet() else sisteSykdomsvurdering.erOppfylt()
 
                     BistandGrunnlagDto(
                         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
@@ -67,7 +69,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource) {
                         vedtatteBistandsvurderinger.map { it.toDto() },
                         historiskeVurderinger.map { it.toDto() },
                         gjeldendeSykdomsvurderinger.map{it.toDto()},
-                        harOppfylt11_5.erOppfylt()
+                        erOppfylt11_5
                     )
                 }
 

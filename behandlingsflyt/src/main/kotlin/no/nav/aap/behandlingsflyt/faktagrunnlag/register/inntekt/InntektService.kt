@@ -1,13 +1,17 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
-import no.nav.aap.behandlingsflyt.behandling.beregning.AvklarFaktaBeregningService
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
@@ -15,57 +19,73 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettGrunnlagSteg
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.gateway.GatewayProvider
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import java.time.Duration
 import java.time.LocalDate
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class InntektService private constructor(
     private val sakService: SakService,
     private val inntektGrunnlagRepository: InntektGrunnlagRepository,
-    private val avklarFaktaBeregningService: AvklarFaktaBeregningService,
     private val sykdomRepository: SykdomRepository,
     private val uføreRepository: UføreRepository,
     private val studentRepository: StudentRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
-    private val inntektRegisterGateway: InntektRegisterGateway
+    private val inntektRegisterGateway: InntektRegisterGateway,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav {
+
+    override val navn = Companion.navn
+
+    override fun erRelevant(
+        kontekst: FlytKontekstMedPerioder,
+        steg: StegType,
+        oppdatert: InformasjonskravOppdatert?
+    ): Boolean {
+        return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
+                oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
+                tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
+    }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val behandlingId = kontekst.behandlingId
 
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
-        val inntekter = if (avklarFaktaBeregningService.skalFastsetteGrunnlag(behandlingId)) {
-            val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
-            val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
-            val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-            val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
-            val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
+        val inntekter =
+            if (!tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, FastsettGrunnlagSteg.type())) {
+                val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
+                val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
+                val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+                val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
+                val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
 
-            val sak = sakService.hent(kontekst.sakId)
-            val nedsettelsesDato = utledNedsettelsesdato(beregningVurdering?.tidspunktVurdering, studentGrunnlag);
-            val behov = Inntektsbehov(
-                Input(
-                    nedsettelsesDato = nedsettelsesDato,
-                    inntekter = setOf(),
-                    uføregrad = uføreGrunnlag?.vurderinger ?: emptyList(),
-                    yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
-                    registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
-                    beregningGrunnlag = beregningVurdering
+                val sak = sakService.hent(kontekst.sakId)
+                val nedsettelsesDato = utledNedsettelsesdato(beregningVurdering?.tidspunktVurdering, studentGrunnlag)
+                val behov = Inntektsbehov(
+                    Input(
+                        nedsettelsesDato = nedsettelsesDato,
+                        inntekter = setOf(),
+                        uføregrad = uføreGrunnlag?.vurderinger ?: emptyList(),
+                        yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
+                        registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
+                        beregningGrunnlag = beregningVurdering
+                    )
                 )
-            )
-            val inntektsBehov = behov.utledAlleRelevanteÅr()
+                val inntektsBehov = behov.utledAlleRelevanteÅr()
 
-            inntektRegisterGateway.innhent(sak.person, inntektsBehov)
-        } else {
-            emptySet()
-        }
+                inntektRegisterGateway.innhent(sak.person, inntektsBehov)
+            } else {
+                emptySet()
+            }
 
         inntektGrunnlagRepository.lagre(behandlingId, inntekter)
 
@@ -89,8 +109,10 @@ class InntektService private constructor(
     }
 
     companion object : Informasjonskravkonstruktør {
+        override val navn = InformasjonskravNavn.INNTEKT
+
         override fun konstruer(connection: DBConnection): InntektService {
-            val repositoryProvider = RepositoryProvider(connection)
+            val repositoryProvider = RepositoryRegistry.provider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
             val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
@@ -98,13 +120,13 @@ class InntektService private constructor(
             return InntektService(
                 sakService = SakService(sakRepository),
                 inntektGrunnlagRepository = repositoryProvider.provide(),
-                avklarFaktaBeregningService = AvklarFaktaBeregningService(vilkårsresultatRepository),
                 sykdomRepository = repositoryProvider.provide(),
                 uføreRepository = repositoryProvider.provide(),
                 studentRepository = repositoryProvider.provide(),
                 beregningVurderingRepository = beregningVurderingRepository,
                 yrkesskadeRepository = repositoryProvider.provide(),
-                inntektRegisterGateway = GatewayProvider.provide()
+                inntektRegisterGateway = GatewayProvider.provide(),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
             )
         }
     }

@@ -95,12 +95,7 @@ fun main() {
                                     if (dto.institusjoner.sykehus == true) genererSykehusopphold() else null,
                                 ),
                                 inntekter = dto.inntekterPerAr?.map { inn -> inn.to() } ?: defaultInntekt(),
-                                sykepenger = listOf(
-                                    TestPerson.Sykepenger(
-                                        grad = 100,
-                                        periode = Periode(LocalDate.now().minusWeeks(2), LocalDate.now().plusWeeks(2))
-                                    )
-                                )
+                                sykepenger = dto.sykepenger.map { TestPerson.Sykepenger(grad = it.grad, periode = it.periode) }
                             )
                         )
                         val periode = Periode(

@@ -1,14 +1,17 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgService
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeService
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.aaregisteret.AARegisterGateway
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -19,6 +22,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.Pers
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -38,8 +42,8 @@ import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.gateway.GatewayRegistry
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -70,6 +74,7 @@ class InformasjonskravGrunnlagTest {
             .register<MedlemskapArbeidInntektForutgåendeRepositoryImpl>()
             .register<PersonopplysningForutgåendeRepositoryImpl>()
             .register<RefusjonkravRepositoryImpl>()
+            .register<TrukketSøknadRepositoryImpl>()
 
         GatewayRegistry.register<MedlemskapGateway>().register<AARegisterGateway>()
             .register<YrkesskadeRegisterGatewayImpl>()
@@ -77,9 +82,9 @@ class InformasjonskravGrunnlagTest {
 
     @Test
     fun `Yrkesskadedata er oppdatert`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
-            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), connection)
 
             FakePersoner.leggTil(
                 TestPerson(
@@ -90,7 +95,7 @@ class InformasjonskravGrunnlagTest {
             )
 
             val initiell = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(YrkesskadeService),
+                listOf(StegType.VURDER_YRKESSKADE to YrkesskadeService),
                 kontekst
             )
 
@@ -99,7 +104,7 @@ class InformasjonskravGrunnlagTest {
                 .allMatch { it === YrkesskadeService }
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(YrkesskadeService),
+                listOf(StegType.VURDER_YRKESSKADE to YrkesskadeService),
                 kontekst
             )
 
@@ -109,9 +114,9 @@ class InformasjonskravGrunnlagTest {
 
     @Test
     fun `Yrkesskadedata er ikke oppdatert`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
-            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), connection)
 
             FakePersoner.leggTil(
                 TestPerson(
@@ -122,7 +127,7 @@ class InformasjonskravGrunnlagTest {
             )
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(YrkesskadeService),
+                listOf(StegType.VURDER_YRKESSKADE to YrkesskadeService),
                 kontekst
             )
 
@@ -134,12 +139,12 @@ class InformasjonskravGrunnlagTest {
 
     @Test
     fun `Yrkesskadedata er utdatert, men har ingen endring fra registeret`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val (_, kontekst) = klargjør(connection)
-            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), connection)
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(YrkesskadeService),
+                listOf(StegType.VURDER_YRKESSKADE to YrkesskadeService),
                 kontekst
             )
 
@@ -149,9 +154,9 @@ class InformasjonskravGrunnlagTest {
 
     @Test
     fun LovvalgMedlemskapErOppdatert() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
-            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), connection)
 
             FakePersoner.leggTil(
                 TestPerson(
@@ -162,7 +167,7 @@ class InformasjonskravGrunnlagTest {
             )
 
             val initiell = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(LovvalgService),
+                listOf(StegType.VURDER_LOVVALG to LovvalgService),
                 kontekst
             )
 
@@ -171,7 +176,7 @@ class InformasjonskravGrunnlagTest {
                 .allMatch { it === LovvalgService }
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(LovvalgService),
+                listOf(StegType.VURDER_LOVVALG to LovvalgService),
                 kontekst
             )
 
@@ -199,13 +204,16 @@ class InformasjonskravGrunnlagTest {
         )
         personopplysningRepository.lagre(
             behandling.id,
-            Personopplysning(Fødselsdato(LocalDate.now().minusYears(20)), land = "NOR", status = PersonStatus.bosatt)
+            Personopplysning(Fødselsdato(LocalDate.now().minusYears(20)), status = PersonStatus.bosatt, statsborgerskap = listOf(
+                Statsborgerskap("NOR")
+            ))
         )
 
         val flytKontekst = behandling.flytKontekst()
         return ident to FlytKontekstMedPerioder(
             flytKontekst.sakId,
             flytKontekst.behandlingId,
+            flytKontekst.forrigeBehandlingId,
             behandling.typeBehandling(),
             VurderingTilBehandling(
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,

@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class SamordningYtelseRepositoryImplTest {
-    private val dataSource = InitTestDatabase.dataSource
+    private val dataSource = InitTestDatabase.freshDatabase()
 
     @Test
     fun `sette inn flere ytelser, skal hente ut nyeste`() {

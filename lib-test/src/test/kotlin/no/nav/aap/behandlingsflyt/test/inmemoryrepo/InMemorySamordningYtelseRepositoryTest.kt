@@ -18,10 +18,7 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import java.time.Clock
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 import java.util.function.Consumer
 
 class InMemorySamordningYtelseRepositoryTest {
@@ -158,28 +155,10 @@ class InMemorySamordningYtelseRepositoryTest {
             kilde = "TEST3",
             saksRef = "REF3"
         )
-
-        // Save the ytelser with different timestamps
-        // First, save ytelse2 (middle timestamp)
-        val middleTime = Instant.parse("2023-02-01T12:00:00Z")
-        val middleClock = Clock.fixed(middleTime, ZoneId.systemDefault())
-        repo.setClock(middleClock)
+        repo.lagre(behandlingId, listOf(ytelse1))
         repo.lagre(behandlingId, listOf(ytelse2))
 
-        // Then, save ytelse3 (newest timestamp)
-        val newestTime = Instant.parse("2023-03-01T12:00:00Z")
-        val newestClock = Clock.fixed(newestTime, ZoneId.systemDefault())
-        repo.setClock(newestClock)
         repo.lagre(behandlingId, listOf(ytelse3))
-
-        // Finally, save ytelse1 (oldest timestamp)
-        val oldestTime = Instant.parse("2023-01-01T12:00:00Z")
-        val oldestClock = Clock.fixed(oldestTime, ZoneId.systemDefault())
-        repo.setClock(oldestClock)
-        repo.lagre(behandlingId, listOf(ytelse1))
-
-        // Reset the clock to system default
-        repo.setClock(Clock.systemDefaultZone())
 
         // Get the oldest grunnlag
         val eldsteGrunnlag = repo.hentEldsteGrunnlag(behandlingId)

@@ -17,6 +17,7 @@ import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.util.stream.IntStream
@@ -28,6 +29,13 @@ class EtAnnetStedUtlederService(
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository
 ) {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        barnetilleggRepository = repositoryProvider.provide(),
+        institusjonsoppholdRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+    )
+
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun utled(
@@ -49,7 +57,7 @@ class EtAnnetStedUtlederService(
 
         var perioderSomTrengerVurdering =
             Tidslinje(soningsOppgold)
-                .kryss(input.rettighetsperiode)
+                .begrensetTil(input.rettighetsperiode)
                 .mapValue { InstitusjonsOpphold(soning = SoningOpphold(vurdering = OppholdVurdering.UAVKLART)) }
                 .kombiner(soningsvurderingTidslinje, JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
                     val venstreVerdi = venstreSegment?.verdi
@@ -62,7 +70,7 @@ class EtAnnetStedUtlederService(
                     Segment(periode, verdi)
                 })
 
-        val helseOpphold = opprettTidslinje(helseopphold).kryss(input.rettighetsperiode)
+        val helseOpphold = opprettTidslinje(helseopphold).begrensetTil(input.rettighetsperiode)
 
         val barnetilleggTidslinje =
             opprettTidslinje(barnetillegg.filter { it.personIdenter.isNotEmpty() }.map { segment ->
@@ -292,7 +300,7 @@ class EtAnnetStedUtlederService(
                 segment.periode,
                 true
             )
-        }.fold(Tidslinje<Boolean>()) { acc, tidslinje ->
+        }.fold(Tidslinje()) { acc, tidslinje ->
             acc.kombiner(tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
         }
     }

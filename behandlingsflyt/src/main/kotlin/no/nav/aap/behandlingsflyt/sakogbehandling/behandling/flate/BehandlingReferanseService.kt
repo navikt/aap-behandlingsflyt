@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import org.slf4j.LoggerFactory
 
 class BehandlingReferanseService(private val behandlingRepositoryImpl: BehandlingRepository) {
@@ -13,7 +14,10 @@ class BehandlingReferanseService(private val behandlingRepositoryImpl: Behandlin
             return behandlingRepositoryImpl.hent(behandlingReferanse)
         } catch (e: NoSuchElementException) {
             log.info("Fant ikke behandling med ref $behandlingReferanse. Stacktrace: ${e.stackTraceToString()}")
-            throw ElementNotFoundException()
+
+            throw VerdiIkkeFunnetException(
+                message = "Fant ikke behandling med ref $behandlingReferanse.",
+            )
         }
     }
 }

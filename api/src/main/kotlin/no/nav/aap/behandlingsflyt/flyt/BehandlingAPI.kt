@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
@@ -12,13 +11,14 @@ import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårsperiodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.pip.PipRepository
-import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -27,15 +27,14 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.lookup.gateway.GatewayProvider
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.motor.JobbInput
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 import kotlin.collections.set
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
     route("/api/behandling").tag(Tags.Behandling) {
@@ -48,7 +47,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                 )
             ) { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val avklaringsbehovRepository =
                         repositoryProvider.provide<AvklaringsbehovRepository>()
@@ -56,6 +55,10 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                         repositoryProvider.provide<VilkårsresultatRepository>()
 
                     val behandling = behandling(behandlingRepository, req)
+                    val virkningstidspunkt =
+                        VirkningstidspunktUtleder(vilkårsresultatRepository = vilkårsresultatRepository).utledVirkningsTidspunkt(
+                            behandling.id
+                        )
                     val flyt = utledType(behandling.typeBehandling()).flyt()
                     DetaljertBehandlingDTO(
                         referanse = behandling.referanse.referanse,
@@ -101,33 +104,40 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                                         })
                             },
                         aktivtSteg = behandling.aktivtSteg(),
-                        versjon = behandling.versjon
+                        versjon = behandling.versjon,
+                        virkningstidspunkt = virkningstidspunkt
                     )
                 }
                 respond(dto)
             }
         }
         route("/{referanse}/forbered") {
-            // TODO: trenger tilgangskontroll. Men hva er Operasjon her?
-            get<BehandlingReferanse, DetaljertBehandlingDTO>(TagModule(listOf(Tags.Behandling))) { req ->
+            authorizedGet<BehandlingReferanse, DetaljertBehandlingDTO>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam(
+                        "referanse"
+                    )
+                )
+            ) { req ->
                 dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val behandlingFørLås = behandling(repositoryProvider.provide(), req)
+                    if (behandlingFørLås.status().erAvsluttet()) {
+                        return@transaction
+                    }
                     val taSkriveLåsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
                     val behandlingRepository =
                         repositoryProvider.provide<BehandlingRepository>()
                     val lås = taSkriveLåsRepository.lås(req.referanse)
                     val behandling = behandling(behandlingRepository, req)
-                    val flytJobbRepository = FlytJobbRepository(connection)
-                    if (!behandling.status()
-                            .erAvsluttet() && behandling.harIkkeVærtAktivitetIDetSiste() && flytJobbRepository.hentJobberForBehandling(
-                            behandling.id.toLong()
-                        ).isEmpty()
+                    val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
+                    if (!behandling.status().erAvsluttet()
+                        && behandling.harIkkeVærtAktivitetIDetSiste()
+                        && flytJobbRepository.hentJobberForBehandling(behandling.id.toLong()).isEmpty()
                     ) {
-                        flytJobbRepository.leggTil(
-                            JobbInput(ProsesserBehandlingJobbUtfører).forBehandling(
-                                behandling.sakId.toLong(),
-                                behandling.id.toLong()
-                            )
+                        ProsesserBehandlingService(flytJobbRepository).triggProsesserBehandling(
+                            behandling.sakId,
+                            behandling.id
                         )
                     }
                     taSkriveLåsRepository.verifiserSkrivelås(lås)
@@ -146,7 +156,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                 val referanse = req.referanse
 
                 val identer = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
+                    val repositoryProvider = RepositoryRegistry.provider(connection)
                     val pipRepository = repositoryProvider.provide<PipRepository>()
                     pipRepository.finnIdenterPåBehandling(BehandlingReferanse(referanse))
                 }

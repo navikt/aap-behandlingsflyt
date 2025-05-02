@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IdentVariables
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlNavnData
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlNavnDataBolk
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersonNavnDataResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRequest
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlResponseHandler
@@ -63,8 +63,8 @@ object PdlPersoninfoBulkGateway : PersoninfoBulkGateway {
         return response.data?.hentPersonBolk?.map { person -> mapPersoninformasjon(person) } ?: emptyList()
     }
 
-    private fun mapPersoninformasjon(data: PdlNavnData): Personinfo {
-        val navn = data.navn?.firstOrNull()
+    private fun mapPersoninformasjon(data: PdlNavnDataBolk): Personinfo {
+        val navn = data.person?.navn?.firstOrNull()
 
         if (navn == null) {
             return Personinfo(Ident(data.ident!!), "Ukjent", null, null)

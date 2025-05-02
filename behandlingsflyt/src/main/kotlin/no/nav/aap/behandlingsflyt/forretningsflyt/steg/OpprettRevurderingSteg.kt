@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
@@ -15,9 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
-import no.nav.aap.motor.FlytJobbRepository
 import org.slf4j.LoggerFactory
 
 class OpprettRevurderingSteg(
@@ -25,11 +24,16 @@ class OpprettRevurderingSteg(
     private val samordningYtelseVurderingRepository: SamordningVurderingRepository,
     private val låsRepository: TaSkriveLåsRepository,
     private val prosesserBehandling: ProsesserBehandlingService,
+    private val trukketSøknadService: TrukketSøknadService,
 ) : BehandlingSteg {
     private val logger = LoggerFactory.getLogger(javaClass)
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         return when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
+                if (trukketSøknadService.søknadErTrukket(kontekst.behandlingId)) {
+                    return Fullført
+                }
+
                 val samordningVurdering =
                     samordningYtelseVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
                         ?: return Fullført
@@ -69,18 +73,18 @@ class OpprettRevurderingSteg(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryProvider = RepositoryProvider(connection)
+        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
 
             return OpprettRevurderingSteg(
                 SakOgBehandlingService(
-                    grunnlagKopierer = GrunnlagKopierer(connection),
+                    grunnlagKopierer = GrunnlagKopiererImpl(repositoryProvider),
                     sakRepository = repositoryProvider.provide(),
                     behandlingRepository = repositoryProvider.provide(),
                 ),
                 samordningYtelseVurderingRepository = repositoryProvider.provide(),
                 låsRepository = repositoryProvider.provide(),
-                prosesserBehandling = ProsesserBehandlingService(FlytJobbRepository(connection))
+                prosesserBehandling = ProsesserBehandlingService(repositoryProvider.provide()),
+                trukketSøknadService = TrukketSøknadService(repositoryProvider),
             )
         }
 

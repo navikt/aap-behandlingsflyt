@@ -10,6 +10,7 @@ enum class ÅrsakTilBehandling {
     MOTTATT_AVVIST_LEGEERKLÆRING,
     MOTTATT_DIALOGMELDING,
     MOTATT_KLAGE,
+    SØKNAD_TRUKKET,
     REVURDER_MEDLEMSKAP,
     REVURDER_SAMORDNING,
     REVURDER_LOVVALG,
@@ -24,7 +25,8 @@ enum class ÅrsakTilBehandling {
     SAMORDNING_OG_AVREGNING,    // Samordning og avregning
     REFUSJONSKRAV,              // Refusjonskrav
     UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT, // Utenlandsopphold før søknadstidspunkt
-    FASTSATT_PERIODE_PASSERT;
+    FASTSATT_PERIODE_PASSERT,
+    VURDER_RETTIGHETSPERIODE;
 
     companion object {
         /**
@@ -70,5 +72,7 @@ fun EksponertÅrsak.tilÅrsakTilBehandling() =
         EksponertÅrsak.SAMORDNING_OG_AVREGNING -> ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING
         EksponertÅrsak.REFUSJONSKRAV -> ÅrsakTilBehandling.REFUSJONSKRAV
         EksponertÅrsak.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT -> ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT
+        EksponertÅrsak.VURDER_RETTIGHETSPERIODE -> ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE
 
+        EksponertÅrsak.SØKNAD_TRUKKET -> ÅrsakTilBehandling.SØKNAD_TRUKKET
     }

@@ -7,18 +7,20 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.lookup.gateway.GatewayProvider
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.meldekort.kontrakt.Periode
 import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
+import no.nav.aap.meldekort.kontrakt.sak.SakStatus
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
@@ -49,12 +51,14 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                 .map { Segment(it.periode, it) }
                 .let(::Tidslinje)
 
-            val fritaksvurderinger: Tidslinje<no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering.FritaksvurderingData> = meldepliktRepository.hentHvisEksisterer(behandlingId)
-                ?.tilTidslinje()
-                ?: Tidslinje()
+            val fritaksvurderinger: Tidslinje<no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering.FritaksvurderingData> =
+                meldepliktRepository.hentHvisEksisterer(behandlingId)
+                    ?.tilTidslinje()
+                    ?: Tidslinje()
 
             meldekortGateway.oppdaterMeldeperioder(
                 MeldeperioderV0(
+                    sakStatus = mapStatusTilMeldekortSakStatus(sak.status()),
                     saksnummer = sak.saksnummer.toString(),
                     identer = identer,
                     sakenGjelderFor = sakenGjelderFor,
@@ -89,6 +93,15 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
         }
     }
 
+    private fun mapStatusTilMeldekortSakStatus(status: Status): SakStatus? {
+        return when (status) {
+            Status.OPPRETTET -> null
+            Status.UTREDES -> SakStatus.UTREDES
+            Status.LØPENDE -> SakStatus.LØPENDE
+            Status.AVSLUTTET -> SakStatus.AVSLUTTET
+        }
+    }
+
     companion object : Jobb {
         override fun beskrivelse(): String {
             return """
@@ -98,7 +111,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
         }
 
         override fun konstruer(connection: DBConnection): JobbUtfører {
-            val repositoryProvider = RepositoryProvider(connection)
+            val repositoryProvider = RepositoryRegistry.provider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()
 
             return MeldeperiodeTilMeldekortBackendJobbUtfører(

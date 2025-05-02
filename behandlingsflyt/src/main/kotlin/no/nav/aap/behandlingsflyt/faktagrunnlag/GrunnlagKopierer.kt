@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 interface GrunnlagKopierer {
     fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId)
@@ -20,13 +21,18 @@ interface GrunnlagKopierer {
  *
  * Knytter alle opplysninger fra forrige til den nye i en immutable state
  */
-class GrunnlagKopiererImpl(connection: DBConnection): GrunnlagKopierer {
-
-    private val repositoryProvider = RepositoryProvider(connection)
+class GrunnlagKopiererImpl(
+    private val repositoryProvider: RepositoryProvider,
+) : GrunnlagKopierer {
+    constructor(connection: DBConnection) : this(RepositoryRegistry.provider(connection))
 
     override fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
         require(fraBehandlingId != tilBehandlingId)
 
-        repositoryProvider.provideAlle().forEach { repository -> repository.kopier(fraBehandlingId, tilBehandlingId) }
+        repositoryProvider.provideAlle().forEach { repository ->
+            if (repository is no.nav.aap.lookup.repository.Repository) {
+                repository.kopier(fraBehandlingId, tilBehandlingId)
+            }
+        }
     }
 }

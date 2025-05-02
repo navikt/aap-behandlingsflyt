@@ -10,7 +10,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.innsendingType
 import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
+import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
@@ -37,13 +40,16 @@ class AktivitetspliktInformasjonskravTest {
         fun beforeAll() {
             RepositoryRegistry
                 .register<MottattDokumentRepositoryImpl>()
+                .register<AvklaringsbehovRepositoryImpl>()
+                .register<TrukketSøknadRepositoryImpl>()
+                .register<VilkårsresultatRepositoryImpl>()
                 .status()
         }
     }
 
     @Test
     fun `detekterer nye dokumenter og legger dem til i grunnlaget`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = nySak(connection)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sak.id,
@@ -109,6 +115,7 @@ class AktivitetspliktInformasjonskravTest {
         FlytKontekstMedPerioder(
             sakId = behandling.sakId,
             behandlingId = behandling.id,
+            forrigeBehandlingId = behandling.forrigeBehandlingId,
             behandlingType = TypeBehandling.Førstegangsbehandling,
             vurdering = VurderingTilBehandling(
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,

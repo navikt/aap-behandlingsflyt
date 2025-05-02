@@ -16,12 +16,12 @@ import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import javax.sql.DataSource
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(dataSource: DataSource) {
     route("/api/behandling/{referanse}/grunnlag/arbeidsevne") {
@@ -55,7 +55,7 @@ private fun arbeidsevneGrunnlag(
     token: OidcToken
 ): ArbeidsevneGrunnlagDto? {
     return dataSource.transaction { connection ->
-        val repositoryProvider = RepositoryProvider(connection)
+        val repositoryProvider = RepositoryRegistry.provider(connection)
         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
         val behandling: Behandling =
             BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
@@ -67,7 +67,7 @@ private fun arbeidsevneGrunnlag(
             behandling.forrigeBehandlingId?.let { arbeidsevneRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
         val historikk = arbeidsevneRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
 
-        val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgang(
+        val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
             behandlingReferanse.referanse,
             Definisjon.FASTSETT_ARBEIDSEVNE.kode.toString(),
             token
@@ -90,7 +90,7 @@ private fun simuleringsresulat(
     dto: SimulerArbeidsevneDto
 ): SimulertArbeidsevneResultatDto {
     return dataSource.transaction(readOnly = true) { con ->
-        val repositoryProvider = RepositoryProvider(con)
+        val repositoryProvider = RepositoryRegistry.provider(con)
         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
         val arbeidsevneRepository = repositoryProvider.provide<ArbeidsevneRepository>()
         val behandling =

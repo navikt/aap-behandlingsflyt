@@ -4,11 +4,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
+// Er ikke ubrukt, men blir opprettet med refleksjon
+@Suppress("unused")
 class EtAnnetStedVisningUtleder(connection: DBConnection) : StegGruppeVisningUtleder {
 
-    private val institusjonsoppholdRepository = RepositoryProvider(connection).provide<InstitusjonsoppholdRepository>()
+    private val institusjonsoppholdRepository =
+        RepositoryRegistry.provider(connection).provide<InstitusjonsoppholdRepository>()
 
     override fun skalVises(behandlingId: BehandlingId): Boolean {
         return !institusjonsoppholdRepository.hentHvisEksisterer(behandlingId)?.oppholdene?.opphold.isNullOrEmpty()

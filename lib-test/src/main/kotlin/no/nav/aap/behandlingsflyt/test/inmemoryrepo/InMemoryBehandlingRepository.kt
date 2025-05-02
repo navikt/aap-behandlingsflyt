@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
@@ -14,7 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
 
-object InMemoryBehandlingRepository : BehandlingRepository, BehandlingFlytRepository {
+object InMemoryBehandlingRepository : BehandlingRepository {
     private val log = LoggerFactory.getLogger(javaClass)
 
     private val idSeq = AtomicLong(10000)

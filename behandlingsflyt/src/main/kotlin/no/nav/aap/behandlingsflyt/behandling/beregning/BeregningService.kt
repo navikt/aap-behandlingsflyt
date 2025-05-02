@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVur
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 
 class BeregningService(
@@ -29,6 +30,16 @@ class BeregningService(
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val yrkesskadeRepository: YrkesskadeRepository
 ) {
+
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        inntektGrunnlagRepository = repositoryProvider.provide(),
+        sykdomRepository = repositoryProvider.provide(),
+        studentRepository = repositoryProvider.provide(),
+        uføreRepository = repositoryProvider.provide(),
+        beregningsgrunnlagRepository = repositoryProvider.provide(),
+        beregningVurderingRepository = repositoryProvider.provide(),
+        yrkesskadeRepository = repositoryProvider.provide(),
+    )
 
     fun beregnGrunnlag(behandlingId: BehandlingId): Beregningsgrunnlag {
         val inntektGrunnlag = inntektGrunnlagRepository.hent(behandlingId)

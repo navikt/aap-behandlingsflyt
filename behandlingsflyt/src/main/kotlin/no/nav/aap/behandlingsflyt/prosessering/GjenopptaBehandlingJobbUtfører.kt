@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.forretningsflyt.gjenopptak.GjenopptakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
@@ -34,7 +35,7 @@ class GjenopptaBehandlingJobbUtfører(
         override fun konstruer(connection: DBConnection): JobbUtfører {
             return GjenopptaBehandlingJobbUtfører(
                 GjenopptakRepository(connection),
-                FlytJobbRepository(connection)
+                RepositoryRegistry.provider(connection).provide()
             )
         }
 

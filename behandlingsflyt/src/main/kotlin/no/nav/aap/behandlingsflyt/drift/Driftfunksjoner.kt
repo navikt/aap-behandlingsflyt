@@ -1,7 +1,13 @@
 package no.nav.aap.behandlingsflyt.drift
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.motor.FlytJobbRepositoryImpl
+
 /**
  * Klasse for alle driftsfunksjoner. Skal kún brukes av DriftApi.
  * */
@@ -24,6 +30,16 @@ class Driftfunksjoner {
             WHERE id = ?
               AND status IN ('UTREDES', 'IVERKSETTES');
         """.trimIndent()
+
+        val repositoryProvider = RepositoryRegistry.provider(connection)
+        val sakOgBehandlingService = SakOgBehandlingService(GrunnlagKopiererImpl(connection), repositoryProvider.provide(), repositoryProvider.provide())
+
+        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
+
+        ProsesserBehandlingService(FlytJobbRepositoryImpl(connection)).triggProsesserBehandling(
+            sakId = sak.id,
+            behandlingId = behandlingId,
+        )
 
         connection.execute(query) {
             setParams {

@@ -5,20 +5,18 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
-import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
+import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
     private val sakService: SakService,
@@ -26,16 +24,11 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
     private val underveisRepository: UnderveisRepository,
     private val sakOgBehandlingService: SakOgBehandlingService,
 ) : JobbUtfører {
-    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
         val sak = sakService.hent(SakId(input.sakId()))
 
         if (!sak.rettighetsperiode.inneholder(LocalDate.now())) {
-            return
-        }
-
-        if (sak.status() != Status.LØPENDE) {
             return
         }
 
@@ -46,7 +39,7 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
             )
         ) ?: return
 
-        if (!behandling.status().erAvsluttet() && ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT in behandling.årsaker().map { it.type }) {
+        if (behandling.status().erÅpen() && ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT in behandling.årsaker().map { it.type }) {
             return
         }
 
@@ -78,7 +71,7 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
 
     companion object : Jobb {
         override fun konstruer(connection: DBConnection): JobbUtfører {
-            val repositoryProvider = RepositoryProvider(connection)
+            val repositoryProvider = RepositoryRegistry.provider(connection)
             return OpprettBehandlingFastsattPeriodePassertJobbUtfører(
                 sakService = SakService(
                     sakRepository = repositoryProvider.provide(),
