@@ -8,4 +8,5 @@ interface RefusjonkravRepository: Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): RefusjonkravVurdering?
     fun hentAlleVurderingerPåSak(sakId: SakId): List<RefusjonkravVurdering>
     fun lagre(sakId: SakId, behandlingId: BehandlingId, refusjonkravVurderinger: RefusjonkravVurdering)
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

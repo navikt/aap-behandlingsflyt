@@ -516,7 +516,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         val query = """
             INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
                 (behandling_id, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id) 
-            SELECT ?, medlemskap_unntak_person_id, inntekter_i_norge_id,  arbeider_id
+            SELECT ?, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id
                 from MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
                 where behandling_id = ? and aktiv
         """.trimIndent()

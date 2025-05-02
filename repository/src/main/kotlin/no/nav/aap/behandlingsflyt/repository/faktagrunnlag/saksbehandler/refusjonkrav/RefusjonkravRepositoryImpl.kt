@@ -107,4 +107,23 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
             }
         }
     }
+
+    override fun kopier(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
+        hentHvisEksisterer(fraBehandlingId) ?: return
+
+        val query = """
+            INSERT INTO REFUSJONKRAV_GRUNNLAG 
+                (behandling_id, sak_id) 
+            SELECT ?, sak_id
+                from REFUSJONKRAV_GRUNNLAG 
+                where behandling_id = ? and aktiv
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setLong(1, tilBehandlingId.toLong())
+                setLong(2, fraBehandlingId.toLong())
+            }
+        }
+    }
 }
