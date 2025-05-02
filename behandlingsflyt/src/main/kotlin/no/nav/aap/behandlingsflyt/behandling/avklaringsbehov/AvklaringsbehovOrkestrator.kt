@@ -189,7 +189,8 @@ class AvklaringsbehovOrkestrator(
         val avklaringsbehovene =
             avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = behandlingId)
         val definisjon = if (typeBrev.erVedtak()) {
-            Definisjon.SKRIV_VEDTAKSBREV
+//            Definisjon.SKRIV_VEDTAKSBREV TODO bytt til denne når frontend er klar
+            Definisjon.SKRIV_BREV
         } else {
             Definisjon.SKRIV_BREV
         }
