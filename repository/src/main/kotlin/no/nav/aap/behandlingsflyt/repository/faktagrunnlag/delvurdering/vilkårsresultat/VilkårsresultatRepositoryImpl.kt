@@ -145,7 +145,7 @@ class VilkårsresultatRepositoryImpl(private val connection: DBConnection) : Vil
     }
 
     private fun mapOmTilVilkår(
-        vilkår: VilårInternal,
+        vilkår: VilkårInternal,
         perioder: List<VilkårPeriodeInternal>
     ): Vilkår {
         val relevantePerioder = perioder.filter { periode -> periode.vilkårId == vilkår.id }.map {
@@ -164,8 +164,8 @@ class VilkårsresultatRepositoryImpl(private val connection: DBConnection) : Vil
         return Vilkår(vilkår.type, relevantePerioder.toSet())
     }
 
-    private fun mapVilkår(row: Row): VilårInternal {
-        return VilårInternal(
+    private fun mapVilkår(row: Row): VilkårInternal {
+        return VilkårInternal(
             id = row.getLong("id"),
             type = row.getEnum("type"),
         )
@@ -191,9 +191,9 @@ class VilkårsresultatRepositoryImpl(private val connection: DBConnection) : Vil
         lagre(tilBehandling, eksisterendeResultat)
     }
 
-    internal class VilårInternal(val id: Long, val type: Vilkårtype)
+    private class VilkårInternal(val id: Long, val type: Vilkårtype)
 
-    internal class VilkårPeriodeInternal(
+    private class VilkårPeriodeInternal(
         val id: Long,
         val vilkårId: Long,
         val periode: Periode,
