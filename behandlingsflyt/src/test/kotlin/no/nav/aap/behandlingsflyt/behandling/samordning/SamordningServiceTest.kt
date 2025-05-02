@@ -24,10 +24,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 
-class SamordningServiceTest {
+internal class SamordningServiceTest {
 
-
-    private val dataSource = InitTestDatabase.dataSource
+    private val dataSource = InitTestDatabase.freshDatabase()
 
     @Test
     fun `gjør vurderinger når all data er tilstede`() {

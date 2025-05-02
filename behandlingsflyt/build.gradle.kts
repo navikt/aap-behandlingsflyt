@@ -2,10 +2,10 @@ plugins {
     id("behandlingsflyt.conventions")
 }
 
-val komponenterVersjon = "1.0.232"
+val komponenterVersjon = "1.0.236"
 val ktorVersion = "3.1.2"
-val tilgangVersjon = "1.0.57"
-val utbetalVersjon = "0.0.37"
+val tilgangVersjon = "1.0.58"
+val utbetalVersjon = "0.0.39"
 val junitVersjon = "5.12.2"
 
 dependencies {
@@ -16,8 +16,8 @@ dependencies {
 
     api("no.nav.aap.tilgang:plugin:$tilgangVersjon")
     api("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
-    api("no.nav.aap.brev:kontrakt:0.0.103")
-    api("no.nav.aap.meldekort:kontrakt:0.0.31")
+    api("no.nav.aap.brev:kontrakt:0.0.105")
+    api("no.nav.aap.meldekort:kontrakt:0.0.34")
     api("no.nav.aap.kelvin:motor:$komponenterVersjon")
     api("no.nav.aap.kelvin:gateway:$komponenterVersjon")
     api("no.nav.aap.utbetal:api-kontrakt:$utbetalVersjon")
@@ -43,7 +43,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersjon")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersjon")
     testImplementation("org.assertj:assertj-core:3.27.3")
-    testImplementation("org.testcontainers:postgresql:1.20.6")
+    testImplementation("org.testcontainers:postgresql:1.21.0")
     constraints {
         implementation("org.apache.commons:commons-compress:1.27.1") {
             because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")

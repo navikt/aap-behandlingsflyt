@@ -27,10 +27,10 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 
-class SamordningVurderingRepositoryImplTest {
+internal class SamordningVurderingRepositoryImplTest {
     private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-    private val dataSource = InitTestDatabase.dataSource
+    private val dataSource = InitTestDatabase.freshDatabase()
 
     @Test
     fun `lagre og hente ut igjen`() {
@@ -116,7 +116,6 @@ class SamordningVurderingRepositoryImplTest {
 
     @Test
     fun `å lagre en vurdering før ytelse eksisterer gir ikke feil`() {
-        val dataSource = InitTestDatabase.dataSource
         val behandling = dataSource.transaction {
             behandling(it, sak(it))
         }
@@ -151,7 +150,6 @@ class SamordningVurderingRepositoryImplTest {
 
     @Test
     fun `lagre flere vurderinger og verifiser at nyeste hentes ut`() {
-        val dataSource = InitTestDatabase.dataSource
         val behandling = dataSource.transaction { behandling(it, sak(it)) }
 
         // Create fixed dates for the periods to avoid test flakiness

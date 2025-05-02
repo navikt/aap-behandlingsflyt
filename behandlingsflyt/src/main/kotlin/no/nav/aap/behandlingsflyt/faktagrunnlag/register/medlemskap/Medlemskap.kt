@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap
 
-data class Medlemskap(val unntak: List<Unntak>)
-
 data class Unntak(
     val status: String,
     val statusaarsak: String?,
@@ -16,6 +14,7 @@ data class Unntak(
 data class MedlemskapDataIntern(
     val unntakId: Number,
     val ident: String,
+    // TODO : Fjern string-typing, bruk LocalDate i stedet
     val fraOgMed: String,
     val tilOgMed: String,
     val status: String,

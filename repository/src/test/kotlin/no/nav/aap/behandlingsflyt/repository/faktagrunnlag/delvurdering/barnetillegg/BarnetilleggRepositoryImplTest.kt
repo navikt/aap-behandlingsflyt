@@ -25,7 +25,8 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class BarnetilleggRepositoryImplTest {
+internal class BarnetilleggRepositoryImplTest {
+    private val dataSource = InitTestDatabase.freshDatabase()
 
     companion object {
         @BeforeAll
@@ -41,7 +42,6 @@ class BarnetilleggRepositoryImplTest {
 
     @Test
     fun `Finner ikke barnetilleggGrunnlag hvis ikke lagret`() {
-        val dataSource = InitTestDatabase.dataSource
         dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
@@ -54,7 +54,7 @@ class BarnetilleggRepositoryImplTest {
 
     @Test
     fun `Lagrer og henter barnetilleggGrunnlag`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
@@ -84,7 +84,7 @@ class BarnetilleggRepositoryImplTest {
 
     @Test
     fun `lager nytt deaktiverer og lager nytt grunnlag ved ny lagring`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
@@ -116,7 +116,7 @@ class BarnetilleggRepositoryImplTest {
 
     @Test
     fun `Kopierer barnetilleggGrunnlag fra en behandling til en annen`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val barnetilleggRepository = BarnetilleggRepositoryImpl(connection)

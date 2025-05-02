@@ -44,9 +44,9 @@ Prosjektet inneholder en run config som kan kjøres av IntelliJ. Burde være syn
 For at det skal kjøre lokalt må du gjøre følgende:
 1. Hent secret med [aap-cli/get-secret.sh](https://github.com/navikt/aap-cli): \
     `get-secret` \
-2. Kjøre opp postgres proxy mot behandlingsflyt: \
-    `nais postgres proxy behandlingsflyt`
-3. Legg til din e-post i `dev-gcp.run.xml` under `NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_USERNAME`
+2. Kjør opp lokal database med: \
+    `docker-compose up -d`
+3. Om du ønsker å hente data fra dev til lokal maskin kan du bruke [dump-gcp-db.sh](https://github.com/navikt/aap-cli?tab=readme-ov-file#dump-gcp-dbsh)
 4. Kjør `dev-gcp` fra IntelliJ.
 
 Etter dette vil appen kjøre mot reelle data. Her kan du velge om du vil koble deg på gjennom autentisert frontend eller 

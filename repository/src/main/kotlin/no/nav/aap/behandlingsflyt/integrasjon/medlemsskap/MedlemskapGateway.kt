@@ -18,14 +18,11 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
-import org.slf4j.LoggerFactory
 import java.net.URI
 
 class MedlemskapGateway : MedlemskapGateway {
     private val url = requiredConfigForKey("integrasjon.medl.url")
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.medl.scope"))
-    private val log = LoggerFactory.getLogger(javaClass)
-
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
@@ -40,7 +37,7 @@ class MedlemskapGateway : MedlemskapGateway {
     }
 
     private fun query(request: MedlemskapRequest): List<MedlemskapResponse> {
-        val urlWithParam = URI.create(url+"?fraOgMed=${request.periode.fom}&tilOgMed=${request.periode.tom}")
+        val urlWithParam = URI.create(url+"?fraOgMed=${request.periode.fom}&tilOgMed=${request.periode.tom}&inkluderSporingsinfo=true")
 
         val httpRequest = GetRequest(
             additionalHeaders = listOf(
@@ -88,8 +85,6 @@ class MedlemskapGateway : MedlemskapGateway {
 
     private fun mapTilKildenavn(sporing: Sporingsinformasjon?): KildesystemMedl? {
         val kilde = sporing?.kilde
-        log.info("mottok medl: $sporing ")
-        log.info("kilde medl: $kilde")
 
         return when (kilde) {
             "APPBRK" -> KildesystemMedl(KildesystemKode.APPBRK, "Applikasjonsbruker")

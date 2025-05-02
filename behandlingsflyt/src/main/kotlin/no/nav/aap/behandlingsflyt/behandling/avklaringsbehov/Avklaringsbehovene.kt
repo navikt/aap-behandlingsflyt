@@ -252,6 +252,6 @@ class Avklaringsbehovene(
     }
 
     override fun toString(): String {
-        return avklaringsbehovene.joinToString { it.toString() }
+        return "Behov[${avklaringsbehovene.joinToString { it.toString() }}. For ID $behandlingId.]"
     }
 }

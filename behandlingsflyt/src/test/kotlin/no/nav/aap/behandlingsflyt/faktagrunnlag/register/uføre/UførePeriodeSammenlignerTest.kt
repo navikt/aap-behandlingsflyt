@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre.Ufør
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -21,13 +20,12 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class UførePeriodeSammenlignerTest {
+internal class UførePeriodeSammenlignerTest {
 
-    private val dataSource = InitTestDatabase.dataSource
+    private val dataSource = InitTestDatabase.freshDatabase()
     private val periode = Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
 
     val femtiProsentUføreIFjor = Uføre(LocalDate.now().minusYears(1), Prosent.`50_PROSENT`)

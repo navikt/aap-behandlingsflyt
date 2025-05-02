@@ -3,8 +3,8 @@
     <envs>
       <env name="NAIS_APP_NAME" value="behandlingsflyt" />
       <env name="NAIS_CLUSTER_NAME" value="LOCAL" />
-      <env name="NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_JDBC_URL" value="jdbc:postgresql://localhost:5432/behandlingsflyt" />
-      <env name="NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_USERNAME" value="DIN.NAV.EPOST.HER@nav.no" />
+      <env name="NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_JDBC_URL" value="jdbc:postgresql://localhost:5438/postgres" />
+      <env name="NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_USERNAME" value="postgres" />
       <env name="NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_PASSWORD" value="" />
       <env name="INTEGRASJON_PDL_URL" value="https://pdl-api.dev-fss-pub.nais.io/graphql" />
       <env name="INTEGRASJON_PDL_SCOPE" value="api://dev-fss.pdl.pdl-api/.default" />

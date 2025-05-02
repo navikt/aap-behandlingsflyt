@@ -19,10 +19,10 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.*
 
-class BrevbestillingRepositoryImplTest {
+internal class BrevbestillingRepositoryImplTest {
 
     companion object {
-        val dataSource = InitTestDatabase.dataSource
+        private val dataSource = InitTestDatabase.freshDatabase()
     }
 
     @Test
