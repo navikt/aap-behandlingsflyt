@@ -191,8 +191,8 @@ internal fun Application.server(dbConfig: DbConfig) {
     registerGateways()
     registerRepositories()
 
-    if (Miljø.erDev()) {
-        /* sjekk om feature toggles i det minste funker i dev .. */
+    if (!Miljø.erLokal()) {
+        /* sjekk at feature toggles funker i dev og prod før det tas i bruk .. */
         LoggerFactory.getLogger("main").info(
             "test feature toggle: {}",
             GatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.FasttrackMeldekort)

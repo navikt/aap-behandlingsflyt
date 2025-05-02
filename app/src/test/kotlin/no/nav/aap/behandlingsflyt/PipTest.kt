@@ -53,6 +53,7 @@ class PipTest {
 
         // Starter server
         private val server = embeddedServer(Netty, port = 0) {
+            System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
             server(dbConfig = dbConfig)
         }
 
