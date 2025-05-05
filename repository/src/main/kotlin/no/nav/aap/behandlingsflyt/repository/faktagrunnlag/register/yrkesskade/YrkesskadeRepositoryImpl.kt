@@ -138,7 +138,7 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
     ) {
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
-            row.getLong("bistand_vurderinger_id")
+            row.getLong("yrkesskade_id")
         }
     }
 
