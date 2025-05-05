@@ -236,7 +236,7 @@ class StatistikkJobbUtførerTest {
         assertThat(hendelser).isNotEmpty()
         assertThat(hendelser.size).isEqualTo(1)
         assertThat(hendelser.first().mottattTid.truncatedTo(ChronoUnit.SECONDS)).isEqualTo(
-            opprettetTidspunkt!!.truncatedTo(
+            opprettetTidspunkt.truncatedTo(
                 ChronoUnit.SECONDS
             )
         )
