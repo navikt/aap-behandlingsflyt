@@ -83,7 +83,7 @@ public enum class Definisjon(
     SKRIV_VEDTAKSBREV(
         kode = AvklaringsbehovKode.`5051`,
         løsesISteg = StegType.BREV,
-        type = BehovType.BREV,
+        type = BehovType.MANUELT_PÅKREVD,
         løsesAv = listOf(
             Rolle.BESLUTTER
         )
