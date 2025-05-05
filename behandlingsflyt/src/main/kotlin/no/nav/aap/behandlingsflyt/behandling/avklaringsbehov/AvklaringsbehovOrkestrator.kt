@@ -183,7 +183,7 @@ class AvklaringsbehovOrkestrator(
         behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
     }
 
-    fun opprettBestillBrevAvklaringsbehov(behandlingId: BehandlingId, typeBrev: TypeBrev) {
+    fun opprettSkrivBrevAvklaringsbehov(behandlingId: BehandlingId, typeBrev: TypeBrev) {
         val behandling = behandlingRepository.hent(behandlingId)
 
         val avklaringsbehovene =

@@ -55,7 +55,7 @@ class BrevbestillingLøser(val connection: DBConnection) :
             val brevbestilling = brevbestillingRepository
                 .hent(BrevbestillingReferanse(løsning.oppdatertStatusForBestilling.bestillingReferanse))
 
-            avklaringsbehovOrkestrator.opprettBestillBrevAvklaringsbehov(
+            avklaringsbehovOrkestrator.opprettSkrivBrevAvklaringsbehov(
                 behandlingId = kontekst.behandlingId(),
                 typeBrev = brevbestilling.typeBrev
             )
