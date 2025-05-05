@@ -12,7 +12,7 @@ data class BrevGrunnlag(
     val harTilgangTilÅSaksbehandle: Boolean,
     val brevGrunnlag: List<Brev>) {
     data class Brev(
-        val skrivBrevDefinisjon: Definisjon?,
+        val skrivBrevDefinisjon: Definisjon,
         val brevbestillingReferanse: UUID,
         val brev: no.nav.aap.brev.kontrakt.Brev?,
         val opprettet: LocalDateTime,

@@ -133,9 +133,16 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                             } else {
                                 emptyList()
                             }
+                            val definisjon =
+                                if (brevbestilling.typeBrev.erVedtak() &&
+                                        skrivBrevAvklaringsbehov.any { it.definisjon == Definisjon.SKRIV_VEDTAKSBREV }) {
+                                    Definisjon.SKRIV_VEDTAKSBREV
+                                } else {
+                                    Definisjon.SKRIV_BREV
+                                }
 
                             BrevGrunnlag.Brev(
-                                skrivBrevDefinisjon = skrivBrevAvklaringsbehov.firstOrNull()?.definisjon,
+                                skrivBrevDefinisjon = definisjon,
                                 brevbestillingReferanse = brevbestillingResponse.referanse,
                                 brev = brevbestillingResponse.brev,
                                 opprettet = brevbestillingResponse.opprettet,
