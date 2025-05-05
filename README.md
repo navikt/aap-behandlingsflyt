@@ -46,7 +46,9 @@ For at det skal kjøre lokalt må du gjøre følgende:
     `get-secret` \
 2. Kjør opp lokal database med: \
     `docker-compose up -d`
-3. Om du ønsker å hente data fra dev til lokal maskin kan du bruke [dump-gcp-db.sh](https://github.com/navikt/aap-cli?tab=readme-ov-file#dump-gcp-dbsh)
+3. Om du ønsker å hente data fra dev til lokal maskin kan du bruke [dump-gcp-db.sh](https://github.com/navikt/aap-cli?tab=readme-ov-file#dump-gcp-dbsh).
+   Hvis du ikke henter data fra dev, får du beskjed om at rollen `cloudsqliamuser` mangler. Den kan denne legges inn ved å logge på databasen og kjøre følgende: \
+    `CREATE ROLE cloudsqliamuser;`
 4. Kjør `dev-gcp` fra IntelliJ.
 
 Etter dette vil appen kjøre mot reelle data. Her kan du velge om du vil koble deg på gjennom autentisert frontend eller 
