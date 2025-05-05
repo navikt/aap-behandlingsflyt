@@ -57,6 +57,8 @@ class BehandlingHendelseServiceImpl(
     ) {
         val sak = sakService.hent(behandling.sakId)
 
+        val erPåVent = avklaringsbehovene.hentÅpneVentebehov().isNotEmpty()
+
         // TODO: Utvide med flere parametere for prioritering
         val hendelse = BehandlingFlytStoppetHendelse(
             personIdent = sak.person.aktivIdent().identifikator,
@@ -89,6 +91,7 @@ class BehandlingHendelseServiceImpl(
                     typeBrev = brevbestilling?.typeBrev?.oversettTilKontrakt()
                 )
             },
+            erPåVent = erPåVent,
             opprettetTidspunkt = behandling.opprettetTidspunkt,
             hendelsesTidspunkt = LocalDateTime.now(),
             versjon = ApplikasjonsVersjon.versjon

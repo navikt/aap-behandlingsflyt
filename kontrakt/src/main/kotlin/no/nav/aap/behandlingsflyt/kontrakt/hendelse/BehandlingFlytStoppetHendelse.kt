@@ -20,6 +20,7 @@ public data class BehandlingFlytStoppetHendelse(
     val status: Status,
     val aktivtSteg: StegType? = null,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
+    val erPåVent: Boolean,
     val opprettetTidspunkt: LocalDateTime,
     val hendelsesTidspunkt: LocalDateTime,
     val versjon: String
