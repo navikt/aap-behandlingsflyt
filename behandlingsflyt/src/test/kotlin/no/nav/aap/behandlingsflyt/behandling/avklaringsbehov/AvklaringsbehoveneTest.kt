@@ -55,11 +55,11 @@ class AvklaringsbehoveneTest {
 
     @Test
     fun `oppdaterer funnet i steg på avklaringsbehov for SKRIV_BREV når det legges til på nytt`() {
-        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(6))
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(7))
         val avklaringsbehov1 = Avklaringsbehov(
             definisjon = Definisjon.SKRIV_BREV,
             funnetISteg = StegType.AVKLAR_SYKDOM,
-            id = 1L,
+            id = 2L,
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
