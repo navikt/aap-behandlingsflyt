@@ -54,6 +54,39 @@ class AvklaringsbehoveneTest {
     }
 
     @Test
+    fun `oppdaterer funnet i steg på avklaringsbehov for SKRIV_BREV når det legges til på nytt`() {
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(6))
+        val avklaringsbehov1 = Avklaringsbehov(
+            definisjon = Definisjon.SKRIV_BREV,
+            funnetISteg = StegType.AVKLAR_SYKDOM,
+            id = 1L,
+            kreverToTrinn = null
+        )
+        avklaringsbehovene.leggTil(
+            listOf(avklaringsbehov1.definisjon), avklaringsbehov1.funnetISteg
+        )
+
+        assertThat(avklaringsbehovene.alle()).hasSize(1)
+        assertThat(avklaringsbehovene.alle().first().definisjon).isEqualTo(Definisjon.SKRIV_BREV)
+        assertThat(avklaringsbehovene.alle().first().funnetISteg).isEqualTo(StegType.AVKLAR_SYKDOM)
+
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.SKRIV_BREV, begrunnelse = "", endretAv = "")
+
+        val avklaringsbehov2 = Avklaringsbehov(
+            definisjon = Definisjon.SKRIV_BREV,
+            funnetISteg = StegType.BREV,
+            id = 1L,
+            kreverToTrinn = null
+        )
+        avklaringsbehovene.leggTil(
+            listOf(avklaringsbehov2.definisjon), avklaringsbehov2.funnetISteg
+        )
+        assertThat(avklaringsbehovene.alle()).hasSize(1)
+        assertThat(avklaringsbehovene.alle().first().definisjon).isEqualTo(Definisjon.SKRIV_BREV)
+        assertThat(avklaringsbehovene.alle().first().funnetISteg).isEqualTo(StegType.BREV)
+    }
+
+    @Test
     fun `skal løse avklaringsbehov`() {
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(8))
         val avklaringsbehov = Avklaringsbehov(
