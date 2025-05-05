@@ -52,6 +52,8 @@ fun main() {
         responseHandler = DefaultResponseHandler()
     )
 
+    System.setProperty("unleash.server.api.url", "http://localhost:8080")
+    System.setProperty("unleash.server.api.token", "xxxx")
     // Starter server
     val server = embeddedServer(Netty, port = 0) {
         server(dbConfig = dbConfig)
