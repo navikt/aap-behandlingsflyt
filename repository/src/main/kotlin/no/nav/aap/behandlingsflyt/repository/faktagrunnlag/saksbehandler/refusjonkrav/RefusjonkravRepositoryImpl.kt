@@ -83,6 +83,37 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+
+        val refusjonskravVurderingIds = getRefusjonskravVurderingIds(behandlingId)
+        connection.execute("""
+            delete from REFUSJONSKRAV_GRUNNLAG where id = ANY(?::bigint[]);
+            delete from REFUSJONSKRAV_VURDERING where id = ANY(?::bigint[]);
+          
+            
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, refusjonskravVurderingIds)
+            }
+        }
+    }
+
+    private fun getRefusjonskravVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT refusjonskrav_vurdering_id
+                    FROM refusjonskrav_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("refusjonskrav_id")
+        }
+    }
+
+
     private fun lagreVurdering(vurdering: RefusjonkravVurdering): Long {
         val query = """
             INSERT INTO REFUSJONKRAV_VURDERING (HAR_KRAV, FOM, TOM) VALUES (?, ?, ?)
