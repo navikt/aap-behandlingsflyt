@@ -102,6 +102,37 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+
+        val bistandVurderingerIds = getBistandVurderingerIds(behandlingId)
+
+        connection.execute("""
+            delete from bistand_vurderinger where id = ANY(?::bigint[]);
+            delete from bistand where bistand_vurderinger_id = ANY(?::bigint[]);
+            delete from bistand_grunnlag where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, bistandVurderingerIds)
+                setLongArray(2, bistandVurderingerIds)
+                setLong(3, behandlingId.toLong())
+            }
+        }
+    }
+
+    private fun getBistandVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT bistand_vurderinger_id
+                    FROM bistand_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("bistand_vurderinger_id")
+        }
+    }
+
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: BistandGrunnlag) {
         val bistandvurderingerId = lagreBistandsvurderinger(nyttGrunnlag.vurderinger)
 
