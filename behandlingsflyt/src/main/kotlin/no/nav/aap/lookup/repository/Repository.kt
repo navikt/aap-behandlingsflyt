@@ -1,9 +1,6 @@
 package no.nav.aap.lookup.repository
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import org.slf4j.LoggerFactory
-
-private val logger = LoggerFactory.getLogger("no.nav.aap.lookup.repository")
 
 /**
  * Marker interface for repository.
@@ -12,7 +9,11 @@ private val logger = LoggerFactory.getLogger("no.nav.aap.lookup.repository")
  * skal lastes i [RepositoryRegistry].
  */
 interface Repository: no.nav.aap.komponenter.repository.Repository {
-    fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        logger.warn("kopier-metoden er ikke implementert for ${this::class.simpleName}. Er dette korrekt? Hvis ikke, implementer dummy-metode.")
-    }
+    /** Kopier opplysninger og vurderinger fra en behandling inn i en annen.
+     *
+     * Denne metoden kalles når en revurdering opprettes (`tilBehandling`). Ideen er at revurderingen
+     * tar utgangspunkt i de vurderingene som allerede er gjort (`fraBehandling`). I revurderingen
+     * kan man så legge til nye vurderinger uten at den gamle behandlingen blir påvirket.
+     **/
+    fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

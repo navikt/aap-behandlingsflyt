@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andresta
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBConnection) : SamordningAndreStatligeYtelserRepository {
 
@@ -15,6 +16,8 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
             return SamordningAndreStatligeYtelserRepositoryImpl(connection)
         }
     }
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningAndreStatligeYtelserGrunnlag? {
         val query = """
@@ -127,4 +130,7 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
         }
     }
 
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        log.warn("kopier-metoden er ikke implementert for ${this::class.simpleName}. Er dette korrekt? Hvis ikke, implementer dummy-metode.")
+    }
 }
