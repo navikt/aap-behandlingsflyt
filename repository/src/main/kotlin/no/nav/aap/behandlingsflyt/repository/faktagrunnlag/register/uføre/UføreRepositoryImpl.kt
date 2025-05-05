@@ -59,6 +59,38 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+
+        val uforeIds = getUforeIds(behandlingId)
+
+        connection.execute("""
+            delete from UFORE_GRUNNLAG where behandling_id = ?;
+            delete from UFORE where behandling_id = ?;
+            delete from UFORE_GRADERING where id = ANY(?::bigint[]);
+           
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLong(2, behandlingId.id)
+                setLongArray(3, uforeIds)
+            }
+        }
+    }
+
+    private fun getUforeIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT ufore_id
+                    FROM UFORE_GRUNNLAG
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("ufore_id")
+        }
+    }
+
     private fun hentVurderinger(uføreId: Long): List<Uføre> {
         return connection.queryList(
             """
