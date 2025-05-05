@@ -66,7 +66,6 @@ private val log = LoggerFactory.getLogger(javaClass)
                     perioderTilVurderingService = PerioderTilVurderingService(
                         SakService(sakRepository),
                         behandlingRepository,
-                        repositoryProvider.provide()
                     ),
                     sakOgBehandlingService = SakOgBehandlingService(
                         GrunnlagKopiererImpl(connection),

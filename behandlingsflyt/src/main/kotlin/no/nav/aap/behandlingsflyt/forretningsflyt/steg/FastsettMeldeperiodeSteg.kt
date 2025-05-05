@@ -22,7 +22,7 @@ class FastsettMeldeperiodeSteg(
     private val meldeperiodeRepository: MeldeperiodeRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         sakRepository = repositoryProvider.provide(),
         meldeperiodeRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
@@ -39,12 +39,14 @@ class FastsettMeldeperiodeSteg(
                 oppdaterMeldeperioder(kontekst.behandlingId, rettighetsperiode)
                 return Fullført
             }
-            VurderingType.REVURDERING,
-            VurderingType.FORLENGELSE -> {
+
+            VurderingType.REVURDERING -> {
                 val rettighetsperiode = sakRepository.hent(kontekst.sakId).rettighetsperiode
                 oppdaterMeldeperioder(kontekst.behandlingId, rettighetsperiode)
                 return Fullført
             }
+
+            VurderingType.FORLENGELSE,
             VurderingType.IKKE_RELEVANT -> {
                 return Fullført
             }

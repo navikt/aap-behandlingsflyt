@@ -72,15 +72,7 @@ class VurderSykepengeErstatningSteg private constructor(
                 vurder(kontekst)
             }
 
-            VurderingType.FORLENGELSE -> {
-                // TODO: Denne må vi finne ut av
-                // !!! RIP !!!
-                // Her blir det en del logikk for å vite om dette vilkåret faktisk skal forlengelse
-                // Er kvoten tom? osv osv
-                Fullført
-            }
-
-
+            VurderingType.FORLENGELSE,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
                 Fullført

@@ -12,16 +12,6 @@ class VilkårService(
         vilkårsresultatRepository = repositoryProvider.provide()
     )
 
-    fun forleng(kontekst: FlytKontekstMedPerioder, vilkårtype: Vilkårtype) {
-        forleng(kontekst.behandlingId, vilkårtype, requireNotNull(kontekst.vurdering.forlengelsePeriode))
-    }
-
-    fun forleng(behandlingId: BehandlingId, vilkårtype: Vilkårtype, forlengelsePeriode: Periode) {
-        val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
-        vilkårsresultat.finnVilkår(vilkårtype).forleng(forlengelsePeriode)
-        vilkårsresultatRepository.lagre(behandlingId, vilkårsresultat)
-    }
-
     /** Fyll hull i vilkårsvurderingene for [vilkårtype] som `IKKE_VURDERT`. */
     fun ingenNyeVurderinger(
         kontekst: FlytKontekstMedPerioder,
