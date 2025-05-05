@@ -44,12 +44,20 @@ object FiktivtNavnGenerator {
 
         private fun loadNames(resourceName: String): List<String> {
             try {
-                BufferedReader(InputStreamReader(FiktivtNavnGenerator::class.java.getResourceAsStream(resourceName))).use { br ->
+                // Try multiple class loaders to find the resource
+                val resourceStream = Thread.currentThread().contextClassLoader.getResourceAsStream(resourceName)
+                    ?: Navnelager::class.java.classLoader.getResourceAsStream(resourceName)
+                    ?: FiktivtNavnGenerator::class.java.classLoader.getResourceAsStream(resourceName)
+                    ?: FiktivtNavnGenerator::class.java.getResourceAsStream(resourceName)
+                    ?: throw RuntimeException("Resource not found: $resourceName")
+
+                BufferedReader(InputStreamReader(resourceStream)).use { br ->
                     val resultat: MutableList<String> =
                         ArrayList()
-                    var strLine: String
-                    while ((br.readLine().also { strLine = it }) != null) {
+                    var strLine: String? = br.readLine()
+                    while (strLine != null) {
                         resultat.add(strLine.uppercase(Locale.getDefault()))
+                        strLine = br.readLine()
                     }
                     return resultat
                 }
