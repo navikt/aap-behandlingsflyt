@@ -71,6 +71,53 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+
+        val studentIds = getStudentIds(behandlingId)
+        val oppgittStudentIds = getOppgittStudentIds(behandlingId)
+        connection.execute("""
+            delete from STUDENT_GRUNNLAG where id = ANY(?::bigint[]);
+            delete from OPPGITT_STUDENT where perioder_id = ANY(?::bigint[]);
+            delete from STUDENT_VURDERING where id = ANY(?::bigint[]);
+          
+            
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, oppgittStudentIds)
+                setLongArray(3, studentIds)
+            }
+        }
+    }
+
+    private fun getStudentIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT student_id
+                    FROM STUDENT_GRUNNLAG
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("student_id")
+        }
+    }
+
+    private fun getOppgittStudentIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT oppgitt_student_id
+                    FROM STUDENT_GRUNNLAG
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("oppgitt_student_id")
+        }
+    }
+
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
         connection.execute("UPDATE STUDENT_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
             setParams {
