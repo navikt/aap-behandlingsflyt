@@ -87,7 +87,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
 
         val refusjonskravVurderingIds = getRefusjonskravVurderingIds(behandlingId)
         connection.execute("""
-            delete from REFUSJONSKRAV_GRUNNLAG where id = ANY(?::bigint[]);
+            delete from REFUSJONSKRAV_GRUNNLAG where id = ?;
             delete from REFUSJONSKRAV_VURDERING where id = ANY(?::bigint[]);
           
             
@@ -102,7 +102,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
     private fun getRefusjonskravVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
         """
                     SELECT refusjonskrav_vurdering_id
-                    FROM refusjonskrav_grunnlag
+                    FROM REFUSJONSKRAV_GRUNNLAG
                     WHERE behandling_id = ?
                  
                 """.trimIndent()

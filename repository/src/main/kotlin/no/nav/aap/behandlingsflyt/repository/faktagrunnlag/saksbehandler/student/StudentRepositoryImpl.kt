@@ -76,7 +76,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         val studentIds = getStudentIds(behandlingId)
         val oppgittStudentIds = getOppgittStudentIds(behandlingId)
         connection.execute("""
-            delete from STUDENT_GRUNNLAG where id = ANY(?::bigint[]);
+            delete from STUDENT_GRUNNLAG where id = ?;
             delete from OPPGITT_STUDENT where perioder_id = ANY(?::bigint[]);
             delete from STUDENT_VURDERING where id = ANY(?::bigint[]);
           
