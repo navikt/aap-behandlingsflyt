@@ -55,10 +55,7 @@ class FastsettSykdomsvilkåretSteg private constructor(
                 vurderVilkåret(kontekst)
             }
 
-            VurderingType.FORLENGELSE -> {
-                vilkårService.forleng(kontekst, Vilkårtype.SYKDOMSVILKÅRET)
-            }
-
+            VurderingType.FORLENGELSE,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
             }

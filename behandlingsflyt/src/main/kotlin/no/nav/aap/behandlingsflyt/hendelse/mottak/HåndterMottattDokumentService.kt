@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.type.Periode
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 class HåndterMottattDokumentService(
@@ -32,7 +31,6 @@ class HåndterMottattDokumentService(
         mottattTidspunkt: LocalDateTime,
         brevkategori: InnsendingType,
         melding: Melding?,
-        mottattDato: LocalDate
     ) {
         val sak = sakService.hent(sakId)
         val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
@@ -44,8 +42,6 @@ class HåndterMottattDokumentService(
         // P.d.d. ingen da de feilaktig kobles på behandling men ikke tas hensyn til
 
         val behandlingSkrivelås = låsRepository.låsBehandling(beriketBehandling.behandling.id)
-
-        sakOgBehandlingService.oppdaterRettighetsperioden(sakId, brevkategori, mottattDato)
 
         prosesserBehandling.triggProsesserBehandling(
             sakId,

@@ -58,13 +58,7 @@ class FastsettGrunnlagSteg(
                 vurderVilkåret(kontekst, vilkår, rettighetsperiode, vilkårsresultat)
             }
 
-            VurderingType.FORLENGELSE -> {
-                if (avklarFaktaBeregningService.skalFastsetteGrunnlag(kontekst.behandlingId)) {
-                    vilkår.forleng(requireNotNull(kontekst.vurdering.forlengelsePeriode))
-                    vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
-                }
-            }
-
+            VurderingType.FORLENGELSE,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
             }

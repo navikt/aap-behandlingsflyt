@@ -199,6 +199,7 @@ class StatistikkJobbUtførerTest {
             behandlingType = behandling.typeBehandling(),
             status = behandling.status(),
             avklaringsbehov = listOf(),
+            erPåVent = false,
             opprettetTidspunkt = opprettetTidspunkt!!,
             hendelsesTidspunkt = hendelseTidspunkt,
             versjon = "123"
@@ -384,6 +385,7 @@ class StatistikkJobbUtførerTest {
             behandlingType = behandling.typeBehandling(),
             status = behandling.status(),
             avklaringsbehov = listOf(),
+            erPåVent = false,
             opprettetTidspunkt = LocalDateTime.now(),
             hendelsesTidspunkt = hendelseTidspunkt,
             versjon = "123"
@@ -648,6 +650,7 @@ class StatistikkJobbUtførerTest {
             referanse = referanse,
             opprettetTidspunkt = LocalDateTime.now(),
             avklaringsbehov = avklaringsbehov,
+            erPåVent = false,
             hendelsesTidspunkt = hendelsesTidspunkt,
             versjon = ApplikasjonsVersjon.versjon
         )

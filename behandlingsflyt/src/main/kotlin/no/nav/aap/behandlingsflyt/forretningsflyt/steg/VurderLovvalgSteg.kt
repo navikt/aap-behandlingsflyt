@@ -64,11 +64,7 @@ class VurderLovvalgSteg private constructor(
                 return vurderVilkår(kontekst)
             }
 
-            VurderingType.FORLENGELSE -> {
-                vilkårService.forleng(kontekst, Vilkårtype.LOVVALG)
-                return Fullført
-            }
-
+            VurderingType.FORLENGELSE,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
                 return Fullført

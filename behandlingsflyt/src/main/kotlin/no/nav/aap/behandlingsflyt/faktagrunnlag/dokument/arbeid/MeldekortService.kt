@@ -37,7 +37,7 @@ class MeldekortService private constructor(
     }
 
     override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
-        return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse() &&
+        return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
                 tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
     }
 

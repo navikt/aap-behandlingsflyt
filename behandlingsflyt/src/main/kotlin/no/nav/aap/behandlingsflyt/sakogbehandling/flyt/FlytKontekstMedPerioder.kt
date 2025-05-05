@@ -16,20 +16,11 @@ data class FlytKontekstMedPerioder(
     val behandlingType: TypeBehandling,
     val vurdering: VurderingTilBehandling
 ) {
-
-    fun skalBehandlesSomFørstegangsbehandling(): Boolean {
-        return vurdering.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING
-    }
-
     fun harNoeTilBehandling(): Boolean {
         return vurdering.skalVurdereNoe()
     }
 
     fun erFørstegangsbehandlingEllerRevurdering(): Boolean {
         return vurdering.vurderingType in setOf(VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING)
-    }
-
-    fun erFørstegangsbehandlingRevurderingEllerForlengelse(): Boolean {
-        return vurdering.vurderingType in setOf(VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.FORLENGELSE)
     }
 }
