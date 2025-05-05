@@ -129,6 +129,15 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         )
     }
 
+    override fun endreSkrivBrev(avklaringsbehovId: Long, endring: Endring, funnetISteg: StegType
+    ) {
+        oppdaterFunnetISteg(avklaringsbehovId, funnetISteg)
+        endreAvklaringsbehov(
+            avklaringsbehovId,
+            endring
+        )
+    }
+
     private fun oppdaterFunnetISteg(avklaringsbehovId: Long, funnetISteg: StegType) {
         val query = """
                     UPDATE AVKLARINGSBEHOV 
