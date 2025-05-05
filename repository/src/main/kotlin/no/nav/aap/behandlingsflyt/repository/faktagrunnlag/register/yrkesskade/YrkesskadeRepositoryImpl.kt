@@ -111,6 +111,37 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+
+        val yrkesskadeIds = getYrkesskadeIds(behandlingId)
+
+        connection.execute("""
+            delete from yrkesskade_dato where id = ANY(?::bigint[]);
+            delete from yrkesskade where bistand_vurderinger_id = ANY(?::bigint[]);
+            delete from yrkesskade_grunnlag where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, yrkesskadeIds)
+                setLongArray(2, yrkesskadeIds)
+                setLong(3, behandlingId.toLong())
+            }
+        }
+    }
+
+    private fun getYrkesskadeIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT yrkesskade_id
+                    FROM yrkesskade_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("bistand_vurderinger_id")
+        }
+    }
+
     private fun deaktiverEksisterende(behandlingId: BehandlingId) {
         connection.execute("UPDATE YRKESSKADE_GRUNNLAG SET AKTIV = FALSE WHERE AKTIV AND BEHANDLING_ID = ?") {
             setParams {
