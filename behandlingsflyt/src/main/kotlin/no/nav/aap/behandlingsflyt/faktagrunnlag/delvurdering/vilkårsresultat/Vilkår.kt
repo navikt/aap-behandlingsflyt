@@ -108,12 +108,6 @@ class Vilkår(
             .any { periode -> periode.verdi.erIkkeVurdert() }
     }
 
-    fun harPerioderSomIkkeErVurdert(periodeTilVurdering: Periode): Boolean {
-        return vilkårTidslinje.kryss(Tidslinje(periodeTilVurdering, Unit))
-            .segmenter()
-            .any { periode -> periode.verdi.erIkkeVurdert() }
-    }
-
     fun førsteDatoTilVurdering(): LocalDate {
         return vilkårTidslinje.minDato()
     }

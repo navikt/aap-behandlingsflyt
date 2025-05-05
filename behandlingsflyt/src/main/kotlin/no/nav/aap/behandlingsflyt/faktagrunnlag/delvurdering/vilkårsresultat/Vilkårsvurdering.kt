@@ -70,7 +70,8 @@ class Vilkårsvurdering(
     fun erIkkeVurdert(): Boolean {
         return utfall !in setOf(
             Utfall.IKKE_OPPFYLT,
-            Utfall.OPPFYLT
+            Utfall.OPPFYLT,
+            Utfall.IKKE_RELEVANT
         )
     }
 
