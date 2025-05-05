@@ -45,7 +45,7 @@ class BarnetilleggSteg(
             vurder(kontekst)
         }
 
-        VurderingType.FORLENGELSE,
+        VurderingType.MELDEKORT,
         VurderingType.IKKE_RELEVANT -> {
             /* do nothing */
             Fullført

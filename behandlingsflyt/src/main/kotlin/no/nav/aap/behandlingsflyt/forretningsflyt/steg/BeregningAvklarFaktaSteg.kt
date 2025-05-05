@@ -92,7 +92,7 @@ class BeregningAvklarFaktaSteg private constructor(
                 }
             }
 
-            VurderingType.FORLENGELSE,
+            VurderingType.MELDEKORT,
             VurderingType.IKKE_RELEVANT -> {
                 // Always do nothing
             }

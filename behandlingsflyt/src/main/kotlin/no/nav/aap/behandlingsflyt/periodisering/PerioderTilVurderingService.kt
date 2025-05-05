@@ -8,15 +8,25 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.FØRSTEGANGSBEHANDLING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.IKKE_RELEVANT
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.FORLENGELSE
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 class PerioderTilVurderingService(
     private val sakService: SakService,
     private val behandlingRepository: BehandlingRepository,
+    private val unleashGateway: UnleashGateway,
 ) {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        sakService = SakService(repositoryProvider),
+        behandlingRepository = repositoryProvider.provide(),
+        unleashGateway = GatewayProvider.provide(),
+    )
 
     fun utled(kontekst: FlytKontekst, stegType: StegType): VurderingTilBehandling {
         val sak = sakService.hent(kontekst.sakId)
@@ -48,37 +58,47 @@ class PerioderTilVurderingService(
         return when {
             FØRSTEGANGSBEHANDLING in vurderingTyper -> FØRSTEGANGSBEHANDLING
             REVURDERING in vurderingTyper -> REVURDERING
-            FORLENGELSE in vurderingTyper -> FORLENGELSE
+            MELDEKORT in vurderingTyper -> MELDEKORT
             else -> IKKE_RELEVANT
         }
     }
 
     private fun årsakTilType(årsak: ÅrsakTilBehandling): VurderingType {
         return when (årsak) {
-            ÅrsakTilBehandling.MOTTATT_SØKNAD -> FØRSTEGANGSBEHANDLING
-            ÅrsakTilBehandling.MOTTATT_AKTIVITETSMELDING -> REVURDERING
-            ÅrsakTilBehandling.MOTTATT_MELDEKORT -> REVURDERING
-            ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING -> REVURDERING
-            ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING -> REVURDERING
-            ÅrsakTilBehandling.MOTTATT_DIALOGMELDING -> REVURDERING
-            ÅrsakTilBehandling.G_REGULERING -> REVURDERING
-            ÅrsakTilBehandling.REVURDER_MEDLEMSKAP -> REVURDERING
-            ÅrsakTilBehandling.REVURDER_BEREGNING -> REVURDERING
-            ÅrsakTilBehandling.REVURDER_YRKESSKADE -> REVURDERING
-            ÅrsakTilBehandling.REVURDER_LOVVALG -> REVURDERING
-            ÅrsakTilBehandling.REVURDER_SAMORDNING -> REVURDERING
-            ÅrsakTilBehandling.MOTATT_KLAGE -> IKKE_RELEVANT // TODO: Verifiser at dette er korrekt.
-            ÅrsakTilBehandling.LOVVALG_OG_MEDLEMSKAP -> REVURDERING
-            ÅrsakTilBehandling.FORUTGAENDE_MEDLEMSKAP -> REVURDERING
-            ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND -> REVURDERING
-            ÅrsakTilBehandling.BARNETILLEGG -> REVURDERING
-            ÅrsakTilBehandling.INSTITUSJONSOPPHOLD -> REVURDERING
-            ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING -> REVURDERING
-            ÅrsakTilBehandling.REFUSJONSKRAV -> REVURDERING
-            ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT -> REVURDERING
-            ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT -> REVURDERING
-            ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE -> REVURDERING
-            ÅrsakTilBehandling.SØKNAD_TRUKKET -> REVURDERING
+            ÅrsakTilBehandling.MOTTATT_SØKNAD ->
+                FØRSTEGANGSBEHANDLING
+
+            ÅrsakTilBehandling.MOTTATT_AKTIVITETSMELDING,
+            ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING,
+            ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING,
+            ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
+            ÅrsakTilBehandling.G_REGULERING,
+            ÅrsakTilBehandling.REVURDER_MEDLEMSKAP,
+            ÅrsakTilBehandling.REVURDER_BEREGNING,
+            ÅrsakTilBehandling.REVURDER_YRKESSKADE,
+            ÅrsakTilBehandling.REVURDER_LOVVALG,
+            ÅrsakTilBehandling.REVURDER_SAMORDNING,
+            ÅrsakTilBehandling.LOVVALG_OG_MEDLEMSKAP,
+            ÅrsakTilBehandling.FORUTGAENDE_MEDLEMSKAP,
+            ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+            ÅrsakTilBehandling.BARNETILLEGG,
+            ÅrsakTilBehandling.INSTITUSJONSOPPHOLD,
+            ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING,
+            ÅrsakTilBehandling.REFUSJONSKRAV,
+            ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE,
+            ÅrsakTilBehandling.SØKNAD_TRUKKET,
+            ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT ->
+                REVURDERING
+
+            ÅrsakTilBehandling.MOTTATT_MELDEKORT,
+            ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT ->
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.FasttrackMeldekort))
+                    MELDEKORT
+                else
+                    REVURDERING
+
+            ÅrsakTilBehandling.MOTATT_KLAGE ->
+                IKKE_RELEVANT // TODO: Verifiser at dette er korrekt.
         }
     }
 }

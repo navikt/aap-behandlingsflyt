@@ -72,7 +72,7 @@ class VurderSykepengeErstatningSteg private constructor(
                 vurder(kontekst)
             }
 
-            VurderingType.FORLENGELSE,
+            VurderingType.MELDEKORT,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
                 Fullført

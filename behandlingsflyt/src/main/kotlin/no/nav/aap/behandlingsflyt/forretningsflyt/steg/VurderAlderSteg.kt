@@ -50,7 +50,7 @@ class VurderAlderSteg private constructor(
                 vurderVilkår(kontekst)
             }
 
-            VurderingType.FORLENGELSE,
+            VurderingType.MELDEKORT,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
             }

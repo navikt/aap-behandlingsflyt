@@ -55,7 +55,7 @@ class FastsettSykdomsvilkåretSteg private constructor(
                 vurderVilkåret(kontekst)
             }
 
-            VurderingType.FORLENGELSE,
+            VurderingType.MELDEKORT,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
             }

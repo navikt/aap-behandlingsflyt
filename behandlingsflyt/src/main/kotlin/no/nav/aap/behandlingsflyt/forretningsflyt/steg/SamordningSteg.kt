@@ -68,7 +68,7 @@ class SamordningSteg(
                 }
             }
 
-            VurderingType.FORLENGELSE, VurderingType.IKKE_RELEVANT -> Fullført
+            VurderingType.MELDEKORT, VurderingType.IKKE_RELEVANT -> Fullført
         }
     }
 
