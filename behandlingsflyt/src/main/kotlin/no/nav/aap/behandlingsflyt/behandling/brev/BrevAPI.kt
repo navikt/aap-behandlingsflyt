@@ -142,7 +142,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                 }
 
                             BrevGrunnlag.Brev(
-                                skrivBrevDefinisjon = definisjon,
+                                avklaringsbehovKode = definisjon.kode,
                                 brevbestillingReferanse = brevbestillingResponse.referanse,
                                 brev = brevbestillingResponse.brev,
                                 opprettet = brevbestillingResponse.opprettet,
