@@ -176,6 +176,69 @@ class PersonopplysningForutgåendeRepositoryImpl(
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+        // Sletter ikke bruker_land og bruker_land_aggregat, da det ikke er personopplysninger her
+        val brukerPersonopplysningIds = getBrukerPersonopplysningIds(behandlingId)
+        val personopplysningerIds = getPersonOpplysningerIds(behandlingId)
+        val personopplysningIds = getPersonOpplysningIds(personopplysningerIds)
+
+        connection.execute("""
+            delete from bruker_personopplysning_forutgaaende where id = ANY(?::bigint[]);
+            delete from personopplysning_forutgaaende where id = ANY(?::bigint[]);
+            delete from personopplysninger_forutgaaende where id = ANY(?::bigint[]);
+            delete from personopplysning_forutgaaende_grunnlag where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, brukerPersonopplysningIds)
+                setLongArray(2, personopplysningIds)
+                setLongArray(3, personopplysningerIds)
+                setLong(4, behandlingId.id)
+            }
+        }
+    }
+
+    private fun getBrukerPersonopplysningIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT bruker_personopplysning_id
+                    FROM personopplysning_forutgaaende_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("bruker_personopplysning_id")
+        }
+    }
+
+    private fun getPersonOpplysningerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT personopplysninger_id
+                    FROM personopplysning_forutgaaende_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("personopplysninger_id")
+        }
+    }
+
+    private fun getPersonOpplysningIds(personopplysningerIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM personopplysninger_forutgaaende
+                    WHERE id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, personopplysningerIds) }
+        setRowMapper { row ->
+            row.getLong("id")
+        }
+    }
+
     private fun hentStatsborgerskap(id: Long): List<Statsborgerskap> {
         return connection.queryList(
             """

@@ -280,4 +280,52 @@ class PersonopplysningRepositoryImpl(
             }
         }
     }
+
+    override fun slett(behandlingId: BehandlingId) {
+        // Sletter ikke bruker_land og bruker_land_aggregat, da det ikke er personopplysninger her
+        val brukerPersonopplysningIds = getBrukerPersonopplysningIds(behandlingId)
+        val personopplysningerIds = getPersonOpplysningerIds(behandlingId)
+
+        connection.execute("""
+            delete from bruker_personopplysning where id = ANY(?::bigint[]);
+            delete from personopplysning where meldelplikt_id = ANY(?::bigint[]);
+            delete from personopplysninger where id = ANY(?::bigint[]);
+            delete from personopplysning_grunnlag where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, brukerPersonopplysningIds)
+                setLongArray(2, personopplysningerIds)
+                setLongArray(3, personopplysningerIds)
+                setLong(4, behandlingId.id)
+            }
+        }
+    }
+
+    private fun getBrukerPersonopplysningIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT bruker_personopplysning_id
+                    FROM personopplysning_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("bruker_personopplysning_id")
+        }
+    }
+
+    private fun getPersonOpplysningerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT personopplysninger_id
+                    FROM personopplysning_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("personopplysninger_id")
+        }
+    }
 }
