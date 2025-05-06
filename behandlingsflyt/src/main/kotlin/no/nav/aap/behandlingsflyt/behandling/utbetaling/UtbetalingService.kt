@@ -72,7 +72,6 @@ class UtbetalingService(
                     antallBarn = detaljer.antallBarn,
                     barnetilleggsats = detaljer.barnetilleggsats.verdi(),
                     barnetillegg = detaljer.barnetillegg.verdi(),
-                    ventedagerSamordning = false, //TODO: hvor får vi ventedager fra?
                     utbetalingsdato = detaljer.utbetalingsdato
                 )
             )
