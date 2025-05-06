@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårsperiodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -56,7 +57,9 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
 
                     val behandling = behandling(behandlingRepository, req)
                     val virkningstidspunkt =
-                        VirkningstidspunktUtleder(vilkårsresultatRepository = vilkårsresultatRepository).utledVirkningsTidspunkt(
+                        if (behandling.typeBehandling() == TypeBehandling.Klage) null else VirkningstidspunktUtleder(
+                            vilkårsresultatRepository = vilkårsresultatRepository
+                        ).utledVirkningsTidspunkt(
                             behandling.id
                         )
                     val flyt = utledType(behandling.typeBehandling()).flyt()

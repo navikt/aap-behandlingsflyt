@@ -14,8 +14,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident
@@ -24,12 +26,14 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskap
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AzurePortHolder
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeServers
@@ -50,6 +54,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
+import javax.sql.DataSource
 
 // Kjøres opp for å få logback i console uten json
 fun main() {
@@ -75,56 +80,13 @@ fun main() {
 
         val datasource = initDatasource(dbConfig)
 
+        opprettTestKlage(datasource, defaultTestCase)
+
         apiRouting {
             route("/test") {
                 route("/opprett") {
                     post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { _, dto ->
-                        val ident = genererIdent(dto.fødselsdato)
-                        val barn = dto.barn.filter { it.harRelasjon }.map { genererBarn(it) }
-                        val urelaterteBarn = dto.barn.filter { !it.harRelasjon }.map { genererBarn(it) }
-                        barn.forEach { FakePersoner.leggTil(it) }
-                        urelaterteBarn.forEach { FakePersoner.leggTil(it) }
-                        FakePersoner.leggTil(
-                            TestPerson(
-                                identer = setOf(ident),
-                                fødselsdato = Fødselsdato(dto.fødselsdato),
-                                yrkesskade = if (dto.yrkesskade) listOf(TestYrkesskade()) else emptyList(),
-                                uføre = dto.uføre?.let(::Prosent),
-                                barn = barn,
-                                institusjonsopphold = listOfNotNull(
-                                    if (dto.institusjoner.fengsel == true) genererFengselsopphold() else null,
-                                    if (dto.institusjoner.sykehus == true) genererSykehusopphold() else null,
-                                ),
-                                inntekter = dto.inntekterPerAr?.map { inn -> inn.to() } ?: defaultInntekt(),
-                                sykepenger = dto.sykepenger.map { TestPerson.Sykepenger(grad = it.grad, periode = it.periode) }
-                            )
-                        )
-                        val periode = Periode(
-                            LocalDate.now(),
-                            LocalDate.now().plusYears(1).minusDays(1)
-                        )
-                        datasource.transaction { connection ->
-                            val sakService = PersonOgSakService(
-                                PdlIdentGateway,
-                                PersonRepositoryImpl(connection),
-                                SakRepositoryImpl(connection)
-                            )
-                            val sak = sakService.finnEllerOpprett(ident, periode)
-
-                            val flytJobbRepository = FlytJobbRepository(connection)
-
-                            flytJobbRepository.leggTil(
-                                HendelseMottattHåndteringJobbUtfører.nyJobb(
-                                    sakId = sak.id,
-                                    dokumentReferanse = InnsendingReferanse(JournalpostId("" + System.currentTimeMillis())),
-                                    brevkategori = InnsendingType.SØKNAD,
-                                    kanal = Kanal.DIGITAL,
-                                    melding = mapTilSøknad(dto, urelaterteBarn),
-                                    mottattTidspunkt = dto.søknadsdato?.atStartOfDay() ?: LocalDateTime.now(),
-                                )
-                            )
-                        }
-
+                        sendInnSøknad(datasource, dto)
                         respond(dto)
                     }
                 }
@@ -220,6 +182,95 @@ fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): S�
         medlemskap = SøknadMedlemskapDto(harMedlemskap, null, null, null, listOf())
     )
 }
+
+private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak {
+    val ident = genererIdent(dto.fødselsdato)
+    val barn = dto.barn.filter { it.harRelasjon }.map { genererBarn(it) }
+    val urelaterteBarn = dto.barn.filter { !it.harRelasjon }.map { genererBarn(it) }
+    barn.forEach { FakePersoner.leggTil(it) }
+    urelaterteBarn.forEach { FakePersoner.leggTil(it) }
+    FakePersoner.leggTil(
+        TestPerson(
+            identer = setOf(ident),
+            fødselsdato = Fødselsdato(dto.fødselsdato),
+            yrkesskade = if (dto.yrkesskade) listOf(TestYrkesskade()) else emptyList(),
+            uføre = dto.uføre?.let(::Prosent),
+            barn = barn,
+            institusjonsopphold = listOfNotNull(
+                if (dto.institusjoner.fengsel == true) genererFengselsopphold() else null,
+                if (dto.institusjoner.sykehus == true) genererSykehusopphold() else null,
+            ),
+            inntekter = dto.inntekterPerAr?.map { inn -> inn.to() } ?: defaultInntekt(),
+            sykepenger = dto.sykepenger.map {
+                TestPerson.Sykepenger(
+                    grad = it.grad,
+                    periode = it.periode
+                )
+            }
+        )
+    )
+    val periode = Periode(
+        LocalDate.now(),
+        LocalDate.now().plusYears(1).minusDays(1)
+    )
+    val sak = datasource.transaction { connection ->
+        val sakService = PersonOgSakService(
+            PdlIdentGateway,
+            PersonRepositoryImpl(connection),
+            SakRepositoryImpl(connection)
+        )
+        val sak = sakService.finnEllerOpprett(ident, periode)
+
+        val flytJobbRepository = FlytJobbRepository(connection)
+
+        flytJobbRepository.leggTil(
+            HendelseMottattHåndteringJobbUtfører.nyJobb(
+                sakId = sak.id,
+                dokumentReferanse = InnsendingReferanse(JournalpostId("" + System.currentTimeMillis())),
+                brevkategori = InnsendingType.SØKNAD,
+                kanal = Kanal.DIGITAL,
+                melding = mapTilSøknad(dto, urelaterteBarn),
+                mottattTidspunkt = dto.søknadsdato?.atStartOfDay() ?: LocalDateTime.now(),
+            )
+        )
+        sak
+    }
+    
+    return sak
+}
+
+private fun sendInnKlage(datasource: DataSource, sak: Sak) {
+    datasource.transaction { connection ->
+        val flytJobbRepository = FlytJobbRepository(connection)
+
+        flytJobbRepository.leggTil(
+            HendelseMottattHåndteringJobbUtfører.nyJobb(
+                sakId = sak.id,
+                dokumentReferanse = InnsendingReferanse(JournalpostId("" + System.currentTimeMillis())),
+                brevkategori = InnsendingType.KLAGE,
+                kanal = Kanal.DIGITAL,
+                mottattTidspunkt = LocalDateTime.now(),
+            )
+        )
+    }
+}
+
+private fun opprettTestKlage(datasource: DataSource, testcaseDTO: OpprettTestcaseDTO) {
+    val sak = sendInnSøknad(datasource, testcaseDTO)
+    sendInnKlage(datasource, sak)
+}
+
+private val defaultTestCase = OpprettTestcaseDTO(
+    fødselsdato = LocalDate.of(1995, 4, 21),
+    barn = emptyList(),
+    yrkesskade = false,
+    uføre = null,
+    institusjoner = Institusjoner(fengsel = false, sykehus = false),
+    inntekterPerAr = null,
+    søknadsdato = LocalDate.now(),
+    student = false,
+    medlemskap = true,
+)
 
 internal fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {
     val postgres = PostgreSQLContainer<Nothing>("postgres:16")
