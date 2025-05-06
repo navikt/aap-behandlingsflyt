@@ -161,4 +161,35 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
             }
         }
     }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val arbeidsevneIds = getArbeidsevneIds(behandlingId)
+
+        connection.execute("""
+            delete from arbeidsevne_vurdering where vurderinger_id = ANY(?::bigint[]);
+            delete from arbeidsevne where id = ANY(?::bigint[]);
+            delete from arbeidsevne_grunnlag where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, arbeidsevneIds)
+                setLongArray(2, arbeidsevneIds)
+                setLong(3, behandlingId.toLong())
+            }
+        }
+    }
+
+    private fun getArbeidsevneIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT arbeidsevne_id
+                    FROM arbeidsevne_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("arbeidsevne_id")
+        }
+    }
 }

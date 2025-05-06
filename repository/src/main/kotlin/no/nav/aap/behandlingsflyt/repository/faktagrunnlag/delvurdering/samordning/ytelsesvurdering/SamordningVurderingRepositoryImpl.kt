@@ -207,7 +207,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
                 setLongArray(1, samordningVurderingYtelseIds)
                 setLongArray(2, samordningVurderingYtelseIds)
                 setLongArray(3, samordningVurderingIds)
-                setLong(3, behandlingId.toLong())
+                setLong(4, behandlingId.toLong())
             }
         }
     }

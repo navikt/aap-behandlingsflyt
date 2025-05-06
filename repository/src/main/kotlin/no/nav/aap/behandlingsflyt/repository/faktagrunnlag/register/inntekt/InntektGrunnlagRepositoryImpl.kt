@@ -142,7 +142,7 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
         }
         return inntekterId
     }
-    
+
     private fun mapGrunnlag(row: Row): InntektGrunnlag {
         return InntektGrunnlag(
             row.getLong("id"),
