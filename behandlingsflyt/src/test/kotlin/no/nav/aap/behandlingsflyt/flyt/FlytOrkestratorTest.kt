@@ -293,6 +293,8 @@ class FlytOrkestratorTest {
                 .register<TjenestePensjonGatewayImpl>()
                 .register<FakeUnleash>()
             motor.start()
+
+
         }
 
         @AfterAll

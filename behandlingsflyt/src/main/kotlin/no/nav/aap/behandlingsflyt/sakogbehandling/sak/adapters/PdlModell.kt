@@ -83,6 +83,9 @@ data class PdlPersoninfo(
     val doedsfall: Set<PDLDødsfall>? = null,
     val statsborgerskap: Set<PdlStatsborgerskap> ? = null,
     val folkeregisterpersonstatus: Set<PdlFolkeregisterPersonStatus> ? = null,
+    val bostedsadresse: List<BostedsAdresse>? = null,
+    val oppholdsadresse: List<OppholdsAdresse>? = null,
+    val kontaktadresse: List<KontaktAdresse>? = null
 )
 
 data class PdlFolkeregisterPersonStatus(
@@ -95,6 +98,37 @@ data class PdlFolkeregistermetadata(
     val opphoerstidspunkt: LocalDateTime?
 )
 
+data class KontaktAdresse(
+    val utenlandskAdresse: UtenlandskAdresse?,
+    val utenlandskAdresseIFrittFormat: UtenlandskadresseIFrittFormat?
+)
+
+data class BostedsAdresse(
+    val utenlandskAdresse: UtenlandskAdresse?
+)
+
+data class OppholdsAdresse(
+    val utenlandskAdresse: UtenlandskAdresse?
+)
+
+data class UtenlandskAdresse (
+    val adressenavnNummer: String?,
+    val bygningEtasjeLeilighet: String?,
+    val postboksNummerNavn: String?,
+    val postkode: String?,
+    val bySted: String?,
+    val regionDistriktOmraade: String?,
+    val landkode: String?
+)
+
+data class UtenlandskadresseIFrittFormat (
+    val adresselinje1: String?,
+    val adresselinje2: String?,
+    val adresselinje3: String?,
+    val byEllerStedsnavn: String?,
+    val postkode: String?,
+    val landkode: String?
+)
 
 data class PdlStatsborgerskap(
     val land: String,
