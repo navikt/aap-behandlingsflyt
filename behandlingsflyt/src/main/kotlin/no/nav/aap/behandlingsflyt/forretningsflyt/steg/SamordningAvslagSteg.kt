@@ -21,7 +21,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -36,14 +35,12 @@ class SamordningAvslagSteg(
     private val samordningService: SamordningService,
     private val uføreService: UføreService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val sakRepository: SakRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         samordningService = SamordningService(repositoryProvider),
         uføreService = UføreService(repositoryProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        sakRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
     )
 
@@ -71,7 +68,7 @@ class SamordningAvslagSteg(
             return Fullført
         }
 
-        val sak = sakRepository.hent(kontekst.sakId)
+        val rettighetsperiode = kontekst.vurdering.rettighetsperiode
 
         val samordningTidslinje = samordningService.tidslinje(kontekst.behandlingId)
         val samordningUføreTidslinje = uføreService.tidslinje(kontekst.behandlingId)
@@ -105,7 +102,7 @@ class SamordningAvslagSteg(
 
 
         val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SAMORDNING)
-        vilkår.leggTilVurderinger(samordningsVurderinger.begrensetTil(sak.rettighetsperiode))
+        vilkår.leggTilVurderinger(samordningsVurderinger.begrensetTil(rettighetsperiode))
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         return Fullført
     }

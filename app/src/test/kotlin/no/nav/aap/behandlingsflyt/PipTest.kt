@@ -40,7 +40,6 @@ class PipTest {
         private lateinit var port: Number
 
         private val dbConfig = DbConfig(
-            database = "sdf",
             url = postgres.jdbcUrl,
             username = postgres.username,
             password = postgres.password
@@ -54,6 +53,7 @@ class PipTest {
 
         // Starter server
         private val server = embeddedServer(Netty, port = 0) {
+            System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
             server(dbConfig = dbConfig)
         }
 

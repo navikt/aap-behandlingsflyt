@@ -85,4 +85,17 @@ enum class Vilkårtype(
         hjemmel = "§ 11-27",
         obligatorisk = false
     ),
+
+    @Deprecated("""
+        Denne skal fases ut. Er med i koden for ikke å krasje DB i prod. Planen er å få saken i prod til å rekjøres, og
+        deretter _slette_ raden som inneholder det gamle vilkåret.""")
+    SYKEPENGEERSTATNING(
+        kode = "AAP-13",
+        spesielleInnvilgelsesÅrsaker = listOf(),
+        avslagsårsaker = listOf(
+            Avslagsårsak.MANGLENDE_DOKUMENTASJON
+        ),
+        hjemmel = "§ 11-13",
+        obligatorisk = false
+    ),
 }

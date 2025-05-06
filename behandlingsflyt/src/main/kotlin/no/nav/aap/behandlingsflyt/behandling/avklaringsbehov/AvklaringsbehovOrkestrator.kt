@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
@@ -20,7 +19,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.lookup.repository.RepositoryRegistry
@@ -109,16 +107,8 @@ class AvklaringsbehovOrkestrator(
                 connection,
             ),
             sakRepository = sakRepository,
-            perioderTilVurderingService = PerioderTilVurderingService(
-                SakService(sakRepository),
-                behandlingRepository,
-                repositoryProvider.provide()
-            ),
-            sakOgBehandlingService = SakOgBehandlingService(
-                GrunnlagKopiererImpl(connection),
-                sakRepository,
-                behandlingRepository
-            ),
+            perioderTilVurderingService = PerioderTilVurderingService(repositoryProvider),
+            sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
             behandlingHendelseService = behandlingHendelseService
         )
         flytOrkestrator.forberedLøsingAvBehov(definisjoner, behandling, kontekst, bruker)

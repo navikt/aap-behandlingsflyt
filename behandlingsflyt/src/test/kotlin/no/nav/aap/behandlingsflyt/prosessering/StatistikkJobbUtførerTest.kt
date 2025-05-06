@@ -199,6 +199,7 @@ class StatistikkJobbUtførerTest {
             behandlingType = behandling.typeBehandling(),
             status = behandling.status(),
             avklaringsbehov = listOf(),
+            erPåVent = false,
             opprettetTidspunkt = opprettetTidspunkt!!,
             hendelsesTidspunkt = hendelseTidspunkt,
             versjon = "123"
@@ -235,7 +236,7 @@ class StatistikkJobbUtførerTest {
         assertThat(hendelser).isNotEmpty()
         assertThat(hendelser.size).isEqualTo(1)
         assertThat(hendelser.first().mottattTid.truncatedTo(ChronoUnit.SECONDS)).isEqualTo(
-            opprettetTidspunkt!!.truncatedTo(
+            opprettetTidspunkt.truncatedTo(
                 ChronoUnit.SECONDS
             )
         )
@@ -384,6 +385,7 @@ class StatistikkJobbUtførerTest {
             behandlingType = behandling.typeBehandling(),
             status = behandling.status(),
             avklaringsbehov = listOf(),
+            erPåVent = false,
             opprettetTidspunkt = LocalDateTime.now(),
             hendelsesTidspunkt = hendelseTidspunkt,
             versjon = "123"
@@ -505,6 +507,9 @@ class StatistikkJobbUtførerTest {
                 TODO("Not yet implemented")
             }
 
+            override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+            }
+
         }
 
         val beregningsgrunnlagRepository = InMemoryBeregningsgrunnlagRepository
@@ -565,6 +570,9 @@ class StatistikkJobbUtførerTest {
                 TODO("Not yet implemented")
             }
 
+            override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+            }
+
         }
 
         val pipRepository = object : PipRepository {
@@ -579,6 +587,9 @@ class StatistikkJobbUtførerTest {
 
             override fun finnIdenterPåBehandling(behandlingReferanse: BehandlingReferanse): List<IdentPåSak> {
                 TODO("Not yet implemented")
+            }
+
+            override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
             }
         }
 
@@ -648,6 +659,7 @@ class StatistikkJobbUtførerTest {
             referanse = referanse,
             opprettetTidspunkt = LocalDateTime.now(),
             avklaringsbehov = avklaringsbehov,
+            erPåVent = false,
             hendelsesTidspunkt = hendelsesTidspunkt,
             versjon = ApplikasjonsVersjon.versjon
         )

@@ -63,16 +63,8 @@ private val log = LoggerFactory.getLogger(javaClass)
                     avklaringsbehovRepository = avklaringsbehovRepository,
                     informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(repositoryProvider.provide(), connection),
                     sakRepository = sakRepository,
-                    perioderTilVurderingService = PerioderTilVurderingService(
-                        SakService(sakRepository),
-                        behandlingRepository,
-                        repositoryProvider.provide()
-                    ),
-                    sakOgBehandlingService = SakOgBehandlingService(
-                        GrunnlagKopiererImpl(connection),
-                        sakRepository,
-                        behandlingRepository
-                    ),
+                    perioderTilVurderingService = PerioderTilVurderingService(repositoryProvider),
+                    sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
                     behandlingHendelseService = BehandlingHendelseServiceImpl(
                         repositoryProvider.provide<FlytJobbRepository>(),
                         repositoryProvider.provide<BrevbestillingRepository>(),

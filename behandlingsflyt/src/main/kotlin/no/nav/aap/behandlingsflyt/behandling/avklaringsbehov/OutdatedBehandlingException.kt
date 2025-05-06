@@ -11,6 +11,6 @@ class OutdatedBehandlingException(årsak: String) : FlytOperasjonException, Runt
     }
 
     override fun body(): ErrorRespons {
-        return GenerellErrorRespons(cause?.message)
+        return GenerellErrorRespons(message)
     }
 }

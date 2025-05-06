@@ -71,10 +71,7 @@ class VurderYrkesskadeSteg private constructor(
                 }
             }
 
-            VurderingType.FORLENGELSE -> {
-                // Do nothing
-            }
-
+            VurderingType.MELDEKORT,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
             }

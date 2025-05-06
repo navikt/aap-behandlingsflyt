@@ -41,7 +41,7 @@ class UføreService(
     override val navn = Companion.navn
 
     override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
-        return kontekst.erFørstegangsbehandlingRevurderingEllerForlengelse() &&
+        return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
                 oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
                 tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
     }

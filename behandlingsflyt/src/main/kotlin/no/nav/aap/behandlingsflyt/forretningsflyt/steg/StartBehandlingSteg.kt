@@ -15,14 +15,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
 class StartBehandlingSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val sakService: SakService,
     private val samordningVurderingRepository: SamordningVurderingRepository,
 ) : BehandlingSteg {
 
@@ -31,7 +28,7 @@ class StartBehandlingSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (kontekst.behandlingType == TypeBehandling.Førstegangsbehandling) {
             val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-            val rettighetsperiode = sakService.hent(kontekst.sakId).rettighetsperiode
+            val rettighetsperiode = kontekst.vurdering.rettighetsperiode
             Vilkårtype
                 .entries
                 .filter { it.obligatorisk }
@@ -74,12 +71,10 @@ class StartBehandlingSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
-            val sakRepository = repositoryProvider.provide<SakRepository>()
             val vilkårsresultatRepository =
                 repositoryProvider.provide<VilkårsresultatRepository>()
             return StartBehandlingSteg(
                 vilkårsresultatRepository,
-                SakService(sakRepository),
                 repositoryProvider.provide()
             )
         }

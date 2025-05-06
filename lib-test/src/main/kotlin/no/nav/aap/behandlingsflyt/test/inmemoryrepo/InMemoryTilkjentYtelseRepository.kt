@@ -20,4 +20,7 @@ object InMemoryTilkjentYtelseRepository : TilkjentYtelseRepository {
             tilkjentYtelse[behandlingId] = tilkjent
         }
     }
+
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+    }
 }

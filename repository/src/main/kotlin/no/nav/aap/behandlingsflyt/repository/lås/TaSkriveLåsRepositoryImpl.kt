@@ -14,7 +14,7 @@ import java.util.*
 
 class TaSkriveLåsRepositoryImpl(private val connection: DBConnection): TaSkriveLåsRepository {
 
-    val log = LoggerFactory.getLogger(javaClass)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<TaSkriveLåsRepositoryImpl> {
         override fun konstruer(connection: DBConnection): TaSkriveLåsRepositoryImpl {
@@ -121,5 +121,9 @@ class TaSkriveLåsRepositoryImpl(private val connection: DBConnection): TaSkrive
                 require(it == 1)
             }
         }
+    }
+
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        // Trengs ikke implementeres
     }
 }

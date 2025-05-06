@@ -54,6 +54,8 @@ class BehandlingHendelseServiceTest {
         val avklaringsbehovene = mockk<Avklaringsbehovene>()
 
         every { avklaringsbehovene.alle() } returns emptyList()
+        every { avklaringsbehovene.hentÅpneVentebehov() } returns emptyList()
+
 
         // ACT
 

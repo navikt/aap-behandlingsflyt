@@ -89,7 +89,6 @@ class ApiTest {
         private lateinit var port: Number
 
         private val dbConfig = DbConfig(
-            database = "sdf",
             url = postgres.jdbcUrl,
             username = postgres.username,
             password = postgres.password
@@ -136,7 +135,7 @@ class ApiTest {
         @JvmStatic
         @BeforeAll
         fun beforeall() {
-            System.setProperty("NAIS_CLUSTER_NAME", "dev-gcp")
+            System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
             server.start()
             port =
                 runBlocking { server.engine.resolvedConnectors().first { it.type == ConnectorType.HTTP }.port }

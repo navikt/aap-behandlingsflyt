@@ -4,6 +4,7 @@ package no.nav.aap.behandlingsflyt.repository.log
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.log.ContextRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
@@ -59,4 +60,8 @@ class ContextRepositoryImpl(private val connection: DBConnection) : ContextRepos
         "behandlingType" to row.getString("type"),
         "behandlingReferanse" to row.getUUID("referanse").toString(),
     )
+
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        // Denne trengs ikke implementeres
+    }
 }

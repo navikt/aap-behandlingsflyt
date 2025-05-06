@@ -1,22 +1,15 @@
 package no.nav.aap.behandlingsflyt.periodisering
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -49,7 +42,7 @@ class PerioderTilVurderingServiceTest {
                 sakRepository = InMemorySakRepository
             ),
             behandlingRepository = InMemoryBehandlingRepository,
-            vilkårsresultatRepository = InMemoryVilkårsresultatRepository
+            unleashGateway = FakeUnleash(mapOf())
         )
 
         val res = perioderTilVurderingService.utled(
@@ -67,75 +60,4 @@ class PerioderTilVurderingServiceTest {
         assertThat(res.rettighetsperiode).isEqualTo(periode)
     }
 
-    @Test
-    fun `ved revurdering pga meldekort skal forlengelseperioden regnes ut`() {
-        val oppdatertRettighetsperiode = Periode(
-            LocalDate.now(),
-            LocalDate.now().plusMonths(14)
-        )
-
-        val originalRettighetsperiode = Periode(
-            LocalDate.now(),
-            LocalDate.now().plusMonths(11)
-        )
-        val sak = InMemorySakRepository.finnEllerOpprett(
-            Person(
-                identifikator = UUID.randomUUID(),
-                identer = listOf(),
-                id = 0
-            ), oppdatertRettighetsperiode
-        )
-
-        val behandling = InMemoryBehandlingRepository.opprettBehandling(
-            sak.id, listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD)),
-            TypeBehandling.Førstegangsbehandling, null
-        )
-
-        InMemoryVilkårsresultatRepository.lagre(
-            behandling.id,
-            Vilkårsresultat(vilkår = Vilkårtype.entries.filter { it.obligatorisk }.map {
-                Vilkår(
-                    type = it, vilkårsperioder = setOf(
-                        Vilkårsperiode(periode = originalRettighetsperiode, utfall = Utfall.OPPFYLT, begrunnelse = null)
-                    )
-                )
-            })
-        )
-
-        InMemoryBehandlingRepository.oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
-
-        val behandling2 = InMemoryBehandlingRepository.opprettBehandling(
-            sak.id, listOf(Årsak(ÅrsakTilBehandling.MOTTATT_MELDEKORT)),
-            TypeBehandling.Revurdering, behandling.id
-        )
-
-        val perioderTilVurderingService = PerioderTilVurderingService(
-            sakService = SakService(
-                sakRepository = InMemorySakRepository
-            ),
-            behandlingRepository = InMemoryBehandlingRepository,
-            vilkårsresultatRepository = InMemoryVilkårsresultatRepository
-        )
-
-        val res = perioderTilVurderingService.utled(
-            FlytKontekst(
-                sakId = sak.id,
-                behandlingId = behandling2.id,
-                forrigeBehandlingId = behandling.id,
-                behandlingType = behandling2.typeBehandling()
-            ),
-            stegType = StegType.AVKLAR_SYKDOM
-        )
-
-        assertThat(res).isNotNull
-        assertThat(res.årsakerTilBehandling.first()).isEqualTo(ÅrsakTilBehandling.MOTTATT_MELDEKORT)
-        assertThat(res.vurderingType).isEqualTo(VurderingType.FORLENGELSE)
-        assertThat(res.rettighetsperiode).isEqualTo(oppdatertRettighetsperiode)
-        assertThat(res.forlengelsePeriode).isEqualTo(
-            Periode(
-                originalRettighetsperiode.tom.plusDays(1),
-                oppdatertRettighetsperiode.tom
-            )
-        )
-    }
 }

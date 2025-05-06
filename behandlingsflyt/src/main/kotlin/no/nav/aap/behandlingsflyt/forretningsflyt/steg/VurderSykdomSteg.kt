@@ -93,10 +93,7 @@ class VurderSykdomSteg private constructor(
                 }
             }
 
-            VurderingType.FORLENGELSE -> {
-                // Skal ikke tvinge noen form for vurdering
-            }
-
+            VurderingType.MELDEKORT,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
             }

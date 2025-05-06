@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.LazyFaktaGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -12,16 +12,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
-
+import java.time.LocalDate
 
 
 class VilkårsresultatRepositoryImpl(private val connection: DBConnection) : VilkårsresultatRepository {
     private val log = LoggerFactory.getLogger(javaClass)
-    
+
     companion object : Factory<VilkårsresultatRepositoryImpl> {
         override fun konstruer(connection: DBConnection): VilkårsresultatRepositoryImpl {
             return VilkårsresultatRepositoryImpl(connection)
@@ -86,7 +86,7 @@ class VilkårsresultatRepositoryImpl(private val connection: DBConnection) : Vil
             setParams {
                 setLong(1, behandlingId.toLong())
             }
-            setResultValidator { require(it == 1) }
+            setResultValidator { require(it == 1) { "Oppdaterte $it, forventet 1." } }
         }
     }
 
@@ -102,87 +102,66 @@ class VilkårsresultatRepositoryImpl(private val connection: DBConnection) : Vil
 
     private fun hentVilkårresultat(behandlingId: BehandlingId): Vilkårsresultat? {
         val query = """
-                SELECT * FROM VILKAR_RESULTAT WHERE behandling_id = ? AND aktiv = true
+SELECT vr.id as vr_id, vilkar.id as vilkar_id, *
+FROM vilkar_resultat vr
+         left join VILKAR on vr.id = VILKAR.resultat_id
+         left JOIN (SELECT vp.vilkar_id                              as vp_vilkar_id,
+                           json_agg(json_build_object('id', id, 'vilkar_id', vilkar_id,
+                                                      'periode_fra',
+                                                      lower(periode), 'periode_til', upper(periode),
+                                                      'utfall', utfall, 'manuell_vurdering',
+                                                      manuell_vurdering, 'begrunnelse',
+                                                      begrunnelse, 'innvilgelsesarsak',
+                                                      innvilgelsesarsak, 'faktagrunnlag',
+                                                      faktagrunnlag,
+                                                      'versjon', versjon, 'avslagsarsak',
+                                                      avslagsarsak)) as perioder
+                    from vilkar_periode vp
+                    group by vp.vilkar_id) vpp
+                   on vpp.vp_vilkar_id = VILKAR.id
+WHERE behandling_id = ?
+  and aktiv = true
             """.trimIndent()
 
-        return connection.queryFirstOrNull(query) {
+        var vilkårsresultatId: Long? = null
+        val vilkårene = connection.queryList(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
-            setRowMapper(::mapResultat)
-        }
-    }
-
-    private fun mapResultat(row: Row): Vilkårsresultat {
-        val id = row.getLong("id")
-        return Vilkårsresultat(id = id, vilkår = hentVilkår(id))
-    }
-
-    private fun hentVilkår(id: Long): List<Vilkår> {
-        val query = """
-            SELECT * FROM VILKAR WHERE resultat_id = ?
-        """.trimIndent()
-
-        val vilkårene = connection.queryList(query) {
-            setParams {
-                setLong(1, id)
+            setRowMapper { row ->
+                vilkårsresultatId = row.getLong("vr_id")
+                VilkårInternal(
+                    id = row.getLong("vilkar_id"),
+                    type = row.getEnum("type"),
+                    perioder = row.getStringOrNull("perioder")?.let { DefaultJsonMapper.fromJson(it) } ?: emptyList()
+                )
             }
-            setRowMapper(::mapVilkår)
         }
 
-        val perioderQuery = """
-            SELECT * FROM VILKAR_PERIODE WHERE vilkar_id = ANY(?::bigint[])
-        """.trimIndent()
+        if (vilkårsresultatId == null) return null
 
-        val periodene = connection.queryList(perioderQuery) {
-            setParams {
-                setArray(1, vilkårene.map { vilkår -> "${vilkår.id}" })
-            }
-            setRowMapper(::mapPerioder)
-        }
+        val vilkår = vilkårene.map { vilkår -> mapOmTilVilkår(vilkår) }
 
-        return vilkårene.map { vilkår -> mapOmTilVilkår(vilkår, periodene) }
+        return Vilkårsresultat(id = vilkårsresultatId, vilkår = vilkår)
     }
 
     private fun mapOmTilVilkår(
-        vilkår: VilårInternal,
-        perioder: List<VilkårPeriodeInternal>
+        vilkår: VilkårInternal,
     ): Vilkår {
-        val relevantePerioder = perioder.filter { periode -> periode.vilkårId == vilkår.id }.map {
-            Vilkårsperiode(
-                periode = it.periode,
-                utfall = it.utfall,
-                manuellVurdering = it.manuellVurdering,
-                faktagrunnlag = LazyFaktaGrunnlag(connection = connection, periodeId = it.id),
-                begrunnelse = it.begrunnelse,
-                avslagsårsak = it.avslagsårsak,
-                innvilgelsesårsak = it.innvilgelsesårsak,
-                versjon = it.versjon
-            )
-        }
-
-        return Vilkår(vilkår.type, relevantePerioder.toSet())
-    }
-
-    private fun mapVilkår(row: Row): VilårInternal {
-        return VilårInternal(
-            id = row.getLong("id"),
-            type = row.getEnum("type"),
-        )
-    }
-
-    private fun mapPerioder(row: Row): VilkårPeriodeInternal {
-        return VilkårPeriodeInternal(
-            id = row.getLong("id"),
-            vilkårId = row.getLong("vilkar_id"),
-            periode = row.getPeriode("periode"),
-            utfall = row.getEnum("utfall"),
-            manuellVurdering = row.getBoolean("manuell_vurdering"),
-            faktagrunnlag = LazyFaktaGrunnlag(connection = connection, periodeId = row.getLong("id")),
-            begrunnelse = row.getStringOrNull("begrunnelse"),
-            avslagsårsak = row.getEnumOrNull("avslagsarsak"),
-            innvilgelsesårsak = row.getEnumOrNull("innvilgelsesarsak"),
-            versjon = row.getString("versjon")
+        return Vilkår(
+            type = vilkår.type,
+            vilkårsperioder = vilkår.perioder.map {
+                Vilkårsperiode(
+                    periode = Periode(it.periodeFra, it.periodeTil.minusDays(1)),
+                    utfall = it.utfall,
+                    manuellVurdering = it.manuellVurdering,
+                    faktagrunnlag = LazyFaktaGrunnlag(connection = connection, periodeId = it.id),
+                    begrunnelse = it.begrunnelse,
+                    avslagsårsak = it.avslagsårsak,
+                    innvilgelsesårsak = it.innvilgelsesårsak,
+                    versjon = it.versjon
+                )
+            }.toSet()
         )
     }
 
@@ -191,18 +170,18 @@ class VilkårsresultatRepositoryImpl(private val connection: DBConnection) : Vil
         lagre(tilBehandling, eksisterendeResultat)
     }
 
-    internal class VilårInternal(val id: Long, val type: Vilkårtype)
+    private class VilkårInternal(val id: Long, val type: Vilkårtype, val perioder: List<VilkårPeriodeInternal>)
 
-    internal class VilkårPeriodeInternal(
+    private class VilkårPeriodeInternal(
         val id: Long,
-        val vilkårId: Long,
-        val periode: Periode,
+        @JsonProperty("vilkar_id") val vilkårId: Long,
+        @JsonProperty("periode_fra") val periodeFra: LocalDate,
+        @JsonProperty("periode_til") val periodeTil: LocalDate,
         val utfall: Utfall,
-        val manuellVurdering: Boolean = false,
+        @JsonProperty("manuell_vurdering") val manuellVurdering: Boolean = false,
         val begrunnelse: String?,
-        val innvilgelsesårsak: Innvilgelsesårsak? = null,
-        val avslagsårsak: Avslagsårsak? = null,
-        val faktagrunnlag: Faktagrunnlag?,
+        @JsonProperty("innvilgelsesarsak") val innvilgelsesårsak: Innvilgelsesårsak? = null,
+        @JsonProperty("avslagsarsak") val avslagsårsak: Avslagsårsak? = null,
         val versjon: String
     )
 }

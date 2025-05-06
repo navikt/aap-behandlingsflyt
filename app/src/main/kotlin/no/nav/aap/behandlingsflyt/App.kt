@@ -118,13 +118,15 @@ import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.miljo.Miljø
-import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.server.AZURE
 import no.nav.aap.komponenter.server.commonKtorModule
 import no.nav.aap.komponenter.server.plugins.NavIdentInterceptor
@@ -341,9 +343,6 @@ fun Application.startMotor(dataSource: DataSource): Motor {
 }
 
 class DbConfig(
-    val database: String = if (Miljø.er() == MiljøKode.DEV) System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_DATABASE") else System.getenv(
-        "NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_JDBC_URL"
-    ),
     val url: String = System.getenv(
         "NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_JDBC_URL"
     ),

@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 
 class BarnetilleggSteg(
     private val barnetilleggService: BarnetilleggService,
@@ -24,24 +23,36 @@ class BarnetilleggSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         barnetilleggService = BarnetilleggService(repositoryProvider),
         barnetilleggRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
     )
 
-    private val log = LoggerFactory.getLogger(javaClass)
-
-    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (kontekst.vurdering.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
+    override fun utfør(kontekst: FlytKontekstMedPerioder) = when (kontekst.vurdering.vurderingType) {
+        VurderingType.FØRSTEGANGSBEHANDLING -> {
             if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                 avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
                     .avbrytForSteg(type())
-                return Fullført
+                Fullført
+            } else {
+                vurder(kontekst)
             }
         }
 
+        VurderingType.REVURDERING -> {
+            vurder(kontekst)
+        }
+
+        VurderingType.MELDEKORT,
+        VurderingType.IKKE_RELEVANT -> {
+            /* do nothing */
+            Fullført
+        }
+    }
+
+    private fun vurder(kontekst: FlytKontekstMedPerioder): StegResultat {
         val barnetillegg = barnetilleggService.beregn(kontekst.behandlingId)
 
         barnetilleggRepository.lagre(
@@ -54,9 +65,7 @@ class BarnetilleggSteg(
                     )
                 }
         )
-        log.info("Beregnet barnetillegg for behandling med id=${kontekst.behandlingId}")
 
-        // TODO: Bør det inn sjekk om dette skjer i revurdering osv
         if (barnetillegg.segmenter().any { it.verdi.harBarnTilAvklaring() }) {
             return FantAvklaringsbehov(Definisjon.AVKLAR_BARNETILLEGG)
         }

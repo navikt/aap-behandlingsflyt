@@ -129,6 +129,15 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         )
     }
 
+    override fun endreSkrivBrev(avklaringsbehovId: Long, endring: Endring, funnetISteg: StegType
+    ) {
+        oppdaterFunnetISteg(avklaringsbehovId, funnetISteg)
+        endreAvklaringsbehov(
+            avklaringsbehovId,
+            endring
+        )
+    }
+
     private fun oppdaterFunnetISteg(avklaringsbehovId: Long, funnetISteg: StegType) {
         val query = """
                     UPDATE AVKLARINGSBEHOV 
@@ -317,4 +326,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
     )
 
     internal class ÅrsakInternal(val endringId: Long, val årsak: ÅrsakTilReturKode, val årsakFritekst: String?)
+
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        // Denne trengs ikke implementeres
+    }
 }

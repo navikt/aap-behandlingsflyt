@@ -77,15 +77,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
                 return vurderVilkår(kontekst)
             }
 
-            VurderingType.FORLENGELSE -> {
-                val forlengensePeriode = requireNotNull(kontekst.vurdering.forlengelsePeriode)
-                val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-                vilkårsresultat.finnVilkår(Vilkårtype.MEDLEMSKAP).forleng(
-                    forlengensePeriode
-                )
-                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
-            }
-
+            VurderingType.MELDEKORT,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
             }

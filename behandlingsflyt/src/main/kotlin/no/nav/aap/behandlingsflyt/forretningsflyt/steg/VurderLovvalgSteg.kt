@@ -25,14 +25,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderLovvalgSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val personopplysningRepository: PersonopplysningRepository,
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
-    private val sakRepository: SakRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val vilkårService: VilkårService,
@@ -41,7 +39,6 @@ class VurderLovvalgSteg private constructor(
         vilkårsresultatRepository = repositoryProvider.provide(),
         personopplysningRepository = repositoryProvider.provide(),
         medlemskapArbeidInntektRepository = repositoryProvider.provide(),
-        sakRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         vilkårService = VilkårService(repositoryProvider),
@@ -67,11 +64,7 @@ class VurderLovvalgSteg private constructor(
                 return vurderVilkår(kontekst)
             }
 
-            VurderingType.FORLENGELSE -> {
-                vilkårService.forleng(kontekst, Vilkårtype.LOVVALG)
-                return Fullført
-            }
-
+            VurderingType.MELDEKORT,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
                 return Fullført
@@ -85,7 +78,7 @@ class VurderLovvalgSteg private constructor(
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
 
         if (kontekst.harNoeTilBehandling()) {
-            val sak = sakRepository.hent(kontekst.sakId)
+            val rettighetsperiode = kontekst.vurdering.rettighetsperiode
             val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)
                 ?: throw IllegalStateException("Forventet å finne personopplysninger")
             val medlemskapArbeidInntektGrunnlag =
@@ -96,7 +89,7 @@ class VurderLovvalgSteg private constructor(
                         kontekst.sakId
                     )
 
-            Medlemskapvilkåret(vilkårsresultat, sak.rettighetsperiode).vurder(
+            Medlemskapvilkåret(vilkårsresultat, rettighetsperiode).vurder(
                 MedlemskapLovvalgGrunnlag(
                     medlemskapArbeidInntektGrunnlag,
                     personopplysningGrunnlag,

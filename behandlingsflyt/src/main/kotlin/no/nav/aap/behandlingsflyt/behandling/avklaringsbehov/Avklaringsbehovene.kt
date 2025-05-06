@@ -84,6 +84,9 @@ class Avklaringsbehovene(
                     if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erBrevVentebehov() || avklaringsbehov.erAutomatisk()) {
                         // TODO: Vurdere om funnet steg bør ligge på endringen...
                         repository.endreVentepunkt(avklaringsbehov.id, avklaringsbehov.historikk.last(), funnetISteg)
+                    } else if (avklaringsbehov.definisjon == Definisjon.SKRIV_BREV) {
+                        // Midlertidig fiks så lenge vi bruker Definisjon.SKRIV_BREV
+                        repository.endreSkrivBrev(avklaringsbehov.id, avklaringsbehov.historikk.last(), funnetISteg)
                     } else {
                         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
                     }
