@@ -26,4 +26,5 @@ interface AvklaringsbehovOperasjonerRepository : Repository {
     fun kreverToTrinn(avklaringsbehovId: Long, kreverToTrinn: Boolean)
     fun endre(avklaringsbehovId: Long, endring: Endring)
     fun endreVentepunkt(avklaringsbehovId: Long, endring: Endring, funnetISteg: StegType)
+    fun endreSkrivBrev(avklaringsbehovId: Long, endring: Endring, funnetISteg: StegType)
 }

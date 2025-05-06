@@ -75,6 +75,7 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
         avklaringsbehovId: Long,
         endring: Endring
     ) {
+        endreAvklaringsbehov(avklaringsbehovId, endring)
     }
 
     override fun endreVentepunkt(
@@ -82,6 +83,49 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
         endring: Endring,
         funnetISteg: StegType
     ) {
+        oppdaterFunnetISteg(avklaringsbehovId, funnetISteg)
+        endreAvklaringsbehov(avklaringsbehovId, endring)
+    }
+
+    override fun endreSkrivBrev(
+        avklaringsbehovId: Long,
+        endring: Endring,
+        funnetISteg: StegType
+    ) {
+        oppdaterFunnetISteg(avklaringsbehovId, funnetISteg)
+        endreAvklaringsbehov(avklaringsbehovId, endring)
+    }
+
+    private fun endreAvklaringsbehov(
+        avklaringsbehovId: Long,
+        endring: Endring
+    ) {
+        memory.values.flatMap { it.avklaringsbehovene }
+            .single { it.id == avklaringsbehovId }
+            .historikk.add(endring)
+    }
+
+    private fun oppdaterFunnetISteg(avklaringsbehovId: Long, funnetISteg: StegType) {
+        val holder = memory.values
+            .single {
+                it.avklaringsbehovene
+                    .find { it.id == avklaringsbehovId } != null
+            }
+
+        val avklaringsbehov = holder.avklaringsbehovene
+            .single { it.id == avklaringsbehovId }
+
+
+        holder.avklaringsbehovene.removeIf { it.id == avklaringsbehovId }
+        holder.avklaringsbehovene.add(
+            Avklaringsbehov(
+                avklaringsbehovId,
+                avklaringsbehov.definisjon,
+                avklaringsbehov.historikk,
+                funnetISteg,
+                avklaringsbehov.erTotrinn() && !avklaringsbehov.definisjon.kreverToTrinn
+            )
+        )
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
