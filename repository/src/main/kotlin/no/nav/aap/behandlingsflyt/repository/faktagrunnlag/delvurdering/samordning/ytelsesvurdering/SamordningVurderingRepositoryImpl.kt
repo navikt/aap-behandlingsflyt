@@ -24,7 +24,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
         """.trimIndent()
         return connection.queryFirstOrNull(query) {
             setParams {
-                setLong(1, behandlingId.toLong())
+                setLong(1, behandlingId.id)
             }
             setRowMapper {
                 // At denne kunne være nullable er egentlig rester fra tidligere. Vurder å slette
@@ -158,7 +158,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
         """.trimIndent()
         connection.execute(grunnlagQuery) {
             setParams {
-                setLong(1, behandlingId.toLong())
+                setLong(1, behandlingId.id)
                 setLong(2, vurderingerId)
             }
         }
@@ -167,7 +167,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
         connection.execute("UPDATE SAMORDNING_YTELSEVURDERING_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
             setParams {
-                setLong(1, behandlingId.toLong())
+                setLong(1, behandlingId.id)
             }
             setResultValidator { require(it == 1) }
         }
@@ -207,7 +207,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
                 setLongArray(1, samordningVurderingYtelseIds)
                 setLongArray(2, samordningVurderingYtelseIds)
                 setLongArray(3, samordningVurderingIds)
-                setLong(4, behandlingId.toLong())
+                setLong(4, behandlingId.id)
             }
         }
     }

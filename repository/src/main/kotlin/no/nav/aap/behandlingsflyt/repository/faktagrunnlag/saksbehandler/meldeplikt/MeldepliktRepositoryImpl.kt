@@ -138,6 +138,38 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+
+        val meldepliktIds = getMeldepiktIds(behandlingId)
+
+        connection.execute("""
+            delete from meldeplikt_fritak_vurdering where meldelplikt_id = ANY(?::bigint[]);
+            delete from meldeplikt_fritak where id = ANY(?::bigint[]);
+            delete from meldeplikt_fritak_grunnlag where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, meldepliktIds)
+                setLongArray(2, meldepliktIds)
+                setLong(3, behandlingId.id)
+            }
+        }
+    }
+
+    private fun getMeldepiktIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT meldeplikt_id
+                    FROM meldeplikt_fritak_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("meldeplikt_id")
+        }
+    }
+
+
     private fun deaktiverEksisterende(behandlingId: BehandlingId) {
         connection.execute("UPDATE MELDEPLIKT_FRITAK_GRUNNLAG SET AKTIV = FALSE WHERE AKTIV AND BEHANDLING_ID = ?") {
             setParams {

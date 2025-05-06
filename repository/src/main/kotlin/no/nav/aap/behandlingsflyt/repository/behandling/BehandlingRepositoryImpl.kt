@@ -115,7 +115,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         """.trimIndent()
         return connection.queryList(query) {
             setParams {
-                setLong(1, behandlingId.toLong())
+                setLong(1, behandlingId.id)
             }
             setRowMapper {
                 Årsak(it.getEnum("aarsak"), it.getPeriodeOrNull("periode"))
