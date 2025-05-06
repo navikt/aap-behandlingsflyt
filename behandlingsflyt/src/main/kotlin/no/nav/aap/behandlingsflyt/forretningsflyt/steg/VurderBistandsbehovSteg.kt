@@ -121,7 +121,7 @@ class VurderBistandsbehovSteg private constructor(
                 )
             }
 
-            VurderingType.FORLENGELSE,
+            VurderingType.MELDEKORT,
             VurderingType.IKKE_RELEVANT -> {
                 // Skal ikke gjøre noe
             }

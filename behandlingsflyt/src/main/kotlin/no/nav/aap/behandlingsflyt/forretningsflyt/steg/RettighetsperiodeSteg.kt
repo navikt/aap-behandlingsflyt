@@ -42,7 +42,7 @@ class RettighetsperiodeSteg private constructor(
                 }
             }
 
-            VurderingType.IKKE_RELEVANT, VurderingType.FORLENGELSE -> {
+            VurderingType.IKKE_RELEVANT, VurderingType.MELDEKORT -> {
                 // Ikke relevant
             }
         }

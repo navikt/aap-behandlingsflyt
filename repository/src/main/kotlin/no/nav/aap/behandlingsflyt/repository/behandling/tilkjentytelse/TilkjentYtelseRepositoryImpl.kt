@@ -6,13 +6,12 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriod
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
     TilkjentYtelseRepository {
@@ -21,6 +20,8 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
             return TilkjentYtelseRepositoryImpl(connection)
         }
     }
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): List<TilkjentYtelsePeriode>? {
         val tilkjent = connection.queryList(
@@ -122,4 +123,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        log.warn("kopier-metoden er ikke implementert for ${this::class.simpleName}. Er dette korrekt? Hvis ikke, implementer dummy-metode.")
+    }
 }

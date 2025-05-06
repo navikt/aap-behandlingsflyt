@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
@@ -65,6 +66,7 @@ internal class StegOrkestratorTest {
                 perioderTilVurderingService = PerioderTilVurderingService(
                     SakService(SakRepositoryImpl(connection)),
                     BehandlingRepositoryImpl(connection),
+                    FakeUnleash(mapOf()),
                 ),
                 stegKonstruktør = StegKonstruktørImpl(connection)
             ).utfør(

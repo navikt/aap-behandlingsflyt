@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import java.util.*
@@ -30,5 +31,8 @@ object InMemoryPersonRepository: PersonRepository {
 
     override fun finn(ident: Ident): Person? {
         return personer.values.find { it.identer().contains(ident) }
+    }
+
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
     }
 }

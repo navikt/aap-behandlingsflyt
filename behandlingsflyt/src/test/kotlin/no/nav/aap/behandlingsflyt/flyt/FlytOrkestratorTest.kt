@@ -175,6 +175,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlStatsborgerska
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.FakePersoner
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -289,6 +290,7 @@ class FlytOrkestratorTest {
                 .register<YrkesskadeRegisterGatewayImpl>()
                 .register<MeldekortGatewayImpl>()
                 .register<TjenestePensjonGatewayImpl>()
+                .register<FakeUnleash>()
             motor.start()
         }
 

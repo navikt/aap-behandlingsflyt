@@ -64,7 +64,7 @@ class VurderLovvalgSteg private constructor(
                 return vurderVilkår(kontekst)
             }
 
-            VurderingType.FORLENGELSE,
+            VurderingType.MELDEKORT,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
                 return Fullført

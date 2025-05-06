@@ -93,7 +93,7 @@ class VurderSykdomSteg private constructor(
                 }
             }
 
-            VurderingType.FORLENGELSE,
+            VurderingType.MELDEKORT,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
             }

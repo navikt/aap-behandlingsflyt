@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
@@ -43,6 +44,7 @@ class EnklereFlytOrkestratorTest {
         perioderTilVurderingService = PerioderTilVurderingService(
             sakService = sakService,
             behandlingRepository = behandlingRepository,
+            unleashGateway = FakeUnleash(mapOf()),
         ),
         informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
         behandlingRepository = behandlingRepository,
@@ -99,6 +101,7 @@ class EnklereFlytOrkestratorTest {
             perioderTilVurderingService = PerioderTilVurderingService(
                 sakService = sakService,
                 behandlingRepository = behandlingRepository,
+                unleashGateway = FakeUnleash(mapOf()),
             ),
             informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
             behandlingRepository = behandlingRepository,

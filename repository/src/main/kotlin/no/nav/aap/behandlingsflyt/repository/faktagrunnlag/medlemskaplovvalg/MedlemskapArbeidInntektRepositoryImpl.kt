@@ -510,8 +510,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
     }
 
-    override fun kopier(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
-        hentHvisEksisterer(fraBehandlingId) ?: return
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        hentHvisEksisterer(fraBehandling) ?: return
 
         val query = """
             INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
@@ -523,8 +523,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
         connection.execute(query) {
             setParams {
-                setLong(1, tilBehandlingId.toLong())
-                setLong(2, fraBehandlingId.toLong())
+                setLong(1, tilBehandling.toLong())
+                setLong(2, fraBehandling.toLong())
             }
         }
     }

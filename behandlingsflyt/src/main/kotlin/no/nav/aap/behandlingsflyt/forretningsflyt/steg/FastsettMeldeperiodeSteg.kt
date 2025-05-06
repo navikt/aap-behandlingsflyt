@@ -46,7 +46,7 @@ class FastsettMeldeperiodeSteg(
                 return Fullført
             }
 
-            VurderingType.FORLENGELSE,
+            VurderingType.MELDEKORT,
             VurderingType.IKKE_RELEVANT -> {
                 return Fullført
             }

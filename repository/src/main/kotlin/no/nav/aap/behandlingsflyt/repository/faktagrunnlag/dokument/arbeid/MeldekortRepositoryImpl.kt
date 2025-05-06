@@ -160,8 +160,8 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
         }
     }
 
-    override fun kopier(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
-        val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandlingId)
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandling)
         if (eksisterendeGrunnlag == null) {
             return
         }
@@ -171,8 +171,8 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
 
         connection.execute(query) {
             setParams {
-                setLong(1, tilBehandlingId.toLong())
-                setLong(2, fraBehandlingId.toLong())
+                setLong(1, tilBehandling.toLong())
+                setLong(2, fraBehandling.toLong())
             }
         }
     }

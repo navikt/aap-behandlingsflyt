@@ -58,7 +58,7 @@ class FastsettGrunnlagSteg(
                 vurderVilkåret(kontekst, vilkår, rettighetsperiode, vilkårsresultat)
             }
 
-            VurderingType.FORLENGELSE,
+            VurderingType.MELDEKORT,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
             }

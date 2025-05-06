@@ -507,6 +507,9 @@ class StatistikkJobbUtførerTest {
                 TODO("Not yet implemented")
             }
 
+            override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+            }
+
         }
 
         val beregningsgrunnlagRepository = InMemoryBeregningsgrunnlagRepository
@@ -567,6 +570,9 @@ class StatistikkJobbUtførerTest {
                 TODO("Not yet implemented")
             }
 
+            override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+            }
+
         }
 
         val pipRepository = object : PipRepository {
@@ -581,6 +587,9 @@ class StatistikkJobbUtførerTest {
 
             override fun finnIdenterPåBehandling(behandlingReferanse: BehandlingReferanse): List<IdentPåSak> {
                 TODO("Not yet implemented")
+            }
+
+            override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
             }
         }
 

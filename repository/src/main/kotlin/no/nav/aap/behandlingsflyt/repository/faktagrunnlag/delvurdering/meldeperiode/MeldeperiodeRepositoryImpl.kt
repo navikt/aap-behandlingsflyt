@@ -16,9 +16,10 @@ class MeldeperiodeRepositoryImpl(private val connection: DBConnection): Meldeper
 
     override fun hent(behandlingId: BehandlingId): List<Periode> {
         val query = """
-            SELECT * FROM MELDEPERIODE 
+            SELECT periode FROM MELDEPERIODE 
             JOIN MELDEPERIODE_GRUNNLAG ON MELDEPERIODE.meldeperiodegrunnlag_id = MELDEPERIODE_GRUNNLAG.id
-            WHERE behandling_id = ? AND aktiv = true order by periode
+            WHERE behandling_id = ? AND aktiv = true
+            order by periode
         """.trimIndent()
         return connection.queryList(query) {
             setParams {
@@ -65,4 +66,7 @@ class MeldeperiodeRepositoryImpl(private val connection: DBConnection): Meldeper
         }
     }
 
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        lagre(tilBehandling, hent(fraBehandling))
+    }
 }

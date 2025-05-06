@@ -136,4 +136,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
             memoryStegHistorikk[behandlingId] = stegHistorikk.plus(tilstand).sorted()
         }
     }
+
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+    }
 }
