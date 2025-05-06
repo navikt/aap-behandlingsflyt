@@ -105,19 +105,21 @@ class VilkårsresultatRepositoryImpl(private val connection: DBConnection) : Vil
 SELECT vr.id as vr_id, vilkar.id as vilkar_id, *
 FROM vilkar_resultat vr
          left join VILKAR on vr.id = VILKAR.resultat_id
-         left JOIN (SELECT vp.vilkar_id                              as vp_vilkar_id,
-                           json_agg(json_build_object('id', id, 'vilkar_id', vilkar_id,
-                                                      'periode_fra',
-                                                      lower(periode), 'periode_til', upper(periode),
-                                                      'utfall', utfall, 'manuell_vurdering',
-                                                      manuell_vurdering, 'begrunnelse',
-                                                      begrunnelse, 'innvilgelsesarsak',
-                                                      innvilgelsesarsak, 'faktagrunnlag',
-                                                      faktagrunnlag,
-                                                      'versjon', versjon, 'avslagsarsak',
-                                                      avslagsarsak)) as perioder
-                    from vilkar_periode vp
-                    group by vp.vilkar_id) vpp
+         left JOIN lateral (SELECT vp.vilkar_id                              as vp_vilkar_id,
+                                   json_agg(json_build_object('id', id, 'vilkar_id', vilkar_id,
+                                                              'periode_fra',
+                                                              lower(periode), 'periode_til',
+                                                              upper(periode),
+                                                              'utfall', utfall, 'manuell_vurdering',
+                                                              manuell_vurdering, 'begrunnelse',
+                                                              begrunnelse, 'innvilgelsesarsak',
+                                                              innvilgelsesarsak, 'faktagrunnlag',
+                                                              faktagrunnlag,
+                                                              'versjon', versjon, 'avslagsarsak',
+                                                              avslagsarsak)) as perioder
+                            from vilkar_periode vp
+                            where vp.vilkar_id = vilkar.id
+                            group by vp.vilkar_id) vpp
                    on vpp.vp_vilkar_id = VILKAR.id
 WHERE behandling_id = ?
   and aktiv = true
