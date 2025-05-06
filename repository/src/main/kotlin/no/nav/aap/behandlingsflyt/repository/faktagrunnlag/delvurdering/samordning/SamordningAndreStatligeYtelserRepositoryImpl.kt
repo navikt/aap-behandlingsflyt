@@ -131,6 +131,19 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        log.warn("kopier-metoden er ikke implementert for ${this::class.simpleName}. Er dette korrekt? Hvis ikke, implementer dummy-metode.")
+        val eksisterer = hentHvisEksisterer(fraBehandling)
+        if (eksisterer == null) {
+            return
+        }
+        val query = """
+            INSERT INTO SAMORDNING_ANDRE_STATLIGE_YTELSER_GRUNNLAG (behandling_id, vurdering_id) SELECT ?, vurdering_id from SAMORDNING_ANDRE_STATLIGE_YTELSER_GRUNNLAG where behandling_id = ? and aktiv
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setLong(1, tilBehandling.toLong())
+                setLong(2, fraBehandling.toLong())
+            }
+        }
     }
 }
