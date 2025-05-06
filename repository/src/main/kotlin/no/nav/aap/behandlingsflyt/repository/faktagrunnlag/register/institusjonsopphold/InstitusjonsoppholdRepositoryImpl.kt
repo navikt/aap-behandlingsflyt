@@ -302,5 +302,72 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+
+        val oppholdPersonIds = getOppholdPersonIds(behandlingId)
+        val helseoppholdVurderingerIds = getHelseOppholdVurderingerIds(behandlingId)
+        val soningVurderingerIds = getSoningVurderingerIds(behandlingId)
+
+        connection.execute("""
+            delete from helseopphold_vurdering where helseopphold_vurderinger_id = ANY(?::bigint[]);
+            delete from helseopphold_vurderinger where id = ANY(?::bigint[]);
+            delete from soning_vurdering where soning_vurderinger_id = ANY(?::bigint[]);
+            delete from soning_vurderinger where id = ANY(?::bigint[]);
+            delete from opphold where opphold_person_id = ANY(?::bigint[]);
+            delete from opphold_grunnlag where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, helseoppholdVurderingerIds)
+                setLongArray(1, helseoppholdVurderingerIds)
+                setLongArray(1, soningVurderingerIds)
+                setLongArray(1, soningVurderingerIds)
+                setLongArray(1, oppholdPersonIds)
+                setLong(2, behandlingId.id)
+            }
+        }
+    }
+
+    private fun getOppholdPersonIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT opphold_person_id
+                    FROM opphold_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("opphold_person_id")
+        }
+    }
+
+    private fun getSoningVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT soning_vurderinger_id
+                    FROM opphold_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("soning_vurderinger_id")
+        }
+    }
+
+    private fun getHelseOppholdVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT helseopphold_vurderinger_id
+                    FROM opphold_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("helseopphold_vurderinger_id")
+        }
+    }
+
     internal data class Keychain(val oppholdId: Long?, val soningvurderingId: Long?, val helsevurderingId: Long?)
 }

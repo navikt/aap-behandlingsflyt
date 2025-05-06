@@ -102,7 +102,7 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
         """.trimIndent()) {
             setParams {
                 setLongArray(1, inntektIds)
-                setLong(2, behandlingId.toLong())
+                setLong(2, behandlingId.id)
             }
         }
     }
