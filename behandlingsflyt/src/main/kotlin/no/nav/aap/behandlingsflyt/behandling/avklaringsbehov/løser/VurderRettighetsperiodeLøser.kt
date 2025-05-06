@@ -12,16 +12,18 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
-import no.nav.aap.komponenter.miljo.Miljø
-import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import java.time.LocalDate
 
 class VurderRettighetsperiodeLøser(connection: DBConnection) :
     AvklaringsbehovsLøser<VurderRettighetsperiodeLøsning> {
 
+    private val unleashGateway = GatewayProvider.provide<UnleashGateway>()
     private val repositoryProvider = RepositoryRegistry.provider(connection)
     private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
     private val sakRepository = repositoryProvider.provide<SakRepository>()
@@ -31,8 +33,9 @@ class VurderRettighetsperiodeLøser(connection: DBConnection) :
     private val sakOgBehandlingService = SakOgBehandlingService(grunnlagKopierer, sakRepository, behandlingRepository)
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: VurderRettighetsperiodeLøsning): LøsningsResultat {
-        if (Miljø.er() == MiljøKode.PROD) {
-            throw UgyldigForespørselException("Kan kke overstyre virkningstidspunkt i prod ennå")
+
+        if (!unleashGateway.isEnabled(BehandlingsflytFeature.OverstyrStarttidspunkt, kontekst.bruker.ident)) {
+            throw UgyldigForespørselException("Funksjonsbryter for overstyr starttidspunkt er skrudd av")
         }
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val sak = sakRepository.hent(kontekst.kontekst.sakId)

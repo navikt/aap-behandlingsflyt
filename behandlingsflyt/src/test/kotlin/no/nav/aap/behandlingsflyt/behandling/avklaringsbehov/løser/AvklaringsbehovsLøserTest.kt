@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
+import no.nav.aap.behandlingsflyt.integrasjon.unleash.UnleashService
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
@@ -30,9 +31,11 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepositoryImpl
 import org.assertj.core.api.Assertions
@@ -74,6 +77,7 @@ internal class AvklaringsbehovsLøserTest {
         RepositoryRegistry.register<MottattDokumentRepositoryImpl>()
         RepositoryRegistry.register<VurderRettighetsperiodeRepositoryImpl>()
         RepositoryRegistry.register<FlytJobbRepositoryImpl>()
+        GatewayRegistry.register<FakeUnleash>()
     }
 
     @Test
