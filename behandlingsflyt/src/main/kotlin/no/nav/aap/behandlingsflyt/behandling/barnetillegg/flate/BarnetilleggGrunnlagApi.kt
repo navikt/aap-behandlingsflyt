@@ -4,7 +4,6 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.BarnetilleggService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
@@ -17,7 +16,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
@@ -42,7 +40,6 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource, repositoryRegistr
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val vilkårsresultatRepository =
                         repositoryProvider.provide<VilkårsresultatRepository>()
-                    val sakRepository = repositoryProvider.provide<SakRepository>()
                     val personopplysningRepository =
                         repositoryProvider.provide<PersonopplysningRepository>()
 
@@ -50,9 +47,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource, repositoryRegistr
                         BehandlingReferanseService(behandlingRepository).behandling(req)
                     val barnRepository = repositoryProvider.provide<BarnRepository>()
 
-                    val sakOgBehandlingService = SakOgBehandlingService(
-                        GrunnlagKopiererImpl(repositoryProvider), sakRepository, behandlingRepository
-                    )
+                    val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider)
                     val barnetilleggService = BarnetilleggService(
                         sakOgBehandlingService,
                         barnRepository,

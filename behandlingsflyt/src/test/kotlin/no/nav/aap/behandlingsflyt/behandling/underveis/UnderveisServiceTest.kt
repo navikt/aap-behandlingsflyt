@@ -1,27 +1,12 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
-import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
-import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.MeldekortRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
@@ -38,30 +23,7 @@ class UnderveisServiceTest {
     @Test
     fun `skal vurdere alle reglene`() {
         dataSource.transaction { connection ->
-            val underveisService =
-                UnderveisService(
-                    SakOgBehandlingService(
-                        GrunnlagKopierer(connection), SakRepositoryImpl(connection),
-                        BehandlingRepositoryImpl(connection)
-                    ),
-                    VilkårsresultatRepositoryImpl(connection),
-                    MeldekortRepositoryImpl(connection),
-                    UnderveisRepositoryImpl(connection),
-                    AktivitetspliktRepositoryImpl(connection),
-                    EtAnnetStedUtlederService(
-                        BarnetilleggRepositoryImpl(connection),
-                        InstitusjonsoppholdRepositoryImpl(connection),
-                        SakRepositoryImpl(connection),
-                        BehandlingRepositoryImpl(connection)
-                    ),
-                    ArbeidsevneRepositoryImpl(connection),
-                    MeldepliktRepositoryImpl(connection),
-                    MeldeperiodeRepositoryImpl(connection),
-                    vedtakService = VedtakService(
-                        vedtakRepository = VedtakRepositoryImpl(connection),
-                        behandlingRepository = BehandlingRepositoryImpl(connection),
-                    ),
-                )
+            val underveisService = UnderveisService(postgresRepositoryRegistry.provider(connection))
             val søknadsdato = LocalDate.now().minusDays(29)
             val periode = Periode(søknadsdato, søknadsdato.plusYears(3))
             val aldersVilkåret =
@@ -76,7 +38,7 @@ class UnderveisServiceTest {
                         )
                     )
                 )
-           val lovvalgVilkåret =
+            val lovvalgVilkåret =
                 Vilkår(
                     Vilkårtype.LOVVALG, setOf(
                         Vilkårsperiode(
@@ -127,7 +89,7 @@ class UnderveisServiceTest {
             val relevanteVilkår = listOf(aldersVilkåret, lovvalgVilkåret, bistandVilkåret, medlemskapVilkåret, sykdomsVilkåret)
             val input = tomUnderveisInput(
                 rettighetsperiode = periode,
-                vilkårsresultat =  Vilkårsresultat(null, relevanteVilkår),
+                vilkårsresultat = Vilkårsresultat(null, relevanteVilkår),
                 opptrappingPerioder = listOf(Periode(søknadsdato.plusYears(2), søknadsdato.plusYears(3))),
                 kvoter = kvoter
             )

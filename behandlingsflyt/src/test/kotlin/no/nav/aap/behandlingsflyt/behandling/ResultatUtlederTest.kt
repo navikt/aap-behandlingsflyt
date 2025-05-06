@@ -4,8 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
@@ -13,7 +11,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.BeriketBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -25,6 +22,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
@@ -140,17 +138,6 @@ class ResultatUtlederTest {
     }
 
     private fun opprettBehandling(sak: Sak): BeriketBehandling {
-        val sakRepository = InMemorySakRepository
-        val sakOgBehandlingService = SakOgBehandlingService(
-            grunnlagKopierer = object : GrunnlagKopierer {
-                override fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
-
-                }
-            },
-            sakRepository = sakRepository,
-            behandlingRepository = InMemoryBehandlingRepository,
-        )
-        val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(sak.saksnummer, listOf())
-        return behandling
+        return InMemorySakOgBehandlingService.finnEllerOpprettBehandling(sak.saksnummer, listOf())
     }
 }

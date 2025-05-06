@@ -4,8 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
@@ -27,12 +25,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
@@ -304,7 +302,7 @@ class SamordningStegTest {
                 sakId = behandling.sakId,
                 behandlingId = behandling.id,
                 forrigeBehandlingId = behandling.forrigeBehandlingId,
-                behandlingType =behandling.typeBehandling(),
+                behandlingType = behandling.typeBehandling(),
                 vurdering = VurderingTilBehandling(
                     vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
                     årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
@@ -483,16 +481,8 @@ class SamordningStegTest {
     }
 
     private fun opprettBehandling(sak: Sak): Behandling {
-        return SakOgBehandlingService(
-            object : GrunnlagKopierer {
-                override fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
-                }
-            },
-            InMemorySakRepository,
-            InMemoryBehandlingRepository,
-        ).finnEllerOpprettBehandling(
-            sak.saksnummer,
-            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
-        ).behandling
+        return InMemorySakOgBehandlingService
+            .finnEllerOpprettBehandling(sak.saksnummer, listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD)))
+            .behandling
     }
 }
