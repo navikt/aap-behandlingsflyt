@@ -174,11 +174,8 @@ val PERSON_QUERY_HISTORIKK = """
             gyldigTilOgMed
             utenlandskAdresse {
               adressenavnNummer
-              bygningEtasjeLeilighet
-              postboksNummerNavn
               postkode
               bySted
-              regionDistriktOmraade
               landkode
             }
         },
@@ -187,11 +184,8 @@ val PERSON_QUERY_HISTORIKK = """
             gyldigTilOgMed
             utenlandskAdresse {
               adressenavnNummer
-              bygningEtasjeLeilighet
-              postboksNummerNavn
               postkode
               bySted
-              regionDistriktOmraade
               landkode
             }
         },
@@ -208,11 +202,8 @@ val PERSON_QUERY_HISTORIKK = """
             },
             utenlandskAdresse {
               adressenavnNummer
-              bygningEtasjeLeilighet
-              postboksNummerNavn
               postkode
               bySted
-              regionDistriktOmraade
               landkode
             }
         },
