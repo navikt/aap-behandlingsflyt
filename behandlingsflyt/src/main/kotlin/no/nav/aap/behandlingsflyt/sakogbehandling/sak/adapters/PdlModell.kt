@@ -99,15 +99,21 @@ data class PdlFolkeregistermetadata(
 )
 
 data class KontaktAdresse(
+    val gyldigFraOgMed: LocalDate? = null,
+    val gyldigTilOgMed: LocalDate? = null,
     val utenlandskAdresse: UtenlandskAdresse?,
     val utenlandskAdresseIFrittFormat: UtenlandskadresseIFrittFormat?
 )
 
 data class BostedsAdresse(
+    val gyldigFraOgMed: LocalDate? = null,
+    val gyldigTilOgMed: LocalDate? = null,
     val utenlandskAdresse: UtenlandskAdresse?
 )
 
 data class OppholdsAdresse(
+    val gyldigFraOgMed: LocalDate? = null,
+    val gyldigTilOgMed: LocalDate? = null,
     val utenlandskAdresse: UtenlandskAdresse?
 )
 

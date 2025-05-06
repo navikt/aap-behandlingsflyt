@@ -102,6 +102,8 @@ val PERSON_QUERY = """
     query($ident: ID!){
       hentPerson(ident: $ident) {
         oppholdsadresse {
+            gyldigFraOgMed
+            gyldigTilOgMed
             utenlandskAdresse {
               adressenavnNummer
               bygningEtasjeLeilighet
@@ -113,6 +115,8 @@ val PERSON_QUERY = """
             }
         },
         bostedsadresse {
+            gyldigFraOgMed
+            gyldigTilOgMed
             utenlandskAdresse {
               adressenavnNummer
               bygningEtasjeLeilighet
@@ -124,6 +128,8 @@ val PERSON_QUERY = """
             }
         },
         kontaktadresse {
+            gyldigFraOgMed
+            gyldigTilOgMed
             utenlandskAdresseIFrittFormat {
                 adresselinje1
                 adresselinje2
@@ -164,6 +170,8 @@ val PERSON_QUERY_HISTORIKK = """
     query($ident: ID!){
       hentPerson(ident: $ident) {
         oppholdsadresse(historikk: true) {
+            gyldigFraOgMed
+            gyldigTilOgMed
             utenlandskAdresse {
               adressenavnNummer
               bygningEtasjeLeilighet
@@ -175,6 +183,8 @@ val PERSON_QUERY_HISTORIKK = """
             }
         },
         bostedsadresse(historikk: true) {
+            gyldigFraOgMed
+            gyldigTilOgMed
             utenlandskAdresse {
               adressenavnNummer
               bygningEtasjeLeilighet
@@ -186,6 +196,8 @@ val PERSON_QUERY_HISTORIKK = """
             }
         },
         kontaktadresse(historikk: true) {
+            gyldigFraOgMed
+            gyldigTilOgMed
             utenlandskAdresseIFrittFormat {
                 adresselinje1
                 adresselinje2
