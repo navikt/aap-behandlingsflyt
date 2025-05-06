@@ -78,7 +78,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRelasjonDataRe
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRequest
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlStatsborgerskap
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
+import no.nav.aap.behandlingsflyt.test.modell.MockUnleashFeature
+import no.nav.aap.behandlingsflyt.test.modell.MockUnleashFeatures
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.brev.kontrakt.BestillBrevRequest
 import no.nav.aap.brev.kontrakt.BestillBrevResponse
 import no.nav.aap.brev.kontrakt.Brev
@@ -140,6 +143,8 @@ object FakeServers : AutoCloseable {
     private val utbetal = embeddedServer(Netty, port = 0, module = { utbetalFake() })
     private val meldekort = embeddedServer(Netty, port = 0, module = { meldekortFake() })
     private val tjenestePensjon = embeddedServer(Netty, port = 0, module = { tjenestePensjonFake() })
+    private val unleash = embeddedServer(Netty, port = 0, module = { unleashFake() })
+
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
@@ -168,7 +173,8 @@ object FakeServers : AutoCloseable {
         routing {
             post("/oppdater-oppgaver") {
                 val received = call.receive<BehandlingFlytStoppetHendelse>()
-                val åpneBehov = received.avklaringsbehov.filter { it.status.erÅpent() }.map { Pair(it.avklaringsbehovDefinisjon.name, it.status) }
+                val åpneBehov = received.avklaringsbehov.filter { it.status.erÅpent() }
+                    .map { Pair(it.avklaringsbehovDefinisjon.name, it.status) }
                 FakeServers.log.info("Åpne behov $åpneBehov")
                 FakeServers.log.info("Fikk oppgave-oppdatering: {}", received)
                 call.respond(HttpStatusCode.NoContent)
@@ -306,7 +312,7 @@ object FakeServers : AutoCloseable {
         }
     }
 
-    private fun Application.tjenestePensjonFake(){
+    private fun Application.tjenestePensjonFake() {
         install(ContentNegotiation) {
             jackson {
                 registerModule(JavaTimeModule())
@@ -330,6 +336,34 @@ object FakeServers : AutoCloseable {
                 val response = TjenestePensjonRespons(
                     call.parameters["fnr"] ?: "",
                 )
+
+                call.respond(response)
+            }
+        }
+    }
+
+
+    private fun Application.unleashFake() {
+        install(ContentNegotiation) {
+            register(
+                ContentType.Application.Json,
+                JacksonConverter(objectMapper = DefaultJsonMapper.objectMapper(), true)
+            )
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@unleashFake.log.info("Unleash :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                call.respond(
+                    status = HttpStatusCode.InternalServerError,
+                    message = ErrorRespons(cause.message)
+                )
+            }
+        }
+        //create route
+        routing {
+            get("/api/client/features") {
+                val features = BehandlingsflytFeature.entries.map { MockUnleashFeature(it.name, true) }
+                val response = MockUnleashFeatures(features = features)
 
                 call.respond(response)
             }
@@ -1328,13 +1362,14 @@ object FakeServers : AutoCloseable {
                 ident = testPerson.identer.first().identifikator,
                 person =
                     PdlPersonBolk(
-                        navn = listOf(PdlNavn(
-                            fornavn = testPerson.navn.fornavn,
-                            mellomnavn = null,
-                            etternavn = testPerson.navn.etternavn
+                        navn = listOf(
+                            PdlNavn(
+                                fornavn = testPerson.navn.fornavn,
+                                mellomnavn = null,
+                                etternavn = testPerson.navn.etternavn
+                            )
                         )
                     )
-                )
             )
         }
 
@@ -1597,6 +1632,7 @@ object FakeServers : AutoCloseable {
         utbetal.start()
         meldekort.start()
         tjenestePensjon.start()
+        unleash.start()
 
         println("AZURE PORT ${azure.port()}")
 
@@ -1697,7 +1733,12 @@ object FakeServers : AutoCloseable {
         //tjenestepensjon
         System.setProperty("integrasjon.tjenestepensjon.url", "http://localhost:${tjenestePensjon.port()}")
         System.setProperty("integrasjon.tjenestepensjon.scope", "tjenestepensjon")
-        
+
+        //unleash
+        System.setProperty("nais.app.name", "behandlingsflyt")
+        System.setProperty("unleash.server.api.url", "http://localhost:${unleash.port()}")
+        System.setProperty("unleash.server.api.token", "token-behandlingsflyt-unleash")
+
         //Azp
         System.setProperty("integrasjon.tilgang.azp", UUID.randomUUID().toString())
         System.setProperty("integrasjon.brev.azp", UUID.randomUUID().toString())
@@ -1730,6 +1771,7 @@ object FakeServers : AutoCloseable {
         utbetal.stop(0L, 0L)
         meldekort.stop(0L, 0L)
         tjenestePensjon.stop(0L, 0L)
+        unleash.stop(0L, 0L)
     }
 }
 

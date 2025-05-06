@@ -10,11 +10,22 @@ import no.nav.aap.behandlingsflyt.EMPTY_JSON_RESPONSE
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurdering
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.httpklient.auth.bruker
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -23,7 +34,6 @@ import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import javax.sql.DataSource
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
 private val log = LoggerFactory.getLogger("hendelse.MottattHendelseAPI")
 
@@ -49,6 +59,7 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
                     sakPathParam = SakPathParam("saksnummer"),
                 )
             ) { _, dto ->
+                validerHendelse(dto, bruker())
                 registrerMottattHendelse(dto, dataSource)
                 respond(EMPTY_JSON_RESPONSE, HttpStatusCode.Accepted)
             }
@@ -58,11 +69,12 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
 
 private fun registrerMottattHendelse(
     dto: Innsending,
-    dataSource: DataSource
+    dataSource: DataSource,
 ) {
     MDC.putCloseable("saksnummer", dto.saksnummer.toString()).use {
         dataSource.transaction { connection ->
             val repositoryProvider = RepositoryRegistry.provider(connection)
+
             val sak = repositoryProvider.provide<SakRepository>().hent(dto.saksnummer)
             val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
             val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
@@ -83,6 +95,22 @@ private fun registrerMottattHendelse(
                     ),
                 )
             }
+        }
+    }
+}
+
+fun validerHendelse(innsending: Innsending, bruker: Bruker) {
+    if (innsending.type == InnsendingType.MANUELL_REVURDERING && innsending.melding is ManuellRevurdering) {
+        val melding = innsending.melding as ManuellRevurderingV0
+        val gjelderOverstyringAvStarttidspunkt =
+            melding.årsakerTilBehandling.contains(ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE)
+        val unleashGateway = GatewayProvider.provide<UnleashGateway>()
+        if (gjelderOverstyringAvStarttidspunkt && !unleashGateway.isEnabled(
+                BehandlingsflytFeature.OverstyrStarttidspunkt,
+                bruker.ident
+            )
+        ) {
+            throw UgyldigForespørselException("Funksjonsbryter for overstyr starttidspunkt er skrudd av")
         }
     }
 }
