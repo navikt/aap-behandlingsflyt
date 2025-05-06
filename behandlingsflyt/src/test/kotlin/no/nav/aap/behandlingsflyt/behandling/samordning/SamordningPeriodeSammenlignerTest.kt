@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
@@ -31,7 +30,7 @@ class SamordningPeriodeSammenlignerTest {
 
     @Test
     fun `om det kun er en lagring, så er alle nye`() {
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Førstegangsbehandling)
+        val behandling = opprettBehandling(nySak())
         val samordningPeriodeSammenligner = SamordningPeriodeSammenligner(InMemorySamordningYtelseRepository)
 
         InMemorySamordningYtelseRepository.lagre(
@@ -58,7 +57,7 @@ class SamordningPeriodeSammenlignerTest {
 
     @Test
     fun `det kommer en ekstra, ikke overlappende periode`() {
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Førstegangsbehandling)
+        val behandling = opprettBehandling(nySak())
         val samordningPeriodeSammenligner = SamordningPeriodeSammenligner(InMemorySamordningYtelseRepository)
 
         val fixedClock = Clock.fixed(Instant.now(), ZoneId.systemDefault())
@@ -131,7 +130,7 @@ class SamordningPeriodeSammenlignerTest {
 
     @Test
     fun `periode har blitt forlenget, skal markeres som NY`() {
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Førstegangsbehandling)
+        val behandling = opprettBehandling(nySak())
         val samordningPeriodeSammenligner = SamordningPeriodeSammenligner(InMemorySamordningYtelseRepository)
 
         val fixedClock = Clock.fixed(Instant.now(), ZoneId.systemDefault())
@@ -197,7 +196,7 @@ class SamordningPeriodeSammenlignerTest {
 
     @Test
     fun `ny periode med annen ytelse skal ikke endre status`() {
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Førstegangsbehandling)
+        val behandling = opprettBehandling(nySak())
         val samordningPeriodeSammenligner = SamordningPeriodeSammenligner(InMemorySamordningYtelseRepository)
 
         val fixedClock = Clock.fixed(Instant.now(), ZoneId.systemDefault())
@@ -279,7 +278,7 @@ class SamordningPeriodeSammenlignerTest {
         ).finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
     }
 
-    private fun opprettBehandling(sak: Sak, typeBehandling: TypeBehandling): Behandling {
+    private fun opprettBehandling(sak: Sak): Behandling {
         return SakOgBehandlingService(
             object : GrunnlagKopierer {
                 override fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
