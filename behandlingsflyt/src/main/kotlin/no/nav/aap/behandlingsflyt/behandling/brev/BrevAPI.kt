@@ -116,7 +116,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                             .filter { it.erÅpent() }
 
                         if (skrivBrevAvklaringsbehov.size > 1) {
-                            log.warn("Fant flere avklaringsbehov for å skrive brev for behandling ${behandling.id}: "
+                            log.warn("Fant flere åpne avklaringsbehov for å skrive brev for behandling ${behandling.id}: "
                             + skrivBrevAvklaringsbehov.joinToString { it.toString() })
                         }
 
