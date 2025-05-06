@@ -1,10 +1,13 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryservice
 
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 
 val InMemorySakOgBehandlingService = SakOgBehandlingService(
     grunnlagKopierer = object: GrunnlagKopierer {
@@ -13,4 +16,8 @@ val InMemorySakOgBehandlingService = SakOgBehandlingService(
     },
     sakRepository = InMemorySakRepository,
     behandlingRepository = InMemoryBehandlingRepository,
+    trukketSøknadService = TrukketSøknadService(
+        InMemoryAvklaringsbehovRepository,
+        InMemoryTrukketSøknadRepository
+    ),
 )

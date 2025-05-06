@@ -37,6 +37,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Refusjonkr
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SamordningVentPaVirkningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TrekkSøknadLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderFormkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
@@ -46,6 +47,7 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
 import no.nav.aap.behandlingsflyt.drift.Driftfunksjoner
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
@@ -138,6 +140,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -154,7 +157,6 @@ import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
@@ -587,6 +589,65 @@ class FlytOrkestratorTest {
 
         assertThat(alleAvklaringsbehov).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV) }
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+    }
+
+    @Test
+    fun `trukket søknad blokkerer nye ytelsesbehandlinger`() {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        val person = TestPerson(
+            fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
+        )
+        FakePersoner.leggTil(person)
+
+        val ident = person.aktivIdent()
+
+        // Sender inn en søknad
+        var behandling = sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("10"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"),
+                        yrkesskade = "NEI",
+                        oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
+                    ),
+                ),
+                periode = periode
+            )
+        )
+        løsSykdom(behandling)
+        leggTilÅrsakForBehandling(behandling, listOf(Årsak(ÅrsakTilBehandling.SØKNAD_TRUKKET)))
+        assertThat(hentAlleAvklaringsbehov(behandling)).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erÅpent() && avklaringsbehov.definisjon == Definisjon.VURDER_TREKK_AV_SØKNAD).isTrue() }
+
+        behandling = løsAvklaringsBehov(
+            behandling,
+            TrekkSøknadLøsning(begrunnelse = "trekker søknaden"),
+        )
+
+        assertThat(hentAlleAvklaringsbehov(behandling)).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erAvsluttet()).isTrue() }
+        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
+
+        behandling = sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("10"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"),
+                        yrkesskade = "NEI",
+                        oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
+                    ),
+                ),
+                periode = periode
+            )
+        )
+
+        assertThat(behandling.forrigeBehandlingId).isNull()
+        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
     }
 
     @Test
@@ -3022,5 +3083,24 @@ class FlytOrkestratorTest {
             brevbestillingReferanse = brevbestillingReferanse,
             handling = SkrivBrevAvklaringsbehovLøsning.Handling.FERDIGSTILL
         )
+    }
+
+    private fun leggTilÅrsakForBehandling(behandling: Behandling, årsaker: List<Årsak>) {
+        dataSource.transaction { connection ->
+            SakOgBehandlingService(postgresRepositoryRegistry.provider(connection))
+                .finnEllerOpprettBehandling(behandling.sakId, årsaker)
+        }
+        prosesserBehandling(behandling)
+    }
+
+    private fun prosesserBehandling(behandling: Behandling) {
+        dataSource.transaction { connection ->
+            FlytOrkestrator(postgresRepositoryRegistry.provider(connection)).forberedOgProsesserBehandling(FlytKontekst(
+                sakId = behandling.sakId,
+                behandlingId = behandling.id,
+                forrigeBehandlingId = behandling.forrigeBehandlingId,
+                behandlingType = behandling.typeBehandling(),
+            ))
+        }
     }
 }
