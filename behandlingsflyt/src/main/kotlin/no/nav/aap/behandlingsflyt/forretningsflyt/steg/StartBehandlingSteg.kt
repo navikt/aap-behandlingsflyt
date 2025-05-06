@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -58,6 +59,9 @@ class StartBehandlingSteg private constructor(
         }
 
         if (kontekst.behandlingType == TypeBehandling.Klage) {
+            if (Miljø.erLokal()) {
+                return Fullført
+            }
             return FantVentebehov(
                 Ventebehov(
                     definisjon = Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON,

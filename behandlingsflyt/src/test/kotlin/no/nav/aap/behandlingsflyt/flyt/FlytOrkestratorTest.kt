@@ -187,6 +187,7 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -2626,7 +2627,8 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `Skal sette behandling på vent hvis man mottar klage`() {
+    fun `Skal sette behandling på vent hvis man mottar klage, og man ikke kjører lokalt`() {
+        System.setProperty("NAIS_CLUSTER_NAME", "noeannet-gcp")
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val sak = hentSak(ident, periode)
@@ -2655,6 +2657,7 @@ class FlytOrkestratorTest {
         assertThat(åpneAvklaringsbehov.erÅpent())
         assertThat(åpneAvklaringsbehov.erVentepunkt())
         assertThat(åpneAvklaringsbehov.definisjon == Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON)
+        System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
     }
 
     @Test

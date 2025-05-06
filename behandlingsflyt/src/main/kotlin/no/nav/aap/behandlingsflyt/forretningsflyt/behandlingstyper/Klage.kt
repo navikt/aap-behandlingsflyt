@@ -4,11 +4,13 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
 import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.FormkravSteg
 
 object Klage : BehandlingType {
     override fun flyt(): BehandlingFlyt {
         return BehandlingFlytBuilder()
             .medSteg(steg = StartBehandlingSteg)
+            .medSteg(steg = FormkravSteg)
             .build()
     }
 }
