@@ -110,6 +110,37 @@ class SamordningRepositoryImpl(private val connection: DBConnection) : Samordnin
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+
+        val smaordningPerioderIds = getSamordningPerioderIds(behandlingId)
+
+        connection.execute("""
+            delete from samordning_periode where perioder_id = ANY(?::bigint[]);
+            delete from samordning_perioder where id = ANY(?::bigint[]);
+            delete from samordning_grunnlag where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, smaordningPerioderIds)
+                setLongArray(2, smaordningPerioderIds)
+                setLong(3, behandlingId.toLong())
+            }
+        }
+    }
+
+    private fun getSamordningPerioderIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT perioder_id
+                    FROM samordning_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("perioder_id")
+        }
+    }
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandling)
         if (eksisterendeGrunnlag == null) {

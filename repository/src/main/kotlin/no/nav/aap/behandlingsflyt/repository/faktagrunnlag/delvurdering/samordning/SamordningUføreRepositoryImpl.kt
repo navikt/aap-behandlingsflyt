@@ -112,6 +112,37 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
 
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+
+        val samordningUforeVurderingIds = getSamordningUforeVurderingIds(behandlingId)
+
+        connection.execute("""
+            delete from samordning_ufore_vurdering_periode where vurdering_id = ANY(?::bigint[]);
+            delete from samordning_ufore_vurdering where id = ANY(?::bigint[]);
+            delete from samordning_ufore_grunnlag where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, samordningUforeVurderingIds)
+                setLongArray(2, samordningUforeVurderingIds)
+                setLong(3, behandlingId.toLong())
+            }
+        }
+    }
+
+    private fun getSamordningUforeVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT vurdering_id
+                    FROM samordning_ufore_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("vurdering_id")
+        }
+    }
+
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
         connection.execute("UPDATE SAMORDNING_UFORE_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
             setParams {

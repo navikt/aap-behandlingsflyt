@@ -193,6 +193,39 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+
+        val samordningYtelseIds = getSamordningYtelseIds(behandlingId)
+
+        dbConnection.execute("""
+            delete from samordning_ytelse where ytelser_id = ANY(?::bigint[]);
+            delete from samordning_ytelse_periode where ytelser_id = ANY(?::bigint[]);
+            delete from samordning_ytelser where id = ANY(?::bigint[]);
+            delete from samordning_ytelse_grunnlag where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, samordningYtelseIds)
+                setLongArray(2, samordningYtelseIds)
+                setLongArray(3, samordningYtelseIds)
+                setLong(3, behandlingId.toLong())
+            }
+        }
+    }
+
+    private fun getSamordningYtelseIds(behandlingId: BehandlingId): List<Long> = dbConnection.queryList(
+        """
+                    SELECT samordning_ytelse_id
+                    FROM samordning_ytelse_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("samordning_ytelse_id")
+        }
+    }
+
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
         dbConnection.execute("UPDATE SAMORDNING_YTELSE_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
             setParams {

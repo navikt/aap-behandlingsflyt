@@ -191,4 +191,52 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
             }
         }
     }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val samordningVurderingYtelseIds = getSamordningYtelseVurderingIds(behandlingId)
+        val samordningVurderingIds = getSamordningVurderingIds(samordningVurderingYtelseIds)
+
+        connection.execute("""
+            delete from samordning_vurdering where vurderinger_id = ANY(?::bigint[]);
+            delete from samordning_vurderinger where id = ANY(?::bigint[]);
+            delete from samordning_vurdering_periode where vurdering_id = ANY(?::bigint[]);
+            delete from samordning_ytelsevurdering_grunnlag where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, samordningVurderingYtelseIds)
+                setLongArray(2, samordningVurderingYtelseIds)
+                setLongArray(3, samordningVurderingIds)
+                setLong(3, behandlingId.toLong())
+            }
+        }
+    }
+
+    private fun getSamordningYtelseVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT vurderinger_id
+                    FROM samordning_ytelsevurdering_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("vurderinger_id")
+        }
+    }
+
+    private fun getSamordningVurderingIds(vurderingIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM samordning_vurdering
+                    WHERE id = ANY(?::bigint[]);
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, vurderingIds) }
+        setRowMapper { row ->
+            row.getLong("vurderinger_id")
+        }
+    }
 }
