@@ -13,14 +13,11 @@ import java.util.*
 @JsonTypeName(value = SKRIV_VEDTAKSBREV_KODE)
 class SkrivVedtaksbrevLøsning(
     @JsonProperty("brevbestillingReferanse", required = true) val brevbestillingReferanse: UUID,
-    @JsonProperty("handling", required = true) val handling: Handling,
+    @JsonProperty("handling", required = true) val handling: SkrivBrevAvklaringsbehovLøsning.Handling,
     @JsonProperty("behovstype", required = true, defaultValue = SKRIV_VEDTAKSBREV_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5051`
 ) : AvklaringsbehovLøsning {
     override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
         return SkrivVedtaksbrevLøser(connection).løs(kontekst, this)
     }
-        enum class Handling {
-            FERDIGSTILL, AVBRYT
-        }
 }

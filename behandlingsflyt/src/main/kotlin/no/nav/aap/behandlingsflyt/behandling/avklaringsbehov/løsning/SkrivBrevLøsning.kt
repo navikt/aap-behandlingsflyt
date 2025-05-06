@@ -13,15 +13,11 @@ import java.util.UUID
 @JsonTypeName(value = SKRIV_BREV_KODE)
 class SkrivBrevLøsning(
     @JsonProperty("brevbestillingReferanse", required = true) val brevbestillingReferanse: UUID,
-    // TODO fjern default fra handling når frontend sender den med
-    @JsonProperty("handling", required = true) val handling: Handling = Handling.FERDIGSTILL,
+    @JsonProperty("handling", required = true) val handling: SkrivBrevAvklaringsbehovLøsning.Handling,
     @JsonProperty("behovstype", required = true, defaultValue = SKRIV_BREV_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5050`
 ) : AvklaringsbehovLøsning {
     override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
         return SkrivBrevLøser(connection).løs(kontekst, this)
     }
-        enum class Handling {
-            FERDIGSTILL, AVBRYT
-        }
 }
