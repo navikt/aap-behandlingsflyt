@@ -166,6 +166,68 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+        val beregningTidspunktVurderingIds = getBeregningTidspunktVurderingIds(behandlingId)
+        val beregningYrkesskadeIds = getBeregningYrkesskadeIds(behandlingId)
+        val yrkesskadeInntekterIds = getYrkesskadeInntekterIds(beregningYrkesskadeIds)
+
+        connection.execute("""
+            delete from BEREGNINGSTIDSPUNKT_VURDERING where id = ANY(?::bigint[]);
+            delete from YRKESSKADE_INNTEKT where id = ANY(?::bigint[]);
+            delete from YRKESSKADE_INNTEKTER where id = ANY(?::bigint[]);
+            delete from BEREGNINGSFAKTA_GRUNNLAG where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, beregningTidspunktVurderingIds)
+                setLongArray(2, yrkesskadeInntekterIds)
+                setLongArray(3, beregningYrkesskadeIds)
+                setLong(3, behandlingId.toLong())
+            }
+        }
+    }
+
+    private fun getBeregningYrkesskadeIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT yrkesskade_vurdering_id
+                    FROM BEREGNINGSFAKTA_GRUNNLAG
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("yrkesskade_vurdering_id")
+        }
+    }
+
+    private fun getBeregningTidspunktVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT tidspunkt_vurdering_id
+                    FROM BEREGNINGSFAKTA_GRUNNLAG
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("yrkesskade_id")
+        }
+    }
+
+    private fun getYrkesskadeInntekterIds(yrkeskadeInntekterIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM YRKESSKADE_INNTEKTER
+                    WHERE id = ANY(?::bigint[]);
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, yrkeskadeInntekterIds) }
+        setRowMapper { row ->
+            row.getLong("yrkesskade_id")
+        }
+    }
+
     private fun lagreVurdering(vurdering: BeregningstidspunktVurdering?): Long? {
         if (vurdering == null) {
             return null
