@@ -528,6 +528,120 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+        val medlemskapUnntakPersonIds = getMedlemskapUnntakPersonIds(behandlingId)
+        val inntekterINorgeIds = getInntekterINorgeIds(behandlingId)
+        val lovvalgMedlemsskapManuellVurderingIds = getLovvalgMedlemsskapManuellVurderingIds(behandlingId)
+        val arbeiderIds = getArbeiderIds(behandlingId)
+        val arbeidIds = getArbeidIds(arbeiderIds)
+        val inntektINorgeIds = getInntektINorgeIds(inntekterINorgeIds)
+
+
+        connection.execute("""
+            delete from INNTEKT_I_NORGE where id = ANY(?::bigint[]);
+            delete from ARBEID where id = ANY(?::bigint[]);
+            delete from MEDLEMSSKAP_UNNTAK_PERSON where id = ANY(?::bigint[]);
+            delete from INNTEKTER_I_NORGE where id = ANY(?::bigint[]);
+            delete from LOVVALG_MEDLEMSSKAP_MANUELL_VURDERING where id = ANY(?::bigint[]);
+            delete from ARBEIDER where id = ANY(?::bigint[]);
+            delete from MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, inntektINorgeIds)
+                setLongArray(2, arbeidIds)
+                setLongArray(3, medlemskapUnntakPersonIds)
+                setLongArray(4, inntekterINorgeIds)
+                setLongArray(5, lovvalgMedlemsskapManuellVurderingIds)
+                setLongArray(6, arbeiderIds)
+                setLong(7, behandlingId.toLong())
+            }
+        }
+    }
+
+    private fun getMedlemskapUnntakPersonIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT medlemskap_unntak_person_id
+                    FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("medlemskap_unntak_person_id")
+        }
+    }
+
+    private fun getLovvalgMedlemsskapManuellVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT lovvalg_medlemskap_manuell_vurdering_id
+                    FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("lovvalg_medlemskap_manuell_vurdering_id")
+        }
+    }
+
+    private fun getInntekterINorgeIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT inntekter_i_norge_id
+                    FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("inntekter_i_norge_id")
+        }
+    }
+
+    private fun getArbeiderIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
+                    WHERE arbeider_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("id")
+        }
+    }
+
+    private fun getInntektINorgeIds(inntekterId: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM INNTEKTER_I_NORGE
+                    WHERE id = ANY(?::bigint[]);
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, inntekterId) }
+        setRowMapper { row ->
+            row.getLong("id")
+        }
+    }
+
+    private fun getArbeidIds(arbeiderIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM ARBEIDER
+                    WHERE id = ANY(?::bigint[]);
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, arbeiderIds) }
+        setRowMapper { row ->
+            row.getLong("id")
+        }
+    }
+
     internal data class GrunnlagOppslag(
         val medlId: Long?,
         val inntektINorgeId: Long?,

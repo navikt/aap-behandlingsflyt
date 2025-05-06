@@ -210,7 +210,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
     ) {
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
-            row.getLong("yrkesskade_id")
+            row.getLong("tidspunkt_vurdering_id")
         }
     }
 
