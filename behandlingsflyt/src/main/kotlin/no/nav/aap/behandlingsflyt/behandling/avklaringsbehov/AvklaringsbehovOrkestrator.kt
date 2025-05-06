@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
@@ -172,12 +173,18 @@ class AvklaringsbehovOrkestrator(
         behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
     }
 
-    fun opprettBestillBrevAvklaringsbehov(behandlingId: BehandlingId) {
+    fun opprettSkrivBrevAvklaringsbehov(behandlingId: BehandlingId, typeBrev: TypeBrev) {
         val behandling = behandlingRepository.hent(behandlingId)
 
         val avklaringsbehovene =
             avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = behandlingId)
-        avklaringsbehovene.leggTil(listOf(Definisjon.SKRIV_BREV), behandling.aktivtSteg())
+        val definisjon = if (typeBrev.erVedtak()) {
+//            Definisjon.SKRIV_VEDTAKSBREV TODO bytt til denne når frontend er klar
+            Definisjon.SKRIV_BREV
+        } else {
+            Definisjon.SKRIV_BREV
+        }
+        avklaringsbehovene.leggTil(listOf(definisjon), behandling.aktivtSteg())
         behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
     }
 }

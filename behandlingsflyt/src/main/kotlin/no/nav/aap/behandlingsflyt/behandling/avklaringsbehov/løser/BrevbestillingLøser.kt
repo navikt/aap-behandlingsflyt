@@ -52,7 +52,13 @@ class BrevbestillingLøser(val connection: DBConnection) :
         )
 
         if (status == Status.FORHÅNDSVISNING_KLAR) {
-            avklaringsbehovOrkestrator.opprettBestillBrevAvklaringsbehov(behandlingId = kontekst.behandlingId())
+            val brevbestilling = brevbestillingRepository
+                .hent(BrevbestillingReferanse(løsning.oppdatertStatusForBestilling.bestillingReferanse))
+
+            avklaringsbehovOrkestrator.opprettSkrivBrevAvklaringsbehov(
+                behandlingId = kontekst.behandlingId(),
+                typeBrev = brevbestilling.typeBrev
+            )
         }
 
         return LøsningsResultat("Oppdatert brevbestilling")

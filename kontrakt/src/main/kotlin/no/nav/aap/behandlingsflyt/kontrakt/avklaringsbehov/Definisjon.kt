@@ -70,6 +70,7 @@ public enum class Definisjon(
             Rolle.SAKSBEHANDLER_OPPFOLGING,
         )
     ),
+    @Deprecated("Bruk egne definisjoner for forskjellige brev")
     SKRIV_BREV(
         kode = AvklaringsbehovKode.`5050`,
         løsesISteg = StegType.UDEFINERT,
@@ -77,6 +78,14 @@ public enum class Definisjon(
         løsesAv = listOf(
             Rolle.SAKSBEHANDLER_OPPFOLGING,
             Rolle.SAKSBEHANDLER_NASJONAL,
+            Rolle.BESLUTTER
+        )
+    ),
+    SKRIV_VEDTAKSBREV(
+        kode = AvklaringsbehovKode.`5051`,
+        løsesISteg = StegType.BREV,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesAv = listOf(
             Rolle.BESLUTTER
         )
     ),

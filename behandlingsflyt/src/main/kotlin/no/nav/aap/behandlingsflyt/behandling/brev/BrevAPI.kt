@@ -36,6 +36,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -44,12 +45,13 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.authorizedPut
+import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import java.io.InputStream
 import java.util.*
 import javax.sql.DataSource
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
+private val log = LoggerFactory.getLogger("BrevAPI")
 fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
     val authorizationParamPathConfig = AuthorizationParamPathConfig(
         operasjon = Operasjon.SAKSBEHANDLE,
@@ -91,7 +93,6 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                         val sakRepository = repositoryProvider.provide<SakRepository>()
                         val brevbestillingRepository = repositoryProvider.provide<BrevbestillingRepository>()
                         val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-
                         val signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository)
                         val brevbestillingService = BrevbestillingService(
                             signaturService = signaturService,
@@ -109,6 +110,16 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                             GatewayProvider.provide(PersoninfoGateway::class)
                                 .hentPersoninfoForIdent(personIdent, token())
 
+                        val skrivBrevAvklaringsbehov = avklaringsbehovRepository
+                            .hentAvklaringsbehovene(behandling.id)
+                            .hentBehovForDefinisjon(listOf(Definisjon.SKRIV_BREV, Definisjon.SKRIV_VEDTAKSBREV))
+                            .filter { it.erÅpent() }
+
+                        if (skrivBrevAvklaringsbehov.size > 1) {
+                            log.warn("Fant flere åpne avklaringsbehov for å skrive brev for behandling ${behandling.id}: "
+                            + skrivBrevAvklaringsbehov.joinToString { it.toString() })
+                        }
+
                         brevbestillinger.map { brevbestilling ->
                             val brevbestillingResponse =
                                 brevbestillingService.hentBrevbestilling(brevbestilling.referanse)
@@ -122,8 +133,16 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                             } else {
                                 emptyList()
                             }
+                            val definisjon =
+                                if (brevbestilling.typeBrev.erVedtak() &&
+                                        skrivBrevAvklaringsbehov.any { it.definisjon == Definisjon.SKRIV_VEDTAKSBREV }) {
+                                    Definisjon.SKRIV_VEDTAKSBREV
+                                } else {
+                                    Definisjon.SKRIV_BREV
+                                }
 
                             BrevGrunnlag.Brev(
+                                avklaringsbehovKode = definisjon.kode,
                                 brevbestillingReferanse = brevbestillingResponse.referanse,
                                 brev = brevbestillingResponse.brev,
                                 opprettet = brevbestillingResponse.opprettet,
@@ -151,8 +170,12 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                         token()
                     )
 
-
-                    respond(BrevGrunnlag(harTilgangTilÅSaksbehandle, grunnlag))
+                    respond(
+                        BrevGrunnlag(
+                            harTilgangTilÅSaksbehandle,
+                            grunnlag
+                        )
+                    )
                 }
             }
         }
