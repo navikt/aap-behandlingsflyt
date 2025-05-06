@@ -8,7 +8,8 @@ class Personopplysning(
     val id: Long? = null,
     val dødsdato: Dødsdato? = null,
     val status: PersonStatus,
-    val statsborgerskap: List<Statsborgerskap>
+    val statsborgerskap: List<Statsborgerskap>,
+    val utenlandsAddresser: UtenlandsAdresser? = null
 ) {
 
     // Denne skal kun sammenlikne data og ikke tidspunkter
