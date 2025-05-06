@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.unleash
 
 import io.getunleash.DefaultUnleash
+import io.getunleash.UnleashContext
 import io.getunleash.util.UnleashConfig
 import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -24,5 +25,6 @@ class UnleashService : UnleashGateway {
     )
 
     override fun isEnabled(featureToggle: FeatureToggle): Boolean = unleash.isEnabled(featureToggle.key())
+    override fun isEnabled(featureToggle: FeatureToggle, ident: String): Boolean = unleash.isEnabled(featureToggle.key(), UnleashContext.builder().userId(ident).build())
 
 }
