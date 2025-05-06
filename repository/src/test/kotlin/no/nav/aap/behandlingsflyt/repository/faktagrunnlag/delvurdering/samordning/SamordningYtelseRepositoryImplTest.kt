@@ -1,17 +1,12 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
-import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
@@ -29,7 +24,7 @@ class SamordningYtelseRepositoryImplTest {
 
     @Test
     fun `sette inn flere ytelser, skal hente ut nyeste`() {
-        val behandling = dataSource.transaction { behandling(it, sak(it)) }
+        val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak(it)) }
 
         val samordningYtelser = listOf(
             SamordningYtelse(
@@ -127,7 +122,7 @@ class SamordningYtelseRepositoryImplTest {
 
         // Kopier:
         val kopiertBehandling = dataSource.transaction {
-            val nyBehandling = behandling(it, sak(it))
+            val nyBehandling = finnEllerOpprettBehandling(it, sak(it))
 
             SamordningYtelseRepositoryImpl(it).kopier(behandling.id, nyBehandling.id)
         }
@@ -135,7 +130,7 @@ class SamordningYtelseRepositoryImplTest {
 
     @Test
     fun `sette inn flere ytelser, skal hente ut eldste`() {
-        val behandling = dataSource.transaction { behandling(it, sak(it)) }
+        val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak(it)) }
 
         // Første sett med ytelser (eldste)
         val samordningYtelserEldste = listOf(
@@ -203,10 +198,10 @@ class SamordningYtelseRepositoryImplTest {
     @Test
     fun `sette inn for flere behandlinger, hente ut`() {
         val behandling1 = dataSource.transaction {
-            behandling(it, sak(it))
+            finnEllerOpprettBehandling(it, sak(it))
         }
         val behandling2 = dataSource.transaction {
-            behandling(it, sak(it))
+            finnEllerOpprettBehandling(it, sak(it))
         }
         val samordningYtelser1 = listOf(
             SamordningYtelse(
@@ -264,7 +259,7 @@ class SamordningYtelseRepositoryImplTest {
 
         // Kopier:
         val kopiertBehandling = dataSource.transaction {
-            val nyBehandling = behandling(it, sak(it))
+            val nyBehandling = finnEllerOpprettBehandling(it, sak(it))
 
             SamordningYtelseRepositoryImpl(it).kopier(behandling1.id, nyBehandling.id)
         }
@@ -279,16 +274,6 @@ class SamordningYtelseRepositoryImplTest {
             ident(),
             periode
         )
-    }
-
-    private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        return SakOgBehandlingService(
-            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
-            BehandlingRepositoryImpl(connection)
-        ).finnEllerOpprettBehandling(
-            sak.saksnummer,
-            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
-        ).behandling
     }
 
     private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))

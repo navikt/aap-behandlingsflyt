@@ -1,8 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.gjenopptak
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -10,9 +9,6 @@ import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
@@ -34,7 +30,7 @@ internal class GjenopptakRepositoryTest {
     fun `skal finne hvilke behandlinger hvor fristen har utløpt`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(
                 behandlingId = behandling.id,
                 status = Status.UTREDES
@@ -48,7 +44,7 @@ internal class GjenopptakRepositoryTest {
 
         dataSource.transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(
                 behandlingId = behandling.id,
                 status = Status.UTREDES
@@ -80,15 +76,5 @@ internal class GjenopptakRepositoryTest {
             ident(),
             Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
         )
-    }
-
-    private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        return SakOgBehandlingService(
-            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
-            BehandlingRepositoryImpl(connection)
-        ).finnEllerOpprettBehandling(
-            sak.saksnummer,
-            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
-        ).behandling
     }
 }

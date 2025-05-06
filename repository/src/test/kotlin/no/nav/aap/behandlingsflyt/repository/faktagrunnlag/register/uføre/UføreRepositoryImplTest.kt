@@ -1,16 +1,11 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
-import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
@@ -33,7 +28,7 @@ class UføreRepositoryImplTest {
     fun `Finner ikke uføre hvis ikke lagret`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val uføreRepository = UføreRepositoryImpl(connection)
             val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
@@ -48,7 +43,7 @@ class UføreRepositoryImplTest {
     fun `Lagrer og henter uføre`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val uføreRepository = UføreRepositoryImpl(connection)
             uføreRepository.lagre(behandling.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
@@ -65,7 +60,7 @@ class UføreRepositoryImplTest {
     fun `Lagrer ikke lik uføre flere ganger`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val uføreRepository = UføreRepositoryImpl(connection)
             uføreRepository.lagre(behandling.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
@@ -97,7 +92,7 @@ class UføreRepositoryImplTest {
     fun `Kopierer uføre fra en behandling til en annen`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling1 = behandling(connection, sak)
+            val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val uføreRepository = UføreRepositoryImpl(connection)
             uføreRepository.lagre(behandling1.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
@@ -106,7 +101,7 @@ class UføreRepositoryImplTest {
                 }
             }
 
-            val behandling2 = behandling(connection, sak)
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling2.id)
             assertThat(uføreGrunnlag?.vurderinger).isEqualTo(listOf(Uføre(LocalDate.now(), Prosent(100))))
@@ -127,7 +122,7 @@ class UføreRepositoryImplTest {
     fun `Kopierer uføre fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling1 = behandling(connection, sak)
+            val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val uføreRepository = UføreRepositoryImpl(connection)
             uføreRepository.lagre(behandling1.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
             uføreRepository.lagre(behandling1.id, listOf(Uføre(LocalDate.now(), Prosent(80))))
@@ -137,7 +132,7 @@ class UføreRepositoryImplTest {
                 }
             }
 
-            val behandling2 = behandling(connection, sak)
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling2.id)
             assertThat(uføreGrunnlag?.vurderinger).isEqualTo(listOf(Uføre(LocalDate.now(), Prosent(80))))
@@ -148,7 +143,7 @@ class UføreRepositoryImplTest {
     fun `Lagrer nye uføreopplysninger som ny rad og deaktiverer forrige versjon av opplysningene`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
             val uføreRepository = UføreRepositoryImpl(connection)
 
             uføreRepository.lagre(behandling.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
@@ -204,7 +199,7 @@ class UføreRepositoryImplTest {
     fun `Ved kopiering av uføreopplysninger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling1 = behandling(connection, sak)
+            val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val uføreRepository = UføreRepositoryImpl(connection)
             uføreRepository.lagre(behandling1.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
             uføreRepository.lagre(behandling1.id, listOf(Uføre(LocalDate.now(), Prosent(80))))
@@ -213,7 +208,7 @@ class UføreRepositoryImplTest {
                     setLong(1, behandling1.id.toLong())
                 }
             }
-            val behandling2 = behandling(connection, sak)
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             data class Opplysning(
                 val behandlingId: Long,
@@ -278,16 +273,6 @@ class UføreRepositoryImplTest {
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident(), periode)
-    }
-
-    private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        return SakOgBehandlingService(
-            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
-            BehandlingRepositoryImpl(connection)
-        ).finnEllerOpprettBehandling(
-            sak.saksnummer,
-            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
-        ).behandling
     }
 }
 

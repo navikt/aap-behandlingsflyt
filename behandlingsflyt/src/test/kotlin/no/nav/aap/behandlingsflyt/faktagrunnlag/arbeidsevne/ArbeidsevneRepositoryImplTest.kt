@@ -1,17 +1,12 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
-import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
@@ -32,7 +27,7 @@ class ArbeidsevneRepositoryImplTest {
     fun `Finner ikke arbeidsevne hvis ikke lagret`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevneGrunnlag = arbeidsevneRepository.hentHvisEksisterer(behandling.id)
@@ -44,7 +39,7 @@ class ArbeidsevneRepositoryImplTest {
     fun `Lagrer og henter arbeidsevne`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null)
 
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
@@ -59,7 +54,7 @@ class ArbeidsevneRepositoryImplTest {
     fun `Kopierer arbeidsevne fra en behandling til en annen`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling1 = behandling(connection, sak)
+            val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null)
 
@@ -70,7 +65,7 @@ class ArbeidsevneRepositoryImplTest {
                 }
             }
 
-            val behandling2 = behandling(connection, sak)
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val vurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling2.id)?.vurderinger
             assertThat(vurderinger).hasSize(1)
@@ -92,7 +87,7 @@ class ArbeidsevneRepositoryImplTest {
     fun `Kopierer arbeidsevne fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling1 = behandling(connection, sak)
+            val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null)
             val arbeidsevne2 = arbeidsevne.copy(begrunnelse = "annen begrunnelse")
@@ -105,7 +100,7 @@ class ArbeidsevneRepositoryImplTest {
                 }
             }
 
-            val behandling2 = behandling(connection, sak)
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val vurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling2.id)?.vurderinger
             assertThat(vurderinger).hasSize(1)
@@ -117,7 +112,7 @@ class ArbeidsevneRepositoryImplTest {
     fun `Lagrer nye arbeidsevneopplysninger som ny rad og deaktiverer forrige versjon av opplysningene`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null)
             val arbeidsevne2 = arbeidsevne.copy("annen begrunnelse")
@@ -179,7 +174,7 @@ class ArbeidsevneRepositoryImplTest {
         InitTestDatabase.freshDatabase().transaction { connection ->
 
             val sak = sak(connection)
-            val behandling1 = behandling(connection, sak)
+            val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now())
             val arbeidsevne2 = arbeidsevne.copy("annen begrunnelse")
@@ -191,7 +186,7 @@ class ArbeidsevneRepositoryImplTest {
                     setLong(1, behandling1.id.toLong())
                 }
             }
-            val behandling2 = behandling(connection, sak)
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             data class Opplysning(
                 val behandlingId: Long,
@@ -265,15 +260,5 @@ class ArbeidsevneRepositoryImplTest {
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident(), periode)
-    }
-
-    private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        return SakOgBehandlingService(
-            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
-            BehandlingRepositoryImpl(connection)
-        ).finnEllerOpprettBehandling(
-            sak.saksnummer,
-            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
-        ).behandling
     }
 }

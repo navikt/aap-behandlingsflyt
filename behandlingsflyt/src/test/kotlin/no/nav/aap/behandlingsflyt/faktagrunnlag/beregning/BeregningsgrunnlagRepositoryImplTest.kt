@@ -1,19 +1,14 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
-import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
@@ -35,7 +30,7 @@ internal class BeregningsgrunnlagRepositoryImplTest {
     @Test
     fun `Lagre og hente opp beregningsgrunnlaget med uføre og yrkesskade`() {
         val sak = dataSource.transaction { sak(it) }
-        val behandling = dataSource.transaction { behandling(it, sak) }
+        val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
         val inntektPerÅr = listOf(
             GrunnlagInntekt(
                 år = Year.of(2013),
@@ -135,7 +130,7 @@ internal class BeregningsgrunnlagRepositoryImplTest {
     @Test
     fun `Lagre og hente opp beregningsgrunnlaget med uføre uten yrkesskade`() {
         val sak = dataSource.transaction { sak(it) }
-        val behandling = dataSource.transaction { behandling(it, sak) }
+        val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
 
         val inntektPerÅr = listOf(
             GrunnlagInntekt(
@@ -234,7 +229,7 @@ internal class BeregningsgrunnlagRepositoryImplTest {
     fun `Lagre og hente opp beregningsgrunnlaget uten uføre og yrkesskade`() {
         val sak = dataSource.transaction { sak(it) }
         val behandling = dataSource.transaction {
-            behandling(it, sak)
+            finnEllerOpprettBehandling(it, sak)
         }
 
         val grunnlag11_19Standard = Grunnlag11_19(
@@ -258,7 +253,7 @@ internal class BeregningsgrunnlagRepositoryImplTest {
     fun `lagre flere grunnlag`() {
         val sak = dataSource.transaction { sak(it) }
         val behandling = dataSource.transaction {
-            behandling(it, sak)
+            finnEllerOpprettBehandling(it, sak)
         }
 
         val grunnlag11_19Standard = Grunnlag11_19(
@@ -274,7 +269,7 @@ internal class BeregningsgrunnlagRepositoryImplTest {
         }
 
         val sak2 = dataSource.transaction { sak(it) }
-        val behandling2 = dataSource.transaction { behandling(it, sak2) }
+        val behandling2 = dataSource.transaction { finnEllerOpprettBehandling(it, sak2) }
         val inntektPerÅr = listOf(
             GrunnlagInntekt(
                 år = Year.of(2013),
@@ -383,16 +378,6 @@ internal class BeregningsgrunnlagRepositoryImplTest {
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident(), periode)
-    }
-
-    private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        return SakOgBehandlingService(
-            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
-            BehandlingRepositoryImpl(connection)
-        ).finnEllerOpprettBehandling(
-            sak.saksnummer,
-            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
-        ).behandling
     }
 
     private class InntekterForUføre(

@@ -1,18 +1,13 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
-import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
@@ -34,7 +29,7 @@ internal class SamordningVurderingRepositoryImplTest {
 
     @Test
     fun `lagre og hente ut igjen`() {
-        val behandling = dataSource.transaction { behandling(it, sak(it)) }
+        val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak(it)) }
 
         // Lagre vurdering
         val vurdering = SamordningVurdering(
@@ -93,7 +88,7 @@ internal class SamordningVurderingRepositoryImplTest {
 
     @Test
     fun `lagre en vurdering uten perioder`() {
-        val behandling = dataSource.transaction { behandling(it, sak(it)) }
+        val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak(it)) }
 
         dataSource.transaction {
             SamordningVurderingRepositoryImpl(it).lagreVurderinger(behandling.id, SamordningVurderingGrunnlag(
@@ -117,7 +112,7 @@ internal class SamordningVurderingRepositoryImplTest {
     @Test
     fun `å lagre en vurdering før ytelse eksisterer gir ikke feil`() {
         val behandling = dataSource.transaction {
-            behandling(it, sak(it))
+            finnEllerOpprettBehandling(it, sak(it))
         }
 
         // Lagre vurdering
@@ -150,7 +145,7 @@ internal class SamordningVurderingRepositoryImplTest {
 
     @Test
     fun `lagre flere vurderinger og verifiser at nyeste hentes ut`() {
-        val behandling = dataSource.transaction { behandling(it, sak(it)) }
+        val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak(it)) }
 
         // Create fixed dates for the periods to avoid test flakiness
         val førstePeriodeStart = LocalDate.of(2022, 1, 1)
@@ -293,15 +288,5 @@ internal class SamordningVurderingRepositoryImplTest {
             ident(),
             periode
         )
-    }
-
-    private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        return SakOgBehandlingService(
-            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
-            BehandlingRepositoryImpl(connection)
-        ).finnEllerOpprettBehandling(
-            sak.saksnummer,
-            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
-        ).behandling
     }
 }

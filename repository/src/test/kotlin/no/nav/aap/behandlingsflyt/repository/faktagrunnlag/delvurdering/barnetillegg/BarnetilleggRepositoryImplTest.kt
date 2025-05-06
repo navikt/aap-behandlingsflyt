@@ -1,17 +1,12 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.barnetillegg
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
-import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
@@ -34,7 +29,7 @@ internal class BarnetilleggRepositoryImplTest {
     fun `Finner ikke barnetilleggGrunnlag hvis ikke lagret`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val barnetilleggRepository = BarnetilleggRepositoryImpl(connection)
             val barnetilleggGrunnlag = barnetilleggRepository.hentHvisEksisterer(behandling.id)
@@ -46,7 +41,7 @@ internal class BarnetilleggRepositoryImplTest {
     fun `Lagrer og henter barnetilleggGrunnlag`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val barnetilleggRepository = BarnetilleggRepositoryImpl(connection)
             val barnetilleggPeriode = listOf(
@@ -76,7 +71,7 @@ internal class BarnetilleggRepositoryImplTest {
     fun `lager nytt deaktiverer og lager nytt grunnlag ved ny lagring`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val barnetilleggRepository = BarnetilleggRepositoryImpl(connection)
             val barnetilleggPeriode1 = BarnetilleggPeriode(
@@ -108,7 +103,7 @@ internal class BarnetilleggRepositoryImplTest {
     fun `Kopierer barnetilleggGrunnlag fra en behandling til en annen`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
-            val behandling1 = behandling(connection, sak)
+            val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val barnetilleggRepository = BarnetilleggRepositoryImpl(connection)
             barnetilleggRepository.lagre(
                 behandling1.id,
@@ -124,7 +119,7 @@ internal class BarnetilleggRepositoryImplTest {
                     setLong(1, behandling1.id.toLong())
                 }
             }
-            val behandling2 = behandling(connection, sak)
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val barnetilleggGrunnlag = barnetilleggRepository.hentHvisEksisterer(behandling2.id)
             assertThat(barnetilleggGrunnlag?.perioder)
@@ -146,15 +141,5 @@ internal class BarnetilleggRepositoryImplTest {
             ident(),
             periode
         )
-    }
-
-    private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        return SakOgBehandlingService(
-            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
-            BehandlingRepositoryImpl(connection)
-        ).finnEllerOpprettBehandling(
-            sak.saksnummer,
-            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
-        ).behandling
     }
 }

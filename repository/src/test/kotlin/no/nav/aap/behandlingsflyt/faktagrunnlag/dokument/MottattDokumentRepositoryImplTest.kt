@@ -1,17 +1,12 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
-import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
@@ -34,7 +29,7 @@ internal class MottattDokumentRepositoryImplTest {
         // SETUP
         val (sak, behandling) = dataSource.transaction {
             val sak = sak(it)
-            val behandling = behandling(it, sak)
+            val behandling = finnEllerOpprettBehandling(it, sak)
             Pair(sak, behandling)
         }
 
@@ -70,7 +65,7 @@ internal class MottattDokumentRepositoryImplTest {
         // SETUP
         val (sak, behandling) = dataSource.transaction {
             val sak = sak(it)
-            val behandling = behandling(it, sak)
+            val behandling = finnEllerOpprettBehandling(it, sak)
             Pair(sak, behandling)
         }
 
@@ -112,7 +107,7 @@ internal class MottattDokumentRepositoryImplTest {
         // SETUP
         val (sak, _) = dataSource.transaction {
             val sak = sak(it)
-            val behandling = behandling(it, sak)
+            val behandling = finnEllerOpprettBehandling(it, sak)
             Pair(sak, behandling)
         }
 
@@ -186,14 +181,5 @@ internal class MottattDokumentRepositoryImplTest {
         ).finnEllerOpprett(
             ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         )
-    }
-
-    private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        return SakOgBehandlingService(
-            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
-            BehandlingRepositoryImpl(connection)
-        ).finnEllerOpprettBehandling(
-            sak.saksnummer, listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
-        ).behandling
     }
 }

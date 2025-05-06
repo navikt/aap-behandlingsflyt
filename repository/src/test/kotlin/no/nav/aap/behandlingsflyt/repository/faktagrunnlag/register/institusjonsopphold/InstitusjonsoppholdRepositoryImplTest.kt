@@ -1,18 +1,13 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
-import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
@@ -29,7 +24,7 @@ class InstitusjonsoppholdRepositoryImplTest {
     fun `Tom tidslinje dersom ingen opphold finnes`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val institusjonsoppholdRepository = InstitusjonsoppholdRepositoryImpl(connection)
             val institusjonsoppholdTidslinje = institusjonsoppholdRepository.hentHvisEksisterer(behandling.id)
@@ -41,7 +36,7 @@ class InstitusjonsoppholdRepositoryImplTest {
     fun `kan lagre og hente fra raw data fra gateway`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val institusjonsoppholdRepository = InstitusjonsoppholdRepositoryImpl(connection)
             val institusjonsopphold = listOf(
@@ -76,7 +71,7 @@ class InstitusjonsoppholdRepositoryImplTest {
     fun kopier() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val institusjonsoppholdRepository = InstitusjonsoppholdRepositoryImpl(connection)
             val institusjonsopphold = listOf(
@@ -91,7 +86,7 @@ class InstitusjonsoppholdRepositoryImplTest {
             )
             institusjonsoppholdRepository.lagreOpphold(behandling.id, institusjonsopphold)
             val sak2 = sak(connection)
-            val behandling2 = behandling(connection, sak2)
+            val behandling2 = finnEllerOpprettBehandling(connection, sak2)
 
             institusjonsoppholdRepository.kopier(behandling.id, behandling2.id)
 
@@ -120,15 +115,5 @@ class InstitusjonsoppholdRepositoryImplTest {
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident(), periode)
-    }
-
-    private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        return SakOgBehandlingService(
-            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
-            BehandlingRepositoryImpl(connection)
-        ).finnEllerOpprettBehandling(
-            sak.saksnummer,
-            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
-        ).behandling
     }
 }

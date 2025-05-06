@@ -1,16 +1,13 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
@@ -33,7 +30,7 @@ internal class SykdomRepositoryImplTest {
         dataSource.transaction { connection ->
             val repo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             repo.lagre(behandling.id, listOf())
             assertEquals(emptyList(), repo.hent(behandling.id).sykdomsvurderinger)
@@ -45,7 +42,7 @@ internal class SykdomRepositoryImplTest {
         dataSource.transaction { connection ->
             val repo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             repo.lagre(behandling.id, listOf(sykdomsvurdering1))
             assertEquals(listOf(sykdomsvurdering1), repo.hent(behandling.id).sykdomsvurderinger)
@@ -57,7 +54,7 @@ internal class SykdomRepositoryImplTest {
         dataSource.transaction { connection ->
             val repo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             repo.lagre(behandling.id, listOf(sykdomsvurdering1, sykdomsvurdering2))
             assertEquals(listOf(sykdomsvurdering1, sykdomsvurdering2), repo.hent(behandling.id).sykdomsvurderinger)
@@ -69,7 +66,7 @@ internal class SykdomRepositoryImplTest {
         val førstegangsbehandling = dataSource.transaction { connection ->
             val repo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
-            val førstegangsbehandling = behandling(connection, sak)
+            val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
 
             repo.lagre(førstegangsbehandling.id, listOf(sykdomsvurdering1))
             førstegangsbehandling
@@ -157,16 +154,6 @@ internal class SykdomRepositoryImplTest {
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident(), periode)
-    }
-
-    private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        return SakOgBehandlingService(
-            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
-            BehandlingRepositoryImpl(connection)
-        ).finnEllerOpprettBehandling(
-            sak.saksnummer,
-            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
-        ).behandling
     }
 
     private fun revurdering(connection: DBConnection, behandling: Behandling): Behandling {

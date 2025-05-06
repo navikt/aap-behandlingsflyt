@@ -4,13 +4,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.august
@@ -32,7 +30,7 @@ class MeldepliktRepositoryImplTest {
     fun `Finner ikke fritaksvurderinger hvis ikke lagret`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
@@ -44,7 +42,7 @@ class MeldepliktRepositoryImplTest {
     fun `Lagrer og henter fritaksvurderinger`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
             val fritaksvurderinger = listOf(
@@ -61,7 +59,7 @@ class MeldepliktRepositoryImplTest {
     fun `Kopierer fritaksvurderinger fra en behandling til en annen`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling1 = behandling(connection, sak)
+            val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
             val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", null)
 
@@ -76,7 +74,7 @@ class MeldepliktRepositoryImplTest {
                     setLong(1, behandling1.id.toLong())
                 }
             }
-            val behandling2 = behandling(connection, sak)
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling2.id)?.vurderinger ?: emptyList()
             assertThat(meldepliktGrunnlag).containsExactlyInAnyOrderElementsOf(behandling1Grunnlag)
@@ -99,7 +97,7 @@ class MeldepliktRepositoryImplTest {
         val dataSource = InitTestDatabase.freshDatabase()
         val behandling1 = dataSource.transaction { connection ->
             val sak = sak(connection)
-            val behandling1 = behandling(connection, sak)
+            val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
             val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", null)
 
@@ -124,7 +122,7 @@ class MeldepliktRepositoryImplTest {
                 GrunnlagKopierer(connection), SakRepositoryImpl(connection),
                 BehandlingRepositoryImpl(connection)
             ).hentSakFor(behandling1.id)
-            val behandling2 = behandling(connection, sak)
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
             assertThat(behandling1.id).isNotEqualTo(behandling2.id)
             assertThat(behandling1.opprettetTidspunkt).isBefore(behandling2.opprettetTidspunkt)
 
@@ -142,7 +140,7 @@ class MeldepliktRepositoryImplTest {
     fun `Lagrer nye fritaksvurderinger som nye rader og deaktiverer forrige versjon av opplysningene`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
 
             val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", null)
@@ -222,7 +220,7 @@ class MeldepliktRepositoryImplTest {
     fun `Ved kopiering av fritaksvurderinger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling1 = behandling(connection, sak)
+            val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
 
             val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", null)
@@ -240,7 +238,7 @@ class MeldepliktRepositoryImplTest {
                     setLong(1, behandling1.id.toLong())
                 }
             }
-            val behandling2 = behandling(connection, sak)
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             data class Opplysning(
                 val behandlingId: Long,
@@ -315,16 +313,5 @@ class MeldepliktRepositoryImplTest {
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident(), periode)
-    }
-
-    private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        val behandling = SakOgBehandlingService(
-            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
-            BehandlingRepositoryImpl(connection)
-        ).finnEllerOpprettBehandling(
-            sak.saksnummer,
-            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
-        ).behandling
-        return BehandlingRepositoryImpl(connection).hent(behandling.id)
     }
 }

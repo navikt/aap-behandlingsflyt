@@ -2,22 +2,18 @@ package no.nav.aap.behandlingsflyt.flyt.ventebehov
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
-import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -50,7 +46,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
     fun `Løser behov når det finnes avvist dokument` () {
         val behandling = dataSource.transaction { connection ->
             val sak = opprettSak(connection)
-            opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING)
+            finnEllerOpprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING)
         }
 
         dataSource.transaction { connection ->
@@ -76,7 +72,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
     fun `løser behov når det finnes mottatt legeerklæring` () {
         val behandling = dataSource.transaction { connection ->
             val sak = opprettSak(connection)
-            opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING)
+            finnEllerOpprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING)
         }
 
         dataSource.transaction { connection ->
@@ -102,7 +98,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
     fun `løser behov når det finnes mottatt dialogmelding`() {
         val behandling = dataSource.transaction { connection ->
             val sak = opprettSak(connection)
-            opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_DIALOGMELDING)
+            finnEllerOpprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_DIALOGMELDING)
         }
 
         dataSource.transaction { connection ->
@@ -128,7 +124,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
     fun `løser ikke behov når legeerklæring er eldre enn bestilling`() {
         val behandling = dataSource.transaction { connection ->
             val sak = opprettSak(connection)
-            opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_SØKNAD)
+            finnEllerOpprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_SØKNAD)
         }
 
         dataSource.transaction { connection ->
@@ -153,7 +149,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
     fun `løser ikke behov når ikke det finnes avvist dokument` () {
         val behandling = dataSource.transaction { connection ->
             val sak = opprettSak(connection)
-            opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_SØKNAD)
+            finnEllerOpprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_SØKNAD)
         }
 
         dataSource.transaction { connection ->
@@ -207,14 +203,5 @@ internal class LegeerklæringVentebehovEvaluererTest {
         ).finnEllerOpprett(
             ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         )
-    }
-
-    private fun opprettBehandling(connection: DBConnection, sak: Sak, årsak: ÅrsakTilBehandling): Behandling {
-        return SakOgBehandlingService(
-            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
-            BehandlingRepositoryImpl(connection)
-        ).finnEllerOpprettBehandling(
-            sak.saksnummer, listOf(Årsak(årsak))
-        ).behandling
     }
 }

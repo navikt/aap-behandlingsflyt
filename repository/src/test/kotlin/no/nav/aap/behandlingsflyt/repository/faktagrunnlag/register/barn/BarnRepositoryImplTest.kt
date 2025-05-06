@@ -1,8 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
@@ -10,9 +9,6 @@ import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
@@ -32,7 +28,7 @@ internal class BarnRepositoryImplTest {
     fun `Finner ikke barn hvis det ikke finnes barn`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val barnRepository = BarnRepositoryImpl(connection)
             val barn = barnRepository.hentHvisEksisterer(behandling.id)
@@ -47,7 +43,7 @@ internal class BarnRepositoryImplTest {
     fun `Lagrer og henter barn`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val barnRepository = BarnRepositoryImpl(connection)
             val barnListe = setOf(Ident("12345678910"), Ident("12345"))
@@ -70,7 +66,7 @@ internal class BarnRepositoryImplTest {
     fun `Henter barn for saker`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
             val barnRepository = BarnRepositoryImpl(connection)
             val registerBarn = setOf(Ident("1234567890"), Ident("1337"))
             val oppgitteBarn = OppgitteBarn(null, setOf(Ident("0987654321")))
@@ -92,12 +88,12 @@ internal class BarnRepositoryImplTest {
             val barnRepository = BarnRepositoryImpl(connection)
             // Given
             val sak = sak(connection)
-            val gammelBehandling = behandling(connection, sak)
+            val gammelBehandling = finnEllerOpprettBehandling(connection, sak)
             barnRepository.lagreOppgitteBarn(gammelBehandling.id, OppgitteBarn(identer = setOf(Ident("1"))))
 
             // When
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(gammelBehandling.id, Status.AVSLUTTET)
-            val nyBehandling = behandling(connection, sak)
+            val nyBehandling = finnEllerOpprettBehandling(connection, sak)
             barnRepository.kopier(gammelBehandling.id, nyBehandling.id)
 
             // Then
@@ -120,15 +116,5 @@ internal class BarnRepositoryImplTest {
             ident(),
             periode
         )
-    }
-
-    private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        return SakOgBehandlingService(
-            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
-            BehandlingRepositoryImpl(connection)
-        ).finnEllerOpprettBehandling(
-            sak.saksnummer,
-            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
-        ).behandling
     }
 }

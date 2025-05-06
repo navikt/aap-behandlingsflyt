@@ -1,16 +1,12 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
@@ -34,7 +30,7 @@ class YrkesskadeRepositoryImplTest {
     fun `Finner ikke yrkesskadeopplysninger hvis ikke lagret`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
@@ -46,7 +42,7 @@ class YrkesskadeRepositoryImplTest {
     fun `Lagrer og henter yrkesskadeopplysninger`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
@@ -64,7 +60,7 @@ class YrkesskadeRepositoryImplTest {
     fun `Lagrer ikke like opplysninger flere ganger`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
@@ -106,7 +102,7 @@ class YrkesskadeRepositoryImplTest {
     fun `Kopierer yrkesskadeopplysninger fra en behandling til en annen`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling1 = behandling(connection, sak)
+            val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling1.id,
@@ -117,7 +113,7 @@ class YrkesskadeRepositoryImplTest {
                     setLong(1, behandling1.id.toLong())
                 }
             }
-            val behandling2 = behandling(connection, sak)
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling2.id)
             assertThat(yrkesskadeGrunnlag?.yrkesskader).isEqualTo(
@@ -140,7 +136,7 @@ class YrkesskadeRepositoryImplTest {
     fun `Kopierer yrkesskadeopplysninger fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling1 = behandling(connection, sak)
+            val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling1.id,
@@ -155,7 +151,7 @@ class YrkesskadeRepositoryImplTest {
                     setLong(1, behandling1.id.toLong())
                 }
             }
-            val behandling2 = behandling(connection, sak)
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling2.id)
             assertThat(yrkesskadeGrunnlag?.yrkesskader).isEqualTo(
@@ -168,7 +164,7 @@ class YrkesskadeRepositoryImplTest {
     fun `Lagrer nye opplysninger som ny rad og deaktiverer forrige versjon av opplysningene`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
 
             yrkesskadeRepository.lagre(
@@ -227,7 +223,7 @@ class YrkesskadeRepositoryImplTest {
     fun `Ved kopiering av fritaksvurderinger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
-            val behandling1 = behandling(connection, sak)
+            val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling1.id,
@@ -242,7 +238,7 @@ class YrkesskadeRepositoryImplTest {
                     setLong(1, behandling1.id.toLong())
                 }
             }
-            val behandling2 = behandling(connection, sak)
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             data class Opplysning(val behandlingId: Long, val aktiv: Boolean, val ref: String, val skadedato: LocalDate)
             data class Grunnlag(val yrkesskadeId: Long, val opplysning: Opplysning)
@@ -306,15 +302,5 @@ class YrkesskadeRepositoryImplTest {
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident(), periode)
-    }
-
-    private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        return SakOgBehandlingService(
-            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
-            BehandlingRepositoryImpl(connection)
-        ).finnEllerOpprettBehandling(
-            sak.saksnummer,
-            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
-        ).behandling
     }
 }
