@@ -318,11 +318,11 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
         """.trimIndent()) {
             setParams {
                 setLongArray(1, helseoppholdVurderingerIds)
-                setLongArray(1, helseoppholdVurderingerIds)
-                setLongArray(1, soningVurderingerIds)
-                setLongArray(1, soningVurderingerIds)
-                setLongArray(1, oppholdPersonIds)
-                setLong(2, behandlingId.id)
+                setLongArray(2, helseoppholdVurderingerIds)
+                setLongArray(3, soningVurderingerIds)
+                setLongArray(4, soningVurderingerIds)
+                setLongArray(5, oppholdPersonIds)
+                setLong(6, behandlingId.id)
             }
         }
     }
