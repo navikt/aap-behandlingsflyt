@@ -43,6 +43,8 @@ class HåndterMottattDokumentService(
 
         val behandlingSkrivelås = låsRepository.låsBehandling(beriketBehandling.behandling.id)
 
+        sakOgBehandlingService.oppdaterRettighetsperioden(sakId, brevkategori, mottattTidspunkt.toLocalDate())
+
         prosesserBehandling.triggProsesserBehandling(
             sakId,
             beriketBehandling.behandling.id,
