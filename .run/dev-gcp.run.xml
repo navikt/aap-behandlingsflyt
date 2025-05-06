@@ -6,12 +6,14 @@
       <env name="NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_JDBC_URL" value="jdbc:postgresql://localhost:5438/postgres" />
       <env name="NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_USERNAME" value="postgres" />
       <env name="NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_PASSWORD" value="" />
+      <env name="INTEGRASJON_TJENESTEPENSJON_URL" value="https://tp-api-q2.dev-fss-pub.nais.io" />
+      <env name="INTEGRASJON_TJENESTEPENSJON_SCOPE" value="api://dev-fss.pensjonsamhandling.tp-q2/.default" />
       <env name="INTEGRASJON_PDL_URL" value="https://pdl-api.dev-fss-pub.nais.io/graphql" />
       <env name="INTEGRASJON_PDL_SCOPE" value="api://dev-fss.pdl.pdl-api/.default" />
       <env name="INTEGRASJON_SAF_URL_GRAPHQL" value="https://saf-q2.dev-fss-pub.nais.io/graphql" />
       <env name="INTEGRASJON_SAF_URL_REST" value="https://saf-q2.dev-fss-pub.nais.io/rest" />
       <env name="INTEGRASJON_SAF_SCOPE" value="api://dev-fss.teamdokumenthandtering.saf/.default" />
-      <env name="INTEGRASJON_YRKESSKADE_URL" value="http://yrkesskade-saker.yrkesskade/api/v1/saker/" />
+      <env name="INTEGRASJON_YRKESSKADE_URL" value="https://yrkesskade-saker.intern.dev.nav.no/api/v1/saker/" />
       <env name="INTEGRASJON_YRKESSKADE_SCOPE" value="api://dev-gcp.yrkesskade.yrkesskade-saker/.default" />
       <env name="INTEGRASJON_INSTITUSJONSOPPHOLD_URL" value="https://inst2-q2.dev-fss-pub.nais.io/api/v1/person/institusjonsopphold" />
       <env name="INTEGRASJON_INSTITUSJONSOPPHOLD_SCOPE" value="api://dev-fss.team-rocket.inst2-q2/.default" />
@@ -19,7 +21,7 @@
       <env name="INTEGRASJON_INNTEKT_SCOPE" value="api://dev-fss.pensjonopptjening.pensjon-popp-q2/.default" />
       <env name="INTEGRASJON_OPPGAVESTYRING_URL" value="https://aap-oppgave.intern.dev.nav.no" />
       <env name="INTEGRASJON_OPPGAVESTYRING_SCOPE" value="api://dev-gcp.aap.oppgave/.default" />
-      <env name="INTEGRASJON_STATISTIKK_URL" value="http://statistikk" />
+      <env name="INTEGRASJON_STATISTIKK_URL" value="https://aap-statistikk.intern.dev.nav.no" />
       <env name="INTEGRASJON_STATISTIKK_SCOPE" value="api://dev-gcp.aap.statistikk/.default" />
       <env name="INTEGRASJON_PESYS_URL" value="https://pensjon-pen-q2.dev-fss-pub.nais.io" />
       <env name="INTEGRASJON_PESYS_SCOPE" value="api://dev-fss.pensjon-q2.pensjon-pen-q2/.default" />
@@ -31,14 +33,14 @@
       <env name="INTEGRASJON_POSTMOTTAK_AZP" value="68642ce3-a231-4c82-b106-7a2f4ed899bc" />
       <env name="INTEGRASJON_FORELDREPENGER_URL" value="https://fpabakus.dev-fss-pub.nais.io/fpabakus/ekstern/api/ytelse/v1" />
       <env name="INTEGRASJON_FORELDREPENGER_SCOPE" value="api://dev-fss.teamforeldrepenger.fpabakus/.default" />
-      <env name="INTEGRASJON_SYKEPENGER_URL" value="http://spokelse.tbd" />
+      <env name="INTEGRASJON_SYKEPENGER_URL" value="https://spokelse.intern.dev.nav.no" />
       <env name="INTEGRASJON_SYKEPENGER_SCOPE" value="api://dev-gcp.tbd.spokelse/.default" />
-      <env name="INTEGRASJON_BREV_URL" value="http://brev" />
+      <env name="INTEGRASJON_BREV_URL" value="https://aap-brev.intern.dev.nav.no" />
       <env name="INTEGRASJON_BREV_SCOPE" value="api://dev-gcp.aap.brev/.default" />
       <env name="INTEGRASJON_BREV_AZP" value="d1c38f80-8965-4e41-8831-8a81052ac1e9" />
-      <env name="INTEGRASJON_MELDEKORT_URL" value="http://meldekort-backend" />
+      <env name="INTEGRASJON_MELDEKORT_URL" value="https://aap-meldekort-backend.intern.dev.nav.no" />
       <env name="INTEGRASJON_MELDEKORT_SCOPE" value="api://dev-gcp.aap.meldekort-backend/.default" />
-      <env name="INTEGRASJON_UTBETAL_URL" value="http://utbetal" />
+      <env name="INTEGRASJON_UTBETAL_URL" value="https://aap-utbetal.intern.dev.nav.no" />
       <env name="INTEGRASJON_UTBETAL_SCOPE" value="api://dev-gcp.aap.utbetal/.default" />
       <env name="INTEGRASJON_UTBETAL_AZP" value="dev-gcp:aap:utbetal" />
       <env name="INTEGRASJON_DOKUMENTINNHENTING_URL" value="https://aap-dokumentinnhenting.intern.dev.nav.no" />
