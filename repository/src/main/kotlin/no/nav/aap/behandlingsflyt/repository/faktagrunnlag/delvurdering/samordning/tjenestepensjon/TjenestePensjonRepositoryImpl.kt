@@ -206,7 +206,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
     ) {
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
-            row.getLong("bistand_vurderinger_id")
+            row.getLong("tjenestepensjon_ordninger_id")
         }
     }
 

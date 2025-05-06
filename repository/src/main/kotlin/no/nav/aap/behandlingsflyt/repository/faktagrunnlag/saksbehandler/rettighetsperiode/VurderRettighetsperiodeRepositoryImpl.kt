@@ -59,6 +59,36 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+
+        val rettighetsPeriodeVurderingerIds = getRettighetsPeriodeVurderingerIds(behandlingId)
+
+        connection.execute("""
+            delete from rettighetsperiode_vurdering where rettighetsperiode_vurderinger_id = ANY(?::bigint[]);
+            delete from rettighetsperiode_vurderinger where id = ANY(?::bigint[]);
+            delete from rettighetsperiode_grunnlag where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, rettighetsPeriodeVurderingerIds)
+                setLongArray(2, rettighetsPeriodeVurderingerIds)
+                setLong(3, behandlingId.toLong())
+            }
+        }
+    }
+
+    private fun getRettighetsPeriodeVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT vurderinger_id
+                    FROM rettighetsperiode_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("vurderinger_id")
+        }
+    }
 
     private fun hentHvisEksisterer(behandlingId: BehandlingId): RettighetsperiodeGrunnlag? {
         val vurderingerId = connection.queryFirstOrNull<Long>(
