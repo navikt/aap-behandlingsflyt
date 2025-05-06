@@ -99,8 +99,50 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
 private const val ident = "\$ident"
 
 val PERSON_QUERY = """
+    
     query($ident: ID!){
       hentPerson(ident: $ident) {
+        oppholdsadresse {
+            utenlandskAdresse {
+              adressenavnNummer
+              bygningEtasjeLeilighet
+              postboksNummerNavn
+              postkode
+              bySted
+              regionDistriktOmraade
+              landkode
+            }
+        },
+        bostedsadresse {
+            utenlandskAdresse {
+              adressenavnNummer
+              bygningEtasjeLeilighet
+              postboksNummerNavn
+              postkode
+              bySted
+              regionDistriktOmraade
+              landkode
+            }
+        },
+        kontaktadresse {
+            utenlandskAdresseIFrittFormat {
+                adresselinje1
+                adresselinje2
+                adresselinje3
+                postkode
+                byEllerStedsnavn
+                landkode
+            },
+            utenlandskAdresse {
+              adressenavnNummer
+              bygningEtasjeLeilighet
+              postboksNummerNavn
+              postkode
+              bySted
+              regionDistriktOmraade
+              landkode
+            }
+        },
         doedsfall {
             doedsdato
         },
@@ -122,8 +164,49 @@ val PERSON_QUERY = """
 val PERSON_QUERY_HISTORIKK = """
     query($ident: ID!){
       hentPerson(ident: $ident) {
+        oppholdsadresse(historikk: true) {
+            utenlandskAdresse {
+              adressenavnNummer
+              bygningEtasjeLeilighet
+              postboksNummerNavn
+              postkode
+              bySted
+              regionDistriktOmraade
+              landkode
+            }
+        },
+        bostedsadresse(historikk: true) {
+            utenlandskAdresse {
+              adressenavnNummer
+              bygningEtasjeLeilighet
+              postboksNummerNavn
+              postkode
+              bySted
+              regionDistriktOmraade
+              landkode
+            }
+        },
+        kontaktadresse(historikk: true) {
+            utenlandskAdresseIFrittFormat {
+                adresselinje1
+                adresselinje2
+                adresselinje3
+                postkode
+                byEllerStedsnavn
+                landkode
+            },
+            utenlandskAdresse {
+              adressenavnNummer
+              bygningEtasjeLeilighet
+              postboksNummerNavn
+              postkode
+              bySted
+              regionDistriktOmraade
+              landkode
+            }
+        },
         foedselsdato {
-    	  foedselsdato
+        foedselsdato
         },
         statsborgerskap(historikk: true) {
             land,
