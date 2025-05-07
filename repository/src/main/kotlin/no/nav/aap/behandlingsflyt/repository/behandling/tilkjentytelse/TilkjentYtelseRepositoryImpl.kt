@@ -124,6 +124,11 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        log.warn("kopier-metoden er ikke implementert for ${this::class.simpleName}. Er dette korrekt? Hvis ikke, implementer dummy-metode.")
+        val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandling)
+        if (eksisterendeGrunnlag == null) {
+            return
+        }
+
+        lagre(tilBehandling, eksisterendeGrunnlag)
     }
 }
