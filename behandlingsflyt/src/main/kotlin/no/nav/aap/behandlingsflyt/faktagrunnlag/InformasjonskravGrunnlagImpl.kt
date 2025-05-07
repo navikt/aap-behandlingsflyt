@@ -13,41 +13,37 @@ class InformasjonskravGrunnlagImpl(
 ) : InformasjonskravGrunnlag {
     private val tracer = GlobalOpenTelemetry.getTracer("informasjonskrav")
 
-    private class Foo(
-        val konstruktør: Informasjonskravkonstruktør,
-        val krav: Informasjonskrav,
-        val steg: StegType,
-    )
-
     override fun oppdaterFaktagrunnlagForKravliste(
         kravkonstruktører: List<Pair<StegType, Informasjonskravkonstruktør>>,
         kontekst: FlytKontekstMedPerioder
     ): List<Informasjonskravkonstruktør> {
         val informasjonskravene = kravkonstruktører.map { (steg, konstruktør) ->
-            Foo(
-                konstruktør = konstruktør,
-                krav = konstruktør.konstruer(connection),
-                steg = steg,
+            Triple(
+                konstruktør,
+                konstruktør.konstruer(connection),
+                steg,
             )
         }
-        val oppdateringer =
-            informasjonskravRepository.hentOppdateringer(kontekst.sakId, informasjonskravene.map { it.konstruktør.navn })
+        val oppdateringer = informasjonskravRepository.hentOppdateringer(
+            kontekst.sakId,
+            informasjonskravene.map { (konstruktør, _, _) -> konstruktør.navn },
+        )
 
         val relevanteInformasjonskrav = informasjonskravene
-            .filter { foo ->
-                val sisteOppdatering = oppdateringer.firstOrNull { it.navn == foo.krav.navn }
-                foo.krav.erRelevant(kontekst, foo.steg, sisteOppdatering)
+            .filter { (_, krav, steg) ->
+                val sisteOppdatering = oppdateringer.firstOrNull { it.navn == krav.navn }
+                krav.erRelevant(kontekst, steg, sisteOppdatering)
             }
 
         val endredeInformasjonskrav = relevanteInformasjonskrav
-            .filter { foo ->
-                val span = tracer.spanBuilder("informasjonskrav ${foo.krav.navn}")
+            .filter { (_, krav, _) ->
+                val span = tracer.spanBuilder("informasjonskrav ${krav.navn}")
                     .setSpanKind(SpanKind.INTERNAL)
-                    .setAttribute("informasjonskrav", foo.krav.navn.toString())
+                    .setAttribute("informasjonskrav", krav.navn.toString())
                     .startSpan()
                 try {
                     span.makeCurrent().use {
-                        foo.krav.oppdater(kontekst) == Informasjonskrav.Endret.ENDRET
+                        krav.oppdater(kontekst) == Informasjonskrav.Endret.ENDRET
                     }
                 } finally {
                     span.end()
@@ -57,10 +53,10 @@ class InformasjonskravGrunnlagImpl(
         informasjonskravRepository.registrerOppdateringer(
             kontekst.sakId,
             kontekst.behandlingId,
-            relevanteInformasjonskrav.map { it.krav.navn },
+            relevanteInformasjonskrav.map { (_, krav, _) -> krav.navn },
             Instant.now()
         )
-        return endredeInformasjonskrav.map { it.konstruktør }
+        return endredeInformasjonskrav.map { (konstruktør, _, _) -> konstruktør }
     }
 
 }
