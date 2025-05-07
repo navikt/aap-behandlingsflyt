@@ -5,14 +5,15 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.Repository
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
-class MedlemskapRepositoryImpl(private val connection: DBConnection) : MedlemskapRepository {
+class MedlemskapRepositoryImpl(private val connection: DBConnection) : Repository {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    override fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapDataIntern>): Long {
+    fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapDataIntern>): Long {
         if (hentHvisEksisterer(behandlingId) != null) {
             log.info("Medlemsskapsgrunnlag for behandling $behandlingId eksisterer allerede. Deaktiverer forrige lagrede.")
             deaktiverEksisterendeGrunnlag(behandlingId)
@@ -96,7 +97,7 @@ class MedlemskapRepositoryImpl(private val connection: DBConnection) : Medlemska
         } else null
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapUnntakGrunnlag? {
+    fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapUnntakGrunnlag? {
         val behandlingsMedlemskapUnntak = connection.queryFirstOrNull(
             "SELECT MEDLEMSKAP_UNNTAK_PERSON_ID FROM MEDLEMSKAP_UNNTAK_GRUNNLAG WHERE BEHANDLING_ID=? AND AKTIV=TRUE"
         ) {
@@ -138,6 +139,10 @@ class MedlemskapRepositoryImpl(private val connection: DBConnection) : Medlemska
                 setLong(3, behandlingId.toLong())
             }
         }
+    }
+
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+
     }
 
     private fun getMedlemskapUnntakPersonIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

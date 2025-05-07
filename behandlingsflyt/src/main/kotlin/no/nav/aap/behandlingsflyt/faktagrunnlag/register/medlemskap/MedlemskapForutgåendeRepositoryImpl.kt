@@ -14,7 +14,7 @@ import java.time.LocalDate
 interface MedlemskapForutgåendeRepository: Repository {
     fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapDataIntern>): Long
     fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapUnntakGrunnlag?
-    fun slett(behandlingId: BehandlingId)
+    override fun slett(behandlingId: BehandlingId)
 }
 
 class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection) : MedlemskapForutgåendeRepository {
@@ -24,6 +24,12 @@ class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection)
         if (hentHvisEksisterer(behandlingId) != null) {
             deaktiverEksisterendeGrunnlag(behandlingId)
         }
+
+        val medlemskapUnntakPersonId = connection.executeReturnKey(
+            """
+            INSERT INTO MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON DEFAULT VALUES
+        """.trimIndent()
+        )
         
         unntak.forEach {
             connection.execute(

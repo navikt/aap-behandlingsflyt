@@ -419,8 +419,8 @@ internal class BeregningsgrunnlagRepositoryImplTest {
 }
 
 // Midlertidig test
-fun main()
+/*fun main()
 {
     InitTestDatabase.dataSource.transaction { connection -> BeregningsgrunnlagRepositoryImpl(connection).slett(
         BehandlingId(1L)) }
-}
+}*/
