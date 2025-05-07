@@ -25,13 +25,14 @@ class AktivitetspliktInformasjonskrav (
         override val navn = InformasjonskravNavn.AKTIVITETSPLIKT
 
         override fun konstruer(connection: DBConnection): AktivitetspliktInformasjonskrav {
+            val repositoryProvider = RepositoryRegistry.provider(connection)
             val mottattDokumentRepository =
-                RepositoryRegistry.provider(connection).provide<MottattDokumentRepository>()
+                repositoryProvider.provide<MottattDokumentRepository>()
 
             return AktivitetspliktInformasjonskrav(
                 MottaDokumentService(mottattDokumentRepository),
-                AktivitetspliktRepositoryImpl(connection),
-                TidligereVurderingerImpl(RepositoryRegistry.provider(connection)),
+                repositoryProvider.provide(),
+                TidligereVurderingerImpl(repositoryProvider),
             )
         }
     }

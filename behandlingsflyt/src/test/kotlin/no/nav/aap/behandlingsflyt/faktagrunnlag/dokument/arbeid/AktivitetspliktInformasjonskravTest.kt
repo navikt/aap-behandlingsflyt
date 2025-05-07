@@ -43,6 +43,7 @@ class AktivitetspliktInformasjonskravTest {
                 .register<AvklaringsbehovRepositoryImpl>()
                 .register<TrukketSøknadRepositoryImpl>()
                 .register<VilkårsresultatRepositoryImpl>()
+                .register<AktivitetspliktRepositoryImpl>()
                 .status()
         }
     }
