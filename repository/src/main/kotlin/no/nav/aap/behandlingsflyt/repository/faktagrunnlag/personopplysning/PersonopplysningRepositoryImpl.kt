@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.RelatertPersonopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.RelatertePersonopplysninger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.UtenlandsAdresse
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
@@ -95,7 +96,8 @@ class PersonopplysningRepositoryImpl(
                     fødselsdato = Fødselsdato(row.getLocalDate("FODSELSDATO")),
                     dødsdato = row.getLocalDateOrNull("dodsdato")?.let { Dødsdato(it) },
                     statsborgerskap = hentStatsborgerskap(row),
-                    status = row.getEnum("STATUS")
+                    status = row.getEnum("STATUS"),
+                    utenlandsAddresser = hentUtenlandsAdresser((row.getLongOrNull("UTENLANDSADRESSER_ID")))
                 )
             }
         }
@@ -131,6 +133,31 @@ class PersonopplysningRepositoryImpl(
         }
     }
 
+    private fun hentUtenlandsAdresser(id: Long?): List<UtenlandsAdresse> {
+        if (id == null) return emptyList()
+        return connection.queryList(
+            """
+            SELECT * FROM BRUKER_UTENLANDSADRESSER
+            WHERE UTENLANDSADRESSER_ID = ?
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, id)
+            }
+            setRowMapper { row ->
+                UtenlandsAdresse(
+                    gyldigFraOgMed = row.getLocalDateTimeOrNull("GYLDIGFRAOGMED"),
+                    gyldigTilOgMed = row.getLocalDateTimeOrNull("GYLDIGTILOGMED"),
+                    adresseNavn = row.getStringOrNull("ADRESSENAVN"),
+                    postkode = row.getStringOrNull("POSTKODE"),
+                    bySted = row.getStringOrNull("BYSTED"),
+                    landkode = row.getStringOrNull("LANDKODE"),
+                    adresseType = row.getEnumOrNull("ADRESSE_TYPE")
+                )
+            }
+        }
+    }
+
     override fun lagre(behandlingId: BehandlingId, personopplysning: Personopplysning) {
         val personopplysningGrunnlag = hentHvisEksisterer(behandlingId)
 
@@ -150,13 +177,37 @@ class PersonopplysningRepositoryImpl(
             }
         }
 
+        var utenlandsAdresserId: Long? = null
+        if (!personopplysning.utenlandsAddresser.isNullOrEmpty()) {
+            utenlandsAdresserId = connection.executeReturnKey("INSERT INTO BRUKER_UTENLANDSADRESSER_AGGREGAT DEFAULT VALUES"){}
+            connection.executeBatch(
+                """
+                    INSERT INTO BRUKER_UTENLANDSADRESSER (UTENLANDSADRESSER_ID, ADRESSENAVN, POSTKODE, BYSTED, LANDKODE, GYLDIGFRAOGMED, GYLDIGTILOGMED, ADRESSE_TYPE) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """.trimIndent(),
+                personopplysning.utenlandsAddresser!!
+            ) {
+                setParams {
+                    setLong(1, utenlandsAdresserId)
+                    setString(2, it.adresseNavn)
+                    setString(3, it.postkode)
+                    setString(4, it.bySted)
+                    setString(5, it.landkode)
+                    setLocalDateTime(6, it.gyldigFraOgMed)
+                    setLocalDateTime(7, it.gyldigTilOgMed)
+                    setEnumName(8, it.adresseType)
+                }
+            }
+        }
+
         val personopplysningId =
-            connection.executeReturnKey("INSERT INTO BRUKER_PERSONOPPLYSNING (FODSELSDATO, dodsdato, LANDKODER_ID, STATUS) VALUES (?, ?, ?, ?)") {
+            connection.executeReturnKey("INSERT INTO BRUKER_PERSONOPPLYSNING (FODSELSDATO, dodsdato, LANDKODER_ID, STATUS, UTENLANDSADRESSER_ID) VALUES (?, ?, ?, ?, ?)") {
                 setParams {
                     setLocalDate(1, personopplysning.fødselsdato.toLocalDate())
                     setLocalDate(2, personopplysning.dødsdato?.toLocalDate())
                     setLong(3, landkoderId)
                     setEnumName(4, personopplysning.status)
+                    setLong(5, utenlandsAdresserId)
                 }
             }
 
