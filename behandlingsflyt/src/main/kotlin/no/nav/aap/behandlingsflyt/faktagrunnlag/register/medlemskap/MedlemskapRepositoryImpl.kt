@@ -1,35 +1,45 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-<<<<<<<< HEAD:behandlingsflyt/src/main/kotlin/no/nav/aap/behandlingsflyt/faktagrunnlag/register/medlemskap/MedlemskapForutgåendeRepositoryImpl.kt
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
-import no.nav.aap.komponenter.repository.RepositoryFactory
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.repository.Repository
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
-interface MedlemskapForutgåendeRepository: Repository {
-    fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapDataIntern>): Long
-    fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapUnntakGrunnlag?
-    fun slett(behandlingId: BehandlingId)
-}
+class MedlemskapRepositoryImpl(private val connection: DBConnection) : MedlemskapRepository {
 
-class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection) : MedlemskapForutgåendeRepository {
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapDataIntern>): Long {
         if (hentHvisEksisterer(behandlingId) != null) {
+            log.info("Medlemsskapsgrunnlag for behandling $behandlingId eksisterer allerede. Deaktiverer forrige lagrede.")
             deaktiverEksisterendeGrunnlag(behandlingId)
         }
-        
+
+        val medlemskapUnntakPersonId = connection.executeReturnKey(
+            """
+            INSERT INTO MEDLEMSKAP_UNNTAK_PERSON DEFAULT VALUES
+        """.trimIndent()
+        )
+
+        connection.execute(
+            """
+            INSERT INTO MEDLEMSKAP_UNNTAK_GRUNNLAG (BEHANDLING_ID, MEDLEMSKAP_UNNTAK_PERSON_ID) VALUES (?, ?)
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLong(2, medlemskapUnntakPersonId)
+            }
+        }
+
         unntak.forEach {
             connection.execute(
                 """
-                INSERT INTO MEDLEMSKAP_FORUTGAAENDE_UNNTAK (
-                STATUS, STATUS_ARSAK, MEDLEM, PERIODE, GRUNNLAG, LOVVALG, HELSEDEL, MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON_ID, LOVVALGSLAND, KILDESYSTEM, KILDENAVN
+                INSERT INTO MEDLEMSKAP_UNNTAK (
+                STATUS, STATUS_ARSAK, MEDLEM, PERIODE, GRUNNLAG, LOVVALG, HELSEDEL, MEDLEMSKAP_UNNTAK_PERSON_ID, LOVVALGSLAND, KILDESYSTEM, KILDENAVN
                 ) VALUES (?, ?, ?, ?::daterange ,?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
             ) {
@@ -53,7 +63,7 @@ class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection)
 
     private fun hentMedlemskapUnntak(behandlingsMedlemskapUnntak: Long): List<Segment<Unntak>> {
         return connection.queryList(
-            """SELECT * FROM MEDLEMSKAP_FORUTGAAENDE_UNNTAK WHERE MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON_ID = ?""".trimIndent()
+            """SELECT * FROM MEDLEMSKAP_UNNTAK WHERE MEDLEMSKAP_UNNTAK_PERSON_ID = ?""".trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingsMedlemskapUnntak)
@@ -77,21 +87,6 @@ class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection)
         }.toList()
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapUnntakGrunnlag? {
-        val behandlingsMedlemskapUnntak = connection.queryFirstOrNull(
-            "SELECT MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON_ID FROM MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG WHERE BEHANDLING_ID=? AND AKTIV=TRUE"
-        ) {
-            setParams {
-                setLong(1, behandlingId.toLong())
-            }
-            setRowMapper { it.getLong("MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON_ID") }
-        }
-        if (behandlingsMedlemskapUnntak == null) {
-            return null
-        }
-        return MedlemskapUnntakGrunnlag(hentMedlemskapUnntak(behandlingsMedlemskapUnntak))
-    }
-
     private fun hentKildesystem(row: Row): KildesystemMedl? {
         val kildesystemKode: KildesystemKode? = row.getEnumOrNull("KILDESYSTEM")
         val kildeNavn = row.getStringOrNull("KILDENAVN")
@@ -101,8 +96,24 @@ class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection)
         } else null
     }
 
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapUnntakGrunnlag? {
+        val behandlingsMedlemskapUnntak = connection.queryFirstOrNull(
+            "SELECT MEDLEMSKAP_UNNTAK_PERSON_ID FROM MEDLEMSKAP_UNNTAK_GRUNNLAG WHERE BEHANDLING_ID=? AND AKTIV=TRUE"
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper { it.getLong("MEDLEMSKAP_UNNTAK_PERSON_ID") }
+        }
+        if (behandlingsMedlemskapUnntak == null) {
+            log.info("Fant ingen aktive unntak for behandling med ID $behandlingId.")
+            return null
+        }
+        return MedlemskapUnntakGrunnlag(hentMedlemskapUnntak(behandlingsMedlemskapUnntak))
+    }
+
     private fun deaktiverEksisterendeGrunnlag(behandlingId: BehandlingId) {
-        connection.execute("UPDATE MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG SET AKTIV = FALSE WHERE AKTIV AND BEHANDLING_ID = ?") {
+        connection.execute("UPDATE MEDLEMSKAP_UNNTAK_GRUNNLAG SET AKTIV = FALSE WHERE AKTIV AND BEHANDLING_ID = ?") {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
@@ -112,47 +123,34 @@ class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection)
         }
     }
 
-    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        // TODO
-        log.warn("ingen kopier-metode for $javaClass. Burde vi implementere kopier-metode her?")
-    }
+    override fun slett(behandlingId: BehandlingId) {
 
-        override fun slett(behandlingId: BehandlingId) {
+        val medlemskapUnntakPersonIds = getMedlemskapUnntakPersonIds(behandlingId)
 
-            val medlemskapForutgaaendeUnntakPersonIds = getMedlemskapForutgaaendeUnntakPersonIds(behandlingId)
-
-            connection.execute("""
-            delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON where id = ANY(?::bigint[]);
-            delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK where medlemskap_forutgaaende_unntak_person_id = ANY(?::bigint[]);
-            delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG where behandling_id = ? 
+        connection.execute("""
+            delete from MEDLEMSKAP_UNNTAK_PERSON where id = ANY(?::bigint[]);
+            delete from MEDLEMSKAP_UNNTAK where medlemskap_unntak_person_id = ANY(?::bigint[]);
+            delete from MEDLEMSKAP_UNNTAK_GRUNNLAG where behandling_id = ? 
         """.trimIndent()) {
-                setParams {
-                    setLongArray(1, medlemskapForutgaaendeUnntakPersonIds)
-                    setLongArray(2, medlemskapForutgaaendeUnntakPersonIds)
-                    setLong(3, behandlingId.toLong())
-                }
+            setParams {
+                setLongArray(1, medlemskapUnntakPersonIds)
+                setLongArray(2, medlemskapUnntakPersonIds)
+                setLong(3, behandlingId.toLong())
             }
         }
+    }
 
-        private fun getMedlemskapForutgaaendeUnntakPersonIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
-            """
-                    SELECT medlemskap_forutgaaende_unntak_person_id
-                    FROM MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG
+    private fun getMedlemskapUnntakPersonIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT medlemskap_unntak_person_id
+                    FROM MEDLEMSKAP_UNNTAK_GRUNNLAG
                     WHERE behandling_id = ?
                  
                 """.trimIndent()
-        ) {
-            setParams { setLong(1, behandlingId.id) }
-            setRowMapper { row ->
-                row.getLong("medlemskap_unntak_person_id")
-            }
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("medlemskap_unntak_person_id")
         }
-
-    companion object: RepositoryFactory<MedlemskapForutgåendeRepository> {
-        override fun konstruer(connection: DBConnection): MedlemskapForutgåendeRepository {
-            return MedlemskapForutgåendeRepositoryImpl(connection)
-        }
-
     }
-
 }
