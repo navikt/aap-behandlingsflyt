@@ -182,16 +182,16 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
         val tjenestePensjonOrdningIds = getTjenestepensjonOrdningIds(tjenestePensjonOrdningerIds)
 
         dbConnection.execute("""
-            delete from tjenestepensjon_ordning where tjenestepensjon_ordninger_id = ANY(?::bigint[]);
             delete from tjenestepensjon_ordninger where id = ANY(?::bigint[]);
+            delete from tjenestepensjon_ordning where tjenestepensjon_ordninger_id = ANY(?::bigint[]);    
             delete from tjenestepensjon_ytelse where tjenestepensjon_ordninger_id = ANY(?::bigint[]);
             delete from tjenestepensjon_forhold_grunnlag where behandling_id = ? 
         """.trimIndent()) {
             setParams {
-                setLongArray(1, tjenestePensjonOrdningerIds)
+                setLongArray(1, tjenestePensjonOrdningIds)
                 setLongArray(2, tjenestePensjonOrdningerIds)
-                setLongArray(2, tjenestePensjonOrdningIds)
-                setLong(3, behandlingId.toLong())
+                setLongArray(3, tjenestePensjonOrdningerIds)
+                setLong(4, behandlingId.id)
             }
         }
     }
@@ -212,15 +212,15 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
 
     private fun getTjenestepensjonOrdningIds(ordningIds: List<Long>): List<Long> = dbConnection.queryList(
         """
-                    SELECT tjenestepensjon_ordning
-                    FROM tjenestepensjon_ordninger_id
+                    SELECT id
+                    FROM tjenestepensjon_ordninger
                     WHERE tjenestepensjon_ordninger_id = ANY(?::bigint[]);
                  
                 """.trimIndent()
     ) {
         setParams { setLongArray(1, ordningIds) }
         setRowMapper { row ->
-            row.getLong("bistand_vurderinger_id")
+            row.getLong("id")
         }
     }
 

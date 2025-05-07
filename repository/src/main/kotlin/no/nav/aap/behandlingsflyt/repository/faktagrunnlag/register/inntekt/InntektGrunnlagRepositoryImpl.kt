@@ -62,6 +62,27 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
+    private fun lagreInntekter(inntekter: Set<InntektPerÅr>): Long {
+        val query = """
+            INSERT INTO INNTEKTER DEFAULT VALUES
+        """.trimIndent()
+
+        val inntekterId = connection.executeReturnKey(query)
+
+        for (inntektPerÅr in inntekter) {
+            val inntektQuery = """
+                INSERT INTO INNTEKT (inntekt_id, ar, belop) VALUES (?, ?, ?)
+            """.trimIndent()
+            connection.execute(inntektQuery) {
+                setParams {
+                    setLong(1, inntekterId)
+                    setLong(2, inntektPerÅr.år.value.toLong())
+                    setBigDecimal(3, inntektPerÅr.beløp.verdi())
+                }
+            }
+        }
+        return inntekterId
+    }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandling)
@@ -119,28 +140,6 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
         setRowMapper { row ->
             row.getLong("inntekt_id")
         }
-    }
-
-    private fun lagreInntekter(inntekter: Set<InntektPerÅr>): Long {
-        val query = """
-            INSERT INTO INNTEKTER DEFAULT VALUES
-        """.trimIndent()
-
-        val inntekterId = connection.executeReturnKey(query)
-
-        for (inntektPerÅr in inntekter) {
-            val inntektQuery = """
-                INSERT INTO INNTEKT (inntekt_id, ar, belop) VALUES (?, ?, ?)
-            """.trimIndent()
-            connection.execute(inntektQuery) {
-                setParams {
-                    setLong(1, inntekterId)
-                    setLong(2, inntektPerÅr.år.value.toLong())
-                    setBigDecimal(3, inntektPerÅr.beløp.verdi())
-                }
-            }
-        }
-        return inntekterId
     }
 
     private fun mapGrunnlag(row: Row): InntektGrunnlag {

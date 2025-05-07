@@ -85,7 +85,7 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
             delete from mottatt_dokument where behandling_id = ?;
         """.trimIndent()) {
             setParams {
-                setLong(1, behandlingId.toLong())
+                setLong(1, behandlingId.id)
             }
         }
     }

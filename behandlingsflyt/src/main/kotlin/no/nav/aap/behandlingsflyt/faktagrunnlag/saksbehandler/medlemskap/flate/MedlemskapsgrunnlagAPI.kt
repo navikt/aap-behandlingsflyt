@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.flate
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -30,7 +30,7 @@ fun NormalOpenAPIRoute.medlemskapsgrunnlagApi(dataSource: DataSource, repository
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
-                    MedlemskapRepositoryImpl(connection).hentHvisEksisterer(behandling.id)
+                    MedlemskapRepository(connection).hentHvisEksisterer(behandling.id)
                         ?: MedlemskapUnntakGrunnlag(unntak = listOf())
                 }
                 respond(MedlemskapGrunnlagDto(medlemskap = medlemskap))

@@ -207,7 +207,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
                 setLongArray(1, samordningYtelseIds)
                 setLongArray(2, samordningYtelseIds)
                 setLongArray(3, samordningYtelseIds)
-                setLong(3, behandlingId.toLong())
+                setLong(4, behandlingId.id)
             }
         }
     }

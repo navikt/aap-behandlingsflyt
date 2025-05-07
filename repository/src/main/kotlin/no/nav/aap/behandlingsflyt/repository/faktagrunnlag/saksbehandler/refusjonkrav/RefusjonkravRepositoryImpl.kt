@@ -109,7 +109,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
     ) {
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
-            row.getLong("refusjonskrav_id")
+            row.getLong("refusjonskrav_vurdering_id")
         }
     }
 

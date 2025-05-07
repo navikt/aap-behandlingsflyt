@@ -124,7 +124,7 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
             setParams {
                 setLongArray(1, samordningUforeVurderingIds)
                 setLongArray(2, samordningUforeVurderingIds)
-                setLong(3, behandlingId.toLong())
+                setLong(3, behandlingId.id)
             }
         }
     }

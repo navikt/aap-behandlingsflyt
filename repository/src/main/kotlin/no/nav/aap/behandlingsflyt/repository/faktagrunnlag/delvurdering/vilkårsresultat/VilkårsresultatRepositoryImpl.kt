@@ -184,7 +184,7 @@ WHERE behandling_id = ?
             setParams {
                 setLongArray(1, vilkarIds)
                 setLongArray(2, resultatIds)
-                setLong(3, behandlingId.toLong())
+                setLong(3, behandlingId.id)
             }
         }
     }

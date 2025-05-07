@@ -191,7 +191,7 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
                 setLongArray(1, meldekortIds)
                 setLongArray(2, meldekorteneIds)
                 setLongArray(3, meldekorteneIds)
-                setLong(4, behandlingId.toLong())
+                setLong(4, behandlingId.id)
             }
         }
     }
@@ -220,7 +220,7 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
     ) {
         setParams { setLongArray(1, meldekorteneId) }
         setRowMapper { row ->
-            row.getLong("meldekortene_id")
+            row.getLong("id")
         }
     }
 

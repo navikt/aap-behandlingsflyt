@@ -57,7 +57,7 @@ class BarnetilleggRepositoryImpl(private val connection: DBConnection) : Barneti
             setParams {
                 setLongArray(1, barnetilleggPerioderIds)
                 setLongArray(2, barnetilleggPerioderIds)
-                setLong(3, behandlingId.toLong())
+                setLong(3, behandlingId.id)
             }
         }
     }

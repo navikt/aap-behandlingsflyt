@@ -17,7 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Inntektkompone
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -33,7 +33,7 @@ import java.time.YearMonth
 class LovvalgService private constructor(
     private val sakService: SakService,
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
-    private val medlemskapRepositoryImpl: MedlemskapRepositoryImpl,
+    private val medlemskapRepository: MedlemskapRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav {
     override val navn = Companion.navn
@@ -85,7 +85,7 @@ class LovvalgService private constructor(
         arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
         inntektGrunnlag: List<ArbeidsInntektMaaned>
     ) {
-        val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapRepositoryImpl.lagreUnntakMedlemskap(
+        val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapRepository.lagreUnntakMedlemskap(
             behandlingId,
             medlemskapGrunnlag
         ) else null

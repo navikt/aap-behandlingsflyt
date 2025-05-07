@@ -181,7 +181,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
                 setLongArray(1, beregningTidspunktVurderingIds)
                 setLongArray(2, yrkesskadeInntekterIds)
                 setLongArray(3, beregningYrkesskadeIds)
-                setLong(3, behandlingId.toLong())
+                setLong(4, behandlingId.id)
             }
         }
     }

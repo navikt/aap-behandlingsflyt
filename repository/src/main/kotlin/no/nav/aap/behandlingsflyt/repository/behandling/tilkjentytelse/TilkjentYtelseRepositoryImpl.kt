@@ -130,7 +130,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
     private fun deaktiverEksisterende(behandlingId: BehandlingId) {
         connection.execute("UPDATE TILKJENT_YTELSE SET AKTIV = FALSE WHERE AKTIV AND BEHANDLING_ID = ?") {
             setParams {
-                setLong(1, behandlingId.toLong())
+                setLong(1, behandlingId.id)
             }
         }
     }

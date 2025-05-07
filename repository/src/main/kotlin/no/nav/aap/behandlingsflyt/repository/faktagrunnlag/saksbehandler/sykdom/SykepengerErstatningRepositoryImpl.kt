@@ -172,7 +172,7 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
             setParams {
                 setLongArray(1, sykepengeVurderingIds)
                 setLongArray(2, sykepengeVurderingIds)
-                setLong(3, behandlingId.toLong())
+                setLong(3, behandlingId.id)
             }
         }
     }

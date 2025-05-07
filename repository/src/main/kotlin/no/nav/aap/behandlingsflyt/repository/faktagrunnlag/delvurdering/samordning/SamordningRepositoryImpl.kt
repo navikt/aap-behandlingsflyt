@@ -122,7 +122,7 @@ class SamordningRepositoryImpl(private val connection: DBConnection) : Samordnin
             setParams {
                 setLongArray(1, smaordningPerioderIds)
                 setLongArray(2, smaordningPerioderIds)
-                setLong(3, behandlingId.toLong())
+                setLong(3, behandlingId.id)
             }
         }
     }

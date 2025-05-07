@@ -174,7 +174,7 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
             setParams {
                 setLongArray(1, arbeidsevneIds)
                 setLongArray(2, arbeidsevneIds)
-                setLong(3, behandlingId.toLong())
+                setLong(3, behandlingId.id)
             }
         }
     }

@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-<<<<<<<< HEAD:behandlingsflyt/src/main/kotlin/no/nav/aap/behandlingsflyt/faktagrunnlag/register/medlemskap/MedlemskapForutgåendeRepositoryImpl.kt
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.repository.RepositoryFactory
@@ -30,7 +29,7 @@ class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection)
             INSERT INTO MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON DEFAULT VALUES
         """.trimIndent()
         )
-        
+
         unntak.forEach {
             connection.execute(
                 """
@@ -132,13 +131,13 @@ class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection)
             delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK where medlemskap_forutgaaende_unntak_person_id = ANY(?::bigint[]);
             delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG where behandling_id = ? 
         """.trimIndent()) {
-                setParams {
-                    setLongArray(1, medlemskapForutgaaendeUnntakPersonIds)
-                    setLongArray(2, medlemskapForutgaaendeUnntakPersonIds)
-                    setLong(3, behandlingId.toLong())
-                }
+            setParams {
+                setLongArray(1, medlemskapForutgaaendeUnntakPersonIds)
+                setLongArray(2, medlemskapForutgaaendeUnntakPersonIds)
+                setLong(3, behandlingId.id)
             }
         }
+    }
 
         private fun getMedlemskapForutgaaendeUnntakPersonIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
             """

@@ -114,7 +114,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
             setParams {
                 setLongArray(1, bistandVurderingerIds)
                 setLongArray(2, bistandVurderingerIds)
-                setLong(3, behandlingId.toLong())
+                setLong(3, behandlingId.id)
             }
         }
     }

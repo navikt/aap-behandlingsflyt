@@ -119,7 +119,7 @@ class AktivitetspliktRepositoryImpl(private val connection: DBConnection) : Akti
         """.trimIndent()
         ) {
             setParams {
-                setLong(1, behandlingId.toLong())
+                setLong(1, behandlingId.id)
             }
         }
     }

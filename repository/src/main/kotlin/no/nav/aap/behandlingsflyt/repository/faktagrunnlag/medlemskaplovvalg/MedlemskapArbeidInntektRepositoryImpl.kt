@@ -538,24 +538,26 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
 
         connection.execute("""
-            delete from INNTEKT_I_NORGE where id = ANY(?::bigint[]);
-            delete from ARBEID where id = ANY(?::bigint[]);
-            delete from MEDLEMSSKAP_UNNTAK_PERSON where id = ANY(?::bigint[]);
-            delete from MEDLEMSSKAP_UNNTAK where medlemskap_unntak_person_id = ANY(?::bigint[]);
+            delete from INNTEKT_I_NORGE where inntekter_i_norge_id = ANY(?::bigint[]);
             delete from INNTEKTER_I_NORGE where id = ANY(?::bigint[]);
+            delete from ARBEID where id = ANY(?::bigint[]);
+            delete from ARBEIDER where arbeider_id = ANY(?::bigint[]);
+            delete from MEDLEMSSKAP_UNNTAK_PERSON where id = ANY(?::bigint[]);
+            delete from MEDLEMSSKAP_UNNTAK where medlemskap_unntak_person_id = ANY(?::bigint[]);        
             delete from LOVVALG_MEDLEMSSKAP_MANUELL_VURDERING where id = ANY(?::bigint[]);
-            delete from ARBEIDER where id = ANY(?::bigint[]);
             delete from OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG where behandling_id = ?; 
             delete from MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ? 
         """.trimIndent()) {
             setParams {
                 setLongArray(1, inntektINorgeIds)
-                setLongArray(2, arbeidIds)
-                setLongArray(3, medlemskapUnntakPersonIds)
-                setLongArray(4, inntekterINorgeIds)
-                setLongArray(5, lovvalgMedlemsskapManuellVurderingIds)
-                setLongArray(6, arbeiderIds)
-                setLong(7, behandlingId.toLong())
+                setLongArray(2, inntektINorgeIds)
+                setLongArray(3, arbeidIds)
+                setLongArray(4, arbeidIds)
+                setLongArray(5, medlemskapUnntakPersonIds)
+                setLongArray(6, medlemskapUnntakPersonIds)
+                setLongArray(7, lovvalgMedlemsskapManuellVurderingIds)
+                setLong(8, behandlingId.id)
+                setLong(9, behandlingId.id)
             }
         }
     }

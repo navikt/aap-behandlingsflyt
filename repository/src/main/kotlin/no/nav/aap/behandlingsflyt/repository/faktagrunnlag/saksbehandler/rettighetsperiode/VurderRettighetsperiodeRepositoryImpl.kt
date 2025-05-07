@@ -71,7 +71,7 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
             setParams {
                 setLongArray(1, rettighetsPeriodeVurderingerIds)
                 setLongArray(2, rettighetsPeriodeVurderingerIds)
-                setLong(3, behandlingId.toLong())
+                setLong(3, behandlingId.id)
             }
         }
     }

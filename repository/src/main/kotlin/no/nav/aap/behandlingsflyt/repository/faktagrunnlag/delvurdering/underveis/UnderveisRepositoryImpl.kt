@@ -134,7 +134,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
                 setLongArray(1, periodeIds)
                 setLongArray(2, periodeIds)
                 setLongArray(3, sporingIds)
-                setLong(4, behandlingId.toLong())
+                setLong(4, behandlingId.id)
             }
         }
     }
