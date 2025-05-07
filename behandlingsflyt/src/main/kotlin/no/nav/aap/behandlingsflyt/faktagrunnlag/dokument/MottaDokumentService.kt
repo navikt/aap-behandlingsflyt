@@ -13,12 +13,17 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDateTime
 
 class MottaDokumentService(
     private val mottattDokumentRepository: MottattDokumentRepository,
 ) {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        mottattDokumentRepository = repositoryProvider.provide(),
+    )
+
     fun mottattDokument(
         referanse: InnsendingReferanse,
         sakId: SakId,
@@ -46,7 +51,13 @@ class MottaDokumentService(
             mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, InnsendingType.MELDEKORT)
 
         return ubehandledeMeldekort
-            .map { UbehandletMeldekort.fraKontrakt(meldekort = meldekort(it), journalpostId = it.referanse.asJournalpostId, mottattTidspunkt = it.mottattTidspunkt) }
+            .map {
+                UbehandletMeldekort.fraKontrakt(
+                    meldekort = meldekort(it),
+                    journalpostId = it.referanse.asJournalpostId,
+                    mottattTidspunkt = it.mottattTidspunkt
+                )
+            }
             .toSet()
     }
 

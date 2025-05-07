@@ -29,7 +29,7 @@ class MeldekortService private constructor(
         override fun konstruer(connection: DBConnection): MeldekortService {
             val repositoryProvider = RepositoryRegistry.provider(connection)
             return MeldekortService(
-                MottaDokumentService(repositoryProvider.provide<MottattDokumentRepository>()),
+                MottaDokumentService(repositoryProvider),
                 repositoryProvider.provide<MeldekortRepository>(),
                 TidligereVurderingerImpl(repositoryProvider),
             )

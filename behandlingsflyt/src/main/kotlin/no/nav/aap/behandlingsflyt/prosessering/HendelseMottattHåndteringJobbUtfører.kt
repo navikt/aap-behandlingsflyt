@@ -128,7 +128,7 @@ class HendelseMottattHåndteringJobbUtfører(
                     låsRepository,
                     ProsesserBehandlingService(flytJobbRepository)
                 ),
-                MottaDokumentService(mottattDokumentRepository),
+                MottaDokumentService(repositoryProvider),
                 mottattDokumentRepository
             )
         }

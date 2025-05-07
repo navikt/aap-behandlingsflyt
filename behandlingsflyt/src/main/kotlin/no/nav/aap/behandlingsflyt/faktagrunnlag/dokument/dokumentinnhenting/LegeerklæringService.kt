@@ -9,14 +9,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import java.time.Duration
 import no.nav.aap.lookup.repository.RepositoryRegistry
+import java.time.Duration
 
 class LegeerklæringService private constructor(
     private val mottaDokumentService: MottaDokumentService,
@@ -27,10 +26,8 @@ class LegeerklæringService private constructor(
 
         override fun konstruer(connection: DBConnection): LegeerklæringService {
             val repositoryProvider = RepositoryRegistry.provider(connection)
-            val mottattDokumentRepository =
-                repositoryProvider.provide<MottattDokumentRepository>()
             return LegeerklæringService(
-                MottaDokumentService(mottattDokumentRepository),
+                MottaDokumentService(repositoryProvider),
                 TidligereVurderingerImpl(repositoryProvider)
             )
         }

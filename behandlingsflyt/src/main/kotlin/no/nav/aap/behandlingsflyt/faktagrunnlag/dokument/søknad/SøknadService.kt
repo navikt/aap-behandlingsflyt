@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStudent
@@ -30,10 +29,9 @@ class SøknadService private constructor(
 
         override fun konstruer(connection: DBConnection): SøknadService {
             val repositoryProvider = RepositoryRegistry.provider(connection)
-            val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
             val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
             return SøknadService(
-                MottaDokumentService(mottattDokumentRepository),
+                MottaDokumentService(repositoryProvider),
                 repositoryProvider.provide<StudentRepository>(),
                 repositoryProvider.provide(),
                 medlemskapArbeidInntektRepository
