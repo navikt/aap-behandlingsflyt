@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
@@ -61,7 +60,7 @@ private val log = LoggerFactory.getLogger(javaClass)
                     ventebehovEvaluererService = VentebehovEvaluererServiceImpl(connection),
                     behandlingRepository = behandlingRepository,
                     avklaringsbehovRepository = avklaringsbehovRepository,
-                    informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(repositoryProvider.provide(), connection),
+                    informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(repositoryProvider.provide(), repositoryProvider),
                     sakRepository = sakRepository,
                     perioderTilVurderingService = PerioderTilVurderingService(repositoryProvider),
                     sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),

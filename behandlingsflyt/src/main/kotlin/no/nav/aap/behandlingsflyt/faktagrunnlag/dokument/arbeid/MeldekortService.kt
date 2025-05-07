@@ -9,12 +9,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 class MeldekortService private constructor(
     private val mottaDokumentService: MottaDokumentService,
@@ -26,8 +24,7 @@ class MeldekortService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.MELDEKORT
 
-        override fun konstruer(connection: DBConnection): MeldekortService {
-            val repositoryProvider = RepositoryRegistry.provider(connection)
+        override fun konstruer(repositoryProvider: RepositoryProvider): MeldekortService {
             return MeldekortService(
                 MottaDokumentService(repositoryProvider),
                 repositoryProvider.provide<MeldekortRepository>(),

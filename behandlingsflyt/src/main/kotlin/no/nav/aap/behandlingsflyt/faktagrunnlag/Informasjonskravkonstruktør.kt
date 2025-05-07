@@ -1,9 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 interface Informasjonskravkonstruktør {
     val navn: InformasjonskravNavn
-    fun konstruer(connection: DBConnection): Informasjonskrav
+    fun konstruer(repositoryProvider: RepositoryProvider): Informasjonskrav
 }

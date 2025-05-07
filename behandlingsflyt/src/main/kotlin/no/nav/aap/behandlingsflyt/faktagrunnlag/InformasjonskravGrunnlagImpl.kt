@@ -4,12 +4,12 @@ import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.SpanKind
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Instant
 
 class InformasjonskravGrunnlagImpl(
     private val informasjonskravRepository: InformasjonkskravRepository,
-    private val connection: DBConnection
+    private val repositoryProvider: RepositoryProvider,
 ) : InformasjonskravGrunnlag {
     private val tracer = GlobalOpenTelemetry.getTracer("informasjonskrav")
 
@@ -20,7 +20,7 @@ class InformasjonskravGrunnlagImpl(
         val informasjonskravene = kravkonstruktører.map { (steg, konstruktør) ->
             Triple(
                 konstruktør,
-                konstruktør.konstruer(connection),
+                konstruktør.konstruer(repositoryProvider),
                 steg,
             )
         }

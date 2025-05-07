@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.lookup.repository.RepositoryRegistry
 
@@ -44,8 +43,8 @@ class VurderRettighetsperiodeService(
     companion object: Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.RETTIGHETSPERIODE
 
-        override fun konstruer(connection: DBConnection): Informasjonskrav {
-            return VurderRettighetsperiodeService(RepositoryRegistry.provider(connection))
+        override fun konstruer(repositoryProvider: RepositoryProvider): Informasjonskrav {
+            return VurderRettighetsperiodeService(repositoryProvider)
         }
     }
 }

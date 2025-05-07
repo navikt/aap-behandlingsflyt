@@ -9,8 +9,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.adapter.ARBEIDSFORHOLDSTATUSER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.adapter.ARBEIDSFORHOLDSTATUSER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.adapter.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
@@ -24,12 +24,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
 import java.time.YearMonth
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class LovvalgService private constructor(
     private val sakService: SakService,
@@ -101,8 +100,7 @@ class LovvalgService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.LOVVALG
 
-        override fun konstruer(connection: DBConnection): LovvalgService {
-            val repositoryProvider = RepositoryRegistry.provider(connection)
+        override fun konstruer(repositoryProvider: RepositoryProvider): LovvalgService {
             val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
             val sakRepository = repositoryProvider.provide<SakRepository>()
             return LovvalgService(

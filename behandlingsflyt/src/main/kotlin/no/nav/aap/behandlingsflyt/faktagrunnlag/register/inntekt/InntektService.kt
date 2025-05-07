@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
@@ -25,11 +24,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
 import java.time.LocalDate
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class InntektService private constructor(
     private val sakService: SakService,
@@ -111,10 +109,8 @@ class InntektService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.INNTEKT
 
-        override fun konstruer(connection: DBConnection): InntektService {
-            val repositoryProvider = RepositoryRegistry.provider(connection)
+        override fun konstruer(repositoryProvider: RepositoryProvider): InntektService {
             val sakRepository = repositoryProvider.provide<SakRepository>()
-            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
             val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
 
             return InntektService(

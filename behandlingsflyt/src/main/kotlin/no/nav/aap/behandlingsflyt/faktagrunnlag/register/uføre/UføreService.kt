@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -86,8 +85,8 @@ class UføreService(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.UFØRE
 
-        override fun konstruer(connection: DBConnection): UføreService {
-            return UføreService(RepositoryRegistry.provider(connection))
+        override fun konstruer(repositoryProvider: RepositoryProvider): UføreService {
+            return UføreService(repositoryProvider)
         }
     }
 }

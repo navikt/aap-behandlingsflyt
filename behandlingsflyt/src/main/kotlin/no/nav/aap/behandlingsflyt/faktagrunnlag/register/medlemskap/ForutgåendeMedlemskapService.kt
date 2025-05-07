@@ -20,12 +20,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
 import java.time.YearMonth
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class ForutgåendeMedlemskapService private constructor(
     private val sakService: SakService,
@@ -84,8 +83,7 @@ class ForutgåendeMedlemskapService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.FORUTGÅENDE_MEDLEMSKAP
 
-        override fun konstruer(connection: DBConnection): ForutgåendeMedlemskapService {
-            val repositoryProvider = RepositoryRegistry.provider(connection)
+        override fun konstruer(repositoryProvider: RepositoryProvider): ForutgåendeMedlemskapService {
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val grunnlagRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
             return ForutgåendeMedlemskapService(

@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -59,7 +60,7 @@ internal class StegOrkestratorTest {
                 aktivtSteg = TestFlytSteg,
                 informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                     InformasjonskravRepositoryImpl(connection),
-                    connection
+                    RepositoryRegistry.provider(connection),
                 ),
                 behandlingRepository = BehandlingRepositoryImpl(connection),
                 avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection),

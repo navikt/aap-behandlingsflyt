@@ -14,8 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRep
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 class SøknadService private constructor(
     private val mottaDokumentService: MottaDokumentService,
@@ -27,8 +26,7 @@ class SøknadService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.SØKNAD
 
-        override fun konstruer(connection: DBConnection): SøknadService {
-            val repositoryProvider = RepositoryRegistry.provider(connection)
+        override fun konstruer(repositoryProvider: RepositoryProvider): SøknadService {
             val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
             return SøknadService(
                 MottaDokumentService(repositoryProvider),

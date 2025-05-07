@@ -15,9 +15,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
-import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway as IInstitusjonsoppholdGateway
 
 class InstitusjonsoppholdService private constructor(
@@ -64,8 +63,7 @@ class InstitusjonsoppholdService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.INSTITUSJONSOPPHOLD
 
-        override fun konstruer(connection: DBConnection): InstitusjonsoppholdService {
-            val repositoryProvider = RepositoryRegistry.provider(connection)
+        override fun konstruer(repositoryProvider: RepositoryProvider): InstitusjonsoppholdService {
             val sakRepository = repositoryProvider.provide<SakRepository>()
             return InstitusjonsoppholdService(
                 SakService(sakRepository),

@@ -106,7 +106,7 @@ class AvklaringsbehovOrkestrator(
             avklaringsbehovRepository = avklaringsbehovRepository,
             informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                 repositoryProvider.provide(),
-                connection,
+                repositoryProvider,
             ),
             sakRepository = sakRepository,
             perioderTilVurderingService = PerioderTilVurderingService(repositoryProvider),

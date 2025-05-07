@@ -13,8 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
 
 class LegeerklæringService private constructor(
@@ -24,8 +23,7 @@ class LegeerklæringService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.LEGEERKLÆRING
 
-        override fun konstruer(connection: DBConnection): LegeerklæringService {
-            val repositoryProvider = RepositoryRegistry.provider(connection)
+        override fun konstruer(repositoryProvider: RepositoryProvider): LegeerklæringService {
             return LegeerklæringService(
                 MottaDokumentService(repositoryProvider),
                 TidligereVurderingerImpl(repositoryProvider)

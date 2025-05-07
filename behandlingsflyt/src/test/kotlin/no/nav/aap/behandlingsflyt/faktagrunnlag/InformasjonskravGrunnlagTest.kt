@@ -43,8 +43,8 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.gateway.GatewayRegistry
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -57,9 +57,8 @@ class InformasjonskravGrunnlagTest {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
-    @BeforeEach
-    fun setUp() {
-        RepositoryRegistry.register(BehandlingRepositoryImpl::class)
+    private val repositoryRegistry =
+        RepositoryRegistry().register(BehandlingRepositoryImpl::class)
             .register(PersonRepositoryImpl::class)
             .register(SakRepositoryImpl::class)
             .register(AvklaringsbehovRepositoryImpl::class)
@@ -77,6 +76,9 @@ class InformasjonskravGrunnlagTest {
             .register<TrukketSøknadRepositoryImpl>()
             .register<MedlemskapRepositoryImpl>()
 
+    @BeforeEach
+    fun setUp() {
+
         GatewayRegistry.register<MedlemskapGateway>().register<AARegisterGateway>()
             .register<YrkesskadeRegisterGatewayImpl>()
     }
@@ -85,7 +87,7 @@ class InformasjonskravGrunnlagTest {
     fun `Yrkesskadedata er oppdatert`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
-            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), connection)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
 
             FakePersoner.leggTil(
                 TestPerson(
@@ -117,7 +119,7 @@ class InformasjonskravGrunnlagTest {
     fun `Yrkesskadedata er ikke oppdatert`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
-            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), connection)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
 
             FakePersoner.leggTil(
                 TestPerson(
@@ -142,7 +144,7 @@ class InformasjonskravGrunnlagTest {
     fun `Yrkesskadedata er utdatert, men har ingen endring fra registeret`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val (_, kontekst) = klargjør(connection)
-            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), connection)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
                 listOf(StegType.VURDER_YRKESSKADE to YrkesskadeService),
@@ -157,7 +159,7 @@ class InformasjonskravGrunnlagTest {
     fun LovvalgMedlemskapErOppdatert() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
-            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), connection)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
 
             FakePersoner.leggTil(
                 TestPerson(

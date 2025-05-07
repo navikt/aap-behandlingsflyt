@@ -12,10 +12,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.Duration
 
@@ -30,8 +29,7 @@ class TjenestePensjonService(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.SAMORDNING_TJENESTEPENSJON
 
-        override fun konstruer(connection: DBConnection): Informasjonskrav {
-            val repositoryProvider = RepositoryRegistry.provider(connection)
+        override fun konstruer(repositoryProvider: RepositoryProvider): Informasjonskrav {
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
 
