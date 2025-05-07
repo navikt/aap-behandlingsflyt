@@ -5,16 +5,19 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRep
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 
 @Suppress("unused")
-class StudentVisningUtleder(connection: DBConnection) : StegGruppeVisningUtleder {
+class StudentVisningUtleder(
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val studentRepository: StudentRepository,
+) : StegGruppeVisningUtleder {
 
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-    private val studentRepository = repositoryProvider.provide<StudentRepository>()
+    constructor(repositoryProvider: RepositoryProvider): this(
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        studentRepository = repositoryProvider.provide(),
+    )
 
     override fun skalVises(behandlingId: BehandlingId): Boolean {
         val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)

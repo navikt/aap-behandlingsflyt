@@ -2,17 +2,17 @@ package no.nav.aap.behandlingsflyt.flyt.flate.visning
 
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.repository.RepositoryProvider
 
-class DynamiskStegGruppeVisningService(private val connection: DBConnection) {
+class DynamiskStegGruppeVisningService(private val repositoryProvider: RepositoryProvider) {
 
     private val utledere = mutableMapOf<StegGruppe, StegGruppeVisningUtleder>()
 
     init {
         StegGruppeVisningUtleder::class.sealedSubclasses.forEach { utleder ->
             val visningUtleder = utleder.constructors
-                .find { it.parameters.singleOrNull()?.type?.classifier == DBConnection::class }!!
-                .call(connection)
+                .find { it.parameters.singleOrNull()?.type?.classifier == RepositoryProvider::class }!!
+                .call(repositoryProvider)
             utledere[visningUtleder.gruppe()] = visningUtleder
         }
     }

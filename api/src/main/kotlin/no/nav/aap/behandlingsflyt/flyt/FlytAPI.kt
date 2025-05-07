@@ -39,6 +39,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.bruker
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbStatus
@@ -50,7 +51,6 @@ import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
 private val log = LoggerFactory.getLogger("flytApi")
 
@@ -76,7 +76,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                         behandling.id
                     )
                     val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
-                    val gruppeVisningService = DynamiskStegGruppeVisningService(connection)
+                    val gruppeVisningService = DynamiskStegGruppeVisningService(repositoryProvider)
 
                     val jobber = flytJobbRepository.hentJobberForBehandling(behandling.id.toLong())
                     val prosessering =

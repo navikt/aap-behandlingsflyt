@@ -3,13 +3,17 @@ package no.nav.aap.behandlingsflyt.flyt.flate.visning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 @Suppress("unused")
-class BarnetilleggVisningUtleder(connection: DBConnection) : StegGruppeVisningUtleder {
+class BarnetilleggVisningUtleder(
+    private val barnRepository: BarnRepository,
+) : StegGruppeVisningUtleder {
 
-    private val barnRepository = RepositoryRegistry.provider(connection).provide<BarnRepository>()
+    constructor(repositoryProvider: RepositoryProvider): this(
+        barnRepository = repositoryProvider.provide()
+    )
+
 
     override fun skalVises(behandlingId: BehandlingId): Boolean {
         val harRegsiterBarn =
