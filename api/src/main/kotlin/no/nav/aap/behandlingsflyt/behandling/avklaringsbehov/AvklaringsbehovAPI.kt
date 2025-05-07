@@ -7,24 +7,20 @@ import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.LøsAvklaringsbehovPåBehandling
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
 import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.bruker
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedPost
 import javax.sql.DataSource
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
 fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
     route("/api/behandling").tag(Tags.Behandling) {
@@ -36,7 +32,6 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
             ) { _, request ->
                 dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryRegistry.provider(connection)
-                    val sakRepository = repositoryProvider.provide<SakRepository>()
                     val behandlingRepository =
                         repositoryProvider.provide<BehandlingRepository>()
                     val taSkriveLåsRepository =
@@ -58,13 +53,9 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                         )
 
                         AvklaringsbehovHendelseHåndterer(
-                            AvklaringsbehovOrkestrator(
-                                connection, BehandlingHendelseServiceImpl(
-                                    flytJobbRepository,
-                                    repositoryProvider.provide<BrevbestillingRepository>(),
-                                    SakService(sakRepository)
-                                )
-                            ), avklaringsbehovRepository, behandlingRepository
+                            AvklaringsbehovOrkestrator(connection, repositoryProvider),
+                            avklaringsbehovRepository,
+                            behandlingRepository
                         ).håndtere(
                             key = lås.behandlingSkrivelås.id, hendelse = LøsAvklaringsbehovHendelse(
                                 request.behov,

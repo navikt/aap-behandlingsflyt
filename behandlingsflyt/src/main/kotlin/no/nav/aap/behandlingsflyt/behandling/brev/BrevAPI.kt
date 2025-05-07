@@ -12,8 +12,12 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.BREV_SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BrevbestillingLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag.Brev.Mottaker
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.*
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.SKRIV_BREV_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -32,8 +36,13 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.lookup.repository.RepositoryRegistry
-import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.tilgang.*
+import no.nav.aap.tilgang.AuthorizationBodyPathConfig
+import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.BehandlingPathParam
+import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.authorizedPost
+import no.nav.aap.tilgang.authorizedPut
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import java.io.InputStream
@@ -279,8 +288,6 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
 
                         val behandlingRepository =
                             repositoryProvider.provide<BehandlingRepository>()
-                        val sakRepository = repositoryProvider.provide<SakRepository>()
-                        val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
 
                         MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
                             MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString())
@@ -289,14 +296,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                         behandlingRepository.hent(lås.behandlingSkrivelås.id)
 
                                     AvklaringsbehovHendelseHåndterer(
-                                        AvklaringsbehovOrkestrator(
-                                            connection,
-                                            BehandlingHendelseServiceImpl(
-                                                flytJobbRepository,
-                                                repositoryProvider.provide(),
-                                                SakService(sakRepository)
-                                            )
-                                        ),
+                                        AvklaringsbehovOrkestrator(connection, repositoryProvider),
                                         avklaringsbehovRepository,
                                         behandlingRepository,
                                     ).håndtere(

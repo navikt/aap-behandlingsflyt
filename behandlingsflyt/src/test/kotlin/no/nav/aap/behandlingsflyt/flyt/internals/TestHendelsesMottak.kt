@@ -2,14 +2,12 @@ package no.nav.aap.behandlingsflyt.flyt.internals
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.innsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
-import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -39,27 +37,15 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
 
     fun håndtere(key: BehandlingId, hendelse: BehandlingSattPåVent) {
         dataSource.transaction { connection ->
-            AvklaringsbehovOrkestrator(
-                connection,
-                BehandlingHendelseServiceImpl(
-                    FlytJobbRepository(connection),
-                    BrevbestillingRepositoryImpl(connection),
-                    SakService(SakRepositoryImpl(connection))
-                )
-            ).settBehandlingPåVent(key, hendelse)
+            AvklaringsbehovOrkestrator(connection)
+                .settBehandlingPåVent(key, hendelse)
         }
     }
 
     fun bestillLegeerklæring(key: BehandlingId) {
         dataSource.transaction { connection ->
-            AvklaringsbehovOrkestrator(
-                connection,
-                BehandlingHendelseServiceImpl(
-                    FlytJobbRepository(connection),
-                    BrevbestillingRepositoryImpl(connection),
-                    SakService(SakRepositoryImpl(connection))
-                )
-            ).settPåVentMensVentePåMedisinskeOpplysninger(key, SYSTEMBRUKER)
+            AvklaringsbehovOrkestrator(connection)
+                .settPåVentMensVentePåMedisinskeOpplysninger(key, SYSTEMBRUKER)
         }
     }
 

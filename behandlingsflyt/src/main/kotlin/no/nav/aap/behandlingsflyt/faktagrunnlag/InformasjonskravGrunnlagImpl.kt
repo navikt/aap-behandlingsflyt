@@ -11,6 +11,11 @@ class InformasjonskravGrunnlagImpl(
     private val informasjonskravRepository: InformasjonkskravRepository,
     private val repositoryProvider: RepositoryProvider,
 ) : InformasjonskravGrunnlag {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        informasjonskravRepository = repositoryProvider.provide(),
+        repositoryProvider = repositoryProvider,
+    )
+
     private val tracer = GlobalOpenTelemetry.getTracer("informasjonskrav")
 
     override fun oppdaterFaktagrunnlagForKravliste(

@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.BehandlingTilstandValidator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -20,7 +19,6 @@ import no.nav.aap.behandlingsflyt.flyt.flate.VilkårsperiodeDTO
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.DynamiskStegGruppeVisningService
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.ProsesseringStatus
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.Visning
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.MANUELT_SATT_PÅ_VENT_KODE
@@ -35,8 +33,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.lookup.repository.RepositoryRegistry
@@ -219,7 +215,6 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
 
                         val behandlingRepository =
                             repositoryProvider.provide<BehandlingRepository>()
-                        val sakRepository = repositoryProvider.provide<SakRepository>()
                         val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
                         BehandlingTilstandValidator(
                             BehandlingReferanseService(behandlingRepository),
@@ -229,22 +224,16 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                             body.behandlingVersjon
                         )
 
-                        AvklaringsbehovOrkestrator(
-                            connection,
-                            BehandlingHendelseServiceImpl(
-                                flytJobbRepository,
-                                repositoryProvider.provide<BrevbestillingRepository>(),
-                                SakService(sakRepository)
+                        AvklaringsbehovOrkestrator(connection, repositoryProvider)
+                            .settBehandlingPåVent(
+                                lås.behandlingSkrivelås.id, BehandlingSattPåVent(
+                                    frist = body.frist,
+                                    begrunnelse = body.begrunnelse,
+                                    behandlingVersjon = body.behandlingVersjon,
+                                    grunn = body.grunn,
+                                    bruker = bruker()
+                                )
                             )
-                        ).settBehandlingPåVent(
-                            lås.behandlingSkrivelås.id, BehandlingSattPåVent(
-                                frist = body.frist,
-                                begrunnelse = body.begrunnelse,
-                                behandlingVersjon = body.behandlingVersjon,
-                                grunn = body.grunn,
-                                bruker = bruker()
-                            )
-                        )
                         taSkriveLåsRepository.verifiserSkrivelås(lås)
                     }
                 }

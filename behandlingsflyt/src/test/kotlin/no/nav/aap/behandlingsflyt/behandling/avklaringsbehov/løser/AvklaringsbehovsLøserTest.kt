@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -80,6 +81,7 @@ internal class AvklaringsbehovsLøserTest {
         RepositoryRegistry.register<FormkravRepositoryImpl>()
         RepositoryRegistry.register<FlytJobbRepositoryImpl>()
         RepositoryRegistry.register<TjenestepensjonRefusjonskravVurderingRepositoryImpl>()
+        RepositoryRegistry.register<InformasjonskravRepositoryImpl>()
         GatewayRegistry.register<FakeUnleash>()
     }
 

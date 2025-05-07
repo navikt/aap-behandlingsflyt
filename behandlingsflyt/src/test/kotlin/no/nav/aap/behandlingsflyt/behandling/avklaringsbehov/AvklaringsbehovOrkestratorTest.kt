@@ -1,15 +1,16 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
-import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -17,15 +18,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryRegistry
-import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.FlytJobbRepositoryImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Condition
@@ -42,22 +43,16 @@ class AvklaringsbehovOrkestratorTest {
         RepositoryRegistry.register(BehandlingRepositoryImpl::class)
         RepositoryRegistry.register(AvklaringsbehovRepositoryImpl::class)
         RepositoryRegistry.register(FlytJobbRepositoryImpl::class)
+        RepositoryRegistry.register(BrevbestillingRepositoryImpl::class)
+        RepositoryRegistry.register(MottattDokumentRepositoryImpl::class)
+        RepositoryRegistry.register(InformasjonskravRepositoryImpl::class)
+        GatewayRegistry.register(FakeUnleash::class)
     }
 
     @Test
     fun `behandlingHendelseService dot stoppet blir kalt når en behandling er satt på vent`() {
         val uthentedeJobber = InitTestDatabase.freshDatabase().transaction { connection ->
-            val behandlingHendelseService =
-                BehandlingHendelseServiceImpl(
-                    FlytJobbRepository(connection),
-                    BrevbestillingRepositoryImpl(connection),
-                    SakService(SakRepositoryImpl(connection))
-                )
-
-            val avklaringsbehovOrkestrator = AvklaringsbehovOrkestrator(
-                connection,
-                behandlingHendelseService,
-            )
+            val avklaringsbehovOrkestrator = AvklaringsbehovOrkestrator(connection)
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 

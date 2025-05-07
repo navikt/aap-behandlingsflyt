@@ -3,42 +3,45 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
-import no.nav.aap.behandlingsflyt.flyt.steg.internal.StegKonstruktørImpl
 import no.nav.aap.behandlingsflyt.flyt.utledType
-import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.lookup.repository.RepositoryRegistry
-import no.nav.aap.motor.FlytJobbRepository
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.Period
 
 class AvklaringsbehovOrkestrator(
-    private val connection: DBConnection, private val behandlingHendelseService: BehandlingHendelseService
+    private val connection: DBConnection,
+    private val behandlingHendelseService: BehandlingHendelseService,
+    private val flytOrkestrator: FlytOrkestrator,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val behandlingRepository: BehandlingRepository,
+    private val prosesserBehandling: ProsesserBehandlingService,
 ) {
-    // TODO flytt?
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-    private val sakRepository = repositoryProvider.provide<SakRepository>()
-    val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
-    private val prosesserBehandling = ProsesserBehandlingService(flytJobbRepository)
+    constructor(connection: DBConnection, repositoryProvider: RepositoryProvider): this(
+        connection = connection,
+        behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider),
+        flytOrkestrator = FlytOrkestrator(repositoryProvider),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+        prosesserBehandling = ProsesserBehandlingService(repositoryProvider),
+    )
+
+    constructor(connection: DBConnection): this(connection, RepositoryRegistry.provider(connection))
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -99,20 +102,6 @@ class AvklaringsbehovOrkestrator(
         )
 
         // løses det behov som fremtvinger tilbakehopp?
-        val flytOrkestrator = FlytOrkestrator(
-            stegKonstruktør = StegKonstruktørImpl(repositoryProvider),
-            ventebehovEvaluererService = VentebehovEvaluererServiceImpl(repositoryProvider),
-            behandlingRepository = behandlingRepository,
-            avklaringsbehovRepository = avklaringsbehovRepository,
-            informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                repositoryProvider.provide(),
-                repositoryProvider,
-            ),
-            sakRepository = sakRepository,
-            perioderTilVurderingService = PerioderTilVurderingService(repositoryProvider),
-            sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
-            behandlingHendelseService = behandlingHendelseService
-        )
         flytOrkestrator.forberedLøsingAvBehov(definisjoner, behandling, kontekst, bruker)
 
         // Bør ideelt kalle på

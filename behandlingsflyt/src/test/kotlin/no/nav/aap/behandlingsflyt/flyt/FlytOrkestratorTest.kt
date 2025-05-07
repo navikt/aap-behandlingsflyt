@@ -84,7 +84,6 @@ import no.nav.aap.behandlingsflyt.flyt.FlytOrkestratorTest.Companion.util
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.integrasjon.aaregisteret.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
@@ -174,7 +173,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFolkeregisterPersonStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFolkeregistermetadata
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlStatsborgerskap
@@ -192,7 +190,6 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
-import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -2732,14 +2729,9 @@ class FlytOrkestratorTest {
     ): Behandling {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(
-                AvklaringsbehovOrkestrator(
-                    it,
-                    BehandlingHendelseServiceImpl(
-                        FlytJobbRepository(it),
-                        BrevbestillingRepositoryImpl(it),
-                        SakService(SakRepositoryImpl(it))
-                    )
-                ), AvklaringsbehovRepositoryImpl(it), BehandlingRepositoryImpl(it)
+                AvklaringsbehovOrkestrator(it),
+                AvklaringsbehovRepositoryImpl(it),
+                BehandlingRepositoryImpl(it),
             ).håndtere(
                 behandling.id, LøsAvklaringsbehovHendelse(
                     løsning = avklaringsBehovLøsning,

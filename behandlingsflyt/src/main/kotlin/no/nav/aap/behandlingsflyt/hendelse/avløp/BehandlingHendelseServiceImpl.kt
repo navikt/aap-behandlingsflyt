@@ -36,6 +36,7 @@ import no.nav.aap.behandlingsflyt.prosessering.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import org.slf4j.LoggerFactory
@@ -48,6 +49,11 @@ class BehandlingHendelseServiceImpl(
     private val brevbestillingRepository: BrevbestillingRepository,
     private val sakService: SakService
 ) : BehandlingHendelseService {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        flytJobbRepository = repositoryProvider.provide(),
+        brevbestillingRepository = repositoryProvider.provide(),
+        sakService = SakService(repositoryProvider),
+    )
 
     private val log = LoggerFactory.getLogger(javaClass)
 

@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegKonstruktør
@@ -12,8 +13,11 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraBeslutter
 import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraKvalitetssikrer
 import no.nav.aap.behandlingsflyt.flyt.steg.Transisjon
+import no.nav.aap.behandlingsflyt.flyt.steg.internal.StegKonstruktørImpl
 import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererService
+import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
@@ -25,6 +29,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
 
@@ -51,6 +56,17 @@ class FlytOrkestrator(
     private val behandlingHendelseService: BehandlingHendelseService,
     private val ventebehovEvaluererService: VentebehovEvaluererService
 ) {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        stegKonstruktør = StegKonstruktørImpl(repositoryProvider),
+        ventebehovEvaluererService = VentebehovEvaluererServiceImpl(repositoryProvider),
+        behandlingRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(repositoryProvider),
+        sakRepository = repositoryProvider.provide(),
+        perioderTilVurderingService = PerioderTilVurderingService(repositoryProvider),
+        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
+        behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider),
+    )
 
     private val log = LoggerFactory.getLogger(javaClass)
 
