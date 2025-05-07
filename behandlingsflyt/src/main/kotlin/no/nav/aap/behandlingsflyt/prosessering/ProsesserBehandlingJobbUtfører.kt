@@ -56,7 +56,7 @@ private val log = LoggerFactory.getLogger(javaClass)
             return ProsesserBehandlingJobbUtfører(
                 låsRepository,
                 FlytOrkestrator(
-                    stegKonstruktør = StegKonstruktørImpl(connection),
+                    stegKonstruktør = StegKonstruktørImpl(repositoryProvider),
                     ventebehovEvaluererService = VentebehovEvaluererServiceImpl(repositoryProvider),
                     behandlingRepository = behandlingRepository,
                     avklaringsbehovRepository = avklaringsbehovRepository,

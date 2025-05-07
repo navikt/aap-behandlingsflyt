@@ -69,7 +69,7 @@ internal class StegOrkestratorTest {
                     BehandlingRepositoryImpl(connection),
                     FakeUnleash(mapOf()),
                 ),
-                stegKonstruktør = StegKonstruktørImpl(connection)
+                stegKonstruktør = StegKonstruktørImpl(RepositoryRegistry.provider(connection))
             ).utfør(
                 kontekst,
                 behandling,
