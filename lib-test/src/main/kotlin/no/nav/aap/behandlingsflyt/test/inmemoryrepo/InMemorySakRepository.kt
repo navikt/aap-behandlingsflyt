@@ -75,6 +75,9 @@ object InMemorySakRepository : SakRepository {
         TODO("Not yet implemented")
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+    }
+
     override fun oppdaterSakStatus(
         sakId: SakId,
         status: Status

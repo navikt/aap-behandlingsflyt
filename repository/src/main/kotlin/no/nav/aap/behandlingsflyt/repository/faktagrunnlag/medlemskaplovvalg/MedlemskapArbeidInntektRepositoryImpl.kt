@@ -541,9 +541,11 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             delete from INNTEKT_I_NORGE where id = ANY(?::bigint[]);
             delete from ARBEID where id = ANY(?::bigint[]);
             delete from MEDLEMSSKAP_UNNTAK_PERSON where id = ANY(?::bigint[]);
+            delete from MEDLEMSSKAP_UNNTAK where medlemskap_unntak_person_id = ANY(?::bigint[]);
             delete from INNTEKTER_I_NORGE where id = ANY(?::bigint[]);
             delete from LOVVALG_MEDLEMSSKAP_MANUELL_VURDERING where id = ANY(?::bigint[]);
             delete from ARBEIDER where id = ANY(?::bigint[]);
+            delete from OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG where behandling_id = ?; 
             delete from MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ? 
         """.trimIndent()) {
             setParams {

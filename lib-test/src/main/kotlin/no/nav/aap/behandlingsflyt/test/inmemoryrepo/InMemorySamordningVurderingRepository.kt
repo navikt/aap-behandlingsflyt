@@ -20,4 +20,7 @@ object InMemorySamordningVurderingRepository : SamordningVurderingRepository {
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         TODO("Not yet implemented")
     }
+
+    override fun slett(behandlingId: BehandlingId) {
+    }
 }
