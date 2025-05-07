@@ -229,7 +229,7 @@ class PersonopplysningForutgåendeRepositoryImpl(
         """
                     SELECT id
                     FROM personopplysninger_forutgaaende
-                    WHERE id = ?
+                    WHERE id = ANY(?::bigint[]);
                  
                 """.trimIndent()
     ) {

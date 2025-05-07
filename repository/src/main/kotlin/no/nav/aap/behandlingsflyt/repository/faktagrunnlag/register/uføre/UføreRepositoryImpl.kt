@@ -65,13 +65,13 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
 
         connection.execute("""
            
-            delete from UFORE_GRADERING where id = ANY(?::bigint[]);
-            delete from UFORE where behandling_id = ?;
+            delete from UFORE_GRADERING where ufore_id = ANY(?::bigint[]);
+            delete from UFORE where id = ANY(?::bigint[]);
             delete from UFORE_GRUNNLAG where behandling_id = ?;
            
         """.trimIndent()) {
             setParams {
-                setLong(1, behandlingId.id)
+                setLongArray(1, uforeIds)
                 setLongArray(2, uforeIds)
                 setLong(3, behandlingId.id)
 

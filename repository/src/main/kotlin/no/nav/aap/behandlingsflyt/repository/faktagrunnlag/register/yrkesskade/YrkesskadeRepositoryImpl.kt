@@ -117,7 +117,7 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
 
         connection.execute("""
             delete from yrkesskade_dato where id = ANY(?::bigint[]);
-            delete from yrkesskade where bistand_vurderinger_id = ANY(?::bigint[]);
+            delete from yrkesskade where id = ANY(?::bigint[]);
             delete from yrkesskade_grunnlag where behandling_id = ? 
         """.trimIndent()) {
             setParams {

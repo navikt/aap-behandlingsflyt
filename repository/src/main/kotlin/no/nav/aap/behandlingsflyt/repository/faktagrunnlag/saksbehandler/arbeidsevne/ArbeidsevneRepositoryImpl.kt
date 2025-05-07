@@ -167,7 +167,7 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
         val arbeidsevneIds = getArbeidsevneIds(behandlingId)
 
         connection.execute("""
-            delete from arbeidsevne_vurdering where vurderinger_id = ANY(?::bigint[]);
+            delete from arbeidsevne_vurdering where arbeidsevne_id = ANY(?::bigint[]);
             delete from arbeidsevne where id = ANY(?::bigint[]);
             delete from arbeidsevne_grunnlag where behandling_id = ? 
         """.trimIndent()) {

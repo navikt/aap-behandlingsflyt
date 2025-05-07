@@ -288,7 +288,7 @@ class PersonopplysningRepositoryImpl(
 
         connection.execute("""
             delete from bruker_personopplysning where id = ANY(?::bigint[]);
-            delete from personopplysning where meldelplikt_id = ANY(?::bigint[]);
+            delete from personopplysning where personopplysninger_id = ANY(?::bigint[]);
             delete from personopplysninger where id = ANY(?::bigint[]);
             delete from personopplysning_grunnlag where behandling_id = ? 
         """.trimIndent()) {
