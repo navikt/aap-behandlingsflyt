@@ -3,12 +3,22 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.repository.RepositoryFactory
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.Repository
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
-class MedlemskapForutgåendeRepository(private val connection: DBConnection) {
-    fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapDataIntern>): Long {
+interface MedlemskapForutgåendeRepository: Repository {
+    fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapDataIntern>): Long
+    fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapUnntakGrunnlag?
+}
+
+class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection) : MedlemskapForutgåendeRepository {
+    private val log = LoggerFactory.getLogger(javaClass)
+
+    override fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapDataIntern>): Long {
         if (hentHvisEksisterer(behandlingId) != null) {
             deaktiverEksisterendeGrunnlag(behandlingId)
         }
@@ -82,7 +92,7 @@ class MedlemskapForutgåendeRepository(private val connection: DBConnection) {
         }.toList()
     }
 
-    fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapUnntakGrunnlag? {
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapUnntakGrunnlag? {
         val behandlingsMedlemskapUnntak = connection.queryFirstOrNull(
             "SELECT MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON_ID FROM MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG WHERE BEHANDLING_ID=? AND AKTIV=TRUE"
         ) {
@@ -115,5 +125,17 @@ class MedlemskapForutgåendeRepository(private val connection: DBConnection) {
                 require(rowsUpdated == 1)
             }
         }
+    }
+
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        // TODO
+        log.warn("ingen kopier-metode for $javaClass. Burde vi implementere kopier-metode her?")
+    }
+
+    companion object: RepositoryFactory<MedlemskapForutgåendeRepository> {
+        override fun konstruer(connection: DBConnection): MedlemskapForutgåendeRepository {
+            return MedlemskapForutgåendeRepositoryImpl(connection)
+        }
+
     }
 }

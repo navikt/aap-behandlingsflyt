@@ -45,6 +45,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate.formkravGrunnlagApi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.arbeidsevneGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.bistandsgrunnlagApi
@@ -315,6 +316,7 @@ private fun registerRepositories() {
         .register<FlytJobbRepositoryImpl>()
         .register<FormkravRepositoryImpl>()
         .register<MedlemskapRepositoryImpl>()
+        .register<MedlemskapForutgåendeRepositoryImpl>()
         .status()
 }
 

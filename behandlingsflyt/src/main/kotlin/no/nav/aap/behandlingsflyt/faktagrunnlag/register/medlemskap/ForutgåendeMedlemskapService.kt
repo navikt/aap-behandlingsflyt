@@ -29,7 +29,7 @@ import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class ForutgåendeMedlemskapService private constructor(
     private val sakService: SakService,
-    private val medlemskapForutgåendeRepository: MedlemskapForutgåendeRepository,
+    private val medlemskapForutgåendeRepository: MedlemskapForutgåendeRepositoryImpl,
     private val grunnlagRepository: MedlemskapArbeidInntektForutgåendeRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav {
@@ -90,7 +90,7 @@ class ForutgåendeMedlemskapService private constructor(
             val grunnlagRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
             return ForutgåendeMedlemskapService(
                 SakService(sakRepository),
-                MedlemskapForutgåendeRepository(connection),
+                repositoryProvider.provide(),
                 grunnlagRepository,
                 TidligereVurderingerImpl(repositoryProvider),
             )
