@@ -285,18 +285,23 @@ class PersonopplysningRepositoryImpl(
         // Sletter ikke bruker_land og bruker_land_aggregat, da det ikke er personopplysninger her
         val brukerPersonopplysningIds = getBrukerPersonopplysningIds(behandlingId)
         val personopplysningerIds = getPersonOpplysningerIds(behandlingId)
+        val utenlandsAdresserIds = getUtenlandsAdresserIds(brukerPersonopplysningIds)
 
         connection.execute("""
+            delete from bruker_utenlandsadresse where utenlandsadresser_id = ANY(?::bigint[]);
+            delete from bruker_utenlandsadresser_aggregat where id = ANY(?::bigint[]);
             delete from bruker_personopplysning where id = ANY(?::bigint[]);
             delete from personopplysning where personopplysninger_id = ANY(?::bigint[]);
             delete from personopplysninger where id = ANY(?::bigint[]);
             delete from personopplysning_grunnlag where behandling_id = ? 
         """.trimIndent()) {
             setParams {
-                setLongArray(1, brukerPersonopplysningIds)
-                setLongArray(2, personopplysningerIds)
-                setLongArray(3, personopplysningerIds)
-                setLong(4, behandlingId.id)
+                setLongArray(1, utenlandsAdresserIds)
+                setLongArray(2, utenlandsAdresserIds)
+                setLongArray(3, brukerPersonopplysningIds)
+                setLongArray(4, personopplysningerIds)
+                setLongArray(5, personopplysningerIds)
+                setLong(6, behandlingId.id)
             }
         }
     }
@@ -326,6 +331,20 @@ class PersonopplysningRepositoryImpl(
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
             row.getLong("personopplysninger_id")
+        }
+    }
+
+    private fun getUtenlandsAdresserIds(brukerPersonopplysningIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT utenlandsadresser_id
+                    FROM bruker_personopplysning
+                    WHERE id = ANY(?::bigint[]);
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, brukerPersonopplysningIds) }
+        setRowMapper { row ->
+            row.getLong("utenlandsadresser_id")
         }
     }
 }

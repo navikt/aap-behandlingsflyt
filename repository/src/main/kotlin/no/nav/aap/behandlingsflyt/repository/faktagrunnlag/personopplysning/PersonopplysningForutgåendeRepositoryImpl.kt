@@ -177,22 +177,27 @@ class PersonopplysningForutgåendeRepositoryImpl(
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        // Sletter ikke bruker_land_forutgaaende, bruker_statuser_forutgaaende, bruker_utenlandskadresse_forutgaaende,  og bruker_land_forutgaaende_aggregat, da det ikke er personopplysninger her
+        // Sletter ikke bruker_land_forutgaaende, bruker_statuser_forutgaaende, og bruker_land_forutgaaende_aggregat, da det ikke er personopplysninger her
         val brukerPersonopplysningIds = getBrukerPersonopplysningIds(behandlingId)
         val personopplysningerIds = getPersonOpplysningerIds(behandlingId)
         val personopplysningIds = getPersonOpplysningIds(personopplysningerIds)
+        val utenlandsAdresserIds = getUtenlandsAdresserIds(brukerPersonopplysningIds)
 
         connection.execute("""
+            delete from bruker_utenlandsadresse_forutgaaende where utenlandsadresser_id = ANY(?::bigint[]);
+            delete from bruker_utenlandsadresser_aggregat where id = ANY(?::bigint[]);
             delete from bruker_personopplysning_forutgaaende where id = ANY(?::bigint[]);
             delete from personopplysning_forutgaaende where id = ANY(?::bigint[]);
             delete from personopplysninger_forutgaaende where id = ANY(?::bigint[]);
             delete from personopplysning_forutgaaende_grunnlag where behandling_id = ? 
         """.trimIndent()) {
             setParams {
-                setLongArray(1, brukerPersonopplysningIds)
-                setLongArray(2, personopplysningIds)
-                setLongArray(3, personopplysningerIds)
-                setLong(4, behandlingId.id)
+                setLongArray(1, utenlandsAdresserIds)
+                setLongArray(2, utenlandsAdresserIds)
+                setLongArray(3, brukerPersonopplysningIds)
+                setLongArray(4, personopplysningIds)
+                setLongArray(5, personopplysningerIds)
+                setLong(6, behandlingId.id)
             }
         }
     }
@@ -236,6 +241,20 @@ class PersonopplysningForutgåendeRepositoryImpl(
         setParams { setLongArray(1, personopplysningerIds) }
         setRowMapper { row ->
             row.getLong("id")
+        }
+    }
+
+    private fun getUtenlandsAdresserIds(brukerPersonopplysningIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT utenlandsadresser_id
+                    FROM bruker_personopplysning_forutgaaende
+                    WHERE id = ANY(?::bigint[]);
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, brukerPersonopplysningIds) }
+        setRowMapper { row ->
+            row.getLong("utenlandsadresser_id")
         }
     }
 
