@@ -177,7 +177,7 @@ class PersonopplysningForutgåendeRepositoryImpl(
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        // Sletter ikke bruker_land_forutgaaende, bruker_statuser_forutgaaende og bruker_land_forutgaaende_aggregat, da det ikke er personopplysninger her
+        // Sletter ikke bruker_land_forutgaaende, bruker_statuser_forutgaaende, bruker_utenlandskadresse_forutgaaende,  og bruker_land_forutgaaende_aggregat, da det ikke er personopplysninger her
         val brukerPersonopplysningIds = getBrukerPersonopplysningIds(behandlingId)
         val personopplysningerIds = getPersonOpplysningerIds(behandlingId)
         val personopplysningIds = getPersonOpplysningIds(personopplysningerIds)
