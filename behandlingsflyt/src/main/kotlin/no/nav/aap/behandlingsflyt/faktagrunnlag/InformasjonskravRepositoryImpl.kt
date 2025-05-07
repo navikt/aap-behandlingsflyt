@@ -55,7 +55,7 @@ class InformasjonskravRepositoryImpl(
             delete from informasjonskrav_oppdatert where behandling_id = ? 
         """.trimIndent()) {
             setParams {
-                setLong(1, behandlingId.toLong())
+                setLong(1, behandlingId.id)
             }
         }
     }

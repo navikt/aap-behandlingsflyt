@@ -92,8 +92,8 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
             delete from tilkjent_ytelse where behandling_id = ? 
         """.trimIndent()) {
             setParams {
-                setLong(1, behandlingId.toLong())
-                setLong(2, behandlingId.toLong())
+                setLong(1, behandlingId.id)
+                setLong(2, behandlingId.id)
             }
         }
     }

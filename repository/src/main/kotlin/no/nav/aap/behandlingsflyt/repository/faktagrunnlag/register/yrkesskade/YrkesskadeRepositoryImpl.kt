@@ -123,7 +123,7 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
             setParams {
                 setLongArray(1, yrkesskadeIds)
                 setLongArray(2, yrkesskadeIds)
-                setLong(3, behandlingId.toLong())
+                setLong(3, behandlingId.id)
             }
         }
     }

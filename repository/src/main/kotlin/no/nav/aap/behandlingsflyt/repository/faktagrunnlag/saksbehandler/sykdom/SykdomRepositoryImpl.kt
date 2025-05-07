@@ -86,7 +86,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 setLongArray(2, sykdomVurderingIds)
                 setLongArray(3, sykdomVurderingerIds)
                 setLongArray(4, sykdomVurderingerIds)
-                setLong(5, behandlingId.toLong())
+                setLong(5, behandlingId.id)
             }
         }
     }
