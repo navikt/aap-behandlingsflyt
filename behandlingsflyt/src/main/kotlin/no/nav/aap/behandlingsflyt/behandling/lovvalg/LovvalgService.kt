@@ -108,7 +108,7 @@ class LovvalgService private constructor(
             return LovvalgService(
                 SakService(sakRepository),
                 medlemskapArbeidInntektRepository,
-                MedlemskapRepository(connection),
+                repositoryProvider.provide<MedlemskapRepository>(),
                 TidligereVurderingerImpl(repositoryProvider),
             )
         }

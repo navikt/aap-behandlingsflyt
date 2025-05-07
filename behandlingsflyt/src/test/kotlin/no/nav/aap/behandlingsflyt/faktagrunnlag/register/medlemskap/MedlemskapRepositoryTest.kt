@@ -42,7 +42,7 @@ internal class MedlemskapRepositoryTest {
             ).behandling
 
             // ACT
-            val repo = MedlemskapRepository(connection)
+            val repo = MedlemskapRepositoryImpl(connection)
             repo.lagreUnntakMedlemskap(
                 behandlingId = behandling.id,
                 listOf(
@@ -66,7 +66,7 @@ internal class MedlemskapRepositoryTest {
         }
 
         val uthentet = dataSource.transaction { connection ->
-            val repo = MedlemskapRepository(connection)
+            val repo = MedlemskapRepositoryImpl(connection)
 
             repo.hentHvisEksisterer(behandlingId = behandlingId)
         }
