@@ -1,8 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.AdresseType
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 data class KanBehandlesAutomatiskVurdering(
     val kanBehandlesAutomatisk: Boolean,
@@ -14,13 +16,14 @@ data class TilhørighetVurdering (
     val indikasjon: Indikasjon,
     val opplysning: String,
     val resultat: Boolean,
-    val fordypelse: String?,// = null,
+    val fordypelse: String?, // Todo: fjern meg når FE er klar
     val vedtakImedlGrunnlag: List<VedtakIMEDLGrunnlag>? = null,
     val mottarSykepengerGrunnlag: List<MottarSykepengerGrunnlag>? = null,
     val arbeidInntektINorgeGrunnlag: List<ArbeidInntektINorgeGrunnlag>? = null,
     val manglerStatsborgerskapGrunnlag: List<ManglerStatsborgerskapGrunnlag>? = null,
     val oppgittJobbetIUtlandGrunnlag: List<OppgittJobbetIUtlandGrunnlag>? = null,
     val oppgittUtenlandsOppholdGrunnlag: Boolean? = null,
+    val utenlandsAddresserGrunnlag: List<UtenlandsAdresseGrunnlag>? = null,
 )
 
 data class VedtakIMEDLGrunnlag(
@@ -52,6 +55,16 @@ data class OppgittJobbetIUtlandGrunnlag(
     val land: String?,
     val tilDato: LocalDate?,
     val fraDato: LocalDate?,
+)
+
+data class UtenlandsAdresseGrunnlag(
+    val gyldigFraOgMed: LocalDateTime?,
+    val gyldigTilOgMed: LocalDateTime?,
+    val adresseNavn: String?,
+    val postkode: String?,
+    val bySted: String?,
+    val landkode: String?,
+    val adresseType: AdresseType?
 )
 
 enum class Kilde {

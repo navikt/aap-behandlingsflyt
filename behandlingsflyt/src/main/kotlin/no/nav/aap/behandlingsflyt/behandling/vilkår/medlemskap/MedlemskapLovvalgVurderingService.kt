@@ -113,14 +113,27 @@ class MedlemskapLovvalgVurderingService {
 
     private fun utenlandskAdresse(grunnlag: PersonopplysningGrunnlag): TilhørighetVurdering {
         val bosattUtenforNorge = grunnlag.brukerPersonopplysning.status != PersonStatus.bosatt
-        val jsonGrunnlag = DefaultJsonMapper.toJson(grunnlag) // Todo: få inn utenlandsaddresser(alle) fra pdl
+        val jsonGrunnlag = DefaultJsonMapper.toJson(grunnlag) // Todo: fjern meg når FE er klar
+
+        val utenlandsAddresserGrunnlag = grunnlag.brukerPersonopplysning.utenlandsAddresser?.map {
+            UtenlandsAdresseGrunnlag(
+                gyldigFraOgMed = it.gyldigFraOgMed,
+                gyldigTilOgMed = it.gyldigTilOgMed,
+                adresseNavn = it.adresseNavn,
+                postkode = it.postkode,
+                bySted = it.bySted,
+                landkode = it.landkode,
+                adresseType = it.adresseType
+            )
+        }
 
         return TilhørighetVurdering(
             kilde = listOf(Kilde.PDL),
             indikasjon = Indikasjon.UTENFOR_NORGE,
             opplysning = "Utenlandsk adresse",
             resultat = bosattUtenforNorge,
-            fordypelse = jsonGrunnlag
+            fordypelse = jsonGrunnlag,
+            utenlandsAddresserGrunnlag = utenlandsAddresserGrunnlag
         )
     }
 
