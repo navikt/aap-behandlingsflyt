@@ -101,7 +101,7 @@ class AvklaringsbehovOrkestrator(
         // løses det behov som fremtvinger tilbakehopp?
         val flytOrkestrator = FlytOrkestrator(
             stegKonstruktør = StegKonstruktørImpl(connection),
-            ventebehovEvaluererService = VentebehovEvaluererServiceImpl(connection),
+            ventebehovEvaluererService = VentebehovEvaluererServiceImpl(repositoryProvider),
             behandlingRepository = behandlingRepository,
             avklaringsbehovRepository = avklaringsbehovRepository,
             informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(

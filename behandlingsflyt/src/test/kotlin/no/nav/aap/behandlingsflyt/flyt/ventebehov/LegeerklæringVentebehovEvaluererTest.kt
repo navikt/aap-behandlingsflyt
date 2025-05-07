@@ -27,28 +27,23 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.testutil.TestUtil
 import no.nav.aap.verdityper.dokument.Kanal
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeAll
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.test.Test
 
 @Fakes
 internal class LegeerklæringVentebehovEvaluererTest {
+    private val repositoryRegistry = RepositoryRegistry()
+        .register<MottattDokumentRepositoryImpl>()
+
     companion object {
         private val dataSource = InitTestDatabase.freshDatabase()
         private val util = TestUtil(dataSource, ProsesseringsJobber.alle().filter { it.cron() != null }.map { it.type() })
-        @JvmStatic
-        @BeforeAll
-        fun beforeAll() {
-            RepositoryRegistry
-                .register<MottattDokumentRepositoryImpl>()
-                .status()
-        }
     }
 
     @Test
@@ -59,7 +54,8 @@ internal class LegeerklæringVentebehovEvaluererTest {
         }
 
         dataSource.transaction { connection ->
-            val evaluerer = LegeerklæringVentebehovEvaluerer(connection)
+            val repositoryProvider = repositoryRegistry.provider(connection)
+            val evaluerer = LegeerklæringVentebehovEvaluerer(repositoryProvider)
             val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
 
             genererDokument(
@@ -84,7 +80,8 @@ internal class LegeerklæringVentebehovEvaluererTest {
         }
 
         dataSource.transaction { connection ->
-            val evaluerer = LegeerklæringVentebehovEvaluerer(connection)
+            val repositoryProvider = repositoryRegistry.provider(connection)
+            val evaluerer = LegeerklæringVentebehovEvaluerer(repositoryProvider)
             val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
 
             genererDokument(
@@ -109,7 +106,8 @@ internal class LegeerklæringVentebehovEvaluererTest {
         }
 
         dataSource.transaction { connection ->
-            val evaluerer = LegeerklæringVentebehovEvaluerer(connection)
+            val repositoryProvider = repositoryRegistry.provider(connection)
+            val evaluerer = LegeerklæringVentebehovEvaluerer(repositoryProvider)
             val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
 
             genererDokument(
@@ -134,7 +132,8 @@ internal class LegeerklæringVentebehovEvaluererTest {
         }
 
         dataSource.transaction { connection ->
-            val evaluerer = LegeerklæringVentebehovEvaluerer(connection)
+            val repositoryProvider = repositoryRegistry.provider(connection)
+            val evaluerer = LegeerklæringVentebehovEvaluerer(repositoryProvider)
             genererDokument(
                 behandling.sakId,
                 behandling.id,
@@ -158,7 +157,8 @@ internal class LegeerklæringVentebehovEvaluererTest {
         }
 
         dataSource.transaction { connection ->
-            val evaluerer = LegeerklæringVentebehovEvaluerer(connection)
+            val repositoryProvider = repositoryRegistry.provider(connection)
+            val evaluerer = LegeerklæringVentebehovEvaluerer(repositoryProvider)
             val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
 
             genererDokument(
