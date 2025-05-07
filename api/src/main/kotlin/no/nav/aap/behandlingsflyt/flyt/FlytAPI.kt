@@ -75,7 +75,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                         avklaringsbehovRepository,
                         behandling.id
                     )
-                    val flytJobbRepository = FlytJobbRepository(connection)
+                    val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
                     val gruppeVisningService = DynamiskStegGruppeVisningService(connection)
 
                     val jobber = flytJobbRepository.hentJobberForBehandling(behandling.id.toLong())
