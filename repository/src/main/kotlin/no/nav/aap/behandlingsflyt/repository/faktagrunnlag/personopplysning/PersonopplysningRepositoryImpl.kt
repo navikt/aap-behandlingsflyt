@@ -137,7 +137,7 @@ class PersonopplysningRepositoryImpl(
         if (id == null) return emptyList()
         return connection.queryList(
             """
-            SELECT * FROM BRUKER_UTENLANDSADRESSER
+            SELECT * FROM BRUKER_UTENLANDSADRESSE
             WHERE UTENLANDSADRESSER_ID = ?
         """.trimIndent()
         ) {
@@ -182,7 +182,7 @@ class PersonopplysningRepositoryImpl(
             utenlandsAdresserId = connection.executeReturnKey("INSERT INTO BRUKER_UTENLANDSADRESSER_AGGREGAT DEFAULT VALUES"){}
             connection.executeBatch(
                 """
-                    INSERT INTO BRUKER_UTENLANDSADRESSER (UTENLANDSADRESSER_ID, ADRESSENAVN, POSTKODE, BYSTED, LANDKODE, GYLDIGFRAOGMED, GYLDIGTILOGMED, ADRESSE_TYPE) 
+                    INSERT INTO BRUKER_UTENLANDSADRESSE (UTENLANDSADRESSER_ID, ADRESSENAVN, POSTKODE, BYSTED, LANDKODE, GYLDIGFRAOGMED, GYLDIGTILOGMED, ADRESSE_TYPE) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """.trimIndent(),
                 personopplysning.utenlandsAddresser!!
