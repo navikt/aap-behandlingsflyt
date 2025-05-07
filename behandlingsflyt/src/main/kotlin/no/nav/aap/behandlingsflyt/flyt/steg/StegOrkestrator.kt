@@ -81,7 +81,7 @@ class StegOrkestrator(
                             )
                             if (gjeldendeStegStatus in setOf(StegStatus.START, StegStatus.OPPDATER_FAKTAGRUNNLAG)) {
                                 // Legger denne her slik at vi får savepoint på at vi har byttet steg, slik at vi starter opp igjen på rett sted når prosessen dras i gang igjen
-                                stegKonstruktør.markerSavepoint()
+                                behandlingRepository.markerSavepoint()
                             }
 
                             if (gjeldendeStegStatus == StegStatus.AVSLUTTER) {

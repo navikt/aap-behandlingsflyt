@@ -137,6 +137,9 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
+    override fun markerSavepoint() {
+    }
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
     }
 }

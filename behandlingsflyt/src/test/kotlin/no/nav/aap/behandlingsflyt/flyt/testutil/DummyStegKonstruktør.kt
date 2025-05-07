@@ -9,8 +9,4 @@ class DummyStegKonstruktør : StegKonstruktør {
     override fun konstruer(steg: FlytSteg): BehandlingSteg {
         return GeneriskTestSteg()
     }
-
-    override fun markerSavepoint() {
-
-    }
 }

@@ -35,5 +35,7 @@ interface BehandlingRepository : Repository {
     fun oppdaterBehandlingStatus(behandlingId: BehandlingId, status: Status)
 
     fun leggTilNyttAktivtSteg(behandlingId: BehandlingId, tilstand: StegTilstand)
+
+    fun markerSavepoint()
 }
 

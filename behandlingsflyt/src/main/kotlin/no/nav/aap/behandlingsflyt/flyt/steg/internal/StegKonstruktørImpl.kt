@@ -10,8 +10,4 @@ class StegKonstruktørImpl(private val connection: DBConnection) : StegKonstrukt
     override fun konstruer(steg: FlytSteg): BehandlingSteg {
         return steg.konstruer(RepositoryRegistry.provider(connection))
     }
-
-    override fun markerSavepoint() {
-        connection.markerSavepoint()
-    }
 }
