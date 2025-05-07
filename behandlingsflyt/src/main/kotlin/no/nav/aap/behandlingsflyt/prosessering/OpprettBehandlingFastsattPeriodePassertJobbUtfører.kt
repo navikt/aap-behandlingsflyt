@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -11,12 +11,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import java.time.LocalDate
 import java.time.LocalDateTime
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
 class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
     private val sakService: SakService,
@@ -79,7 +79,7 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
                 behandlingRepository = repositoryProvider.provide(),
                 underveisRepository = repositoryProvider.provide(),
                 sakOgBehandlingService = SakOgBehandlingService(
-                    grunnlagKopierer = GrunnlagKopierer(connection),
+                    grunnlagKopierer = GrunnlagKopiererImpl(repositoryProvider),
                     sakRepository = repositoryProvider.provide(),
                     behandlingRepository = repositoryProvider.provide(),
                 )

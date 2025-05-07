@@ -32,7 +32,7 @@ class Driftfunksjoner {
         """.trimIndent()
 
         val repositoryProvider = RepositoryRegistry.provider(connection)
-        val sakOgBehandlingService = SakOgBehandlingService(GrunnlagKopiererImpl(connection), repositoryProvider.provide(), repositoryProvider.provide())
+        val sakOgBehandlingService = SakOgBehandlingService(GrunnlagKopiererImpl(repositoryProvider), repositoryProvider.provide(), repositoryProvider.provide())
 
         val sak = sakOgBehandlingService.hentSakFor(behandlingId)
 

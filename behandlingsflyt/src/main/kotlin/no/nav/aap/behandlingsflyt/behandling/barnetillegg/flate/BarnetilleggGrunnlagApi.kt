@@ -4,7 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.BarnetilleggService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
@@ -51,7 +51,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
                     val barnRepository = repositoryProvider.provide<BarnRepository>()
 
                     val sakOgBehandlingService = SakOgBehandlingService(
-                        GrunnlagKopierer(connection), sakRepository, behandlingRepository
+                        GrunnlagKopiererImpl(repositoryProvider), sakRepository, behandlingRepository
                     )
                     val barnetilleggService = BarnetilleggService(
                         sakOgBehandlingService,

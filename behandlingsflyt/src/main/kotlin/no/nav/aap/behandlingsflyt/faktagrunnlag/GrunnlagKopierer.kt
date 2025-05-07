@@ -11,7 +11,7 @@ interface GrunnlagKopierer {
     companion object {
         /* TODO: Flytt GrunnlagKopiererImpl til repository-modulen og bruk RepositoryProvider. */
         operator fun invoke(connection: DBConnection): GrunnlagKopierer {
-            return GrunnlagKopiererImpl(connection)
+            return GrunnlagKopiererImpl(RepositoryRegistry.provider(connection))
         }
     }
 }
@@ -24,8 +24,6 @@ interface GrunnlagKopierer {
 class GrunnlagKopiererImpl(
     private val repositoryProvider: RepositoryProvider,
 ) : GrunnlagKopierer {
-    constructor(connection: DBConnection) : this(RepositoryRegistry.provider(connection))
-
     override fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
         require(fraBehandlingId != tilBehandlingId)
 

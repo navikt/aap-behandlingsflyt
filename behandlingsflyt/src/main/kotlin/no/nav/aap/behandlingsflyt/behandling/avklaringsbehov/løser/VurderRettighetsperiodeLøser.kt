@@ -27,7 +27,7 @@ class VurderRettighetsperiodeLøser(connection: DBConnection) :
     private val repositoryProvider = RepositoryRegistry.provider(connection)
     private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
     private val sakRepository = repositoryProvider.provide<SakRepository>()
-    private val grunnlagKopierer = GrunnlagKopiererImpl(connection)
+    private val grunnlagKopierer = GrunnlagKopiererImpl(repositoryProvider)
     private val rettighetsperiodeRepository = repositoryProvider.provide<VurderRettighetsperiodeRepository>()
 
     private val sakOgBehandlingService = SakOgBehandlingService(grunnlagKopierer, sakRepository, behandlingRepository)

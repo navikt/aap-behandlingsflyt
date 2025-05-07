@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
@@ -23,7 +24,6 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
 private const val BREVKODE = "brevkode"
 private const val KANAL = "kanal"
@@ -121,7 +121,7 @@ class HendelseMottattHåndteringJobbUtfører(
                 HåndterMottattDokumentService(
                     SakService(sakRepository),
                     SakOgBehandlingService(
-                        GrunnlagKopierer(connection),
+                        GrunnlagKopiererImpl(repositoryProvider),
                         sakRepository,
                         behandlingRepository
                     ),
