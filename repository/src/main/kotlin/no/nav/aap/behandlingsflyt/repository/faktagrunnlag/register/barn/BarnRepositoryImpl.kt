@@ -392,9 +392,9 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             delete from barn_vurdering where id = ANY(?::bigint[]);
             delete from barn_vurdering_periode where id = ANY(?::bigint[]);
             delete from barn_vurderinger where id = ANY(?::bigint[]);
-            delete from barn_opplysning where id = ANY(?::bigint[]);
+            delete from barnopplysning where id = ANY(?::bigint[]);
             delete from barnopplysning_grunnlag_barnopplysning where id = ANY(?::bigint[]);
-            delete from oppgitt_barn_opplysning where id = ANY(?::bigint[]);
+            delete from oppgitt_barnopplysning where id = ANY(?::bigint[]);
             delete from oppgitt_barn where oppgitt_barn_id = ANY(?::bigint[]);
             delete from barnopplysning_grunnlag where behandling_id = ? 
         """.trimIndent()
@@ -458,7 +458,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         """
                     SELECT id
                     FROM barn_vurdering
-                    WHERE barn_vurderinger_id = ?
+                    WHERE barn_vurderinger_id = ANY(?::bigint[]);
                  
                 """.trimIndent()
     ) {
@@ -471,8 +471,8 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
     private fun getBarnOpplysningIds(registerBarnIds: List<Long>): List<Long> = connection.queryList(
         """
                     SELECT id
-                    FROM barnopplysning_grunnlag_barnopplysning
-                    WHERE behandling_id = ?
+                    FROM barnopplysning
+                    WHERE bgb_id = ANY(?::bigint[]);
                  
                 """.trimIndent()
     ) {

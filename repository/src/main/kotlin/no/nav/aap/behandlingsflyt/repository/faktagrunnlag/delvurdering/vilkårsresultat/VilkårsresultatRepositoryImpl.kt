@@ -193,7 +193,7 @@ WHERE behandling_id = ?
         """
                     SELECT id
                     FROM vilkar_resultat
-                    WHERE behandlingId = ?;
+                    WHERE behandling_id = ?;
                  
                 """.trimIndent()
     ) {

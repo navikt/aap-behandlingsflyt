@@ -214,7 +214,7 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
         """
                     SELECT id
                     FROM meldekort
-                    WHERE meldekorteneId = ANY(?::bigint[])
+                    WHERE meldekortene_id = ANY(?::bigint[])
                  
                 """.trimIndent()
     ) {

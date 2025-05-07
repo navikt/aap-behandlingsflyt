@@ -184,13 +184,13 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
         dbConnection.execute("""
             delete from tjenestepensjon_ordninger where id = ANY(?::bigint[]);
             delete from tjenestepensjon_ordning where tjenestepensjon_ordninger_id = ANY(?::bigint[]);    
-            delete from tjenestepensjon_ytelse where tjenestepensjon_ordninger_id = ANY(?::bigint[]);
+            delete from tjenestepensjon_ytelse where tjenestepensjon_ordning_id = ANY(?::bigint[]);
             delete from tjenestepensjon_forhold_grunnlag where behandling_id = ? 
         """.trimIndent()) {
             setParams {
-                setLongArray(1, tjenestePensjonOrdningIds)
+                setLongArray(1, tjenestePensjonOrdningerIds)
                 setLongArray(2, tjenestePensjonOrdningerIds)
-                setLongArray(3, tjenestePensjonOrdningerIds)
+                setLongArray(3, tjenestePensjonOrdningIds)
                 setLong(4, behandlingId.id)
             }
         }
@@ -214,7 +214,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
         """
                     SELECT id
                     FROM tjenestepensjon_ordninger
-                    WHERE tjenestepensjon_ordninger_id = ANY(?::bigint[]);
+                    WHERE id = ANY(?::bigint[]);
                  
                 """.trimIndent()
     ) {

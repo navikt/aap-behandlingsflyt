@@ -195,24 +195,25 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
 
     override fun slett(behandlingId: BehandlingId) {
 
-        val samordningYtelseIds = getSamordningYtelseIds(behandlingId)
+        val samordningYtelserIds = getSamordningYtelserIds(behandlingId)
+        val samordningYtelseIds = getSamordningYtelseIds(samordningYtelserIds)
 
         dbConnection.execute("""
             delete from samordning_ytelse where ytelser_id = ANY(?::bigint[]);
-            delete from samordning_ytelse_periode where ytelser_id = ANY(?::bigint[]);
+            delete from samordning_ytelse_periode where ytelse_id = ANY(?::bigint[]);
             delete from samordning_ytelser where id = ANY(?::bigint[]);
             delete from samordning_ytelse_grunnlag where behandling_id = ? 
         """.trimIndent()) {
             setParams {
                 setLongArray(1, samordningYtelseIds)
                 setLongArray(2, samordningYtelseIds)
-                setLongArray(3, samordningYtelseIds)
+                setLongArray(3, samordningYtelserIds)
                 setLong(4, behandlingId.id)
             }
         }
     }
 
-    private fun getSamordningYtelseIds(behandlingId: BehandlingId): List<Long> = dbConnection.queryList(
+    private fun getSamordningYtelserIds(behandlingId: BehandlingId): List<Long> = dbConnection.queryList(
         """
                     SELECT samordning_ytelse_id
                     FROM samordning_ytelse_grunnlag
@@ -223,6 +224,20 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
             row.getLong("samordning_ytelse_id")
+        }
+    }
+
+    private fun getSamordningYtelseIds(ytelserIds: List<Long>): List<Long> = dbConnection.queryList(
+        """
+                    SELECT id
+                    FROM samordning_ytelse
+                    WHERE ytelser_id = ANY(?::bigint[]);
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, ytelserIds) }
+        setRowMapper { row ->
+            row.getLong("id")
         }
     }
 

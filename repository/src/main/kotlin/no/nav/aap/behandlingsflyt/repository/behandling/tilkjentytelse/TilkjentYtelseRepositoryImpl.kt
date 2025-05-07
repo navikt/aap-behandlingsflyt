@@ -88,7 +88,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
 
     override fun slett(behandlingId: BehandlingId) {
         connection.execute("""
-            delete from tilkjent_periode where tilkjent_ytelse_id in (select tikjent_ytelse.id from tilkjent_ytelse where behandling_id = ?);
+            delete from tilkjent_periode where tilkjent_ytelse_id in (select tilkjent_ytelse.id from tilkjent_ytelse where behandling_id = ?);
             delete from tilkjent_ytelse where behandling_id = ? 
         """.trimIndent()) {
             setParams {
