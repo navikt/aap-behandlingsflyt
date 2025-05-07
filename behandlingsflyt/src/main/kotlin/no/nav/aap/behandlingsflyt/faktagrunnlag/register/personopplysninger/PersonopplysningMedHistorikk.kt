@@ -11,7 +11,7 @@ data class PersonopplysningMedHistorikk(
     val dødsdato: Dødsdato? = null,
     val statsborgerskap: List<Statsborgerskap>,
     val folkeregisterStatuser: List<FolkeregisterStatus>,
-    val utenlandsAddresser: UtenlandsAdresser? = null
+    val utenlandsAddresser: List<UtenlandsAdresse>? = null
 ) {
 
     // Denne skal kun sammenlikne data og ikke tidspunkter
@@ -46,33 +46,18 @@ data class Statsborgerskap(
     val gyldigTilOgMed: LocalDate? = null,
 )
 
-data class UtenlandsAdresser (
-    val kontaktAdresser: List<KontaktAdresse>?,
-    val bostedsAdresser: List<BostedsAdresse>?,
-    val oppholdsAdresse: List<OppholdsAdresse>?
-)
-
-data class KontaktAdresse(
+data class UtenlandsAdresse (
     val gyldigFraOgMed: LocalDateTime? = null,
     val gyldigTilOgMed: LocalDateTime? = null,
-    val utenlandskAdresse: Adresse
-)
-
-data class BostedsAdresse(
-    val gyldigFraOgMed: LocalDateTime? = null,
-    val gyldigTilOgMed: LocalDateTime? = null,
-    val utenlandskAdresse: Adresse
-)
-
-data class OppholdsAdresse(
-    val gyldigFraOgMed: LocalDateTime? = null,
-    val gyldigTilOgMed: LocalDateTime? = null,
-    val utenlandskAdresse: Adresse
-)
-
-data class Adresse (
     val adresseNavn: String?,
     val postkode: String?,
     val bySted: String?,
-    val landkode: String?
+    val landkode: String?,
+    val adresseType: AdresseType?
 )
+
+enum class AdresseType {
+    KONTAKT_ADRESSE,
+    OPPHOLDS_ADRESSE,
+    BOSTEDS_ADRESSE
+}

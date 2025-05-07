@@ -9,9 +9,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.RelatertPersonopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.RelatertePersonopplysninger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.UtenlandsAdresse
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
@@ -97,7 +97,8 @@ class PersonopplysningForutgåendeRepositoryImpl(
                     fødselsdato = Fødselsdato(row.getLocalDate("FODSELSDATO")),
                     dødsdato = row.getLocalDateOrNull("DODSDATO")?.let { Dødsdato(it) },
                     statsborgerskap = hentStatsborgerskap(row.getLong("LANDKODER_ID")),
-                    folkeregisterStatuser = hentStatuser(row.getLong("STATUSER_ID"))
+                    folkeregisterStatuser = hentStatuser(row.getLong("STATUSER_ID")),
+                    utenlandsAddresser = hentUtenlandsAdresser((row.getLongOrNull("UTENLANDSADRESSER_ID")))
                 )
             }
         }
@@ -132,13 +133,37 @@ class PersonopplysningForutgåendeRepositoryImpl(
             }
         }
 
+        var utenlandsAdresserId: Long? = null
+        if (!personopplysning.utenlandsAddresser.isNullOrEmpty()) {
+            utenlandsAdresserId = connection.executeReturnKey("INSERT INTO BRUKER_UTENLANDSADRESSER_FORUTGAAENDE_AGGREGAT DEFAULT VALUES"){}
+            connection.executeBatch(
+                """
+                    INSERT INTO BRUKER_UTENLANDSADRESSER_FORUTGAAENDE (UTENLANDSADRESSER_ID, ADRESSENAVN, POSTKODE, BYSTED, LANDKODE, GYLDIGFRAOGMED, GYLDIGTILOGMED, ADRESSE_TYPE) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """.trimIndent(),
+                personopplysning.utenlandsAddresser!!
+            ) {
+                setParams {
+                    setLong(1, utenlandsAdresserId)
+                    setString(2, it.adresseNavn)
+                    setString(3, it.postkode)
+                    setString(4, it.bySted)
+                    setString(5, it.landkode)
+                    setLocalDateTime(6, it.gyldigFraOgMed)
+                    setLocalDateTime(7, it.gyldigTilOgMed)
+                    setEnumName(8, it.adresseType)
+                }
+            }
+        }
+
         val personopplysningId =
-            connection.executeReturnKey("INSERT INTO BRUKER_PERSONOPPLYSNING_FORUTGAAENDE (FODSELSDATO, DODSDATO, LANDKODER_ID, STATUSER_ID) VALUES (?, ?, ?, ?)") {
+            connection.executeReturnKey("INSERT INTO BRUKER_PERSONOPPLYSNING_FORUTGAAENDE (FODSELSDATO, DODSDATO, LANDKODER_ID, STATUSER_ID, UTENLANDSADRESSER_ID) VALUES (?, ?, ?, ?, ?)") {
                 setParams {
                     setLocalDate(1, personopplysning.fødselsdato.toLocalDate())
                     setLocalDate(2, personopplysning.dødsdato?.toLocalDate())
                     setLong(3, landkoderId)
                     setLong(4, statuserId)
+                    setLong(5, utenlandsAdresserId)
                 }
             }
 
@@ -166,6 +191,31 @@ class PersonopplysningForutgåendeRepositoryImpl(
                     land = row.getString("LAND"),
                     gyldigFraOgMed = row.getLocalDateOrNull("GYLDIGFRAOGMED"),
                     gyldigTilOgMed = row.getLocalDateOrNull("GYLDIGTILOGMED"),
+                )
+            }
+        }
+    }
+
+    private fun hentUtenlandsAdresser(id: Long?): List<UtenlandsAdresse> {
+        if (id == null) return emptyList()
+        return connection.queryList(
+        """
+            SELECT * FROM BRUKER_UTENLANDSADRESSER_FORUTGAAENDE
+            WHERE UTENLANDSADRESSER_ID = ?
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, id)
+            }
+            setRowMapper { row ->
+                UtenlandsAdresse(
+                    gyldigFraOgMed = row.getLocalDateTimeOrNull("GYLDIGFRAOGMED"),
+                    gyldigTilOgMed = row.getLocalDateTimeOrNull("GYLDIGTILOGMED"),
+                    adresseNavn = row.getStringOrNull("ADRESSENAVN"),
+                    postkode = row.getStringOrNull("POSTKODE"),
+                    bySted = row.getStringOrNull("BYSTED"),
+                    landkode = row.getStringOrNull("LANDKODE"),
+                    adresseType = row.getEnumOrNull("ADRESSE_TYPE")
                 )
             }
         }

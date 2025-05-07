@@ -1,14 +1,17 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.AdresseType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.FolkeregisterStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.UtenlandsAdresse
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IdentVariables
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfo
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoDataResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRequest
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlResponseHandler
@@ -64,7 +67,8 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
             fødselsdato = foedselsdato,
             dødsdato = response.data?.hentPerson?.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) },
             statsborgerskap = statsborgerskap,
-            status = status
+            status = status,
+            utenlandsAddresser = mapUtenlandsAdresser(response.data?.hentPerson)
         )
     }
 
@@ -91,10 +95,82 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
             fødselsdato = foedselsdato,
             dødsdato = response.data?.hentPerson?.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) },
             statsborgerskap = statsborgerskap,
-            folkeregisterStatuser = folkeregisterStatuser
+            folkeregisterStatuser = folkeregisterStatuser,
+            utenlandsAddresser = mapUtenlandsAdresser(response.data?.hentPerson)
         )
     }
 }
+
+private fun mapUtenlandsAdresser(personInfo: PdlPersoninfo?): List<UtenlandsAdresse>? {
+    if (personInfo == null) return null
+
+    val bostedsAdresser = personInfo.bostedsadresse.orEmpty().mapNotNull {
+        it.utenlandskAdresse?.let { adresse ->
+            UtenlandsAdresse(
+                gyldigFraOgMed = it.gyldigFraOgMed,
+                gyldigTilOgMed = it.gyldigTilOgMed,
+                adresseNavn = adresse.adressenavnNummer,
+                postkode = adresse.postkode,
+                bySted = adresse.bySted,
+                landkode = adresse.landkode,
+                adresseType = AdresseType.BOSTEDS_ADRESSE
+            )
+        }
+    }
+
+    val kontaktAdresser = personInfo.kontaktadresse.orEmpty().mapNotNull {
+        when {
+            it.utenlandskAdresse != null -> {
+                val adresse = it.utenlandskAdresse
+                UtenlandsAdresse(
+                    gyldigFraOgMed = it.gyldigFraOgMed,
+                    gyldigTilOgMed = it.gyldigTilOgMed,
+                    adresseNavn = adresse.adressenavnNummer,
+                    postkode = adresse.postkode,
+                    bySted = adresse.bySted,
+                    landkode = adresse.landkode,
+                    adresseType = AdresseType.KONTAKT_ADRESSE
+                )
+            }
+            it.utenlandskAdresseIFrittFormat != null -> {
+                val frittFormat = it.utenlandskAdresseIFrittFormat
+                val adresseNavn = listOfNotNull(
+                    frittFormat.adresselinje1,
+                    frittFormat.adresselinje2,
+                    frittFormat.adresselinje3
+                ).joinToString(", ")
+
+                UtenlandsAdresse(
+                    gyldigFraOgMed = it.gyldigFraOgMed,
+                    gyldigTilOgMed = it.gyldigTilOgMed,
+                    adresseNavn = adresseNavn,
+                    postkode = frittFormat.postkode,
+                    bySted = frittFormat.byEllerStedsnavn,
+                    landkode = frittFormat.landkode,
+                    adresseType = AdresseType.KONTAKT_ADRESSE
+                )
+            }
+            else -> null
+        }
+    }
+
+    val oppholdsAdresser = personInfo.oppholdsadresse.orEmpty().mapNotNull {
+        it.utenlandskAdresse?.let { adresse ->
+            UtenlandsAdresse(
+                gyldigFraOgMed = it.gyldigFraOgMed,
+                gyldigTilOgMed = it.gyldigTilOgMed,
+                adresseNavn = adresse.adressenavnNummer,
+                postkode = adresse.postkode,
+                bySted = adresse.bySted,
+                landkode = adresse.landkode,
+                adresseType = AdresseType.OPPHOLDS_ADRESSE
+            )
+        }
+    }
+
+    return oppholdsAdresser + kontaktAdresser + bostedsAdresser
+}
+
 
 private const val ident = "\$ident"
 
