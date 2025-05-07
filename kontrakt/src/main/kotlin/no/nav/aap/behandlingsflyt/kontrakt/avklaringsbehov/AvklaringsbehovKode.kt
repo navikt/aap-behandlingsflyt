@@ -39,6 +39,7 @@ public const val MANUELL_OVERSTYRING_LOVVALG: String = "5021"
 public const val MANUELL_OVERSTYRING_MEDLEMSKAP: String = "5022"
 public const val VURDER_TREKK_AV_SØKNAD_KODE: String = "5028"
 public const val REFUSJON_KRAV: String = "5026"
+public const val VURDER_FORMKRAV_KODE: String = "6000"
 
 @Suppress("EnumEntryName")
 public enum class AvklaringsbehovKode {
@@ -156,5 +157,9 @@ public enum class AvklaringsbehovKode {
     /**
     * [REFUSJON_KRAV]
     * */
-    `5026`
+    `5026`,
+    /**
+     * [VURDER_FORMKRAV_KODE]
+     */
+    `6000`
 }
