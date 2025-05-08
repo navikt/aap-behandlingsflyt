@@ -78,13 +78,18 @@ class VurderSykepengeErstatningSteg private constructor(
     }
 
     private fun vurder(kontekst: FlytKontekstMedPerioder): StegResultat {
+        log.info("Vurderer sykepengeerstatning for behandlingId ${kontekst.behandlingId}")
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
 
-        val erRelevantÅVurdereSykepengererstatning =
+        val sykdomsvurderinger =
             sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.sykdomsvurderinger.orEmpty()
-                .any { it.erOppfyltSettBortIfraVissVarighet() && !it.erOppfylt() }
-        if (erRelevantÅVurdereSykepengererstatning) {
+        val erRelevantÅVurdereSykepengererstatning =
+            sykdomsvurderinger
+                .any { it.erOppfyltSettBortIfraVissVarighet() && !it.erOppfylt() } || (!vilkårsresultat.finnVilkår(
+                Vilkårtype.BISTANDSVILKÅRET
+            ).harPerioderSomErOppfylt() && sykdomsvurderinger.all { it.erOppfylt() })
 
+        if (erRelevantÅVurdereSykepengererstatning) {
             val grunnlag = sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
 
             if (grunnlag?.vurdering != null) {

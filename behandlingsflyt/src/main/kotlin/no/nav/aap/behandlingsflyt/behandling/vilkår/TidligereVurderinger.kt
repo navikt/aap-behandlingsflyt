@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl.UtfallForFørstegangsbehandling.IKKE_BEHANDLINGSGRUNNLAG
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl.UtfallForFørstegangsbehandling.UKJENT
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl.UtfallForFørstegangsbehandling.UUNGÅELIG_AVSLAG
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
@@ -82,7 +83,18 @@ class TidligereVurderingerImpl(
         },
 
         Sjekk(StegType.VURDER_BISTANDSBEHOV) { vilkårsresultat, _ ->
-            ikkeOppfyltFørerTilAvslag(Vilkårtype.BISTANDSVILKÅRET, vilkårsresultat)
+            val sykdomstidslinje = vilkårsresultat.tidslinjeFor(Vilkårtype.SYKDOMSVILKÅRET)
+            val bistandstidslinje = vilkårsresultat.tidslinjeFor(Vilkårtype.BISTANDSVILKÅRET)
+
+            sykdomstidslinje.outerJoin(bistandstidslinje) { sykdomsvilkåret, bistandsvilkåret ->
+                val sykdomAvslagPgaVarighet =
+                    sykdomsvilkåret?.utfall == IKKE_OPPFYLT && sykdomsvilkåret.avslagsårsak == Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET
+                when {
+                    sykdomsvilkåret?.utfall == IKKE_OPPFYLT && !sykdomAvslagPgaVarighet -> UUNGÅELIG_AVSLAG
+                    sykdomAvslagPgaVarighet && bistandsvilkåret?.utfall == IKKE_OPPFYLT -> UUNGÅELIG_AVSLAG
+                    else -> UKJENT
+                }
+            }
         },
 
         Sjekk(StegType.VURDER_SYKEPENGEERSTATNING) { vilkårsresultat, _ ->
@@ -90,13 +102,16 @@ class TidligereVurderingerImpl(
             val erstatningstidslinje = vilkårsresultat.tidslinjeFor(Vilkårtype.BISTANDSVILKÅRET)
                 .filter { it.verdi.innvilgelsesårsak == Innvilgelsesårsak.SYKEPENGEERSTATNING }
 
-            sykdomstidslinje.outerJoin(erstatningstidslinje) { sykdomsvilkåret, sykepengeerstatning ->
-                if (sykdomsvilkåret?.utfall == IKKE_OPPFYLT && sykepengeerstatning?.utfall == IKKE_OPPFYLT) {
-                    UUNGÅELIG_AVSLAG
-                } else {
-                    UKJENT
-                }
-            }
+            val bistandTidslinje = vilkårsresultat.tidslinjeFor(Vilkårtype.BISTANDSVILKÅRET)
+
+            Tidslinje.zip3(sykdomstidslinje, erstatningstidslinje, bistandTidslinje)
+                .mapValue { (sykdomsvilkåret, sykepengeerstatning, bistand) ->
+                    when {
+                        sykdomsvilkåret?.utfall == IKKE_OPPFYLT && sykepengeerstatning?.utfall == IKKE_OPPFYLT -> UUNGÅELIG_AVSLAG
+                        bistand?.utfall == IKKE_OPPFYLT -> UKJENT
+                        else -> UKJENT
+                    }
+                }.also { println("SADASD $it") }
         },
 
         Sjekk(StegType.FASTSETT_SYKDOMSVILKÅRET) { vilkårsresultat, _ ->
@@ -179,7 +194,10 @@ class TidligereVurderingerImpl(
     }
 
     override fun girAvslagEllerIngenBehandlingsgrunnlag(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean {
-        return gir(kontekst, førSteg) in listOf(IKKE_BEHANDLINGSGRUNNLAG, UUNGÅELIG_AVSLAG)
+        return (gir(kontekst, førSteg) in listOf(
+            IKKE_BEHANDLINGSGRUNNLAG,
+            UUNGÅELIG_AVSLAG
+        )).also { println("XXX: førSteg: $førSteg . $it") }
     }
 
     override fun girAvslag(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean {
