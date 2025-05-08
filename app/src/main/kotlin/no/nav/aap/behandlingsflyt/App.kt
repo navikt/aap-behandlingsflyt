@@ -35,6 +35,7 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.forutgå
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.lovvalgMedlemskapGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskapAPI
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagAPI
+import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringAPI
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerAPI
@@ -235,6 +236,7 @@ internal fun Application.server(dbConfig: DbConfig) {
                 samordningGrunnlag(dataSource)
                 forutgåendeMedlemskapAPI(dataSource)
                 driftAPI(dataSource)
+                simuleringAPI(dataSource)
             }
         }
         actuator(prometheus, motor)
