@@ -74,12 +74,16 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
     override fun slett(behandlingId: BehandlingId) {
         val sykdomVurderingerIds = getSykdomVurderingerIds(behandlingId)
         val sykdomVurderingIds = getSykdomVurderingIds(sykdomVurderingerIds)
+        val yrkesskadevurderingIds = getYrkesskadeVurderingIds(behandlingId)
+
         connection.execute("""
             delete from sykdom_vurdering_bidiagnoser where vurdering_id = ANY(?::bigint[]);
             delete from sykdom_vurdering_dokumenter where vurdering_id = ANY(?::bigint[]);
             delete from sykdom_vurdering where sykdom_vurderinger_id = ANY(?::bigint[]);
             delete from sykdom_vurderinger where id = ANY(?::bigint[]);
-            delete from sykdom_grunnlag where behandling_id = ? 
+            delete from sykdom_grunnlag where behandling_id = ?; 
+            delete from yrkesskade_vurdering where id = ANY(?::bigint[]);
+            delete from yrkesskade_relaterte_saker where vurdering_id = ANY(?::bigint[]);
         """.trimIndent()) {
             setParams {
                 setLongArray(1, sykdomVurderingIds)
@@ -87,6 +91,8 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 setLongArray(3, sykdomVurderingerIds)
                 setLongArray(4, sykdomVurderingerIds)
                 setLong(5, behandlingId.id)
+                setLongArray(6, yrkesskadevurderingIds)
+                setLongArray(7, yrkesskadevurderingIds)
             }
         }
     }
@@ -116,6 +122,20 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         setParams { setLongArray(1, sykdomVurderingerIds) }
         setRowMapper { row ->
             row.getLong("id")
+        }
+    }
+
+    private fun getYrkesskadeVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT yrkesskade_id
+                    FROM sykdom_grunnlag
+                    WHERE behandling_id = ?;
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("yrkesskade_id")
         }
     }
 

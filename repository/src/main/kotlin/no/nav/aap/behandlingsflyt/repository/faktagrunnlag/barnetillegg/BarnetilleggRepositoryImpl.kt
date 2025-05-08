@@ -47,22 +47,25 @@ class BarnetilleggRepositoryImpl(private val connection: DBConnection) : Barneti
 
     override fun slett(behandlingId: BehandlingId) {
 
-        val barnetilleggPerioderIds = getBarnetilleggPeriodeIds(behandlingId)
+        val barnetilleggPerioderIds = getBarnetilleggPerioderIds(behandlingId)
+        val barnetilleggPeriodeIds = getBarnetilleggPeriodeIds(barnetilleggPerioderIds)
 
         connection.execute("""
-            delete from barnetillegg_periode where id = ANY(?::bigint[]);
-            delete from barn_tillegg where id = ANY(?::bigint[]);
+            delete from barnetillegg_periode where perioder_id = ANY(?::bigint[]);
+            delete from barnetillegg_perioder where id = ANY(?::bigint[]);
+            delete from barn_tillegg where barnetillegg_periode_id = ANY(?::bigint[]);
             delete from barnetillegg_grunnlag where behandling_id = ? 
         """.trimIndent()) {
             setParams {
                 setLongArray(1, barnetilleggPerioderIds)
                 setLongArray(2, barnetilleggPerioderIds)
-                setLong(3, behandlingId.id)
+                setLongArray(3, barnetilleggPeriodeIds)
+                setLong(4, behandlingId.id)
             }
         }
     }
 
-    private fun getBarnetilleggPeriodeIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+    private fun getBarnetilleggPerioderIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
         """
                     SELECT perioder_id
                     FROM barnetillegg_grunnlag
@@ -73,6 +76,20 @@ class BarnetilleggRepositoryImpl(private val connection: DBConnection) : Barneti
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
             row.getLong("perioder_id")
+        }
+    }
+
+    private fun getBarnetilleggPeriodeIds(perioderIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM barnetillegg_periode
+                    WHERE perioder_id = ANY(?::bigint[]);
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, perioderIds) }
+        setRowMapper { row ->
+            row.getLong("id")
         }
     }
 
