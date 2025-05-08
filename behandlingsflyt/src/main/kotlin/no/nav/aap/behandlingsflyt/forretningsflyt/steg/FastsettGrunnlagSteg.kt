@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.beregning.AvklarFaktaBeregningService
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -25,14 +24,12 @@ import org.slf4j.LoggerFactory
 class FastsettGrunnlagSteg(
     private val beregningService: BeregningService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val avklarFaktaBeregningService: AvklarFaktaBeregningService,
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårService: VilkårService,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         beregningService = BeregningService(repositoryProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        avklarFaktaBeregningService = AvklarFaktaBeregningService(repositoryProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         vilkårService = VilkårService(repositoryProvider),
     )
