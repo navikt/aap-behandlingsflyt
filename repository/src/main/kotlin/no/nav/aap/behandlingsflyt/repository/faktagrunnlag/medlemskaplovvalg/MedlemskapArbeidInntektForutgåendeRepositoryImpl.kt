@@ -149,16 +149,25 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        // Sletter ikke arbeid_forutgaaende og inntekt_forutgaaende, da det ikke er personopplysninger her(?). Det er om virksomheter da
+        val arbeidIds = getArbeidIds(behandlingId)
+        val inntekterIds = getInntekterIds(behandlingId)
         val manuellVurderingIds = getManuellVurderingIds(behandlingId)
 
         connection.execute("""
+            delete from INNTEKT_I_NORGE_FORUTGAAENDE where inntekter_i_norge_id = ANY(?::bigint[]);
+            delete from INNTEKTER_I_NORGE_ where id = ANY(?::bigint[]);
+            delete from ARBEID_FORUTGAAENDE where arbeider_id = ANY(?::bigint[]);
+            delete from ARBEIDER_FORUTGAAENDE where id = ANY(?::bigint[]);
             delete from FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING where id = ANY(?::bigint[]);
             delete from FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ? 
         """.trimIndent()) {
             setParams {
-                setLongArray(1, manuellVurderingIds)
-                setLong(2, behandlingId.id)
+                setLongArray(1, inntekterIds)
+                setLongArray(2, inntekterIds)
+                setLongArray(3, arbeidIds)
+                setLongArray(4, arbeidIds)
+                setLongArray(5, manuellVurderingIds)
+                setLong(6, behandlingId.id)
             }
         }
     }
@@ -174,6 +183,34 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
             row.getLong("manuell_vurdering_id")
+        }
+    }
+
+    private fun getArbeidIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT arbeider_id
+                    FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("arbeider_id")
+        }
+    }
+
+    private fun getInntekterIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT inntekter_i_norge_id
+                    FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("inntekter_i_norge_id")
         }
     }
 

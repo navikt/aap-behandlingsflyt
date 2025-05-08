@@ -529,7 +529,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        val medlemskapUnntakPersonIds = getMedlemskapUnntakPersonIds(behandlingId)
+        val utenlandsOppholdIds = getUtenlandsOppholdIds(behandlingId)
         val inntekterINorgeIds = getInntekterINorgeIds(behandlingId)
         val lovvalgMedlemsskapManuellVurderingIds = getLovvalgMedlemsskapManuellVurderingIds(behandlingId)
         val arbeiderIds = getArbeiderIds(behandlingId)
@@ -540,10 +540,10 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         connection.execute("""
             delete from INNTEKT_I_NORGE where inntekter_i_norge_id = ANY(?::bigint[]);     
             delete from ARBEID where arbeider_id = ANY(?::bigint[]);
-            delete from ARBEIDER where id = ANY(?::bigint[]);
-            delete from MEDLEMSKAP_UNNTAK_PERSON where id = ANY(?::bigint[]);
-            delete from MEDLEMSKAP_UNNTAK where medlemskap_unntak_person_id = ANY(?::bigint[]);        
+            delete from ARBEIDER where id = ANY(?::bigint[]);    
             delete from LOVVALG_MEDLEMSKAP_MANUELL_VURDERING where id = ANY(?::bigint[]);
+            delete from UTENLANDS_PERIODE where oppgitt_utenlandsopphold_id = ?; 
+            delete from OPPGITT_UTENLANDSOPPHOLD where id = ?; 
             delete from OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG where behandling_id = ?; 
             delete from MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ?; 
             delete from INNTEKTER_I_NORGE where id = ANY(?::bigint[]);
@@ -552,9 +552,9 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLongArray(1, inntektINorgeIds)
                 setLongArray(2, arbeidIds)
                 setLongArray(3, arbeiderIds)
-                setLongArray(4, medlemskapUnntakPersonIds)
-                setLongArray(5, medlemskapUnntakPersonIds)
-                setLongArray(6, lovvalgMedlemsskapManuellVurderingIds)
+                setLongArray(4, lovvalgMedlemsskapManuellVurderingIds)
+                setLongArray(5, utenlandsOppholdIds)
+                setLongArray(6, utenlandsOppholdIds)
                 setLong(7, behandlingId.id)
                 setLong(8, behandlingId.id)
                 setLongArray(9, inntektINorgeIds)
@@ -562,19 +562,6 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
     }
 
-    private fun getMedlemskapUnntakPersonIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
-        """
-                    SELECT medlemskap_unntak_person_id
-                    FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
-                    WHERE behandling_id = ? AND medlemskap_unntak_person_id is not null
-                 
-                """.trimIndent()
-    ) {
-        setParams { setLong(1, behandlingId.id) }
-        setRowMapper { row ->
-            row.getLong("medlemskap_unntak_person_id")
-        }
-    }
 
     private fun getLovvalgMedlemsskapManuellVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
         """
@@ -641,6 +628,20 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 """.trimIndent()
     ) {
         setParams { setLongArray(1, arbeiderIds) }
+        setRowMapper { row ->
+            row.getLong("id")
+        }
+    }
+
+    private fun getUtenlandsOppholdIds(behandlingId : BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
             row.getLong("id")
         }

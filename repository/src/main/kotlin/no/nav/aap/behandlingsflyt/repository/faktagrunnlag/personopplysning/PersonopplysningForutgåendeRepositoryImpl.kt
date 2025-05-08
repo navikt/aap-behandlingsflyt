@@ -185,7 +185,7 @@ class PersonopplysningForutgåendeRepositoryImpl(
 
         connection.execute("""
             delete from bruker_utenlandsadresse_forutgaaende where utenlandsadresser_id = ANY(?::bigint[]);
-            delete from bruker_utenlandsadresser_aggregat where id = ANY(?::bigint[]);
+            delete from bruker_utenlandsadresser_forutgaaende_aggregat where id = ANY(?::bigint[]);
             delete from bruker_personopplysning_forutgaaende where id = ANY(?::bigint[]);
             delete from personopplysning_forutgaaende where id = ANY(?::bigint[]);
             delete from personopplysninger_forutgaaende where id = ANY(?::bigint[]);
