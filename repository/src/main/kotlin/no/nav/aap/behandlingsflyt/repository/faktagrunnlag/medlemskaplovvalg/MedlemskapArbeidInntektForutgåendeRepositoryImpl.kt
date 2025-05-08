@@ -155,7 +155,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
 
         connection.execute("""
             delete from INNTEKT_I_NORGE_FORUTGAAENDE where inntekter_i_norge_id = ANY(?::bigint[]);
-            delete from INNTEKTER_I_NORGE_ where id = ANY(?::bigint[]);
+            delete from INNTEKTER_I_NORGE where id = ANY(?::bigint[]);
             delete from ARBEID_FORUTGAAENDE where arbeider_id = ANY(?::bigint[]);
             delete from ARBEIDER_FORUTGAAENDE where id = ANY(?::bigint[]);
             delete from FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING where id = ANY(?::bigint[]);

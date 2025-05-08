@@ -542,9 +542,9 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             delete from ARBEID where arbeider_id = ANY(?::bigint[]);
             delete from ARBEIDER where id = ANY(?::bigint[]);    
             delete from LOVVALG_MEDLEMSKAP_MANUELL_VURDERING where id = ANY(?::bigint[]);
-            delete from UTENLANDS_PERIODE where oppgitt_utenlandsopphold_id = ?; 
-            delete from OPPGITT_UTENLANDSOPPHOLD where id = ?; 
+            delete from UTENLANDS_PERIODE where oppgitt_utenlandsopphold_id = ANY(?::bigint[]);
             delete from OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG where behandling_id = ?; 
+            delete from OPPGITT_UTENLANDSOPPHOLD where id = ANY(?::bigint[]); 
             delete from MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ?; 
             delete from INNTEKTER_I_NORGE where id = ANY(?::bigint[]);
         """.trimIndent()) {
@@ -554,8 +554,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLongArray(3, arbeiderIds)
                 setLongArray(4, lovvalgMedlemsskapManuellVurderingIds)
                 setLongArray(5, utenlandsOppholdIds)
-                setLongArray(6, utenlandsOppholdIds)
-                setLong(7, behandlingId.id)
+                setLong(6, behandlingId.id)
+                setLongArray(7, utenlandsOppholdIds)
                 setLong(8, behandlingId.id)
                 setLongArray(9, inntektINorgeIds)
             }
