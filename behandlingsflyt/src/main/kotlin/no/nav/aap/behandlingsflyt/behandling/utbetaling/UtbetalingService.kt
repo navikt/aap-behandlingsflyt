@@ -4,11 +4,17 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.utbetal.kodeverk.AvventÅrsak
+import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseAvventDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDetaljerDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelsePeriodeDto
@@ -20,6 +26,7 @@ class UtbetalingService(
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val vedtakRepository: VedtakRepository,
+    private val refusjonskravRepository: RefusjonkravRepository,
 ) {
 
      fun lagTilkjentYtelseForUtbetaling(sakId: SakId, behandlingId: BehandlingId, simulering: Boolean = false): TilkjentYtelseDto? {
@@ -43,6 +50,12 @@ class UtbetalingService(
             } else {
                 vedtakRepository.hent(behandlingId)?.vedtakstidspunkt ?: error("Fant ikke vedtak")
             }
+            val unleashGateway = GatewayProvider.provide<UnleashGateway>()
+            val avventUtbetaling = if (unleashGateway.isEnabled(BehandlingsflytFeature.AvventUtbetaling)) {
+                finnEventuellAvventUtbetaling(behandlingId, vedtakstidspunkt)
+            } else {
+                null
+            }
             TilkjentYtelseDto(
                 saksnummer = saksnummer,
                 behandlingsreferanse = behandlingsreferanse,
@@ -52,6 +65,7 @@ class UtbetalingService(
                 beslutterId = beslutterIdent,
                 saksbehandlerId = saksbehandlerIdent,
                 perioder = tilkjentYtelse.tilTilkjentYtelsePeriodeDtoer(),
+                avvent = avventUtbetaling,
             )
 
         } else {
@@ -80,5 +94,20 @@ class UtbetalingService(
                 )
             )
         }
+
+    private fun finnEventuellAvventUtbetaling(behandlingId: BehandlingId, vedtakstidspunkt: LocalDateTime): TilkjentYtelseAvventDto? {
+        val refusjonkravVurdering = refusjonskravRepository.hentHvisEksisterer(behandlingId)
+        if (refusjonkravVurdering == null || !refusjonkravVurdering.harKrav) {
+            return null
+        }
+        val tom = refusjonkravVurdering.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1)
+        return TilkjentYtelseAvventDto(
+            fom = refusjonkravVurdering.fom!!,
+            tom = tom,
+            overføres = tom.plusDays(21),
+            årsak = AvventÅrsak.AVVENT_REFUSJONSKRAV,
+            feilregistrering = false
+        )
+    }
 
 }

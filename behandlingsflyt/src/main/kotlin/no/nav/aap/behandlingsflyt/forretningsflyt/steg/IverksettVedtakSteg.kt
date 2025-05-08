@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -61,6 +62,7 @@ class IverksettVedtakSteg private constructor(
         override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val refusjonskravRepository = repositoryProvider.provide<RefusjonkravRepository>()
             val tilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>()
             val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
             val vedtakRepository = repositoryProvider.provide<VedtakRepository>()
@@ -75,7 +77,8 @@ class IverksettVedtakSteg private constructor(
                     behandlingRepository = behandlingRepository,
                     tilkjentYtelseRepository = tilkjentYtelseRepository,
                     avklaringsbehovRepository = avklaringsbehovRepository,
-                    vedtakRepository = vedtakRepository
+                    vedtakRepository = vedtakRepository,
+                    refusjonskravRepository = refusjonskravRepository,
                 ),
                 vedtakService = VedtakService(vedtakRepository, behandlingRepository),
                 utbetalingGateway = utbetalingGateway,
