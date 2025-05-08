@@ -147,6 +147,10 @@ public enum class StegType(
         gruppe = StegGruppe.BREV,
         status = Status.IVERKSETTES,
     ),
+    PÅKLAGET_BEHANDLING(
+        gruppe = StegGruppe.FORMKRAV,
+        status = Status.UTREDES,
+    ),
     FORMKRAV(
         gruppe = StegGruppe.FORMKRAV,
         status = Status.UTREDES,
