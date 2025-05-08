@@ -23,7 +23,7 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.simuleringAPI(dataSource: DataSource) {
     route("/api/behandling") {
-        route("/simulering/{referanse}") {
+        route("/{referanse}/utbetaling/simulering") {
             authorizedGet<BehandlingReferanse, List<UtbetalingOgSimuleringDto>>(
                 AuthorizationParamPathConfig(
                     operasjon = Operasjon.SE,
