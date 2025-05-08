@@ -1,11 +1,13 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
+import io.micrometer.core.instrument.Timer
 import io.opentelemetry.api.GlobalOpenTelemetry
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
+import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -15,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
+import java.util.function.Supplier
 
 /**
  * Håndterer den definerte prosessen i et gitt steg, flytter behandlingen gjennom de forskjellige fasene internt i et
@@ -36,7 +39,7 @@ class StegOrkestrator(
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val perioderTilVurderingService: PerioderTilVurderingService,
-    private val stegKonstruktør: StegKonstruktør
+    stegKonstruktør: StegKonstruktør
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -176,9 +179,16 @@ class StegOrkestrator(
     }
 
     private fun behandleSteg(kontekstMedPerioder: FlytKontekstMedPerioder): Transisjon {
-        val stegResultat = behandlingSteg.utfør(kontekstMedPerioder)
-        log.info("Fullført steg av type {}", behandlingSteg::javaClass)
+        val simpleName = behandlingSteg.javaClass.simpleName
+        val utførStegTimer =
+            Timer.builder("behandlingsflyt_utfør_steg_tid").tags("steg", simpleName).register(prometheus)
+        val stegResultat =
+            utførStegTimer.record(Supplier {
+                behandlingSteg.utfør(kontekstMedPerioder)
+            })
+        log.info("Fullført steg av type $simpleName", behandlingSteg::javaClass.name)
 
+        @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
         val resultat = stegResultat.transisjon()
 
         if (resultat is FunnetAvklaringsbehov) {
