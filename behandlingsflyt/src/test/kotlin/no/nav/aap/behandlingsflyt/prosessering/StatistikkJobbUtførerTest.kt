@@ -202,7 +202,8 @@ class StatistikkJobbUtførerTest {
             erPåVent = false,
             opprettetTidspunkt = opprettetTidspunkt!!,
             hendelsesTidspunkt = hendelseTidspunkt,
-            versjon = "123"
+            versjon = "123",
+            årsakerTilBehandling = listOf(ÅrsakTilBehandling.SØKNAD.name),
         )
 
         val hendelse2 = DefaultJsonMapper.toJson(payload)
@@ -388,7 +389,8 @@ class StatistikkJobbUtførerTest {
             erPåVent = false,
             opprettetTidspunkt = LocalDateTime.now(),
             hendelsesTidspunkt = hendelseTidspunkt,
-            versjon = "123"
+            versjon = "123",
+            årsakerTilBehandling = listOf(ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE.name),
         )
 
         val hendelse2 = DefaultJsonMapper.toJson(payload)
@@ -661,7 +663,8 @@ class StatistikkJobbUtførerTest {
             avklaringsbehov = avklaringsbehov,
             erPåVent = false,
             hendelsesTidspunkt = hendelsesTidspunkt,
-            versjon = ApplikasjonsVersjon.versjon
+            versjon = ApplikasjonsVersjon.versjon,
+            årsakerTilBehandling = listOf(ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE.name),
         )
 
         val hendelse = DefaultJsonMapper.toJson(payload)

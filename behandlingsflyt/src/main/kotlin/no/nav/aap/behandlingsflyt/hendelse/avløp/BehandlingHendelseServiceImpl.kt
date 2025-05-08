@@ -59,6 +59,8 @@ class BehandlingHendelseServiceImpl(
 
         val erPåVent = avklaringsbehovene.hentÅpneVentebehov().isNotEmpty()
 
+        val årsaker = behandling.årsaker()
+
         // TODO: Utvide med flere parametere for prioritering
         val hendelse = BehandlingFlytStoppetHendelse(
             personIdent = sak.person.aktivIdent().identifikator,
@@ -67,6 +69,7 @@ class BehandlingHendelseServiceImpl(
             behandlingType = behandling.typeBehandling(),
             aktivtSteg = behandling.aktivtSteg(),
             status = behandling.status(),
+            årsakerTilBehandling = årsaker.map { it.type.name },
             avklaringsbehov = avklaringsbehovene.alle().map { avklaringsbehov ->
                 val brevbestilling = if (avklaringsbehov.definisjon == Definisjon.SKRIV_BREV) {
                     brevbestillingRepository.hent(behandling.id)

@@ -12,12 +12,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.BREV_SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BrevbestillingLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag.Brev.Mottaker
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.*
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.SKRIV_BREV_KODE
@@ -38,13 +33,7 @@ import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.tilgang.AuthorizationBodyPathConfig
-import no.nav.aap.tilgang.AuthorizationParamPathConfig
-import no.nav.aap.tilgang.BehandlingPathParam
-import no.nav.aap.tilgang.Operasjon
-import no.nav.aap.tilgang.authorizedGet
-import no.nav.aap.tilgang.authorizedPost
-import no.nav.aap.tilgang.authorizedPut
+import no.nav.aap.tilgang.*
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import java.io.InputStream
@@ -116,8 +105,9 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                             .filter { it.erÅpent() }
 
                         if (skrivBrevAvklaringsbehov.size > 1) {
-                            log.warn("Fant flere åpne avklaringsbehov for å skrive brev for behandling ${behandling.id}: "
-                            + skrivBrevAvklaringsbehov.joinToString { it.toString() })
+                            log.warn(
+                                "Fant flere åpne avklaringsbehov for å skrive brev for behandling ${behandling.id}: "
+                                        + skrivBrevAvklaringsbehov.joinToString { it.toString() })
                         }
 
                         brevbestillinger.map { brevbestilling ->
@@ -135,7 +125,8 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                             }
                             val definisjon =
                                 if (brevbestilling.typeBrev.erVedtak() &&
-                                        skrivBrevAvklaringsbehov.any { it.definisjon == Definisjon.SKRIV_VEDTAKSBREV }) {
+                                    skrivBrevAvklaringsbehov.any { it.definisjon == Definisjon.SKRIV_VEDTAKSBREV }
+                                ) {
                                     Definisjon.SKRIV_VEDTAKSBREV
                                 } else {
                                     Definisjon.SKRIV_BREV
@@ -226,7 +217,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                     avklaringsbehovene.validateTilstand(behandling = behandling)
                                     avklaringsbehovene.leggTil(
                                         definisjoner = listOf(Definisjon.BESTILL_BREV),
-                                        funnetISteg = behandling.aktivtSteg(),
+                                        funnetISteg = behandling.aktivtSteg()
                                     )
                                     avklaringsbehovene.validerPlassering(behandling = behandling)
 
