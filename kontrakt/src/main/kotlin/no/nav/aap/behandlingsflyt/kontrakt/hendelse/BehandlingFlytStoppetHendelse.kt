@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import java.time.LocalDateTime
 
@@ -18,7 +17,8 @@ public data class BehandlingFlytStoppetHendelse(
     val saksnummer: Saksnummer,
     val referanse: BehandlingReferanse,
     val behandlingType: TypeBehandling,
-    val årsakerTilBehandling: List<String>,
+    // TODO: fjern default emptyList her
+    val årsakerTilBehandling: List<String> = emptyList(),
     val status: Status,
     val aktivtSteg: StegType? = null,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
