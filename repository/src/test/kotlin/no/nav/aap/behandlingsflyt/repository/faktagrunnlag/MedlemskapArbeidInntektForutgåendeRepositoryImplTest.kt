@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     private val dataSource = InitTestDatabase.freshDatabase()
@@ -113,7 +114,12 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
         forutgåendeRepository.lagreArbeidsforholdOgInntektINorge(behandlingId, listOf(), listOf(), null)
         forutgåendeRepository.lagreManuellVurdering(behandlingId,
             ManuellVurderingForForutgåendeMedlemskap(
-                begrunnelse, true, false, false
+                begrunnelse = begrunnelse,
+                harForutgåendeMedlemskap = true,
+                varMedlemMedNedsattArbeidsevne = false,
+                medlemMedUnntakAvMaksFemAar = false,
+                vurdertAv = "NavIdent",
+                vurdertTidspunkt = LocalDateTime.now()
             )
         )
     }
