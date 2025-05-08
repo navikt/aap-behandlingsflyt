@@ -185,7 +185,7 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = SamordningSteg,
-                informasjonskrav = listOf(SamordningYtelseVurderingService, TjenestePensjonService),
+                informasjonskrav = listOf(SamordningYtelseVurderingService),
                 årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING)
             )
             .medSteg(steg = SamordningUføreSteg, informasjonskrav = listOf(UføreService))

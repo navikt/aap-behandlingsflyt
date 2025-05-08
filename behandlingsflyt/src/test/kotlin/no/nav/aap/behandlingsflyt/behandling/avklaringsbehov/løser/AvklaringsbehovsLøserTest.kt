@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.effektue
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningAndreStatligeYtelserRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningUføreRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FormkravRepositoryImpl
@@ -78,6 +79,7 @@ internal class AvklaringsbehovsLøserTest {
         RepositoryRegistry.register<VurderRettighetsperiodeRepositoryImpl>()
         RepositoryRegistry.register<FormkravRepositoryImpl>()
         RepositoryRegistry.register<FlytJobbRepositoryImpl>()
+        RepositoryRegistry.register<TjenestepensjonRefusjonskravVurderingRepositoryImpl>()
         GatewayRegistry.register<FakeUnleash>()
     }
 

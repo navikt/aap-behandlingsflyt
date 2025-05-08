@@ -107,6 +107,10 @@ public enum class StegType(
         gruppe = StegGruppe.SAMORDNING,
         status = Status.UTREDES
     ),
+    SAMORDNING_TJENESTEPENSJON_REFUSJONSKRAV(
+        gruppe = StegGruppe.SAMORDNING,
+        status = Status.UTREDES
+    ),
     FASTSETT_UTTAK(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES

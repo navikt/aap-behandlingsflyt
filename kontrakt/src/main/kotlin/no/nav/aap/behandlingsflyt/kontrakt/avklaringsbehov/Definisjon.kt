@@ -305,6 +305,12 @@ public enum class Definisjon(
         løsesISteg = StegType.PÅKLAGET_BEHANDLING,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
+    SAMORDNING_REFUSJONS_KRAV(
+        kode = AvklaringsbehovKode.`5056`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.SAMORDNING_TJENESTEPENSJON_REFUSJONSKRAV,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+    ),
     VURDER_FORMKRAV(
         kode = AvklaringsbehovKode.`6000`,
         type = BehovType.MANUELT_PÅKREVD,
