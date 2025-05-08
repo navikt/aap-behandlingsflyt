@@ -30,6 +30,17 @@ class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection)
         """.trimIndent()
         )
 
+        connection.execute(
+            """
+            INSERT INTO MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG (BEHANDLING_ID, MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON_ID) VALUES (?, ?)
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLong(2, medlemskapUnntakPersonId)
+            }
+        }
+
         unntak.forEach {
             connection.execute(
                 """
