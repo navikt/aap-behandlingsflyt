@@ -115,4 +115,34 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
             }
         }
     }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val refusjonsKravVurderingIds = getRefusjonsKravVurderingIds(behandlingId)
+
+        connection.execute("""
+            delete from tjenestepensjon_refusjonskrav_vurdering where id = ANY(?::bigint[]);
+            delete from tjenestepensjon_refusjonskrav_grunnlag where behandling_id = ? 
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, refusjonsKravVurderingIds)
+                setLong(2, behandlingId.id)
+            }
+        }
+    }
+
+    private fun getRefusjonsKravVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT REFUSJONKRAV_VURDERING_ID
+                    FROM tjenestepensjon_refusjonskrav_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("refusjonkrav_vurdering_id")
+        }
+    }
+
 }
