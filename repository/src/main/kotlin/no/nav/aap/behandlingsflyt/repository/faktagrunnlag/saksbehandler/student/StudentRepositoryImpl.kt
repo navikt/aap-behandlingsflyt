@@ -76,16 +76,16 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         val studentIds = getStudentIds(behandlingId)
         val oppgittStudentIds = getOppgittStudentIds(behandlingId)
         connection.execute("""
-            delete from STUDENT_GRUNNLAG where id = ?;
+          
             delete from OPPGITT_STUDENT where id = ANY(?::bigint[]);
             delete from STUDENT_VURDERING where id = ANY(?::bigint[]);
-          
+          delete from STUDENT_GRUNNLAG where id = ?;
             
         """.trimIndent()) {
             setParams {
-                setLong(1, behandlingId.id)
+                setLongArray(1, studentIds)
                 setLongArray(2, oppgittStudentIds)
-                setLongArray(3, studentIds)
+                setLong(3, behandlingId.id)
             }
         }
     }
@@ -94,7 +94,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         """
                     SELECT student_id
                     FROM STUDENT_GRUNNLAG
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND student_id is not null
                  
                 """.trimIndent()
     ) {
@@ -108,7 +108,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         """
                     SELECT oppgitt_student_id
                     FROM STUDENT_GRUNNLAG
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND oppgitt_student_id is not null
                  
                 """.trimIndent()
     ) {

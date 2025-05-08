@@ -109,17 +109,19 @@ class AktivitetspliktRepositoryImpl(private val connection: DBConnection) : Akti
             delete from brudd_aktivitetsplikt where brudd_aktivitetsplikt.id in (
                 select brudd_aktivitetsplikt_id from brudd_aktivitetsplikter 
                 join brudd_aktivitetsplikt_grunnlag on brudd_aktivitetsplikter.brudd_aktivitetsplikt_grunnlag_id = brudd_aktivitetsplikt_grunnlag.id
-                where brudd_aktivitetsplikt_grunnlag.behandling_id = ?1
+                where brudd_aktivitetsplikt_grunnlag.behandling_id = ?
                 ); 
             delete from brudd_aktivitetsplikter where brudd_aktivitetsplikter.brudd_aktivitetsplikt_grunnlag_id in (
-                select id from brudd_aktivitetsplikt_grunnlag where behandling_id = ?1
+                select id from brudd_aktivitetsplikt_grunnlag where behandling_id = ?
                 )
             ; 
-            delete from brudd_aktivitetsplikt_grunnlag where behandling_id = ?1;
+            delete from brudd_aktivitetsplikt_grunnlag where behandling_id = ?;
         """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.id)
+                setLong(2, behandlingId.id)
+                setLong(3, behandlingId.id)
             }
         }
     }

@@ -290,18 +290,18 @@ class PersonopplysningRepositoryImpl(
         connection.execute("""
             delete from bruker_utenlandsadresse where utenlandsadresser_id = ANY(?::bigint[]);
             delete from bruker_utenlandsadresser_aggregat where id = ANY(?::bigint[]);
-            delete from bruker_personopplysning where id = ANY(?::bigint[]);
             delete from personopplysning where personopplysninger_id = ANY(?::bigint[]);
             delete from personopplysninger where id = ANY(?::bigint[]);
-            delete from personopplysning_grunnlag where behandling_id = ? 
+            delete from personopplysning_grunnlag where behandling_id = ?; 
+             delete from bruker_personopplysning where id = ANY(?::bigint[]);
         """.trimIndent()) {
             setParams {
                 setLongArray(1, utenlandsAdresserIds)
                 setLongArray(2, utenlandsAdresserIds)
-                setLongArray(3, brukerPersonopplysningIds)
+                setLongArray(3, personopplysningerIds)
                 setLongArray(4, personopplysningerIds)
-                setLongArray(5, personopplysningerIds)
-                setLong(6, behandlingId.id)
+                setLong(5, behandlingId.id)
+                setLongArray(6, brukerPersonopplysningIds)
             }
         }
     }
@@ -324,7 +324,7 @@ class PersonopplysningRepositoryImpl(
         """
                     SELECT personopplysninger_id
                     FROM personopplysning_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND personopplysninger_id is not null
                  
                 """.trimIndent()
     ) {
@@ -338,7 +338,7 @@ class PersonopplysningRepositoryImpl(
         """
                     SELECT utenlandsadresser_id
                     FROM bruker_personopplysning
-                    WHERE id = ANY(?::bigint[]);
+                    WHERE id = ANY(?::bigint[]) AND utenlandsadresser_id is not null;
                  
                 """.trimIndent()
     ) {

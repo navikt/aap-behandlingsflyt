@@ -76,7 +76,6 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        TODO()
         // Det kan ikke avgjøres her hvilke avklaringsbehov som skal slettes og ikke, så det ansvaret overlates til hvert steg,
         // og gjøres som en del av utfør-metoden i det enkelte steg
     }
