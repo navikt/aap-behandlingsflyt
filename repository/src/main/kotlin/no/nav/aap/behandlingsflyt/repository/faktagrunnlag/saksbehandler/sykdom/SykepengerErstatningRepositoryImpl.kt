@@ -166,7 +166,7 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
         val sykepengeVurderingIds = getSykepengeVurderingIds(behandlingId)
         connection.execute("""
             delete from sykepenge_vurdering where id = ANY(?::bigint[]);
-            delete from sykepenge_vurdering_dokumenter where id = ANY(?::bigint[]);
+            delete from sykepenge_vurdering_dokumenter where vurdering_id = ANY(?::bigint[]);
             delete from sykepenge_erstatning_grunnlag where behandling_id = ? 
         """.trimIndent()) {
             setParams {

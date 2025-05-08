@@ -173,7 +173,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
 
         connection.execute("""
             delete from BEREGNINGSTIDSPUNKT_VURDERING where id = ANY(?::bigint[]);
-            delete from YRKESSKADE_INNTEKT where id = ANY(?::bigint[]);
+            delete from YRKESSKADE_INNTEKT where inntekter_id = ANY(?::bigint[]);
             delete from YRKESSKADE_INNTEKTER where id = ANY(?::bigint[]);
             delete from BEREGNINGSFAKTA_GRUNNLAG where behandling_id = ? 
         """.trimIndent()) {
