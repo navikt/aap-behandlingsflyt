@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDateTime
 
 class HåndterMottattDokumentService(
@@ -25,6 +26,13 @@ class HåndterMottattDokumentService(
     private val låsRepository: TaSkriveLåsRepository,
     private val prosesserBehandling: ProsesserBehandlingService,
 ) {
+
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        sakService = SakService(repositoryProvider),
+        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
+        låsRepository = repositoryProvider.provide(),
+        prosesserBehandling = ProsesserBehandlingService(repositoryProvider),
+    )
 
     fun håndterMottatteDokumenter(
         sakId: SakId,

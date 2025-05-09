@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDokument
@@ -9,15 +7,11 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.lookup.repository.RepositoryRegistry
-import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
@@ -111,23 +105,10 @@ class HendelseMottattHåndteringJobbUtfører(
         override fun konstruer(connection: DBConnection): JobbUtfører {
             val repositoryProvider = RepositoryRegistry.provider(connection)
             val låsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
-            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val sakRepository = repositoryProvider.provide<SakRepository>()
-            val mottattDokumentRepository =
-                repositoryProvider.provide<MottattDokumentRepository>()
-            val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
+            val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
             return HendelseMottattHåndteringJobbUtfører(
                 låsRepository,
-                HåndterMottattDokumentService(
-                    SakService(sakRepository),
-                    SakOgBehandlingService(
-                        GrunnlagKopiererImpl(repositoryProvider),
-                        sakRepository,
-                        behandlingRepository
-                    ),
-                    låsRepository,
-                    ProsesserBehandlingService(flytJobbRepository)
-                ),
+                HåndterMottattDokumentService(repositoryProvider),
                 MottaDokumentService(repositoryProvider),
                 mottattDokumentRepository
             )
