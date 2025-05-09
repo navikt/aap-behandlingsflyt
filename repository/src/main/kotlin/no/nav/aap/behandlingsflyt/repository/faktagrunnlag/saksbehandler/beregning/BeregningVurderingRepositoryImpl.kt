@@ -172,16 +172,17 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
         val yrkesskadeInntekterIds = getYrkesskadeInntekterIds(beregningYrkesskadeIds)
 
         connection.execute("""
+            delete from BEREGNINGSFAKTA_GRUNNLAG where behandling_id = ?; 
             delete from BEREGNINGSTIDSPUNKT_VURDERING where id = ANY(?::bigint[]);
             delete from YRKESSKADE_INNTEKT where inntekter_id = ANY(?::bigint[]);
             delete from YRKESSKADE_INNTEKTER where id = ANY(?::bigint[]);
-            delete from BEREGNINGSFAKTA_GRUNNLAG where behandling_id = ? 
+           
         """.trimIndent()) {
             setParams {
-                setLongArray(1, beregningTidspunktVurderingIds)
-                setLongArray(2, yrkesskadeInntekterIds)
-                setLongArray(3, beregningYrkesskadeIds)
-                setLong(4, behandlingId.id)
+                setLong(1, behandlingId.id)
+                setLongArray(2, beregningTidspunktVurderingIds)
+                setLongArray(3, yrkesskadeInntekterIds)
+                setLongArray(4, beregningYrkesskadeIds)
             }
         }
     }

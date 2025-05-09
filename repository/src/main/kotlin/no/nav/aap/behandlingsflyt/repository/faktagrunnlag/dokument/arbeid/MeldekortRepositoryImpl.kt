@@ -182,16 +182,16 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
         val meldekorteneIds = getMeldekorteneIds(behandlingId)
         val meldekortIds = getMeldekortIds(meldekorteneIds)
         connection.execute("""
+            delete from meldekort_grunnlag where behandling_id = ?; 
             delete from meldekort_periode where meldekort_id = ANY(?::bigint[]);
             delete from meldekort where meldekortene_id = ANY(?::bigint[]);
             delete from meldekortene where id = ANY(?::bigint[]);
-            delete from meldekort_grunnlag where behandling_id = ? 
         """.trimIndent()) {
             setParams {
-                setLongArray(1, meldekortIds)
-                setLongArray(2, meldekorteneIds)
+                setLong(1, behandlingId.id)
+                setLongArray(2, meldekortIds)
                 setLongArray(3, meldekorteneIds)
-                setLong(4, behandlingId.id)
+                setLongArray(4, meldekorteneIds)
             }
         }
     }

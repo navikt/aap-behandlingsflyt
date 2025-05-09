@@ -117,14 +117,15 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
         val samordningUforeVurderingIds = getSamordningUforeVurderingIds(behandlingId)
 
         connection.execute("""
+            delete from samordning_ufore_grunnlag where behandling_id = ?; 
             delete from samordning_ufore_vurdering_periode where vurdering_id = ANY(?::bigint[]);
             delete from samordning_ufore_vurdering where id = ANY(?::bigint[]);
-            delete from samordning_ufore_grunnlag where behandling_id = ? 
+          
         """.trimIndent()) {
             setParams {
-                setLongArray(1, samordningUforeVurderingIds)
+                setLong(1, behandlingId.id)
                 setLongArray(2, samordningUforeVurderingIds)
-                setLong(3, behandlingId.id)
+                setLongArray(3, samordningUforeVurderingIds)
             }
         }
     }

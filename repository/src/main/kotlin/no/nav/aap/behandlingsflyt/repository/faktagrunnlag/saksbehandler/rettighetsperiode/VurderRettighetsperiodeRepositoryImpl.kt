@@ -64,14 +64,15 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
         val rettighetsPeriodeVurderingerIds = getRettighetsPeriodeVurderingerIds(behandlingId)
 
         connection.execute("""
+            delete from rettighetsperiode_grunnlag where behandling_id = ?; 
             delete from rettighetsperiode_vurdering where vurderinger_id = ANY(?::bigint[]);
             delete from rettighetsperiode_vurderinger where id = ANY(?::bigint[]);
-            delete from rettighetsperiode_grunnlag where behandling_id = ? 
+       
         """.trimIndent()) {
             setParams {
-                setLongArray(1, rettighetsPeriodeVurderingerIds)
+                setLong(1, behandlingId.id)
                 setLongArray(2, rettighetsPeriodeVurderingerIds)
-                setLong(3, behandlingId.id)
+                setLongArray(3, rettighetsPeriodeVurderingerIds)
             }
         }
     }

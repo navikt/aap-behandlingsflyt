@@ -154,20 +154,21 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         val manuellVurderingIds = getManuellVurderingIds(behandlingId)
 
         connection.execute("""
+            delete from FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ?; 
             delete from INNTEKT_I_NORGE_FORUTGAAENDE where inntekter_i_norge_id = ANY(?::bigint[]);
             delete from INNTEKTER_I_NORGE where id = ANY(?::bigint[]);
             delete from ARBEID_FORUTGAAENDE where arbeider_id = ANY(?::bigint[]);
             delete from ARBEIDER_FORUTGAAENDE where id = ANY(?::bigint[]);
             delete from FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING where id = ANY(?::bigint[]);
-            delete from FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ? 
+           
         """.trimIndent()) {
             setParams {
-                setLongArray(1, inntekterIds)
+                setLong(1, behandlingId.id)
                 setLongArray(2, inntekterIds)
-                setLongArray(3, arbeidIds)
+                setLongArray(3, inntekterIds)
                 setLongArray(4, arbeidIds)
-                setLongArray(5, manuellVurderingIds)
-                setLong(6, behandlingId.id)
+                setLongArray(5, arbeidIds)
+                setLongArray(6, manuellVurderingIds)
             }
         }
     }

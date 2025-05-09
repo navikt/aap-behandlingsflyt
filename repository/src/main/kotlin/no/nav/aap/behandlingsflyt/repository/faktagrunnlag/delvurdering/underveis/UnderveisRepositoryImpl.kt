@@ -125,16 +125,17 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         val sporingIds = getSporingIds(behandlingId)
         val periodeIds = getPerioderIds(behandlingId)
         connection.execute("""
+            delete from underveis_grunnlag where behandling_id = ?; 
             delete from underveis_periode where perioder_id = ANY(?::bigint[]);
             delete from underveis_perioder where id = ANY(?::bigint[]);
             delete from underveis_sporing where id = ANY(?::bigint[]);
-            delete from underveis_grunnlag where behandling_id = ? 
+          
         """.trimIndent()) {
             setParams {
-                setLongArray(1, periodeIds)
+                setLong(1, behandlingId.id)
                 setLongArray(2, periodeIds)
-                setLongArray(3, sporingIds)
-                setLong(4, behandlingId.id)
+                setLongArray(3, periodeIds)
+                setLongArray(4, sporingIds)
             }
         }
     }

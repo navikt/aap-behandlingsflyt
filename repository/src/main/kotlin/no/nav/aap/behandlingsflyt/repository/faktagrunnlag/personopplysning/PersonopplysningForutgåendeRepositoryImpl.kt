@@ -184,20 +184,20 @@ class PersonopplysningForutgåendeRepositoryImpl(
         val utenlandsAdresserIds = getUtenlandsAdresserIds(brukerPersonopplysningIds)
 
         connection.execute("""
+            delete from personopplysning_forutgaaende_grunnlag where behandling_id = ?; 
             delete from bruker_utenlandsadresse_forutgaaende where utenlandsadresser_id = ANY(?::bigint[]);
             delete from bruker_utenlandsadresser_forutgaaende_aggregat where id = ANY(?::bigint[]);
             delete from bruker_personopplysning_forutgaaende where id = ANY(?::bigint[]);
             delete from personopplysning_forutgaaende where id = ANY(?::bigint[]);
-            delete from personopplysninger_forutgaaende where id = ANY(?::bigint[]);
-            delete from personopplysning_forutgaaende_grunnlag where behandling_id = ? 
+            delete from personopplysninger_forutgaaende where id = ANY(?::bigint[]);        
         """.trimIndent()) {
             setParams {
-                setLongArray(1, utenlandsAdresserIds)
+                setLong(1, behandlingId.id)
                 setLongArray(2, utenlandsAdresserIds)
-                setLongArray(3, brukerPersonopplysningIds)
-                setLongArray(4, personopplysningIds)
-                setLongArray(5, personopplysningerIds)
-                setLong(6, behandlingId.id)
+                setLongArray(3, utenlandsAdresserIds)
+                setLongArray(4, brukerPersonopplysningIds)
+                setLongArray(5, personopplysningIds)
+                setLongArray(6, personopplysningerIds)
             }
         }
     }

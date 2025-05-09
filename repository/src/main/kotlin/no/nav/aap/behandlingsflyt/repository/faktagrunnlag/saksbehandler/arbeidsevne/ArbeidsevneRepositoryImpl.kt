@@ -167,14 +167,16 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
         val arbeidsevneIds = getArbeidsevneIds(behandlingId)
 
         connection.execute("""
+            delete from arbeidsevne_grunnlag where behandling_id = ?; 
             delete from arbeidsevne_vurdering where arbeidsevne_id = ANY(?::bigint[]);
             delete from arbeidsevne where id = ANY(?::bigint[]);
-            delete from arbeidsevne_grunnlag where behandling_id = ? 
+           
         """.trimIndent()) {
             setParams {
-                setLongArray(1, arbeidsevneIds)
+                setLong(1, behandlingId.id)
                 setLongArray(2, arbeidsevneIds)
-                setLong(3, behandlingId.id)
+                setLongArray(3, arbeidsevneIds)
+
             }
         }
     }

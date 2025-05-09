@@ -121,12 +121,12 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
         val refusjonsKravVurderingIds = getRefusjonsKravVurderingIds(behandlingId)
 
         connection.execute("""
+            delete from tjenestepensjon_refusjonskrav_grunnlag where behandling_id = ?; 
             delete from tjenestepensjon_refusjonskrav_vurdering where id = ANY(?::bigint[]);
-            delete from tjenestepensjon_refusjonskrav_grunnlag where behandling_id = ? 
         """.trimIndent()) {
             setParams {
-                setLongArray(1, refusjonsKravVurderingIds)
-                setLong(2, behandlingId.id)
+                setLong(1, behandlingId.id)
+                setLongArray(2, refusjonsKravVurderingIds)
             }
         }
     }

@@ -51,16 +51,18 @@ class BarnetilleggRepositoryImpl(private val connection: DBConnection) : Barneti
         val barnetilleggPeriodeIds = getBarnetilleggPeriodeIds(barnetilleggPerioderIds)
 
         connection.execute("""
+            delete from barnetillegg_grunnlag where behandling_id = ?; 
             delete from barnetillegg_periode where perioder_id = ANY(?::bigint[]);
             delete from barnetillegg_perioder where id = ANY(?::bigint[]);
             delete from barn_tillegg where barnetillegg_periode_id = ANY(?::bigint[]);
-            delete from barnetillegg_grunnlag where behandling_id = ? 
+           
         """.trimIndent()) {
             setParams {
-                setLongArray(1, barnetilleggPerioderIds)
+                setLong(1, behandlingId.id)
                 setLongArray(2, barnetilleggPerioderIds)
-                setLongArray(3, barnetilleggPeriodeIds)
-                setLong(4, behandlingId.id)
+                setLongArray(3, barnetilleggPerioderIds)
+                setLongArray(4, barnetilleggPeriodeIds)
+
             }
         }
     }

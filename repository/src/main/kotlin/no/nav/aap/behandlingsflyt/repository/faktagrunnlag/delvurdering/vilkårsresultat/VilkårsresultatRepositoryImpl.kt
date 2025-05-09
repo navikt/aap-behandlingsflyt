@@ -178,8 +178,9 @@ WHERE behandling_id = ?
 
         connection.execute("""
             delete from vilkar_periode where vilkar_id = ANY(?::bigint[]);
-            delete from vilkar where resultat_id = ANY(?::bigint[]);
-            delete from vilkar_resultat where behandling_id = ? 
+            delete from vilkar where resultat_id = ANY(?::bigint[]);   
+            delete from vilkar_resultat where behandling_id = ?; 
+                     
         """.trimIndent()) {
             setParams {
                 setLongArray(1, vilkarIds)

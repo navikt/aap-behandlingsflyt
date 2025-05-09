@@ -538,6 +538,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
 
         connection.execute("""
+            delete from MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ?; 
             delete from INNTEKT_I_NORGE where inntekter_i_norge_id = ANY(?::bigint[]);     
             delete from ARBEID where arbeider_id = ANY(?::bigint[]);
             delete from ARBEIDER where id = ANY(?::bigint[]);    
@@ -545,18 +546,17 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             delete from UTENLANDS_PERIODE where oppgitt_utenlandsopphold_id = ANY(?::bigint[]);
             delete from OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG where behandling_id = ?; 
             delete from OPPGITT_UTENLANDSOPPHOLD where id = ANY(?::bigint[]); 
-            delete from MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ?; 
             delete from INNTEKTER_I_NORGE where id = ANY(?::bigint[]);
         """.trimIndent()) {
             setParams {
-                setLongArray(1, inntektINorgeIds)
-                setLongArray(2, arbeidIds)
-                setLongArray(3, arbeiderIds)
-                setLongArray(4, lovvalgMedlemsskapManuellVurderingIds)
-                setLongArray(5, utenlandsOppholdIds)
-                setLong(6, behandlingId.id)
-                setLongArray(7, utenlandsOppholdIds)
-                setLong(8, behandlingId.id)
+                setLong(1, behandlingId.id)
+                setLongArray(2, inntektINorgeIds)
+                setLongArray(3, arbeidIds)
+                setLongArray(4, arbeiderIds)
+                setLongArray(5, lovvalgMedlemsskapManuellVurderingIds)
+                setLongArray(6, utenlandsOppholdIds)
+                setLong(7, behandlingId.id)
+                setLongArray(8, utenlandsOppholdIds)
                 setLongArray(9, inntektINorgeIds)
             }
         }

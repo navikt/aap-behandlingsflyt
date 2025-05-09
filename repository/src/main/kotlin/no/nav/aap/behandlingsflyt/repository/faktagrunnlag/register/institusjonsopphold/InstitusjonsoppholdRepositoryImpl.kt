@@ -309,20 +309,20 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
         val soningVurderingerIds = getSoningVurderingerIds(behandlingId)
 
         connection.execute("""
+            delete from opphold_grunnlag where behandling_id = ?; 
             delete from helseopphold_vurdering where helseopphold_vurderinger_id = ANY(?::bigint[]);
             delete from helseopphold_vurderinger where id = ANY(?::bigint[]);
             delete from soning_vurdering where soning_vurderinger_id = ANY(?::bigint[]);
             delete from soning_vurderinger where id = ANY(?::bigint[]);
             delete from opphold where opphold_person_id = ANY(?::bigint[]);
-            delete from opphold_grunnlag where behandling_id = ? 
         """.trimIndent()) {
             setParams {
-                setLongArray(1, helseoppholdVurderingerIds)
+                setLong(1, behandlingId.id)
                 setLongArray(2, helseoppholdVurderingerIds)
-                setLongArray(3, soningVurderingerIds)
+                setLongArray(3, helseoppholdVurderingerIds)
                 setLongArray(4, soningVurderingerIds)
-                setLongArray(5, oppholdPersonIds)
-                setLong(6, behandlingId.id)
+                setLongArray(5, soningVurderingerIds)
+                setLongArray(6, oppholdPersonIds)
             }
         }
     }

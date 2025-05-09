@@ -118,12 +118,13 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
         val inntektIds = getInntektIds(behandlingId)
 
         connection.execute("""
+            delete from inntekt_grunnlag where behandling_id = ?; 
             delete from inntekt where inntekt_id = ANY(?::bigint[]);
-            delete from inntekt_grunnlag where behandling_id = ? 
+          
         """.trimIndent()) {
             setParams {
-                setLongArray(1, inntektIds)
-                setLong(2, behandlingId.id)
+                setLong(1, behandlingId.id)
+                setLongArray(2, inntektIds)
             }
         }
     }

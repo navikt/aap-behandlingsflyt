@@ -107,14 +107,16 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         val bistandVurderingerIds = getBistandVurderingerIds(behandlingId)
 
         connection.execute("""
+            delete from bistand_grunnlag where behandling_id = ?; 
             delete from bistand_vurderinger where id = ANY(?::bigint[]);
             delete from bistand where bistand_vurderinger_id = ANY(?::bigint[]);
-            delete from bistand_grunnlag where behandling_id = ? 
+           
         """.trimIndent()) {
             setParams {
-                setLongArray(1, bistandVurderingerIds)
+                setLong(1, behandlingId.id)
                 setLongArray(2, bistandVurderingerIds)
-                setLong(3, behandlingId.id)
+                setLongArray(3, bistandVurderingerIds)
+
             }
         }
     }

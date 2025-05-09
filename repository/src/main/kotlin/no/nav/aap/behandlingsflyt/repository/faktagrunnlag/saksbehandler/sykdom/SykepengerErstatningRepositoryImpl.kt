@@ -165,14 +165,15 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
     override fun slett(behandlingId: BehandlingId) {
         val sykepengeVurderingIds = getSykepengeVurderingIds(behandlingId)
         connection.execute("""
-            delete from sykepenge_vurdering where id = ANY(?::bigint[]);
+            delete from sykepenge_erstatning_grunnlag where behandling_id = ?; 
             delete from sykepenge_vurdering_dokumenter where vurdering_id = ANY(?::bigint[]);
-            delete from sykepenge_erstatning_grunnlag where behandling_id = ? 
+            delete from sykepenge_vurdering where id = ANY(?::bigint[]);
+           
         """.trimIndent()) {
             setParams {
-                setLongArray(1, sykepengeVurderingIds)
+                setLong(1, behandlingId.id)
                 setLongArray(2, sykepengeVurderingIds)
-                setLong(3, behandlingId.id)
+                setLongArray(3, sykepengeVurderingIds)
             }
         }
     }

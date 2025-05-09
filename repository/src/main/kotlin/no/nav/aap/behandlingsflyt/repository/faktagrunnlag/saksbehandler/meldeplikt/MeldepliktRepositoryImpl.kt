@@ -143,14 +143,15 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
         val meldepliktIds = getMeldepiktIds(behandlingId)
 
         connection.execute("""
+            delete from meldeplikt_fritak_grunnlag where behandling_id = ?; 
             delete from meldeplikt_fritak_vurdering where meldeplikt_id = ANY(?::bigint[]);
             delete from meldeplikt_fritak where id = ANY(?::bigint[]);
-            delete from meldeplikt_fritak_grunnlag where behandling_id = ? 
+          
         """.trimIndent()) {
             setParams {
-                setLongArray(1, meldepliktIds)
+                setLong(1, behandlingId.id)
                 setLongArray(2, meldepliktIds)
-                setLong(3, behandlingId.id)
+                setLongArray(3, meldepliktIds)
             }
         }
     }

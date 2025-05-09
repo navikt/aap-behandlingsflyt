@@ -199,16 +199,16 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
         val samordningYtelseIds = getSamordningYtelseIds(samordningYtelserIds)
 
         dbConnection.execute("""
+            delete from samordning_ytelse_grunnlag where behandling_id = ?; 
             delete from samordning_ytelse where ytelser_id = ANY(?::bigint[]);
             delete from samordning_ytelse_periode where ytelse_id = ANY(?::bigint[]);
             delete from samordning_ytelser where id = ANY(?::bigint[]);
-            delete from samordning_ytelse_grunnlag where behandling_id = ? 
         """.trimIndent()) {
             setParams {
-                setLongArray(1, samordningYtelseIds)
+                setLong(1, behandlingId.id)
                 setLongArray(2, samordningYtelseIds)
-                setLongArray(3, samordningYtelserIds)
-                setLong(4, behandlingId.id)
+                setLongArray(3, samordningYtelseIds)
+                setLongArray(4, samordningYtelserIds)
             }
         }
     }

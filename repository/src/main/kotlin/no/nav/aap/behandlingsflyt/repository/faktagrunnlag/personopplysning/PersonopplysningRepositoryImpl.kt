@@ -288,19 +288,20 @@ class PersonopplysningRepositoryImpl(
         val utenlandsAdresserIds = getUtenlandsAdresserIds(brukerPersonopplysningIds)
 
         connection.execute("""
+            delete from personopplysning_grunnlag where behandling_id = ?; 
             delete from bruker_utenlandsadresse where utenlandsadresser_id = ANY(?::bigint[]);
             delete from bruker_utenlandsadresser_aggregat where id = ANY(?::bigint[]);
             delete from personopplysning where personopplysninger_id = ANY(?::bigint[]);
             delete from personopplysninger where id = ANY(?::bigint[]);
-            delete from personopplysning_grunnlag where behandling_id = ?; 
+           
              delete from bruker_personopplysning where id = ANY(?::bigint[]);
         """.trimIndent()) {
             setParams {
-                setLongArray(1, utenlandsAdresserIds)
+                setLong(1, behandlingId.id)
                 setLongArray(2, utenlandsAdresserIds)
-                setLongArray(3, personopplysningerIds)
+                setLongArray(3, utenlandsAdresserIds)
                 setLongArray(4, personopplysningerIds)
-                setLong(5, behandlingId.id)
+                setLongArray(5, personopplysningerIds)
                 setLongArray(6, brukerPersonopplysningIds)
             }
         }

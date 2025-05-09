@@ -116,14 +116,15 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
         val yrkesskadeIds = getYrkesskadeIds(behandlingId)
 
         connection.execute("""
+            delete from yrkesskade_grunnlag where behandling_id = ?; 
             delete from yrkesskade_dato where id = ANY(?::bigint[]);
             delete from yrkesskade where id = ANY(?::bigint[]);
-            delete from yrkesskade_grunnlag where behandling_id = ? 
+         
         """.trimIndent()) {
             setParams {
-                setLongArray(1, yrkesskadeIds)
+                setLong(1, behandlingId.id)
                 setLongArray(2, yrkesskadeIds)
-                setLong(3, behandlingId.id)
+                setLongArray(3, yrkesskadeIds)
             }
         }
     }

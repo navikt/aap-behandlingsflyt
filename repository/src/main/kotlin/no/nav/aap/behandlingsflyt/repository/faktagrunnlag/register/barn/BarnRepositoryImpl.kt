@@ -389,25 +389,26 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
 
         connection.execute(
             """
+            delete from barnopplysning_grunnlag where behandling_id = ?;
             delete from barn_vurdering where id = ANY(?::bigint[]);
             delete from barn_vurdering_periode where id = ANY(?::bigint[]);
             delete from barn_vurderinger where id = ANY(?::bigint[]);
             delete from barnopplysning where id = ANY(?::bigint[]);
             delete from barnopplysning_grunnlag_barnopplysning where id = ANY(?::bigint[]);
-            delete from oppgitt_barnopplysning where id = ANY(?::bigint[]);
-            delete from oppgitt_barn where oppgitt_barn_id = ANY(?::bigint[]);
-            delete from barnopplysning_grunnlag where behandling_id = ? 
+            delete from oppgitt_barn where oppgitt_barn_id = ANY(?::bigint[]);   
+            delete from oppgitt_barnopplysning where id = ANY(?::bigint[]);          
         """.trimIndent()
         ) {
             setParams {
-                setLongArray(1, barnVurderingIds)
+                setLong(1, behandlingId.id)
                 setLongArray(2, barnVurderingIds)
-                setLongArray(3, vurderteBarnIds)
-                setLongArray(4, barnOpplysningIds)
+                setLongArray(3, barnVurderingIds)
+                setLongArray(4, vurderteBarnIds)
                 setLongArray(5, barnOpplysningIds)
-                setLongArray(6, oppgittBarnIds)
+                setLongArray(6, barnOpplysningIds)
                 setLongArray(7, oppgittBarnIds)
-                setLong(8, behandlingId.id)
+                setLongArray(8, oppgittBarnIds)
+
             }
         }
     }

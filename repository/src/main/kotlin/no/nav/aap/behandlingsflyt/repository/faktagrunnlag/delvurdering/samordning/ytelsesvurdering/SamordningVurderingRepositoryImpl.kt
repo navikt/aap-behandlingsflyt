@@ -198,16 +198,17 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
         val samordningVurderingIds = getSamordningVurderingIds(samordningVurderingYtelseIds)
 
         connection.execute("""
+            delete from samordning_ytelsevurdering_grunnlag where behandling_id = ?; 
             delete from samordning_vurdering where vurderinger_id = ANY(?::bigint[]);
             delete from samordning_vurderinger where id = ANY(?::bigint[]);
             delete from samordning_vurdering_periode where vurdering_id = ANY(?::bigint[]);
-            delete from samordning_ytelsevurdering_grunnlag where behandling_id = ? 
+           
         """.trimIndent()) {
             setParams {
-                setLongArray(1, samordningVurderingYtelseIds)
+                setLong(1, behandlingId.id)
                 setLongArray(2, samordningVurderingYtelseIds)
-                setLongArray(3, samordningVurderingIds)
-                setLong(4, behandlingId.id)
+                setLongArray(3, samordningVurderingYtelseIds)
+                setLongArray(4, samordningVurderingIds)
             }
         }
     }

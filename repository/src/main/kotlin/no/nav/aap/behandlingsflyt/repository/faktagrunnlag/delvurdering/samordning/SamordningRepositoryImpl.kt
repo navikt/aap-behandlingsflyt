@@ -115,14 +115,15 @@ class SamordningRepositoryImpl(private val connection: DBConnection) : Samordnin
         val smaordningPerioderIds = getSamordningPerioderIds(behandlingId)
 
         connection.execute("""
+            delete from samordning_grunnlag where behandling_id = ?; 
             delete from samordning_periode where perioder_id = ANY(?::bigint[]);
             delete from samordning_perioder where id = ANY(?::bigint[]);
-            delete from samordning_grunnlag where behandling_id = ? 
+          
         """.trimIndent()) {
             setParams {
-                setLongArray(1, smaordningPerioderIds)
+                setLong(1, behandlingId.id)
                 setLongArray(2, smaordningPerioderIds)
-                setLong(3, behandlingId.id)
+                setLongArray(3, smaordningPerioderIds)
             }
         }
     }

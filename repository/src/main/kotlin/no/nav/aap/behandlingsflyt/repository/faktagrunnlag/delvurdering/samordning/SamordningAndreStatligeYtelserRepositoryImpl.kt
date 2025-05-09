@@ -121,9 +121,36 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        // Ikke relevant for trukkede søknader, da man ikke vil ha fått meldeperioder
+
+        val samordningStatligYtelseVurderingIds = getSamordningStatligYtelseVurderingIds(behandlingId)
+
+        connection.execute("""
+            delete from samordning_andre_statlige_ytelser_grunnlag where behandling_id = ?; 
+            delete from samordning_andre_statlige_ytelser_vurdering_periode where vurdering_id = ANY(?::bigint[]);
+            delete from samordning_andre_statlige_ytelser_vurdering where id = ANY(?::bigint[]);
+           
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, samordningStatligYtelseVurderingIds)
+                setLongArray(3, samordningStatligYtelseVurderingIds)
+            }
+        }
     }
 
+    private fun getSamordningStatligYtelseVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT vurdering_id
+                    FROM samordning_andre_statlige_ytelser_grunnlag
+                    WHERE vurdering_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("vurderinger_id")
+        }
+    }
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
         connection.execute("UPDATE SAMORDNING_ANDRE_STATLIGE_YTELSER_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
             setParams {
