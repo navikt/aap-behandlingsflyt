@@ -4,11 +4,10 @@ import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
-import no.nav.aap.motor.Jobb
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.motor.ProviderJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 
 
@@ -33,26 +32,16 @@ class ProsesserBehandlingJobbUtfører(
         låsRepository.verifiserSkrivelås(skrivelås)
     }
 
-    companion object : Jobb {
-        override fun konstruer(connection: DBConnection): JobbUtfører {
-            val repositoryProvider = RepositoryRegistry.provider(connection)
-            val låsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
+    companion object : ProviderJobbSpesifikasjon {
+        override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
             return ProsesserBehandlingJobbUtfører(
-                låsRepository,
-                FlytOrkestrator(repositoryProvider)
+                låsRepository = repositoryProvider.provide(),
+                kontroller = FlytOrkestrator(repositoryProvider)
             )
         }
 
-        override fun type(): String {
-            return "flyt.prosesserBehandling"
-        }
-
-        override fun navn(): String {
-            return "Prosesser behandling"
-        }
-
-        override fun beskrivelse(): String {
-            return "Ansvarlig for å drive prosessen på en gitt behandling"
-        }
+        override val type = "flyt.prosesserBehandling"
+        override val navn = "Prosesser behandling"
+        override val beskrivelse = "Ansvarlig for å drive prosessen på en gitt behandling"
     }
 }

@@ -5,10 +5,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.SakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.repository.Repository
+import no.nav.aap.komponenter.repository.RepositoryFactory
 
-class GjenopptakRepository(private val connection: DBConnection) {
+interface GjenopptakRepository: Repository {
+    fun finnBehandlingerForGjennopptak(): List<SakOgBehandling>
+}
 
-    fun finnBehandlingerForGjennopptak(): List<SakOgBehandling> {
+class GjenopptakRepositoryImpl(private val connection: DBConnection): GjenopptakRepository {
+    override fun finnBehandlingerForGjennopptak(): List<SakOgBehandling> {
         val query = """
             SELECT b.id, b.sak_id 
             FROM BEHANDLING b
@@ -31,5 +36,9 @@ class GjenopptakRepository(private val connection: DBConnection) {
                 SakOgBehandling(sakId = SakId(row.getLong("sak_id")), behandlingId = BehandlingId(row.getLong("id")))
             }
         }
+    }
+
+    companion object: RepositoryFactory<GjenopptakRepository> {
+        override fun konstruer(connection: DBConnection) = GjenopptakRepositoryImpl(connection)
     }
 }

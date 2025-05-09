@@ -54,6 +54,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.flate.m
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.flate.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
+import no.nav.aap.behandlingsflyt.forretningsflyt.gjenopptak.GjenopptakRepositoryImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.aaregisteret.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
@@ -321,6 +322,7 @@ private fun registerRepositories() {
         .register<MedlemskapRepositoryImpl>()
         .register<MedlemskapForutgåendeRepositoryImpl>()
         .register<TjenestepensjonRefusjonskravVurderingRepositoryImpl>()
+        .register<GjenopptakRepositoryImpl>()
         .status()
 }
 
@@ -331,6 +333,7 @@ fun Application.startMotor(dataSource: DataSource): Motor {
         logInfoProvider = BehandlingsflytLogInfoProvider,
         jobber = ProsesseringsJobber.alle(),
         prometheus = prometheus,
+        repositoryRegistry = RepositoryRegistry,
     )
 
     dataSource.transaction { dbConnection ->

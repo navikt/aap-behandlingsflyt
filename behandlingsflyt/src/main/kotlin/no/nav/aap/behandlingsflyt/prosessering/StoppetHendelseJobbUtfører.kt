@@ -2,13 +2,12 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.motor.Jobb
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.motor.ProviderJobbSpesifikasjon
 import org.slf4j.LoggerFactory
-
 
 
 class StoppetHendelseJobbUtfører private constructor() : JobbUtfører {
@@ -22,21 +21,13 @@ class StoppetHendelseJobbUtfører private constructor() : JobbUtfører {
         GatewayProvider.provide<OppgavestyringGateway>().varsleHendelse(hendelse)
     }
 
-    companion object : Jobb {
-        override fun konstruer(connection: DBConnection): JobbUtfører {
+    companion object : ProviderJobbSpesifikasjon {
+        override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
             return StoppetHendelseJobbUtfører()
         }
 
-        override fun type(): String {
-            return "flyt.hendelse"
-        }
-
-        override fun navn(): String {
-            return "Oppgavestyrings hendelse"
-        }
-
-        override fun beskrivelse(): String {
-            return "Produsere hendelse til oppgavestyring"
-        }
+        override val type = "flyt.hendelse"
+        override val navn = "Oppgavestyrings hendelse"
+        override val beskrivelse = "Produsere hendelse til oppgavestyring"
     }
 }

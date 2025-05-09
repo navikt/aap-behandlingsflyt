@@ -5,12 +5,11 @@ import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.lookup.repository.RepositoryRegistry
-import no.nav.aap.motor.Jobb
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.motor.ProviderJobbSpesifikasjon
 
 class DatadelingMeldePerioderJobbUtfører(
     private val apiInternGateway: ApiInternGateway,
@@ -29,33 +28,18 @@ class DatadelingMeldePerioderJobbUtfører(
 
     }
 
-    companion object : Jobb {
-        override fun beskrivelse(): String {
+    companion object : ProviderJobbSpesifikasjon {
+        override val beskrivelse = "Sender meldekort perioder og vedtaksdata til api-intern."
+        override val navn = "DatadelingMeldePerioderJobbUtfører"
+        override val type = "flyt.DatadelingMeldePerioder"
 
-            return "Sender meldekort perioder og vedtaksdata til api-intern."
-        }
-
-        override fun konstruer(connection: DBConnection): JobbUtfører {
-            val repositoryProvider = RepositoryRegistry.provider(connection)
-            val behandlingRepository: BehandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val sakRepository: SakRepository = repositoryProvider.provide<SakRepository>()
-            val meldeperiodeRepository: MeldeperiodeRepository = repositoryProvider.provide<MeldeperiodeRepository>()
-
+        override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
             return DatadelingMeldePerioderJobbUtfører(
-                GatewayProvider.provide(),
-                behandlingRepository,
-                sakRepository,
-                meldeperiodeRepository
+                apiInternGateway = GatewayProvider.provide(),
+                behandlingRepository = repositoryProvider.provide(),
+                sakRepository = repositoryProvider.provide(),
+                meldeperiodeRepository = repositoryProvider.provide()
             )
         }
-
-        override fun navn(): String {
-            return "DatadelingMeldePerioderJobbUtfører"
-        }
-
-        override fun type(): String {
-            return "flyt.DatadelingMeldePerioder"
-        }
-
     }
 }

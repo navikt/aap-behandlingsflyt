@@ -21,7 +21,7 @@ class ProsesserBehandlingService(private val flytJobbRepository: FlytJobbReposit
     ) {
         val eksisterendeJobber = flytJobbRepository
             .hentJobberForBehandling(behandlingId.toLong())
-            .filter { it.type() == ProsesserBehandlingJobbUtfører.type() }
+            .filter { it.type() == ProsesserBehandlingJobbUtfører.type }
 
         if (eksisterendeJobber.isNotEmpty()) {
             log.info("Har planlagt eksisterende kjøring, planlegger ikke en ny. {}", eksisterendeJobber)

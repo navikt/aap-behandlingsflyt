@@ -71,8 +71,8 @@ class AvklaringsbehovOrkestratorTest {
             hentJobber(connection)
         }
         assertThat(uthentedeJobber).haveAtLeastOne(
-            Condition<String>(
-                { it -> it == StoppetHendelseJobbUtfører.type() },
+            Condition(
+                { it == StoppetHendelseJobbUtfører.type },
                 "skal være av rett type"
             )
         )

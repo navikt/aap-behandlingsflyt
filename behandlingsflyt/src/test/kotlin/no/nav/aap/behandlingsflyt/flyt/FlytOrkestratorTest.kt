@@ -218,10 +218,10 @@ class FlytOrkestratorTest {
 
     companion object {
         private val dataSource = InitTestDatabase.freshDatabase()
-        private val motor = Motor(dataSource, 8, jobber = ProsesseringsJobber.alle())
+        private val motor = Motor(dataSource, 8, jobber = ProsesseringsJobber.alle(), repositoryRegistry = RepositoryRegistry)
         private val hendelsesMottak = TestHendelsesMottak(dataSource)
         private val util =
-            TestUtil(dataSource, ProsesseringsJobber.alle().filter { it.cron() != null }.map { it.type() })
+            TestUtil(dataSource, ProsesseringsJobber.alle().filter { it.cron != null }.map { it.type })
 
         @BeforeAll
         @JvmStatic

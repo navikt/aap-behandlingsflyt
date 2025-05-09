@@ -42,16 +42,14 @@ import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.lookup.repository.RepositoryRegistry
-import no.nav.aap.motor.Jobb
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.motor.ProviderJobbSpesifikasjon
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -379,42 +377,24 @@ class StatistikkJobbUtfører(
     )
 
 
-    companion object : Jobb {
-        override fun konstruer(connection: DBConnection): JobbUtfører {
-            val repositoryProvider = RepositoryRegistry.provider(connection)
-            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
-            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val sakRepository = repositoryProvider.provide<SakRepository>()
-            val pipRepository = repositoryProvider.provide<PipRepository>()
-            val tilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>()
-            val beregningsgrunnlagRepository = repositoryProvider.provide<BeregningsgrunnlagRepository>()
-            val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
-            val sakService = SakService(sakRepository)
-
+    companion object : ProviderJobbSpesifikasjon {
+        override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
             return StatistikkJobbUtfører(
-                vilkårsresultatRepository,
-                behandlingRepository,
-                sakService,
-                tilkjentYtelseRepository,
-                beregningsgrunnlagRepository,
-                pipRepository = pipRepository,
-                dokumentRepository = mottattDokumentRepository,
+                vilkårsresultatRepository = repositoryProvider.provide(),
+                behandlingRepository = repositoryProvider.provide(),
+                sakService = SakService(repositoryProvider),
+                tilkjentYtelseRepository = repositoryProvider.provide(),
+                beregningsgrunnlagRepository = repositoryProvider.provide(),
+                pipRepository = repositoryProvider.provide(),
+                dokumentRepository = repositoryProvider.provide(),
                 sykdomRepository = repositoryProvider.provide(),
                 underveisRepository = repositoryProvider.provide(),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
             )
         }
 
-        override fun type(): String {
-            return "flyt.statistikk"
-        }
-
-        override fun navn(): String {
-            return "Lagrer statistikk"
-        }
-
-        override fun beskrivelse(): String {
-            return "Skal ta i mot data fra steg i en behandling og sender til statistikk-appen."
-        }
+        override val type = "flyt.statistikk"
+        override val navn = "Lagrer statistikk"
+        override val beskrivelse = "Skal ta i mot data fra steg i en behandling og sender til statistikk-appen."
     }
 }

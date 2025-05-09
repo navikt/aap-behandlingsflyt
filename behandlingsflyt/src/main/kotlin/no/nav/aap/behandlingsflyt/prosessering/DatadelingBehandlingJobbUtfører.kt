@@ -7,12 +7,11 @@ import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.lookup.repository.RepositoryRegistry
-import no.nav.aap.motor.Jobb
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.motor.ProviderJobbSpesifikasjon
 
 class DatadelingBehandlingJobbUtfører(
     private val apiInternGateway: ApiInternGateway,
@@ -40,37 +39,20 @@ class DatadelingBehandlingJobbUtfører(
         )
     }
 
-    companion object : Jobb {
-        override fun beskrivelse(): String {
-            return "Sender data rundt behandling til api-intern."
-        }
+    companion object : ProviderJobbSpesifikasjon {
+        override val beskrivelse = "Sender data rundt behandling til api-intern."
+        override val navn = "BehandlingDatadelingUtfører"
+        override val type = "flyt.DatadelingBehandlingsdata"
 
-        override fun konstruer(connection: DBConnection): JobbUtfører {
-            val repositoryProvider = RepositoryRegistry.provider(connection)
-            val behandlingRepository: BehandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val sakRepository: SakRepository = repositoryProvider.provide<SakRepository>()
-            val tilkjentRepository: TilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>()
-            val underveisRepository: UnderveisRepository = repositoryProvider.provide<UnderveisRepository>()
-            val vilkårsresultatRepository: VilkårsresultatRepository =
-                repositoryProvider.provide<VilkårsresultatRepository>()
-
+        override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
             return DatadelingBehandlingJobbUtfører(
                 apiInternGateway = GatewayProvider.provide(),
-                sakRepository = sakRepository,
-                behandlingRepository = behandlingRepository,
-                tilkjentRepository = tilkjentRepository,
-                underveisRepository = underveisRepository,
-                vilkårsresultatRepository = vilkårsresultatRepository
+                sakRepository = repositoryProvider.provide(),
+                behandlingRepository = repositoryProvider.provide(),
+                tilkjentRepository = repositoryProvider.provide(),
+                underveisRepository = repositoryProvider.provide(),
+                vilkårsresultatRepository = repositoryProvider.provide()
             )
         }
-
-        override fun navn(): String {
-            return "BehandlingDatadelingUtfører"
-        }
-
-        override fun type(): String {
-            return "flyt.DatadelingBehandlingsdata"
-        }
     }
-
 }

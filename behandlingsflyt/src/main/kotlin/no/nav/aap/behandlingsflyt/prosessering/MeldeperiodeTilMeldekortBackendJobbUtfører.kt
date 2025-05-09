@@ -14,17 +14,16 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.meldekort.kontrakt.Periode
 import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
 import no.nav.aap.meldekort.kontrakt.sak.SakStatus
-import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.motor.ProviderJobbSpesifikasjon
 
 class MeldeperiodeTilMeldekortBackendJobbUtfører(
     private val sakService: SakService,
@@ -117,17 +116,15 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
         }
     }
 
-    companion object : Jobb {
-        override fun beskrivelse(): String {
-            return """
+    companion object : ProviderJobbSpesifikasjon {
+        override val navn = "MeldeperiodeTilMeldekortBackend"
+        override val type = "flyt.meldeperiodeTilMeldekortBackend"
+        override val beskrivelse = """
                 Push informasjon til meldekort-backend slik at vi kan åpne for
                 innsending av meldekort før vedtak er fattet.
                 """.trimIndent()
-        }
 
-        override fun konstruer(connection: DBConnection): JobbUtfører {
-            val repositoryProvider = RepositoryRegistry.provider(connection)
-
+        override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
             return MeldeperiodeTilMeldekortBackendJobbUtfører(
                 sakService = SakService(repositoryProvider),
                 meldekortGateway = GatewayProvider.provide(),
@@ -138,14 +135,6 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                 vedtakRepository = repositoryProvider.provide(),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
             )
-        }
-
-        override fun navn(): String {
-            return "MeldeperiodeTilMeldekortBackend"
-        }
-
-        override fun type(): String {
-            return "flyt.meldeperiodeTilMeldekortBackend"
         }
 
         fun nyJobb(

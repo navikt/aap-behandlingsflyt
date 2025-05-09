@@ -65,7 +65,7 @@ internal class GjenopptakRepositoryTest {
         }
 
         dataSource.transaction { connection ->
-            val kandidater = GjenopptakRepository(connection).finnBehandlingerForGjennopptak()
+            val kandidater = GjenopptakRepositoryImpl(connection).finnBehandlingerForGjennopptak()
 
             assertThat(kandidater).hasSize(1)
         }

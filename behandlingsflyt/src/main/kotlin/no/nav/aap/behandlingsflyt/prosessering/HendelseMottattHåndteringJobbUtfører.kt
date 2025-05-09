@@ -9,12 +9,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.lookup.repository.RepositoryRegistry
-import no.nav.aap.motor.Jobb
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.motor.ProviderJobbSpesifikasjon
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -83,7 +82,7 @@ class HendelseMottattHåndteringJobbUtfører(
         return innsendinger.any { dokument -> dokument.referanse == innsendingReferanse }
     }
 
-    companion object : Jobb {
+    companion object : ProviderJobbSpesifikasjon {
         fun nyJobb(
             sakId: SakId,
             dokumentReferanse: InnsendingReferanse,
@@ -102,28 +101,17 @@ class HendelseMottattHåndteringJobbUtfører(
                 medPayload(melding)
             }
 
-        override fun konstruer(connection: DBConnection): JobbUtfører {
-            val repositoryProvider = RepositoryRegistry.provider(connection)
-            val låsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
-            val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
+        override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
             return HendelseMottattHåndteringJobbUtfører(
-                låsRepository,
-                HåndterMottattDokumentService(repositoryProvider),
-                MottaDokumentService(repositoryProvider),
-                mottattDokumentRepository
+                låsRepository = repositoryProvider.provide(),
+                hånderMottattDokumentService = HåndterMottattDokumentService(repositoryProvider),
+                mottaDokumentService = MottaDokumentService(repositoryProvider),
+                mottattDokumentRepository = repositoryProvider.provide()
             )
         }
 
-        override fun type(): String {
-            return "hendelse.håndterer"
-        }
-
-        override fun navn(): String {
-            return "Hendelses håndterer"
-        }
-
-        override fun beskrivelse(): String {
-            return "Håndterer hendelser på en gitt sak. Knytter de nye opplysningene til rett behandling og oppretter behandling hvis det er behov for det."
-        }
+        override val type = "hendelse.håndterer"
+        override val navn = "Hendelses håndterer"
+        override val beskrivelse = "Håndterer hendelser på en gitt sak. Knytter de nye opplysningene til rett behandling og oppretter behandling hvis det er behov for det."
     }
 }

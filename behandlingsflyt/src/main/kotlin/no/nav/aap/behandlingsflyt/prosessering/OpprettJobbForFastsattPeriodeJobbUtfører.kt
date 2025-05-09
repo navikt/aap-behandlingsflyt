@@ -26,8 +26,8 @@ class OpprettJobbForFastsattPeriodeJobbUtfører(
         override fun konstruer(connection: DBConnection): JobbUtfører {
             val provider = RepositoryRegistry.provider(connection)
             return OpprettJobbForFastsattPeriodeJobbUtfører(
-                provider.provide(),
-                provider.provide(),
+                flytJobbRepository = provider.provide(),
+                sakRepository = provider.provide(),
             )
         }
 
