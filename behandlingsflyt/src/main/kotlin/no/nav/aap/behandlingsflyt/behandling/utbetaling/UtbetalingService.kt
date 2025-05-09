@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDetaljerDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelsePeriodeDto
+import java.time.LocalDateTime
 
 class UtbetalingService(
     private val sakRepository: SakRepository,
@@ -21,7 +22,7 @@ class UtbetalingService(
     private val vedtakRepository: VedtakRepository,
 ) {
 
-     fun lagTilkjentYtelseForUtbetaling(sakId: SakId, behandlingId: BehandlingId): TilkjentYtelseDto? {
+     fun lagTilkjentYtelseForUtbetaling(sakId: SakId, behandlingId: BehandlingId, simulering: Boolean = false): TilkjentYtelseDto? {
         val sak = sakRepository.hent(sakId)
         val behandling = behandlingRepository.hent(behandlingId)
         val forrigeBehandling = behandling.forrigeBehandlingId?.let { behandlingRepository.hent(it) }
@@ -37,8 +38,11 @@ class UtbetalingService(
             val avklaringsbehovFatteVedtak = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK)
             val saksbehandlerIdent = avklaringsbehovForeslåVedtak?.endretAv() ?: "Kelvin"
             val beslutterIdent = avklaringsbehovFatteVedtak?.endretAv() ?: "Kelvin"
-            val vedtakstidspunkt = vedtakRepository.hent(behandlingId)?.vedtakstidspunkt ?: error("Fant ikke vedtak")
-
+            val vedtakstidspunkt = if (simulering) {
+                LocalDateTime.now()
+            } else {
+                vedtakRepository.hent(behandlingId)?.vedtakstidspunkt ?: error("Fant ikke vedtak")
+            }
             TilkjentYtelseDto(
                 saksnummer = saksnummer,
                 behandlingsreferanse = behandlingsreferanse,

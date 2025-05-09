@@ -41,7 +41,7 @@ fun NormalOpenAPIRoute.simuleringAPI(dataSource: DataSource) {
                         vedtakRepository = repositoryFactory.provide<VedtakRepository>()
                     )
                     val behandling = behandlingRepo.hent(req)
-                    utbetalingService.lagTilkjentYtelseForUtbetaling(behandling.sakId, behandling.id)
+                    utbetalingService.lagTilkjentYtelseForUtbetaling(behandling.sakId, behandling.id, simulering = true)
                 }
                 val utbetalingGateway = GatewayProvider.provide(UtbetalingGateway::class)
                 if (tilkjentYtelseDto != null) {
