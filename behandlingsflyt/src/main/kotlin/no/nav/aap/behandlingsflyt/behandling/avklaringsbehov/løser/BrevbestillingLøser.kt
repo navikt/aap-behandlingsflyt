@@ -8,17 +8,20 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepos
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingLøsningStatus
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.auth.Bruker
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 val BREV_SYSTEMBRUKER = Bruker("Brevløsning")
 
-class BrevbestillingLøser(val connection: DBConnection) :
-    AvklaringsbehovsLøser<BrevbestillingLøsning> {
+class BrevbestillingLøser(
+    private val avklaringsbehovOrkestrator: AvklaringsbehovOrkestrator,
+    private val brevbestillingRepository: BrevbestillingRepository,
+) : AvklaringsbehovsLøser<BrevbestillingLøsning> {
 
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val avklaringsbehovOrkestrator = AvklaringsbehovOrkestrator(connection, repositoryProvider)
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        avklaringsbehovOrkestrator = AvklaringsbehovOrkestrator(repositoryProvider),
+        brevbestillingRepository = repositoryProvider.provide(),
+    )
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
@@ -26,8 +29,6 @@ class BrevbestillingLøser(val connection: DBConnection) :
     ): LøsningsResultat {
 
         require(kontekst.bruker == BREV_SYSTEMBRUKER) { "Bruker kan ikke løse brevbestilling. Ble forsøkt løst av ${kontekst.bruker}." }
-
-        val brevbestillingRepository = repositoryProvider.provide<BrevbestillingRepository>()
 
         val status = when (løsning.oppdatertStatusForBestilling.status) {
             BrevbestillingLøsningStatus.KLAR_FOR_EDITERING -> Status.FORHÅNDSVISNING_KLAR

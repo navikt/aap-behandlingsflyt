@@ -5,15 +5,19 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
-class AvklarForutgåendeMedlemskapLøser(connection: DBConnection): AvklaringsbehovsLøser<AvklarForutgåendeMedlemskapLøsning> {
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val forutgåendeMedlemskapRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
+class AvklarForutgåendeMedlemskapLøser(
+    private val forutgåendeMedlemskapRepository: MedlemskapArbeidInntektForutgåendeRepository,
+) : AvklaringsbehovsLøser<AvklarForutgåendeMedlemskapLøsning> {
+
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        forutgåendeMedlemskapRepository = repositoryProvider.provide(),
+    )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarForutgåendeMedlemskapLøsning): LøsningsResultat {
-        forutgåendeMedlemskapRepository.lagreManuellVurdering(kontekst.behandlingId(),
+        forutgåendeMedlemskapRepository.lagreManuellVurdering(
+            kontekst.behandlingId(),
             ManuellVurderingForForutgåendeMedlemskap(
                 løsning.manuellVurderingForForutgåendeMedlemskap.begrunnelse,
                 løsning.manuellVurderingForForutgåendeMedlemskap.harForutgåendeMedlemskap,

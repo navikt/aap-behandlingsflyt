@@ -224,7 +224,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                             body.behandlingVersjon
                         )
 
-                        AvklaringsbehovOrkestrator(connection, repositoryProvider)
+                        AvklaringsbehovOrkestrator(repositoryProvider)
                             .settBehandlingPåVent(
                                 lås.behandlingSkrivelås.id, BehandlingSattPåVent(
                                     frist = body.frist,

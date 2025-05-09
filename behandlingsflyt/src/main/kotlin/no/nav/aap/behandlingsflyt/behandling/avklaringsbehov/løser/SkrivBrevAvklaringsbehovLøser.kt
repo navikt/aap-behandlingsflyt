@@ -10,18 +10,21 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepos
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
-
-class SkrivBrevAvklaringsbehovLøser(connection: DBConnection) {
-
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-    private val sakRepository = repositoryProvider.provide<SakRepository>()
-    private val brevbestillingRepository = repositoryProvider.provide<BrevbestillingRepository>()
-    private val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+class SkrivBrevAvklaringsbehovLøser(
+    private val behandlingRepository: BehandlingRepository,
+    private val sakRepository: SakRepository,
+    private val brevbestillingRepository: BrevbestillingRepository,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+) {
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        behandlingRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
+        brevbestillingRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+    )
 
     fun løs(
         kontekst: AvklaringsbehovKontekst,

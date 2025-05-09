@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsRes
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.UtenlandskVidereføringLøser
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_UTENLANDSK_MEDLEMSKAP_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_UTENLANDSK_MEDLEMSKAP_KODE)
@@ -17,7 +17,7 @@ class UtenlandskVidereføringLøsning(
         "behovstype", required = true, defaultValue = AVKLAR_UTENLANDSK_MEDLEMSKAP_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5019`
 ) : AvklaringsbehovLøsning {
-    override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
-        return UtenlandskVidereføringLøser(connection).løs(kontekst, this)
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
+        return UtenlandskVidereføringLøser(repositoryProvider).løs(kontekst, this)
     }
 }

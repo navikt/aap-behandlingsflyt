@@ -1,4 +1,3 @@
-
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
@@ -6,15 +5,17 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStud
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
-class AvklarStudentLøser(val connection: DBConnection) :
-    AvklaringsbehovsLøser<AvklarStudentLøsning> {
+class AvklarStudentLøser(
+    private val behandlingRepository: BehandlingRepository,
+    private val studentRepository: StudentRepository,
+) : AvklaringsbehovsLøser<AvklarStudentLøsning> {
 
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-    private val studentRepository = repositoryProvider.provide<StudentRepository>()
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        behandlingRepository = repositoryProvider.provide(),
+        studentRepository = repositoryProvider.provide(),
+    )
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,

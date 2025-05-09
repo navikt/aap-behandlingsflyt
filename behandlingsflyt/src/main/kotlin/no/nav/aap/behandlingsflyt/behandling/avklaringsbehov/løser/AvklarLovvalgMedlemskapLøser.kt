@@ -5,16 +5,20 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarLovv
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
-class AvklarLovvalgMedlemskapLøser(connection: DBConnection): AvklaringsbehovsLøser<AvklarLovvalgMedlemskapLøsning> {
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
+class AvklarLovvalgMedlemskapLøser(
+    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
+) : AvklaringsbehovsLøser<AvklarLovvalgMedlemskapLøsning> {
+
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        medlemskapArbeidInntektRepository = repositoryProvider.provide(),
+    )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarLovvalgMedlemskapLøsning): LøsningsResultat {
-        medlemskapArbeidInntektRepository.lagreManuellVurdering(kontekst.behandlingId(),
+        medlemskapArbeidInntektRepository.lagreManuellVurdering(
+            kontekst.behandlingId(),
             ManuellVurderingForLovvalgMedlemskap(
                 lovvalgVedSøknadsTidspunkt = løsning.manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt,
                 medlemskapVedSøknadsTidspunkt = løsning.manuellVurderingForLovvalgMedlemskap.medlemskapVedSøknadsTidspunkt,

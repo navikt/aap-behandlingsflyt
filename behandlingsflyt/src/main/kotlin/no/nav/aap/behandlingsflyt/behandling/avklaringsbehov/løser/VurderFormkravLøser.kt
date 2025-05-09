@@ -4,12 +4,15 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderFormkravLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
-class VurderFormkravLøser(val connection: DBConnection) : AvklaringsbehovsLøser<VurderFormkravLøsning> {
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val formkravRepository = repositoryProvider.provide<FormkravRepository>()
+class VurderFormkravLøser(
+    private val formkravRepository: FormkravRepository,
+) : AvklaringsbehovsLøser<VurderFormkravLøsning> {
+
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        formkravRepository = repositoryProvider.provide(),
+    )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: VurderFormkravLøsning): LøsningsResultat {
         formkravRepository.lagre(

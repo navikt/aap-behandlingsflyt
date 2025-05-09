@@ -67,7 +67,7 @@ class FatteVedtakLøserTest {
         )
 
         val fatteVedtakLøser = MockDataSource().transaction {
-            FatteVedtakLøser(it)
+            FatteVedtakLøser(RepositoryRegistry.provider(it))
         }
 
         // Totrinnsvurdering ikke godkjent.

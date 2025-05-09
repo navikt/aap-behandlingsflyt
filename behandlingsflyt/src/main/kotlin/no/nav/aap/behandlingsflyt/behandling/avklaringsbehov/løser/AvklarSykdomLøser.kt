@@ -10,20 +10,25 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurd
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
-class AvklarSykdomLøser(connection: DBConnection) : AvklaringsbehovsLøser<AvklarSykdomLøsning> {
+class AvklarSykdomLøser(
+    private val behandlingRepository: BehandlingRepository,
+    private val sykdomRepository: SykdomRepository,
+    private val yrkersskadeRepository: YrkesskadeRepository,
+) : AvklaringsbehovsLøser<AvklarSykdomLøsning> {
 
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-    private val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
-    private val yrkersskadeRepository = repositoryProvider.provide<YrkesskadeRepository>()
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        behandlingRepository = repositoryProvider.provide(),
+        sykdomRepository = repositoryProvider.provide(),
+        yrkersskadeRepository = repositoryProvider.provide(),
+    )
+
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarSykdomLøsning): LøsningsResultat {

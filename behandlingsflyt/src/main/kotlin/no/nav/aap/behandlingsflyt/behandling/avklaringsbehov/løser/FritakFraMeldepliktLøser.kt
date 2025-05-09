@@ -8,15 +8,17 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Meldepl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
-class FritakFraMeldepliktLøser(val connection: DBConnection) :
-    AvklaringsbehovsLøser<FritakMeldepliktLøsning> {
+class FritakFraMeldepliktLøser(
+    private val behandlingRepository: BehandlingRepository,
+    private val meldepliktRepository: MeldepliktRepository,
+) : AvklaringsbehovsLøser<FritakMeldepliktLøsning> {
 
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-    private val meldepliktRepository = repositoryProvider.provide<MeldepliktRepository>()
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        behandlingRepository = repositoryProvider.provide(),
+        meldepliktRepository = repositoryProvider.provide(),
+    )
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,

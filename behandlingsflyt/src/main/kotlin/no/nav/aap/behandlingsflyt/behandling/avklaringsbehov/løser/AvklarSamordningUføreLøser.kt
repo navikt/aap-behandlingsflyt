@@ -8,16 +8,19 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
-class AvklarSamordningUføreLøser(connection: DBConnection) : AvklaringsbehovsLøser<AvklarSamordningUføreLøsning> {
+class AvklarSamordningUføreLøser(
+    private val samordningUføreRepository: SamordningUføreRepository,
+    private val uføreRepository: UføreRepository,
+) : AvklaringsbehovsLøser<AvklarSamordningUføreLøsning> {
 
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val samordningUføreRepository = repositoryProvider.provide<SamordningUføreRepository>()
-    private val uføreRepository = repositoryProvider.provide<UføreRepository>()
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        samordningUføreRepository = repositoryProvider.provide(),
+        uføreRepository = repositoryProvider.provide(),
+    )
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,

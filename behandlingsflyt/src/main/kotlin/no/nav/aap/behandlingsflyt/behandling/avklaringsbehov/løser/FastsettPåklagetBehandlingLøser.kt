@@ -4,8 +4,9 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettPåklagetBehandlingLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
-class FastsettPåklagetBehandlingLøser(val connection: DBConnection) : AvklaringsbehovsLøser<FastsettPåklagetBehandlingLøsning>  {
+class FastsettPåklagetBehandlingLøser(repositoryProvider: RepositoryProvider) : AvklaringsbehovsLøser<FastsettPåklagetBehandlingLøsning>  {
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FastsettPåklagetBehandlingLøsning): LøsningsResultat {
         // TODO: Legg inn lagring av løsning
         return LøsningsResultat(begrunnelse = "Fortsetter")

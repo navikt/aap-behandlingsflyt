@@ -10,19 +10,29 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapAr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
-class AvklarOverstyrtLovvalgMedlemskapLøser(connection: DBConnection): AvklaringsbehovsLøser<AvklarOverstyrtLovvalgMedlemskapLøsning> {
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
-    private val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
-    private val sakRepository = repositoryProvider.provide<SakRepository>()
-    private val personopplysningRepository = repositoryProvider.provide<PersonopplysningRepository>()
+class AvklarOverstyrtLovvalgMedlemskapLøser(
+    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val sakRepository: SakRepository,
+    private val personopplysningRepository: PersonopplysningRepository,
+) : AvklaringsbehovsLøser<AvklarOverstyrtLovvalgMedlemskapLøsning> {
 
-    override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarOverstyrtLovvalgMedlemskapLøsning): LøsningsResultat {
-        medlemskapArbeidInntektRepository.lagreManuellVurdering(kontekst.behandlingId(),
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        medlemskapArbeidInntektRepository = repositoryProvider.provide(),
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
+        personopplysningRepository = repositoryProvider.provide(),
+    )
+
+    override fun løs(
+        kontekst: AvklaringsbehovKontekst,
+        løsning: AvklarOverstyrtLovvalgMedlemskapLøsning
+    ): LøsningsResultat {
+        medlemskapArbeidInntektRepository.lagreManuellVurdering(
+            kontekst.behandlingId(),
             ManuellVurderingForLovvalgMedlemskap(
                 lovvalgVedSøknadsTidspunkt = løsning.manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt,
                 medlemskapVedSøknadsTidspunkt = løsning.manuellVurderingForLovvalgMedlemskap.medlemskapVedSøknadsTidspunkt,
@@ -36,11 +46,17 @@ class AvklarOverstyrtLovvalgMedlemskapLøser(connection: DBConnection): Avklarin
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId())
         val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId())
             ?: throw IllegalStateException("Forventet å finne personopplysninger")
-        val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId())
-        val oppgittUtenlandsOppholdGrunnlag = medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(kontekst.behandlingId())
+        val medlemskapArbeidInntektGrunnlag =
+            medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId())
+        val oppgittUtenlandsOppholdGrunnlag =
+            medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(kontekst.behandlingId())
 
         Medlemskapvilkåret(vilkårsresultat, sak.rettighetsperiode).vurderOverstyrt(
-            MedlemskapLovvalgGrunnlag(medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag)
+            MedlemskapLovvalgGrunnlag(
+                medlemskapArbeidInntektGrunnlag,
+                personopplysningGrunnlag,
+                oppgittUtenlandsOppholdGrunnlag
+            )
         )
         vilkårsresultatRepository.lagre(kontekst.behandlingId(), vilkårsresultat)
 

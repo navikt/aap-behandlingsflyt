@@ -61,7 +61,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                         val behandling = repositoryProvider.provide<BehandlingRepository>()
                             .hent(BehandlingReferanse(req.behandlingsReferanse))
 
-                        AvklaringsbehovOrkestrator(connection, repositoryProvider)
+                        AvklaringsbehovOrkestrator(repositoryProvider)
                             .settPåVentMensVentePåMedisinskeOpplysninger(behandling.id, bruker())
 
                         val personIdent = sak.person.aktivIdent()

@@ -4,8 +4,10 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
-class ForeslåVedtakLøser(val connection: DBConnection) : AvklaringsbehovsLøser<ForeslåVedtakLøsning> {
+class ForeslåVedtakLøser() : AvklaringsbehovsLøser<ForeslåVedtakLøsning> {
+    constructor(repositoryProvider: RepositoryProvider): this()
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: ForeslåVedtakLøsning): LøsningsResultat {
         // DO NOTHING 4 Now

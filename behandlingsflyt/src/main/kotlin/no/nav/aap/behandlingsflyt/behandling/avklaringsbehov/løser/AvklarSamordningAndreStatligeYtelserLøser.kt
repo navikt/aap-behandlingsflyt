@@ -6,13 +6,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andresta
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
-class AvklarSamordningAndreStatligeYtelserLøser(connection: DBConnection) : AvklaringsbehovsLøser<AvklarSamordningAndreStatligeYtelserLøsning> {
+class AvklarSamordningAndreStatligeYtelserLøser(
+    private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
+) : AvklaringsbehovsLøser<AvklarSamordningAndreStatligeYtelserLøsning> {
 
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val samordningAndreStatligeYtelserRepository = repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>()
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        samordningAndreStatligeYtelserRepository = repositoryProvider.provide(),
+    )
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,

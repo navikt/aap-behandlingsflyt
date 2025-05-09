@@ -5,15 +5,17 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSyke
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
-class AvklarSykepengerErstatningLøser(val connection: DBConnection) :
-    AvklaringsbehovsLøser<AvklarSykepengerErstatningLøsning> {
+class AvklarSykepengerErstatningLøser(
+    private val behandlingRepository: BehandlingRepository,
+    private val sykepengerErstatningRepository: SykepengerErstatningRepository,
+) : AvklaringsbehovsLøser<AvklarSykepengerErstatningLøsning> {
 
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-    private val sykepengerErstatningRepository = repositoryProvider.provide<SykepengerErstatningRepository>()
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        behandlingRepository = repositoryProvider.provide(),
+        sykepengerErstatningRepository = repositoryProvider.provide(),
+    )
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,

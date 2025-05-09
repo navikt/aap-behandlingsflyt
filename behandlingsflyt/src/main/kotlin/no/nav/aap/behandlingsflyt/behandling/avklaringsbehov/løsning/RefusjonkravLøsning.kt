@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.Refusjonkrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.REFUSJON_KRAV
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = REFUSJON_KRAV)
@@ -21,7 +21,7 @@ class RefusjonkravLøsning(
         defaultValue = REFUSJON_KRAV
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5026`
 ) : AvklaringsbehovLøsning {
-    override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
-        return RefusjonkravLøser(connection).løs(kontekst, this)
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
+        return RefusjonkravLøser(repositoryProvider).løs(kontekst, this)
     }
 }

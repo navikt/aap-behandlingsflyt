@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsRes
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurderingerDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_HELSEINSTITUSJON_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_HELSEINSTITUSJON_KODE)
@@ -25,7 +25,7 @@ class AvklarHelseinstitusjonLøsning(
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5011`
 ) :
     AvklaringsbehovLøsning {
-    override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
-        return AvklarHelseinstitusjonLøser(connection).løs(kontekst, this)
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
+        return AvklarHelseinstitusjonLøser(repositoryProvider).løs(kontekst, this)
     }
 }

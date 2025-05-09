@@ -296,7 +296,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                         behandlingRepository.hent(lås.behandlingSkrivelås.id)
 
                                     AvklaringsbehovHendelseHåndterer(
-                                        AvklaringsbehovOrkestrator(connection, repositoryProvider),
+                                        AvklaringsbehovOrkestrator(repositoryProvider),
                                         avklaringsbehovRepository,
                                         behandlingRepository,
                                     ).håndtere(

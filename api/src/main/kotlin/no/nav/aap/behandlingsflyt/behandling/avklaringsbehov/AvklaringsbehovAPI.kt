@@ -53,7 +53,7 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                         )
 
                         AvklaringsbehovHendelseHåndterer(
-                            AvklaringsbehovOrkestrator(connection, repositoryProvider),
+                            AvklaringsbehovOrkestrator(repositoryProvider),
                             avklaringsbehovRepository,
                             behandlingRepository
                         ).håndtere(

@@ -7,18 +7,23 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
-class AvklarBistandLøser(val connection: DBConnection) :
-    AvklaringsbehovsLøser<AvklarBistandsbehovLøsning> {
+class AvklarBistandLøser(
+    private val behandlingRepository: BehandlingRepository,
+    private val bistandRepository: BistandRepository,
+    private val sykdomRepository: SykdomRepository,
+) : AvklaringsbehovsLøser<AvklarBistandsbehovLøsning> {
 
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-    private val bistandRepository = repositoryProvider.provide<BistandRepository>()
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        behandlingRepository = repositoryProvider.provide(),
+        bistandRepository = repositoryProvider.provide(),
+        sykdomRepository = repositoryProvider.provide(),
+    )
+
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
@@ -26,7 +31,7 @@ class AvklarBistandLøser(val connection: DBConnection) :
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
-        val nyesteSykdomsvurdering = repositoryProvider.provide<SykdomRepository>().hentHvisEksisterer(behandling.id)
+        val nyesteSykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)
             ?.sykdomsvurderinger?.maxByOrNull { it.opprettet }
 
         val bistandsVurdering = løsning.bistandsVurdering.tilBistandVurdering(

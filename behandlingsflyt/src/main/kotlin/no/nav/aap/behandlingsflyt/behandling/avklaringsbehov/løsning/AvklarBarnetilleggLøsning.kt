@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsRes
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingerForBarnetillegg
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_BARNETILLEGG_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_BARNETILLEGG_KODE)
@@ -17,7 +17,7 @@ class AvklarBarnetilleggLøsning(
     @JsonProperty("vurderingerForBarnetillegg", required = true) val vurderingerForBarnetillegg: VurderingerForBarnetillegg,
     @JsonProperty("behovstype", required = true, defaultValue = AVKLAR_BARNETILLEGG_KODE) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5009`
 ) : AvklaringsbehovLøsning {
-    override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
-        return AvklarBarnetilleggLøser(connection).løs(kontekst, this)
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
+        return AvklarBarnetilleggLøser(repositoryProvider).løs(kontekst, this)
     }
 }

@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsRes
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.SkrivBrevLøser
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.SKRIV_BREV_KODE
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 import java.util.UUID
 
 @JsonTypeName(value = SKRIV_BREV_KODE)
@@ -17,7 +17,7 @@ class SkrivBrevLøsning(
     @JsonProperty("behovstype", required = true, defaultValue = SKRIV_BREV_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5050`
 ) : AvklaringsbehovLøsning {
-    override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
-        return SkrivBrevLøser(connection).løs(kontekst, this)
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
+        return SkrivBrevLøser(repositoryProvider).løs(kontekst, this)
     }
 }

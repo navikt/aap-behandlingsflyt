@@ -4,9 +4,11 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LegeerklæringBestillingLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
-class LegeerklæringBestillingLøser(val connection: DBConnection) :
-    AvklaringsbehovsLøser<LegeerklæringBestillingLøsning> {
+class LegeerklæringBestillingLøser() : AvklaringsbehovsLøser<LegeerklæringBestillingLøsning> {
+    constructor(repositoryProvider: RepositoryProvider): this()
+
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: LegeerklæringBestillingLøsning): LøsningsResultat {
         return LøsningsResultat("Tatt av vent (ventet på bestilling av legeerklæring)")
     }

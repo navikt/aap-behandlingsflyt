@@ -4,11 +4,16 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
-class SkrivVedtaksbrevLøser(connection: DBConnection) : AvklaringsbehovsLøser<SkrivVedtaksbrevLøsning> {
+class SkrivVedtaksbrevLøser(
+    private val skrivBrevAvklaringsbehovLøser: SkrivBrevAvklaringsbehovLøser,
+) : AvklaringsbehovsLøser<SkrivVedtaksbrevLøsning> {
 
-    private val skrivBrevAvklaringsbehovLøser = SkrivBrevAvklaringsbehovLøser(connection)
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        skrivBrevAvklaringsbehovLøser = SkrivBrevAvklaringsbehovLøser(repositoryProvider)
+    )
+
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
         løsning: SkrivVedtaksbrevLøsning

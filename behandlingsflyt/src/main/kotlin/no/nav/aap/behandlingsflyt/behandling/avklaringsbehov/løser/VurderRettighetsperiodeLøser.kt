@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -14,21 +15,26 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 
-class VurderRettighetsperiodeLøser(connection: DBConnection) :
-    AvklaringsbehovsLøser<VurderRettighetsperiodeLøsning> {
+class VurderRettighetsperiodeLøser(
+    private val unleashGateway: UnleashGateway,
+    private val behandlingRepository: BehandlingRepository,
+    private val sakRepository: SakRepository,
+    private val grunnlagKopierer: GrunnlagKopierer,
+    private val rettighetsperiodeRepository: VurderRettighetsperiodeRepository,
+) : AvklaringsbehovsLøser<VurderRettighetsperiodeLøsning> {
 
-    private val unleashGateway = GatewayProvider.provide<UnleashGateway>()
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-    private val sakRepository = repositoryProvider.provide<SakRepository>()
-    private val grunnlagKopierer = GrunnlagKopiererImpl(repositoryProvider)
-    private val rettighetsperiodeRepository = repositoryProvider.provide<VurderRettighetsperiodeRepository>()
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        unleashGateway = GatewayProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
+        grunnlagKopierer = GrunnlagKopiererImpl(repositoryProvider),
+        rettighetsperiodeRepository = repositoryProvider.provide(),
+    )
 
     private val sakOgBehandlingService = SakOgBehandlingService(grunnlagKopierer, sakRepository, behandlingRepository)
 

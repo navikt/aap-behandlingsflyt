@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsRes
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.FastsettArbeidsevneDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FASTSETT_ARBEIDSEVNE_KODE
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = FASTSETT_ARBEIDSEVNE_KODE)
@@ -17,7 +17,7 @@ class FastsettArbeidsevneLøsning(
     @JsonProperty("arbeidsevneVurderinger", required = true) val arbeidsevneVurderinger: List<FastsettArbeidsevneDto>,
     @JsonProperty("behovstype", required = true, defaultValue = FASTSETT_ARBEIDSEVNE_KODE) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5004`
 ) : AvklaringsbehovLøsning {
-    override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
-        return FastsettArbeidsevneLøser(connection).løs(kontekst, this)
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
+        return FastsettArbeidsevneLøser(repositoryProvider).løs(kontekst, this)
     }
 }

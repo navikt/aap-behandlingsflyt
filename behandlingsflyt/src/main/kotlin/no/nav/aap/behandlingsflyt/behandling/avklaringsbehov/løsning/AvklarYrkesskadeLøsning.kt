@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsRes
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_YRKESSKADE_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_YRKESSKADE_KODE)
@@ -21,7 +21,7 @@ class AvklarYrkesskadeLøsning(
         defaultValue = AVKLAR_YRKESSKADE_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5013`
 ) : AvklaringsbehovLøsning {
-    override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
-        return AvklarYrkesskadeLøser(connection).løs(kontekst, this)
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
+        return AvklarYrkesskadeLøser(repositoryProvider).løs(kontekst, this)
     }
 }

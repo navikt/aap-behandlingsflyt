@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsRes
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.SamordningVentPaVirkningstidspunktLøser
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 
 @JsonTypeName(value = SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
@@ -18,7 +18,7 @@ class SamordningVentPaVirkningstidspunktLøsning(
         defaultValue = SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5025`
 ) : AvklaringsbehovLøsning {
-    override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
-        return SamordningVentPaVirkningstidspunktLøser(connection).løs(kontekst, this)
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
+        return SamordningVentPaVirkningstidspunktLøser(repositoryProvider).løs(kontekst, this)
     }
 }

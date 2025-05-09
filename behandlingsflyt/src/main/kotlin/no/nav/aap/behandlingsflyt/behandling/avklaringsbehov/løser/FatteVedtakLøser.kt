@@ -9,17 +9,20 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedta
 import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
-class FatteVedtakLøser(dbConnection: DBConnection) : AvklaringsbehovsLøser<FatteVedtakLøsning> {
+class FatteVedtakLøser(
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val behandlingRepository: BehandlingRepository,
+) : AvklaringsbehovsLøser<FatteVedtakLøsning> {
 
-    private val repositoryProvider = RepositoryRegistry.provider(dbConnection)
-    private val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+    )
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,

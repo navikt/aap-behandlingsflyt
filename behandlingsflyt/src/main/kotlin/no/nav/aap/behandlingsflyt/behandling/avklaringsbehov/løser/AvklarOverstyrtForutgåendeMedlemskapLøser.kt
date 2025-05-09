@@ -13,20 +13,23 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapAr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningForutgåendeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
-class AvklarOverstyrtForutgåendeMedlemskapLøser(connection: DBConnection) :
-    AvklaringsbehovsLøser<AvklarOverstyrtForutgåendeMedlemskapLøsning> {
+class AvklarOverstyrtForutgåendeMedlemskapLøser(
+    private val forutgåendeMedlemskapArbeidInntektRepository: MedlemskapArbeidInntektForutgåendeRepository,
+    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val sakRepository: SakRepository,
+    private val personopplysningForutgåendeRepository: PersonopplysningForutgåendeRepository,
+) : AvklaringsbehovsLøser<AvklarOverstyrtForutgåendeMedlemskapLøsning> {
 
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val forutgåendeMedlemskapArbeidInntektRepository =
-        repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
-    private val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
-    private val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
-    private val sakRepository = repositoryProvider.provide<SakRepository>()
-    private val personopplysningForutgåendeRepository =
-        repositoryProvider.provide<PersonopplysningForutgåendeRepository>()
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        forutgåendeMedlemskapArbeidInntektRepository = repositoryProvider.provide(),
+        medlemskapArbeidInntektRepository = repositoryProvider.provide(),
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
+        personopplysningForutgåendeRepository = repositoryProvider.provide(),
+    )
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,

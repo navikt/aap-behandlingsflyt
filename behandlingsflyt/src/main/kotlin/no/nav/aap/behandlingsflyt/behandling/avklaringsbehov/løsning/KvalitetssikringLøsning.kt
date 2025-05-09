@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsRes
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.KVALITETSSIKRING_KODE
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonTypeName(value = KVALITETSSIKRING_KODE)
 class KvalitetssikringLøsning(
@@ -19,7 +19,7 @@ class KvalitetssikringLøsning(
         defaultValue = KVALITETSSIKRING_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5097`
 ) : AvklaringsbehovLøsning {
-    override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
-        return KvalitetssikrerLøser(connection).løs(kontekst, this)
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
+        return KvalitetssikrerLøser(repositoryProvider).løs(kontekst, this)
     }
 }

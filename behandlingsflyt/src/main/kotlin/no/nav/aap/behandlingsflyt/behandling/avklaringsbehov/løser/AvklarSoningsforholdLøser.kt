@@ -8,19 +8,21 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.SoningsvurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
-class AvklarSoningsforholdLøser(connection: DBConnection) :
-    AvklaringsbehovsLøser<AvklarSoningsforholdLøsning> {
+class AvklarSoningsforholdLøser(
+    private val behandlingRepository: BehandlingRepository,
+    private val soningRepository: InstitusjonsoppholdRepository,
+) : AvklaringsbehovsLøser<AvklarSoningsforholdLøsning> {
 
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-    private val soningRepository = repositoryProvider.provide<InstitusjonsoppholdRepository>()
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        behandlingRepository = repositoryProvider.provide(),
+        soningRepository = repositoryProvider.provide(),
+    )
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,

@@ -10,15 +10,20 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Instant
 
-class TrekkSøknadLøser(connection: DBConnection) : AvklaringsbehovsLøser<TrekkSøknadLøsning> {
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
-    private val trekkSøknadRepository = repositoryProvider.provide<TrukketSøknadRepository>()
-    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+class TrekkSøknadLøser(
+    private val mottattDokumentRepository: MottattDokumentRepository,
+    private val trekkSøknadRepository: TrukketSøknadRepository,
+    private val behandlingRepository: BehandlingRepository,
+) : AvklaringsbehovsLøser<TrekkSøknadLøsning> {
+
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        mottattDokumentRepository = repositoryProvider.provide(),
+        trekkSøknadRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+    )
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,

@@ -7,16 +7,17 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Kvalitetss
 import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
-class KvalitetssikrerLøser(val connection: DBConnection) :
-    AvklaringsbehovsLøser<KvalitetssikringLøsning> {
+class KvalitetssikrerLøser(
+    private val behandlingRepository: BehandlingRepository,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+) : AvklaringsbehovsLøser<KvalitetssikringLøsning> {
 
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-    private val avklaringsbehovRepository =
-        repositoryProvider.provide<AvklaringsbehovRepository>()
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        behandlingRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+    )
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,

@@ -8,16 +8,17 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn.ForeldreansvarVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklarBarnetilleggLøser(
-    val connection: DBConnection
+    private val barnRepository: BarnRepository,
 ) : AvklaringsbehovsLøser<AvklarBarnetilleggLøsning> {
 
-    private val barnRepository = RepositoryRegistry.provider(connection).provide<BarnRepository>()
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        barnRepository = repositoryProvider.provide(),
+    )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarBarnetilleggLøsning): LøsningsResultat {
 

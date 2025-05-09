@@ -25,15 +25,15 @@ import java.time.LocalDate
 import java.time.Period
 
 class AvklaringsbehovOrkestrator(
-    private val connection: DBConnection,
+    private val repositoryProvider: RepositoryProvider,
     private val behandlingHendelseService: BehandlingHendelseService,
     private val flytOrkestrator: FlytOrkestrator,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val behandlingRepository: BehandlingRepository,
     private val prosesserBehandling: ProsesserBehandlingService,
 ) {
-    constructor(connection: DBConnection, repositoryProvider: RepositoryProvider): this(
-        connection = connection,
+    constructor(repositoryProvider: RepositoryProvider): this(
+        repositoryProvider = repositoryProvider,
         behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider),
         flytOrkestrator = FlytOrkestrator(repositoryProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
@@ -41,7 +41,7 @@ class AvklaringsbehovOrkestrator(
         prosesserBehandling = ProsesserBehandlingService(repositoryProvider),
     )
 
-    constructor(connection: DBConnection): this(connection, RepositoryRegistry.provider(connection))
+    constructor(connection: DBConnection): this(RepositoryRegistry.provider(connection))
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -115,7 +115,7 @@ class AvklaringsbehovOrkestrator(
         avklaringsbehovLøsning: AvklaringsbehovLøsning,
         bruker: Bruker
     ) {
-        val løsningsResultat = avklaringsbehovLøsning.løs(connection, AvklaringsbehovKontekst(bruker, kontekst))
+        val løsningsResultat = avklaringsbehovLøsning.løs(repositoryProvider, AvklaringsbehovKontekst(bruker, kontekst))
 
         avklaringsbehovene.løsAvklaringsbehov(
             avklaringsbehovLøsning.definisjon(),

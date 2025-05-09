@@ -271,7 +271,7 @@ class BistandsvilkåretTest {
                 overgangBegrunnelse = null,
             )
 
-            AvklarBistandLøser(connection).løs(
+            AvklarBistandLøser(RepositoryRegistry.provider(connection)).løs(
                 AvklaringsbehovKontekst(
                     bruker = Bruker(sak.person.aktivIdent().identifikator),
                     kontekst = FlytKontekst(

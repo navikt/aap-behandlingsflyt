@@ -6,20 +6,29 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
-class TjenestepensjonRefusjonskravLøser(val connection: DBConnection) :
-    AvklaringsbehovsLøser<TjenestepensjonRefusjonskravLøsning> {
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val sakRepository = repositoryProvider.provide<SakRepository>()
-    private val tjenestepensjonRefusjonsKravVurderingRepository =
-        repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>()
+class TjenestepensjonRefusjonskravLøser(
+    private val sakRepository: SakRepository,
+    private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository,
+) : AvklaringsbehovsLøser<TjenestepensjonRefusjonskravLøsning> {
 
-    override fun løs(kontekst: AvklaringsbehovKontekst, løsning: TjenestepensjonRefusjonskravLøsning): LøsningsResultat {
-        val vurdering  = validerRefusjonsDato(kontekst, løsning)
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        sakRepository = repositoryProvider.provide(),
+        tjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide(),
+    )
 
-        tjenestepensjonRefusjonsKravVurderingRepository.lagre(kontekst.kontekst.sakId, kontekst.behandlingId(), vurdering)
+    override fun løs(
+        kontekst: AvklaringsbehovKontekst,
+        løsning: TjenestepensjonRefusjonskravLøsning
+    ): LøsningsResultat {
+        val vurdering = validerRefusjonsDato(kontekst, løsning)
+
+        tjenestepensjonRefusjonsKravVurderingRepository.lagre(
+            kontekst.kontekst.sakId,
+            kontekst.behandlingId(),
+            vurdering
+        )
         return LøsningsResultat("Vurdert SamordningRefusjonskrav")
     }
 

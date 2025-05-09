@@ -4,8 +4,11 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SamordningVentPaVirkningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
-class SamordningVentPaVirkningstidspunktLøser(val connection: DBConnection) : AvklaringsbehovsLøser<SamordningVentPaVirkningstidspunktLøsning>  {
+class SamordningVentPaVirkningstidspunktLøser() : AvklaringsbehovsLøser<SamordningVentPaVirkningstidspunktLøsning>  {
+    constructor(repositoryProvider: RepositoryProvider): this()
+
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
         løsning: SamordningVentPaVirkningstidspunktLøsning

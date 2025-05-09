@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.Tjenestepens
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.SAMORDNING_REFUSJONS_KRAV
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = SAMORDNING_REFUSJONS_KRAV)
@@ -21,7 +21,7 @@ class TjenestepensjonRefusjonskravLøsning (
         defaultValue = SAMORDNING_REFUSJONS_KRAV
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5056`
 ): AvklaringsbehovLøsning {
-    override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
-        return TjenestepensjonRefusjonskravLøser(connection).løs(kontekst, this)
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
+        return TjenestepensjonRefusjonskravLøser(repositoryProvider).løs(kontekst, this)
     }
 }

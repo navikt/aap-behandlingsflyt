@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsRes
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.BESTILL_BREV_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonTypeName(value = BESTILL_BREV_KODE)
 class BrevbestillingLøsning(
@@ -19,7 +19,7 @@ class BrevbestillingLøsning(
         defaultValue = BESTILL_BREV_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`9002`
 ) : AvklaringsbehovLøsning {
-    override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
-        return BrevbestillingLøser(connection).løs(kontekst, this)
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
+        return BrevbestillingLøser(repositoryProvider).løs(kontekst, this)
     }
 }

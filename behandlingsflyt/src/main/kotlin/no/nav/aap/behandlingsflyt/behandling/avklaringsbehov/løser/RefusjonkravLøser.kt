@@ -6,13 +6,17 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
-class RefusjonkravLøser(val connection: DBConnection) : AvklaringsbehovsLøser<RefusjonkravLøsning> {
-    private val repositoryProvider = RepositoryRegistry.provider(connection)
-    private val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
-    private val sakRepository = repositoryProvider.provide<SakRepository>()
+class RefusjonkravLøser(
+    private val refusjonkravRepository: RefusjonkravRepository,
+    private val sakRepository: SakRepository,
+) : AvklaringsbehovsLøser<RefusjonkravLøsning> {
+
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        refusjonkravRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
+    )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: RefusjonkravLøsning): LøsningsResultat {
         val vurdering = validerRefusjonDato(kontekst, løsning)

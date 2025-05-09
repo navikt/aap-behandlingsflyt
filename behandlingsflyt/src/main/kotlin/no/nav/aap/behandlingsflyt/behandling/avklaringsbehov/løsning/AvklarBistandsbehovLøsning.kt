@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsRes
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_BISTANDSBEHOV_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -23,13 +23,13 @@ class AvklarBistandsbehovLøsning(
         defaultValue = AVKLAR_BISTANDSBEHOV_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5006`
 ) : AvklaringsbehovLøsning {
-    override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
         if (this.bistandsVurdering.skalVurdereAapIOvergangTilArbeid == true
             || this.bistandsVurdering.skalVurdereAapIOvergangTilUføre == true
         ) {
             TODO("Implementer støtte for oppfylt 11-17 og 11-18 og kvote")
         }
-        return AvklarBistandLøser(connection).løs(kontekst, this)
+        return AvklarBistandLøser(repositoryProvider).løs(kontekst, this)
     }
 }
 

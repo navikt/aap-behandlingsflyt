@@ -5,14 +5,15 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettAr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevnePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 class FastsettArbeidsevneLøser(
-    connection: DBConnection,
+    private val arbeidsevneRepository: ArbeidsevneRepository,
 ) : AvklaringsbehovsLøser<FastsettArbeidsevneLøsning> {
-    private val arbeidsevneRepository =
-        RepositoryRegistry.provider(connection).provide<ArbeidsevneRepository>()
+
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        arbeidsevneRepository = repositoryProvider.provide(),
+    )
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,

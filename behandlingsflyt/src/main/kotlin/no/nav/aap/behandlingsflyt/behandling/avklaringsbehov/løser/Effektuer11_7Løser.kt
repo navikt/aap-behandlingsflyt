@@ -5,14 +5,15 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Effektuer1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Vurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 class Effektuer11_7Løser(
-    connection: DBConnection,
+    private val effektuer117repository: Effektuer11_7Repository,
 ) : AvklaringsbehovsLøser<Effektuer11_7Løsning> {
-    private val effektuer117repository =
-        RepositoryRegistry.provider(connection).provide<Effektuer11_7Repository>()
+
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        effektuer117repository = repositoryProvider.provide(),
+    )
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
