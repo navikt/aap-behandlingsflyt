@@ -181,7 +181,10 @@ class StegOrkestrator(
     private fun behandleSteg(kontekstMedPerioder: FlytKontekstMedPerioder): Transisjon {
         val simpleName = behandlingSteg.javaClass.simpleName
         val utførStegTimer =
-            Timer.builder("behandlingsflyt_utfør_steg_tid").tags("steg", simpleName).register(prometheus)
+            Timer.builder("behandlingsflyt_utfør_steg_tid")
+                .tags("steg", simpleName)
+                .publishPercentileHistogram()
+                .register(prometheus)
         val stegResultat =
             utførStegTimer.record(Supplier {
                 behandlingSteg.utfør(kontekstMedPerioder)
