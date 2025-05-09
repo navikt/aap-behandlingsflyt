@@ -324,7 +324,8 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                     )
                 ) { _, request ->
                     val faktagrunnlag = dataSource.transaction { connection ->
-                        FaktagrunnlagService.konstruer(connection)
+                        val repositoryProvider = RepositoryRegistry.provider(connection)
+                        FaktagrunnlagService.konstruer(repositoryProvider)
                             .finnFaktagrunnlag(
                                 behandlingReferanse = request.behandlingReferanse,
                                 faktagrunnlag = request.faktagrunnlag

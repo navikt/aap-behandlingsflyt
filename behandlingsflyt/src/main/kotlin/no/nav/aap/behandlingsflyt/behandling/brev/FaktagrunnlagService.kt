@@ -13,8 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Faktagrunnlag.Grunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.FaktagrunnlagType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 class FaktagrunnlagService(
     private val behandlingRepository: BehandlingRepository,
@@ -23,21 +22,11 @@ class FaktagrunnlagService(
 ) {
 
     companion object {
-        fun konstruer(connection: DBConnection): FaktagrunnlagService {
-            val repositoryProvider = RepositoryRegistry.provider(connection)
+        fun konstruer(repositoryProvider: RepositoryProvider): FaktagrunnlagService {
             return FaktagrunnlagService(
                 behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
                 effektuer117repository = repositoryProvider.provide<Effektuer11_7Repository>(),
-                beregningService =
-                    BeregningService(
-                        inntektGrunnlagRepository = repositoryProvider.provide(),
-                        sykdomRepository = repositoryProvider.provide(),
-                        studentRepository = repositoryProvider.provide(),
-                        uføreRepository = repositoryProvider.provide(),
-                        beregningsgrunnlagRepository = repositoryProvider.provide(),
-                        beregningVurderingRepository = repositoryProvider.provide(),
-                        yrkesskadeRepository = repositoryProvider.provide()
-                    )
+                beregningService = BeregningService(repositoryProvider)
             )
         }
     }
