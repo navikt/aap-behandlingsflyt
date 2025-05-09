@@ -59,7 +59,7 @@ class StartBehandlingSteg private constructor(
         }
 
         if (kontekst.behandlingType == TypeBehandling.Klage) {
-            if (Miljø.erLokal()) {
+            if (Miljø.erLokal() || Miljø.erDev()) {
                 return Fullført
             }
             return FantVentebehov(

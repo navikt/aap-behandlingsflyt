@@ -2633,8 +2633,8 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `Skal sette behandling på vent hvis man mottar klage, og man ikke kjører lokalt`() {
-        System.setProperty("NAIS_CLUSTER_NAME", "noeannet-gcp")
+    fun `Skal sette behandling på vent hvis man mottar klage i prod`() {
+        System.setProperty("NAIS_CLUSTER_NAME", "prod-test")
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val sak = hentSak(ident, periode)
@@ -2660,10 +2660,43 @@ class FlytOrkestratorTest {
 
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(nyBehandling.id).first()
 
-        assertThat(åpneAvklaringsbehov.erÅpent())
-        assertThat(åpneAvklaringsbehov.erVentepunkt())
-        assertThat(åpneAvklaringsbehov.definisjon == Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON)
+        assertTrue(åpneAvklaringsbehov.erÅpent())
+        assertTrue(åpneAvklaringsbehov.erVentepunkt())
+        assertThat(åpneAvklaringsbehov.definisjon).isEqualTo(Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON)
         System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
+    }
+
+    @Test
+    fun `Klageflyt`() {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val sak = hentSak(ident, periode)
+
+        opprettBehandling(
+            sak.id,
+            årsaker = listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD)),
+            forrigeBehandlingId = null,
+            typeBehandling = TypeBehandling.Førstegangsbehandling
+        )
+
+        val nyBehandling = sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("21"),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+                InnsendingType.KLAGE,
+                strukturertDokument = null,
+                periode
+            )
+        )
+
+        assertThat(nyBehandling.typeBehandling() == TypeBehandling.Klage)
+
+        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(nyBehandling.id).first()
+
+        // TODO: Utvid denne testen
+        
+        assertTrue(åpneAvklaringsbehov.erÅpent())
+        assertThat(åpneAvklaringsbehov.definisjon).isEqualTo(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
     }
 
     @Test
