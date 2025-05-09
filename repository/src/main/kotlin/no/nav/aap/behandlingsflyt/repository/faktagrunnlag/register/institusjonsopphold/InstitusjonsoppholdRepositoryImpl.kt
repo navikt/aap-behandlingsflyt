@@ -315,6 +315,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
             delete from soning_vurdering where soning_vurderinger_id = ANY(?::bigint[]);
             delete from soning_vurderinger where id = ANY(?::bigint[]);
             delete from opphold where opphold_person_id = ANY(?::bigint[]);
+            delete from opphold_person where id = ANY(?::bigint[]);
         """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId.id)
@@ -323,6 +324,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                 setLongArray(4, soningVurderingerIds)
                 setLongArray(5, soningVurderingerIds)
                 setLongArray(6, oppholdPersonIds)
+                setLongArray(7, oppholdPersonIds)
             }
         }
     }
