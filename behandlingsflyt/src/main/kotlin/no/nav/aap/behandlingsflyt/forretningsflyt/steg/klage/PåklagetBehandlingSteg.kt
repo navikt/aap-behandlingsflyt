@@ -1,26 +1,43 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class PåklagetBehandlingSteg private constructor(): BehandlingSteg {
+class PåklagetBehandlingSteg private constructor(
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        return FantAvklaringsbehov(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
+        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+
+        return if (avklaringsbehov.harIkkeBlittLøst(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)) {
+            FantAvklaringsbehov(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
+        } else Fullført
     }
 
     companion object : FlytSteg {
         override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
-            return PåklagetBehandlingSteg()
+            return PåklagetBehandlingSteg(repositoryProvider.provide<AvklaringsbehovRepository>())
         }
 
         override fun type(): StegType {
             return StegType.PÅKLAGET_BEHANDLING
         }
     }
+
+    private fun Avklaringsbehovene.harIkkeBlittLøst(definisjon: Definisjon): Boolean {
+        return this.alle()
+            .filter { it.definisjon == definisjon }
+            .none { it.status() == Status.AVSLUTTET }
+    }
+
 }
