@@ -131,7 +131,7 @@ class MedlemskapLovvalgVurderingService {
             kilde = listOf(Kilde.PDL),
             indikasjon = Indikasjon.UTENFOR_NORGE,
             opplysning = "Utenlandsk adresse",
-            resultat = bosattUtenforNorge,
+            resultat = bosattUtenforNorge || !utenlandsAddresserGrunnlag.isNullOrEmpty(),
             fordypelse = jsonGrunnlag,
             utenlandsAddresserGrunnlag = utenlandsAddresserGrunnlag
         )
