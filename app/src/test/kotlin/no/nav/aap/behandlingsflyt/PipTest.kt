@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.pip.IdenterDTO
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -24,7 +25,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -54,7 +54,7 @@ class PipTest {
         // Starter server
         private val server = embeddedServer(Netty, port = 0) {
             System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
-            server(dbConfig = dbConfig)
+            server(dbConfig = dbConfig, repositoryRegistry = postgresRepositoryRegistry)
         }
 
         @JvmStatic
@@ -94,7 +94,7 @@ class PipTest {
                 TypeBehandling.Førstegangsbehandling, null
             )
 
-            val barnRepository = RepositoryRegistry.provider(connection).provide<BarnRepository>()
+            val barnRepository = postgresRepositoryRegistry.provider(connection).provide<BarnRepository>()
 
             barnRepository.lagreRegisterBarn(behandling.id, setOf(Ident("regbarn")))
             barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = setOf(Ident("oppgittbarn"))))
@@ -146,7 +146,7 @@ class PipTest {
                 TypeBehandling.Førstegangsbehandling, null
             )
 
-            val barnRepository = RepositoryRegistry.provider(connection).provide<BarnRepository>()
+            val barnRepository = postgresRepositoryRegistry.provider(connection).provide<BarnRepository>()
 
             barnRepository.lagreRegisterBarn(behandling.id, setOf(Ident("regbarn")))
             barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = setOf(Ident("oppgittbarn"))))

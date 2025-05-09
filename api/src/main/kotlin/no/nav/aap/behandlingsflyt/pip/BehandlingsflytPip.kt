@@ -7,14 +7,14 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.pip.IdentPåSak.Companion.filterDistinctIdent
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
-fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
+fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/pip/api") {
         route("/sak/{saksnummer}/identer") {
             authorizedGet<SakDTO, IdenterDTO>(
@@ -26,7 +26,7 @@ fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
             ) { req ->
                 val saksnummer = req.saksnummer
                 val identer = dataSource.transaction(readOnly = true) { connection ->
-                    RepositoryRegistry.provider(connection).provide<PipRepository>()
+                    repositoryRegistry.provider(connection).provide<PipRepository>()
                         .finnIdenterPåSak(Saksnummer(saksnummer))
                 }
                 respond(
@@ -48,7 +48,7 @@ fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
             ) { req ->
                 val behandlingsnummer = req.behandlingsnummer
                 val identer = dataSource.transaction(readOnly = true) { connection ->
-                    RepositoryRegistry.provider(connection).provide<PipRepository>()
+                    repositoryRegistry.provider(connection).provide<PipRepository>()
                         .finnIdenterPåBehandling(BehandlingReferanse(behandlingsnummer))
                 }
                 respond(

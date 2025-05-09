@@ -33,8 +33,8 @@ import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -46,13 +46,13 @@ import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.verdityper.dokument.JournalpostId
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
+fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/sak").tag(Tags.Sak) {
         route("/ekstern/finn").authorizedPost<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO>(
             AuthorizationMachineToMachineConfig(authorizedRoles = listOf("finn-sak"))
         ) { _, dto ->
             val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
-                val repositoryProvider = RepositoryRegistry.provider(connection)
+                val repositoryProvider = repositoryRegistry.provider(connection)
                 val ident = Ident(dto.ident)
                 val person = repositoryProvider.provide<PersonRepository>().finn(ident)
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
@@ -96,7 +96,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
         @Suppress("UnauthorizedPost")
         route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
             val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
-                val repositoryProvider = RepositoryRegistry.provider(connection)
+                val repositoryProvider = repositoryRegistry.provider(connection)
                 val ident = Ident(dto.ident)
                 val person = repositoryProvider.provide<PersonRepository>().finn(ident)
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
@@ -171,7 +171,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             )
             { _, dto ->
                 val behandlinger: SakOgBehandlingDTO? = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val repositoryProvider = repositoryRegistry.provider(connection)
                     val ident = Ident(dto.ident)
                     val person = repositoryProvider.provide<PersonRepository>().finn(ident)
 
@@ -215,7 +215,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 )
             ) { _, dto ->
                 val saken: SaksinfoDTO = dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val repositoryProvider = repositoryRegistry.provider(connection)
                     val ident = Ident(dto.ident)
                     val periode = Periode(
                         dto.søknadsdato, dto.søknadsdato.plusYears(1).minusDays(1)
@@ -242,7 +242,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             route("/alle").get<Unit, List<SaksinfoDTO>>(TagModule(listOf(Tags.Sak))) {
                 if (Miljø.er() == MiljøKode.DEV || Miljø.er() == MiljøKode.LOKALT) {
                     val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
-                        val repositoryProvider = RepositoryRegistry.provider(connection)
+                        val repositoryProvider = repositoryRegistry.provider(connection)
                         repositoryProvider.provide<SakRepository>().finnAlle().map { sak ->
                             SaksinfoDTO(
                                 saksnummer = sak.saksnummer.toString(),
@@ -270,7 +270,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 val saksnummer = req.saksnummer
                 var søknadErTrukket: Boolean? = null
                 val (sak, behandlinger) = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val repositoryProvider = repositoryRegistry.provider(connection)
                     val resultatUtleder = ResultatUtleder(repositoryProvider)
                     val sak = repositoryProvider.provide<SakRepository>()
                         .hent(saksnummer = Saksnummer(saksnummer))
@@ -356,7 +356,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 val saksnummer = req.saksnummer
 
                 val ident = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val repositoryProvider = repositoryRegistry.provider(connection)
                     val sak =
                         repositoryProvider.provide<SakRepository>()
                             .hent(saksnummer = Saksnummer(saksnummer))

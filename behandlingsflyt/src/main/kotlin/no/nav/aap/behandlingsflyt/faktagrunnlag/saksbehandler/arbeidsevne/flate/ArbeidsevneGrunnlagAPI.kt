@@ -16,14 +16,14 @@ import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import javax.sql.DataSource
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
-fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(dataSource: DataSource) {
+fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling/{referanse}/grunnlag/arbeidsevne") {
         authorizedGet<BehandlingReferanse, ArbeidsevneGrunnlagDto>(
             AuthorizationParamPathConfig(
@@ -33,7 +33,7 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(dataSource: DataSource) {
             )
         ) { behandlingReferanse ->
 
-            arbeidsevneGrunnlag(dataSource, behandlingReferanse, token())?.let { respond(it) } ?: respondWithStatus(
+            arbeidsevneGrunnlag(dataSource, behandlingReferanse, token(), repositoryRegistry)?.let { respond(it) } ?: respondWithStatus(
                 HttpStatusCode.NoContent
             )
         }
@@ -42,7 +42,7 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(dataSource: DataSource) {
             authorizedPost<BehandlingReferanse, SimulertArbeidsevneResultatDto, SimulerArbeidsevneDto>(
                 AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
             ) { behandlingReferanse, dto ->
-                respond(simuleringsresulat(dataSource, behandlingReferanse, dto))
+                respond(simuleringsresulat(dataSource, behandlingReferanse, dto, repositoryRegistry))
             }
         }
 
@@ -52,10 +52,11 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(dataSource: DataSource) {
 private fun arbeidsevneGrunnlag(
     dataSource: DataSource,
     behandlingReferanse: BehandlingReferanse,
-    token: OidcToken
+    token: OidcToken,
+    repositoryRegistry: RepositoryRegistry
 ): ArbeidsevneGrunnlagDto? {
     return dataSource.transaction { connection ->
-        val repositoryProvider = RepositoryRegistry.provider(connection)
+        val repositoryProvider = repositoryRegistry.provider(connection)
         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
         val behandling: Behandling =
             BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
@@ -87,10 +88,11 @@ private fun arbeidsevneGrunnlag(
 private fun simuleringsresulat(
     dataSource: DataSource,
     behandlingReferanse: BehandlingReferanse,
-    dto: SimulerArbeidsevneDto
+    dto: SimulerArbeidsevneDto,
+    repositoryRegistry: RepositoryRegistry
 ): SimulertArbeidsevneResultatDto {
     return dataSource.transaction(readOnly = true) { con ->
-        val repositoryProvider = RepositoryRegistry.provider(con)
+        val repositoryProvider = repositoryRegistry.provider(con)
         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
         val arbeidsevneRepository = repositoryProvider.provide<ArbeidsevneRepository>()
         val behandling =

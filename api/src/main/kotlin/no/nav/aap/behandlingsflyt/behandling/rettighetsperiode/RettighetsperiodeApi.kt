@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
@@ -30,7 +30,7 @@ class RettighetsperiodeVurderingDto(
 )
 
 
-fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(dataSource: DataSource) {
+fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling/{referanse}/grunnlag/rettighetsperiode").authorizedGet<BehandlingReferanse, RettighetsperiodeGrunnlagDto>(
         AuthorizationParamPathConfig(
             operasjon = Operasjon.SE,
@@ -38,7 +38,7 @@ fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(dataSource: DataSource) {
         )
     ) { req ->
         val trukketSøknadVurderingDto = dataSource.transaction(readOnly = true) { connection ->
-            val repositoryProvider = RepositoryRegistry.provider(connection)
+            val repositoryProvider = repositoryRegistry.provider(connection)
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val rettighetsperiodeRepository = repositoryProvider.provide<VurderRettighetsperiodeRepository>()
             val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()

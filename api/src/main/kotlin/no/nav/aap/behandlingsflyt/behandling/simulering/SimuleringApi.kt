@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
@@ -21,7 +21,7 @@ import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.utbetal.simulering.UtbetalingOgSimuleringDto
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.simuleringAPI(dataSource: DataSource) {
+fun NormalOpenAPIRoute.simuleringAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling") {
         route("/{referanse}/utbetaling/simulering") {
             authorizedGet<BehandlingReferanse, List<UtbetalingOgSimuleringDto>>(
@@ -31,7 +31,7 @@ fun NormalOpenAPIRoute.simuleringAPI(dataSource: DataSource) {
                 )
             ) { req ->
                 val tilkjentYtelseDto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryFactory = RepositoryRegistry.provider(connection)
+                    val repositoryFactory = repositoryRegistry.provider(connection)
                     val behandlingRepo = repositoryFactory.provide<BehandlingRepository>()
                     val utbetalingService = UtbetalingService(
                         sakRepository = repositoryFactory.provide<SakRepository>(),

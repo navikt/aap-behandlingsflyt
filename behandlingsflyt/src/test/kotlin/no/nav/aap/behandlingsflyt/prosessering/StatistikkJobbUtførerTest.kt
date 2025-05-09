@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentRekkefølge
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
@@ -56,18 +55,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.pip.IdentPåSak
 import no.nav.aap.behandlingsflyt.pip.PipRepository
-import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -96,7 +90,6 @@ import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
-import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
@@ -113,21 +106,6 @@ import java.util.*
 class StatistikkJobbUtførerTest {
     @BeforeEach
     fun setUp() {
-        RepositoryRegistry.register(BehandlingRepositoryImpl::class)
-            .register(PersonRepositoryImpl::class)
-            .register(SakRepositoryImpl::class)
-            .register(AvklaringsbehovRepositoryImpl::class)
-            .register(VilkårsresultatRepositoryImpl::class)
-            .register(PipRepositoryImpl::class)
-            .register(TaSkriveLåsRepositoryImpl::class)
-            .register(BeregningsgrunnlagRepositoryImpl::class)
-            .register(PersonopplysningRepositoryImpl::class)
-            .register(TilkjentYtelseRepositoryImpl::class)
-            .register(AktivitetspliktRepositoryImpl::class)
-            .register(BrevbestillingRepositoryImpl::class)
-            .register<PersonopplysningForutgåendeRepositoryImpl>()
-            .register<TrukketSøknadRepositoryImpl>()
-            .status()
         GatewayRegistry.register<PdlBarnGateway>()
             .register<PdlIdentGateway>()
             .register<PdlPersoninfoBulkGateway>()
@@ -226,7 +204,7 @@ class StatistikkJobbUtførerTest {
                 pipRepository = PipRepositoryImpl(connection),
                 sykdomRepository = SykdomRepositoryImpl(connection),
                 underveisRepository = UnderveisRepositoryImpl(connection),
-                trukketSøknadService = TrukketSøknadService(RepositoryRegistry.provider(connection)),
+                trukketSøknadService = TrukketSøknadService(postgresRepositoryRegistry.provider(connection)),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -413,7 +391,7 @@ class StatistikkJobbUtførerTest {
                 MottattDokumentRepositoryImpl(connection),
                 sykdomRepository = SykdomRepositoryImpl(connection),
                 underveisRepository = UnderveisRepositoryImpl(connection),
-                trukketSøknadService = TrukketSøknadService(RepositoryRegistry.provider(connection)),
+                trukketSøknadService = TrukketSøknadService(postgresRepositoryRegistry.provider(connection)),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )

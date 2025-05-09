@@ -9,13 +9,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.underveisVurderingerAPI(datasource: DataSource) {
+fun NormalOpenAPIRoute.underveisVurderingerAPI(datasource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling/underveis/{referanse}").authorizedGet<BehandlingReferanse, List<UnderveisperiodeDto>>(
         AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse")),
         null,
@@ -29,7 +29,7 @@ fun NormalOpenAPIRoute.underveisVurderingerAPI(datasource: DataSource) {
         )
     ) { behandlingReferanse ->
         val underveisGrunnlag = datasource.transaction(readOnly = true) { conn ->
-            val repositoryProvider = RepositoryRegistry.provider(conn)
+            val repositoryProvider = repositoryRegistry.provider(conn)
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val behandling =
                 BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)

@@ -23,11 +23,11 @@ import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
@@ -38,6 +38,10 @@ import java.util.*
 
 @Fakes
 class TilkjentYtelseAPITest {
+    private val repositoryRegistry = RepositoryRegistry()
+        .register<InMemoryTilkjentYtelseRepository>()
+        .register<InMemoryBehandlingRepository>()
+
     companion object {
         private val server = MockOAuth2Server()
 
@@ -45,10 +49,6 @@ class TilkjentYtelseAPITest {
         @JvmStatic
         fun beforeAll() {
             server.start()
-
-            RepositoryRegistry
-                .register<InMemoryTilkjentYtelseRepository>()
-                .register<InMemoryBehandlingRepository>()
         }
     }
 
@@ -81,7 +81,7 @@ class TilkjentYtelseAPITest {
 
         testApplication {
             installApplication {
-                tilkjentYtelseAPI(ds)
+                tilkjentYtelseAPI(ds, repositoryRegistry)
             }
             val jwt = issueToken("nav:aap:afpoffentlig.read")
 

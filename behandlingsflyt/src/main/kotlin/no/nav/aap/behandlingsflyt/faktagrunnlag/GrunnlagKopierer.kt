@@ -1,19 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
 interface GrunnlagKopierer {
     fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId)
-
-    companion object {
-        /* TODO: Flytt GrunnlagKopiererImpl til repository-modulen og bruk RepositoryProvider. */
-        operator fun invoke(connection: DBConnection): GrunnlagKopierer {
-            return GrunnlagKopiererImpl(RepositoryRegistry.provider(connection))
-        }
-    }
 }
 
 /**

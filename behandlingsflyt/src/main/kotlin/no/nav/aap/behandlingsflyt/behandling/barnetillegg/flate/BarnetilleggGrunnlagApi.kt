@@ -21,13 +21,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
-fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
+fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/barnetillegg") {
         route("/grunnlag/{referanse}") {
             authorizedGet<BehandlingReferanse, BarnetilleggDto>(
@@ -38,7 +38,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
                 )
             ) { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val vilkårsresultatRepository =
                         repositoryProvider.provide<VilkårsresultatRepository>()

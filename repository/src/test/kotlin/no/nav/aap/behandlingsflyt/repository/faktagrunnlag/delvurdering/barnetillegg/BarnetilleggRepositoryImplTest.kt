@@ -19,9 +19,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -29,14 +27,6 @@ internal class BarnetilleggRepositoryImplTest {
     private val dataSource = InitTestDatabase.freshDatabase()
 
     companion object {
-        @BeforeAll
-        @JvmStatic
-        fun beforeAll() {
-            RepositoryRegistry
-                .register<BarnetilleggRepositoryImpl>()
-                .status()
-        }
-
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 

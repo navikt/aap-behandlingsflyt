@@ -19,17 +19,17 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import java.math.BigDecimal
 import java.time.format.DateTimeFormatter
 import javax.sql.DataSource
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
 private val årFormatter = DateTimeFormatter.ofPattern("yyyy")
 
-fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
+fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/beregning") {
         route("/grunnlag/{referanse}").tag(Tags.Grunnlag) {
             authorizedGet<BehandlingReferanse, BeregningDTO>(
@@ -40,7 +40,7 @@ fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
                 )
             ) { req ->
                 val begregningsgrunnlag = dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val beregningsgrunnlagRepository =
                         repositoryProvider.provide<BeregningsgrunnlagRepository>()

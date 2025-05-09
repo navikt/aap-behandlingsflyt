@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import kotlinx.coroutines.runBlocking
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -56,7 +57,7 @@ fun main() {
 //    System.setProperty("unleash.server.api.token", "xxxx")
     // Starter server
     val server = embeddedServer(Netty, port = 0) {
-        server(dbConfig = dbConfig)
+        server(dbConfig = dbConfig, repositoryRegistry = postgresRepositoryRegistry)
     }.start()
 
     port = runBlocking { server.engine.resolvedConnectors().first { it.type == ConnectorType.HTTP }.port }

@@ -4,14 +4,16 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.auditlog.AuditLogPathParamConfig
 import no.nav.aap.tilgang.auditlog.PathBrukerIdentResolver
 import org.slf4j.LoggerFactory
 import java.util.*
 import javax.sql.DataSource
 
-object DefaultAuditLogConfig {
+class DefaultAuditLogConfig(
+    private val repositoryRegistry: RepositoryRegistry,
+) {
     val auditLogger = LoggerFactory.getLogger("auditLogger")
     val app = requiredConfigForKey("nais.app.name")
 
@@ -29,7 +31,7 @@ object DefaultAuditLogConfig {
 
     private fun hentIdentForBehandling(referanse: BehandlingReferanse, dataSource: DataSource) =
         dataSource.transaction(readOnly = true) {
-            RepositoryRegistry.provider(it).provide<BehandlingRepository>()
+            repositoryRegistry.provider(it).provide<BehandlingRepository>()
                 .finnSøker(referanse).aktivIdent().identifikator
         }
 }

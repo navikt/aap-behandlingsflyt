@@ -11,13 +11,16 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.refusjonGrunnlagAPI(dataSource: DataSource) {
+fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry
+) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/refusjon") {
             authorizedGet<BehandlingReferanse, RefusjonkravGrunnlagDto>(
@@ -25,7 +28,7 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(dataSource: DataSource) {
                     )
                 ) { req ->
                 val response = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val repositoryProvider = repositoryRegistry.provider(connection)
                     val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
 
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()

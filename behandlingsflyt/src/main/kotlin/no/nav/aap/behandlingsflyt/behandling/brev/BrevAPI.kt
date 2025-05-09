@@ -35,7 +35,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -50,7 +50,7 @@ import java.util.*
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("BrevAPI")
-fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
+fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     val authorizationParamPathConfig = AuthorizationParamPathConfig(
         operasjon = Operasjon.SAKSBEHANDLE,
         avklaringsbehovKode = SKRIV_BREV_KODE,
@@ -59,7 +59,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
             resolver = {
                 val brevbestillingReferanse = BrevbestillingReferanse(UUID.fromString(it))
                 dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val repositoryProvider = repositoryRegistry.provider(connection)
                     val brevbestillingRepository =
                         repositoryProvider.provide<BrevbestillingRepository>()
                     val behandlingRepository =
@@ -86,7 +86,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                     )
                 ) { behandlingReferanse ->
                     val grunnlag = dataSource.transaction(readOnly = true) { connection ->
-                        val repositoryProvider = RepositoryRegistry.provider(connection)
+                        val repositoryProvider = repositoryRegistry.provider(connection)
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                         val sakRepository = repositoryProvider.provide<SakRepository>()
                         val brevbestillingRepository = repositoryProvider.provide<BrevbestillingRepository>()
@@ -189,7 +189,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                     )
                 ) { _, req ->
                     dataSource.transaction { connection ->
-                        val repositoryProvider = RepositoryRegistry.provider(connection)
+                        val repositoryProvider = repositoryRegistry.provider(connection)
 
                         val taSkriveLåsRepository =
                             repositoryProvider.provide<TaSkriveLåsRepository>()
@@ -253,7 +253,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
             route("/{brevbestillingReferanse}/forhandsvis") {
                 authorizedGet<BrevbestillingReferanse, DokumentResponsDTO>(authorizationParamPathConfig) { brevbestillingReferanse ->
                     val pdf = dataSource.transaction { connection ->
-                        val repositoryProvider = RepositoryRegistry.provider(connection)
+                        val repositoryProvider = repositoryRegistry.provider(connection)
                         val brevbestillingRepository =
                             repositoryProvider.provide<BrevbestillingRepository>()
                         val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
@@ -278,7 +278,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                     )
                 ) { _, request ->
                     dataSource.transaction { connection ->
-                        val repositoryProvider = RepositoryRegistry.provider(connection)
+                        val repositoryProvider = repositoryRegistry.provider(connection)
                         val avklaringsbehovRepository =
                             repositoryProvider.provide<AvklaringsbehovRepository>()
                         val taSkriveLåsRepository =
@@ -324,7 +324,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                     )
                 ) { _, request ->
                     val faktagrunnlag = dataSource.transaction { connection ->
-                        val repositoryProvider = RepositoryRegistry.provider(connection)
+                        val repositoryProvider = repositoryRegistry.provider(connection)
                         FaktagrunnlagService.konstruer(repositoryProvider)
                             .finnFaktagrunnlag(
                                 behandlingReferanse = request.behandlingReferanse,

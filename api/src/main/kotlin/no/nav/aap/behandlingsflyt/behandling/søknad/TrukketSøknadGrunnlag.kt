@@ -6,7 +6,7 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
@@ -28,7 +28,7 @@ class TrukketSøknadVurderingDto(
     val vurdertAv: String,
 )
 
-fun NormalOpenAPIRoute.trukketSøknadGrunnlagAPI(dataSource: DataSource) {
+fun NormalOpenAPIRoute.trukketSøknadGrunnlagAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling/{referanse}/grunnlag/trukket-søknad").authorizedGet<BehandlingReferanse, TrukketSøknadGrunnlagDto>(
         AuthorizationParamPathConfig(
             operasjon = Operasjon.SE,
@@ -36,7 +36,7 @@ fun NormalOpenAPIRoute.trukketSøknadGrunnlagAPI(dataSource: DataSource) {
         )
     ) { req ->
         val trukketSøknadVurderingDto = dataSource.transaction(readOnly = true) { connection ->
-            val repositoryProvider = RepositoryRegistry.provider(connection)
+            val repositoryProvider = repositoryRegistry.provider(connection)
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val trukketSøknadRepository = repositoryProvider.provide<TrukketSøknadRepository>()
 

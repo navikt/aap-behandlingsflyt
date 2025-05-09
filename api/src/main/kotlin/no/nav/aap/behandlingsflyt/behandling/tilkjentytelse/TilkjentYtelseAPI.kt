@@ -6,7 +6,7 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
@@ -14,7 +14,7 @@ import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode as TilkjentYtelsePeriodeD
 
-fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource) {
+fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling") {
         route("/tilkjent/{referanse}") {
             authorizedGet<BehandlingReferanse, TilkjentYtelseDto>(
@@ -24,7 +24,7 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource) {
                 )
             ) { req ->
                 val tilkjentYtelser = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryFactory = RepositoryRegistry.provider(connection)
+                    val repositoryFactory = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryFactory.provide<BehandlingRepository>()
                     val tilkjentYtelseRepository: TilkjentYtelseRepository =
                         repositoryFactory.provide<TilkjentYtelseRepository>()

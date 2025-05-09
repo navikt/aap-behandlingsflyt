@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.innsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -37,14 +38,14 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
 
     fun håndtere(key: BehandlingId, hendelse: BehandlingSattPåVent) {
         dataSource.transaction { connection ->
-            AvklaringsbehovOrkestrator(connection)
+            AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(connection))
                 .settBehandlingPåVent(key, hendelse)
         }
     }
 
     fun bestillLegeerklæring(key: BehandlingId) {
         dataSource.transaction { connection ->
-            AvklaringsbehovOrkestrator(connection)
+            AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(connection))
                 .settPåVentMensVentePåMedisinskeOpplysninger(key, SYSTEMBRUKER)
         }
     }

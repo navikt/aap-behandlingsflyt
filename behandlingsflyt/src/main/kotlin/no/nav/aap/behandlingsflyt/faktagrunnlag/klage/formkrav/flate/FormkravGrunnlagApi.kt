@@ -9,13 +9,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.formkravGrunnlagApi(dataSource: DataSource) {
+fun NormalOpenAPIRoute.formkravGrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("api/klage/{referanse}/grunnlag/formkrav") {
         authorizedGet<BehandlingReferanse, FormkravGrunnlagDto>(
             AuthorizationParamPathConfig(
@@ -26,7 +26,7 @@ fun NormalOpenAPIRoute.formkravGrunnlagApi(dataSource: DataSource) {
         ) {
             req -> 
                 val respons = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val formkravRepository = repositoryProvider.provide<FormkravRepository>()
 

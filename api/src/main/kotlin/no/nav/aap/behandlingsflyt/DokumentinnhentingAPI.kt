@@ -26,7 +26,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.Operasjon
@@ -35,7 +35,7 @@ import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
+fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     val dokumentinnhentingGateway = GatewayProvider.provide<DokumentinnhentingGateway>()
     route("/api/dokumentinnhenting/syfo") {
         route("/bestill") {
@@ -47,7 +47,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
             )
             { _, req ->
                 val bestillingUuid = dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val repositoryProvider = repositoryRegistry.provider(connection)
 
                     LoggingKontekst(
                         repositoryProvider,
@@ -112,7 +112,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                 )
             ) { _, req ->
                 val brevPreview = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryRegistry.provider(connection).provide<SakRepository>()
+                    val repositoryProvider = repositoryRegistry.provider(connection).provide<SakRepository>()
                     val sak = repositoryProvider.hent((Saksnummer(req.saksnummer)))
 
                     val personIdent = sak.person.aktivIdent()

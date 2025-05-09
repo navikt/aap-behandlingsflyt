@@ -23,22 +23,12 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 class PersonopplysningRepositoryImplTest {
-
-    @BeforeEach
-    fun setUp() {
-        RepositoryRegistry
-            .register(PersonopplysningRepositoryImpl::class)
-            .status()
-    }
-
     @Test
     fun `Finner ikke personopplysninger hvis ikke lagret`() {
         InitTestDatabase.freshDatabase().transaction { connection ->

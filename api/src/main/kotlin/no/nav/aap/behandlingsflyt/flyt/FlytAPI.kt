@@ -35,7 +35,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.bruker
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbStatus
@@ -50,7 +50,7 @@ import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("flytApi")
 
-fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
+fun NormalOpenAPIRoute.flytApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling") {
         route("/{referanse}/flyt") {
             authorizedGet<BehandlingReferanse, BehandlingFlytOgTilstandDto>(
@@ -59,7 +59,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                 )
             ) { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val vilkårsresultatRepository =
                         repositoryProvider.provide<VilkårsresultatRepository>()
@@ -181,7 +181,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                 ),
             ) { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val vilkårsresultatRepository =
                         repositoryProvider.provide<VilkårsresultatRepository>()
@@ -204,7 +204,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                 )
             ) { request, body ->
                 dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val repositoryProvider = repositoryRegistry.provider(connection)
                     LoggingKontekst(
                         repositoryProvider,
                         LogKontekst(referanse = BehandlingReferanse(request.referanse))
@@ -249,7 +249,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                 )
             ) { request ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val avklaringsbehovRepository =
                         repositoryProvider.provide<AvklaringsbehovRepository>()

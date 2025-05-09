@@ -31,6 +31,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -129,7 +130,7 @@ class ApiTest {
 
         // Starter server
         private val server = embeddedServer(Netty, port = 0) {
-            server(dbConfig = dbConfig)
+            server(dbConfig = dbConfig, repositoryRegistry = postgresRepositoryRegistry)
         }
 
         @JvmStatic

@@ -18,13 +18,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurd
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
-import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -41,7 +38,6 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
@@ -183,15 +179,7 @@ class BistandsvilkåretTest {
 
     @Test
     fun `Skal bygge tidslinje på tvers av behandlinger`() {
-        RepositoryRegistry.register(BistandRepositoryImpl::class)
-        RepositoryRegistry.register(StudentRepositoryImpl::class)
-        RepositoryRegistry.register(SykdomRepositoryImpl::class)
-        RepositoryRegistry.register(VilkårsresultatRepositoryImpl::class)
-        RepositoryRegistry.register(AvklaringsbehovRepositoryImpl::class)
-        RepositoryRegistry.register(BehandlingRepositoryImpl::class)
-        RepositoryRegistry.register(TrukketSøknadRepositoryImpl::class)
         val dataSource = InitTestDatabase.freshDatabase()
-
 
         val bistandsvurdering1 = BistandVurdering(
             begrunnelse = "Begrunnelse",
@@ -231,7 +219,7 @@ class BistandsvilkåretTest {
         }
 
         dataSource.transaction { connection ->
-            VurderBistandsbehovSteg.konstruer(RepositoryRegistry.provider(connection)).utfør(
+            VurderBistandsbehovSteg.konstruer(postgresRepositoryRegistry.provider(connection)).utfør(
                 FlytKontekstMedPerioder(
                     sakId = sak.id,
                     behandlingId = førstegangsbehandling.id,
@@ -259,7 +247,7 @@ class BistandsvilkåretTest {
         dataSource.transaction { connection ->
             // Må lagre ned sykdomsvurdering for behandlingen da vurderingenGjelderFra for 11-6 skal være lik den for 11-5 i samme behandling
             val sykdomsvurdering = sykdomsvurdering(vurderingenGjelderFra = now.plusDays(10))
-            RepositoryRegistry.provider(connection).provide<SykdomRepository>().lagre(revurdering.id, listOf(sykdomsvurdering))
+            postgresRepositoryRegistry.provider(connection).provide<SykdomRepository>().lagre(revurdering.id, listOf(sykdomsvurdering))
 
             val bistandsvurdering2 = BistandVurderingLøsningDto(
                 begrunnelse = "Begrunnelse",
@@ -271,7 +259,7 @@ class BistandsvilkåretTest {
                 overgangBegrunnelse = null,
             )
 
-            AvklarBistandLøser(RepositoryRegistry.provider(connection)).løs(
+            AvklarBistandLøser(postgresRepositoryRegistry.provider(connection)).løs(
                 AvklaringsbehovKontekst(
                     bruker = Bruker(sak.person.aktivIdent().identifikator),
                     kontekst = FlytKontekst(
@@ -286,7 +274,7 @@ class BistandsvilkåretTest {
 
 
         dataSource.transaction { connection ->
-            VurderBistandsbehovSteg.konstruer(RepositoryRegistry.provider(connection)).utfør(
+            VurderBistandsbehovSteg.konstruer(postgresRepositoryRegistry.provider(connection)).utfør(
                 FlytKontekstMedPerioder(
                     sakId = sak.id,
                     behandlingId = revurdering.id,

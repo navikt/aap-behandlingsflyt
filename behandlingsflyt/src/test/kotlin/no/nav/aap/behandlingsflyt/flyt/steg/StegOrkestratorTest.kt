@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -22,7 +23,6 @@ import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -60,7 +60,7 @@ internal class StegOrkestratorTest {
                 aktivtSteg = TestFlytSteg,
                 informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                     InformasjonskravRepositoryImpl(connection),
-                    RepositoryRegistry.provider(connection),
+                    postgresRepositoryRegistry.provider(connection),
                 ),
                 behandlingRepository = BehandlingRepositoryImpl(connection),
                 avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection),
@@ -69,7 +69,7 @@ internal class StegOrkestratorTest {
                     BehandlingRepositoryImpl(connection),
                     FakeUnleash(mapOf()),
                 ),
-                stegKonstruktør = StegKonstruktørImpl(RepositoryRegistry.provider(connection))
+                stegKonstruktør = StegKonstruktørImpl(postgresRepositoryRegistry.provider(connection))
             ).utfør(
                 kontekst,
                 behandling,

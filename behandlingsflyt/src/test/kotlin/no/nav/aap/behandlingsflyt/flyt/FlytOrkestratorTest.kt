@@ -43,7 +43,6 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
 import no.nav.aap.behandlingsflyt.drift.Driftfunksjoner
-import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
@@ -54,16 +53,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapForutgåendeRepositoryImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
@@ -74,7 +69,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
@@ -126,41 +120,10 @@ import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7RepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningAndreStatligeYtelserRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningUføreRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurderingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.MeldekortRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FormkravRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt.InntektGrunnlagRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre.UføreRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.rettighetsperiode.VurderRettighetsperiodeRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -195,9 +158,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.motor.FlytJobbRepositoryImpl
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.testutil.TestUtil
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -218,7 +179,7 @@ class FlytOrkestratorTest {
 
     companion object {
         private val dataSource = InitTestDatabase.freshDatabase()
-        private val motor = Motor(dataSource, 8, jobber = ProsesseringsJobber.alle(), repositoryRegistry = RepositoryRegistry)
+        private val motor = Motor(dataSource, 8, jobber = ProsesseringsJobber.alle(), repositoryRegistry = postgresRepositoryRegistry)
         private val hendelsesMottak = TestHendelsesMottak(dataSource)
         private val util =
             TestUtil(dataSource, ProsesseringsJobber.alle().filter { it.cron != null }.map { it.type })
@@ -227,57 +188,6 @@ class FlytOrkestratorTest {
         @JvmStatic
         internal fun beforeAll() {
             System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
-            RepositoryRegistry
-                .register<BehandlingRepositoryImpl>()
-                .register<PersonRepositoryImpl>()
-                .register<SakRepositoryImpl>()
-                .register<AvklaringsbehovRepositoryImpl>()
-                .register<VilkårsresultatRepositoryImpl>()
-                .register<PipRepositoryImpl>()
-                .register<TaSkriveLåsRepositoryImpl>()
-                .register<BeregningsgrunnlagRepositoryImpl>()
-                .register<PersonopplysningRepositoryImpl>()
-                .register<TilkjentYtelseRepositoryImpl>()
-                .register<AktivitetspliktRepositoryImpl>()
-                .register<BrevbestillingRepositoryImpl>()
-                .register<SamordningRepositoryImpl>()
-                .register<MottattDokumentRepositoryImpl>()
-                .register<MeldekortRepositoryImpl>()
-                .register<UnderveisRepositoryImpl>()
-                .register<ArbeidsevneRepositoryImpl>()
-                .register<Effektuer11_7RepositoryImpl>()
-                .register<BarnetilleggRepositoryImpl>()
-                .register<BistandRepositoryImpl>()
-                .register<BeregningVurderingRepositoryImpl>()
-                .register<SykdomRepositoryImpl>()
-                .register<YrkesskadeRepositoryImpl>()
-                .register<UføreRepositoryImpl>()
-                .register<MedlemskapArbeidInntektRepositoryImpl>()
-                .register<SykepengerErstatningRepositoryImpl>()
-                .register<SamordningVurderingRepositoryImpl>()
-                .register<StudentRepositoryImpl>()
-                .register<MeldepliktRepositoryImpl>()
-                .register<MedlemskapArbeidInntektForutgåendeRepositoryImpl>()
-                .register<PersonopplysningForutgåendeRepositoryImpl>()
-                .register<BarnRepositoryImpl>()
-                .register<InstitusjonsoppholdRepositoryImpl>()
-                .register<InntektGrunnlagRepositoryImpl>()
-                .register<MeldeperiodeRepositoryImpl>()
-                .register<VedtakRepositoryImpl>()
-                .register<SamordningYtelseRepositoryImpl>()
-                .register<SamordningUføreRepositoryImpl>()
-                .register<SamordningAndreStatligeYtelserRepositoryImpl>()
-                .register<RefusjonkravRepositoryImpl>()
-                .register<InformasjonskravRepositoryImpl>()
-                .register<TjenestePensjonRepositoryImpl>()
-                .register<TrukketSøknadRepositoryImpl>()
-                .register<VurderRettighetsperiodeRepositoryImpl>()
-                .register<FlytJobbRepositoryImpl>()
-                .register<FormkravRepositoryImpl>()
-                .register<MedlemskapRepositoryImpl>()
-                .register<MedlemskapForutgåendeRepositoryImpl>()
-                .register<TjenestepensjonRefusjonskravVurderingRepositoryImpl>()
-                .status()
             GatewayRegistry
                 .register<PdlBarnGateway>()
                 .register<PdlIdentGateway>()
@@ -940,7 +850,7 @@ class FlytOrkestratorTest {
 
         assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
 
-        var resultat = dataSource.transaction { ResultatUtleder(RepositoryRegistry.provider(it)).utledResultat(behandling.id) }
+        var resultat = dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
 
         var brevBestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
@@ -962,7 +872,7 @@ class FlytOrkestratorTest {
             .hasSize(1)
             .allMatch { vilkårsperiode -> vilkårsperiode.erOppfylt() && vilkårsperiode.innvilgelsesårsak == Innvilgelsesårsak.SYKEPENGEERSTATNING }
 
-        resultat = dataSource.transaction { ResultatUtleder(RepositoryRegistry.provider(it)).utledResultat(behandling.id) }
+        resultat = dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
 
         assertTidslinje(
@@ -1235,7 +1145,7 @@ class FlytOrkestratorTest {
         assertThat(alleAvklaringsbehov).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.BESTILL_BREV) }
 
         val resultat = dataSource.transaction {
-            ResultatUtleder(RepositoryRegistry.provider(it)).utledResultat(behandling.id)
+            ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id)
         }
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
         var brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
@@ -2621,7 +2531,7 @@ class FlytOrkestratorTest {
             assertThat(behandlingRepo.hent(behandlingId).aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
 
             // Tilbakefør med hjelpefunksjon
-            Driftfunksjoner().flyttBehandlingTilStart(behandlingId, connection)
+            Driftfunksjoner(postgresRepositoryRegistry).flyttBehandlingTilStart(behandlingId, connection)
 
             // Validér avklaring
             assertThat(behandlingRepo.hent(behandlingId).aktivtSteg()).isEqualTo(StegType.START_BEHANDLING)
@@ -2762,7 +2672,7 @@ class FlytOrkestratorTest {
     ): Behandling {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(
-                AvklaringsbehovOrkestrator(it),
+                AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(it)),
                 AvklaringsbehovRepositoryImpl(it),
                 BehandlingRepositoryImpl(it),
             ).håndtere(

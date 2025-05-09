@@ -18,13 +18,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
-fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource) {
+fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/lovvalgmedlemskap/") {
         route("/vurdering/{referanse}") {
             authorizedGet<BehandlingReferanse, KanBehandlesAutomatiskVurdering>(
@@ -32,7 +32,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource) {
                 null, TagModule(listOf(Tags.Behandling))
             ) { req ->
                 val vurdering = dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandling = repositoryProvider.provide<BehandlingRepository>().hent(BehandlingReferanse(req.referanse))
                     val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
                     val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
@@ -72,7 +72,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource) {
                 null, TagModule(listOf(Tags.Behandling))
             ) { req ->
                 val vurdering = dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val repositoryProvider = repositoryRegistry.provider(connection)
                     val medlemskapArbeidInntektForutgåendeRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
                     val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
                     val behandling = repositoryProvider.provide<BehandlingRepository>().hent(BehandlingReferanse(req.referanse))

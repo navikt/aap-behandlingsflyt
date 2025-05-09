@@ -28,8 +28,6 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
-import no.nav.aap.lookup.repository.RepositoryRegistry
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -37,12 +35,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class Effektuer11_7RepositoryImplTest {
-    @BeforeEach
-    fun setUp() {
-        RepositoryRegistry.register<Effektuer11_7RepositoryImpl>()
-        RepositoryRegistry.register<UnderveisRepositoryImpl>()
-    }
-
     @Test
     fun `Finner ikke grunnlag hvis ikke lagret`() {
         InitTestDatabase.freshDatabase().transaction { connection ->

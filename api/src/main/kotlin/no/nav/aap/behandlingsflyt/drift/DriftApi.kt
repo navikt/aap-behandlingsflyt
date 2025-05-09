@@ -7,12 +7,12 @@ import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedPost
 import javax.sql.DataSource
-import no.nav.aap.lookup.repository.RepositoryRegistry
 
 /**
  * API for å utføre manuelle operasjoner med forsøk på å rette opp i låste saker av varierende grunn.
@@ -21,7 +21,7 @@ import no.nav.aap.lookup.repository.RepositoryRegistry
  * */
 
 // TODO: Denne resetter en behandling til start, men trenger å fikses til å kunne sette behandlingen i gang igjen.
-fun NormalOpenAPIRoute.driftAPI(dataSource: DataSource) {
+fun NormalOpenAPIRoute.driftAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/drift") {
         route("/flyttbehandlingtilstart/{referanse}") {
             authorizedPost<BehandlingReferanse, Unit, Unit>(
@@ -31,11 +31,11 @@ fun NormalOpenAPIRoute.driftAPI(dataSource: DataSource) {
                 )
             ){ req, _ ->
                 dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
 
-                    Driftfunksjoner().flyttBehandlingTilStart(behandling.id, connection)
+                    Driftfunksjoner(repositoryRegistry).flyttBehandlingTilStart(behandling.id, connection)
                 }
                 respondWithStatus(HttpStatusCode.Accepted)
             }

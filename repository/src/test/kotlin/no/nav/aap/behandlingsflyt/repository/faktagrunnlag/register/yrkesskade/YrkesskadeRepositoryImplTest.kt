@@ -20,23 +20,13 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 class YrkesskadeRepositoryImplTest {
     companion object {
-        @BeforeAll
-        @JvmStatic
-        fun beforeAll() {
-            RepositoryRegistry.register<BehandlingRepositoryImpl>()
-                .register<YrkesskadeRepositoryImpl>()
-                .status()
-        }
-
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 

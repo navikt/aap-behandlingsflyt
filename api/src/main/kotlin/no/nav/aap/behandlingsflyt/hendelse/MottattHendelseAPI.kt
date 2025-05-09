@@ -25,7 +25,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -37,7 +37,7 @@ import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("hendelse.MottattHendelseAPI")
 
-fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
+fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/hendelse") {
         route("/send") {
             authorizedPost<Unit, String, Innsending>(
@@ -46,7 +46,7 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
                     authorizedAzps = listOf(Azp.Postmottak.uuid, Azp.Dokumentinnhenting.uuid)
                 )
             ) { _, dto ->
-                registrerMottattHendelse(dto, dataSource)
+                registrerMottattHendelse(dto, dataSource, repositoryRegistry)
                 respond(EMPTY_JSON_RESPONSE, HttpStatusCode.Accepted)
             }
         }
@@ -60,7 +60,7 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
                 )
             ) { _, dto ->
                 validerHendelse(dto, bruker())
-                registrerMottattHendelse(dto, dataSource)
+                registrerMottattHendelse(dto, dataSource, repositoryRegistry)
                 respond(EMPTY_JSON_RESPONSE, HttpStatusCode.Accepted)
             }
         }
@@ -70,10 +70,11 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
 private fun registrerMottattHendelse(
     dto: Innsending,
     dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
 ) {
     MDC.putCloseable("saksnummer", dto.saksnummer.toString()).use {
         dataSource.transaction { connection ->
-            val repositoryProvider = RepositoryRegistry.provider(connection)
+            val repositoryProvider = repositoryRegistry.provider(connection)
 
             val sak = repositoryProvider.provide<SakRepository>().hent(dto.saksnummer)
             val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()

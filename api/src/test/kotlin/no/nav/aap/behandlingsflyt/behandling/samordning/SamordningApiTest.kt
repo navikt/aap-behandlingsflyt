@@ -30,9 +30,9 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingR
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTjenestePensjonRepository
 import no.nav.aap.komponenter.gateway.GatewayRegistry
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
@@ -44,6 +44,12 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientCon
 
 @Fakes
 class SamordningApiKtTest {
+    private val repositoryRegistry = RepositoryRegistry()
+        .register<InMemorySamordningVurderingRepository>()
+        .register<InMemorySamordningYtelseRepository>()
+        .register<InMemoryBehandlingRepository>()
+        .register<InMemoryTjenestePensjonRepository>()
+
     companion object {
         private val server = MockOAuth2Server()
 
@@ -52,11 +58,6 @@ class SamordningApiKtTest {
         fun beforeAll() {
             server.start()
 
-            RepositoryRegistry
-                .register<InMemorySamordningVurderingRepository>()
-                .register<InMemorySamordningYtelseRepository>()
-                .register<InMemoryBehandlingRepository>()
-                .register<InMemoryTjenestePensjonRepository>()
 
             GatewayRegistry
                 .register<FakeTilgangGateway>()
@@ -89,7 +90,7 @@ class SamordningApiKtTest {
 
         testApplication {
             installApplication {
-                samordningGrunnlag(ds)
+                samordningGrunnlag(ds, repositoryRegistry)
             }
 
             val jwt = issueToken("nav:aap:afpoffentlig.read")

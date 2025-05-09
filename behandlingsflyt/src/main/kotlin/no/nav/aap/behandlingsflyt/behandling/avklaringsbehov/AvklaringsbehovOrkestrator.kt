@@ -14,12 +14,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.lookup.repository.RepositoryProvider
-import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.Period
@@ -40,8 +38,6 @@ class AvklaringsbehovOrkestrator(
         behandlingRepository = repositoryProvider.provide(),
         prosesserBehandling = ProsesserBehandlingService(repositoryProvider),
     )
-
-    constructor(connection: DBConnection): this(RepositoryRegistry.provider(connection))
 
     private val log = LoggerFactory.getLogger(javaClass)
 

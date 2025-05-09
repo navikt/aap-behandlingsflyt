@@ -9,13 +9,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.medlemskapsgrunnlagApi(dataSource: DataSource) {
+fun NormalOpenAPIRoute.medlemskapsgrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/medlemskap") {
             authorizedGet<BehandlingReferanse, MedlemskapGrunnlagDto>(
@@ -26,7 +26,7 @@ fun NormalOpenAPIRoute.medlemskapsgrunnlagApi(dataSource: DataSource) {
                 )
             ) { req ->
                 val medlemskap = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryRegistry.provider(connection)
+                    val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
