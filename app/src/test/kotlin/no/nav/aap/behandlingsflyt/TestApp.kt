@@ -84,7 +84,7 @@ fun main() {
 
         val datasource = initDatasource(dbConfig)
 
-        opprettTestKlage(datasource, defaultTestCase)
+        opprettTestKlage(datasource, alderIkkeOppfyltTestCase)
 
         apiRouting {
             route("/test") {
@@ -286,8 +286,8 @@ private fun opprettTestKlage(datasource: DataSource, testcaseDTO: OpprettTestcas
     sendInnKlage(datasource, sak)
 }
 
-private val defaultTestCase = OpprettTestcaseDTO(
-    fødselsdato = LocalDate.of(1995, 4, 21),
+private val alderIkkeOppfyltTestCase = OpprettTestcaseDTO(
+    fødselsdato = LocalDate.now().minusYears(17),
     barn = emptyList(),
     yrkesskade = false,
     uføre = null,

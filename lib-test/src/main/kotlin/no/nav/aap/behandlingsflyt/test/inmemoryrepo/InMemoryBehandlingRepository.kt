@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
@@ -120,6 +121,13 @@ object InMemoryBehandlingRepository : BehandlingRepository {
             field.trySetAccessible()
             field.set(behandling, status)
         }
+    }
+
+    override fun hentAlleMedVedtakFor(
+        sakId: SakId,
+        behandlingstypeFilter: List<TypeBehandling>
+    ): List<BehandlingMedVedtak> {
+        TODO("Not yet implemented")
     }
 
     override fun leggTilNyttAktivtSteg(
