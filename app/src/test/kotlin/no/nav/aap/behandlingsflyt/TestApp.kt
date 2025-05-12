@@ -10,6 +10,12 @@ import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.integrasjon.brev.BrevGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerForholdDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerYtelseDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TpOrdning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdJSON
@@ -78,7 +84,7 @@ fun main() {
 
         val datasource = initDatasource(dbConfig)
 
-        opprettTestKlage(datasource, defaultTestCase)
+        opprettTestKlage(datasource, alderIkkeOppfyltTestCase)
 
         apiRouting {
             route("/test") {
@@ -185,6 +191,7 @@ private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak
     val ident = genererIdent(dto.fødselsdato)
     val barn = dto.barn.filter { it.harRelasjon }.map { genererBarn(it) }
     val urelaterteBarn = dto.barn.filter { !it.harRelasjon }.map { genererBarn(it) }
+    val tjenestePensjon = dto.tjenestePensjon
     barn.forEach { FakePersoner.leggTil(it) }
     urelaterteBarn.forEach { FakePersoner.leggTil(it) }
     FakePersoner.leggTil(
@@ -204,7 +211,28 @@ private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak
                     grad = it.grad,
                     periode = it.periode
                 )
-            }
+            },
+            tjenestePensjon = if (dto.tjenestePensjon != null && dto.tjenestePensjon) TjenestePensjonRespons(
+                fnr = ident.identifikator,
+                forhold = listOf(
+                    SamhandlerForholdDto(
+                        TpOrdning(
+                            "test",
+                            "test",
+                            "test"
+                        ),
+                        ytelser = listOf(
+                            SamhandlerYtelseDto(
+                                null,
+                                YtelseTypeCode.ALDER,
+                                LocalDate.now().minusYears(1),
+                                null,
+                                12345678L
+                            )
+                        )
+                    )
+                )
+            ) else null,
         )
     )
     val periode = Periode(
@@ -233,7 +261,7 @@ private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak
         )
         sak
     }
-    
+
     return sak
 }
 
@@ -258,8 +286,8 @@ private fun opprettTestKlage(datasource: DataSource, testcaseDTO: OpprettTestcas
     sendInnKlage(datasource, sak)
 }
 
-private val defaultTestCase = OpprettTestcaseDTO(
-    fødselsdato = LocalDate.of(1995, 4, 21),
+private val alderIkkeOppfyltTestCase = OpprettTestcaseDTO(
+    fødselsdato = LocalDate.now().minusYears(17),
     barn = emptyList(),
     yrkesskade = false,
     uføre = null,

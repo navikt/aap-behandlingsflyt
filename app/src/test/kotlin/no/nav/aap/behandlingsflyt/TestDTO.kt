@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.papsign.ktor.openapigen.annotations.Response
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.type.Periode
@@ -24,6 +25,7 @@ data class OpprettTestcaseDTO(
     @NotNull @JsonProperty(value = "barn") val barn: List<TestBarn> = emptyList(),
     @NotNull @JsonProperty(value = "medlemskap", defaultValue = "true") val medlemskap: Boolean,
     @JsonProperty(value = "inntekterPerAr") val inntekterPerAr: List<InntektPerÅrDto>? = null,
+    @JsonProperty(value = "tjenestePensjon") val tjenestePensjon: Boolean? = null,
     val institusjoner: Institusjoner = Institusjoner(),
     val sykepenger: List<TestPerson.Sykepenger> = emptyList(),
     val søknadsdato: LocalDate? = null,
