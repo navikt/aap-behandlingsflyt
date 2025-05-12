@@ -10,9 +10,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository {
-    companion object : Factory<BarnRepository> {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
+   companion object : Factory<BarnRepository> {
         override fun konstruer(connection: DBConnection): BarnRepository {
             return BarnRepositoryImpl(connection)
         }
@@ -387,7 +391,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         val barnVurderingIds = getBarnVurderingIds(vurderteBarnIds)
         val barnOpplysningIds = getBarnOpplysningIds(registerBarnIds)
 
-        connection.execute(
+        val deletedRows = connection.executeReturnUpdated(
             """
             delete from barnopplysning_grunnlag where behandling_id = ?;
             delete from barn_vurdering where id = ANY(?::bigint[]);
@@ -411,6 +415,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
 
             }
         }
+        log.info("Slettet $deletedRows fra barnopplysning_grunnlag")
     }
 
     private fun getOppgittBarnIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

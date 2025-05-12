@@ -7,9 +7,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
     InstitusjonsoppholdRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<InstitusjonsoppholdRepository> {
         override fun konstruer(connection: DBConnection): InstitusjonsoppholdRepository {
@@ -308,7 +311,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
         val helseoppholdVurderingerIds = getHelseOppholdVurderingerIds(behandlingId)
         val soningVurderingerIds = getSoningVurderingerIds(behandlingId)
 
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from opphold_grunnlag where behandling_id = ?; 
             delete from helseopphold_vurdering where helseopphold_vurderinger_id = ANY(?::bigint[]);
             delete from helseopphold_vurderinger where id = ANY(?::bigint[]);
@@ -327,6 +330,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                 setLongArray(7, oppholdPersonIds)
             }
         }
+        log.info("Slettet $deletedRows fra opphold_grunnlag")
     }
 
     private fun getOppholdPersonIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

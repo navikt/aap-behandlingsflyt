@@ -12,9 +12,12 @@ import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<SykdomRepositoryImpl> {
         override fun konstruer(connection: DBConnection): SykdomRepositoryImpl {
@@ -76,7 +79,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         val sykdomVurderingIds = getSykdomVurderingIds(sykdomVurderingerIds)
         val yrkesskadevurderingIds = getYrkesskadeVurderingIds(behandlingId)
 
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from sykdom_grunnlag where behandling_id = ?; 
             delete from sykdom_vurdering_bidiagnoser where vurdering_id = ANY(?::bigint[]);
             delete from sykdom_vurdering_dokumenter where vurdering_id = ANY(?::bigint[]);
@@ -95,6 +98,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 setLongArray(7, yrkesskadevurderingIds)
             }
         }
+        log.info("Slettet $deletedRows fra sykdom_grunnlag")
     }
 
     private fun getSykdomVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

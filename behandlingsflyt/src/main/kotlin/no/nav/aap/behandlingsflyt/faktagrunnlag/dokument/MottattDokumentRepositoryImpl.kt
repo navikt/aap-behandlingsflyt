@@ -81,13 +81,14 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from mottatt_dokument where behandling_id = ?;
         """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId.id)
             }
         }
+        deletedRows
     }
 
     private fun mapMottattDokument(row: Row): MottattDokument {

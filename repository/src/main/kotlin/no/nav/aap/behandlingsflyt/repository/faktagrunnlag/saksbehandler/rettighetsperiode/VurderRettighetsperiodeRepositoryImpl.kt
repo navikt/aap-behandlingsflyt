@@ -5,8 +5,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection) : VurderRettighetsperiodeRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     override fun lagreVurdering(behandlingId: BehandlingId, vurdering: RettighetsperiodeVurdering) {
         lagreGrunnlag(behandlingId, RettighetsperiodeGrunnlag(vurdering))
     }
@@ -63,7 +67,7 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
 
         val rettighetsPeriodeVurderingerIds = getRettighetsPeriodeVurderingerIds(behandlingId)
 
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from rettighetsperiode_grunnlag where behandling_id = ?; 
             delete from rettighetsperiode_vurdering where vurderinger_id = ANY(?::bigint[]);
             delete from rettighetsperiode_vurderinger where id = ANY(?::bigint[]);
@@ -75,6 +79,7 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
                 setLongArray(3, rettighetsPeriodeVurderingerIds)
             }
         }
+        log.info("Slettet $deletedRows fra rettighetsperiode_grunnlag")
     }
 
     private fun getRettighetsPeriodeVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

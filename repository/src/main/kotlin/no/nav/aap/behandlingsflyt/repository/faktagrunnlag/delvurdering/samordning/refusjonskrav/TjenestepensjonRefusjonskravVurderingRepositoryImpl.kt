@@ -6,8 +6,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection: DBConnection) : TjenestepensjonRefusjonsKravVurderingRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<TjenestepensjonRefusjonskravVurderingRepositoryImpl>{
         override fun konstruer(connection: DBConnection): TjenestepensjonRefusjonskravVurderingRepositoryImpl {
             return TjenestepensjonRefusjonskravVurderingRepositoryImpl(connection)
@@ -120,7 +124,7 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
 
         val refusjonsKravVurderingIds = getRefusjonsKravVurderingIds(behandlingId)
 
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from tjenestepensjon_refusjonskrav_grunnlag where behandling_id = ?; 
             delete from tjenestepensjon_refusjonskrav_vurdering where id = ANY(?::bigint[]);
         """.trimIndent()) {
@@ -129,6 +133,7 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
                 setLongArray(2, refusjonsKravVurderingIds)
             }
         }
+        log.info("Slettet $deletedRows fra tjenestepensjon_refusjonskrav_grunnlag")
     }
 
     private fun getRefusjonsKravVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

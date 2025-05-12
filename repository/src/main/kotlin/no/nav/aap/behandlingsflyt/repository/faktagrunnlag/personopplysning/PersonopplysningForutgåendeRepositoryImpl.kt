@@ -16,11 +16,14 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 // Mangler full støtte for barn / relaterte personer
 class PersonopplysningForutgåendeRepositoryImpl(
     private val connection: DBConnection, private val personRepository: PersonRepository
 ) : PersonopplysningForutgåendeRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<PersonopplysningForutgåendeRepositoryImpl> {
         override fun konstruer(connection: DBConnection): PersonopplysningForutgåendeRepositoryImpl {
@@ -183,7 +186,7 @@ class PersonopplysningForutgåendeRepositoryImpl(
         val personopplysningIds = getPersonOpplysningIds(personopplysningerIds)
         val utenlandsAdresserIds = getUtenlandsAdresserIds(brukerPersonopplysningIds)
 
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from personopplysning_forutgaaende_grunnlag where behandling_id = ?; 
             delete from bruker_utenlandsadresse_forutgaaende where utenlandsadresser_id = ANY(?::bigint[]);
             delete from bruker_utenlandsadresser_forutgaaende_aggregat where id = ANY(?::bigint[]);
@@ -200,6 +203,7 @@ class PersonopplysningForutgåendeRepositoryImpl(
                 setLongArray(6, personopplysningerIds)
             }
         }
+        log.info("Slettet $deletedRows fra personopplysning_forutgaaende_grunnlag")
     }
 
     private fun getBrukerPersonopplysningIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

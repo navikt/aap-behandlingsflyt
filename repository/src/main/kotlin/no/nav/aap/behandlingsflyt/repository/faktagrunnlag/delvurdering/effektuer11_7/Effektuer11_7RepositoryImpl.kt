@@ -10,9 +10,13 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.undervei
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 import kotlin.collections.List
 
 class Effektuer11_7RepositoryImpl(private val connection: DBConnection) : Effektuer11_7Repository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<Effektuer11_7RepositoryImpl> {
         override fun konstruer(connection: DBConnection): Effektuer11_7RepositoryImpl {
             return Effektuer11_7RepositoryImpl(connection)
@@ -129,7 +133,9 @@ class Effektuer11_7RepositoryImpl(private val connection: DBConnection) : Effekt
                 row.getLong("id")
             }
         }
-       if (aktivitetsbrudd.isNotEmpty()) { // Her må vi enten feile hardt siden det ikke er forventet at det skal være noe}
+       if (aktivitetsbrudd.isNotEmpty()) {
+           log.error("Slettet fra aktivitsbrudd med behandlingId $behandlingId, dette skal ikke skje!")
+       // Her må vi enten feile hardt siden det ikke er forventet at det skal være noe}
           // innhold i tabellene, evt som minimum logge at det skjedde, så vi kan rydde manuelt
        }
     }

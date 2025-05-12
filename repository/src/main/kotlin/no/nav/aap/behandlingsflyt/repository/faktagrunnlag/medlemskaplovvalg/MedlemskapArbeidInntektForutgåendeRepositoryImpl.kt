@@ -18,9 +18,13 @@ import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: DBConnection):
     MedlemskapArbeidInntektForutgåendeRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<MedlemskapArbeidInntektForutgåendeRepositoryImpl> {
         override fun konstruer(connection: DBConnection): MedlemskapArbeidInntektForutgåendeRepositoryImpl {
             return MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
@@ -153,7 +157,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         val inntekterIds = getInntekterIds(behandlingId)
         val manuellVurderingIds = getManuellVurderingIds(behandlingId)
 
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ?; 
             delete from INNTEKT_I_NORGE_FORUTGAAENDE where inntekter_i_norge_id = ANY(?::bigint[]);
             delete from INNTEKTER_I_NORGE where id = ANY(?::bigint[]);
@@ -171,6 +175,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                 setLongArray(6, manuellVurderingIds)
             }
         }
+        log.info("Slettet $deletedRows fra FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG")
     }
 
     private fun getManuellVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

@@ -124,7 +124,7 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
 
         val samordningStatligYtelseVurderingIds = getSamordningStatligYtelseVurderingIds(behandlingId)
 
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from samordning_andre_statlige_ytelser_grunnlag where behandling_id = ?; 
             delete from samordning_andre_statlige_ytelser_vurdering_periode where vurdering_id = ANY(?::bigint[]);
             delete from samordning_andre_statlige_ytelser_vurdering where id = ANY(?::bigint[]);
@@ -136,6 +136,7 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
                 setLongArray(3, samordningStatligYtelseVurderingIds)
             }
         }
+        log.info("Slettet $deletedRows fra samordning_andre_statlige_ytelser_grunnlag")
     }
 
     private fun getSamordningStatligYtelseVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

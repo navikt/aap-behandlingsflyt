@@ -24,9 +24,13 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
 class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection) : MedlemskapArbeidInntektRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<MedlemskapArbeidInntektRepositoryImpl> {
         override fun konstruer(connection: DBConnection): MedlemskapArbeidInntektRepositoryImpl {
             return MedlemskapArbeidInntektRepositoryImpl(connection)
@@ -537,7 +541,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         val inntektINorgeIds = getInntektINorgeIds(inntekterINorgeIds)
 
 
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ?; 
             delete from INNTEKT_I_NORGE where inntekter_i_norge_id = ANY(?::bigint[]);     
             delete from ARBEID where arbeider_id = ANY(?::bigint[]);
@@ -560,6 +564,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLongArray(9, inntektINorgeIds)
             }
         }
+        log.info("Slettet $deletedRows fra MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG")
     }
 
 

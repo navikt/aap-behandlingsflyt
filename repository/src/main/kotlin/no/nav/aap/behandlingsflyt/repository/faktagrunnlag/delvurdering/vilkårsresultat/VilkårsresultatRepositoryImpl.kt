@@ -176,7 +176,7 @@ WHERE behandling_id = ?
         val resultatIds = getVilkarResultatIds(behandlingId)
         val vilkarIds = getVilkarIds(resultatIds)
 
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from vilkar_periode where vilkar_id = ANY(?::bigint[]);
             delete from vilkar where resultat_id = ANY(?::bigint[]);   
             delete from vilkar_resultat where behandling_id = ?; 
@@ -188,6 +188,7 @@ WHERE behandling_id = ?
                 setLong(3, behandlingId.id)
             }
         }
+        log.info("Slettet $deletedRows fra vilkar_periode")
     }
 
     private fun getVilkarResultatIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

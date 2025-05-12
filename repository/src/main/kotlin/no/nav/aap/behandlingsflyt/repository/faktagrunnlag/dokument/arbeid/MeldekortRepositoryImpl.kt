@@ -13,8 +13,11 @@ import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
+import org.slf4j.LoggerFactory
 
 class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<MeldekortRepositoryImpl> {
         override fun konstruer(connection: DBConnection): MeldekortRepositoryImpl {
@@ -181,7 +184,7 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
 
         val meldekorteneIds = getMeldekorteneIds(behandlingId)
         val meldekortIds = getMeldekortIds(meldekorteneIds)
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from meldekort_grunnlag where behandling_id = ?; 
             delete from meldekort_periode where meldekort_id = ANY(?::bigint[]);
             delete from meldekort where meldekortene_id = ANY(?::bigint[]);
@@ -194,6 +197,7 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
                 setLongArray(4, meldekorteneIds)
             }
         }
+        log.info("Slettet $deletedRows fra meldekort_grunnlag")
     }
 
     private fun getMeldekorteneIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

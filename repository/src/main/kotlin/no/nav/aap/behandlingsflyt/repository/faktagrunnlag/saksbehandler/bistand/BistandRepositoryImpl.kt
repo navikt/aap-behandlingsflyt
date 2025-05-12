@@ -8,8 +8,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<BistandRepositoryImpl> {
         override fun konstruer(connection: DBConnection): BistandRepositoryImpl {
@@ -106,7 +109,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
 
         val bistandVurderingerIds = getBistandVurderingerIds(behandlingId)
 
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from bistand_grunnlag where behandling_id = ?; 
             delete from bistand_vurderinger where id = ANY(?::bigint[]);
             delete from bistand where bistand_vurderinger_id = ANY(?::bigint[]);
@@ -119,6 +122,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
 
             }
         }
+        log.info("Slettet $deletedRows fra bistand_grunnlag")
     }
 
     private fun getBistandVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

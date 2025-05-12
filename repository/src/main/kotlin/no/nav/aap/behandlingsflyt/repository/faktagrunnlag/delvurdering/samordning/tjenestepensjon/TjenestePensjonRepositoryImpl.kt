@@ -181,7 +181,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
         val tjenestePensjonOrdningerIds = getTjenestepensjonOrdningerIds(behandlingId)
         val tjenestePensjonOrdningIds = getTjenestepensjonOrdningIds(tjenestePensjonOrdningerIds)
 
-        dbConnection.execute("""
+        val deletedRows = dbConnection.executeReturnUpdated("""
             delete from tjenestepensjon_forhold_grunnlag where behandling_id = ?; 
             delete from tjenestepensjon_ordning where tjenestepensjon_ordninger_id = ANY(?::bigint[]); 
             delete from tjenestepensjon_ordninger where id = ANY(?::bigint[]);
@@ -195,6 +195,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
                 setLongArray(4, tjenestePensjonOrdningIds)
             }
         }
+        log.info("Slettet $deletedRows fra tjenestepensjon_forhold_grunnlag")
     }
 
     private fun getTjenestepensjonOrdningerIds(behandlingId: BehandlingId): List<Long> = dbConnection.queryList(

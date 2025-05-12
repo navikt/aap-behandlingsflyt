@@ -16,8 +16,12 @@ import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<UnderveisRepositoryImpl> {
         override fun konstruer(connection: DBConnection): UnderveisRepositoryImpl {
             return UnderveisRepositoryImpl(connection)
@@ -124,7 +128,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
 
         val sporingIds = getSporingIds(behandlingId)
         val periodeIds = getPerioderIds(behandlingId)
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from underveis_grunnlag where behandling_id = ?; 
             delete from underveis_periode where perioder_id = ANY(?::bigint[]);
             delete from underveis_perioder where id = ANY(?::bigint[]);
@@ -138,6 +142,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
                 setLongArray(4, sporingIds)
             }
         }
+        log.info("Slettet $deletedRows fra underveis_grunnlag")
     }
 
     private fun getSporingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

@@ -8,8 +8,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class SamordningUføreRepositoryImpl(private val connection: DBConnection) : SamordningUføreRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<SamordningUføreRepositoryImpl> {
         override fun konstruer(connection: DBConnection): SamordningUføreRepositoryImpl {
@@ -116,7 +119,7 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
 
         val samordningUforeVurderingIds = getSamordningUforeVurderingIds(behandlingId)
 
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from samordning_ufore_grunnlag where behandling_id = ?; 
             delete from samordning_ufore_vurdering_periode where vurdering_id = ANY(?::bigint[]);
             delete from samordning_ufore_vurdering where id = ANY(?::bigint[]);
@@ -128,6 +131,7 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
                 setLongArray(3, samordningUforeVurderingIds)
             }
         }
+        log.info("Slettet $deletedRows fra samordning_ufore_grunnlag")
     }
 
     private fun getSamordningUforeVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

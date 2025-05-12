@@ -9,8 +9,11 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class SamordningRepositoryImpl(private val connection: DBConnection) : SamordningRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<SamordningRepositoryImpl> {
         override fun konstruer(connection: DBConnection): SamordningRepositoryImpl {
@@ -114,7 +117,7 @@ class SamordningRepositoryImpl(private val connection: DBConnection) : Samordnin
 
         val smaordningPerioderIds = getSamordningPerioderIds(behandlingId)
 
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from samordning_grunnlag where behandling_id = ?; 
             delete from samordning_periode where perioder_id = ANY(?::bigint[]);
             delete from samordning_perioder where id = ANY(?::bigint[]);

@@ -16,10 +16,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class PersonopplysningRepositoryImpl(
     private val connection: DBConnection, private val personRepository: PersonRepository
 ) : PersonopplysningRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<PersonopplysningRepositoryImpl> {
         override fun konstruer(connection: DBConnection): PersonopplysningRepositoryImpl {
@@ -287,7 +290,7 @@ class PersonopplysningRepositoryImpl(
         val personopplysningerIds = getPersonOpplysningerIds(behandlingId)
         val utenlandsAdresserIds = getUtenlandsAdresserIds(brukerPersonopplysningIds)
 
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from personopplysning_grunnlag where behandling_id = ?; 
             delete from bruker_utenlandsadresse where utenlandsadresser_id = ANY(?::bigint[]);
             delete from bruker_utenlandsadresser_aggregat where id = ANY(?::bigint[]);
@@ -305,6 +308,7 @@ class PersonopplysningRepositoryImpl(
                 setLongArray(6, brukerPersonopplysningIds)
             }
         }
+        log.info("Slettet $deletedRows fra personopplysning_grunnlag")
     }
 
     private fun getBrukerPersonopplysningIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

@@ -104,7 +104,7 @@ class AktivitetspliktRepositoryImpl(private val connection: DBConnection) : Akti
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        connection.execute(
+       val rowsDeleted = connection.executeReturnUpdated(
             """
             delete from brudd_aktivitetsplikt where brudd_aktivitetsplikt.id in (
                 select brudd_aktivitetsplikt_id from brudd_aktivitetsplikter 
@@ -124,6 +124,7 @@ class AktivitetspliktRepositoryImpl(private val connection: DBConnection) : Akti
                 setLong(3, behandlingId.id)
             }
         }
+        rowsDeleted;
     }
 
     private fun finnGrunnlagId(behandlingId: BehandlingId): Long? =

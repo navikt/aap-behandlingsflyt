@@ -7,8 +7,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class UføreRepositoryImpl(private val connection: DBConnection) : UføreRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<UføreRepositoryImpl> {
         override fun konstruer(connection: DBConnection): UføreRepositoryImpl {
             return UføreRepositoryImpl(connection)
@@ -63,7 +67,7 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
 
         val uforeIds = getUforeIds(behandlingId)
 
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from UFORE_GRUNNLAG where behandling_id = ?;
             delete from UFORE_GRADERING where ufore_id = ANY(?::bigint[]);
             delete from UFORE where id = ANY(?::bigint[]);
@@ -76,6 +80,7 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
                 setLongArray(3, uforeIds)
             }
         }
+        log.info("Slettet $deletedRows fra UFORE_GRUNNLAG")
     }
 
     private fun getUforeIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

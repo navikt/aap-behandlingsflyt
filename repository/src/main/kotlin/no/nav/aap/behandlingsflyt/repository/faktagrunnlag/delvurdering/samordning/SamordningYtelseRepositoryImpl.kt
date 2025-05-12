@@ -198,7 +198,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
         val samordningYtelserIds = getSamordningYtelserIds(behandlingId)
         val samordningYtelseIds = getSamordningYtelseIds(samordningYtelserIds)
 
-        dbConnection.execute("""
+        val deletedRows = dbConnection.executeReturnUpdated("""
             delete from samordning_ytelse_grunnlag where behandling_id = ?; 
             delete from samordning_ytelse where ytelser_id = ANY(?::bigint[]);
             delete from samordning_ytelse_periode where ytelse_id = ANY(?::bigint[]);
@@ -211,6 +211,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
                 setLongArray(4, samordningYtelserIds)
             }
         }
+        log.info("Slettet $deletedRows fra samordning_ytelse_grunnlag")
     }
 
     private fun getSamordningYtelserIds(behandlingId: BehandlingId): List<Long> = dbConnection.queryList(

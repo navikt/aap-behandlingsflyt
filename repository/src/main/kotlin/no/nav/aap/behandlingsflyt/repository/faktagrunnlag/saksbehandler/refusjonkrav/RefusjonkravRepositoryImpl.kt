@@ -6,8 +6,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class RefusjonkravRepositoryImpl(private val connection: DBConnection) : RefusjonkravRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<RefusjonkravRepositoryImpl> {
         override fun konstruer(connection: DBConnection): RefusjonkravRepositoryImpl {
             return RefusjonkravRepositoryImpl(connection)
@@ -86,7 +90,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
     override fun slett(behandlingId: BehandlingId) {
 
         val refusjonskravVurderingIds = getRefusjonskravVurderingIds(behandlingId)
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from REFUSJONKRAV_GRUNNLAG where id = ?;
             delete from REFUSJONKRAV_VURDERING where id = ANY(?::bigint[]);
           
@@ -97,6 +101,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
                 setLongArray(2, refusjonskravVurderingIds)
             }
         }
+        log.info("Slettet $deletedRows fra REFUSJONKRAV_GRUNNLAG")
     }
 
     private fun getRefusjonskravVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

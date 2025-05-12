@@ -7,9 +7,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
 class YrkesskadeRepositoryImpl(private val connection: DBConnection) : YrkesskadeRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<YrkesskadeRepositoryImpl> {
         override fun konstruer(connection: DBConnection): YrkesskadeRepositoryImpl {
             return YrkesskadeRepositoryImpl(connection)
@@ -115,7 +119,7 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
 
         val yrkesskadeIds = getYrkesskadeIds(behandlingId)
 
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from yrkesskade_grunnlag where behandling_id = ?; 
             delete from yrkesskade_dato where id = ANY(?::bigint[]);
             delete from yrkesskade where id = ANY(?::bigint[]);
@@ -127,6 +131,7 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
                 setLongArray(3, yrkesskadeIds)
             }
         }
+        log.info("Slettet $deletedRows fra yrkesskade_grunnlag")
     }
 
     private fun getYrkesskadeIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

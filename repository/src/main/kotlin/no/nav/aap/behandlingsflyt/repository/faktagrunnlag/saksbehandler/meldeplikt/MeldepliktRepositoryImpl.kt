@@ -7,10 +7,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 class MeldepliktRepositoryImpl(private val connection: DBConnection) : MeldepliktRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<MeldepliktRepositoryImpl> {
         override fun konstruer(connection: DBConnection): MeldepliktRepositoryImpl {
@@ -142,7 +145,7 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
 
         val meldepliktIds = getMeldepiktIds(behandlingId)
 
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from meldeplikt_fritak_grunnlag where behandling_id = ?; 
             delete from meldeplikt_fritak_vurdering where meldeplikt_id = ANY(?::bigint[]);
             delete from meldeplikt_fritak where id = ANY(?::bigint[]);
@@ -154,6 +157,7 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
                 setLongArray(3, meldepliktIds)
             }
         }
+        log.info("Slettet $deletedRows fra meldeplikt_fritak_grunnlag")
     }
 
     private fun getMeldepiktIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

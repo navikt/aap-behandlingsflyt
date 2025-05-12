@@ -15,13 +15,13 @@ import org.slf4j.LoggerFactory
 
 class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
     TilkjentYtelseRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
     companion object : Factory<TilkjentYtelseRepositoryImpl> {
         override fun konstruer(connection: DBConnection): TilkjentYtelseRepositoryImpl {
             return TilkjentYtelseRepositoryImpl(connection)
         }
     }
-
-    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): List<TilkjentYtelsePeriode>? {
         val tilkjent = connection.queryList(
@@ -87,7 +87,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from tilkjent_periode where tilkjent_ytelse_id in (select tilkjent_ytelse.id from tilkjent_ytelse where behandling_id = ?);
             delete from tilkjent_ytelse where behandling_id = ? 
         """.trimIndent()) {
@@ -96,6 +96,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                 setLong(2, behandlingId.id)
             }
         }
+        log.info("Slettet $deletedRows fra tilkjent_periode")
     }
 
     private fun lagrePeriode(tilkjentYtelseId: Long, periode: Periode, tilkjent: Tilkjent) {

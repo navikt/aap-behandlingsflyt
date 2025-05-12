@@ -8,10 +8,13 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 import java.time.Year
 
 class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
     InntektGrunnlagRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<InntektGrunnlagRepository> {
         override fun konstruer(connection: DBConnection): InntektGrunnlagRepository {
@@ -117,7 +120,7 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
 
         val inntektIds = getInntektIds(behandlingId)
 
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from inntekt_grunnlag where behandling_id = ?; 
             delete from inntekt where inntekt_id = ANY(?::bigint[]);
           
@@ -127,6 +130,7 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
                 setLongArray(2, inntektIds)
             }
         }
+        log.info("Slettet $deletedRows fra barnopplysning_grunnlag")
     }
 
     private fun getInntektIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
