@@ -27,7 +27,6 @@ import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 import java.time.Duration
 
 class YrkesskadeService private constructor(
@@ -39,8 +38,6 @@ class YrkesskadeService private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav {
     override val navn = Companion.navn
-
-    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
@@ -54,7 +51,7 @@ class YrkesskadeService private constructor(
         val fødselsdato =
             requireNotNull(personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)?.brukerPersonopplysning?.fødselsdato)
         val registerYrkesskade: List<Yrkesskade> = yrkesskadeRegisterGateway.innhent(sak.person, fødselsdato)
-        val oppgittYrkesskade = oppgittYrkesskade(kontekst.sakId, sak.rettighetsperiode, harRegisterData = registerYrkesskade.isNotEmpty())
+        val oppgittYrkesskade = oppgittYrkesskade(kontekst.sakId, sak.rettighetsperiode)
         val yrkesskader = registerYrkesskade + listOfNotNull(oppgittYrkesskade)
 
         val behandlingId = kontekst.behandlingId
@@ -76,7 +73,6 @@ class YrkesskadeService private constructor(
     private fun oppgittYrkesskade(
         id: SakId,
         periode: Periode,
-        harRegisterData: Boolean,
     ): Yrkesskade? {
         val mottattDokumenter = mottattDokumentRepository.hentDokumenterAvType(id, InnsendingType.SØKNAD)
 
@@ -86,9 +82,6 @@ class YrkesskadeService private constructor(
             }
 
             /* TODO: Modeller og vis informasjon fra søknad i kelvin. */
-            if (!harRegisterData) {
-                log.error("yrkesskade er JA i søknad, men finner ikke yrkesskade i register")
-            }
         }
 
         return null
