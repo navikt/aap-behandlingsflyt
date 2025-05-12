@@ -35,6 +35,7 @@ class RettighetsperiodeSteg private constructor(
                 if (erRelevant(kontekst)) {
                     val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
                     if (erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene)) {
+                        avbrytÅpneAvklaringsbehov(avklaringsbehovene)
                         return FantAvklaringsbehov(Definisjon.VURDER_RETTIGHETSPERIODE)
                     } else {
                         oppdaterVilkårsresultatForNyPeriode(kontekst)
@@ -48,6 +49,12 @@ class RettighetsperiodeSteg private constructor(
         }
 
         return Fullført
+    }
+
+    private fun avbrytÅpneAvklaringsbehov(avklaringsbehovene: Avklaringsbehovene) {
+        val avklaringsbehovSomSkalAvbrytes =
+            avklaringsbehovene.alle().filter { it.erÅpent() && !(it.erVentepunkt() || it.erBrevVentebehov()) }
+        avklaringsbehovSomSkalAvbrytes.map { it.definisjon }.distinct().forEach { avklaringsbehovene.avbryt(it) }
     }
 
     private fun erIkkeVurdertTidligereIBehandlingen(
