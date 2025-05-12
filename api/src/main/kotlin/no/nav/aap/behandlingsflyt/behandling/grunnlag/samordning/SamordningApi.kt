@@ -150,7 +150,24 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource, repositoryRegi
                 )
             }
         }
-
+        route("/{referanse}/grunnlag/samordning/tjenestepensjon") {
+            authorizedGet<BehandlingReferanse, List<TjenestePensjonForhold>>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam(
+                        "referanse"
+                    )
+                )
+            ) { req ->
+                val tp = dataSource.transaction{ connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
+                    val behandling =
+                        BehandlingReferanseService(repositoryProvider.provide<BehandlingRepository>()).behandling(req)
+                    tjenestePensjonRepository.hent(behandling.id)
+                }
+                respond(tp)
+            }
+        }
 
         route("/{referanse}/grunnlag/samordning") {
             authorizedGet<BehandlingReferanse, SamordningYtelseVurderingGrunnlagDTO>(
