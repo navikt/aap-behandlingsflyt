@@ -165,6 +165,10 @@ class AvklaringsbehovOrkestrator(
             avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = behandlingId)
         val definisjon = if (typeBrev.erVedtak()) {
             Definisjon.SKRIV_VEDTAKSBREV
+        } else if (typeBrev == TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT) {
+//            Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV
+            // Bruker Definisjon.SKRIV_BREV inntil frontend og andre applikasjoner har oppdatert kontrakt
+            Definisjon.SKRIV_BREV
         } else {
             Definisjon.SKRIV_BREV
         }

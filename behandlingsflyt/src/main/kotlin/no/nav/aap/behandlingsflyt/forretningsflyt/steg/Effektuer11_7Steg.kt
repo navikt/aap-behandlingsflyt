@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.BESTILL_BREV
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.EFFEKTUER_11_7
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.SKRIV_BREV
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.VENTE_PÅ_FRIST_EFFEKTUER_11_7
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -121,10 +122,18 @@ class Effektuer11_7Steg(
         }
 
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        if (avklaringsbehov.åpne().any { it.definisjon == SKRIV_BREV && it.skalStoppeHer(type()) }) {
+
+        if (avklaringsbehov.åpne().any { it.definisjon == SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV }) {
+            log.info("Fant åpent avklaringsbehov $SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV (kode ${SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV.kode}). Avgir avklaringsbehov.")
+            return FantAvklaringsbehov(SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
+        }
+
+        if ( // Dette kan fjernes når det ikke er åpne avklaringsbehov av Definisjon.SKRIV_BREV for dette brevet
+            avklaringsbehov.åpne().any { it.definisjon == SKRIV_BREV && it.skalStoppeHer(type()) }) {
             log.info("Fant åpent avklaringsbehov $SKRIV_BREV (kode ${SKRIV_BREV.kode}). Avgir avklaringsbehov.")
             return FantAvklaringsbehov(SKRIV_BREV)
         }
+
         check(eksisterendeBrevBestilling.status == FULLFØRT) {
             "Brevet er ikke fullført, men brev-service har ikke opprettet SKRIV_BREV-behov"
         }
