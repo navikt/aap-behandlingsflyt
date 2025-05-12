@@ -15,8 +15,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.komponenter.httpklient.auth.Bruker
-import no.nav.aap.komponenter.miljo.Miljø
-import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -165,7 +163,7 @@ class AvklaringsbehovOrkestrator(
 
         val avklaringsbehovene =
             avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = behandlingId)
-        val definisjon = if (typeBrev.erVedtak() && Miljø.er() == MiljøKode.DEV) {
+        val definisjon = if (typeBrev.erVedtak()) {
             Definisjon.SKRIV_VEDTAKSBREV
         } else if (typeBrev == TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT) {
 //            Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV

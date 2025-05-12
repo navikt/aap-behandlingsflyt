@@ -20,7 +20,10 @@ interface BehandlingRepository : Repository {
 
     fun hentStegHistorikk(behandlingId: BehandlingId): List<StegTilstand>
 
-    fun hentAlleFor(sakId: SakId): List<Behandling>
+    fun hentAlleFor(
+        sakId: SakId,
+        behandlingstypeFilter: List<TypeBehandling> = TypeBehandling.entries
+    ): List<Behandling>
 
     fun hent(behandlingId: BehandlingId): Behandling
 
