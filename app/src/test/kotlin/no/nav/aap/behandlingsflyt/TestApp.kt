@@ -10,7 +10,12 @@ import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.integrasjon.brev.BrevGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerForholdDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerYtelseDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TpOrdning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdJSON
@@ -186,6 +191,7 @@ private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak
     val ident = genererIdent(dto.fødselsdato)
     val barn = dto.barn.filter { it.harRelasjon }.map { genererBarn(it) }
     val urelaterteBarn = dto.barn.filter { !it.harRelasjon }.map { genererBarn(it) }
+    val tjenestePensjon = dto.tjenestePensjon
     barn.forEach { FakePersoner.leggTil(it) }
     urelaterteBarn.forEach { FakePersoner.leggTil(it) }
     FakePersoner.leggTil(
@@ -206,7 +212,27 @@ private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak
                     periode = it.periode
                 )
             },
-            tjenestePensjon = dto.tjenestePensjon
+            tjenestePensjon = if (dto.tjenestePensjon != null && dto.tjenestePensjon) TjenestePensjonRespons(
+                fnr = ident.identifikator,
+                forhold = listOf(
+                    SamhandlerForholdDto(
+                        TpOrdning(
+                            "test",
+                            "test",
+                            "test"
+                        ),
+                        ytelser = listOf(
+                            SamhandlerYtelseDto(
+                                null,
+                                YtelseTypeCode.LIVSVARIG_AFP,
+                                LocalDate.now().minusYears(1),
+                                null,
+                                12345678L
+                            )
+                        )
+                    )
+                )
+            ) else null,
         )
     )
     val periode = Periode(
@@ -235,7 +261,7 @@ private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak
         )
         sak
     }
-    
+
     return sak
 }
 

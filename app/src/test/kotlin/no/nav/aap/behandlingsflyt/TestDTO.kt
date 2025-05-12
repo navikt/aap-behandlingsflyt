@@ -25,7 +25,7 @@ data class OpprettTestcaseDTO(
     @NotNull @JsonProperty(value = "barn") val barn: List<TestBarn> = emptyList(),
     @NotNull @JsonProperty(value = "medlemskap", defaultValue = "true") val medlemskap: Boolean,
     @JsonProperty(value = "inntekterPerAr") val inntekterPerAr: List<InntektPerÅrDto>? = null,
-    @JsonProperty(value = "tjenestePensjon") val tjenestePensjon: TjenestePensjonRespons? = null,
+    @JsonProperty(value = "tjenestePensjon") val tjenestePensjon: Boolean? = null,
     val institusjoner: Institusjoner = Institusjoner(),
     val sykepenger: List<TestPerson.Sykepenger> = emptyList(),
     val søknadsdato: LocalDate? = null,
