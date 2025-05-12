@@ -132,14 +132,22 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                             } else {
                                 emptyList()
                             }
-                            val definisjon =
-                                if (brevbestilling.typeBrev.erVedtak() &&
+                            val definisjon = when {
+                                brevbestilling.typeBrev.erVedtak() &&
                                     skrivBrevAvklaringsbehov.any { it.definisjon == Definisjon.SKRIV_VEDTAKSBREV }
-                                ) {
+                                -> {
                                     Definisjon.SKRIV_VEDTAKSBREV
-                                } else {
+                                }
+
+                                brevbestilling.typeBrev == TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT &&
+                                        skrivBrevAvklaringsbehov.any { it.definisjon == Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV } -> {
+                                    Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV
+                                }
+
+                                else -> {
                                     Definisjon.SKRIV_BREV
                                 }
+                            }
 
                             BrevGrunnlag.Brev(
                                 avklaringsbehovKode = definisjon.kode,

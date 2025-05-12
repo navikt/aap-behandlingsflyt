@@ -225,6 +225,14 @@ public enum class Definisjon(
         løsesISteg = StegType.EFFEKTUER_11_7,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
     ),
+    SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV(
+        kode = AvklaringsbehovKode.`5052`,
+        løsesISteg = StegType.EFFEKTUER_11_7,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_OPPFOLGING
+        )
+    ),
     VENTE_PÅ_FRIST_EFFEKTUER_11_7(
         kode = AvklaringsbehovKode.`5018`,
         type = BehovType.VENTEPUNKT,
