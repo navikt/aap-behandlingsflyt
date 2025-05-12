@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDateTime
 
 class AvklarOverstyrtForutgåendeMedlemskapLøser(
     private val forutgåendeMedlemskapArbeidInntektRepository: MedlemskapArbeidInntektForutgåendeRepository,
@@ -22,7 +23,6 @@ class AvklarOverstyrtForutgåendeMedlemskapLøser(
     private val sakRepository: SakRepository,
     private val personopplysningForutgåendeRepository: PersonopplysningForutgåendeRepository,
 ) : AvklaringsbehovsLøser<AvklarOverstyrtForutgåendeMedlemskapLøsning> {
-
     constructor(repositoryProvider: RepositoryProvider) : this(
         forutgåendeMedlemskapArbeidInntektRepository = repositoryProvider.provide(),
         medlemskapArbeidInntektRepository = repositoryProvider.provide(),
@@ -45,11 +45,12 @@ class AvklarOverstyrtForutgåendeMedlemskapLøser(
         forutgåendeMedlemskapArbeidInntektRepository.lagreManuellVurdering(
             kontekst.behandlingId(),
             ManuellVurderingForForutgåendeMedlemskap(
-                løsning.manuellVurderingForForutgåendeMedlemskap.begrunnelse,
-                løsning.manuellVurderingForForutgåendeMedlemskap.harForutgåendeMedlemskap,
-                løsning.manuellVurderingForForutgåendeMedlemskap.varMedlemMedNedsattArbeidsevne,
-                løsning.manuellVurderingForForutgåendeMedlemskap.medlemMedUnntakAvMaksFemAar,
-                true
+                begrunnelse = løsning.manuellVurderingForForutgåendeMedlemskap.begrunnelse,
+                harForutgåendeMedlemskap = løsning.manuellVurderingForForutgåendeMedlemskap.harForutgåendeMedlemskap,
+                varMedlemMedNedsattArbeidsevne = løsning.manuellVurderingForForutgåendeMedlemskap.varMedlemMedNedsattArbeidsevne,
+                medlemMedUnntakAvMaksFemAar = løsning.manuellVurderingForForutgåendeMedlemskap.medlemMedUnntakAvMaksFemAar,
+                vurdertAv = kontekst.bruker.ident,
+                overstyrt = true
             )
         )
 
