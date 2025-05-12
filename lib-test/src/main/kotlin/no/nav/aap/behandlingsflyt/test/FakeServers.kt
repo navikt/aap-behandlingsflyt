@@ -332,12 +332,14 @@ object FakeServers : AutoCloseable {
             get("/api/tjenestepensjon/getActiveForholdMedActiveYtelser") {
                 val fomDate = call.request.queryParameters["fomDate"]
                 val tomDate = call.request.queryParameters["tomDate"]
+                val ident = call.parameters["fnr"] ?: ""
+                val fakePerson = FakePersoner.hentPerson(ident)
 
-                val response = TjenestePensjonRespons(
-                    call.parameters["fnr"] ?: "",
-                )
-
-                call.respond(response)
+                if (fakePerson != null && fakePerson.tjenestePensjon != null) {
+                    call.respond(fakePerson.tjenestePensjon)
+                } else {
+                    call.respond(TjenestePensjonRespons(ident))
+                }
             }
         }
     }

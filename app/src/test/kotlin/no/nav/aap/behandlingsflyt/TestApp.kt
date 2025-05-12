@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.integrasjon.brev.BrevGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdJSON
@@ -204,7 +205,8 @@ private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak
                     grad = it.grad,
                     periode = it.periode
                 )
-            }
+            },
+            tjenestePensjon = dto.tjenestePensjon
         )
     )
     val periode = Periode(

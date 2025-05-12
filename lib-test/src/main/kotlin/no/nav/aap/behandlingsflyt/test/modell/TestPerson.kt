@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.test.modell
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdJSON
@@ -51,7 +52,8 @@ class TestPerson(
     ),
     val medlStatus: List<MedlemskapDataIntern> = listOf(),
     val sykepenger: List<Sykepenger>? = null,
-    val foreldrepenger: List<ForeldrePenger>? = null
+    val foreldrepenger: List<ForeldrePenger>? = null,
+    val tjenestePensjon: TjenestePensjonRespons? = null
 ) {
     data class Sykepenger(val grad: Int, val periode: Periode)
     data class ForeldrePenger(val grad: Number, val periode: Periode)
