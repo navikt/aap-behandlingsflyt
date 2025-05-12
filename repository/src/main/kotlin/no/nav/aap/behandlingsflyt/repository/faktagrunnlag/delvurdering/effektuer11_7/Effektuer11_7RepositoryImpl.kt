@@ -133,8 +133,8 @@ class Effektuer11_7RepositoryImpl(private val connection: DBConnection) : Effekt
                 row.getLong("id")
             }
         }
-       if (aktivitetsbrudd.isNotEmpty()) {
-           log.error("Slettet fra aktivitsbrudd med behandlingId $behandlingId, dette skal ikke skje!")
+       check (aktivitetsbrudd.isEmpty()) {
+           log.error("Slettet fra aktivitetsbrudd med behandlingId $behandlingId, dette skal ikke skje!")
        // Her må vi enten feile hardt siden det ikke er forventet at det skal være noe}
           // innhold i tabellene, evt som minimum logge at det skjedde, så vi kan rydde manuelt
        }

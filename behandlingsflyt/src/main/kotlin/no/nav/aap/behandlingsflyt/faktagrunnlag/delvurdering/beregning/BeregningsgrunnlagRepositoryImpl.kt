@@ -6,10 +6,11 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 import java.time.Year
 
 class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : BeregningsgrunnlagRepository {
-
+    private val log = LoggerFactory.getLogger(javaClass)
     companion object : Factory<BeregningsgrunnlagRepositoryImpl> {
         override fun konstruer(connection: DBConnection): BeregningsgrunnlagRepositoryImpl {
             return BeregningsgrunnlagRepositoryImpl(connection)
@@ -31,7 +32,7 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
 
         val beregningUforeIds = getBeregningUforeIds(beregningIds)
 
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from beregning_hoved where beregning_id = ANY(?::BIGINT[]);
             delete from beregning_yrkesskade where beregning_id = ANY(?::BIGINT[]);
         
@@ -52,6 +53,7 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
                 setLongArray(7, beregningIds)
             }
         }
+        log.info("Slettet $deletedRows fra beregning_hoved")
     }
 
     private fun getBeregningUforeIds(beregningIds: List<Long>): List<Long> = connection.queryList(

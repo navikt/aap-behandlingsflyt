@@ -4,11 +4,14 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 import java.time.Instant
 
 class InformasjonskravRepositoryImpl(
     private val connection: DBConnection,
 ): InformasjonkskravRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun hentOppdateringer(sakId: SakId, krav: List<InformasjonskravNavn>): List<InformasjonskravOppdatert> {
         return connection.queryList("""
@@ -51,13 +54,14 @@ class InformasjonskravRepositoryImpl(
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        connection.execute("""
+        val deletedRows = connection.executeReturnUpdated("""
             delete from informasjonskrav_oppdatert where behandling_id = ? 
         """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId.id)
             }
         }
+        log.info("Slettet $deletedRows fra mottatt_dokument")
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {

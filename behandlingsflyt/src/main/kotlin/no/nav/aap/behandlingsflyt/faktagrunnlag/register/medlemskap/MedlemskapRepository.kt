@@ -133,19 +133,22 @@ class MedlemskapRepositoryImpl(private val connection: DBConnection) : Medlemska
 
         val medlemskapUnntakPersonIds = getMedlemskapUnntakPersonIds(behandlingId)
 
-        connection.execute(
+        val deletedRows = connection.executeReturnUpdated(
             """
+            delete from MEDLEMSKAP_UNNTAK_GRUNNLAG where behandling_id = ? 
             delete from MEDLEMSKAP_UNNTAK_PERSON where id = ANY(?::bigint[]);
             delete from MEDLEMSKAP_UNNTAK where medlemskap_unntak_person_id = ANY(?::bigint[]);
-            delete from MEDLEMSKAP_UNNTAK_GRUNNLAG where behandling_id = ? 
+          
         """.trimIndent()
         ) {
             setParams {
-                setLongArray(1, medlemskapUnntakPersonIds)
+                setLong(1, behandlingId.id)
                 setLongArray(2, medlemskapUnntakPersonIds)
-                setLong(3, behandlingId.id)
+                setLongArray(3, medlemskapUnntakPersonIds)
+
             }
         }
+        log.info("Slettet $deletedRows fra MEDLEMSKAP_UNNTAK_GRUNNLAG")
     }
 
     private fun getMedlemskapUnntakPersonIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

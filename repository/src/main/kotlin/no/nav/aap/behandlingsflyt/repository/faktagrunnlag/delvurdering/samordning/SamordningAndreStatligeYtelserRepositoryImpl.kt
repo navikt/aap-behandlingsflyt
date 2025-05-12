@@ -143,13 +143,13 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
         """
                     SELECT vurdering_id
                     FROM samordning_andre_statlige_ytelser_grunnlag
-                    WHERE vurdering_id = ?
+                    WHERE behandling_id = ?
                  
                 """.trimIndent()
     ) {
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
-            row.getLong("vurderinger_id")
+            row.getLong("vurdering_id")
         }
     }
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {

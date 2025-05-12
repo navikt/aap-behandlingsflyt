@@ -8,8 +8,11 @@ import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.lookup.repository.Factory
 import org.jetbrains.annotations.TestOnly
+import org.slf4j.LoggerFactory
 
 class AktivitetspliktRepositoryImpl(private val connection: DBConnection) : AktivitetspliktRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<AktivitetspliktRepositoryImpl> {
         override fun konstruer(connection: DBConnection): AktivitetspliktRepositoryImpl {
@@ -104,7 +107,7 @@ class AktivitetspliktRepositoryImpl(private val connection: DBConnection) : Akti
     }
 
     override fun slett(behandlingId: BehandlingId) {
-       val rowsDeleted = connection.executeReturnUpdated(
+       val deletedRows = connection.executeReturnUpdated(
             """
             delete from brudd_aktivitetsplikt where brudd_aktivitetsplikt.id in (
                 select brudd_aktivitetsplikt_id from brudd_aktivitetsplikter 
@@ -124,7 +127,7 @@ class AktivitetspliktRepositoryImpl(private val connection: DBConnection) : Akti
                 setLong(3, behandlingId.id)
             }
         }
-        rowsDeleted;
+        log.info("Slettet $deletedRows fra brudd_aktivitetsplikt_grunnlag")
     }
 
     private fun finnGrunnlagId(behandlingId: BehandlingId): Long? =
