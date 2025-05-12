@@ -193,14 +193,17 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
-    override fun hentAlleFor(sakId: SakId): List<Behandling> {
+    override fun hentAlleFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): List<Behandling> {
         val query = """
-            SELECT * FROM BEHANDLING WHERE sak_id = ? ORDER BY opprettet_tid DESC
+            SELECT * FROM BEHANDLING WHERE sak_id = ?
+             AND type = ANY(?::text[])
+             ORDER BY opprettet_tid DESC
             """.trimIndent()
 
         return connection.queryList(query) {
             setParams {
                 setLong(1, sakId.toLong())
+                setArray(2, behandlingstypeFilter.map { it.identifikator() })
             }
             setRowMapper {
                 mapBehandling(it)

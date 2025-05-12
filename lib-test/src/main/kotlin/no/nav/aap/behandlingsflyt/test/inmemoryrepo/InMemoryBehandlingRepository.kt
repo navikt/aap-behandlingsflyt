@@ -58,9 +58,11 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
-    override fun hentAlleFor(sakId: SakId): List<Behandling> {
+    override fun hentAlleFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): List<Behandling> {
         synchronized(lock) {
-            return memory.values.filter { behandling -> behandling.sakId == sakId }
+            return memory.values
+                .filter { behandling -> behandling.sakId == sakId }
+                .filter { behandling -> behandling.typeBehandling() in behandlingstypeFilter }
         }
     }
 
