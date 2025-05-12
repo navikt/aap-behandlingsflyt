@@ -73,8 +73,6 @@ fun main() {
         println("jdbcUrl: ${postgres.jdbcUrl}. Password: ${postgres.password}. Username: ${postgres.username}.")
         server(dbConfig, postgresRepositoryRegistry)
         System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
-        System.setProperty("unleash.server.api.url", "http://localhost:8080")
-        System.setProperty("unleash.server.api.token", "xxxx")
 
         val datasource = initDatasource(dbConfig)
 
