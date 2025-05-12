@@ -224,7 +224,7 @@ private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak
                         ytelser = listOf(
                             SamhandlerYtelseDto(
                                 null,
-                                YtelseTypeCode.LIVSVARIG_AFP,
+                                YtelseTypeCode.ALDER,
                                 LocalDate.now().minusYears(1),
                                 null,
                                 12345678L
