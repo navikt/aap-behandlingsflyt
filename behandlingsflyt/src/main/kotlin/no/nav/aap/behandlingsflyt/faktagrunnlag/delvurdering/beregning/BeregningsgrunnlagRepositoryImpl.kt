@@ -6,10 +6,11 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 import java.time.Year
 
 class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : BeregningsgrunnlagRepository {
-
+    private val log = LoggerFactory.getLogger(javaClass)
     companion object : Factory<BeregningsgrunnlagRepositoryImpl> {
         override fun konstruer(connection: DBConnection): BeregningsgrunnlagRepositoryImpl {
             return BeregningsgrunnlagRepositoryImpl(connection)
@@ -21,6 +22,80 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
         UFØRE,
         YRKESSKADE,
         YRKESSKADE_UFØRE
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val beregningIds = getBeregningIds(behandlingId)
+
+        val beregningHovedIds = getBeregningHovedIds(beregningIds)
+
+        val beregningUforeIds = getBeregningUforeIds(beregningIds)
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from beregning_hoved where beregning_id = ANY(?::BIGINT[]);
+            delete from beregning_yrkesskade where beregning_id = ANY(?::BIGINT[]);
+        
+            delete from beregning_inntekt where beregning_hoved_id = ANY(?::BIGINT[]);
+            delete from beregning_ufore_inntekt where beregning_ufore_id = ANY(?::BIGINT[]);
+        
+            delete from beregning_ufore where beregning_id = ANY(?::BIGINT[]);
+            delete from beregningsgrunnlag where behandling_id = ?;  
+            delete from beregning where id = ANY(?::BIGINT[]);
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, beregningIds)
+                setLongArray(2, beregningIds)
+                setLongArray(3, beregningHovedIds)
+                setLongArray(4, beregningUforeIds)
+                setLongArray(5, beregningIds)
+                setLong(6, behandlingId.id)
+                setLongArray(7, beregningIds)
+            }
+        }
+        log.info("Slettet $deletedRows fra beregning_hoved")
+    }
+
+    private fun getBeregningUforeIds(beregningIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM beregning_ufore
+                    WHERE beregning_id = ANY(?::BIGINT[])
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, beregningIds) }
+        setRowMapper { row ->
+            row.getLong("id")
+        }
+    }
+
+    private fun getBeregningHovedIds(beregningIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM beregning_hoved
+                    WHERE beregning_id = ANY(?::BIGINT[])
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, beregningIds) }
+        setRowMapper { row ->
+            row.getLong("id")
+        }
+    }
+
+    private fun getBeregningIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT beregning_id
+                    FROM beregningsgrunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("beregning_id")
+        }
     }
 
     private fun hentInntekt(beregningsId: Long): List<GrunnlagInntekt> {
@@ -487,4 +562,6 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             deaktiverEksisterende(behandlingId)
         }
     }
+
 }
+

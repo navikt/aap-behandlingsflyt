@@ -8,8 +8,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<StudentRepositoryImpl> {
         override fun konstruer(connection: DBConnection): StudentRepositoryImpl {
@@ -68,6 +71,52 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
 
             val vurderingId = lagreVurdering(studentvurdering)
             lagreGrunnlag(behandlingId, vurderingId, eksisterendeGrunnlag?.oppgittStudent?.id)
+        }
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val studentIds = getStudentIds(behandlingId)
+        val oppgittStudentIds = getOppgittStudentIds(behandlingId)
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from STUDENT_GRUNNLAG where id = ?;
+            delete from OPPGITT_STUDENT where id = ANY(?::bigint[]);
+            delete from STUDENT_VURDERING where id = ANY(?::bigint[]);
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, studentIds)
+                setLongArray(3, oppgittStudentIds)
+            }
+        }
+        log.info("Slettet $deletedRows fra STUDENT_GRUNNLAG")
+    }
+
+    private fun getStudentIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT student_id
+                    FROM STUDENT_GRUNNLAG
+                    WHERE behandling_id = ? AND student_id is not null
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("student_id")
+        }
+    }
+
+    private fun getOppgittStudentIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT oppgitt_student_id
+                    FROM STUDENT_GRUNNLAG
+                    WHERE behandling_id = ? AND oppgitt_student_id is not null
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("oppgitt_student_id")
         }
     }
 

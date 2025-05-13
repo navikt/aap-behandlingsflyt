@@ -28,4 +28,7 @@ object InMemoryTrukketSøknadRepository : TrukketSøknadRepository {
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         store[tilBehandling] = store[fraBehandling].orEmpty()
     }
+
+    override fun slett(behandlingId: BehandlingId) {
+    }
 }

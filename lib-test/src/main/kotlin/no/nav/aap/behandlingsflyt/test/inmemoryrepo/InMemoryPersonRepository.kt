@@ -33,6 +33,9 @@ object InMemoryPersonRepository: PersonRepository {
         return personer.values.find { it.identer().contains(ident) }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+    }
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
     }
 }

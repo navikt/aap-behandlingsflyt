@@ -50,6 +50,9 @@ object InMemoryBrevbestillingRepository: BrevbestillingRepository {
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+    }
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
     }
 }

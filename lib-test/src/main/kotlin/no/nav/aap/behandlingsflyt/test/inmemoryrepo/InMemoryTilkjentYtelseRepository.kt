@@ -21,6 +21,9 @@ object InMemoryTilkjentYtelseRepository : TilkjentYtelseRepository {
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+    }
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
     }
 }

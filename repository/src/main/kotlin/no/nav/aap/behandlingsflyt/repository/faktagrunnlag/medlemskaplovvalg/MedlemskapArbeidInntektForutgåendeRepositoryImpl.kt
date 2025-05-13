@@ -18,9 +18,13 @@ import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: DBConnection):
     MedlemskapArbeidInntektForutgåendeRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<MedlemskapArbeidInntektForutgåendeRepositoryImpl> {
         override fun konstruer(connection: DBConnection): MedlemskapArbeidInntektForutgåendeRepositoryImpl {
             return MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
@@ -145,6 +149,74 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                 setLong(4, medlId)
                 setLong(5, grunnlagOppslag?.manuellVurderingId)
             }
+        }
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+        val arbeidIds = getArbeidIds(behandlingId)
+        val inntekterIds = getInntekterIds(behandlingId)
+        val manuellVurderingIds = getManuellVurderingIds(behandlingId)
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ?; 
+            delete from INNTEKT_I_NORGE_FORUTGAAENDE where inntekter_i_norge_id = ANY(?::bigint[]);
+            delete from INNTEKTER_I_NORGE where id = ANY(?::bigint[]);
+            delete from ARBEID_FORUTGAAENDE where arbeider_id = ANY(?::bigint[]);
+            delete from ARBEIDER_FORUTGAAENDE where id = ANY(?::bigint[]);
+            delete from FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING where id = ANY(?::bigint[]);
+           
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, inntekterIds)
+                setLongArray(3, inntekterIds)
+                setLongArray(4, arbeidIds)
+                setLongArray(5, arbeidIds)
+                setLongArray(6, manuellVurderingIds)
+            }
+        }
+        log.info("Slettet $deletedRows fra FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG")
+    }
+
+    private fun getManuellVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT manuell_vurdering_id
+                    FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("manuell_vurdering_id")
+        }
+    }
+
+    private fun getArbeidIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT arbeider_id
+                    FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("arbeider_id")
+        }
+    }
+
+    private fun getInntekterIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT inntekter_i_norge_id
+                    FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("inntekter_i_norge_id")
         }
     }
 

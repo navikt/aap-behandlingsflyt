@@ -6,8 +6,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection: DBConnection) : TjenestepensjonRefusjonsKravVurderingRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<TjenestepensjonRefusjonskravVurderingRepositoryImpl>{
         override fun konstruer(connection: DBConnection): TjenestepensjonRefusjonskravVurderingRepositoryImpl {
             return TjenestepensjonRefusjonskravVurderingRepositoryImpl(connection)
@@ -115,4 +119,35 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
             }
         }
     }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val refusjonsKravVurderingIds = getRefusjonsKravVurderingIds(behandlingId)
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from tjenestepensjon_refusjonskrav_grunnlag where behandling_id = ?; 
+            delete from tjenestepensjon_refusjonskrav_vurdering where id = ANY(?::bigint[]);
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, refusjonsKravVurderingIds)
+            }
+        }
+        log.info("Slettet $deletedRows fra tjenestepensjon_refusjonskrav_grunnlag")
+    }
+
+    private fun getRefusjonsKravVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT REFUSJONKRAV_VURDERING_ID
+                    FROM tjenestepensjon_refusjonskrav_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("refusjonkrav_vurdering_id")
+        }
+    }
+
 }

@@ -98,6 +98,10 @@ class BrevbestillingRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+        // Det trenger ikke å slettes fra brevBestilling-tabellen, men det må slettes fra aap-brev - applikasjonen.
+    }
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         // Trengs ikke implementeres
     }

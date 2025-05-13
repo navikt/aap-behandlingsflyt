@@ -7,9 +7,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
     InstitusjonsoppholdRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<InstitusjonsoppholdRepository> {
         override fun konstruer(connection: DBConnection): InstitusjonsoppholdRepository {
@@ -299,6 +302,76 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                 setLong(1, tilBehandling.toLong())
                 setLong(2, fraBehandling.toLong())
             }
+        }
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val oppholdPersonIds = getOppholdPersonIds(behandlingId)
+        val helseoppholdVurderingerIds = getHelseOppholdVurderingerIds(behandlingId)
+        val soningVurderingerIds = getSoningVurderingerIds(behandlingId)
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from opphold_grunnlag where behandling_id = ?; 
+            delete from helseopphold_vurdering where helseopphold_vurderinger_id = ANY(?::bigint[]);
+            delete from helseopphold_vurderinger where id = ANY(?::bigint[]);
+            delete from soning_vurdering where soning_vurderinger_id = ANY(?::bigint[]);
+            delete from soning_vurderinger where id = ANY(?::bigint[]);
+            delete from opphold where opphold_person_id = ANY(?::bigint[]);
+            delete from opphold_person where id = ANY(?::bigint[]);
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, helseoppholdVurderingerIds)
+                setLongArray(3, helseoppholdVurderingerIds)
+                setLongArray(4, soningVurderingerIds)
+                setLongArray(5, soningVurderingerIds)
+                setLongArray(6, oppholdPersonIds)
+                setLongArray(7, oppholdPersonIds)
+            }
+        }
+        log.info("Slettet $deletedRows fra opphold_grunnlag")
+    }
+
+    private fun getOppholdPersonIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT opphold_person_id
+                    FROM opphold_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("opphold_person_id")
+        }
+    }
+
+    private fun getSoningVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT soning_vurderinger_id
+                    FROM opphold_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("soning_vurderinger_id")
+        }
+    }
+
+    private fun getHelseOppholdVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT helseopphold_vurderinger_id
+                    FROM opphold_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("helseopphold_vurderinger_id")
         }
     }
 

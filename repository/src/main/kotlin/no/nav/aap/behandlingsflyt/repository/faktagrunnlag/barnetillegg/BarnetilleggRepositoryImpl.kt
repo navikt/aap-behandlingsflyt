@@ -8,8 +8,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class BarnetilleggRepositoryImpl(private val connection: DBConnection) : BarnetilleggRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<BarnetilleggRepositoryImpl> {
         override fun konstruer(connection: DBConnection): BarnetilleggRepositoryImpl {
@@ -42,6 +45,57 @@ class BarnetilleggRepositoryImpl(private val connection: DBConnection) : Barneti
             }
 
             lagreNyttGrunnlag(behandlingId, barnetilleggPerioder)
+        }
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val barnetilleggPerioderIds = getBarnetilleggPerioderIds(behandlingId)
+        val barnetilleggPeriodeIds = getBarnetilleggPeriodeIds(barnetilleggPerioderIds)
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from barnetillegg_grunnlag where behandling_id = ?; 
+            delete from barnetillegg_periode where perioder_id = ANY(?::bigint[]);
+            delete from barnetillegg_perioder where id = ANY(?::bigint[]);
+            delete from barn_tillegg where barnetillegg_periode_id = ANY(?::bigint[]);
+           
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, barnetilleggPerioderIds)
+                setLongArray(3, barnetilleggPerioderIds)
+                setLongArray(4, barnetilleggPeriodeIds)
+
+            }
+        }
+        log.info("Slettet $deletedRows fra barnetillegg_grunnlag")
+    }
+
+    private fun getBarnetilleggPerioderIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT perioder_id
+                    FROM barnetillegg_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("perioder_id")
+        }
+    }
+
+    private fun getBarnetilleggPeriodeIds(perioderIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM barnetillegg_periode
+                    WHERE perioder_id = ANY(?::bigint[]);
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, perioderIds) }
+        setRowMapper { row ->
+            row.getLong("id")
         }
     }
 

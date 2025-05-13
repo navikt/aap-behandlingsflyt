@@ -487,6 +487,9 @@ class StatistikkJobbUtførerTest {
                 TODO("Not yet implemented")
             }
 
+            override fun slett(behandlingId: BehandlingId) {
+            }
+
             override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
             }
 
@@ -501,6 +504,9 @@ class StatistikkJobbUtførerTest {
         val dokumentRepository = object : MottattDokumentRepository {
             override fun lagre(mottattDokument: MottattDokument) {
                 TODO("Not yet implemented")
+            }
+
+            override fun slett(behandlingId: BehandlingId) {
             }
 
             override fun oppdaterStatus(
@@ -569,6 +575,9 @@ class StatistikkJobbUtførerTest {
                 TODO("Not yet implemented")
             }
 
+            override fun slett(behandlingId: BehandlingId) {
+            }
+
             override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
             }
         }
@@ -592,6 +601,9 @@ class StatistikkJobbUtførerTest {
 
             override fun hent(behandlingId: BehandlingId): SykdomGrunnlag {
                 TODO("Not yet implemented")
+            }
+
+            override fun slett(behandlingId: BehandlingId) {
             }
 
             override fun hentHistoriskeSykdomsvurderinger(

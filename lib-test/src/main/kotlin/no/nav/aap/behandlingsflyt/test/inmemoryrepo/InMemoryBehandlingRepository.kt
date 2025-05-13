@@ -103,6 +103,9 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         TODO("Not yet implemented")
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+    }
+
     override fun oppdaterBehandlingStatus(
         behandlingId: BehandlingId,
         status: Status

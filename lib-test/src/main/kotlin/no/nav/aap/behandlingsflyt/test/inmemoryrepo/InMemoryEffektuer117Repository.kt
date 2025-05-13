@@ -40,6 +40,9 @@ object InMemoryEffektuer117Repository: Effektuer11_7Repository {
         TODO("Not yet implemented")
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+    }
+
     private fun hentEllerOpprett(behandlingId: BehandlingId): Effektuer11_7Grunnlag {
         return grunnlag.computeIfAbsent(behandlingId) { Effektuer11_7Grunnlag(null, emptyList()) }
     }

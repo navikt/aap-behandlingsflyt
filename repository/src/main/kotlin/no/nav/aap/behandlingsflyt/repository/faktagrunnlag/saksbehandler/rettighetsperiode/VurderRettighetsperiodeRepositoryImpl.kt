@@ -5,8 +5,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection) : VurderRettighetsperiodeRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     override fun lagreVurdering(behandlingId: BehandlingId, vurdering: RettighetsperiodeVurdering) {
         lagreGrunnlag(behandlingId, RettighetsperiodeGrunnlag(vurdering))
     }
@@ -59,6 +63,38 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+
+        val rettighetsPeriodeVurderingerIds = getRettighetsPeriodeVurderingerIds(behandlingId)
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from rettighetsperiode_grunnlag where behandling_id = ?; 
+            delete from rettighetsperiode_vurdering where vurderinger_id = ANY(?::bigint[]);
+            delete from rettighetsperiode_vurderinger where id = ANY(?::bigint[]);
+       
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, rettighetsPeriodeVurderingerIds)
+                setLongArray(3, rettighetsPeriodeVurderingerIds)
+            }
+        }
+        log.info("Slettet $deletedRows fra rettighetsperiode_grunnlag")
+    }
+
+    private fun getRettighetsPeriodeVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT vurderinger_id
+                    FROM rettighetsperiode_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("vurderinger_id")
+        }
+    }
 
     private fun hentHvisEksisterer(behandlingId: BehandlingId): RettighetsperiodeGrunnlag? {
         val vurderingerId = connection.queryFirstOrNull<Long>(

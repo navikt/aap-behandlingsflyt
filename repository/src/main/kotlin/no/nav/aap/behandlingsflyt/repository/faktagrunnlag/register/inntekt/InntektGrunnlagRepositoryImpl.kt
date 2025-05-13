@@ -8,10 +8,13 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 import java.time.Year
 
 class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
     InntektGrunnlagRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<InntektGrunnlagRepository> {
         override fun konstruer(connection: DBConnection): InntektGrunnlagRepository {
@@ -110,6 +113,37 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper(::mapGrunnlag)
+        }
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val inntektIds = getInntektIds(behandlingId)
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from inntekt_grunnlag where behandling_id = ?; 
+            delete from inntekt where inntekt_id = ANY(?::bigint[]);
+          
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, inntektIds)
+            }
+        }
+        log.info("Slettet $deletedRows fra barnopplysning_grunnlag")
+    }
+
+    private fun getInntektIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT inntekt_id
+                    FROM inntekt_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("inntekt_id")
         }
     }
 

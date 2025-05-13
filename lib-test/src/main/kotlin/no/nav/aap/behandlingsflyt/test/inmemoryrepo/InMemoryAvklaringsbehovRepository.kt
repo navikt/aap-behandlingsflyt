@@ -131,6 +131,9 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+    }
+
     private class AvklaringsbehovHolder(val avklaringsbehovene: MutableList<Avklaringsbehov>) {
         fun hentBehov(definisjon: Definisjon): Avklaringsbehov? {
             return avklaringsbehovene.singleOrNull { avklaringsbehov -> avklaringsbehov.definisjon == definisjon }

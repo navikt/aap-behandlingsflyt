@@ -7,8 +7,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : PåklagetBehandlingRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<PåklagetBehandlingRepositoryImpl> {
         override fun konstruer(connection: DBConnection): PåklagetBehandlingRepositoryImpl {
@@ -79,6 +82,38 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         // Skal ikke kopieres
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val påklagetBehandlingVurderingIds = getpåklagetBehandlingVurderingIds(behandlingId)
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from PAAKLAGET_BEHANDLING_GRUNNLAG where behandling_id = ?; 
+            delete from PAAKLAGET_BEHANDLING_VURDERING where id = ANY(?::bigint[]);
+    
+           
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, påklagetBehandlingVurderingIds)
+            }
+        }
+        log.info("Slettet $deletedRows fra samordning_andre_statlige_ytelser_grunnlag")
+    }
+
+    private fun getpåklagetBehandlingVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT vurdering_id
+                    FROM PAAKLAGET_BEHANDLING_GRUNNLAG
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("vurdering_id")
+        }
     }
 
     private fun mapGrunnlag(row: Row): PåklagetBehandlingGrunnlag {

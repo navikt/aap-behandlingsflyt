@@ -7,10 +7,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 class MeldepliktRepositoryImpl(private val connection: DBConnection) : MeldepliktRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<MeldepliktRepositoryImpl> {
         override fun konstruer(connection: DBConnection): MeldepliktRepositoryImpl {
@@ -137,6 +140,40 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
             }
         }
     }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val meldepliktIds = getMeldepiktIds(behandlingId)
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from meldeplikt_fritak_grunnlag where behandling_id = ?; 
+            delete from meldeplikt_fritak_vurdering where meldeplikt_id = ANY(?::bigint[]);
+            delete from meldeplikt_fritak where id = ANY(?::bigint[]);
+          
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, meldepliktIds)
+                setLongArray(3, meldepliktIds)
+            }
+        }
+        log.info("Slettet $deletedRows fra meldeplikt_fritak_grunnlag")
+    }
+
+    private fun getMeldepiktIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT meldeplikt_id
+                    FROM meldeplikt_fritak_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("meldeplikt_id")
+        }
+    }
+
 
     private fun deaktiverEksisterende(behandlingId: BehandlingId) {
         connection.execute("UPDATE MELDEPLIKT_FRITAK_GRUNNLAG SET AKTIV = FALSE WHERE AKTIV AND BEHANDLING_ID = ?") {

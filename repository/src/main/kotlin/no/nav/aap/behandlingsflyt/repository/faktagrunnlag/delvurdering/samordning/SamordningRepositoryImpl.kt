@@ -9,8 +9,11 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class SamordningRepositoryImpl(private val connection: DBConnection) : SamordningRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<SamordningRepositoryImpl> {
         override fun konstruer(connection: DBConnection): SamordningRepositoryImpl {
@@ -107,6 +110,39 @@ class SamordningRepositoryImpl(private val connection: DBConnection) : Samordnin
                 setLong(1, behandlingId.toLong())
             }
             setResultValidator { require(it == 1) }
+        }
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val smaordningPerioderIds = getSamordningPerioderIds(behandlingId)
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from samordning_grunnlag where behandling_id = ?; 
+            delete from samordning_periode where perioder_id = ANY(?::bigint[]);
+            delete from samordning_perioder where id = ANY(?::bigint[]);
+          
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, smaordningPerioderIds)
+                setLongArray(3, smaordningPerioderIds)
+            }
+        }
+        log.info("Slettet $deletedRows fra samordning_grunnlag")
+    }
+
+    private fun getSamordningPerioderIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT perioder_id
+                    FROM samordning_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("perioder_id")
         }
     }
 

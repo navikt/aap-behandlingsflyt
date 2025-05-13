@@ -8,10 +8,14 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : ArbeidsevneRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<ArbeidsevneRepositoryImpl> {
         override fun konstruer(connection: DBConnection): ArbeidsevneRepositoryImpl {
             return ArbeidsevneRepositoryImpl(connection)
@@ -159,6 +163,40 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
                 setLong(1, tilBehandling.toLong())
                 setLong(2, fraBehandling.toLong())
             }
+        }
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val arbeidsevneIds = getArbeidsevneIds(behandlingId)
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from arbeidsevne_grunnlag where behandling_id = ?; 
+            delete from arbeidsevne_vurdering where arbeidsevne_id = ANY(?::bigint[]);
+            delete from arbeidsevne where id = ANY(?::bigint[]);
+           
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, arbeidsevneIds)
+                setLongArray(3, arbeidsevneIds)
+
+            }
+        }
+        log.info("Slettet $deletedRows fra arbeidsevne_grunnlag")
+    }
+
+    private fun getArbeidsevneIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT arbeidsevne_id
+                    FROM arbeidsevne_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("arbeidsevne_id")
         }
     }
 }
