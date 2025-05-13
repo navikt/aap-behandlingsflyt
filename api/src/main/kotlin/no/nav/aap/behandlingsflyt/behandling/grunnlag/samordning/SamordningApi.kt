@@ -10,7 +10,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andresta
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonOrdning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonYtelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TpOrdning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
@@ -106,9 +110,16 @@ data class SamordningAndreStatligeYtelserVurderingPeriodeDTO(
     val beløp: Int
 )
 
-class TjenestepensjonGrunnlagDTO(
+data class TjenestepensjonGrunnlagDTO(
     val harTilgangTilÅSaksbehandle: Boolean,
-    val tjenestepensjonForhold: List<TjenestePensjonForhold>,
+    val tjenestepensjonYtelser: List<TjenestepensjonYtelseDTO>,
+)
+
+data class TjenestepensjonYtelseDTO(
+    val ytelseIverksattFom: LocalDate,
+    val ytelseIverksattTom: LocalDate?,
+    val ytelse: YtelseTypeCode,
+    val ordning: TjenestePensjonOrdning
 )
 
 fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
@@ -176,7 +187,16 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource, repositoryRegi
                     token()
                 )
 
-                respond(TjenestepensjonGrunnlagDTO(harTilgangTilÅSaksbehandle,tp))
+                respond(TjenestepensjonGrunnlagDTO(harTilgangTilÅSaksbehandle,tp.flatMap { ordning ->
+                    ordning.ytelser.map { ytelse ->
+                        TjenestepensjonYtelseDTO(
+                            ytelseIverksattFom = ytelse.ytelseIverksattFom,
+                            ytelseIverksattTom = ytelse.ytelseIverksattTom,
+                            ytelse = ytelse.ytelseType,
+                            ordning = ordning.ordning
+                        )
+                    }
+                }))
             }
         }
 
