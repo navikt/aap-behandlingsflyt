@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.flate
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import java.time.LocalDate
 import java.time.LocalDateTime

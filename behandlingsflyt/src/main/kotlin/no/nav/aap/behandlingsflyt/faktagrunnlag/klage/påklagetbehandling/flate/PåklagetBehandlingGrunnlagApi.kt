@@ -5,7 +5,6 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.transaction
