@@ -106,6 +106,10 @@ data class SamordningAndreStatligeYtelserVurderingPeriodeDTO(
     val beløp: Int
 )
 
+class TjenestepensjonGrunnlagDTO(
+    val harTilgangTilÅSaksbehandle: Boolean,
+    val tjenestepensjonForhold: List<TjenestePensjonForhold>,
+)
 
 fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling") {
@@ -151,7 +155,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource, repositoryRegi
             }
         }
         route("/{referanse}/grunnlag/samordning/tjenestepensjon") {
-            authorizedGet<BehandlingReferanse, TjenestePensjonGrunnlag>(
+            authorizedGet<BehandlingReferanse, TjenestepensjonGrunnlagDTO>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam(
                         "referanse"
@@ -165,7 +169,14 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource, repositoryRegi
                         BehandlingReferanseService(repositoryProvider.provide<BehandlingRepository>()).behandling(req)
                     tjenestePensjonRepository.hent(behandling.id)
                 }
-                respond(TjenestePensjonGrunnlag(tp))
+
+                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
+                    req.referanse,
+                    Definisjon.SAMORDNING_REFUSJONS_KRAV.kode.toString(),
+                    token()
+                )
+
+                respond(TjenestepensjonGrunnlagDTO(harTilgangTilÅSaksbehandle,tp))
             }
         }
 
