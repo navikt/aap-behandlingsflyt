@@ -122,7 +122,7 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
                 setLongArray(2, påklagetBehandlingVurderingIds)
             }
         }
-        log.info("Slettet $deletedRows fra samordning_andre_statlige_ytelser_grunnlag")
+        log.info("Slettet $deletedRows fra PAAKLAGET_BEHANDLING_GRUNNLAG")
     }
 
     private fun getpåklagetBehandlingVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
