@@ -138,7 +138,7 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
         """
                     SELECT vurdering_id
                     FROM samordning_ufore_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND vurdering_id is not null
                  
                 """.trimIndent()
     ) {

@@ -129,7 +129,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         """
                     SELECT bistand_vurderinger_id
                     FROM bistand_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND bistand_vurderinger_id is not null
                  
                 """.trimIndent()
     ) {

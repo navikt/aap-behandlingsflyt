@@ -142,7 +142,7 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
         """
                     SELECT REFUSJONKRAV_VURDERING_ID
                     FROM tjenestepensjon_refusjonskrav_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND REFUSJONKRAV_VURDERING_ID is not null
                  
                 """.trimIndent()
     ) {

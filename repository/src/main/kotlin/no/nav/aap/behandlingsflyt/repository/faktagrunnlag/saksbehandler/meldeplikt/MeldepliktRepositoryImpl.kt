@@ -164,7 +164,7 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
         """
                     SELECT meldeplikt_id
                     FROM meldeplikt_fritak_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND meldeplikt_id is not null
                  
                 """.trimIndent()
     ) {

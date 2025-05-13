@@ -315,7 +315,7 @@ class PersonopplysningRepositoryImpl(
         """
                     SELECT bruker_personopplysning_id
                     FROM personopplysning_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND bruker_personopplysning_id is not null
                  
                 """.trimIndent()
     ) {

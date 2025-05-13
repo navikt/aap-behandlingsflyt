@@ -87,7 +87,7 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
         """
                     SELECT ufore_id
                     FROM UFORE_GRUNNLAG
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND ufore_id is not null
                  
                 """.trimIndent()
     ) {

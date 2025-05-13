@@ -133,7 +133,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         """
                     SELECT yrkesskade_id
                     FROM sykdom_grunnlag
-                    WHERE behandling_id = ?;
+                    WHERE behandling_id = ? AND student_id is not null;
                  
                 """.trimIndent()
     ) {

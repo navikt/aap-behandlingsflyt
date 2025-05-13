@@ -149,7 +149,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         """
                     SELECT sporing_id
                     FROM underveis_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND sporing_id is not null
                  
                 """.trimIndent()
     ) {
@@ -163,7 +163,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         """
                     SELECT perioder_id
                     FROM underveis_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND perioder_id is not null
                  
                 """.trimIndent()
     ) {

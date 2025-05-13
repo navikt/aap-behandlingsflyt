@@ -195,7 +195,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
         """
                     SELECT yrkesskade_vurdering_id
                     FROM BEREGNINGSFAKTA_GRUNNLAG
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND yrkesskade_vurdering_id is not null
                  
                 """.trimIndent()
     ) {
@@ -209,7 +209,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
         """
                     SELECT tidspunkt_vurdering_id
                     FROM BEREGNINGSFAKTA_GRUNNLAG
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND tidspunkt_vurdering_id is not null
                  
                 """.trimIndent()
     ) {

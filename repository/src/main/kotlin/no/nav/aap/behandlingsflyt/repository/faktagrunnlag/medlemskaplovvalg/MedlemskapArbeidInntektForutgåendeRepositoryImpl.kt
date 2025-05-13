@@ -182,7 +182,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         """
                     SELECT manuell_vurdering_id
                     FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND manuell_vurdering_id is not null
                  
                 """.trimIndent()
     ) {
@@ -196,7 +196,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         """
                     SELECT arbeider_id
                     FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND arbeider_id is not null
                  
                 """.trimIndent()
     ) {
@@ -210,7 +210,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         """
                     SELECT inntekter_i_norge_id
                     FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND inntekter_i_norge_id is not null
                  
                 """.trimIndent()
     ) {

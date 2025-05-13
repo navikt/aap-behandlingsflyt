@@ -187,7 +187,7 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
         """
                     SELECT vurdering_id
                     FROM sykepenge_erstatning_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND vurdering_id is not null
                  
                 """.trimIndent()
     ) {

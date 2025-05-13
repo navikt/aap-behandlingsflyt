@@ -129,7 +129,7 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
         """
                     SELECT vurdering_id
                     FROM PAAKLAGET_BEHANDLING_GRUNNLAG
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND vurdering_id is not null
                  
                 """.trimIndent()
     ) {

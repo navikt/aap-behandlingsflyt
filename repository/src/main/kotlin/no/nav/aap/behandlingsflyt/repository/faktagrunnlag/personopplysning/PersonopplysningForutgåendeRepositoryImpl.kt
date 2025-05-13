@@ -210,7 +210,7 @@ class PersonopplysningForutgåendeRepositoryImpl(
         """
                     SELECT bruker_personopplysning_id
                     FROM personopplysning_forutgaaende_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND bruker_personopplysning_id is not null
                  
                 """.trimIndent()
     ) {
@@ -224,7 +224,7 @@ class PersonopplysningForutgåendeRepositoryImpl(
         """
                     SELECT personopplysninger_id
                     FROM personopplysning_forutgaaende_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND personopplysninger_id is not null
                  
                 """.trimIndent()
     ) {

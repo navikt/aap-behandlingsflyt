@@ -143,7 +143,7 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
         """
                     SELECT vurdering_id
                     FROM samordning_andre_statlige_ytelser_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND vurdering_id is not null
                  
                 """.trimIndent()
     ) {

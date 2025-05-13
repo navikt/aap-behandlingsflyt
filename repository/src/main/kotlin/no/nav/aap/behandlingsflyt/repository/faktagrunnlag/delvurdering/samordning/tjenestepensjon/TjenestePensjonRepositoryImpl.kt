@@ -202,7 +202,8 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
         """
                     SELECT tjenestepensjon_ordninger_id
                     FROM tjenestepensjon_forhold_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND tjenestepensjon_ordninger_id is not null
+                 
                  
                 """.trimIndent()
     ) {

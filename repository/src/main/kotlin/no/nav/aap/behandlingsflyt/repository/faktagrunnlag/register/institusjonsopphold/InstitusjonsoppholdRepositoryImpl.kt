@@ -337,7 +337,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
         """
                     SELECT opphold_person_id
                     FROM opphold_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND opphold_person_id is not null
                  
                 """.trimIndent()
     ) {
@@ -351,7 +351,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
         """
                     SELECT soning_vurderinger_id
                     FROM opphold_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND soning_vurderinger_id is not null
                  
                 """.trimIndent()
     ) {
@@ -365,7 +365,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
         """
                     SELECT helseopphold_vurderinger_id
                     FROM opphold_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND helseopphold_vurderinger_id is not null
                  
                 """.trimIndent()
     ) {

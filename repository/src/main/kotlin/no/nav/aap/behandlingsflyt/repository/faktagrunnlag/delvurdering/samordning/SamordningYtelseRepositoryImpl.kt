@@ -218,7 +218,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
         """
                     SELECT samordning_ytelse_id
                     FROM samordning_ytelse_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND samordning_ytelse_id is not null
                  
                 """.trimIndent()
     ) {

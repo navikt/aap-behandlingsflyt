@@ -204,7 +204,7 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
         """
                     SELECT meldekortene_id
                     FROM meldekort_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND meldekortene_id is not null
                  
                 """.trimIndent()
     ) {

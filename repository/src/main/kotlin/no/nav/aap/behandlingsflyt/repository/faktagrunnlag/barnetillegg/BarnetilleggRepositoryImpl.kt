@@ -75,7 +75,7 @@ class BarnetilleggRepositoryImpl(private val connection: DBConnection) : Barneti
         """
                     SELECT perioder_id
                     FROM barnetillegg_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND perioder_id is not null
                  
                 """.trimIndent()
     ) {

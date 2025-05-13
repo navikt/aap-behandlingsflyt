@@ -138,7 +138,7 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
         """
                     SELECT yrkesskade_id
                     FROM yrkesskade_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND yrkesskade_id is not null
                  
                 """.trimIndent()
     ) {

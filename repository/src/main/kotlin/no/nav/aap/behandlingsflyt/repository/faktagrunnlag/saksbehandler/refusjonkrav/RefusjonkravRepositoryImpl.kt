@@ -108,7 +108,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
         """
                     SELECT refusjonkrav_vurdering_id
                     FROM REFUSJONKRAV_GRUNNLAG
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND refusjonkrav_vurdering_id is not null
                  
                 """.trimIndent()
     ) {

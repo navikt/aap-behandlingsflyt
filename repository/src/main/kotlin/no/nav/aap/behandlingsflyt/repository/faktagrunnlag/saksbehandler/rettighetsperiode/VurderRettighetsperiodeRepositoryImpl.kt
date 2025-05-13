@@ -86,7 +86,7 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
         """
                     SELECT vurderinger_id
                     FROM rettighetsperiode_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND vurderinger_id is not null
                  
                 """.trimIndent()
     ) {

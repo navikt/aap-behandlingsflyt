@@ -190,7 +190,7 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
         """
                     SELECT arbeidsevne_id
                     FROM arbeidsevne_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND arbeidsevne_id is not null
                  
                 """.trimIndent()
     ) {
