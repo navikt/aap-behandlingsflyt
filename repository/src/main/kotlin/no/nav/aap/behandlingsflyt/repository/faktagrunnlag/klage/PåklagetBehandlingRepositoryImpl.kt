@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurderingMedReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
@@ -32,6 +34,27 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper(::mapGrunnlag)
+        }
+    }
+
+    override fun hentGjeldendeVurderingMedReferanse(behandlingReferanse: BehandlingReferanse): PåklagetBehandlingVurderingMedReferanse? {
+        val query = """
+            SELECT 
+                PAAKLAGET_BEHANDLING_VURDERING.type_vedtak as TYPE_VEDTAK,
+                PAAKLAGET_BEHANDLING_VURDERING.paaklaget_behandling_id as PAAKLAGET_BEHANDLING_ID,
+                PAAKLAGET_BEHANDLING_VURDERING.vurdert_av as VURDERT_AV,
+                PAAKLAGET_BEHANDLING_VURDERING.opprettet_tid as OPPRETTET_TID,
+                BEHANDLING.referanse as REFERANSE
+            FROM PAAKLAGET_BEHANDLING_VURDERING
+            INNER JOIN PAAKLAGET_BEHANDLING_GRUNNLAG ON PAAKLAGET_BEHANDLING_GRUNNLAG.vurdering_id = PAAKLAGET_BEHANDLING_VURDERING.id
+            LEFT JOIN BEHANDLING ON BEHANDLING.id = PAAKLAGET_BEHANDLING_GRUNNLAG.behandling_id
+            WHERE BEHANDLING.referanse = ? AND PAAKLAGET_BEHANDLING_GRUNNLAG.AKTIV = TRUE
+        """.trimIndent()
+        return connection.queryFirstOrNull(query) {
+            setParams {
+                setUUID(1, behandlingReferanse.referanse)
+            }
+            setRowMapper(::mapPåklagetBehandlingVurderingMedReferanse)
         }
     }
 
@@ -127,6 +150,18 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
             påklagetVedtakType = row.getEnum("type_vedtak"),
             påklagetBehandling = row.getLongOrNull("PAAKLAGET_BEHANDLING_ID")?.let { BehandlingId(it) },
             vurdertAv = row.getString("VURDERT_AV"),
+            opprettet = row.getInstant(
+                "OPPRETTET_TID"
+            )
+        )
+    }
+
+    private fun mapPåklagetBehandlingVurderingMedReferanse(row: Row): PåklagetBehandlingVurderingMedReferanse {
+        return PåklagetBehandlingVurderingMedReferanse(
+            påklagetVedtakType = row.getEnum("TYPE_VEDTAK"),
+            påklagetBehandling = row.getLongOrNull("PAAKLAGET_BEHANDLING_ID")?.let { BehandlingId(it) },
+            vurdertAv = row.getString("VURDERT_AV"),
+            referanse = row.getUUIDOrNull("REFERANSE")?.let { BehandlingReferanse(it) },
             opprettet = row.getInstant(
                 "OPPRETTET_TID"
             )
