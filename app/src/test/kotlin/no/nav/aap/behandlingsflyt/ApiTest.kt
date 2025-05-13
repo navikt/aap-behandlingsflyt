@@ -299,7 +299,11 @@ class ApiTest {
   },
   "grunnlagYrkesskade": null,
   "grunnlagUføre": null,
-  "grunnlagYrkesskadeUføre": null
+  "grunnlagYrkesskadeUføre": null,
+  "gjeldendeGrunnbeløp": {
+    "grunnbeløp":124028.0,
+    "dato":"2025-05-13"
+  }
 }"""
         Assertions.assertThat(asJSON).isEqualTo(ObjectMapper().readTree(expectedJSON))
     }
