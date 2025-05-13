@@ -200,8 +200,8 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
 
         val deletedRows = dbConnection.executeReturnUpdated("""
             delete from samordning_ytelse_grunnlag where behandling_id = ?; 
-            delete from samordning_ytelse where ytelser_id = ANY(?::bigint[]);
             delete from samordning_ytelse_periode where ytelse_id = ANY(?::bigint[]);
+            delete from samordning_ytelse where ytelser_id = ANY(?::bigint[]);
             delete from samordning_ytelser where id = ANY(?::bigint[]);
         """.trimIndent()) {
             setParams {

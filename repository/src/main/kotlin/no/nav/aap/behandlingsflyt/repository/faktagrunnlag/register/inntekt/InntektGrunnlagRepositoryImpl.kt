@@ -137,7 +137,7 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
         """
                     SELECT inntekt_id
                     FROM inntekt_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND inntekt_id is not null
                  
                 """.trimIndent()
     ) {

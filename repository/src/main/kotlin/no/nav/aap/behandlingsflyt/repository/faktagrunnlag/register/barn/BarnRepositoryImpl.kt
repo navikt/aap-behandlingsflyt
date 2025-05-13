@@ -422,7 +422,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         """
                     SELECT oppgitt_barn_id
                     FROM barnopplysning_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND oppgitt_barn_id is not null
                  
                 """.trimIndent()
     ) {
@@ -436,7 +436,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         """
                     SELECT register_barn_id
                     FROM barnopplysning_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND register_barn_id is not null
                  
                 """.trimIndent()
     ) {
@@ -450,7 +450,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         """
                     SELECT vurderte_barn_id
                     FROM barnopplysning_grunnlag
-                    WHERE behandling_id = ?
+                    WHERE behandling_id = ? AND vurderte_barn_id is not null
                  
                 """.trimIndent()
     ) {
