@@ -111,6 +111,10 @@ spec:
           namespace: pensjondeployer
           cluster: prod-fss
         - application: api-intern
+        - application: nom-api
+          namespace: nom
+        - application: norg2
+          namespace: org
 
   env:
     - name: INTEGRASJON_PDL_URL
@@ -205,3 +209,9 @@ spec:
       value: 785e7a77-8976-4e4e-b620-d7b3731076aa
     - name: INTEGRASJON_SAKSBEHANDLING_AZP
       value: 10269c6f-313a-44d0-9145-c4ba26177928
+    - name: INTEGRASJON_NOM_URL
+      value: http://nom-api.nom/graphql
+    - name: INTEGRASJON_NOM_SCOPE
+      value: api://prod-gcp.nom.nom-api/.default
+    - name: INTEGRASJON_NORG_URL
+      value: http://norg2.org

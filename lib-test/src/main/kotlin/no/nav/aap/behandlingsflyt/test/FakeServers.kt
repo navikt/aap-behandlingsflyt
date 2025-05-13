@@ -43,10 +43,16 @@ import no.nav.aap.behandlingsflyt.integrasjon.barn.BARN_RELASJON_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PERSON_BOLK_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.ident.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
+import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomData
+import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomDataRessurs
+import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgEnhet
+import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.OrgEnhet
+import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.OrgTilknytning
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreHistorikkRespons
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UførePeriode
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRequest
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRespons
+import no.nav.aap.behandlingsflyt.integrasjon.util.GraphQLResponse
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRequest
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingLøsningStatus
@@ -145,6 +151,8 @@ object FakeServers : AutoCloseable {
     private val meldekort = embeddedServer(Netty, port = 0, module = { meldekortFake() })
     private val tjenestePensjon = embeddedServer(Netty, port = 0, module = { tjenestePensjonFake() })
     private val unleash = embeddedServer(Netty, port = 0, module = { unleashFake() })
+    private val norg = embeddedServer(Netty, port = 0, module = { norgFake() })
+    private val nom = embeddedServer(Netty, port = 0, module = { nomFake() })
 
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
@@ -1465,6 +1473,72 @@ object FakeServers : AutoCloseable {
 
     }
 
+    private fun Application.nomFake() {
+        install(ContentNegotiation) {
+            jackson {
+                registerModule(JavaTimeModule())
+            }
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@nomFake.log.info("Nom :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                call.respond(
+                    status = HttpStatusCode.InternalServerError,
+                    message = ErrorRespons(cause.message)
+                )
+            }
+
+        }
+
+        routing {
+            post("/graphql") {
+                val data = NomData(
+                    NomDataRessurs(
+                        orgTilknytning = listOf(
+                            OrgTilknytning(
+                                OrgEnhet("1234"),
+                                true,
+                                LocalDate.now(),
+                                null
+                            )
+                        ), visningsnavn = "Test Testesen"
+                    )
+                )
+                val response = GraphQLResponse(
+                    data,
+                    emptyList()
+                )
+
+                call.respond(response)
+            }
+        }
+    }
+
+
+
+    private fun Application.norgFake() {
+        install(ContentNegotiation) {
+            jackson {
+                registerModule(JavaTimeModule())
+            }
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@norgFake.log.info("Norg :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                call.respond(
+                    status = HttpStatusCode.InternalServerError,
+                    message = ErrorRespons(cause.message)
+                )
+            }
+        }
+
+        routing {
+            get("/norg2/api/v1/enhet/{enhetsnummer}") {
+                call.respond(NorgEnhet("1234", "Lokalenhetsnavn", "LOKAL"))
+            }
+        }
+    }
+
     private fun Application.brevFake() {
         val config = ClientConfig(scope = "")
         val client = RestClient.withDefaultResponseHandler(
@@ -1653,6 +1727,8 @@ object FakeServers : AutoCloseable {
         meldekort.start()
         tjenestePensjon.start()
         unleash.start()
+        nom.start()
+        norg.start()
 
         println("AZURE PORT ${azure.port()}")
 
@@ -1765,6 +1841,13 @@ object FakeServers : AutoCloseable {
         System.setProperty("integrasjon.dokumentinnhenting.azp", UUID.randomUUID().toString())
         System.setProperty("integrasjon.postmottak.azp", UUID.randomUUID().toString())
         System.setProperty("integrasjon.saksbehandling.azp", UUID.randomUUID().toString())
+
+        // Norg
+        System.setProperty("integrasjon.norg.url", "http://localhost:${norg.port()}")
+
+        // NOM
+        System.setProperty("integrasjon.nom.url", "http://localhost:${nom.port()}/graphql")
+        System.setProperty("integrasjon.nom.scope", "scope")
     }
 
     override fun close() {
@@ -1792,6 +1875,8 @@ object FakeServers : AutoCloseable {
         meldekort.stop(0L, 0L)
         tjenestePensjon.stop(0L, 0L)
         unleash.stop(0L, 0L)
+        nom.stop(0L, 0L)
+        norg.stop(0L, 0L)
     }
 }
 

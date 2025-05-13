@@ -4,5 +4,7 @@ import java.time.LocalDate
 
 data class VurdertAvResponse(
     val ident: String,
-    val dato: LocalDate
+    val dato: LocalDate,
+    val ansattnavn: String? = null,
+    val enhetsnavn: String? = null
 )
