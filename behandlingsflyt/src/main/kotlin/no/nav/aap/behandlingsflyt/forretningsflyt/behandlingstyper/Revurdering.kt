@@ -34,6 +34,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ForeslåVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FritakMeldepliktSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.IverksettVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ManglendeLigningGrunnlagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OpprettRevurderingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RefusjonkravSteg
@@ -158,7 +159,14 @@ object Revurdering : BehandlingType {
             )
             .medSteg(steg = VisGrunnlagSteg)
             .medSteg(
-                steg = FastsettGrunnlagSteg, informasjonskrav = listOf(InntektService), årsakRelevanteForSteg = listOf(
+                steg = ManglendeLigningGrunnlagSteg, informasjonskrav = listOf(InntektService), årsakRelevanteForSteg = listOf(
+                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
+                    ÅrsakTilBehandling.REVURDER_BEREGNING,
+                    ÅrsakTilBehandling.REVURDER_YRKESSKADE
+                )
+            )
+            .medSteg(
+                steg = FastsettGrunnlagSteg, årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.REVURDER_BEREGNING,
                     ÅrsakTilBehandling.REVURDER_YRKESSKADE

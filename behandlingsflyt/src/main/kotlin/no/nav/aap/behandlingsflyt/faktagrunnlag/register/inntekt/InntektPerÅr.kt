@@ -1,39 +1,24 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.komponenter.verdityper.Beløp
 import java.time.Year
 
-class InntektPerÅr(val år: Year, val beløp: Beløp) :
-    Comparable<InntektPerÅr> {
+data class InntektPerÅr(
+    val år: Year,
+    val beløp: Beløp,
+    val manuellInntektVurdering: ManuellInntektVurdering? = null
+) : Comparable<InntektPerÅr> {
     constructor(år: Int, beløp: Beløp) : this(Year.of(år), beløp)
+    constructor(år: Int, beløp: Beløp, manuellInntektVurdering: ManuellInntektVurdering) : this(
+        Year.of(år),
+        beløp,
+        manuellInntektVurdering
+    )
 
-    fun gUnit(): Grunnbeløp.BenyttetGjennomsnittsbeløp {
-        return Grunnbeløp.finnGUnit(år, beløp)
-    }
+    fun gUnit(): Grunnbeløp.BenyttetGjennomsnittsbeløp =
+        Grunnbeløp.finnGUnit(år, beløp)
 
-    override fun compareTo(other: InntektPerÅr): Int {
-        return this.år.compareTo(other.år)
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as InntektPerÅr
-
-        if (år != other.år) return false
-        if (beløp != other.beløp) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = år.hashCode()
-        result = 31 * result + beløp.hashCode()
-        return result
-    }
-
-    override fun toString(): String {
-        return "InntektPerÅr(år=$år, beløp=$beløp)"
-    }
+    override fun compareTo(other: InntektPerÅr): Int =
+        this.år.compareTo(other.år)
 }

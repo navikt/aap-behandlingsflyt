@@ -37,17 +37,15 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val nyttGrunnlag = InntektGrunnlag(
-            null,
             inntekter = inntekter,
         )
 
-        if (eksisterendeGrunnlag != nyttGrunnlag) {
-            eksisterendeGrunnlag?.let {
-                deaktiverGrunnlag(behandlingId)
-            }
-
-            lagre(behandlingId, nyttGrunnlag)
+        if (eksisterendeGrunnlag != null) {
+            deaktiverGrunnlag(behandlingId)
         }
+
+        lagre(behandlingId, nyttGrunnlag)
+
     }
 
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: InntektGrunnlag) {
@@ -149,7 +147,6 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
 
     private fun mapGrunnlag(row: Row): InntektGrunnlag {
         return InntektGrunnlag(
-            row.getLong("id"),
             mapInntekter(row.getLongOrNull("inntekt_id"))
         )
     }
