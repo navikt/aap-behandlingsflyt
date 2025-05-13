@@ -160,6 +160,8 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         val deletedRows = connection.executeReturnUpdated("""
             delete from FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ?; 
             delete from INNTEKT_I_NORGE_FORUTGAAENDE where inntekter_i_norge_id = ANY(?::bigint[]);
+            delete from INNTEKT_I_NORGE where inntekter_i_norge_id = ANY(?::bigint[]);
+            delete from MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where inntekter_i_norge_id = ANY(?::bigint[]);
             delete from INNTEKTER_I_NORGE where id = ANY(?::bigint[]);
             delete from ARBEID_FORUTGAAENDE where arbeider_id = ANY(?::bigint[]);
             delete from ARBEIDER_FORUTGAAENDE where id = ANY(?::bigint[]);
@@ -170,9 +172,11 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                 setLong(1, behandlingId.id)
                 setLongArray(2, inntekterIds)
                 setLongArray(3, inntekterIds)
-                setLongArray(4, arbeidIds)
-                setLongArray(5, arbeidIds)
-                setLongArray(6, manuellVurderingIds)
+                setLongArray(4, inntekterIds)
+                setLongArray(5, inntekterIds)
+                setLongArray(6, arbeidIds)
+                setLongArray(7, arbeidIds)
+                setLongArray(8, manuellVurderingIds)
             }
         }
         log.info("Slettet $deletedRows fra FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG")

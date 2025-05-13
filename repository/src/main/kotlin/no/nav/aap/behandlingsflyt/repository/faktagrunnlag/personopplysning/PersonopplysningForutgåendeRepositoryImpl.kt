@@ -252,7 +252,7 @@ class PersonopplysningForutgåendeRepositoryImpl(
         """
                     SELECT utenlandsadresser_id
                     FROM bruker_personopplysning_forutgaaende
-                    WHERE id = ANY(?::bigint[]);
+                    WHERE id = ANY(?::bigint[]) AND utenlandsadresser_id is not null;
                  
                 """.trimIndent()
     ) {

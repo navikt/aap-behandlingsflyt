@@ -409,7 +409,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                 setLongArray(3, barnVurderingIds)
                 setLongArray(4, vurderteBarnIds)
                 setLongArray(5, barnOpplysningIds)
-                setLongArray(6, barnOpplysningIds)
+                setLongArray(6, registerBarnIds)
                 setLongArray(7, oppgittBarnIds)
                 setLongArray(8, oppgittBarnIds)
 
