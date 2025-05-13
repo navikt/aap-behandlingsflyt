@@ -4,12 +4,13 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
 import no.nav.aap.behandlingsflyt.historiskevurderinger.HistoriskVurderingDto
 import no.nav.aap.behandlingsflyt.historiskevurderinger.ÅpenPeriodeDto
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 data class ManuellVurderingForLovvalgMedlemskap(
     val lovvalgVedSøknadsTidspunkt: LovvalgVedSøknadsTidspunktDto,
     val medlemskapVedSøknadsTidspunkt: MedlemskapVedSøknadsTidspunktDto?,
     val vurdertAv: String,
-    val vurdertDato: LocalDate,
+    val vurdertDato: LocalDateTime? = null,
     val overstyrt: Boolean = false
 )
 
@@ -37,3 +38,4 @@ data class MedlemskapVedSøknadsTidspunktDto(
     val begrunnelse: String?,
     val varMedlemIFolketrygd: Boolean?
 )
+

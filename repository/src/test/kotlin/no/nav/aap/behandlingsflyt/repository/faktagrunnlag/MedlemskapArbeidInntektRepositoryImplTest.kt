@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 internal class MedlemskapArbeidInntektRepositoryImplTest {
     private val dataSource = InitTestDatabase.freshDatabase()
@@ -64,7 +65,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
                 LovvalgVedSøknadsTidspunktDto(begrunnelse, EØSLand.NOR),
                 MedlemskapVedSøknadsTidspunktDto(begrunnelse, true),
                 "SAKSBEHANDLER",
-                LocalDate.now()
+                LocalDateTime.now()
             )
         )
         repo.lagreOppgittUtenlandsOppplysninger(behandlingId, JournalpostId("1"), UtenlandsOppholdData(true, false, false, false, null))

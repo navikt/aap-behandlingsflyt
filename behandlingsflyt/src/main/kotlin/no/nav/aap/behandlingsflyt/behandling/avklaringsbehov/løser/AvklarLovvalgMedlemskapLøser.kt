@@ -23,7 +23,6 @@ class AvklarLovvalgMedlemskapLøser(
                 lovvalgVedSøknadsTidspunkt = løsning.manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt,
                 medlemskapVedSøknadsTidspunkt = løsning.manuellVurderingForLovvalgMedlemskap.medlemskapVedSøknadsTidspunkt,
                 vurdertAv = kontekst.bruker.ident,
-                vurdertDato = LocalDate.now(),
                 overstyrt = false
             )
         )
