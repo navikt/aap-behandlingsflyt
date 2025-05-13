@@ -20,7 +20,7 @@ import javax.sql.DataSource
 fun NormalOpenAPIRoute.forutgåendeMedlemskapAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/forutgaaendemedlemskap") {
-            authorizedGet<BehandlingReferanse, ForutgåendeMedlemskapGrunnlagDto>(
+            authorizedGet<BehandlingReferanse, ForutgåendeMedlemskapGrunnlagResponse>(
                 AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
             ) { req ->
                 val grunnlag = dataSource.transaction { connection ->
@@ -40,11 +40,10 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapAPI(dataSource: DataSource, reposit
                         token()
                     )
 
-
-                    ForutgåendeMedlemskapGrunnlagDto(
+                    ForutgåendeMedlemskapGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
-                        data,
-                        historiskeManuelleVurderinger
+                        vurdering = data?.toResponse(),
+                        historiskeManuelleVurderinger = historiskeManuelleVurderinger.map { it.toResponse() }
                     )
                 }
                 respond(grunnlag)

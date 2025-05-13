@@ -69,9 +69,11 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                         harForutgåendeMedlemskap = it.getBoolean("har_forutgaaende_medlemskap"),
                         varMedlemMedNedsattArbeidsevne = it.getBooleanOrNull("var_medlem_med_nedsatt_arbeidsevne"),
                         medlemMedUnntakAvMaksFemAar = it.getBooleanOrNull("medlem_med_unntak_av_maks_fem_aar"),
+                        vurdertAv = it.getString("vurdert_av"),
+                        vurdertTidspunkt = it.getLocalDateTime("opprettet_tid"),
                         overstyrt = it.getBoolean("overstyrt")
                     ),
-                    opprettet = it.getLocalDate("opprettet_tid")
+                    opprettet = it.getLocalDateTime("opprettet_tid")
                 )
             }
         }
@@ -87,8 +89,8 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         }
 
         val manuellVurderingQuery = """
-            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING (BEGRUNNELSE, HAR_FORUTGAAENDE_MEDLEMSKAP, VAR_MEDLEM_MED_NEDSATT_ARBEIDSEVNE, MEDLEM_MED_UNNTAK_AV_MAKS_FEM_AAR, OVERSTYRT) VALUES (?, ?, ?, ?, ?)
-        """.trimIndent()
+            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING (BEGRUNNELSE, HAR_FORUTGAAENDE_MEDLEMSKAP, VAR_MEDLEM_MED_NEDSATT_ARBEIDSEVNE, MEDLEM_MED_UNNTAK_AV_MAKS_FEM_AAR, OVERSTYRT, VURDERT_AV) VALUES (?, ?, ?, ?, ?, ?)
+            """.trimIndent()
 
         val manuellVurderingId = connection.executeReturnKey(manuellVurderingQuery) {
             setParams {
@@ -97,6 +99,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                 setBoolean(3, manuellVurdering.varMedlemMedNedsattArbeidsevne)
                 setBoolean(4, manuellVurdering.medlemMedUnntakAvMaksFemAar)
                 setBoolean(5, overstyrt)
+                setString(6, manuellVurdering.vurdertAv)
             }
         }
 
@@ -219,7 +222,9 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                     harForutgåendeMedlemskap = it.getBoolean("har_forutgaaende_medlemskap"),
                     varMedlemMedNedsattArbeidsevne = it.getBooleanOrNull("var_medlem_med_nedsatt_arbeidsevne"),
                     medlemMedUnntakAvMaksFemAar = it.getBooleanOrNull("medlem_med_unntak_av_maks_fem_aar"),
-                    overstyrt = it.getBoolean("overstyrt")
+                    overstyrt = it.getBoolean("overstyrt"),
+                    vurdertAv = it.getString("vurdert_av"),
+                    vurdertTidspunkt = it.getLocalDateTime("opprettet_tid")
                 )
             }
         }

@@ -19,11 +19,12 @@ class AvklarForutgåendeMedlemskapLøser(
         forutgåendeMedlemskapRepository.lagreManuellVurdering(
             kontekst.behandlingId(),
             ManuellVurderingForForutgåendeMedlemskap(
-                løsning.manuellVurderingForForutgåendeMedlemskap.begrunnelse,
-                løsning.manuellVurderingForForutgåendeMedlemskap.harForutgåendeMedlemskap,
-                løsning.manuellVurderingForForutgåendeMedlemskap.varMedlemMedNedsattArbeidsevne,
-                løsning.manuellVurderingForForutgåendeMedlemskap.medlemMedUnntakAvMaksFemAar,
-                false
+                begrunnelse = løsning.manuellVurderingForForutgåendeMedlemskap.begrunnelse,
+                harForutgåendeMedlemskap = løsning.manuellVurderingForForutgåendeMedlemskap.harForutgåendeMedlemskap,
+                varMedlemMedNedsattArbeidsevne = løsning.manuellVurderingForForutgåendeMedlemskap.varMedlemMedNedsattArbeidsevne,
+                medlemMedUnntakAvMaksFemAar = løsning.manuellVurderingForForutgåendeMedlemskap.medlemMedUnntakAvMaksFemAar,
+                vurdertAv = kontekst.bruker.ident,
+                overstyrt = false
             )
         )
         return LøsningsResultat("Vurdert forutgående medlemskap manuelt.")

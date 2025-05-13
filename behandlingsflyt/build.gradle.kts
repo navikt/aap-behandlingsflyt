@@ -4,13 +4,13 @@ plugins {
 
 val komponenterVersjon = "1.0.242"
 val ktorVersion = "3.1.3"
-val tilgangVersjon = "1.0.64"
+val tilgangVersjon = "1.0.67"
 val utbetalVersjon = "0.0.43"
 val junitVersjon = "5.12.2"
 
 dependencies {
     api(project(":kontrakt"))
-    implementation("io.micrometer:micrometer-registry-prometheus:1.14.6")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.14.7")
     implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
 

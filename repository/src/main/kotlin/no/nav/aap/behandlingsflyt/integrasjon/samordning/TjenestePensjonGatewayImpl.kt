@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.integrasjon.samordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
+import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -35,6 +36,7 @@ class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
         tokenProvider = ClientCredentialsTokenProvider,
+        prometheus = prometheus
     )
 
     override fun hentTjenestePensjon(ident: String, periode: Periode): List<TjenestePensjonForhold> {
@@ -48,12 +50,12 @@ class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
         return try {
             requireNotNull(
                 client.get(
-                uri = URI.create("${url}?fomDate=${periode.fom}&tomDate=${periode.tom}"),
-                request = httpRequest,
-                mapper = { body, _ ->
-                    fromJson<TjenestePensjonRespons?>(body)?.toIntern()
-                }
-            ))
+                    uri = URI.create("${url}?fomDate=${periode.fom}&tomDate=${periode.tom}"),
+                    request = httpRequest,
+                    mapper = { body, _ ->
+                        fromJson<TjenestePensjonRespons?>(body)?.toIntern()
+                    }
+                ))
         } catch (e: IkkeFunnetException) {
             log.info("Fikk 404 fra tp-registeret. Melding: ${e.message}")
             emptyList()

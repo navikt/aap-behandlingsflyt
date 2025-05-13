@@ -31,6 +31,7 @@ public const val FORESLÅ_VEDTAK_KODE: String = "5098"
 public const val FATTE_VEDTAK_KODE: String = "5099"
 public const val SKRIV_BREV_KODE: String = "5050"
 public const val SKRIV_VEDTAKSBREV_KODE: String = "5051"
+public const val SKRIV_FORHÅNDSVARSEL_AKTIVITETSPLIKT_BREV_KODE: String = "5052"
 public const val AVKLAR_LOVVALG_MEDLEMSKAP_KODE: String = "5017"
 public const val VENTE_PÅ_FIRST_EFFEKTUER_11_7_KODE: String = "5018"
 public const val AVKLAR_UTENLANDSK_MEDLEMSKAP_KODE: String = "5019"
@@ -155,6 +156,11 @@ public enum class AvklaringsbehovKode {
      * [SKRIV_VEDTAKSBREV_KODE]
      */
     `5051`,
+
+    /**
+     * [SKRIV_FORHÅNDSVARSEL_AKTIVITETSPLIKT_BREV_KODE]
+     */
+    `5052`,
 
     /**
     * [REFUSJON_KRAV]

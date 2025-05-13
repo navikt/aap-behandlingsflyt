@@ -70,6 +70,7 @@ public enum class Definisjon(
             Rolle.SAKSBEHANDLER_OPPFOLGING,
         )
     ),
+
     @Deprecated("Bruk egne definisjoner for forskjellige brev")
     SKRIV_BREV(
         kode = AvklaringsbehovKode.`5050`,
@@ -93,9 +94,9 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5029`,
         løsesISteg = StegType.VURDER_RETTIGHETSPERIODE,
         type = BehovType.MANUELT_FRIVILLIG,
+        kreverToTrinn = true,
         løsesAv = listOf(
-            Rolle.SAKSBEHANDLER_NASJONAL,
-            Rolle.BESLUTTER
+            Rolle.SAKSBEHANDLER_NASJONAL
         )
     ),
     AVKLAR_STUDENT(
@@ -225,6 +226,14 @@ public enum class Definisjon(
         løsesISteg = StegType.EFFEKTUER_11_7,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
     ),
+    SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV(
+        kode = AvklaringsbehovKode.`5052`,
+        løsesISteg = StegType.EFFEKTUER_11_7,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_OPPFOLGING
+        )
+    ),
     VENTE_PÅ_FRIST_EFFEKTUER_11_7(
         kode = AvklaringsbehovKode.`5018`,
         type = BehovType.VENTEPUNKT,
@@ -328,7 +337,7 @@ public enum class Definisjon(
         }
 
         public fun fraStegType(steg: StegType): List<Definisjon> {
-            return entries.filter {it.løsesISteg == steg }
+            return entries.filter { it.løsesISteg == steg }
         }
 
         init {
