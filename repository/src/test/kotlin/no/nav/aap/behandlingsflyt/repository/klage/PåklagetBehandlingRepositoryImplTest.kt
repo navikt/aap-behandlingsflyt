@@ -24,7 +24,7 @@ internal class PåklagetBehandlingRepositoryImplTest {
     private val dataSource = InitTestDatabase.freshDatabase()
     
     @Test
-    fun `Lagrer og henter påklagetbehandling`() {
+    fun `Lagrer og henter påklagetbehandling med id`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
@@ -43,6 +43,29 @@ internal class PåklagetBehandlingRepositoryImplTest {
             assertThat(grunnlag.vurdering.påklagetBehandling).isEqualTo(behandling.id)
             assertThat(grunnlag.vurdering.vurdertAv).isEqualTo("ident")
             assertNotNull(grunnlag.vurdering.opprettet)
+        }
+    }
+
+    @Test
+    fun `Lagrer og henter påklagetbehandling med referanse`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val klageBehandling = finnEllerOpprettBehandling(connection, sak, ÅrsakTilBehandling.MOTATT_KLAGE)
+
+            val påklagetBehandlingRepository = PåklagetBehandlingRepositoryImpl(connection)
+            val vurdering = PåklagetBehandlingVurdering(
+                påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
+                påklagetBehandling = behandling.id,
+                vurdertAv = "ident"
+            )
+
+            påklagetBehandlingRepository.lagre(klageBehandling.id, vurdering)
+            val vurderingMedReferanse = påklagetBehandlingRepository.hentGjeldendeVurderingMedReferanse(klageBehandling.referanse)!!
+            assertThat(vurderingMedReferanse.påklagetVedtakType).isEqualTo(PåklagetVedtakType.KELVIN_BEHANDLING)
+            assertThat(vurderingMedReferanse.påklagetBehandling).isEqualTo(behandling.id)
+            assertThat(vurderingMedReferanse.vurdertAv).isEqualTo("ident")
+            assertNotNull(vurderingMedReferanse.opprettet)
         }
     }
 

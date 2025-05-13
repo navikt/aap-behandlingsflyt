@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.flate
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
@@ -8,7 +9,13 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 data class PåklagetBehandlingGrunnlagDto(
-    val behandlinger: List<BehandlingMedVedtakDto>
+    val behandlinger: List<BehandlingMedVedtakDto>,
+    val gjeldendeVurdering: PåklagetBehandlingVurderingDto?
+)
+
+data class PåklagetBehandlingVurderingDto(
+    val påklagetBehandling: UUID?,
+    val påklagetVedtakType: PåklagetVedtakType
 )
 
 data class BehandlingMedVedtakDto(

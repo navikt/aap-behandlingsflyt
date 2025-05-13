@@ -3,8 +3,10 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.flate
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurderingMedReferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurderingService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -22,28 +24,36 @@ fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(dataSource: DataSource, re
                     "referanse"
                 )
             )
-        ) { req ->
+        ) { behandlingReferanse ->
             val respons = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                val påklagetBehandlingRepository = repositoryProvider.provide<PåklagetBehandlingRepository>()
+                val påklagetBehandlingService = PåklagetBehandlingVurderingService(behandlingRepository, påklagetBehandlingRepository)
 
-                val behandling = behandlingRepository.hent(req)
-                val behandlingerForSak = behandlingRepository.hentAlleMedVedtakFor(
-                    behandling.sakId,
-                    listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
-                )
+                val gjeldendeVurdering = påklagetBehandlingService.hentGjeldendeVurderingMedReferanse(behandlingReferanse)
+                val behandlingerMedVedtak = påklagetBehandlingService.hentAlleBehandlingerMedVedtakForSak(behandlingReferanse)
 
-
-                PåklagetBehandlingGrunnlagDto(
-                    behandlinger = behandlingerForSak
-                        .map(BehandlingMedVedtak::tilBehandlingMedVedtakDto)
-                        .sortedByDescending { it.vedtakstidspunkt },
-                )
+                mapTilPåklagetBehandlingGrunnlagDto(gjeldendeVurdering, behandlingerMedVedtak)
             }
 
             respond(respons)
         }
     }
+}
+
+fun mapTilPåklagetBehandlingGrunnlagDto(påklagetBehandlingVurderingMedReferanse: PåklagetBehandlingVurderingMedReferanse?, behandlingerMedVedtak: List<BehandlingMedVedtak>): PåklagetBehandlingGrunnlagDto {
+    return PåklagetBehandlingGrunnlagDto(
+        behandlinger = behandlingerMedVedtak
+            .map { it.tilBehandlingMedVedtakDto() }
+            .sortedByDescending { it.vedtakstidspunkt },
+        gjeldendeVurdering = påklagetBehandlingVurderingMedReferanse?.let {
+            PåklagetBehandlingVurderingDto(
+                påklagetBehandling = påklagetBehandlingVurderingMedReferanse.referanse?.referanse,
+                påklagetVedtakType = påklagetBehandlingVurderingMedReferanse.påklagetVedtakType
+            )
+        }
+    )
 }
         
             
