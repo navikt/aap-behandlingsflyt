@@ -11,13 +11,13 @@ import org.slf4j.LoggerFactory
 
 class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBConnection) : SamordningAndreStatligeYtelserRepository {
 
+    private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<SamordningAndreStatligeYtelserRepositoryImpl> {
         override fun konstruer(connection: DBConnection): SamordningAndreStatligeYtelserRepositoryImpl {
             return SamordningAndreStatligeYtelserRepositoryImpl(connection)
         }
     }
-
-    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningAndreStatligeYtelserGrunnlag? {
         val query = """
@@ -152,6 +152,7 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
             row.getLong("vurdering_id")
         }
     }
+
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
         connection.execute("UPDATE SAMORDNING_ANDRE_STATLIGE_YTELSER_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
             setParams {
