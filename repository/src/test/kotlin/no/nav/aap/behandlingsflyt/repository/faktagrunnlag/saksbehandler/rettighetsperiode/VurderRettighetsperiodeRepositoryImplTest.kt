@@ -31,15 +31,18 @@ class VurderRettighetsperiodeRepositoryImplTest {
                 startDato = LocalDate.now().minusDays(10),
                 begrunnelse = "begrunnelse",
                 harRettUtoverSøknadsdato = true,
-                harKravPåRenter = true
+                harKravPåRenter = true,
+                vurdertAv = "NAVident"
             )
             repo.lagreVurdering(behandling.id, vurdering)
 
             val vurderingerEtterLagring = repo.hentVurdering(behandling.id)
             assertThat(vurderingerFørLagring).isNull()
             assertThat(vurderingerEtterLagring).isNotNull()
-            assertThat(vurderingerEtterLagring).isEqualTo(vurdering)
-
+            assertThat(vurderingerEtterLagring)
+                .usingRecursiveComparison()
+                .ignoringFields("vurdertDato")
+                .isEqualTo(vurdering)
         }
     }
 
@@ -56,15 +59,18 @@ class VurderRettighetsperiodeRepositoryImplTest {
                 startDato = null,
                 begrunnelse = "begrunnelse",
                 harRettUtoverSøknadsdato = false,
-                harKravPåRenter = null
+                harKravPåRenter = null,
+                vurdertAv = "NAVident"
             )
             repo.lagreVurdering(behandling.id, vurdering)
 
             val vurderingerEtterLagring = repo.hentVurdering(behandling.id)
             assertThat(vurderingerFørLagring).isNull()
             assertThat(vurderingerEtterLagring).isNotNull()
-            assertThat(vurderingerEtterLagring).isEqualTo(vurdering)
-
+            assertThat(vurderingerEtterLagring)
+                .usingRecursiveComparison()
+                .ignoringFields("vurdertDato")
+                .isEqualTo(vurdering)
         }
     }
 

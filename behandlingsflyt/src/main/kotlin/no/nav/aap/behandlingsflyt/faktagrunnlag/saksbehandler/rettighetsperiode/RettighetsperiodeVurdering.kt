@@ -2,12 +2,22 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode
 
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 data class RettighetsperiodeVurdering(
     val startDato: LocalDate?,
     val begrunnelse: String,
     val harRettUtoverSøknadsdato: Boolean,
     val harKravPåRenter: Boolean?,
+    val vurdertAv: String,
+    val vurdertDato: LocalDateTime? = null
+)
+
+data class RettighetsperiodeVurderingDTO(
+    val startDato: LocalDate?,
+    val begrunnelse: String,
+    val harRettUtoverSøknadsdato: Boolean,
+    val harKravPåRenter: Boolean?
 ) {
     init {
         if (harRettUtoverSøknadsdato == true) {

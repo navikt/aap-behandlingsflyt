@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.rettig
 
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurderingDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
@@ -48,10 +49,10 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
         connection.execute(
             """
             insert into rettighetsperiode_vurdering
-                (vurderinger_id, begrunnelse, start_dato, har_rett_utover_soknadsdato, har_krav_paa_renter)
+                (vurderinger_id, begrunnelse, start_dato, har_rett_utover_soknadsdato, har_krav_paa_renter, vurdert_av)
             values
-                (?, ?, ?, ?, ?)
-        """.trimIndent()
+                (?, ?, ?, ?, ?, ?)
+            """.trimIndent()
         ) {
             setParams {
                 setLong(1, vurderingerId)
@@ -59,6 +60,7 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
                 setLocalDate(3, grunnlag.vurdering.startDato)
                 setBoolean(4, grunnlag.vurdering.harRettUtoverSøknadsdato)
                 setBoolean(5, grunnlag.vurdering.harKravPåRenter)
+                setString(6, grunnlag.vurdering.vurdertAv)
             }
         }
     }
@@ -115,11 +117,11 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
         return RettighetsperiodeGrunnlag(
             connection.queryFirst(
                 """
-            select vurdering.* 
-            from rettighetsperiode_vurdering vurdering
-            join rettighetsperiode_vurderinger vurderinger on vurderinger.id = vurdering.vurderinger_id
-            where vurderinger.id = ?
-        """.trimIndent()
+                select vurdering.* 
+                from rettighetsperiode_vurdering vurdering
+                join rettighetsperiode_vurderinger vurderinger on vurderinger.id = vurdering.vurderinger_id
+                where vurderinger.id = ?
+                """.trimIndent()
             ) {
                 setParams {
                     setLong(1, vurderingerId)
@@ -129,11 +131,13 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
                         begrunnelse = it.getString("begrunnelse"),
                         startDato = it.getLocalDateOrNull("start_dato"),
                         harRettUtoverSøknadsdato = it.getBoolean("har_rett_utover_soknadsdato"),
-                        harKravPåRenter = it.getBooleanOrNull("har_krav_paa_renter")
-
+                        harKravPåRenter = it.getBooleanOrNull("har_krav_paa_renter"),
+                        vurdertAv = it.getString("vurdert_av"),
+                        vurdertDato = it.getLocalDateTime("opprettet")
                     )
                 }
-            })
+            }
+        )
     }
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
