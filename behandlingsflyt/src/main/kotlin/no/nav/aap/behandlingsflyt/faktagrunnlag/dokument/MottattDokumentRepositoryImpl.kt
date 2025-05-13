@@ -9,9 +9,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class MottattDokumentRepositoryImpl(private val connection: DBConnection) : MottattDokumentRepository {
-
+    private val log = LoggerFactory.getLogger(javaClass)
     companion object : Factory<MottattDokumentRepositoryImpl> {
         override fun konstruer(connection: DBConnection): MottattDokumentRepositoryImpl {
             return MottattDokumentRepositoryImpl(connection)
@@ -78,6 +79,17 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
                 mapMottattDokument(row)
             }
         }.toSet()
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from mottatt_dokument where behandling_id = ?;
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+            }
+        }
+        log.info("Slettet $deletedRows fra mottatt_dokument")
     }
 
     private fun mapMottattDokument(row: Row): MottattDokument {

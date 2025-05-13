@@ -172,6 +172,53 @@ WHERE behandling_id = ?
         lagre(tilBehandling, eksisterendeResultat)
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+        val resultatIds = getVilkarResultatIds(behandlingId)
+        val vilkarIds = getVilkarIds(resultatIds)
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from vilkar_periode where vilkar_id = ANY(?::bigint[]);
+            delete from vilkar where resultat_id = ANY(?::bigint[]);   
+            delete from vilkar_resultat where behandling_id = ?; 
+                     
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, vilkarIds)
+                setLongArray(2, resultatIds)
+                setLong(3, behandlingId.id)
+            }
+        }
+        log.info("Slettet $deletedRows fra vilkar_periode")
+    }
+
+    private fun getVilkarResultatIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM vilkar_resultat
+                    WHERE behandling_id = ?;
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("id")
+        }
+    }
+
+    private fun getVilkarIds(resultatIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM vilkar
+                    WHERE resultat_id = ANY(?::bigint[]);
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, resultatIds ) }
+        setRowMapper { row ->
+            row.getLong("id")
+        }
+    }
+
     private class VilkårInternal(val id: Long, val type: Vilkårtype, val perioder: List<VilkårPeriodeInternal>)
 
     private class VilkårPeriodeInternal(

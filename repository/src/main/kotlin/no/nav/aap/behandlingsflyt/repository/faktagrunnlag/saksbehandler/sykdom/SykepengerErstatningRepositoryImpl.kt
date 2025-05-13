@@ -7,9 +7,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
+import org.slf4j.LoggerFactory
 
 class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
     SykepengerErstatningRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<SykepengerErstatningRepositoryImpl> {
         override fun konstruer(connection: DBConnection): SykepengerErstatningRepositoryImpl {
             return SykepengerErstatningRepositoryImpl(connection)
@@ -157,7 +161,40 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
+
     override fun hent(behandlingId: BehandlingId): SykepengerErstatningGrunnlag {
         return requireNotNull(hentHvisEksisterer(behandlingId))
     }
+
+    override fun slett(behandlingId: BehandlingId) {
+        val sykepengeVurderingIds = getSykepengeVurderingIds(behandlingId)
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from sykepenge_erstatning_grunnlag where behandling_id = ?; 
+            delete from sykepenge_vurdering_dokumenter where vurdering_id = ANY(?::bigint[]);
+            delete from sykepenge_vurdering where id = ANY(?::bigint[]);
+           
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, sykepengeVurderingIds)
+                setLongArray(3, sykepengeVurderingIds)
+            }
+        }
+        log.info("Slettet $deletedRows fra sykepenge_erstatning_grunnlag")
+    }
+
+    private fun getSykepengeVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT vurdering_id
+                    FROM sykepenge_erstatning_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("vurdering_id")
+        }
+    }
+
 }

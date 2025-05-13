@@ -93,6 +93,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
         )
     }
 
+
     override fun lagre(
         behandlingId: BehandlingId,
         tjenestePensjon: List<TjenestePensjonForhold>
@@ -157,6 +158,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
         }
     }
 
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         val sql = """
             INSERT INTO TJENESTEPENSJON_FORHOLD_GRUNNLAG (BEHANDLING_ID, AKTIV, TJENESTEPENSJON_ORDNINGER_ID)
@@ -171,6 +173,56 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
                 setLong(2, fraBehandling.id)
             }
             log.info("Kopiert tjenestepensjon fra behandling $fraBehandling til $tilBehandling")
+        }
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val tjenestePensjonOrdningerIds = getTjenestepensjonOrdningerIds(behandlingId)
+        val tjenestePensjonOrdningIds = getTjenestepensjonOrdningIds(tjenestePensjonOrdningerIds)
+
+        val deletedRows = dbConnection.executeReturnUpdated("""
+            delete from tjenestepensjon_forhold_grunnlag where behandling_id = ?; 
+            delete from tjenestepensjon_ordning where tjenestepensjon_ordninger_id = ANY(?::bigint[]); 
+            delete from tjenestepensjon_ordninger where id = ANY(?::bigint[]);
+            delete from tjenestepensjon_ytelse where tjenestepensjon_ordning_id = ANY(?::bigint[]);
+         
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, tjenestePensjonOrdningerIds)
+                setLongArray(3, tjenestePensjonOrdningerIds)
+                setLongArray(4, tjenestePensjonOrdningIds)
+            }
+        }
+        log.info("Slettet $deletedRows fra tjenestepensjon_forhold_grunnlag")
+    }
+
+    private fun getTjenestepensjonOrdningerIds(behandlingId: BehandlingId): List<Long> = dbConnection.queryList(
+        """
+                    SELECT tjenestepensjon_ordninger_id
+                    FROM tjenestepensjon_forhold_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("tjenestepensjon_ordninger_id")
+        }
+    }
+
+    private fun getTjenestepensjonOrdningIds(ordningIds: List<Long>): List<Long> = dbConnection.queryList(
+        """
+                    SELECT id
+                    FROM tjenestepensjon_ordninger
+                    WHERE id = ANY(?::bigint[]);
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, ordningIds) }
+        setRowMapper { row ->
+            row.getLong("id")
         }
     }
 

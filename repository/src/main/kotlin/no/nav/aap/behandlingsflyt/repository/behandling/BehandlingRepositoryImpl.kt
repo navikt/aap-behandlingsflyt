@@ -115,7 +115,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         """.trimIndent()
         return connection.queryList(query) {
             setParams {
-                setLong(1, behandlingId.toLong())
+                setLong(1, behandlingId.id)
             }
             setRowMapper {
                 Årsak(it.getEnum("aarsak"), it.getPeriodeOrNull("periode"))
@@ -322,6 +322,11 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun markerSavepoint() {
         connection.markerSavepoint()
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+        // Ved sletting av behandling beholdes innholdet i alle relevante tabeller her. Det er ikke personopplysninger,
+        // og er kritisk til at flyten skal kjøre.
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {

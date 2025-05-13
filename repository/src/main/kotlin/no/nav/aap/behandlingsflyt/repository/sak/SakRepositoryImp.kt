@@ -196,6 +196,10 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+        // Sak skal ikke slettes ved trekking av søknad
+    }
+
     private fun mapSak(row: Row) = Sak(
         id = SakId(row.getLong("id")),
         person = personRepository.hent(row.getLong("person_id")),

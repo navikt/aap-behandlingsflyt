@@ -110,6 +110,10 @@ class PipRepositoryImpl(private val connection: DBConnection) : PipRepository {
         return grunnlag
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+        // Ikke relevant for å slette trukket sak
+    }
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         // Denne trengs ikke implementeres
     }

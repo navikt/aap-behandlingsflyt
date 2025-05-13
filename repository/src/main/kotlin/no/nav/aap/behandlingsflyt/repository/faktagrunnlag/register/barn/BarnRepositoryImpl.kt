@@ -10,9 +10,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository {
-    companion object : Factory<BarnRepository> {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
+   companion object : Factory<BarnRepository> {
         override fun konstruer(connection: DBConnection): BarnRepository {
             return BarnRepositoryImpl(connection)
         }
@@ -170,22 +174,23 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             return null
         }
 
-        return RegisterBarn(id = id, identer = connection.queryList(
-            """
+        return RegisterBarn(
+            id = id, identer = connection.queryList(
+                """
                 SELECT p.IDENT
                 FROM BARNOPPLYSNING p
                 WHERE p.bgb_id = ?
             """.trimIndent()
-        ) {
-            setParams {
-                setLong(1, id)
-            }
-            setRowMapper { row ->
-                Ident(
-                    row.getString("IDENT")
-                )
-            }
-        })
+            ) {
+                setParams {
+                    setLong(1, id)
+                }
+                setRowMapper { row ->
+                    Ident(
+                        row.getString("IDENT")
+                    )
+                }
+            })
     }
 
     override fun hentOppgitteBarnForSaker(saksnumre: List<Saksnummer>): Map<Saksnummer, List<String>> {
@@ -377,6 +382,112 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             }
         }
     }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val oppgittBarnIds = getOppgittBarnIds(behandlingId)
+        val registerBarnIds = getRegisterBarnIds(behandlingId)
+        val vurderteBarnIds = getVurderteBarnIds(behandlingId)
+        val barnVurderingIds = getBarnVurderingIds(vurderteBarnIds)
+        val barnOpplysningIds = getBarnOpplysningIds(registerBarnIds)
+
+        val deletedRows = connection.executeReturnUpdated(
+            """
+            delete from barnopplysning_grunnlag where behandling_id = ?;
+            delete from barn_vurdering where id = ANY(?::bigint[]);
+            delete from barn_vurdering_periode where id = ANY(?::bigint[]);
+            delete from barn_vurderinger where id = ANY(?::bigint[]);
+            delete from barnopplysning where id = ANY(?::bigint[]);
+            delete from barnopplysning_grunnlag_barnopplysning where id = ANY(?::bigint[]);
+            delete from oppgitt_barn where oppgitt_barn_id = ANY(?::bigint[]);   
+            delete from oppgitt_barnopplysning where id = ANY(?::bigint[]);          
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, barnVurderingIds)
+                setLongArray(3, barnVurderingIds)
+                setLongArray(4, vurderteBarnIds)
+                setLongArray(5, barnOpplysningIds)
+                setLongArray(6, barnOpplysningIds)
+                setLongArray(7, oppgittBarnIds)
+                setLongArray(8, oppgittBarnIds)
+
+            }
+        }
+        log.info("Slettet $deletedRows fra barnopplysning_grunnlag")
+    }
+
+    private fun getOppgittBarnIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT oppgitt_barn_id
+                    FROM barnopplysning_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("oppgitt_barn_id")
+        }
+    }
+
+    private fun getRegisterBarnIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT register_barn_id
+                    FROM barnopplysning_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("register_barn_id")
+        }
+    }
+
+    private fun getVurderteBarnIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT vurderte_barn_id
+                    FROM barnopplysning_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("vurderte_barn_id")
+        }
+    }
+
+    private fun getBarnVurderingIds(vurderingerIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM barn_vurdering
+                    WHERE barn_vurderinger_id = ANY(?::bigint[]);
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, vurderingerIds) }
+        setRowMapper { row ->
+            row.getLong("id")
+        }
+    }
+
+    private fun getBarnOpplysningIds(registerBarnIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM barnopplysning
+                    WHERE bgb_id = ANY(?::bigint[]);
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, registerBarnIds) }
+        setRowMapper { row ->
+            row.getLong("id")
+        }
+    }
+
 
     private fun deaktiverEksisterende(behandlingId: BehandlingId) {
         connection.execute("UPDATE BARNOPPLYSNING_GRUNNLAG SET AKTIV = FALSE WHERE AKTIV AND BEHANDLING_ID = ?") {

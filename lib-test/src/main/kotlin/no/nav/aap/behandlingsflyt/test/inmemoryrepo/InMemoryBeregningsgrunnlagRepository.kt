@@ -39,4 +39,7 @@ object InMemoryBeregningsgrunnlagRepository : BeregningsgrunnlagRepository {
             memory.remove(behandlingId)
         }
     }
+
+    override fun slett(behandlingId: BehandlingId) {
+    }
 }

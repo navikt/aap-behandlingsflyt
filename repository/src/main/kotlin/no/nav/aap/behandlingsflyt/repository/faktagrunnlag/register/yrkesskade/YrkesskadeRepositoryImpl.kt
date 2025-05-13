@@ -7,9 +7,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
 class YrkesskadeRepositoryImpl(private val connection: DBConnection) : YrkesskadeRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<YrkesskadeRepositoryImpl> {
         override fun konstruer(connection: DBConnection): YrkesskadeRepositoryImpl {
             return YrkesskadeRepositoryImpl(connection)
@@ -108,6 +112,39 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
                     setLocalDate(3, yrkesskade.skadedato)
                 }
             }
+        }
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val yrkesskadeIds = getYrkesskadeIds(behandlingId)
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from yrkesskade_grunnlag where behandling_id = ?; 
+            delete from yrkesskade_dato where id = ANY(?::bigint[]);
+            delete from yrkesskade where id = ANY(?::bigint[]);
+         
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, yrkesskadeIds)
+                setLongArray(3, yrkesskadeIds)
+            }
+        }
+        log.info("Slettet $deletedRows fra yrkesskade_grunnlag")
+    }
+
+    private fun getYrkesskadeIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT yrkesskade_id
+                    FROM yrkesskade_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("yrkesskade_id")
         }
     }
 

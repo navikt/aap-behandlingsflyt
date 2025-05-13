@@ -69,4 +69,7 @@ object InMemorySamordningYtelseRepository : SamordningYtelseRepository {
             }
         }
     }
+
+    override fun slett(behandlingId: BehandlingId) {
+    }
 }

@@ -53,6 +53,10 @@ class ContextRepositoryImpl(private val connection: DBConnection) : ContextRepos
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+        // Sletting av behandlinger gjøres i BehandlingRepository
+    }
+
     private fun mapRad(row: Row): Map<String, String> = mapOf(
         "sakId" to row.getString("sakId"),
         "behandlingId" to row.getString("behandlingId"),

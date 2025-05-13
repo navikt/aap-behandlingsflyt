@@ -24,9 +24,13 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
 class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection) : MedlemskapArbeidInntektRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<MedlemskapArbeidInntektRepositoryImpl> {
         override fun konstruer(connection: DBConnection): MedlemskapArbeidInntektRepositoryImpl {
             return MedlemskapArbeidInntektRepositoryImpl(connection)
@@ -525,6 +529,126 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLong(1, tilBehandling.toLong())
                 setLong(2, fraBehandling.toLong())
             }
+        }
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+        val utenlandsOppholdIds = getUtenlandsOppholdIds(behandlingId)
+        val inntekterINorgeIds = getInntekterINorgeIds(behandlingId)
+        val lovvalgMedlemsskapManuellVurderingIds = getLovvalgMedlemsskapManuellVurderingIds(behandlingId)
+        val arbeiderIds = getArbeiderIds(behandlingId)
+        val arbeidIds = getArbeidIds(arbeiderIds)
+        val inntektINorgeIds = getInntektINorgeIds(inntekterINorgeIds)
+
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ?; 
+            delete from INNTEKT_I_NORGE where inntekter_i_norge_id = ANY(?::bigint[]);     
+            delete from ARBEID where arbeider_id = ANY(?::bigint[]);
+            delete from ARBEIDER where id = ANY(?::bigint[]);    
+            delete from LOVVALG_MEDLEMSKAP_MANUELL_VURDERING where id = ANY(?::bigint[]);
+            delete from UTENLANDS_PERIODE where oppgitt_utenlandsopphold_id = ANY(?::bigint[]);
+            delete from OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG where behandling_id = ?; 
+            delete from OPPGITT_UTENLANDSOPPHOLD where id = ANY(?::bigint[]); 
+            delete from INNTEKTER_I_NORGE where id = ANY(?::bigint[]);
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, inntektINorgeIds)
+                setLongArray(3, arbeidIds)
+                setLongArray(4, arbeiderIds)
+                setLongArray(5, lovvalgMedlemsskapManuellVurderingIds)
+                setLongArray(6, utenlandsOppholdIds)
+                setLong(7, behandlingId.id)
+                setLongArray(8, utenlandsOppholdIds)
+                setLongArray(9, inntektINorgeIds)
+            }
+        }
+        log.info("Slettet $deletedRows fra MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG")
+    }
+
+
+    private fun getLovvalgMedlemsskapManuellVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT manuell_vurdering_id
+                    FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
+                    WHERE behandling_id = ? AND manuell_vurdering_id is not null
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("lovvalg_medlemskap_manuell_vurdering_id")
+        }
+    }
+
+    private fun getInntekterINorgeIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT inntekter_i_norge_id
+                    FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
+                    WHERE behandling_id = ? AND inntekter_i_norge_id is not null
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("inntekter_i_norge_id")
+        }
+    }
+
+    private fun getArbeiderIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
+                    WHERE arbeider_id = ? 
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("id")
+        }
+    }
+
+    private fun getInntektINorgeIds(inntekterId: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM INNTEKTER_I_NORGE
+                    WHERE id = ANY(?::bigint[]);
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, inntekterId) }
+        setRowMapper { row ->
+            row.getLong("id")
+        }
+    }
+
+    private fun getArbeidIds(arbeiderIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM ARBEIDER
+                    WHERE id = ANY(?::bigint[]);
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, arbeiderIds) }
+        setRowMapper { row ->
+            row.getLong("id")
+        }
+    }
+
+    private fun getUtenlandsOppholdIds(behandlingId : BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("id")
         }
     }
 

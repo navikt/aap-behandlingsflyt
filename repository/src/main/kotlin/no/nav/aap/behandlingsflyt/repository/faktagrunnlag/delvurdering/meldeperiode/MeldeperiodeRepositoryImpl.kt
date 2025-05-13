@@ -1,13 +1,12 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 
-class MeldeperiodeRepositoryImpl(private val connection: DBConnection): MeldeperiodeRepository {
+class MeldeperiodeRepositoryImpl(private val connection: DBConnection) : MeldeperiodeRepository {
     companion object : Factory<MeldeperiodeRepositoryImpl> {
         override fun konstruer(connection: DBConnection): MeldeperiodeRepositoryImpl {
             return MeldeperiodeRepositoryImpl(connection)
@@ -64,6 +63,10 @@ class MeldeperiodeRepositoryImpl(private val connection: DBConnection): Meldeper
                 setPeriode(2, it)
             }
         }
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+        // Ikke relevant for trukkede søknader, da man ikke vil ha fått meldeperioder
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {

@@ -8,8 +8,11 @@ import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.lookup.repository.Factory
 import org.jetbrains.annotations.TestOnly
+import org.slf4j.LoggerFactory
 
 class AktivitetspliktRepositoryImpl(private val connection: DBConnection) : AktivitetspliktRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<AktivitetspliktRepositoryImpl> {
         override fun konstruer(connection: DBConnection): AktivitetspliktRepositoryImpl {
@@ -41,7 +44,8 @@ class AktivitetspliktRepositoryImpl(private val connection: DBConnection) : Akti
                     is RegistreringInput -> {
                         setEnumName(10, request.grunn)
                     }
-                    is FeilregistreringInput ->  {
+
+                    is FeilregistreringInput -> {
                         setEnumName(10, null)
                     }
                 }
@@ -100,6 +104,30 @@ class AktivitetspliktRepositoryImpl(private val connection: DBConnection) : Akti
         return AktivitetspliktGrunnlag(
             bruddene = bruddene,
         )
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+       val deletedRows = connection.executeReturnUpdated(
+            """
+            delete from brudd_aktivitetsplikt where brudd_aktivitetsplikt.id in (
+                select brudd_aktivitetsplikt_id from brudd_aktivitetsplikter 
+                join brudd_aktivitetsplikt_grunnlag on brudd_aktivitetsplikter.brudd_aktivitetsplikt_grunnlag_id = brudd_aktivitetsplikt_grunnlag.id
+                where brudd_aktivitetsplikt_grunnlag.behandling_id = ?
+                ); 
+            delete from brudd_aktivitetsplikter where brudd_aktivitetsplikter.brudd_aktivitetsplikt_grunnlag_id in (
+                select id from brudd_aktivitetsplikt_grunnlag where behandling_id = ?
+                )
+            ; 
+            delete from brudd_aktivitetsplikt_grunnlag where behandling_id = ?;
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLong(2, behandlingId.id)
+                setLong(3, behandlingId.id)
+            }
+        }
+        log.info("Slettet $deletedRows fra brudd_aktivitetsplikt_grunnlag")
     }
 
     private fun finnGrunnlagId(behandlingId: BehandlingId): Long? =
@@ -200,6 +228,7 @@ class AktivitetspliktRepositoryImpl(private val connection: DBConnection) : Akti
                 begrunnelse = begrunnelse,
                 grunn = row.getEnum("GRUNN")
             )
+
             DokumentType.FEILREGISTRERING -> AktivitetspliktFeilregistrering(
                 brudd = brudd,
                 metadata = metadata,

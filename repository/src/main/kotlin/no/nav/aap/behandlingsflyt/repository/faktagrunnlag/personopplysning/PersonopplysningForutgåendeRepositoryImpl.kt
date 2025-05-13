@@ -16,11 +16,14 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 // Mangler full støtte for barn / relaterte personer
 class PersonopplysningForutgåendeRepositoryImpl(
     private val connection: DBConnection, private val personRepository: PersonRepository
 ) : PersonopplysningForutgåendeRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<PersonopplysningForutgåendeRepositoryImpl> {
         override fun konstruer(connection: DBConnection): PersonopplysningForutgåendeRepositoryImpl {
@@ -173,6 +176,89 @@ class PersonopplysningForutgåendeRepositoryImpl(
                 setLong(2, personopplysningId)
                 setLong(3, personopplysningGrunnlag?.relatertePersonopplysninger?.id)
             }
+        }
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+        // Sletter ikke bruker_land_forutgaaende, bruker_statuser_forutgaaende, og bruker_land_forutgaaende_aggregat, da det ikke er personopplysninger her
+        val brukerPersonopplysningIds = getBrukerPersonopplysningIds(behandlingId)
+        val personopplysningerIds = getPersonOpplysningerIds(behandlingId)
+        val personopplysningIds = getPersonOpplysningIds(personopplysningerIds)
+        val utenlandsAdresserIds = getUtenlandsAdresserIds(brukerPersonopplysningIds)
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from personopplysning_forutgaaende_grunnlag where behandling_id = ?; 
+            delete from bruker_utenlandsadresse_forutgaaende where utenlandsadresser_id = ANY(?::bigint[]);
+            delete from bruker_utenlandsadresser_forutgaaende_aggregat where id = ANY(?::bigint[]);
+            delete from bruker_personopplysning_forutgaaende where id = ANY(?::bigint[]);
+            delete from personopplysning_forutgaaende where id = ANY(?::bigint[]);
+            delete from personopplysninger_forutgaaende where id = ANY(?::bigint[]);        
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, utenlandsAdresserIds)
+                setLongArray(3, utenlandsAdresserIds)
+                setLongArray(4, brukerPersonopplysningIds)
+                setLongArray(5, personopplysningIds)
+                setLongArray(6, personopplysningerIds)
+            }
+        }
+        log.info("Slettet $deletedRows fra personopplysning_forutgaaende_grunnlag")
+    }
+
+    private fun getBrukerPersonopplysningIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT bruker_personopplysning_id
+                    FROM personopplysning_forutgaaende_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("bruker_personopplysning_id")
+        }
+    }
+
+    private fun getPersonOpplysningerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT personopplysninger_id
+                    FROM personopplysning_forutgaaende_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("personopplysninger_id")
+        }
+    }
+
+    private fun getPersonOpplysningIds(personopplysningerIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM personopplysninger_forutgaaende
+                    WHERE id = ANY(?::bigint[]);
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, personopplysningerIds) }
+        setRowMapper { row ->
+            row.getLong("id")
+        }
+    }
+
+    private fun getUtenlandsAdresserIds(brukerPersonopplysningIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT utenlandsadresser_id
+                    FROM bruker_personopplysning_forutgaaende
+                    WHERE id = ANY(?::bigint[]);
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, brukerPersonopplysningIds) }
+        setRowMapper { row ->
+            row.getLong("utenlandsadresser_id")
         }
     }
 

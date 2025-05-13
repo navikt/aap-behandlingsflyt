@@ -8,9 +8,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
     SamordningVurderingRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<SamordningVurderingRepositoryImpl> {
         override fun konstruer(connection: DBConnection): SamordningVurderingRepositoryImpl {
@@ -24,7 +27,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
         """.trimIndent()
         return connection.queryFirstOrNull(query) {
             setParams {
-                setLong(1, behandlingId.toLong())
+                setLong(1, behandlingId.id)
             }
             setRowMapper {
                 // At denne kunne være nullable er egentlig rester fra tidligere. Vurder å slette
@@ -158,7 +161,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
         """.trimIndent()
         connection.execute(grunnlagQuery) {
             setParams {
-                setLong(1, behandlingId.toLong())
+                setLong(1, behandlingId.id)
                 setLong(2, vurderingerId)
             }
         }
@@ -167,7 +170,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
         connection.execute("UPDATE SAMORDNING_YTELSEVURDERING_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
             setParams {
-                setLong(1, behandlingId.toLong())
+                setLong(1, behandlingId.id)
             }
             setResultValidator { require(it == 1) }
         }
@@ -189,6 +192,56 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
                 setLong(1, tilBehandling.toLong())
                 setLong(2, fraBehandling.toLong())
             }
+        }
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val samordningVurderingYtelseIds = getSamordningYtelseVurderingIds(behandlingId)
+        val samordningVurderingIds = getSamordningVurderingIds(samordningVurderingYtelseIds)
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from samordning_ytelsevurdering_grunnlag where behandling_id = ?; 
+            delete from samordning_vurdering where vurderinger_id = ANY(?::bigint[]);
+            delete from samordning_vurderinger where id = ANY(?::bigint[]);
+            delete from samordning_vurdering_periode where vurdering_id = ANY(?::bigint[]);
+           
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, samordningVurderingYtelseIds)
+                setLongArray(3, samordningVurderingYtelseIds)
+                setLongArray(4, samordningVurderingIds)
+            }
+        }
+        log.info("Slettet $deletedRows fra samordning_ytelsevurdering_grunnlag")
+    }
+
+    private fun getSamordningYtelseVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT vurderinger_id
+                    FROM samordning_ytelsevurdering_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("vurderinger_id")
+        }
+    }
+
+    private fun getSamordningVurderingIds(vurderingIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM samordning_vurdering
+                    WHERE id = ANY(?::bigint[]);
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, vurderingIds) }
+        setRowMapper { row ->
+            row.getLong("vurderinger_id")
         }
     }
 }
