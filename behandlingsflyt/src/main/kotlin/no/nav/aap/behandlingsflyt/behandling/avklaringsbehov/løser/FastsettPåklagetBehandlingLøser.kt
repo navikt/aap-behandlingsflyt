@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettPåklagetBehandlingLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -23,7 +23,7 @@ class FastsettPåklagetBehandlingLøser(
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FastsettPåklagetBehandlingLøsning): LøsningsResultat {
         val påklagetBehandling = løsning.påklagetBehandlingVurdering.påklagetBehandling?.let {
-            behandlingRepository.hent(løsning.påklagetBehandlingVurdering.påklagetBehandling).valider()
+            behandlingRepository.hent(BehandlingReferanse(løsning.påklagetBehandlingVurdering.påklagetBehandling)).valider()
         }
 
         påklagetBehandlingRepository.lagre(
@@ -44,7 +44,9 @@ class FastsettPåklagetBehandlingLøser(
         if (this.typeBehandling() !in listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)) {
             throw IllegalArgumentException("Kan ikke klage på type ${this.typeBehandling()}")
         }
-        if (this.status() != Status.AVSLUTTET) {
+
+        // TODO: Sjekk hva som er kravet for status for å kunne sende inn en klage på behandlingen
+        if (!this.status().erAvsluttet()) {
             throw IllegalArgumentException("Kan ikke klage på åpen behandling ${this.status()}")
         }
         return this
