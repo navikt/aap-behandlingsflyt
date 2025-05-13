@@ -138,14 +138,14 @@ class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection)
             val medlemskapForutgaaendeUnntakPersonIds = getMedlemskapForutgaaendeUnntakPersonIds(behandlingId)
 
             connection.execute("""
-            delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON where id = ANY(?::bigint[]);
+            delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG where behandling_id = ?; 
             delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK where medlemskap_forutgaaende_unntak_person_id = ANY(?::bigint[]);
-            delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG where behandling_id = ? 
+            delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON where id = ANY(?::bigint[]);
         """.trimIndent()) {
             setParams {
-                setLongArray(1, medlemskapForutgaaendeUnntakPersonIds)
+                setLong(1, behandlingId.id)
                 setLongArray(2, medlemskapForutgaaendeUnntakPersonIds)
-                setLong(3, behandlingId.id)
+                setLongArray(3, medlemskapForutgaaendeUnntakPersonIds)
             }
         }
     }
