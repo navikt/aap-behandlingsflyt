@@ -46,7 +46,8 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
                 TjenestepensjonRefusjonskravVurdering(
                     harKrav = it.getBoolean("HAR_KRAV"),
                     fom = it.getLocalDateOrNull("FOM"),
-                    tom = it.getLocalDateOrNull("TOM")
+                    tom = it.getLocalDateOrNull("TOM"),
+                    begrunnelse = it.getString("BEGRUNNELSE")
                 )
             }
         }
@@ -78,7 +79,7 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
 
     private fun lagreVurdering(vurdering: TjenestepensjonRefusjonskravVurdering): Long{
         val query = """
-            INSERT INTO TJENESTEPENSJON_REFUSJONSKRAV_VURDERING (HAR_KRAV, FOM, TOM) VALUES (?, ?, ?)
+            INSERT INTO TJENESTEPENSJON_REFUSJONSKRAV_VURDERING (HAR_KRAV, FOM, TOM, BEGRUNNELSE) VALUES (?, ?, ?, ?)
         """.trimIndent()
 
         return connection.executeReturnKey(query) {
@@ -86,6 +87,7 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
                 setBoolean(1, vurdering.harKrav)
                 setLocalDate(2, vurdering.fom)
                 setLocalDate(3, vurdering.tom)
+                setString(4, vurdering.begrunnelse)
             }
         }
     }
