@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
 import java.math.BigDecimal
+import java.time.LocalDate
 
 enum class BeregningstypeDTO {
     STANDARD,
@@ -15,6 +16,12 @@ class BeregningDTO(
     val grunnlagYrkesskade: YrkesskadeGrunnlagDTO? = null,
     val grunnlagUføre: UføreGrunnlagDTO? = null,
     val grunnlagYrkesskadeUføre: YrkesskadeUføreGrunnlagDTO? = null,
+    val gjeldendeGrunnbeløp: GjeldendeGrunnbeløpDTO,
+)
+
+class GjeldendeGrunnbeløpDTO(
+    val grunnbeløp: BigDecimal,
+    val dato: LocalDate,
 )
 
 class Grunnlag11_19DTO(

@@ -16,8 +16,12 @@ import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<UnderveisRepositoryImpl> {
         override fun konstruer(connection: DBConnection): UnderveisRepositoryImpl {
             return UnderveisRepositoryImpl(connection)
@@ -117,6 +121,55 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
             }
 
             lagreNyttGrunnlag(behandlingId, underveisperioder, input)
+        }
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val sporingIds = getSporingIds(behandlingId)
+        val periodeIds = getPerioderIds(behandlingId)
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from underveis_grunnlag where behandling_id = ?; 
+            delete from underveis_periode where perioder_id = ANY(?::bigint[]);
+            delete from underveis_perioder where id = ANY(?::bigint[]);
+            delete from underveis_sporing where id = ANY(?::bigint[]);
+          
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, periodeIds)
+                setLongArray(3, periodeIds)
+                setLongArray(4, sporingIds)
+            }
+        }
+        log.info("Slettet $deletedRows fra underveis_grunnlag")
+    }
+
+    private fun getSporingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT sporing_id
+                    FROM underveis_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("sporing_id")
+        }
+    }
+
+    private fun getPerioderIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT perioder_id
+                    FROM underveis_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("perioder_id")
         }
     }
 

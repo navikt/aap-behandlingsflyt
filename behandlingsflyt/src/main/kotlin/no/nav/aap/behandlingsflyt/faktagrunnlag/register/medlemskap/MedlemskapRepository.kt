@@ -10,12 +10,12 @@ import no.nav.aap.lookup.repository.Repository
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
-interface MedlemskapRepository: Repository {
+interface MedlemskapRepository : Repository {
     fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapDataIntern>): Long
     fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapUnntakGrunnlag?
 }
 
-class MedlemskapRepositoryImpl(private val connection: DBConnection): MedlemskapRepository {
+class MedlemskapRepositoryImpl(private val connection: DBConnection) : MedlemskapRepository {
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapDataIntern>): Long {
@@ -129,13 +129,50 @@ class MedlemskapRepositoryImpl(private val connection: DBConnection): Medlemskap
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+
+        val medlemskapUnntakPersonIds = getMedlemskapUnntakPersonIds(behandlingId)
+
+        val deletedRows = connection.executeReturnUpdated(
+            """
+            delete from MEDLEMSKAP_UNNTAK_GRUNNLAG where behandling_id = ?; 
+            delete from MEDLEMSKAP_UNNTAK_PERSON where id = ANY(?::bigint[]);
+            delete from MEDLEMSKAP_UNNTAK where medlemskap_unntak_person_id = ANY(?::bigint[]);
+          
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, medlemskapUnntakPersonIds)
+                setLongArray(3, medlemskapUnntakPersonIds)
+
+            }
+        }
+        log.info("Slettet $deletedRows fra MEDLEMSKAP_UNNTAK_GRUNNLAG")
+    }
+
+    private fun getMedlemskapUnntakPersonIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT medlemskap_unntak_person_id
+                    FROM MEDLEMSKAP_UNNTAK_GRUNNLAG
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("medlemskap_unntak_person_id")
+        }
+    }
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         log.warn("mangler kopier-metode for $javaClass. Skal denne klassen ha kopier-metode?")
     }
 
-    companion object: RepositoryFactory<MedlemskapRepository> {
+    companion object : RepositoryFactory<MedlemskapRepository> {
         override fun konstruer(connection: DBConnection): MedlemskapRepository {
             return MedlemskapRepositoryImpl(connection)
+
         }
     }
 }

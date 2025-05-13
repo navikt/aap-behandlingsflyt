@@ -90,6 +90,10 @@ class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRep
         // Gjør ingenting
     }
 
+    override fun slett(fraBehandling: BehandlingId) {
+        // Gjør ingenting
+    }
+
     private fun mapGrunnlag(row: Row): FormkravGrunnlag {
         return FormkravGrunnlag(
             vurdering = mapFormkravVurdering(row),

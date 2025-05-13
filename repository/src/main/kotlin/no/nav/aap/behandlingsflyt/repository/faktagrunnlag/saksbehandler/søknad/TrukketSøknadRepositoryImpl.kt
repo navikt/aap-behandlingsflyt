@@ -73,6 +73,10 @@ class TrukketSøknadRepositoryImpl(
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+        // Sletting av trukketSøknad-tabellene skal ikke gjøres ved trekking av søknad
+    }
+
     private class Grunnlag(
         val vurderinger: List<TrukketSøknadVurdering>,
     )

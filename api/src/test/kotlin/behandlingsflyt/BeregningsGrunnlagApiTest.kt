@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
@@ -67,8 +68,9 @@ class BeregningsGrunnlagApiTest {
         )
 
         val beregning = Beregning(input).beregneMedInput()
+        val behandlingOpprettet = LocalDate.of(2024, 1, 1)
 
-        val res = beregningDTO(beregning)
+        val res = beregningDTO(beregning, behandlingOpprettet)
 
         val grunnlagYrkesskadeUføre = requireNotNull(res.grunnlagYrkesskadeUføre)
         fun inntektForÅr(år: String): BigDecimal {
@@ -78,6 +80,9 @@ class BeregningsGrunnlagApiTest {
         assertThat(inntektForÅr("2022")).isEqualByComparingTo(BigDecimal(500000))
         assertThat(inntektForÅr("2021")).isEqualByComparingTo(BigDecimal(400000))
         assertThat(inntektForÅr("2020")).isEqualByComparingTo(BigDecimal(300000))
+
+        assertThat(res.gjeldendeGrunnbeløp.grunnbeløp.toInt()).isEqualTo(118620)
+        assertThat(res.gjeldendeGrunnbeløp.dato).isEqualTo(behandlingOpprettet)
     }
 
     @Test
@@ -127,8 +132,9 @@ class BeregningsGrunnlagApiTest {
         )
 
         val beregning = Beregning(input).beregneMedInput()
+        val behandlingOpprettet = LocalDate.of(2024, 1, 1)
 
-        val res = beregningDTO(beregning)
+        val res = beregningDTO(beregning, behandlingOpprettet)
 
         val grunnlagYrkesskadeUføre = requireNotNull(res.grunnlagYrkesskadeUføre)
 

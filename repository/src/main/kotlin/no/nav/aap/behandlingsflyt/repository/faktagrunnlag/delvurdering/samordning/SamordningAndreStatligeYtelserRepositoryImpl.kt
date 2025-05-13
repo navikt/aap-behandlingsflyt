@@ -11,13 +11,13 @@ import org.slf4j.LoggerFactory
 
 class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBConnection) : SamordningAndreStatligeYtelserRepository {
 
+    private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<SamordningAndreStatligeYtelserRepositoryImpl> {
         override fun konstruer(connection: DBConnection): SamordningAndreStatligeYtelserRepositoryImpl {
             return SamordningAndreStatligeYtelserRepositoryImpl(connection)
         }
     }
-
-    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningAndreStatligeYtelserGrunnlag? {
         val query = """
@@ -120,6 +120,38 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+
+        val samordningStatligYtelseVurderingIds = getSamordningStatligYtelseVurderingIds(behandlingId)
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from samordning_andre_statlige_ytelser_grunnlag where behandling_id = ?; 
+            delete from samordning_andre_statlige_ytelser_vurdering_periode where vurdering_id = ANY(?::bigint[]);
+            delete from samordning_andre_statlige_ytelser_vurdering where id = ANY(?::bigint[]);
+           
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, samordningStatligYtelseVurderingIds)
+                setLongArray(3, samordningStatligYtelseVurderingIds)
+            }
+        }
+        log.info("Slettet $deletedRows fra samordning_andre_statlige_ytelser_grunnlag")
+    }
+
+    private fun getSamordningStatligYtelseVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT vurdering_id
+                    FROM samordning_andre_statlige_ytelser_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("vurdering_id")
+        }
+    }
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
         connection.execute("UPDATE SAMORDNING_ANDRE_STATLIGE_YTELSER_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {

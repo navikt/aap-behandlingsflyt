@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -24,6 +25,7 @@ import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import javax.sql.DataSource
 
@@ -50,7 +52,8 @@ fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource, repositoryR
                     if (beregning == null) {
                         return@transaction null
                     }
-                    beregningDTO(beregning)
+                    val behandlingOpprettet = behandling.opprettetTidspunkt.toLocalDate()
+                    beregningDTO(beregning, behandlingOpprettet)
                 }
 
                 if (begregningsgrunnlag == null) {
@@ -63,7 +66,16 @@ fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource, repositoryR
     }
 }
 
-internal fun beregningDTO(beregning: Beregningsgrunnlag): BeregningDTO {
+internal fun beregningDTO(beregning: Beregningsgrunnlag, behandlingOpprettet: LocalDate): BeregningDTO {
+    /**
+     * TODO:
+     * Dette er en minimumsløsning inntil det finnes en bedre måte å beregne grunnlaget hvor G er endelig fastsatt
+     * basert på virkningstidspunktet som ikke er tilgjengelig i grunnlagssteget. Antageligvis burde dette flyttes
+     * til et senere steg. I tillegg burde også beløpene som vises til saksbehandler lagres ned slik at de også er
+     * tilgjengelig ved senere visning av behandlingen uten å være påvirket av eventuelle G-endringer.
+     */
+    val gjeldendeGrunnbeløp = hentGjeldendeGrunnbeløp(behandlingOpprettet)
+
     return when (beregning) {
         is GrunnlagYrkesskade -> {
             when (val underliggende = beregning.underliggende()) {
@@ -79,7 +91,8 @@ internal fun beregningDTO(beregning: Beregningsgrunnlag): BeregningDTO {
                             uføreGrunnlag = uføre,
                             yrkesskadeGrunnlag = yrkesskade,
                             grunnlag = beregning.grunnlaget().verdi()
-                        )
+                        ),
+                        gjeldendeGrunnbeløp = gjeldendeGrunnbeløp
                     )
                 }
 
@@ -93,7 +106,8 @@ internal fun beregningDTO(beregning: Beregningsgrunnlag): BeregningDTO {
                             beregning,
                             underliggende,
                             gjennomsnittligInntektIG.verdi()
-                        )
+                        ),
+                        gjeldendeGrunnbeløp = gjeldendeGrunnbeløp
                     )
 
                 }
@@ -105,7 +119,8 @@ internal fun beregningDTO(beregning: Beregningsgrunnlag): BeregningDTO {
         is GrunnlagUføre -> {
             BeregningDTO(
                 beregningstypeDTO = BeregningstypeDTO.UFØRE,
-                grunnlagUføre = uføreGrunnlagDTO(beregning)
+                grunnlagUføre = uføreGrunnlagDTO(beregning),
+                gjeldendeGrunnbeløp = gjeldendeGrunnbeløp
             )
         }
 
@@ -113,9 +128,17 @@ internal fun beregningDTO(beregning: Beregningsgrunnlag): BeregningDTO {
             BeregningDTO(
                 beregningstypeDTO = BeregningstypeDTO.STANDARD,
                 grunnlag11_19 = grunnlag11_19_to_DTO(beregning),
+                gjeldendeGrunnbeløp = gjeldendeGrunnbeløp
             )
         }
     }
+}
+
+private fun hentGjeldendeGrunnbeløp(behandlingOpprettet: LocalDate): GjeldendeGrunnbeløpDTO {
+    return GjeldendeGrunnbeløpDTO(
+        grunnbeløp = Grunnbeløp.tilTidslinje().segment(behandlingOpprettet)!!.verdi.verdi,
+        dato = behandlingOpprettet
+    )
 }
 
 private fun grunnlag11_19_to_DTO(grunnlag: Grunnlag11_19): Grunnlag11_19DTO {

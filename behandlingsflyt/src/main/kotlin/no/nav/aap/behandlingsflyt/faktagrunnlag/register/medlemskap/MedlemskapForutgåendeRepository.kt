@@ -13,6 +13,7 @@ import java.time.LocalDate
 interface MedlemskapForutgåendeRepository: Repository {
     fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapDataIntern>): Long
     fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapUnntakGrunnlag?
+    override fun slett(behandlingId: BehandlingId)
 }
 
 class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection) : MedlemskapForutgåendeRepository {
@@ -132,10 +133,42 @@ class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection)
         log.warn("ingen kopier-metode for $javaClass. Burde vi implementere kopier-metode her?")
     }
 
+        override fun slett(behandlingId: BehandlingId) {
+
+            val medlemskapForutgaaendeUnntakPersonIds = getMedlemskapForutgaaendeUnntakPersonIds(behandlingId)
+
+            connection.execute("""
+            delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG where behandling_id = ?; 
+            delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK where medlemskap_forutgaaende_unntak_person_id = ANY(?::bigint[]);
+            delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON where id = ANY(?::bigint[]);
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, medlemskapForutgaaendeUnntakPersonIds)
+                setLongArray(3, medlemskapForutgaaendeUnntakPersonIds)
+            }
+        }
+    }
+
+        private fun getMedlemskapForutgaaendeUnntakPersonIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+            """
+                    SELECT medlemskap_forutgaaende_unntak_person_id
+                    FROM MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+        ) {
+            setParams { setLong(1, behandlingId.id) }
+            setRowMapper { row ->
+                row.getLong("medlemskap_unntak_person_id")
+            }
+        }
+
     companion object: RepositoryFactory<MedlemskapForutgåendeRepository> {
         override fun konstruer(connection: DBConnection): MedlemskapForutgåendeRepository {
             return MedlemskapForutgåendeRepositoryImpl(connection)
         }
 
     }
+
 }

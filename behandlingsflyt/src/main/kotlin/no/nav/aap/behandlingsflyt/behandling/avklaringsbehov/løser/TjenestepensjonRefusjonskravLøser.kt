@@ -58,7 +58,8 @@ class TjenestepensjonRefusjonskravLøser(
             return TjenestepensjonRefusjonskravVurdering(
                 harKrav = løsning.samordningRefusjonskrav.harKrav,
                 fom = refusjonFomDato,
-                tom = refusjonTomDato
+                tom = refusjonTomDato,
+                begrunnelse = løsning.samordningRefusjonskrav.begrunnelse
             )
         }
         return løsning.samordningRefusjonskrav

@@ -13,8 +13,11 @@ import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
+import org.slf4j.LoggerFactory
 
 class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<MeldekortRepositoryImpl> {
         override fun konstruer(connection: DBConnection): MeldekortRepositoryImpl {
@@ -176,4 +179,53 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
             }
         }
     }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val meldekorteneIds = getMeldekorteneIds(behandlingId)
+        val meldekortIds = getMeldekortIds(meldekorteneIds)
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from meldekort_grunnlag where behandling_id = ?; 
+            delete from meldekort_periode where meldekort_id = ANY(?::bigint[]);
+            delete from meldekort where meldekortene_id = ANY(?::bigint[]);
+            delete from meldekortene where id = ANY(?::bigint[]);
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, meldekortIds)
+                setLongArray(3, meldekorteneIds)
+                setLongArray(4, meldekorteneIds)
+            }
+        }
+        log.info("Slettet $deletedRows fra meldekort_grunnlag")
+    }
+
+    private fun getMeldekorteneIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT meldekortene_id
+                    FROM meldekort_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("meldekortene_id")
+        }
+    }
+
+    private fun getMeldekortIds(meldekorteneId: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM meldekort
+                    WHERE meldekortene_id = ANY(?::bigint[])
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, meldekorteneId) }
+        setRowMapper { row ->
+            row.getLong("id")
+        }
+    }
+
 }

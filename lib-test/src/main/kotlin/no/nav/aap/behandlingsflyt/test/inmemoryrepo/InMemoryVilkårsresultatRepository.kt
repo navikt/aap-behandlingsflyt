@@ -32,4 +32,7 @@ object InMemoryVilkårsresultatRepository : VilkårsresultatRepository {
             memory.put(tilBehandling, memory.getValue(fraBehandling))
         }
     }
+
+    override fun slett(behandlingId: BehandlingId) {
+    }
 }

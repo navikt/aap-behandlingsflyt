@@ -49,6 +49,13 @@ class VedtakRepositoryImpl(private val connection: DBConnection) : VedtakReposit
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+       val vedtak = hent(behandlingId)
+        check(vedtak == null) {
+            "Fant vedtak med id $behandlingId på trukket søknad"
+        }
+    }
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         // Denne trengs ikke implementeres
     }

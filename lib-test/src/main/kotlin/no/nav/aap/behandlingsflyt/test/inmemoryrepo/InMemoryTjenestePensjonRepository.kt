@@ -32,5 +32,8 @@ object InMemoryTjenestePensjonRepository : TjenestePensjonRepository {
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+    }
+
 
 }

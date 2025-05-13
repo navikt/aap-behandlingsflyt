@@ -12,9 +12,12 @@ import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<SykdomRepositoryImpl> {
         override fun konstruer(connection: DBConnection): SykdomRepositoryImpl {
@@ -70,6 +73,76 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             lagre(behandlingId, nyttGrunnlag)
         }
     }
+
+    override fun slett(behandlingId: BehandlingId) {
+        val sykdomVurderingerIds = getSykdomVurderingerIds(behandlingId)
+        val sykdomVurderingIds = getSykdomVurderingIds(sykdomVurderingerIds)
+        val yrkesskadevurderingIds = getYrkesskadeVurderingIds(behandlingId)
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from sykdom_grunnlag where behandling_id = ?; 
+            delete from sykdom_vurdering_bidiagnoser where vurdering_id = ANY(?::bigint[]);
+            delete from sykdom_vurdering_dokumenter where vurdering_id = ANY(?::bigint[]);
+            delete from sykdom_vurdering where sykdom_vurderinger_id = ANY(?::bigint[]);
+            delete from sykdom_vurderinger where id = ANY(?::bigint[]);
+            delete from yrkesskade_vurdering where id = ANY(?::bigint[]);
+            delete from yrkesskade_relaterte_saker where vurdering_id = ANY(?::bigint[]);
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, sykdomVurderingIds)
+                setLongArray(3, sykdomVurderingIds)
+                setLongArray(4, sykdomVurderingerIds)
+                setLongArray(5, sykdomVurderingerIds)
+                setLongArray(6, yrkesskadevurderingIds)
+                setLongArray(7, yrkesskadevurderingIds)
+            }
+        }
+        log.info("Slettet $deletedRows fra sykdom_grunnlag")
+    }
+
+    private fun getSykdomVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT sykdom_vurderinger_id
+                    FROM sykdom_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("sykdom_vurderinger_id")
+        }
+    }
+
+    private fun getSykdomVurderingIds(sykdomVurderingerIds: List<Long>): List<Long> = connection.queryList(
+        """
+                    SELECT id
+                    FROM sykdom_vurdering
+                    WHERE sykdom_vurderinger_id = ANY(?::bigint[]);
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLongArray(1, sykdomVurderingerIds) }
+        setRowMapper { row ->
+            row.getLong("id")
+        }
+    }
+
+    private fun getYrkesskadeVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT yrkesskade_id
+                    FROM sykdom_grunnlag
+                    WHERE behandling_id = ?;
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("yrkesskade_id")
+        }
+    }
+
 
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: SykdomGrunnlag) {
         val sykdomsvurderingerId = lagreSykdom(nyttGrunnlag.sykdomsvurderinger)

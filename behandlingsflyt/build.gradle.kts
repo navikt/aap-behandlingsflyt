@@ -4,20 +4,20 @@ plugins {
 
 val komponenterVersjon = "1.0.242"
 val ktorVersion = "3.1.3"
-val tilgangVersjon = "1.0.64"
+val tilgangVersjon = "1.0.67"
 val utbetalVersjon = "0.0.43"
 val junitVersjon = "5.12.2"
 
 dependencies {
     api(project(":kontrakt"))
-    implementation("io.micrometer:micrometer-registry-prometheus:1.14.6")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.14.7")
     implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
 
     api("no.nav.aap.tilgang:plugin:$tilgangVersjon")
     api("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
     api("no.nav.aap.brev:kontrakt:0.0.107")
-    api("no.nav.aap.meldekort:kontrakt:0.0.39")
+    api("no.nav.aap.meldekort:kontrakt:0.0.40")
     api("no.nav.aap.kelvin:motor:$komponenterVersjon")
     api("no.nav.aap.kelvin:gateway:$komponenterVersjon")
     api("no.nav.aap.utbetal:api-kontrakt:$utbetalVersjon")

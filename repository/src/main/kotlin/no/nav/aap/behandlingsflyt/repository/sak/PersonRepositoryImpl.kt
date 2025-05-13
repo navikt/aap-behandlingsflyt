@@ -193,6 +193,10 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+        // Ikke relevant for å slette sak
+    }
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         // Denne trengs ikke implementeres
     }

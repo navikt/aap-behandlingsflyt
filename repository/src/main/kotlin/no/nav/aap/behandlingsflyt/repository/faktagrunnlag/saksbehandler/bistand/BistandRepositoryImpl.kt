@@ -8,8 +8,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<BistandRepositoryImpl> {
         override fun konstruer(connection: DBConnection): BistandRepositoryImpl {
@@ -99,6 +102,40 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 deaktiverEksisterende(behandlingId)
             }
             lagre(behandlingId, nyttGrunnlag)
+        }
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val bistandVurderingerIds = getBistandVurderingerIds(behandlingId)
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from bistand_grunnlag where behandling_id = ?; 
+            delete from bistand_vurderinger where id = ANY(?::bigint[]);
+            delete from bistand where bistand_vurderinger_id = ANY(?::bigint[]);
+           
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, bistandVurderingerIds)
+                setLongArray(3, bistandVurderingerIds)
+
+            }
+        }
+        log.info("Slettet $deletedRows fra bistand_grunnlag")
+    }
+
+    private fun getBistandVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT bistand_vurderinger_id
+                    FROM bistand_grunnlag
+                    WHERE behandling_id = ?
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("bistand_vurderinger_id")
         }
     }
 

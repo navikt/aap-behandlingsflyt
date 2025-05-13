@@ -28,7 +28,7 @@ import java.time.YearMonth
 
 class ForutgåendeMedlemskapService private constructor(
     private val sakService: SakService,
-    private val medlemskapForutgåendeRepository: MedlemskapForutgåendeRepositoryImpl,
+    private val medlemskapForutgåendeRepository: MedlemskapForutgåendeRepository,
     private val grunnlagRepository: MedlemskapArbeidInntektForutgåendeRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav {
