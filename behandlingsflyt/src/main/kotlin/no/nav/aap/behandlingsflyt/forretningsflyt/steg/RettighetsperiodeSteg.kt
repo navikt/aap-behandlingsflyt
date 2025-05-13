@@ -35,6 +35,7 @@ class RettighetsperiodeSteg private constructor(
                 if (erRelevant(kontekst)) {
                     val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
                     if (erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene)) {
+                        avklaringsbehovene.avbrytÅpneAvklaringsbehov()
                         return FantAvklaringsbehov(Definisjon.VURDER_RETTIGHETSPERIODE)
                     } else {
                         oppdaterVilkårsresultatForNyPeriode(kontekst)

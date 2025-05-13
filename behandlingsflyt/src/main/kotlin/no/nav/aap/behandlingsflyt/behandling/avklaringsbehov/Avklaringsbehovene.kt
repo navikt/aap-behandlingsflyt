@@ -153,6 +153,13 @@ class Avklaringsbehovene(
         }
     }
 
+    fun avbrytÅpneAvklaringsbehov() {
+        val avklaringsbehovSomSkalAvbrytes =
+            alle().filter { it.erÅpent() && !(it.erVentepunkt() || it.erBrevVentebehov()) }
+        avklaringsbehovSomSkalAvbrytes.map { it.definisjon }.distinct().forEach { avbryt(it) }
+    }
+
+
     fun reåpne(definisjon: Definisjon) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.reåpne()
