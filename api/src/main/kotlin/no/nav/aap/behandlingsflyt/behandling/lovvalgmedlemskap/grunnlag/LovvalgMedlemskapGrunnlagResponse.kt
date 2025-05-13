@@ -19,7 +19,7 @@ data class LovvalgMedlemskapGrunnlagResponse(
 data class ManuellVurderingForLovvalgMedlemskapResponse(
     val lovvalgVedSøknadsTidspunkt: LovvalgVedSøknadsTidspunktResponse,
     val medlemskapVedSøknadsTidspunkt: MedlemskapVedSøknadsTidspunktResponse?,
-    val vurdertAvResponse: VurdertAvResponse,
+    val vurdertAv: VurdertAvResponse,
     val overstyrt: Boolean = false
 )
 
@@ -51,7 +51,7 @@ fun ManuellVurderingForLovvalgMedlemskap.toResponse() =
     ManuellVurderingForLovvalgMedlemskapResponse(
         lovvalgVedSøknadsTidspunkt = lovvalgVedSøknadsTidspunkt.toResponse(),
         medlemskapVedSøknadsTidspunkt = medlemskapVedSøknadsTidspunkt?.toResponse(),
-        vurdertAvResponse = VurdertAvResponse(ident = vurdertAv, dato = vurdertDato!!.toLocalDate()),
+        vurdertAv = VurdertAvResponse(ident = vurdertAv, dato = vurdertDato!!.toLocalDate()),
         overstyrt = overstyrt
     )
 
