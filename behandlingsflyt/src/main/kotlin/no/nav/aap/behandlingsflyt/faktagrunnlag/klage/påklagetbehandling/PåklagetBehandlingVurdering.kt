@@ -10,7 +10,7 @@ data class PåklagetBehandlingVurdering(
     val opprettet: Instant? = null
 ) {
     init {
-        require(påklagetVedtakType == PåklagetVedtakType.KELVIN_BEHANDLING || påklagetBehandling != null) {
+        require(!(påklagetVedtakType == PåklagetVedtakType.KELVIN_BEHANDLING && påklagetBehandling != null)) {
             "Påklaget behandling må være utfylt dersom det klages på et Kelvin-vedtak"
         }
     }
