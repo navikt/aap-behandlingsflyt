@@ -43,6 +43,7 @@ public const val REFUSJON_KRAV: String = "5026"
 public const val FASTSETT_PÅKLAGET_BEHANDLING_KODE: String = "5999"
 public const val SAMORDNING_REFUSJONS_KRAV = "5056"
 public const val VURDER_FORMKRAV_KODE: String = "6000"
+public const val FASTSETT_BEHANDLENDE_ENHET_KODE: String = "6001"
 
 @Suppress("EnumEntryName")
 public enum class AvklaringsbehovKode {
@@ -179,6 +180,11 @@ public enum class AvklaringsbehovKode {
     /**
      * [VURDER_FORMKRAV_KODE]
      */
-    `6000`
+    `6000`,
+
+    /**
+     * [FASTSETT_BEHANLENDE_ENHET_KODE]
+     */
+    `6001`
 
 }

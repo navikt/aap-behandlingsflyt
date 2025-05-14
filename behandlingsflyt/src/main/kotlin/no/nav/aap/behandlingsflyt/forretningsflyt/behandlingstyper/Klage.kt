@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
 import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FatteVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.BehandlendeEnhetSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.FormkravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.PåklagetBehandlingSteg
 
@@ -14,6 +15,7 @@ object Klage : BehandlingType {
             .medSteg(steg = StartBehandlingSteg)
             .medSteg(steg = PåklagetBehandlingSteg)
             .medSteg(steg = FormkravSteg)
+            .medSteg(steg = BehandlendeEnhetSteg)
             .medSteg(steg = FatteVedtakSteg)
             .build()
     }

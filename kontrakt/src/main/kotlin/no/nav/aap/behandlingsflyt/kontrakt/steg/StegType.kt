@@ -159,6 +159,10 @@ public enum class StegType(
         gruppe = StegGruppe.FORMKRAV,
         status = Status.UTREDES,
     ),
+    BEHANDLENDE_ENHET(
+        gruppe = StegGruppe.FORMKRAV,
+        status = Status.UTREDES,
+    ),
     UDEFINERT(
         gruppe = StegGruppe.UDEFINERT,
         status = Status.UTREDES,
