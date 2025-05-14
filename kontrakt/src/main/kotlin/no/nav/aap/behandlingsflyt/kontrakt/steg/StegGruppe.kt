@@ -22,5 +22,7 @@ public enum class StegGruppe(public val skalVises: Boolean, public val obligator
     IVERKSETT_VEDTAK(false, true),
     BREV(true, true),
     UDEFINERT(false, true),
-    FORMKRAV(true, true)
+    FORMKRAV(true, true),
+    KLAGEBEHANDLING_KONTOR(true, false),
+    KLAGEBEHANDLING_NAY(true, false),
 }
