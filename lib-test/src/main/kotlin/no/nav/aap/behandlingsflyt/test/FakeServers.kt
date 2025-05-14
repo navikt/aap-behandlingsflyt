@@ -886,10 +886,13 @@ object FakeServers : AutoCloseable {
 
         routing {
             post("/api/insert/meldeperioder") {
-                call.respond("datadeling Reponse")
+                call.respond("datadeling response")
             }
             post("/api/insert/sakStatus") {
-                call.respond("datadeling Reponse")
+                call.respond("datadeling response")
+            }
+            post("api/insert/vedtak") {
+                call.respond("datadeling response")
             }
         }
     }
