@@ -6,11 +6,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.Year
 import java.util.*
 
 class Inntektsbehov(private val input: Input) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun utledAlleRelevanteÅr(): Set<Year> {
         return input.datoerForInnhenting().flatMap(::treÅrForutFor).toSortedSet()
@@ -63,6 +66,8 @@ class Inntektsbehov(private val input: Input) {
         return relevanteÅr.map { relevantÅr ->
             val år = inntekter.firstOrNull { entry -> entry.år == relevantÅr }
             if (år == null) {
+                // TODO IKKe default til null kr inntekt! Bør krasje, og fikses i tidligere steg
+                log.warn("Fant ikke inntekt for $relevantÅr, bruker 0 i stedet.")
                 return@map InntektPerÅr(relevantÅr, Beløp(0))
             }
             return@map år
