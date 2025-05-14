@@ -41,6 +41,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerAPI
 import no.nav.aap.behandlingsflyt.drift.driftAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.flate.behandlendeEnhetGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate.formkravGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.flate.påklagetBehandlingGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.arbeidsevneGrunnlagApi
@@ -179,6 +180,7 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
                 //Klage
                 påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry)
                 formkravGrunnlagApi(dataSource, repositoryRegistry)
+                behandlendeEnhetGrunnlagApi(dataSource, repositoryRegistry)
                 // Flytt
                 brevApi(dataSource, repositoryRegistry)
                 dokumentinnhentingAPI(dataSource, repositoryRegistry)

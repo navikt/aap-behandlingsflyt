@@ -6,8 +6,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.Behandlen
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.lookup.repository.Factory
 
 class BehandlendeEnhetRepositoryImpl(private val connection: DBConnection) : BehandlendeEnhetRepository {
+
+    companion object : Factory<BehandlendeEnhetRepositoryImpl> {
+        override fun konstruer(connection: DBConnection): BehandlendeEnhetRepositoryImpl {
+            return BehandlendeEnhetRepositoryImpl(connection)
+        }
+    }
+    
     override fun hentHvisEksisterer(behandlingId: BehandlingId): BehandlendeEnhetGrunnlag? {
         val query = """
             SELECT * FROM BEHANDLENDE_ENHET_VURDERING

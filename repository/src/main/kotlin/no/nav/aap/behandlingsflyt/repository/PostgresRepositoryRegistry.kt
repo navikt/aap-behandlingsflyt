@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordni
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.MeldekortRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.BehandlendeEnhetRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FormkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.PåklagetBehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
@@ -101,6 +102,7 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<FlytJobbRepositoryImpl>()
     .register<FormkravRepositoryImpl>()
     .register<PåklagetBehandlingRepositoryImpl>()
+    .register<BehandlendeEnhetRepositoryImpl>()
     .register<MedlemskapRepositoryImpl>()
     .register<MedlemskapForutgåendeRepositoryImpl>()
     .register<TjenestepensjonRefusjonskravVurderingRepositoryImpl>()
