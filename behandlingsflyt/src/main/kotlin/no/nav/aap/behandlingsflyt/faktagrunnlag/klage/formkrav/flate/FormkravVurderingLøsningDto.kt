@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurdering
 import no.nav.aap.komponenter.httpklient.auth.Bruker
-import java.util.*
 
 data class FormkravVurderingLøsningDto(
     val begrunnelse: String,

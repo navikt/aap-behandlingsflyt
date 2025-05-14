@@ -33,11 +33,7 @@ fun NormalOpenAPIRoute.formkravGrunnlagApi(dataSource: DataSource, repositoryReg
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
 
-                    val formkravGrunnlag = formkravRepository.hentHvisEksisterer(behandling.id)
-                    
-                    FormkravGrunnlagDto(
-                        formkravGrunnlag?.vurdering
-                    )
+                    formkravRepository.hentHvisEksisterer(behandling.id)?.tilDto() ?: FormkravGrunnlagDto()
                 }
             respond(respons)
         }
