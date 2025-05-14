@@ -2740,14 +2740,15 @@ class FlytOrkestratorTest {
             avklaringsBehovLøsning = FastsettBehandlendeEnhetLøsning(
                 behandlendeEnhetVurdering = BehandlendeEnhetLøsningDto(
                     skalBehandlesAvNay = true,
-                    skalBehandlesAvKontor = false
+                    skalBehandlesAvKontor = true
                 )
             )
         )
 
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FASTSETT_BEHANDLENDE_ENHET)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_KONTOR)
+        
         // TODO: Lukk avklaringsbehovet og gå til neste steg når neste steg er implementert
     }
 
@@ -3095,12 +3096,14 @@ class FlytOrkestratorTest {
 
     private fun prosesserBehandling(behandling: Behandling) {
         dataSource.transaction { connection ->
-            FlytOrkestrator(postgresRepositoryRegistry.provider(connection)).forberedOgProsesserBehandling(FlytKontekst(
-                sakId = behandling.sakId,
-                behandlingId = behandling.id,
-                forrigeBehandlingId = behandling.forrigeBehandlingId,
-                behandlingType = behandling.typeBehandling(),
-            ))
+            FlytOrkestrator(postgresRepositoryRegistry.provider(connection)).forberedOgProsesserBehandling(
+                FlytKontekst(
+                    sakId = behandling.sakId,
+                    behandlingId = behandling.id,
+                    forrigeBehandlingId = behandling.forrigeBehandlingId,
+                    behandlingType = behandling.typeBehandling(),
+                )
+            )
         }
     }
 }
