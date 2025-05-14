@@ -32,7 +32,8 @@ public data class EndringDTO(
     val frist: LocalDate? = null,
     val endretAv: String,
     val årsakTilSattPåVent: ÅrsakTilSettPåVent? = null,
-    val årsakTilRetur: List<ÅrsakTilRetur> = emptyList()
+    val årsakTilRetur: List<ÅrsakTilRetur> = emptyList(),
+    val begrunnelse: String? = "",
 )
 
 public data class ÅrsakTilRetur(val årsak: ÅrsakTilReturKode)

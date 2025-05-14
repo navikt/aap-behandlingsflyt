@@ -93,6 +93,7 @@ class BehandlingHendelseServiceImpl(
                             endretAv = endring.endretAv,
                             frist = endring.frist,
                             årsakTilSattPåVent = endring.grunn?.oversettTilKontrakt(),
+                            begrunnelse = endring.begrunnelse,
                             årsakTilRetur = endring.årsakTilRetur.map {
                                 ÅrsakTilRetur(it.oversettTilKontrakt())
                             })
