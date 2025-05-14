@@ -257,6 +257,8 @@ class ApiTest {
             )
             behandling.referanse
         }
+        
+        val dagensDato = LocalDate.now()
 
         val asJSON: JsonNode? = client.get(
             URI.create("http://localhost:$port/api/beregning/grunnlag/").resolve(referanse.toString()),
@@ -302,7 +304,7 @@ class ApiTest {
   "grunnlagYrkesskadeUføre": null,
   "gjeldendeGrunnbeløp": {
     "grunnbeløp":124028.0,
-    "dato":"2025-05-13"
+    "dato": "$dagensDato"
   }
 }"""
         Assertions.assertThat(asJSON).isEqualTo(ObjectMapper().readTree(expectedJSON))
