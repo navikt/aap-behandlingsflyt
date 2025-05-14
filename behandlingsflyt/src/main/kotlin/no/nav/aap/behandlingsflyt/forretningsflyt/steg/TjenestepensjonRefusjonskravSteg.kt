@@ -34,7 +34,7 @@ class TjenestepensjonRefusjonskravSteg private constructor(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val tpResultat = tjenestePensjonRepository.hent(kontekst.behandlingId)
-        return Fullført
+
 
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
