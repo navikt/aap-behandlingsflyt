@@ -34,7 +34,8 @@ internal class FormkravRepositoryImplTest {
                 erFristOverholdt = true,
                 erKonkret = true,
                 erSignert = true,
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+                likevelBehandles = null
             )
 
             formkravRepository.lagre(behandling.id, formkrav)

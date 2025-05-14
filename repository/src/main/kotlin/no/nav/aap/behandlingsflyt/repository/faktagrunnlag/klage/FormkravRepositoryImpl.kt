@@ -66,8 +66,8 @@ class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRep
     private fun lagreVurdering(vurdering: FormkravVurdering): Long {
         val query = """
             INSERT INTO FORMKRAV_VURDERING 
-            (BEGRUNNELSE, ER_BRUKER_PART, ER_FRIST_OVERHOLDT, ER_KONKRET, ER_SIGNERT, VURDERT_AV) 
-            VALUES (?, ?, ?, ?, ?, ?)
+            (BEGRUNNELSE, ER_BRUKER_PART, ER_FRIST_OVERHOLDT, ER_KONKRET, ER_SIGNERT, VURDERT_AV, LIKEVEL_BEHANDLES) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         return connection.executeReturnKey(query) {
@@ -78,6 +78,7 @@ class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRep
                 setBoolean(4, vurdering.erKonkret)
                 setBoolean(5, vurdering.erSignert)
                 setString(6, vurdering.vurdertAv)
+                setBoolean(7, vurdering.likevelBehandles)
             }
             setResultValidator { rowsUpdated ->
                 require(rowsUpdated == 1)
@@ -108,6 +109,7 @@ class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRep
             erKonkret = row.getBoolean("ER_KONKRET"),
             erSignert = row.getBoolean("ER_SIGNERT"),
             vurdertAv = row.getString("VURDERT_AV"),
+            likevelBehandles = row.getBooleanOrNull("LIKEVEL_BEHANDLES"),
         )
     }
 

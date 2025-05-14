@@ -7,6 +7,7 @@ data class FormkravVurderingLøsningDto(
     val begrunnelse: String,
     val erBrukerPart: Boolean,
     val erFristOverholdt: Boolean,
+    val likevelBehandles: Boolean?,
     val erKonkret: Boolean,
     val erSignert: Boolean
 ) {
@@ -16,6 +17,7 @@ data class FormkravVurderingLøsningDto(
         erFristOverholdt = erFristOverholdt,
         erKonkret = erKonkret,
         erSignert = erSignert,
-        vurdertAv = bruker.ident
+        vurdertAv = bruker.ident,
+        likevelBehandles = likevelBehandles,
     )
 }

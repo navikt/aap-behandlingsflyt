@@ -11,6 +11,7 @@ data class FormkravVurderingDto(
     val begrunnelse: String,
     val erBrukerPart: Boolean,
     val erFristOverholdt: Boolean,
+    val likevelBehandles: Boolean?,
     val erKonkret: Boolean,
     val erSignert: Boolean,
     val vurdertAv: String
@@ -23,7 +24,8 @@ internal fun FormkravVurdering.tilDto() =
         erFristOverholdt = erFristOverholdt,
         erKonkret = erKonkret,
         erSignert = erSignert,
-        vurdertAv = vurdertAv
+        vurdertAv = vurdertAv,
+        likevelBehandles = likevelBehandles
     )
 
 internal fun FormkravGrunnlag.tilDto() =
