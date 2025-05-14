@@ -23,8 +23,10 @@ class FakeUnleash(private val flags: Map<FeatureToggle, Boolean>): UnleashGatewa
         fun med(vararg flags: Pair<FeatureToggle, Boolean>) = FakeUnleash(flags.toMap())
 
         override fun konstruer(): UnleashGateway {
-            val defaultVerdier = Pair(BehandlingsflytFeature.OverstyrStarttidspunkt, true)
-            return FakeUnleash(mapOf(defaultVerdier))
+            return FakeUnleash(mapOf(
+                BehandlingsflytFeature.OverstyrStarttidspunkt to true,
+                BehandlingsflytFeature.AvventUtbetaling to true,
+            ))
         }
     }
 }
