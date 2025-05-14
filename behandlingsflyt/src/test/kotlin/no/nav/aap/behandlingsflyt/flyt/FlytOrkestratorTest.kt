@@ -2739,7 +2739,7 @@ class FlytOrkestratorTest {
             klagebehandling,
             avklaringsBehovLøsning = FastsettBehandlendeEnhetLøsning(
                 behandlendeEnhetVurdering = BehandlendeEnhetLøsningDto(
-                    skalBehandlesAvNay = true,
+                    skalBehandlesAvNay = false,
                     skalBehandlesAvKontor = true
                 )
             )
@@ -2748,7 +2748,23 @@ class FlytOrkestratorTest {
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_KONTOR)
-        
+
+        // Omgjør vurdering til NAY 
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = FastsettBehandlendeEnhetLøsning(
+                behandlendeEnhetVurdering = BehandlendeEnhetLøsningDto(
+                    skalBehandlesAvNay = true,
+                    skalBehandlesAvKontor = false
+                )
+            )
+        )
+
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_NAY)
+
+
         // TODO: Lukk avklaringsbehovet og gå til neste steg når neste steg er implementert
     }
 
