@@ -18,45 +18,49 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.studentgrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.studentgrunnlagApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry
+) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/student") {
-            authorizedGet<BehandlingReferanse, StudentGrunnlagDto>(
+            authorizedGet<BehandlingReferanse, StudentGrunnlagResponse>(
                 AuthorizationParamPathConfig(
-                    behandlingPathParam = BehandlingPathParam(
-                        "referanse"
-                    )
+                    behandlingPathParam =
+                        BehandlingPathParam(
+                            "referanse"
+                        )
                 )
             ) { req ->
-                val studentGrunnlag: StudentGrunnlag? = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val studentRepository = repositoryProvider.provide<StudentRepository>()
-                    val behandling =
-                        BehandlingReferanseService(behandlingRepository).behandling(req)
+                val studentGrunnlag: StudentGrunnlag? =
+                    dataSource.transaction(readOnly = true) { connection ->
+                        val repositoryProvider = repositoryRegistry.provider(connection)
+                        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                        val studentRepository = repositoryProvider.provide<StudentRepository>()
+                        val behandling =
+                            BehandlingReferanseService(behandlingRepository).behandling(req)
 
-                    studentRepository.hentHvisEksisterer(behandlingId = behandling.id)
-                }
+                        studentRepository.hentHvisEksisterer(behandlingId = behandling.id)
+                    }
 
-                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
-                    req.referanse,
-                    Definisjon.AVKLAR_STUDENT.kode.toString(),
-                    token()
-                )
+                val harTilgangTilÅSaksbehandle =
+                    TilgangGatewayImpl.sjekkTilgangTilBehandling(
+                        req.referanse,
+                        Definisjon.AVKLAR_STUDENT.kode.toString(),
+                        token()
+                    )
 
                 if (studentGrunnlag != null) {
                     respond(
-                        StudentGrunnlagDto(
+                        StudentGrunnlagResponse(
                             harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
-                            studentvurdering = studentGrunnlag.studentvurdering,
+                            studentvurdering = studentGrunnlag.studentvurdering?.tilResponse(),
                             oppgittStudent = studentGrunnlag.oppgittStudent
                         )
                     )
                 } else {
-                    respond(NoneStudentGrunnlagDto())
+                    respond(NoneStudentGrunnlagResponse())
                 }
-
-
             }
         }
     }
