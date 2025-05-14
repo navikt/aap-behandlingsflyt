@@ -5,9 +5,12 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.søknad.SøknadsdatoUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -20,6 +23,7 @@ import javax.sql.DataSource
 class RettighetsperiodeGrunnlagDto(
     val vurdering: RettighetsperiodeVurderingDto?,
     val søknadsdato: LocalDate?,
+    val harTilgangTilÅSaksbehandle: Boolean
 )
 
 class RettighetsperiodeVurderingDto(
@@ -37,12 +41,18 @@ fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(dataSource: DataSource, repo
             behandlingPathParam = BehandlingPathParam("referanse")
         )
     ) { req ->
-        val trukketSøknadVurderingDto = dataSource.transaction(readOnly = true) { connection ->
+        val rettighetsperiodeGrunnlagDto = dataSource.transaction(readOnly = true) { connection ->
             val repositoryProvider = repositoryRegistry.provider(connection)
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val rettighetsperiodeRepository = repositoryProvider.provide<VurderRettighetsperiodeRepository>()
             val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
             val søknadsdatoUtleder = SøknadsdatoUtleder(mottattDokumentRepository)
+            val hartilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
+                req.referanse,
+                Definisjon.VURDER_RETTIGHETSPERIODE.kode.toString(),
+                token()
+            )
+
 
             val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
             RettighetsperiodeGrunnlagDto(
@@ -54,9 +64,10 @@ fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(dataSource: DataSource, repo
                         harKravPåRenter = it.harKravPåRenter,
                     )
                 },
-                søknadsdato = søknadsdatoUtleder.utledSøknadsdatoForSak(behandling.sakId)?.toLocalDate()
+                søknadsdato = søknadsdatoUtleder.utledSøknadsdatoForSak(behandling.sakId)?.toLocalDate(),
+                harTilgangTilÅSaksbehandle = hartilgangTilÅSaksbehandle
             )
         }
-        respond(trukketSøknadVurderingDto)
+        respond(rettighetsperiodeGrunnlagDto)
     }
 }

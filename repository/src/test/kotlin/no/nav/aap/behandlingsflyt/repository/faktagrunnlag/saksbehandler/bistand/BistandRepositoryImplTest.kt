@@ -1,10 +1,9 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
-import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -17,7 +16,6 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -570,13 +568,13 @@ internal class BistandRepositoryImplTest {
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {
         return SakOgBehandlingService(
-            GrunnlagKopiererImpl(RepositoryRegistry().register(BistandRepositoryImpl::class).provider(connection)),
-            SakRepositoryImpl(connection),
-            BehandlingRepositoryImpl(connection)
-        ).finnEllerOpprettBehandling(
-            sak.saksnummer,
-            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
-        ).behandling
+            postgresRepositoryRegistry.provider(connection)
+
+        )
+            .finnEllerOpprettBehandling(
+                sak.saksnummer,
+                listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
+            ).behandling
     }
 
     private fun revurdering(connection: DBConnection, behandling: Behandling, sak: Sak): Behandling {

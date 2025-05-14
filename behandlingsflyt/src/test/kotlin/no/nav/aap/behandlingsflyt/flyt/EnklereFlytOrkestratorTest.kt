@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyBehandlingHendelseService
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyInformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyStegKonstruktør
@@ -15,7 +13,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -24,6 +21,7 @@ import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
@@ -52,14 +50,7 @@ class EnklereFlytOrkestratorTest {
         sakRepository = sakRepository,
         avklaringsbehovRepository = avklaringsbehovRepository,
         behandlingHendelseService = DummyBehandlingHendelseService,
-        sakOgBehandlingService = SakOgBehandlingService(
-            object : GrunnlagKopierer {
-                override fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
-                }
-            },
-            sakRepository,
-            behandlingRepository
-        ),
+        sakOgBehandlingService = InMemorySakOgBehandlingService,
     )
 
     @Test
@@ -109,14 +100,7 @@ class EnklereFlytOrkestratorTest {
             sakRepository = sakRepository,
             avklaringsbehovRepository = avklaringsbehovRepository,
             behandlingHendelseService = behandlingHendelseService,
-            sakOgBehandlingService = SakOgBehandlingService(
-                object : GrunnlagKopierer {
-                    override fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
-                    }
-                },
-                sakRepository,
-                behandlingRepository
-            ),
+            sakOgBehandlingService = InMemorySakOgBehandlingService,
         )
 
         val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)

@@ -156,13 +156,12 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         val arbeidIds = getArbeidIds(behandlingId)
         val inntekterIds = getInntekterIds(behandlingId)
         val manuellVurderingIds = getManuellVurderingIds(behandlingId)
+        val medlemsskapUnntakPersonIds = getMedlemsskapUnntakPersonIds(behandlingId)
 
         val deletedRows = connection.executeReturnUpdated("""
             delete from FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ?; 
-            delete from INNTEKT_I_NORGE_FORUTGAAENDE where inntekter_i_norge_id = ANY(?::bigint[]);
-            delete from INNTEKT_I_NORGE where inntekter_i_norge_id = ANY(?::bigint[]);
-            delete from MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where inntekter_i_norge_id = ANY(?::bigint[]);
-            delete from INNTEKTER_I_NORGE where id = ANY(?::bigint[]);
+            delete from INNTEKT_I_NORGE_FORUTGAAENDE where id = ANY(?::bigint[]);
+            delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON where id = ANY(?::bigint[]);
             delete from ARBEID_FORUTGAAENDE where arbeider_id = ANY(?::bigint[]);
             delete from ARBEIDER_FORUTGAAENDE where id = ANY(?::bigint[]);
             delete from FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING where id = ANY(?::bigint[]);
@@ -171,12 +170,10 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, inntekterIds)
-                setLongArray(3, inntekterIds)
-                setLongArray(4, inntekterIds)
-                setLongArray(5, inntekterIds)
-                setLongArray(6, arbeidIds)
-                setLongArray(7, arbeidIds)
-                setLongArray(8, manuellVurderingIds)
+                setLongArray(3, medlemsskapUnntakPersonIds)
+                setLongArray(4, arbeidIds)
+                setLongArray(5, arbeidIds)
+                setLongArray(6, manuellVurderingIds)
             }
         }
         log.info("Slettet $deletedRows fra FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG")
@@ -207,6 +204,20 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
             row.getLong("arbeider_id")
+        }
+    }
+
+    private fun getMedlemsskapUnntakPersonIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT medlemskap_unntak_person_id
+                    FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
+                    WHERE behandling_id = ? AND medlemskap_unntak_person_id is not null
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("medlemskap_unntak_person_id")
         }
     }
 

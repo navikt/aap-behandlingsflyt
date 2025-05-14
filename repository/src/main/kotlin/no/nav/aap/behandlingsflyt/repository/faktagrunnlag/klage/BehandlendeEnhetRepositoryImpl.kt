@@ -48,7 +48,7 @@ class BehandlendeEnhetRepositoryImpl(private val connection: DBConnection) : Beh
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        TODO("Not yet implemented")
+        // TODO: Not yet implemented
     }
 
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: BehandlendeEnhetGrunnlag) {

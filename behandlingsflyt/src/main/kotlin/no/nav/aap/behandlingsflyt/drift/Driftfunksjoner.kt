@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.drift
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -35,7 +34,7 @@ class Driftfunksjoner(
         """.trimIndent()
 
         val repositoryProvider = repositoryRegistry.provider(connection)
-        val sakOgBehandlingService = SakOgBehandlingService(GrunnlagKopiererImpl(repositoryProvider), repositoryProvider.provide(), repositoryProvider.provide())
+        val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider)
 
         val sak = sakOgBehandlingService.hentSakFor(behandlingId)
 

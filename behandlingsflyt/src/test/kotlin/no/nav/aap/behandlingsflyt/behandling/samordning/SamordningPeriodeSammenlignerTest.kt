@@ -1,22 +1,18 @@
 package no.nav.aap.behandlingsflyt.behandling.samordning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
@@ -31,7 +27,7 @@ class SamordningPeriodeSammenlignerTest {
 
     @Test
     fun `om det kun er en lagring, så er alle nye`() {
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Førstegangsbehandling)
+        val behandling = opprettBehandling(nySak())
         val samordningPeriodeSammenligner = SamordningPeriodeSammenligner(InMemorySamordningYtelseRepository)
 
         InMemorySamordningYtelseRepository.lagre(
@@ -58,7 +54,7 @@ class SamordningPeriodeSammenlignerTest {
 
     @Test
     fun `det kommer en ekstra, ikke overlappende periode`() {
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Førstegangsbehandling)
+        val behandling = opprettBehandling(nySak())
         val samordningPeriodeSammenligner = SamordningPeriodeSammenligner(InMemorySamordningYtelseRepository)
 
         val fixedClock = Clock.fixed(Instant.now(), ZoneId.systemDefault())
@@ -131,7 +127,7 @@ class SamordningPeriodeSammenlignerTest {
 
     @Test
     fun `periode har blitt forlenget, skal markeres som NY`() {
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Førstegangsbehandling)
+        val behandling = opprettBehandling(nySak())
         val samordningPeriodeSammenligner = SamordningPeriodeSammenligner(InMemorySamordningYtelseRepository)
 
         val fixedClock = Clock.fixed(Instant.now(), ZoneId.systemDefault())
@@ -197,7 +193,7 @@ class SamordningPeriodeSammenlignerTest {
 
     @Test
     fun `ny periode med annen ytelse skal ikke endre status`() {
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Førstegangsbehandling)
+        val behandling = opprettBehandling(nySak())
         val samordningPeriodeSammenligner = SamordningPeriodeSammenligner(InMemorySamordningYtelseRepository)
 
         val fixedClock = Clock.fixed(Instant.now(), ZoneId.systemDefault())
@@ -278,18 +274,9 @@ class SamordningPeriodeSammenlignerTest {
             InMemorySakRepository,
         ).finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
     }
-
-    private fun opprettBehandling(sak: Sak, typeBehandling: TypeBehandling): Behandling {
-        return SakOgBehandlingService(
-            object : GrunnlagKopierer {
-                override fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
-                }
-            },
-            InMemorySakRepository,
-            InMemoryBehandlingRepository,
-        ).finnEllerOpprettBehandling(
-            sak.saksnummer,
-            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
-        ).behandling
+    private fun opprettBehandling(sak: Sak): Behandling {
+        return InMemorySakOgBehandlingService
+            .finnEllerOpprettBehandling(sak.saksnummer, listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD)))
+            .behandling
     }
 }

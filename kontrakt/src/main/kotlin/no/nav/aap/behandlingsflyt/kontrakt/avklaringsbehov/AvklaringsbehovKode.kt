@@ -44,6 +44,8 @@ public const val FASTSETT_PÅKLAGET_BEHANDLING_KODE: String = "5999"
 public const val SAMORDNING_REFUSJONS_KRAV = "5056"
 public const val VURDER_FORMKRAV_KODE: String = "6000"
 public const val FASTSETT_BEHANDLENDE_ENHET_KODE: String = "6001"
+public const val VURDER_KLAGE_KONTOR_KODE: String = "6002"
+public const val VURDER_KLAGE_NAY_KODE: String = "6003"
 
 @Suppress("EnumEntryName")
 public enum class AvklaringsbehovKode {
@@ -96,6 +98,7 @@ public enum class AvklaringsbehovKode {
      * [AVKLAR_BISTANDSBEHOV_KODE]
      */
     `5006`,
+
     /**
      * [VURDER_SYKEPENGEERSTATNING_KODE]
      */
@@ -164,9 +167,10 @@ public enum class AvklaringsbehovKode {
     `5052`,
 
     /**
-    * [REFUSJON_KRAV]
-    * */
+     * [REFUSJON_KRAV]
+     * */
     `5026`,
+
     /**
      * [FASTSETT_PÅKLAGET_BEHANDLING_KODE]
      */
@@ -183,8 +187,18 @@ public enum class AvklaringsbehovKode {
     `6000`,
 
     /**
-     * [FASTSETT_BEHANLENDE_ENHET_KODE]
+     * [FASTSETT_BEHANDLENDE_ENHET_KODE]
      */
-    `6001`
+    `6001`,
+
+    /**
+     * [VURDER_KLAGE_KONTOR_KODE]
+     */
+    `6002`,
+
+    /**
+     * [VURDER_KLAGE_NAY_KODE]
+     */
+    `6003`
 
 }

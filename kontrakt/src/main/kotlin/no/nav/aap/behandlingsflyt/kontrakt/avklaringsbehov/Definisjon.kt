@@ -331,6 +331,19 @@ public enum class Definisjon(
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.BEHANDLENDE_ENHET,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
+    VURDER_KLAGE_KONTOR(
+        kode = AvklaringsbehovKode.`6002`,
+        kvalitetssikres = true,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.KLAGEBEHANDLING_KONTOR,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
+    ),
+    VURDER_KLAGE_NAY(
+        kode = AvklaringsbehovKode.`6003`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.KLAGEBEHANDLING_NAY,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     );
 
     public companion object {

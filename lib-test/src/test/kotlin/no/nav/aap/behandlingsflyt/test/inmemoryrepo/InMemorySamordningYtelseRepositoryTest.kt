@@ -1,11 +1,8 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -15,6 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -26,7 +24,7 @@ class InMemorySamordningYtelseRepositoryTest {
     @Test
     fun `lagre og hente ut igjen`() {
         val repo = InMemorySamordningYtelseRepository
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Førstegangsbehandling)
+        val behandling = opprettBehandling(nySak())
         repo.lagre(behandling.id, emptyList())
 
         val res = repo.hentHvisEksisterer(behandling.id)
@@ -38,8 +36,8 @@ class InMemorySamordningYtelseRepositoryTest {
     fun `kopier fra en behandling til en annen`() {
         val repo = InMemorySamordningYtelseRepository
         val sak = nySak()
-        val behandling1 = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
-        val behandling2 = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+        val behandling1 = opprettBehandling(sak)
+        val behandling2 = opprettBehandling(sak)
         val fraBehandlingId = behandling1.id
         val tilBehandlingId = behandling2.id
 
@@ -86,8 +84,8 @@ class InMemorySamordningYtelseRepositoryTest {
     fun `kopier fra en behandling som ikke eksisterer`() {
         val repo = InMemorySamordningYtelseRepository
         val sak = nySak()
-        val behandling1 = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
-        val behandling2 = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+        val behandling1 = opprettBehandling(sak)
+        val behandling2 = opprettBehandling(sak)
         val fraBehandlingId = behandling1.id
         val tilBehandlingId = behandling2.id
 
@@ -104,7 +102,7 @@ class InMemorySamordningYtelseRepositoryTest {
     fun `hentEldsteGrunnlag returnerer det eldste grunnlaget`() {
         val repo = InMemorySamordningYtelseRepository
         val sak = nySak()
-        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+        val behandling = opprettBehandling(sak)
         val behandlingId = behandling.id
 
         // Create test ytelser with different attributes to identify them
@@ -185,7 +183,7 @@ class InMemorySamordningYtelseRepositoryTest {
     fun `lagre med flere ytelser i en enkelt kall`() {
         val repo = InMemorySamordningYtelseRepository
         val sak = nySak()
-        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+        val behandling = opprettBehandling(sak)
 
         // Create multiple ytelser
         val ytelse1 = SamordningYtelse(
@@ -249,7 +247,7 @@ class InMemorySamordningYtelseRepositoryTest {
     fun `lagre med flere kall for samme behandlingId`() {
         val repo = InMemorySamordningYtelseRepository
         val sak = nySak()
-        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+        val behandling = opprettBehandling(sak)
         val behandlingId = behandling.id
 
         // Create different ytelser for each call
@@ -334,7 +332,7 @@ class InMemorySamordningYtelseRepositoryTest {
     fun `kopier når målbehandlingen allerede har data`() {
         val repo = InMemorySamordningYtelseRepository
         val sak = nySak()
-        val behandling1 = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+        val behandling1 = opprettBehandling(sak)
         val fraBehandlingId = behandling1.id
 
         // Create ytelser for source and target
@@ -375,7 +373,7 @@ class InMemorySamordningYtelseRepositoryTest {
         repo.lagre(fraBehandlingId, listOf(ytelseTarget))
 
         // Opprett ny behandling på samme sak
-        val behandling2 = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+        val behandling2 = opprettBehandling(sak)
         val tilBehandlingId = behandling2.id
 
         // Copy from source to target
@@ -425,17 +423,9 @@ class InMemorySamordningYtelseRepositoryTest {
         ).finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
     }
 
-    private fun opprettBehandling(sak: Sak, typeBehandling: TypeBehandling): Behandling {
-        return SakOgBehandlingService(
-            object : GrunnlagKopierer {
-                override fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
-                }
-            },
-            InMemorySakRepository,
-            InMemoryBehandlingRepository,
-        ).finnEllerOpprettBehandling(
-            sak.saksnummer,
-            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
-        ).behandling
+    private fun opprettBehandling(sak: Sak): Behandling {
+        return InMemorySakOgBehandlingService
+            .finnEllerOpprettBehandling(sak.saksnummer, listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD)))
+            .behandling
     }
 }

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -23,12 +24,14 @@ import java.time.LocalDate
 class SakOgBehandlingService(
     private val grunnlagKopierer: GrunnlagKopierer,
     private val sakRepository: SakRepository,
-    private val behandlingRepository: BehandlingRepository
+    private val behandlingRepository: BehandlingRepository,
+    private val trukketSøknadService: TrukketSøknadService,
 ) {
     constructor(repositoryProvider: RepositoryProvider): this(
         grunnlagKopierer = GrunnlagKopiererImpl(repositoryProvider),
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
+        trukketSøknadService = TrukketSøknadService(repositoryProvider),
     )
 
     fun finnEllerOpprettBehandling(sakId: SakId, årsaker: List<Årsak>): BeriketBehandling {
@@ -38,6 +41,12 @@ class SakOgBehandlingService(
         )
 
         val behandlingstype = utledBehandlingstype(sisteBehandlingForSak, årsaker)
+
+        if (sisteBehandlingForSak != null && behandlingstype in listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)) {
+            check(!trukketSøknadService.søknadErTrukket(sisteBehandlingForSak.id)) {
+                "ikke lov å opprette ny behandling for trukket søknad $sakId"
+            }
+        }
 
         if (behandlingstype == TypeBehandling.Klage) {
             // TODO: Se på om vi må knytte klagebehandling mot en gitt behandling
@@ -95,7 +104,6 @@ class SakOgBehandlingService(
             }
         }
     }
-
 
     fun finnEllerOpprettBehandling(saksnummer: Saksnummer, årsaker: List<Årsak>): BeriketBehandling {
         val sak = sakRepository.hent(saksnummer)

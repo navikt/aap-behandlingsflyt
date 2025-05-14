@@ -1,11 +1,10 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -118,10 +117,7 @@ class MeldepliktRepositoryImplTest {
         }
         dataSource.transaction { connection ->
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
-            val sak = SakOgBehandlingService(
-                GrunnlagKopierer(connection), SakRepositoryImpl(connection),
-                BehandlingRepositoryImpl(connection)
-            ).hentSakFor(behandling1.id)
+            val sak = SakOgBehandlingService(postgresRepositoryRegistry.provider(connection)).hentSakFor(behandling1.id)
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
             assertThat(behandling1.id).isNotEqualTo(behandling2.id)
             assertThat(behandling1.opprettetTidspunkt).isBefore(behandling2.opprettetTidspunkt)

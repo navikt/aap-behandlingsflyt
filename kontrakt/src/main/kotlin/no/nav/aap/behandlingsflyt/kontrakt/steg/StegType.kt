@@ -163,6 +163,14 @@ public enum class StegType(
         gruppe = StegGruppe.FORMKRAV,
         status = Status.UTREDES,
     ),
+    KLAGEBEHANDLING_KONTOR(
+        gruppe = StegGruppe.KLAGEBEHANDLING_KONTOR,
+        status = Status.UTREDES
+    ),
+    KLAGEBEHANDLING_NAY(
+        gruppe = StegGruppe.KLAGEBEHANDLING_NAY,
+        status = Status.UTREDES
+    ),
     UDEFINERT(
         gruppe = StegGruppe.UDEFINERT,
         status = Status.UTREDES,

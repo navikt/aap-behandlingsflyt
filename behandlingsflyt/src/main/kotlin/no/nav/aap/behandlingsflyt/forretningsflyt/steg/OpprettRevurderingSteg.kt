@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
@@ -76,14 +75,10 @@ class OpprettRevurderingSteg(
         override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
 
             return OpprettRevurderingSteg(
-                SakOgBehandlingService(
-                    grunnlagKopierer = GrunnlagKopiererImpl(repositoryProvider),
-                    sakRepository = repositoryProvider.provide(),
-                    behandlingRepository = repositoryProvider.provide(),
-                ),
+                SakOgBehandlingService(repositoryProvider),
                 samordningYtelseVurderingRepository = repositoryProvider.provide(),
                 låsRepository = repositoryProvider.provide(),
-                prosesserBehandling = ProsesserBehandlingService(repositoryProvider.provide()),
+                prosesserBehandling = ProsesserBehandlingService(repositoryProvider),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
             )
         }

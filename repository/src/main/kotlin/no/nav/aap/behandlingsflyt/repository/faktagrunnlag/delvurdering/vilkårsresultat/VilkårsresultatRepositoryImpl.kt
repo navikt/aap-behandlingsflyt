@@ -102,7 +102,7 @@ class VilkårsresultatRepositoryImpl(private val connection: DBConnection) : Vil
 
     private fun hentVilkårresultat(behandlingId: BehandlingId): Vilkårsresultat? {
         val query = """
-SELECT vr.id as vr_id, vilkar.id as vilkar_id, *
+SELECT vr.id as vr_id, vilkar.id as vilkar_id, type, perioder
 FROM vilkar_resultat vr
          left join VILKAR on vr.id = VILKAR.resultat_id
          left JOIN lateral (SELECT vp.vilkar_id                              as vp_vilkar_id,
@@ -132,39 +132,46 @@ WHERE behandling_id = ?
             }
             setRowMapper { row ->
                 vilkårsresultatId = row.getLong("vr_id")
-                VilkårInternal(
-                    id = row.getLong("vilkar_id"),
-                    type = row.getEnum("type"),
-                    perioder = row.getStringOrNull("perioder")?.let { DefaultJsonMapper.fromJson(it) } ?: emptyList()
-                )
+                when (val vilkårId = row.getLongOrNull("vilkar_id")) {
+                    null -> Null
+                    else ->
+                        VilkårInternal(
+                            id = vilkårId,
+                            type = row.getEnum("type"),
+                            perioder = row.getStringOrNull("perioder")?.let { DefaultJsonMapper.fromJson(it) }
+                                ?: emptyList()
+                        )
+                }
             }
         }
 
         if (vilkårsresultatId == null) return null
 
-        val vilkår = vilkårene.map { vilkår -> mapOmTilVilkår(vilkår) }
+        val vilkår = vilkårene.mapNotNull { vilkår -> mapOmTilVilkår(vilkår) }
 
         return Vilkårsresultat(id = vilkårsresultatId, vilkår = vilkår)
     }
 
     private fun mapOmTilVilkår(
-        vilkår: VilkårInternal,
-    ): Vilkår {
-        return Vilkår(
-            type = vilkår.type,
-            vilkårsperioder = vilkår.perioder.map {
-                Vilkårsperiode(
-                    periode = Periode(it.periodeFra, it.periodeTil.minusDays(1)),
-                    utfall = it.utfall,
-                    manuellVurdering = it.manuellVurdering,
-                    faktagrunnlag = LazyFaktaGrunnlag(connection = connection, periodeId = it.id),
-                    begrunnelse = it.begrunnelse,
-                    avslagsårsak = it.avslagsårsak,
-                    innvilgelsesårsak = it.innvilgelsesårsak,
-                    versjon = it.versjon
-                )
-            }.toSet()
-        )
+        vilkår: VilkårInternalOrNull,
+    ) = when (vilkår) {
+        Null -> null
+        is VilkårInternal ->
+            Vilkår(
+                type = vilkår.type,
+                vilkårsperioder = vilkår.perioder.map {
+                    Vilkårsperiode(
+                        periode = Periode(it.periodeFra, it.periodeTil.minusDays(1)),
+                        utfall = it.utfall,
+                        manuellVurdering = it.manuellVurdering,
+                        faktagrunnlag = LazyFaktaGrunnlag(connection = connection, periodeId = it.id),
+                        begrunnelse = it.begrunnelse,
+                        avslagsårsak = it.avslagsårsak,
+                        innvilgelsesårsak = it.innvilgelsesårsak,
+                        versjon = it.versjon
+                    )
+                }.toSet()
+            )
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
@@ -219,7 +226,10 @@ WHERE behandling_id = ?
         }
     }
 
-    private class VilkårInternal(val id: Long, val type: Vilkårtype, val perioder: List<VilkårPeriodeInternal>)
+    /* queryList har bound Any, så får ikke returnert null. Burde vel kunne endres til Any?. Workaround: */
+    private sealed interface VilkårInternalOrNull
+    private data object Null : VilkårInternalOrNull
+    private class VilkårInternal(val id: Long, val type: Vilkårtype, val perioder: List<VilkårPeriodeInternal>): VilkårInternalOrNull
 
     private class VilkårPeriodeInternal(
         val id: Long,

@@ -3,8 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -24,19 +22,17 @@ class VurderRettighetsperiodeLøser(
     private val unleashGateway: UnleashGateway,
     private val behandlingRepository: BehandlingRepository,
     private val sakRepository: SakRepository,
-    private val grunnlagKopierer: GrunnlagKopierer,
     private val rettighetsperiodeRepository: VurderRettighetsperiodeRepository,
+    private val sakOgBehandlingService: SakOgBehandlingService,
 ) : AvklaringsbehovsLøser<VurderRettighetsperiodeLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         unleashGateway = GatewayProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
-        grunnlagKopierer = GrunnlagKopiererImpl(repositoryProvider),
         rettighetsperiodeRepository = repositoryProvider.provide(),
+        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
     )
-
-    private val sakOgBehandlingService = SakOgBehandlingService(grunnlagKopierer, sakRepository, behandlingRepository)
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: VurderRettighetsperiodeLøsning): LøsningsResultat {
 
