@@ -6,7 +6,6 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.BREV_SYSTEMBRUKER
@@ -134,8 +133,8 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                             }
                             val definisjon = when {
                                 brevbestilling.typeBrev.erVedtak() &&
-                                    skrivBrevAvklaringsbehov.any { it.definisjon == Definisjon.SKRIV_VEDTAKSBREV }
-                                -> {
+                                        skrivBrevAvklaringsbehov.any { it.definisjon == Definisjon.SKRIV_VEDTAKSBREV }
+                                    -> {
                                     Definisjon.SKRIV_VEDTAKSBREV
                                 }
 
@@ -287,8 +286,6 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                 ) { _, request ->
                     dataSource.transaction { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
-                        val avklaringsbehovRepository =
-                            repositoryProvider.provide<AvklaringsbehovRepository>()
                         val taSkriveLåsRepository =
                             repositoryProvider.provide<TaSkriveLåsRepository>()
 
@@ -303,11 +300,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                                     val behandling =
                                         behandlingRepository.hent(lås.behandlingSkrivelås.id)
 
-                                    AvklaringsbehovHendelseHåndterer(
-                                        AvklaringsbehovOrkestrator(repositoryProvider),
-                                        avklaringsbehovRepository,
-                                        behandlingRepository,
-                                    ).håndtere(
+                                    AvklaringsbehovHendelseHåndterer(repositoryProvider).håndtere(
                                         key = lås.behandlingSkrivelås.id,
                                         hendelse = LøsAvklaringsbehovHendelse(
                                             løsning = BrevbestillingLøsning(request),
