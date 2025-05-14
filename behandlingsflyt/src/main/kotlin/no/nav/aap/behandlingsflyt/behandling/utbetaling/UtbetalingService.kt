@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriod
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -13,11 +14,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.utbetal.kodeverk.AvventÅrsak
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseAvventDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDetaljerDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelsePeriodeDto
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class UtbetalingService(
@@ -27,6 +30,7 @@ class UtbetalingService(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val vedtakRepository: VedtakRepository,
     private val refusjonskravRepository: RefusjonkravRepository,
+    private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository,
 ) {
 
      fun lagTilkjentYtelseForUtbetaling(sakId: SakId, behandlingId: BehandlingId, simulering: Boolean = false): TilkjentYtelseDto? {
@@ -52,7 +56,7 @@ class UtbetalingService(
             }
             val unleashGateway = GatewayProvider.provide<UnleashGateway>()
             val avventUtbetaling = if (unleashGateway.isEnabled(BehandlingsflytFeature.AvventUtbetaling)) {
-                finnEventuellAvventUtbetaling(behandlingId, vedtakstidspunkt)
+                finnEventuellAvventUtbetaling(behandlingId, vedtakstidspunkt, tilkjentYtelse.finnHelePerioden())
             } else {
                 null
             }
@@ -72,6 +76,19 @@ class UtbetalingService(
             null
         }
     }
+
+    private fun tilPeriode(fom: LocalDate?, tom: LocalDate?) =
+        Periode(
+            fom = fom ?: LocalDate.MIN,
+            tom = tom ?: LocalDate.MAX,
+
+        )
+
+    private fun List<TilkjentYtelsePeriode>.finnHelePerioden() =
+        Periode(
+            fom = this.minOf { it.periode.fom },
+            tom = this.maxOf { it.periode.tom }
+        )
 
     private fun List<TilkjentYtelsePeriode>.tilTilkjentYtelsePeriodeDtoer() =
         map { segment ->
@@ -95,19 +112,33 @@ class UtbetalingService(
             )
         }
 
-    private fun finnEventuellAvventUtbetaling(behandlingId: BehandlingId, vedtakstidspunkt: LocalDateTime): TilkjentYtelseAvventDto? {
-        val refusjonkravVurdering = refusjonskravRepository.hentHvisEksisterer(behandlingId)
-        if (refusjonkravVurdering == null || !refusjonkravVurdering.harKrav) {
-            return null
+    private fun finnEventuellAvventUtbetaling(behandlingId: BehandlingId, vedtakstidspunkt: LocalDateTime, tilkjentYtelseHelePerioden: Periode): TilkjentYtelseAvventDto? {
+        val sosialRefusjonkrav = refusjonskravRepository.hentHvisEksisterer(behandlingId)
+        val tpRefusjonskrav = tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(behandlingId)
+
+        val overlapperMedSosialRefusjon = sosialRefusjonkrav != null && sosialRefusjonkrav.harKrav
+                && tilkjentYtelseHelePerioden.overlapper(tilPeriode(sosialRefusjonkrav.fom, sosialRefusjonkrav.tom))
+
+        val overlapperMedTjenestepensjonRefusjon = tpRefusjonskrav != null && tpRefusjonskrav.harKrav
+                && tilkjentYtelseHelePerioden.overlapper(tilPeriode(tpRefusjonskrav.fom, tpRefusjonskrav.tom))
+
+        val (frist, fom, tom) = when {
+            overlapperMedTjenestepensjonRefusjon -> Triple(42L, tpRefusjonskrav.fom!!, tpRefusjonskrav.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1))
+            overlapperMedSosialRefusjon -> Triple(21L, sosialRefusjonkrav.fom!!, sosialRefusjonkrav.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1))
+            else -> Triple(null, null, null)
         }
-        val tom = refusjonkravVurdering.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1)
-        return TilkjentYtelseAvventDto(
-            fom = refusjonkravVurdering.fom!!,
-            tom = tom,
-            overføres = tom.plusDays(21),
-            årsak = AvventÅrsak.AVVENT_REFUSJONSKRAV,
-            feilregistrering = false
-        )
+
+        return if (frist != null) {
+            TilkjentYtelseAvventDto(
+                fom = fom!!,
+                tom = tom!!,
+                overføres = tom.plusDays(frist),
+                årsak = AvventÅrsak.AVVENT_REFUSJONSKRAV,
+                feilregistrering = false
+            )
+        } else {
+            null
+        }
     }
 
 }
