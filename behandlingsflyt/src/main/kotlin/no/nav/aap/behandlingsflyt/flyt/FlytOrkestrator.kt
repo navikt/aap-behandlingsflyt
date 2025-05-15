@@ -114,7 +114,12 @@ class FlytOrkestrator(
                         kontekst.sakId
                     )
                 }
-            behovSomErLøst.forEach { avklaringsbehovene.løsAvklaringsbehov(it.definisjon, "", SYSTEMBRUKER.ident) }
+            behovSomErLøst.forEach { avklaringsbehovene.løsAvklaringsbehov(
+                definisjon = it.definisjon,
+                begrunnelse = "Ventebehov løst.",
+                endretAv = SYSTEMBRUKER.ident
+            ) }
+
             // Hvis fortsatt på vent
             if (avklaringsbehovene.erSattPåVent()) {
                 return // Bail out
