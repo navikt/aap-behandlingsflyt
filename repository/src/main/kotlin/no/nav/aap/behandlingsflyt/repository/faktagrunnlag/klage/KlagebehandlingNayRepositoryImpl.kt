@@ -32,9 +32,9 @@ class KlagebehandlingNayRepositoryImpl(private val connection: DBConnection) : K
         }
     }
 
-    override fun lagre(behandlingId: BehandlingId, KlagevurderingNay: KlagevurderingNay) {
+    override fun lagre(behandlingId: BehandlingId, klagevurderingNay: KlagevurderingNay) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
-        val nyttGrunnlag = KlagebehandlingNayGrunnlag(vurdering = KlagevurderingNay)
+        val nyttGrunnlag = KlagebehandlingNayGrunnlag(vurdering = klagevurderingNay)
         if (eksisterendeGrunnlag != nyttGrunnlag) {
             eksisterendeGrunnlag?.let {
                 deaktiverEksisterende(behandlingId)
