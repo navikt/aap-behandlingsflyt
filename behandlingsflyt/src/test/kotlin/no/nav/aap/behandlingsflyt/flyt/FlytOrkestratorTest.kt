@@ -75,7 +75,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Yrkesska
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
@@ -2801,7 +2801,7 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling = behandling,
             avklaringsBehovLøsning = VurderRettighetsperiodeLøsning(
-                rettighetsperiodeVurdering = RettighetsperiodeVurdering(
+                rettighetsperiodeVurdering = RettighetsperiodeVurderingDTO(
                     startDato = nyStartDato,
                     begrunnelse = "En begrunnelse",
                     harRettUtoverSøknadsdato = true,
