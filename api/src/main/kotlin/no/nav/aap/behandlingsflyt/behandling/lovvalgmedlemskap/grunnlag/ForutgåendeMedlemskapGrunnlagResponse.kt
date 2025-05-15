@@ -31,7 +31,13 @@ fun ManuellVurderingForForutgåendeMedlemskap.toResponse(): ManuellVurderingForF
         harForutgåendeMedlemskap = harForutgåendeMedlemskap,
         varMedlemMedNedsattArbeidsevne = varMedlemMedNedsattArbeidsevne,
         medlemMedUnntakAvMaksFemAar = medlemMedUnntakAvMaksFemAar,
-        vurdertAv = VurdertAvResponse(ident = vurdertAv, dato = vurdertTidspunkt!!.toLocalDate()),
+        vurdertAv =
+            VurdertAvResponse(
+                ident = vurdertAv,
+                dato =
+                    vurdertTidspunkt?.toLocalDate()
+                        ?: error("Mangler vurdertDato på ManuellVurderingForForutgåendeMedlemskap")
+            ),
         overstyrt = overstyrt
     )
 

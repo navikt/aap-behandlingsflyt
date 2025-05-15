@@ -51,7 +51,13 @@ fun ManuellVurderingForLovvalgMedlemskap.toResponse() =
     ManuellVurderingForLovvalgMedlemskapResponse(
         lovvalgVedSøknadsTidspunkt = lovvalgVedSøknadsTidspunkt.toResponse(),
         medlemskapVedSøknadsTidspunkt = medlemskapVedSøknadsTidspunkt?.toResponse(),
-        vurdertAv = VurdertAvResponse(ident = vurdertAv, dato = vurdertDato!!.toLocalDate()),
+        vurdertAv =
+            VurdertAvResponse(
+                ident = vurdertAv,
+                dato =
+                    vurdertDato?.toLocalDate()
+                        ?: error("Mangler vurdertDato på ManuellVurderingForLovvalgMedlemskap")
+            ),
         overstyrt = overstyrt
     )
 
