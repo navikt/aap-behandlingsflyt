@@ -235,13 +235,12 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
         """
                     SELECT id
                     FROM samordning_vurdering
-                    WHERE id = ANY(?::bigint[]);
-                 
+                    WHERE vurderinger_id = ANY(?::bigint[]);
                 """.trimIndent()
     ) {
         setParams { setLongArray(1, vurderingIds) }
         setRowMapper { row ->
-            row.getLong("vurderinger_id")
+            row.getLong("id")
         }
     }
 }
