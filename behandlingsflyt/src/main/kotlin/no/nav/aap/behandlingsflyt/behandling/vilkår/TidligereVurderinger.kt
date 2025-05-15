@@ -108,7 +108,6 @@ class TidligereVurderingerImpl(
                 .mapValue { (sykdomsvilkåret, sykepengeerstatning, bistand) ->
                     when {
                         sykdomsvilkåret?.utfall == IKKE_OPPFYLT && sykepengeerstatning?.utfall == IKKE_OPPFYLT -> UUNGÅELIG_AVSLAG
-                        bistand?.utfall == IKKE_OPPFYLT -> UKJENT
                         else -> UKJENT
                     }
                 }
