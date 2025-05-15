@@ -58,6 +58,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.flate.BehandlendeEnhetLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate.FormkravVurderingLøsningDto
@@ -115,6 +116,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
@@ -2635,14 +2637,16 @@ class FlytOrkestratorTest {
             typeBehandling = TypeBehandling.Førstegangsbehandling
         )
 
+        val kravMottatt = LocalDate.now().minusDays(10)
         val nyBehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("21"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 InnsendingType.KLAGE,
-                strukturertDokument = null,
+                strukturertDokument = StrukturertDokument(KlageV0(kravMottatt = kravMottatt)),
                 periode
             )
+
         )
 
         assertThat(nyBehandling.typeBehandling() == TypeBehandling.Klage)
@@ -2652,6 +2656,13 @@ class FlytOrkestratorTest {
         assertTrue(åpneAvklaringsbehov.erÅpent())
         assertTrue(åpneAvklaringsbehov.erVentepunkt())
         assertThat(åpneAvklaringsbehov.definisjon).isEqualTo(Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON)
+
+        dataSource.transaction { val mottattDokumentRepositoryImpl = MottattDokumentRepositoryImpl(it)
+            val klageDokument = mottattDokumentRepositoryImpl.hentDokumenterAvType(sak.id, InnsendingType.KLAGE)
+            assertThat(klageDokument).hasSize(1)
+            assertThat(klageDokument.first().strukturertDokument).isNotNull
+            assertThat(klageDokument.first().strukturerteData<KlageV0>()?.data?.kravMottatt).isEqualTo(kravMottatt)
+        }
         System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
     }
 

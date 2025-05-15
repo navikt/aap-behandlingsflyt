@@ -146,6 +146,16 @@ class InnsendingTest {
     }
 
     @Test
+    fun `serialisere og deserialisere klage`() {
+        val klage = KlageV0(
+            kravMottatt = LocalDate.of(2023, 1, 1)
+        )
+
+        val somJSON = DefaultJsonMapper.toJson(klage)
+        assertThat(DefaultJsonMapper.fromJson<Melding>(somJSON)).isEqualTo(klage)
+    }
+
+    @Test
     fun `kan deserialisere eksempel-json`() {
         val eksempelJSON = """
             {
