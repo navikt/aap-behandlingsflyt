@@ -148,8 +148,8 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
             return null
         }
         val query = """
-                INSERT INTO STUDENT_VURDERING (begrunnelse, avbrutt_studie, godkjent_studie_av_laanekassen, avbrutt_pga_sykdom_eller_skade, har_behov_for_behandling, avbrutt_dato, avbrudd_mer_enn_6_maaneder)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO STUDENT_VURDERING (begrunnelse, avbrutt_studie, godkjent_studie_av_laanekassen, avbrutt_pga_sykdom_eller_skade, har_behov_for_behandling, avbrutt_dato, avbrudd_mer_enn_6_maaneder, vurdert_av)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
         val vurderingId = connection.executeReturnKey(query) {
@@ -161,6 +161,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
                 setBoolean(5, studentvurdering.harBehovForBehandling)
                 setLocalDate(6, studentvurdering.avbruttStudieDato)
                 setBoolean(7, studentvurdering.avbruddMerEnn6Måneder)
+                setString(8, studentvurdering.vurdertAv)
             }
         }
 
@@ -255,6 +256,8 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
                     it.getBooleanOrNull("har_behov_for_behandling"),
                     it.getLocalDateOrNull("avbrutt_dato"),
                     it.getBooleanOrNull("avbrudd_mer_enn_6_maaneder"),
+                    it.getString("vurdert_av"),
+                    it.getLocalDateTime("vurdert_tidspunkt")
                 )
             }
         }
