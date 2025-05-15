@@ -174,6 +174,7 @@ import no.nav.aap.motor.testutil.TestUtil
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Condition
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
@@ -183,6 +184,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
 import java.util.*
+import java.util.function.Consumer
 
 @Fakes
 class FlytOrkestratorTest {
@@ -2684,7 +2686,7 @@ class FlytOrkestratorTest {
                 periode
             )
         )
-        assertThat(avslåttFørstegang.status().erAvsluttet())
+        assertThat(avslåttFørstegang.status().erAvsluttet()).isTrue
 
         val klagebehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
@@ -2731,8 +2733,8 @@ class FlytOrkestratorTest {
         )
 
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FASTSETT_BEHANDLENDE_ENHET)
+        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            .isEqualTo(Definisjon.FASTSETT_BEHANDLENDE_ENHET)
 
         løsAvklaringsBehov(
             klagebehandling,
