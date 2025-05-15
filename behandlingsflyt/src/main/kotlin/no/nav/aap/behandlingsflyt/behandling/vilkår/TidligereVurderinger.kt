@@ -111,7 +111,7 @@ class TidligereVurderingerImpl(
                         bistand?.utfall == IKKE_OPPFYLT -> UKJENT
                         else -> UKJENT
                     }
-                }.also { println("SADASD $it") }
+                }
         },
 
         Sjekk(StegType.FASTSETT_SYKDOMSVILKÅRET) { vilkårsresultat, _ ->
@@ -197,7 +197,7 @@ class TidligereVurderingerImpl(
         return (gir(kontekst, førSteg) in listOf(
             IKKE_BEHANDLINGSGRUNNLAG,
             UUNGÅELIG_AVSLAG
-        )).also { println("XXX: førSteg: $førSteg . $it") }
+        ))
     }
 
     override fun girAvslag(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean {

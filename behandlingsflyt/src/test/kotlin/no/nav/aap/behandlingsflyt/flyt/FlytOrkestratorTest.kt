@@ -2562,7 +2562,7 @@ class FlytOrkestratorTest {
 
         // Validér riktig resultat
         val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
-        assertTrue(vilkårsResultat.none { it.erOppfylt() })
+        assertThat(vilkårsResultat).noneMatch { it.erOppfylt() }
         assertTrue(Avslagsårsak.IKKE_MEDLEM == vilkårsResultat.first().avslagsårsak)
     }
 
@@ -2840,7 +2840,9 @@ class FlytOrkestratorTest {
                 periode
             )
         )
-        assertThat(avslåttFørstegang.status().erAvsluttet()).isTrue
+        assertThat(avslåttFørstegang)
+            .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
+            .extracting { b -> b.status().erAvsluttet() }.isEqualTo(true)
 
         val klagebehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
@@ -2851,7 +2853,7 @@ class FlytOrkestratorTest {
                 periode
             )
         )
-
+        assertThat(klagebehandling.referanse).isNotEqualTo(avslåttFørstegang.referanse)
         assertThat(klagebehandling.typeBehandling()).isEqualTo(TypeBehandling.Klage)
 
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
