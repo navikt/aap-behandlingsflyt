@@ -2656,7 +2656,7 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `Klageflyt`() {
+    fun `Teste Klageflyt`() {
         val person = TestPerson(
             fødselsdato = Fødselsdato(LocalDate.now().minusYears(14)),
             yrkesskade = listOf(TestYrkesskade()),
@@ -2684,7 +2684,6 @@ class FlytOrkestratorTest {
                 periode
             )
         )
-
         assertThat(avslåttFørstegang.status().erAvsluttet())
 
         val klagebehandling = sendInnDokument(
@@ -2697,11 +2696,11 @@ class FlytOrkestratorTest {
             )
         )
 
-        assertThat(klagebehandling.typeBehandling() == TypeBehandling.Klage)
+        assertThat(klagebehandling.typeBehandling()).isEqualTo(TypeBehandling.Klage)
 
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
+        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            .isEqualTo(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
 
         løsAvklaringsBehov(
             klagebehandling,
