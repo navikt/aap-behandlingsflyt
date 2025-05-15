@@ -47,7 +47,7 @@ class TjenestepensjonRefusjonskravLøser(
             val refusjonFomDato = listOfNotNull(løsning.samordningRefusjonskrav.fom,kravDato).max()
             val refusjonTomDato = løsning.samordningRefusjonskrav.tom
 
-            if (refusjonFomDato.isAfter(kravDato)) {
+            if (refusjonFomDato.isBefore(kravDato)) {
                 throw IllegalArgumentException("Refusjonsdato kan ikke være før kravdato")
             }
 
