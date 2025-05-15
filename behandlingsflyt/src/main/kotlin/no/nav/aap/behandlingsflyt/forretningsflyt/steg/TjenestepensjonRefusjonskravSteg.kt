@@ -33,9 +33,6 @@ class TjenestepensjonRefusjonskravSteg private constructor(
 
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val tpResultat = tjenestePensjonRepository.hent(kontekst.behandlingId)
-
-
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, RefusjonkravSteg.type())) {
@@ -43,6 +40,7 @@ class TjenestepensjonRefusjonskravSteg private constructor(
                         .avbrytForSteg(RefusjonkravSteg.type())
                     return Fullført
                 }
+                val tpResultat = tjenestePensjonRepository.hent(kontekst.behandlingId)
                 val tidligereTpVurderinger = tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
 
                 if (tidligereTpVurderinger == null && tpResultat.isNotEmpty()) return FantAvklaringsbehov(
