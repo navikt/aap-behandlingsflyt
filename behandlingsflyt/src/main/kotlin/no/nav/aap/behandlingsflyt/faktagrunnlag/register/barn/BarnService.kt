@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Rela
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling.BARNETILLEGG
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -35,29 +36,31 @@ class BarnService private constructor(
     override val navn = Companion.navn
 
     override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
-        return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
+        // Kun gjøre oppslag mot register ved førstegangsbehandling og revurdering av barnetillegg (Se AAP-933).
+        return (kontekst.erFørstegangsbehandling() || kontekst.erRevurderingMedÅrsak(BARNETILLEGG)) &&
                 oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
                 tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val behandlingId = kontekst.behandlingId
-        val eksisterendeData = barnRepository.hentHvisEksisterer(behandlingId)
-
-        val oppgitteIdenter = eksisterendeData?.oppgitteBarn?.identer?.toList() ?: emptyList()
         val sak = sakService.hent(kontekst.sakId)
-        val barn = barnGateway.hentBarn(sak.person, oppgitteIdenter)
+        val barnGrunnlag = barnRepository.hentHvisEksisterer(behandlingId)
+
+        val oppgitteBarnIdenter = barnGrunnlag?.oppgitteBarn?.identer?.toList() ?: emptyList()
+        val barn = barnGateway.hentBarn(sak.person, oppgitteBarnIdenter)
+        val registerBarnIdenter = barn.registerBarn.map { it.ident }.toSet()
 
         val relatertePersonopplysninger =
             personopplysningRepository.hentHvisEksisterer(behandlingId)?.relatertePersonopplysninger?.personopplysninger
-        val barnIdenter = barn.registerBarn.map { it.ident }.toSet()
 
         oppdaterPersonIdenter(barn.alleBarn().map { it.ident }.toSet())
 
-        if (harEndringerIIdenter(barnIdenter, eksisterendeData)
-            || harEndringerIPersonopplysninger(barn.alleBarn(), relatertePersonopplysninger)
-        ) {
-            barnRepository.lagreRegisterBarn(behandlingId, barnIdenter)
+        val identifisertNyeBarnFraRegister = identifisertNyeBarnFraRegister(registerBarnIdenter, barnGrunnlag)
+        val personopplysningerForBarnErOppdatert = personopplysningerForBarnErOppdatert(barn.alleBarn(), relatertePersonopplysninger)
+
+        if (identifisertNyeBarnFraRegister || personopplysningerForBarnErOppdatert) {
+            barnRepository.lagreRegisterBarn(behandlingId, registerBarnIdenter)
             personopplysningRepository.lagre(behandlingId, barn.alleBarn())
             return ENDRET
         }
@@ -75,7 +78,7 @@ class BarnService private constructor(
         }
     }
 
-    private fun harEndringerIPersonopplysninger(
+    private fun personopplysningerForBarnErOppdatert(
         barn: Set<Barn>,
         relatertePersonopplysninger: List<RelatertPersonopplysning>?
     ): Boolean {
@@ -93,7 +96,7 @@ class BarnService private constructor(
         return barn.toSet() != eksisterendeData
     }
 
-    private fun harEndringerIIdenter(
+    private fun identifisertNyeBarnFraRegister(
         barnIdenter: Set<Ident>,
         eksisterendeData: BarnGrunnlag?
     ): Boolean {
