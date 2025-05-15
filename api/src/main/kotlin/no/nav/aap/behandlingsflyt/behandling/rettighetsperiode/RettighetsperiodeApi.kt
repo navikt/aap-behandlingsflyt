@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.søknad.SøknadsdatoUtleder
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -20,22 +21,23 @@ import java.time.LocalDate
 import javax.sql.DataSource
 
 
-class RettighetsperiodeGrunnlagDto(
-    val vurdering: RettighetsperiodeVurderingDto?,
+class RettighetsperiodeGrunnlagResponse(
+    val vurdering: RettighetsperiodeVurderingResponse?,
     val søknadsdato: LocalDate?,
     val harTilgangTilÅSaksbehandle: Boolean
 )
 
-class RettighetsperiodeVurderingDto(
+class RettighetsperiodeVurderingResponse(
     val begrunnelse: String,
     val harRettUtoverSøknadsdato: Boolean,
     val startDato: LocalDate?,
     val harKravPåRenter: Boolean?,
+    val vurdertAv: VurdertAvResponse
 )
 
 
 fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
-    route("/api/behandling/{referanse}/grunnlag/rettighetsperiode").authorizedGet<BehandlingReferanse, RettighetsperiodeGrunnlagDto>(
+    route("/api/behandling/{referanse}/grunnlag/rettighetsperiode").authorizedGet<BehandlingReferanse, RettighetsperiodeGrunnlagResponse>(
         AuthorizationParamPathConfig(
             operasjon = Operasjon.SE,
             behandlingPathParam = BehandlingPathParam("referanse")
@@ -53,17 +55,24 @@ fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(dataSource: DataSource, repo
                 token()
             )
 
-
             val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
-            RettighetsperiodeGrunnlagDto(
-                vurdering = rettighetsperiodeRepository.hentVurdering(behandling.id)?.let {
-                    RettighetsperiodeVurderingDto(
-                        begrunnelse = it.begrunnelse,
-                        startDato = it.startDato,
-                        harRettUtoverSøknadsdato = it.harRettUtoverSøknadsdato,
-                        harKravPåRenter = it.harKravPåRenter,
-                    )
-                },
+            RettighetsperiodeGrunnlagResponse(
+                vurdering =
+                    rettighetsperiodeRepository.hentVurdering(behandling.id)?.let {
+                        RettighetsperiodeVurderingResponse(
+                            begrunnelse = it.begrunnelse,
+                            startDato = it.startDato,
+                            harRettUtoverSøknadsdato = it.harRettUtoverSøknadsdato,
+                            harKravPåRenter = it.harKravPåRenter,
+                            vurdertAv =
+                                VurdertAvResponse(
+                                    ident = it.vurdertAv,
+                                    dato =
+                                        it.vurdertDato?.toLocalDate()
+                                            ?: error("Mangler vurdertdato på rettighetsperiodevurderingen")
+                                )
+                        )
+                    },
                 søknadsdato = søknadsdatoUtleder.utledSøknadsdatoForSak(behandling.sakId)?.toLocalDate(),
                 harTilgangTilÅSaksbehandle = hartilgangTilÅSaksbehandle
             )

@@ -65,7 +65,7 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
         val vurderingId = lagreVurdering(vurdering)
 
         val query = """
-            INSERT INTO TJENESTEPENSJON_REFUSJONSKRAV_GRUNNLAG (BEHANDLING_ID, SAK_ID, REFUSJONKRAV_VURDERING_ID, AKTIV) VALUES (?, ?, ?, ?)
+            INSERT INTO TJENESTEPENSJON_REFUSJONSKRAV_GRUNNLAG (BEHANDLING_ID, SAK_ID, REFUSJONKRAV_VURDERING_ID) VALUES (?, ?, ?)
         """.trimIndent()
 
         connection.execute(query) {

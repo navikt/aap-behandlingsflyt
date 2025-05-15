@@ -39,6 +39,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevA
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TrekkSøknadLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderFormkravLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKlageKontorLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
@@ -56,12 +57,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Av
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.flate.BehandlendeEnhetLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate.FormkravVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.Hjemmel
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.flate.KlagevurderingKontorLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.flate.PåklagetBehandlingVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
@@ -76,10 +81,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Yrkesska
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
@@ -176,6 +181,7 @@ import no.nav.aap.motor.testutil.TestUtil
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Condition
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
@@ -185,6 +191,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
 import java.util.*
+import java.util.function.Consumer
 
 @Fakes
 class FlytOrkestratorTest {
@@ -944,12 +951,156 @@ class FlytOrkestratorTest {
         val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
         val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
-        assertThat(sykdomsvilkåret.vilkårsperioder())
-            .hasSize(1)
-            .allMatch { vilkårsperiode -> vilkårsperiode.erOppfylt() && vilkårsperiode.innvilgelsesårsak == Innvilgelsesårsak.SYKEPENGEERSTATNING }
+        assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1)
+            .first()
+            .extracting(Vilkårsperiode::erOppfylt, Vilkårsperiode::innvilgelsesårsak)
+            .containsExactly(true, Innvilgelsesårsak.SYKEPENGEERSTATNING)
 
         resultat =
             dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
+        assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
+
+        assertTidslinje(
+            vilkårsresultat.rettighetstypeTidslinje(),
+            periode to {
+                assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
+            })
+    }
+
+    @Test
+    fun `avslag på 11-6 er også inngang til 11-13`() {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val person = TestPerson(
+            fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
+        )
+        FakePersoner.leggTil(person)
+        val ident = person.aktivIdent()
+
+        // Sender inn en søknad
+        var behandling = sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("10"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"),
+                        yrkesskade = "NEI",
+                        oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
+                    ),
+                ),
+                periode = periode
+            )
+        )
+
+        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+
+        behandling = løsAvklaringsBehov(
+            behandling,
+            AvklarSykdomLøsning(
+                sykdomsvurdering = SykdomsvurderingLøsningDto(
+                    begrunnelse = "Er syk nok",
+                    dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                    harSkadeSykdomEllerLyte = true,
+                    erSkadeSykdomEllerLyteVesentligdel = true,
+                    erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                    erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                    erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                    erArbeidsevnenNedsatt = true,
+                    yrkesskadeBegrunnelse = null,
+                    vurderingenGjelderFra = null,
+                )
+            ),
+        )
+
+        // Nei på 11-6
+        behandling = løsAvklaringsBehov(
+            behandling,
+            AvklarBistandsbehovLøsning(
+                bistandsVurdering = BistandVurderingLøsningDto(
+                    begrunnelse = "Trenger  hjelp fra nav",
+                    erBehovForAktivBehandling = false,
+                    erBehovForArbeidsrettetTiltak = false,
+                    erBehovForAnnenOppfølging = false,
+                    skalVurdereAapIOvergangTilUføre = null,
+                    skalVurdereAapIOvergangTilArbeid = null,
+                    overgangBegrunnelse = null
+                ),
+            ),
+        )
+
+        behandling = kvalitetssikre(behandling)
+
+        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
+
+        behandling = løsAvklaringsBehov(
+            behandling, AvklarSykepengerErstatningLøsning(
+                sykepengeerstatningVurdering = SykepengerVurdering(
+                    begrunnelse = "...",
+                    dokumenterBruktIVurdering = listOf(),
+                    harRettPå = true,
+                    grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR
+                ),
+            )
+        )
+
+        behandling = løsAvklaringsBehov(
+            behandling,
+            FastsettBeregningstidspunktLøsning(
+                beregningVurdering = BeregningstidspunktVurdering(
+                    begrunnelse = "Trenger hjelp fra Nav",
+                    nedsattArbeidsevneDato = LocalDate.now(),
+                    ytterligereNedsattArbeidsevneDato = null,
+                    ytterligereNedsattBegrunnelse = null
+                ),
+            ),
+        )
+
+        // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
+        var alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
+        assertThat(alleAvklaringsbehov).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erÅpent() && avklaringsbehov.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
+        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+
+        behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
+
+        // Saken står til To-trinnskontroll hos beslutter
+        alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
+        assertThat(alleAvklaringsbehov).anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.FATTE_VEDTAK).isTrue() }
+        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+
+        behandling = fattVedtak(behandling)
+
+        assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
+
+        var resultat =
+            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
+        assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
+
+        var brevBestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
+
+        behandling = løsAvklaringsBehov(
+            behandling, brevbestillingLøsning(behandling, brevBestilling), BREV_SYSTEMBRUKER
+        )
+
+
+        brevBestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
+        behandling =
+            løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevBestilling.referanse.brevbestillingReferanse))
+
+        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
+
+        val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
+        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+
+        // Sjekker at sykdomsvilkåret ble oppfylt med innvilgelsesårsak satt til 11-13.
+        assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1).first()
+            .extracting(Vilkårsperiode::erOppfylt, Vilkårsperiode::innvilgelsesårsak)
+            .containsExactly(true, Innvilgelsesårsak.SYKEPENGEERSTATNING)
+
+        resultat =
+            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
+
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
 
         assertTidslinje(
@@ -1075,7 +1226,8 @@ class FlytOrkestratorTest {
         // Vilkår skal ikke være oppfylt med 100% gradert samordning
         val vilkår = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
         assertThat(vilkår.vilkårsperioder()).hasSize(1)
-        assertThat(vilkår.vilkårsperioder().first().utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+            .first()
+            .extracting(Vilkårsperiode::utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
 
         behandling = løsAvklaringsBehov(
             behandling,
@@ -1201,8 +1353,12 @@ class FlytOrkestratorTest {
 
 
         // Saken er tilbake til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
-        alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        assertThat(alleAvklaringsbehov).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.FORESLÅ_VEDTAK) }
+        alleAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        assertThat(alleAvklaringsbehov).anySatisfy {
+            assertThat(it)
+                .extracting(Avklaringsbehov::erÅpent, Avklaringsbehov::definisjon)
+                .containsExactly(true, Definisjon.FORESLÅ_VEDTAK)
+        }
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
         behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
@@ -1451,7 +1607,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             AvklarStudentLøsning(
-                studentvurdering = StudentVurdering(
+                studentvurdering = StudentVurderingDTO(
                     begrunnelse = "Er student",
                     avbruttStudieDato = LocalDate.now(),
                     avbruddMerEnn6Måneder = true,
@@ -2408,7 +2564,7 @@ class FlytOrkestratorTest {
 
         // Validér riktig resultat
         val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
-        assertTrue(vilkårsResultat.none { it.erOppfylt() })
+        assertThat(vilkårsResultat).noneMatch { it.erOppfylt() }
         assertTrue(Avslagsårsak.IKKE_MEDLEM == vilkårsResultat.first().avslagsårsak)
     }
 
@@ -2667,7 +2823,7 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `Klageflyt`() {
+    fun `Teste Klageflyt`() {
         val person = TestPerson(
             fødselsdato = Fødselsdato(LocalDate.now().minusYears(14)),
             yrkesskade = listOf(TestYrkesskade()),
@@ -2695,8 +2851,9 @@ class FlytOrkestratorTest {
                 periode
             )
         )
-
-        assertThat(avslåttFørstegang.status().erAvsluttet())
+        assertThat(avslåttFørstegang)
+            .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
+            .extracting { b -> b.status().erAvsluttet() }.isEqualTo(true)
 
         val klagebehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
@@ -2707,12 +2864,12 @@ class FlytOrkestratorTest {
                 periode
             )
         )
-
-        assertThat(klagebehandling.typeBehandling() == TypeBehandling.Klage)
+        assertThat(klagebehandling.referanse).isNotEqualTo(avslåttFørstegang.referanse)
+        assertThat(klagebehandling.typeBehandling()).isEqualTo(TypeBehandling.Klage)
 
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
+        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            .isEqualTo(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
 
         løsAvklaringsBehov(
             klagebehandling,
@@ -2743,22 +2900,40 @@ class FlytOrkestratorTest {
         )
 
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FASTSETT_BEHANDLENDE_ENHET)
+        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            .isEqualTo(Definisjon.FASTSETT_BEHANDLENDE_ENHET)
 
         løsAvklaringsBehov(
             klagebehandling,
             avklaringsBehovLøsning = FastsettBehandlendeEnhetLøsning(
                 behandlendeEnhetVurdering = BehandlendeEnhetLøsningDto(
-                    skalBehandlesAvNay = true,
-                    skalBehandlesAvKontor = false
+                    skalBehandlesAvNay = false,
+                    skalBehandlesAvKontor = true
                 )
             )
         )
 
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FASTSETT_BEHANDLENDE_ENHET)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_KONTOR)
+        
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = VurderKlageKontorLøsning(
+                klagevurderingKontor = KlagevurderingKontorLøsningDto(
+                    begrunnelse = "Begrunnelse",
+                    notat = null,
+                    innstilling = KlageInnstilling.OPPRETTHOLD,
+                    vilkårSomOmgjøres = emptyList(),
+                    vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
+                )
+            )
+        )
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
+
+
         // TODO: Lukk avklaringsbehovet og gå til neste steg når neste steg er implementert
     }
 
@@ -2794,7 +2969,7 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling = behandling,
             avklaringsBehovLøsning = VurderRettighetsperiodeLøsning(
-                rettighetsperiodeVurdering = RettighetsperiodeVurdering(
+                rettighetsperiodeVurdering = RettighetsperiodeVurderingDTO(
                     startDato = nyStartDato,
                     begrunnelse = "En begrunnelse",
                     harRettUtoverSøknadsdato = true,
@@ -3106,12 +3281,14 @@ class FlytOrkestratorTest {
 
     private fun prosesserBehandling(behandling: Behandling) {
         dataSource.transaction { connection ->
-            FlytOrkestrator(postgresRepositoryRegistry.provider(connection)).forberedOgProsesserBehandling(FlytKontekst(
-                sakId = behandling.sakId,
-                behandlingId = behandling.id,
-                forrigeBehandlingId = behandling.forrigeBehandlingId,
-                behandlingType = behandling.typeBehandling(),
-            ))
+            FlytOrkestrator(postgresRepositoryRegistry.provider(connection)).forberedOgProsesserBehandling(
+                FlytKontekst(
+                    sakId = behandling.sakId,
+                    behandlingId = behandling.id,
+                    forrigeBehandlingId = behandling.forrigeBehandlingId,
+                    behandlingType = behandling.typeBehandling(),
+                )
+            )
         }
     }
 }

@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldeperiodeRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.type.Periode
@@ -19,7 +18,6 @@ class FastsettMeldeperiodeStegTest {
     @Test
     fun `samme fastsatt dag ved endring av rettighetsperioden`() {
         val steg = FastsettMeldeperiodeSteg(
-            sakRepository = InMemorySakRepository,
             meldeperiodeRepository = InMemoryMeldeperiodeRepository,
             tidligereVurderinger = FakeTidligereVurderinger(),
         )

@@ -189,7 +189,6 @@ private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak
     val ident = genererIdent(dto.fødselsdato)
     val barn = dto.barn.filter { it.harRelasjon }.map { genererBarn(it) }
     val urelaterteBarn = dto.barn.filter { !it.harRelasjon }.map { genererBarn(it) }
-    val tjenestePensjon = dto.tjenestePensjon
     barn.forEach { FakePersoner.leggTil(it) }
     urelaterteBarn.forEach { FakePersoner.leggTil(it) }
     FakePersoner.leggTil(

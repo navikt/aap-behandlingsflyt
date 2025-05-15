@@ -4,14 +4,12 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RefusjonkravSteg.Companion
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -33,16 +31,14 @@ class TjenestepensjonRefusjonskravSteg private constructor(
 
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        return Fullført
-        val tpResultat = tjenestePensjonRepository.hent(kontekst.behandlingId)
-
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
-                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, RefusjonkravSteg.type())) {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-                        .avbrytForSteg(RefusjonkravSteg.type())
+                        .avbrytForSteg(type())
                     return Fullført
                 }
+                val tpResultat = tjenestePensjonRepository.hent(kontekst.behandlingId)
                 val tidligereTpVurderinger = tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
 
                 if (tidligereTpVurderinger == null && tpResultat.isNotEmpty()) return FantAvklaringsbehov(
@@ -50,7 +46,7 @@ class TjenestepensjonRefusjonskravSteg private constructor(
                 )
             }
             VurderingType.REVURDERING -> {
-
+                //Do nothing
             }
 
             VurderingType.MELDEKORT -> {

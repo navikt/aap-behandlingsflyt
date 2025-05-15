@@ -8,15 +8,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_END
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.RelatertPersonopplysning
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -33,7 +29,6 @@ class BarnService private constructor(
     private val personRepository: PersonRepository,
     private val barnGateway: BarnGateway,
     private val pdlGateway: IdentGateway,
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav {
 
@@ -50,12 +45,8 @@ class BarnService private constructor(
         val eksisterendeData = barnRepository.hentHvisEksisterer(behandlingId)
 
         val oppgitteIdenter = eksisterendeData?.oppgitteBarn?.identer?.toList() ?: emptyList()
-        val barn = if (harBehandlingsgrunnlag(behandlingId)) {
-            val sak = sakService.hent(kontekst.sakId)
-            barnGateway.hentBarn(sak.person, oppgitteIdenter)
-        } else {
-            BarnInnhentingRespons(emptyList(), emptyList())
-        }
+        val sak = sakService.hent(kontekst.sakId)
+        val barn = barnGateway.hentBarn(sak.person, oppgitteIdenter)
 
         val relatertePersonopplysninger =
             personopplysningRepository.hentHvisEksisterer(behandlingId)?.relatertePersonopplysninger?.personopplysninger
@@ -109,14 +100,6 @@ class BarnService private constructor(
         return barnIdenter != eksisterendeData?.registerbarn?.identer?.toSet()
     }
 
-    private fun harBehandlingsgrunnlag(behandlingId: BehandlingId): Boolean {
-        val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
-        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-        val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-
-        return sykdomsvilkåret.harPerioderSomErOppfylt() && bistandsvilkåret.harPerioderSomErOppfylt()
-    }
-
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.BARN
 
@@ -125,8 +108,6 @@ class BarnService private constructor(
             val personRepository = repositoryProvider.provide<PersonRepository>()
             val personopplysningRepository =
                 repositoryProvider.provide<PersonopplysningRepository>()
-            val vilkårsresultatRepository =
-                repositoryProvider.provide<VilkårsresultatRepository>()
             val barnGateway = GatewayProvider.provide(BarnGateway::class)
             val identGateway = GatewayProvider.provide(IdentGateway::class)
             return BarnService(
@@ -136,7 +117,6 @@ class BarnService private constructor(
                 personRepository,
                 barnGateway,
                 identGateway,
-                vilkårsresultatRepository,
                 TidligereVurderingerImpl(repositoryProvider),
             )
         }

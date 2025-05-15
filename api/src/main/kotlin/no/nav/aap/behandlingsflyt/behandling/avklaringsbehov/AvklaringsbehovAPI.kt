@@ -32,12 +32,8 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource, repositoryRegi
             ) { _, request ->
                 dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
-                    val behandlingRepository =
-                        repositoryProvider.provide<BehandlingRepository>()
-                    val taSkriveLåsRepository =
-                        repositoryProvider.provide<TaSkriveLåsRepository>()
-                    val avklaringsbehovRepository =
-                        repositoryProvider.provide<AvklaringsbehovRepository>()
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val taSkriveLåsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
                     val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
 
                     LoggingKontekst(
@@ -52,11 +48,7 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource, repositoryRegi
                             BehandlingReferanse(request.referanse), request.behandlingVersjon
                         )
 
-                        AvklaringsbehovHendelseHåndterer(
-                            AvklaringsbehovOrkestrator(repositoryProvider),
-                            avklaringsbehovRepository,
-                            behandlingRepository
-                        ).håndtere(
+                        AvklaringsbehovHendelseHåndterer(repositoryProvider).håndtere(
                             key = lås.behandlingSkrivelås.id, hendelse = LøsAvklaringsbehovHendelse(
                                 request.behov,
                                 request.ingenEndringIGruppe == true,

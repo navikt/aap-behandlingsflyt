@@ -10,7 +10,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andresta
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonOrdning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonYtelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TpOrdning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
@@ -106,6 +110,17 @@ data class SamordningAndreStatligeYtelserVurderingPeriodeDTO(
     val beløp: Int
 )
 
+data class TjenestepensjonGrunnlagDTO(
+    val harTilgangTilÅSaksbehandle: Boolean,
+    val tjenestepensjonYtelser: List<TjenestepensjonYtelseDTO>,
+)
+
+data class TjenestepensjonYtelseDTO(
+    val ytelseIverksattFom: LocalDate,
+    val ytelseIverksattTom: LocalDate?,
+    val ytelse: YtelseTypeCode,
+    val ordning: TjenestePensjonOrdning
+)
 
 fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling") {
@@ -150,7 +165,40 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource, repositoryRegi
                 )
             }
         }
+        route("/{referanse}/grunnlag/samordning/tjenestepensjon") {
+            authorizedGet<BehandlingReferanse, TjenestepensjonGrunnlagDTO>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam(
+                        "referanse"
+                    )
+                )
+            ) { req ->
+                val tp = dataSource.transaction{ connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
+                    val behandling =
+                        BehandlingReferanseService(repositoryProvider.provide<BehandlingRepository>()).behandling(req)
+                    tjenestePensjonRepository.hent(behandling.id)
+                }
 
+                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
+                    req.referanse,
+                    Definisjon.SAMORDNING_REFUSJONS_KRAV.kode.toString(),
+                    token()
+                )
+
+                respond(TjenestepensjonGrunnlagDTO(harTilgangTilÅSaksbehandle,tp.flatMap { ordning ->
+                    ordning.ytelser.map { ytelse ->
+                        TjenestepensjonYtelseDTO(
+                            ytelseIverksattFom = ytelse.ytelseIverksattFom,
+                            ytelseIverksattTom = ytelse.ytelseIverksattTom,
+                            ytelse = ytelse.ytelseType,
+                            ordning = ordning.ordning
+                        )
+                    }
+                }))
+            }
+        }
 
         route("/{referanse}/grunnlag/samordning") {
             authorizedGet<BehandlingReferanse, SamordningYtelseVurderingGrunnlagDTO>(

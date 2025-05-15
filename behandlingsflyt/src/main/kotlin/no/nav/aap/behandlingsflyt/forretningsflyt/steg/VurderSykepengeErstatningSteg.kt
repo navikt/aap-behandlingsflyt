@@ -22,7 +22,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -31,7 +30,6 @@ class VurderSykepengeErstatningSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sykepengerErstatningRepository: SykepengerErstatningRepository,
     private val sykdomRepository: SykdomRepository,
-    private val sakService: SakService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
@@ -41,7 +39,6 @@ class VurderSykepengeErstatningSteg private constructor(
         vilkårsresultatRepository = repositoryProvider.provide(),
         sykepengerErstatningRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
-        sakService = SakService(repositoryProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
@@ -53,7 +50,7 @@ class VurderSykepengeErstatningSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         return when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
-                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
                     log.info("Ingen behandlingsgrunnlag for behandlingId ${kontekst.behandlingId}, avbryter steg ${type()}")
                     avklaringsbehovService.avbrytForSteg(kontekst.behandlingId, type())
                     vilkårService.ingenNyeVurderinger(
@@ -81,22 +78,27 @@ class VurderSykepengeErstatningSteg private constructor(
     }
 
     private fun vurder(kontekst: FlytKontekstMedPerioder): StegResultat {
+        log.info("Vurderer sykepengeerstatning for behandlingId ${kontekst.behandlingId}")
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
 
-        val erRelevantÅVurdereSykepengererstatning =
+        val sykdomsvurderinger =
             sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.sykdomsvurderinger.orEmpty()
-                .any { it.erOppfyltSettBortIfraVissVarighet() && !it.erOppfylt() }
-        if (erRelevantÅVurdereSykepengererstatning) {
+        val erRelevantÅVurdereSykepengererstatning =
+            sykdomsvurderinger
+                .any { it.erOppfyltSettBortIfraVissVarighet() && !it.erOppfylt() } || (!vilkårsresultat.finnVilkår(
+                Vilkårtype.BISTANDSVILKÅRET
+            ).harPerioderSomErOppfylt() && sykdomsvurderinger.all { it.erOppfylt() })
 
+        if (erRelevantÅVurdereSykepengererstatning) {
             val grunnlag = sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
 
             if (grunnlag?.vurdering != null) {
-                val sak = sakService.hent(kontekst.sakId)
-                val vurderingsdato = sak.rettighetsperiode.fom
+                val rettighetsperiode = kontekst.vurdering.rettighetsperiode
+                val vurderingsdato = rettighetsperiode.fom
                 val faktagrunnlag = SykepengerErstatningFaktagrunnlag(
                     vurderingsdato,
                     // TODO: Trenger å finne en god løsning for hvordan vi setter slutt på dette vilkåret ved tom kvote
-                    sak.rettighetsperiode.tom,
+                    rettighetsperiode.tom,
                     grunnlag.vurdering
                 )
 

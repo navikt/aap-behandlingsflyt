@@ -44,14 +44,14 @@ class TjenestepensjonRefusjonskravLøser(
             val sak = sakRepository.hent(kontekst.kontekst.sakId)
             val kravDato = sak.rettighetsperiode.fom
 
-            val refusjonFomDato = løsning.samordningRefusjonskrav.fom ?: kravDato
+            val refusjonFomDato = listOfNotNull(løsning.samordningRefusjonskrav.fom,kravDato).max()
             val refusjonTomDato = løsning.samordningRefusjonskrav.tom
 
-            if (refusjonFomDato.isEqual(kravDato) || refusjonFomDato.isAfter(kravDato)) {
+            if (refusjonFomDato.isBefore(kravDato)) {
                 throw IllegalArgumentException("Refusjonsdato kan ikke være før kravdato")
             }
 
-            if (refusjonTomDato == null || refusjonTomDato.isBefore(refusjonFomDato)) {
+            if (refusjonTomDato != null && refusjonTomDato.isBefore(refusjonFomDato)) {
                 throw IllegalArgumentException("Refusjonsdato kan ikke være før refusjonsdato eller null")
             }
 

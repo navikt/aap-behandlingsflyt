@@ -17,35 +17,42 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry
+) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/lovvalgmedlemskap") {
-            authorizedGet<BehandlingReferanse, LovvalgMedlemskapGrunnlagDto>(
+            authorizedGet<BehandlingReferanse, LovvalgMedlemskapGrunnlagResponse>(
                 AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
             ) { req ->
-                val grunnlag = dataSource.transaction { connection ->
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val lovvalgMedlemskapRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
-                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+                val grunnlag =
+                    dataSource.transaction { connection ->
+                        val repositoryProvider = repositoryRegistry.provider(connection)
+                        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                        val lovvalgMedlemskapRepository =
+                            repositoryProvider
+                                .provide<MedlemskapArbeidInntektRepository>()
+                        val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
 
-                    val gjeldendeManuellVurdering =
-                        lovvalgMedlemskapRepository.hentHvisEksisterer(behandling.id)?.manuellVurdering
-                    val historiskeManuelleVurderinger =
-                        lovvalgMedlemskapRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
+                        val gjeldendeManuellVurdering =
+                            lovvalgMedlemskapRepository.hentHvisEksisterer(behandling.id)?.manuellVurdering
+                        val historiskeManuelleVurderinger =
+                            lovvalgMedlemskapRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
-                        req.referanse,
-                        Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP.kode.toString(),
-                        token()
-                    )
+                        val harTilgangTilÅSaksbehandle =
+                            TilgangGatewayImpl.sjekkTilgangTilBehandling(
+                                req.referanse,
+                                Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP.kode.toString(),
+                                token()
+                            )
 
-                    LovvalgMedlemskapGrunnlagDto(
-                        harTilgangTilÅSaksbehandle,
-                        gjeldendeManuellVurdering,
-                        historiskeManuelleVurderinger
-                    )
-                }
+                        LovvalgMedlemskapGrunnlagResponse(
+                            harTilgangTilÅSaksbehandle,
+                            gjeldendeManuellVurdering?.toResponse(),
+                            historiskeManuelleVurderinger.map { it.toResponse() }
+                        )
+                    }
                 respond(grunnlag)
             }
         }

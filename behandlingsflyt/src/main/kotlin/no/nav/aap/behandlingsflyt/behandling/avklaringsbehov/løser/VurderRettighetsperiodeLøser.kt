@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -51,7 +52,14 @@ class VurderRettighetsperiodeLøser(
 
         rettighetsperiodeRepository.lagreVurdering(
             behandlingId = behandling.id,
-            vurdering = løsning.rettighetsperiodeVurdering
+            vurdering =
+                RettighetsperiodeVurdering(
+                    begrunnelse = løsning.rettighetsperiodeVurdering.begrunnelse,
+                    startDato = løsning.rettighetsperiodeVurdering.startDato,
+                    harRettUtoverSøknadsdato = løsning.rettighetsperiodeVurdering.harRettUtoverSøknadsdato,
+                    harKravPåRenter = løsning.rettighetsperiodeVurdering.harKravPåRenter,
+                    vurdertAv = kontekst.bruker.ident
+                )
         )
 
         if (løsning.rettighetsperiodeVurdering.harRettUtoverSøknadsdato && løsning.rettighetsperiodeVurdering.startDato != null) {

@@ -12,36 +12,34 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.DayOfWeek
 
 class FastsettMeldeperiodeSteg(
-    private val sakRepository: SakRepository,
     private val meldeperiodeRepository: MeldeperiodeRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
-        sakRepository = repositoryProvider.provide(),
         meldeperiodeRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        val rettighetsperiode = kontekst.vurdering.rettighetsperiode
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     return Fullført
                 }
 
-                val rettighetsperiode = sakRepository.hent(kontekst.sakId).rettighetsperiode
+                val rettighetsperiode = rettighetsperiode
                 oppdaterMeldeperioder(kontekst.behandlingId, rettighetsperiode)
                 return Fullført
             }
 
             VurderingType.REVURDERING -> {
-                val rettighetsperiode = sakRepository.hent(kontekst.sakId).rettighetsperiode
+                val rettighetsperiode = rettighetsperiode
                 oppdaterMeldeperioder(kontekst.behandlingId, rettighetsperiode)
                 return Fullført
             }

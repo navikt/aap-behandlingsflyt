@@ -39,16 +39,19 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
 
     override fun hentGjeldendeVurderingMedReferanse(behandlingReferanse: BehandlingReferanse): PåklagetBehandlingVurderingMedReferanse? {
         val query = """
-            SELECT 
+            SELECT
                 PAAKLAGET_BEHANDLING_VURDERING.type_vedtak as TYPE_VEDTAK,
                 PAAKLAGET_BEHANDLING_VURDERING.paaklaget_behandling_id as PAAKLAGET_BEHANDLING_ID,
                 PAAKLAGET_BEHANDLING_VURDERING.vurdert_av as VURDERT_AV,
                 PAAKLAGET_BEHANDLING_VURDERING.opprettet_tid as OPPRETTET_TID,
                 BEHANDLING.referanse as REFERANSE
             FROM PAAKLAGET_BEHANDLING_VURDERING
-            INNER JOIN PAAKLAGET_BEHANDLING_GRUNNLAG ON PAAKLAGET_BEHANDLING_GRUNNLAG.vurdering_id = PAAKLAGET_BEHANDLING_VURDERING.id
-            LEFT JOIN BEHANDLING ON BEHANDLING.id = PAAKLAGET_BEHANDLING_GRUNNLAG.behandling_id
-            WHERE BEHANDLING.referanse = ? AND PAAKLAGET_BEHANDLING_GRUNNLAG.AKTIV = TRUE
+                 INNER JOIN PAAKLAGET_BEHANDLING_GRUNNLAG ON PAAKLAGET_BEHANDLING_GRUNNLAG.vurdering_id = PAAKLAGET_BEHANDLING_VURDERING.id
+                 LEFT JOIN BEHANDLING ON BEHANDLING.id = PAAKLAGET_BEHANDLING_VURDERING.paaklaget_behandling_id
+            WHERE PAAKLAGET_BEHANDLING_GRUNNLAG.behandling_id IN (
+                SELECT ID FROM BEHANDLING
+                WHERE referanse = ?
+            ) AND PAAKLAGET_BEHANDLING_GRUNNLAG.aktiv = TRUE;
         """.trimIndent()
         return connection.queryFirstOrNull(query) {
             setParams {
