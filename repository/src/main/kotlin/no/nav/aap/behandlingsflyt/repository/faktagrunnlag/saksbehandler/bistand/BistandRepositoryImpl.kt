@@ -111,15 +111,14 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
 
         val deletedRows = connection.executeReturnUpdated("""
             delete from bistand_grunnlag where behandling_id = ?; 
-            delete from bistand_vurderinger where id = ANY(?::bigint[]);
             delete from bistand where bistand_vurderinger_id = ANY(?::bigint[]);
+            delete from bistand_vurderinger where id = ANY(?::bigint[]);
            
         """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, bistandVurderingerIds)
                 setLongArray(3, bistandVurderingerIds)
-
             }
         }
         log.info("Slettet $deletedRows fra bistand_grunnlag")
