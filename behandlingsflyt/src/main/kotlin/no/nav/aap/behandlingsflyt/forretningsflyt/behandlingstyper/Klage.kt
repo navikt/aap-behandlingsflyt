@@ -20,6 +20,7 @@ object Klage : BehandlingType {
             .medSteg(steg = FormkravSteg)
             .medSteg(steg = BehandlendeEnhetSteg)
             .medSteg(steg = KlagebehandlingKontorSteg)
+            .medSteg(steg = KvalitetssikringsSteg)
             .medSteg(steg = KlagebehandlingNaySteg)
             .medSteg(steg = FatteVedtakSteg)
             .build()

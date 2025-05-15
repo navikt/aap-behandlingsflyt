@@ -2767,7 +2767,9 @@ class FlytOrkestratorTest {
             )
         )
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(0)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
+
 
         // TODO: Lukk avklaringsbehovet og gå til neste steg når neste steg er implementert
     }
