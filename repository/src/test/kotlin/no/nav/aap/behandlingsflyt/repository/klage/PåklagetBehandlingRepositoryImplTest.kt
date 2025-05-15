@@ -64,6 +64,7 @@ internal class PåklagetBehandlingRepositoryImplTest {
             val vurderingMedReferanse = påklagetBehandlingRepository.hentGjeldendeVurderingMedReferanse(klageBehandling.referanse)!!
             assertThat(vurderingMedReferanse.påklagetVedtakType).isEqualTo(PåklagetVedtakType.KELVIN_BEHANDLING)
             assertThat(vurderingMedReferanse.påklagetBehandling).isEqualTo(behandling.id)
+            assertThat(vurderingMedReferanse.referanse?.referanse).isEqualTo(behandling.referanse.referanse)
             assertThat(vurderingMedReferanse.vurdertAv).isEqualTo("ident")
             assertNotNull(vurderingMedReferanse.opprettet)
         }

@@ -26,6 +26,7 @@ import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection) : MedlemskapArbeidInntektRepository {
 
@@ -172,19 +173,19 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                         ),
                         overstyrt = it.getBoolean("overstyrt"),
                         vurdertAv = it.getString("vurdert_av"),
-                        vurdertDato = it.getLocalDate("opprettet_tid")
+                        vurdertDato = it.getLocalDateTime("opprettet_tid")
                     ),
-                    vurdertDato = it.getLocalDate("opprettet_tid")
+                    vurdertDato = it.getLocalDateTime("opprettet_tid")
                 )
             }
         }.sortedBy { it.vurdertDato }
 
         return vurderinger.map {
             HistoriskManuellVurderingForLovvalgMedlemskap(
-                it.vurdertDato,
+                it.vurdertDato.toLocalDate(),
                 it.manuellVurdering.vurdertAv,
-                it == vurderinger.last(),
-                periode = ÅpenPeriodeDto(it.vurdertDato),
+                erGjeldendeVurdering = it == vurderinger.last(),
+                periode = ÅpenPeriodeDto(it.vurdertDato.toLocalDate()),
                 vurdering = it.manuellVurdering
             )
         }
@@ -331,7 +332,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                     ),
                     overstyrt = it.getBoolean("overstyrt"),
                     vurdertAv = it.getString("vurdert_av"),
-                    vurdertDato = it.getLocalDate("opprettet_tid"),
+                    vurdertDato = it.getLocalDateTime("opprettet_tid")
                 )
             }
         }
@@ -661,6 +662,6 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
     internal data class InternalHistoriskManuellVurderingForLovvalgMedlemskap(
         val manuellVurdering: ManuellVurderingForLovvalgMedlemskap,
-        val vurdertDato: LocalDate
+        val vurdertDato: LocalDateTime
     )
 }

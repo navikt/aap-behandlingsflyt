@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag
 
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.HistoriskManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import java.time.LocalDate
@@ -19,11 +20,6 @@ data class ManuellVurderingForForutgåendeMedlemskapResponse(
     val overstyrt: Boolean = false
 )
 
-data class VurdertAvResponse(
-    val ident: String,
-    val dato: LocalDate
-)
-
 data class HistoriskManuellVurderingForForutgåendeMedlemskapResponse(
     val manuellVurdering: ManuellVurderingForForutgåendeMedlemskapResponse,
     val opprettet: LocalDate
@@ -35,7 +31,13 @@ fun ManuellVurderingForForutgåendeMedlemskap.toResponse(): ManuellVurderingForF
         harForutgåendeMedlemskap = harForutgåendeMedlemskap,
         varMedlemMedNedsattArbeidsevne = varMedlemMedNedsattArbeidsevne,
         medlemMedUnntakAvMaksFemAar = medlemMedUnntakAvMaksFemAar,
-        vurdertAv = VurdertAvResponse(ident = vurdertAv, dato = vurdertTidspunkt!!.toLocalDate()),
+        vurdertAv =
+            VurdertAvResponse(
+                ident = vurdertAv,
+                dato =
+                    vurdertTidspunkt?.toLocalDate()
+                        ?: error("Mangler vurdertDato på ManuellVurderingForForutgåendeMedlemskap")
+            ),
         overstyrt = overstyrt
     )
 

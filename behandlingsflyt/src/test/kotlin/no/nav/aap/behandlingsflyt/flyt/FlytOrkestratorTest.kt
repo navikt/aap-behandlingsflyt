@@ -78,7 +78,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
@@ -174,6 +174,7 @@ import no.nav.aap.motor.testutil.TestUtil
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Condition
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
@@ -183,6 +184,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
 import java.util.*
+import java.util.function.Consumer
 
 @Fakes
 class FlytOrkestratorTest {
@@ -1449,7 +1451,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             AvklarStudentLøsning(
-                studentvurdering = StudentVurdering(
+                studentvurdering = StudentVurderingDTO(
                     begrunnelse = "Er student",
                     avbruttStudieDato = LocalDate.now(),
                     avbruddMerEnn6Måneder = true,
@@ -2656,7 +2658,7 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `Klageflyt`() {
+    fun `Teste Klageflyt`() {
         val person = TestPerson(
             fødselsdato = Fødselsdato(LocalDate.now().minusYears(14)),
             yrkesskade = listOf(TestYrkesskade()),
@@ -2684,8 +2686,7 @@ class FlytOrkestratorTest {
                 periode
             )
         )
-
-        assertThat(avslåttFørstegang.status().erAvsluttet())
+        assertThat(avslåttFørstegang.status().erAvsluttet()).isTrue
 
         val klagebehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
@@ -2697,11 +2698,11 @@ class FlytOrkestratorTest {
             )
         )
 
-        assertThat(klagebehandling.typeBehandling() == TypeBehandling.Klage)
+        assertThat(klagebehandling.typeBehandling()).isEqualTo(TypeBehandling.Klage)
 
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
+        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            .isEqualTo(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
 
         løsAvklaringsBehov(
             klagebehandling,
@@ -2732,14 +2733,14 @@ class FlytOrkestratorTest {
         )
 
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FASTSETT_BEHANDLENDE_ENHET)
+        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            .isEqualTo(Definisjon.FASTSETT_BEHANDLENDE_ENHET)
 
         løsAvklaringsBehov(
             klagebehandling,
             avklaringsBehovLøsning = FastsettBehandlendeEnhetLøsning(
                 behandlendeEnhetVurdering = BehandlendeEnhetLøsningDto(
-                    skalBehandlesAvNay = true,
+                    skalBehandlesAvNay = false,
                     skalBehandlesAvKontor = true
                 )
             )
@@ -2748,7 +2749,23 @@ class FlytOrkestratorTest {
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_KONTOR)
-        
+
+        // Omgjør vurdering til NAY 
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = FastsettBehandlendeEnhetLøsning(
+                behandlendeEnhetVurdering = BehandlendeEnhetLøsningDto(
+                    skalBehandlesAvNay = true,
+                    skalBehandlesAvKontor = false
+                )
+            )
+        )
+
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_NAY)
+
+
         // TODO: Lukk avklaringsbehovet og gå til neste steg når neste steg er implementert
     }
 

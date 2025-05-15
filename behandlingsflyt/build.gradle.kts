@@ -16,8 +16,8 @@ dependencies {
 
     api("no.nav.aap.tilgang:plugin:$tilgangVersjon")
     api("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
-    api("no.nav.aap.brev:kontrakt:0.0.107")
-    api("no.nav.aap.meldekort:kontrakt:0.0.40")
+    api("no.nav.aap.brev:kontrakt:0.0.111")
+    api("no.nav.aap.meldekort:kontrakt:0.0.42")
     api("no.nav.aap.kelvin:motor:$komponenterVersjon")
     api("no.nav.aap.kelvin:gateway:$komponenterVersjon")
     api("no.nav.aap.utbetal:api-kontrakt:$utbetalVersjon")

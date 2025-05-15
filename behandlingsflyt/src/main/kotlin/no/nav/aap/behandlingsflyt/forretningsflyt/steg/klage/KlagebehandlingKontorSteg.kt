@@ -26,7 +26,13 @@ class KlagebehandlingKontorSteg private constructor(
         }
         return if (behandlendeEnhetVurdering.skalBehandlesAvKontor && avklaringsbehov.harIkkeBlittLøst(Definisjon.VURDER_KLAGE_KONTOR)) {
             FantAvklaringsbehov(Definisjon.VURDER_KLAGE_KONTOR)
-        } else Fullført
+        } else {
+            avbrytHvisFinnes(avklaringsbehov, Definisjon.VURDER_KLAGE_KONTOR)
+            /** TODO: Eventuell utnulling av vurdering kan skje i senere steg.
+             *Vil kanskje ta vare på vurderingen "så lenge som mulig" i tilfelle man ombestemmer seg
+             * **/
+            Fullført
+        }
     }
 
     companion object : FlytSteg {
@@ -43,5 +49,14 @@ class KlagebehandlingKontorSteg private constructor(
         return this.alle()
             .filter { it.definisjon == definisjon }
             .none { it.status() == Status.AVSLUTTET }
+    }
+
+
+    private fun avbrytHvisFinnes(avklaringsbehovene: Avklaringsbehovene, definisjon: Definisjon) {
+        val eksisterendeBehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+
+        if (eksisterendeBehov?.erÅpent() == true) {
+            avklaringsbehovene.avbryt(definisjon)
+        }
     }
 }

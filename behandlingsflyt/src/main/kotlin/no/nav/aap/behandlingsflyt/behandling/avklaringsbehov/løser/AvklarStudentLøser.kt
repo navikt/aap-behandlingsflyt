@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -25,7 +26,17 @@ class AvklarStudentLøser(
 
         studentRepository.lagre(
             behandlingId = behandling.id,
-            studentvurdering = løsning.studentvurdering,
+            studentvurdering = løsning.studentvurdering.let { StudentVurdering(
+                id = it.id,
+                begrunnelse = it.begrunnelse,
+                harAvbruttStudie = it.harAvbruttStudie,
+                godkjentStudieAvLånekassen = it.godkjentStudieAvLånekassen,
+                avbruttPgaSykdomEllerSkade = it.avbruttPgaSykdomEllerSkade,
+                harBehovForBehandling = it.harBehovForBehandling,
+                avbruttStudieDato = it.avbruttStudieDato,
+                avbruddMerEnn6Måneder = it.avbruddMerEnn6Måneder,
+                vurdertAv = kontekst.bruker.ident,
+            ) }
         )
 
         return LøsningsResultat(

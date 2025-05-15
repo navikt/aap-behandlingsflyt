@@ -13,7 +13,7 @@ dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation(project(":kontrakt"))
-    implementation("no.nav.aap.brev:kontrakt:0.0.107")
+    implementation("no.nav.aap.brev:kontrakt:0.0.111")
     implementation("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
@@ -37,7 +37,7 @@ dependencies {
 
     implementation("ch.qos.logback:logback-classic:1.5.18")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:10.2")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.3")
 
     implementation("org.junit.jupiter:junit-jupiter-api:$junitVersjon")
     testImplementation("org.assertj:assertj-core:3.27.3")
