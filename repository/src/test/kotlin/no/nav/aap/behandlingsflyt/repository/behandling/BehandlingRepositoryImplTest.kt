@@ -173,11 +173,11 @@ internal class BehandlingRepositoryImplTest {
             assertThat(alleKlage[0].referanse).isEqualTo(klage.referanse)
         }
     }
-
     @Test
     fun `kan hente ut behandlinger med vedtak`() {
         val vedtakstidspunkt = LocalDateTime.now()
         val virkningstidspunkt = LocalDate.now().plusMonths(1)
+
 
         val (sak, førstegang, klage) = dataSource.transaction { connection ->
             val sak = PersonOgSakService(
@@ -228,8 +228,6 @@ internal class BehandlingRepositoryImplTest {
             assertThat(alleFørstegang[0].virkningstidspunkt).isEqualTo(virkningstidspunkt)
         }
     }
-
-
 }
 
 // Midlertidig test
