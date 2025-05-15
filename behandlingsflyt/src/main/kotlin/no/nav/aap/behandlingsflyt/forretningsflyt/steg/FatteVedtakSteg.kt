@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageresultatUtleder
@@ -20,19 +21,21 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class FatteVedtakSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val klageresultatUtleder: KlageresultatUtleder
+    private val klageresultatUtleder: KlageresultatUtleder,
+    private val trekkKlageService: TrekkKlageService,
 ) : BehandlingSteg {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
-        klageresultatUtleder = KlageresultatUtleder(repositoryProvider)
+        klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
+        trekkKlageService = TrekkKlageService(repositoryProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) || trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
             avklaringsbehov.avbrytForSteg(type())
             return Fullført
         }

@@ -2,8 +2,10 @@
 
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
+import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -21,15 +23,21 @@ private val log = LoggerFactory.getLogger("BrevSteg")
 class MeldingOmVedtakBrevSteg private constructor(
     private val brevUtlederService: BrevUtlederService,
     private val brevbestillingService: BrevbestillingService,
-    private val behandlingRepository: BehandlingRepository
+    private val behandlingRepository: BehandlingRepository,
+    private val trekkKlageService: TrekkKlageService,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         brevUtlederService = BrevUtlederService(repositoryProvider),
         brevbestillingService = BrevbestillingService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
+        trekkKlageService = TrekkKlageService(repositoryProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if(trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
+            return Fullført
+        }
+
         val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
         if (brevBehov.harBehovForBrev()) {
             val typeBrev = brevBehov.typeBrev!!

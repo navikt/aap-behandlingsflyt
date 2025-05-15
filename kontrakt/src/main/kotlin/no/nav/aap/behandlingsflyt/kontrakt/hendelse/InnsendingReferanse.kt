@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.hendelse
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonValue
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.util.*
 
@@ -14,6 +15,7 @@ public data class InnsendingReferanse(
         BRUDD_AKTIVITETSPLIKT_INNSENDING_ID,
         AVVIST_LEGEERKLÆRING_ID,
         REVURDERING_ID,
+        BEHANDLING_REFERANSE
     }
 
     @get:JsonIgnore
@@ -24,6 +26,11 @@ public data class InnsendingReferanse(
     @get:JsonIgnore
     val asInnsendingId: InnsendingId get() = InnsendingId(verdi).also {
         require(type == Type.BRUDD_AKTIVITETSPLIKT_INNSENDING_ID)
+    }
+
+    @get:JsonIgnore
+    val asBehandlingReferanse: BehandlingReferanse get() = BehandlingReferanse(UUID.fromString(verdi)).also {
+        require(type == Type.BEHANDLING_REFERANSE)
     }
 
     @get:JsonIgnore

@@ -11,6 +11,7 @@ enum class ÅrsakTilBehandling {
     MOTTATT_DIALOGMELDING,
     MOTATT_KLAGE,
     SØKNAD_TRUKKET,
+    KLAGE_TRUKKET,
     REVURDER_MEDLEMSKAP,
     REVURDER_SAMORDNING,
     REVURDER_LOVVALG,
@@ -73,6 +74,6 @@ fun EksponertÅrsak.tilÅrsakTilBehandling() =
         EksponertÅrsak.REFUSJONSKRAV -> ÅrsakTilBehandling.REFUSJONSKRAV
         EksponertÅrsak.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT -> ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT
         EksponertÅrsak.VURDER_RETTIGHETSPERIODE -> ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE
-
         EksponertÅrsak.SØKNAD_TRUKKET -> ÅrsakTilBehandling.SØKNAD_TRUKKET
+        EksponertÅrsak.KLAGE_TRUKKET -> ÅrsakTilBehandling.KLAGE_TRUKKET
     }

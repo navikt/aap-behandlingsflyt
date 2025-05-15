@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 
+import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageResultat
@@ -26,8 +27,13 @@ import java.util.*
 class OmgjøringSteg private constructor(
     private val klageresultatUtleder: KlageresultatUtleder,
     private val flytJobbRepository: FlytJobbRepository,
+    private val trekkKlageService: TrekkKlageService,
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if(trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
+            return Fullført
+        }
+
         val resultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
 
         // / TODO: Opprett egen innsendingstype for klageomgjøring
@@ -78,6 +84,7 @@ class OmgjøringSteg private constructor(
             return OmgjøringSteg(
                 KlageresultatUtleder(repositoryProvider),
                 repositoryProvider.provide(),
+                trekkKlageService = TrekkKlageService(repositoryProvider),
             )
         }
 

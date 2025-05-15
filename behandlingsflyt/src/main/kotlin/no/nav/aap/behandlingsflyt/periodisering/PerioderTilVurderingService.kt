@@ -97,7 +97,8 @@ class PerioderTilVurderingService(
                 else
                     REVURDERING
 
-            ÅrsakTilBehandling.MOTATT_KLAGE ->
+            ÅrsakTilBehandling.MOTATT_KLAGE,
+             ÅrsakTilBehandling.KLAGE_TRUKKET ->
                 IKKE_RELEVANT // TODO: Verifiser at dette er korrekt.
         }
     }

@@ -72,6 +72,11 @@ public class Innsending(
                 require(referanse.type == InnsendingReferanse.Type.JOURNALPOST)
                 require(melding is Klage)
             }
+
+            InnsendingType.NY_ÅRSAK_TIL_BEHANDLING -> {
+                require(referanse.type == InnsendingReferanse.Type.BEHANDLING_REFERANSE)
+                require(melding is NyÅrsakTilBehandling)
+            }
         }
     }
 }
@@ -93,6 +98,7 @@ public fun Melding.innsendingType(): InnsendingType = when (this) {
     is AnnetRelevantDokument -> InnsendingType.ANNET_RELEVANT_DOKUMENT
     is ManuellRevurdering -> InnsendingType.MANUELL_REVURDERING
     is KlageV0 -> InnsendingType.KLAGE
+    is NyÅrsakTilBehandling -> InnsendingType.NY_ÅRSAK_TIL_BEHANDLING
 }
 
 /**
@@ -118,6 +124,8 @@ private fun example(innsending: Innsending) {
         is ManuellRevurdering,
 
         is KlageV0 -> TODO()
+
+        is NyÅrsakTilBehandlingV0 -> TODO()
 
         null -> TODO()
 

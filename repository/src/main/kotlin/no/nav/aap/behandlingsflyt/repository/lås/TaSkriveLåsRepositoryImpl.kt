@@ -28,6 +28,16 @@ class TaSkriveLåsRepositoryImpl(private val connection: DBConnection): TaSkrive
         return Skrivelås(sakSkrivelås, behandling)
     }
 
+    override fun withLås(
+        sakId: SakId,
+        behandlingId: BehandlingId,
+        block: (Skrivelås) -> Unit
+    ) {
+        val lås = lås(sakId, behandlingId)
+        block(lås)
+        verifiserSkrivelås(lås)
+    }
+
     override fun låsBehandling(behandlingId: BehandlingId): BehandlingSkrivelås {
         val query = """SELECT versjon FROM BEHANDLING WHERE ID = ? FOR UPDATE"""
 
@@ -39,6 +49,15 @@ class TaSkriveLåsRepositoryImpl(private val connection: DBConnection): TaSkrive
                 BehandlingSkrivelås(behandlingId, it.getLong("versjon"))
             }
         }
+    }
+
+    override fun withLåstBehandling(
+        behandlingId: BehandlingId,
+        block: (BehandlingSkrivelås) -> Unit
+    ) {
+        val skrivelås = låsBehandling(behandlingId)
+        block(skrivelås)
+        verifiserSkrivelås(skrivelås)
     }
 
     override fun lås(behandlingUUid: UUID): Skrivelås {

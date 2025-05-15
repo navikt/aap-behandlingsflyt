@@ -179,6 +179,10 @@ public enum class StegType(
         gruppe = StegGruppe.OMGJØRING,
         status = Status.IVERKSETTES
     ),
+    TREKK_KLAGE(
+        gruppe = StegGruppe.TREKK_KLAGE,
+        status = Status.UTREDES
+    ),
     OPPRETTHOLDELSE(
         gruppe = StegGruppe.OPPRETTHOLDELSE,
         status = Status.IVERKSETTES
