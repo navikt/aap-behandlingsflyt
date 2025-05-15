@@ -64,6 +64,7 @@ data class StudentVurderingDTO(
     val avbruddMerEnn6Måneder: Boolean?,
 )
 
+// TODO: skal sende med navn heller enn ident
 data class VurdertAvResponse(
     val ident: String,
     val dato: LocalDate
