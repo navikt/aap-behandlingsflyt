@@ -55,22 +55,24 @@ fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(dataSource: DataSource, repo
                 token()
             )
 
-
             val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
             RettighetsperiodeGrunnlagResponse(
-                vurdering = rettighetsperiodeRepository.hentVurdering(behandling.id)?.let {
-                    RettighetsperiodeVurderingResponse(
-                        begrunnelse = it.begrunnelse,
-                        startDato = it.startDato,
-                        harRettUtoverSøknadsdato = it.harRettUtoverSøknadsdato,
-                        harKravPåRenter = it.harKravPåRenter,
-                        vurdertAv =
-                            VurdertAvResponse(
-                                ident = it.vurdertAv,
-                                dato = it.vurdertDato!!.toLocalDate()
-                            )
-                    )
-                },
+                vurdering =
+                    rettighetsperiodeRepository.hentVurdering(behandling.id)?.let {
+                        RettighetsperiodeVurderingResponse(
+                            begrunnelse = it.begrunnelse,
+                            startDato = it.startDato,
+                            harRettUtoverSøknadsdato = it.harRettUtoverSøknadsdato,
+                            harKravPåRenter = it.harKravPåRenter,
+                            vurdertAv =
+                                VurdertAvResponse(
+                                    ident = it.vurdertAv,
+                                    dato =
+                                        it.vurdertDato?.toLocalDate()
+                                            ?: error("Mangler vurdertdato på rettighetsperiodevurderingen")
+                                )
+                        )
+                    },
                 søknadsdato = søknadsdatoUtleder.utledSøknadsdatoForSak(behandling.sakId)?.toLocalDate(),
                 harTilgangTilÅSaksbehandle = hartilgangTilÅSaksbehandle
             )
