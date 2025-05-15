@@ -181,7 +181,6 @@ import no.nav.aap.motor.testutil.TestUtil
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Condition
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
@@ -191,7 +190,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
 import java.util.*
-import java.util.function.Consumer
 
 @Fakes
 class FlytOrkestratorTest {
@@ -2813,12 +2811,6 @@ class FlytOrkestratorTest {
         assertTrue(åpneAvklaringsbehov.erVentepunkt())
         assertThat(åpneAvklaringsbehov.definisjon).isEqualTo(Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON)
 
-        dataSource.transaction { val mottattDokumentRepositoryImpl = MottattDokumentRepositoryImpl(it)
-            val klageDokument = mottattDokumentRepositoryImpl.hentDokumenterAvType(sak.id, InnsendingType.KLAGE)
-            assertThat(klageDokument).hasSize(1)
-            assertThat(klageDokument.first().strukturertDokument).isNotNull
-            assertThat(klageDokument.first().strukturerteData<KlageV0>()?.data?.kravMottatt).isEqualTo(kravMottatt)
-        }
         System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
     }
 
@@ -2854,18 +2846,27 @@ class FlytOrkestratorTest {
         assertThat(avslåttFørstegang)
             .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
             .extracting { b -> b.status().erAvsluttet() }.isEqualTo(true)
-
+        val kravMottatt = LocalDate.now().minusMonths(1)
         val klagebehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("21"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 InnsendingType.KLAGE,
-                strukturertDokument = null,
+                strukturertDokument = StrukturertDokument(KlageV0(kravMottatt = kravMottatt)),
                 periode
             )
         )
         assertThat(klagebehandling.referanse).isNotEqualTo(avslåttFørstegang.referanse)
         assertThat(klagebehandling.typeBehandling()).isEqualTo(TypeBehandling.Klage)
+
+        dataSource.transaction { connection ->
+            val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
+            val klageDokumenter =
+                mottattDokumentRepository.hentDokumenterAvType(klagebehandling.sakId, InnsendingType.KLAGE)
+            assertThat(klageDokumenter).hasSize(1)
+            assertThat(klageDokumenter.first().strukturertDokument).isNotNull
+            assertThat(klageDokumenter.first().strukturerteData<KlageV0>()?.data?.kravMottatt).isEqualTo(kravMottatt)
+        }
 
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
@@ -2916,7 +2917,7 @@ class FlytOrkestratorTest {
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_KONTOR)
-        
+
         løsAvklaringsBehov(
             klagebehandling,
             avklaringsBehovLøsning = VurderKlageKontorLøsning(
@@ -2929,10 +2930,10 @@ class FlytOrkestratorTest {
                 )
             )
         )
+
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
-
 
         // TODO: Lukk avklaringsbehovet og gå til neste steg når neste steg er implementert
     }
