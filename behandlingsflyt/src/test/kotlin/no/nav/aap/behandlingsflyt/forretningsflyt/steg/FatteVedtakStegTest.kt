@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
+import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
@@ -19,6 +20,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
@@ -29,6 +31,12 @@ class FatteVedtakStegTest {
 
     val klageresultatUtleder = mockk<KlageresultatUtleder>()
     val tidligereVurderinger = mockk<TidligereVurderinger>()
+    val trekkKlageService = mockk<TrekkKlageService>()
+
+    @BeforeEach
+    fun setup() {
+        every { trekkKlageService.klageErTrukket(any()) } returns false
+    }
 
     @Test
     fun `Klagevurderinger fra Nay skal kvalitetssikres`() {
@@ -63,7 +71,8 @@ class FatteVedtakStegTest {
         val steg = FatteVedtakSteg(
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
             tidligereVurderinger = tidligereVurderinger,
-            klageresultatUtleder = klageresultatUtleder
+            klageresultatUtleder = klageresultatUtleder,
+            trekkKlageService = trekkKlageService
         )
 
         val resultat = steg.utfør(kontekst)
@@ -104,7 +113,8 @@ class FatteVedtakStegTest {
         val steg = FatteVedtakSteg(
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
             tidligereVurderinger = tidligereVurderinger,
-            klageresultatUtleder = klageresultatUtleder
+            klageresultatUtleder = klageresultatUtleder,
+            trekkKlageService = trekkKlageService
         )
 
         val resultat = steg.utfør(kontekst)
@@ -144,7 +154,8 @@ class FatteVedtakStegTest {
         val steg = FatteVedtakSteg(
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
             tidligereVurderinger = tidligereVurderinger,
-            klageresultatUtleder = klageresultatUtleder
+            klageresultatUtleder = klageresultatUtleder,
+            trekkKlageService = trekkKlageService
         )
 
         val resultat = steg.utfør(kontekst)

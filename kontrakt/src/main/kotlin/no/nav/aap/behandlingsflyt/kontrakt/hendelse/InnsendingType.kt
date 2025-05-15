@@ -14,4 +14,5 @@ public enum class InnsendingType {
     KLAGE,
     ANNET_RELEVANT_DOKUMENT,
     MANUELL_REVURDERING,
+    NY_ÅRSAK_TIL_BEHANDLING,
 }

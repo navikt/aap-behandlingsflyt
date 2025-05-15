@@ -366,6 +366,15 @@ public enum class Definisjon(
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.OMGJØRING,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
+    VURDER_TREKK_AV_KLAGE(
+        kode = AvklaringsbehovKode.`6010`,
+        løsesISteg = StegType.TREKK_KLAGE,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_OPPFOLGING,
+            Rolle.SAKSBEHANDLER_NASJONAL
+        ),
     );
 
     public companion object {

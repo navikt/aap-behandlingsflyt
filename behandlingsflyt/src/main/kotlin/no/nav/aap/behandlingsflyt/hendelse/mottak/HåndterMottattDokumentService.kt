@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.hendelse.mottak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Aktivitetskort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
@@ -12,6 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderin
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.tilÅrsakTilBehandling
@@ -48,9 +50,10 @@ class HåndterMottattDokumentService(
     ) {
         val sak = sakService.hent(sakId)
         val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
-        val elementer = utledÅrsaker(brevkategori, melding, periode)
-        val beriketBehandling =
-            sakOgBehandlingService.finnEllerOpprettBehandling(sak.saksnummer, elementer)
+        val årsaker = utledÅrsaker(brevkategori, melding, periode)
+
+        val beriketBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(sak.saksnummer, årsaker)
+
         // TODO: Evaluer at at behandlingen faktisk kan motta endringene
         // Står hos beslutter - Hvilke endringer kan da håndteres
         // P.d.d. ingen da de feilaktig kobles på behandling men ikke tas hensyn til
@@ -68,10 +71,26 @@ class HåndterMottattDokumentService(
         prosesserBehandling.triggProsesserBehandling(
             sakId,
             beriketBehandling.behandling.id,
-            listOf("trigger" to elementer.map { it.type.name }.toString())
+            listOf("trigger" to årsaker.map { it.type.name }.toString())
         )
         låsRepository.verifiserSkrivelås(behandlingSkrivelås)
     }
+
+    fun oppdaterÅrsakerTilBehandlingPåEksisterendeÅpenBehandling(sakId: SakId, behandlingsreferanse: BehandlingReferanse, melding: NyÅrsakTilBehandlingV0) {
+        val behandling = sakOgBehandlingService.finnBehandling(behandlingsreferanse)
+
+        låsRepository.withLåstBehandling(behandling.id) {
+            val årsaker = melding.årsakerTilBehandling.map { Årsak(it.tilÅrsakTilBehandling()) }
+            sakOgBehandlingService.oppdaterÅrsakerTilBehandling(behandling, årsaker)
+
+            prosesserBehandling.triggProsesserBehandling(
+                sakId,
+                behandling.id,
+                listOf("trigger" to årsaker.map { it.type.name }.toString())
+            )
+        }
+    }
+
 
     private fun utledÅrsaker(brevkategori: InnsendingType, melding: Melding?, periode: Periode?): List<Årsak> {
         return when (brevkategori) {
@@ -100,6 +119,11 @@ class HåndterMottattDokumentService(
                 }
 
             InnsendingType.KLAGE -> listOf(Årsak(ÅrsakTilBehandling.MOTATT_KLAGE))
+            InnsendingType.NY_ÅRSAK_TIL_BEHANDLING ->
+                when (melding) {
+                    is NyÅrsakTilBehandlingV0 -> melding.årsakerTilBehandling.map { Årsak(it.tilÅrsakTilBehandling()) }
+                    else -> error("Melding må være NyÅrsakTilBehandlingV0")
+                }
 
         }
     }

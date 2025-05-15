@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 
 import no.nav.aap.behandlingsflyt.behandling.klage.andreinstans.AndreinstansService
+import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Opprettholdes
@@ -16,8 +17,13 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class OpprettholdelseSteg private constructor(
     private val klageresultatUtleder: KlageresultatUtleder,
     private val andreinstansService: AndreinstansService,
+    private val trekkKlageService: TrekkKlageService,
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if(trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
+            return Fullført
+        }
+
         val resultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
         return when (resultat) {
             is Opprettholdes, is DelvisOmgjøres -> {
@@ -35,6 +41,7 @@ class OpprettholdelseSteg private constructor(
             return OpprettholdelseSteg(
                 KlageresultatUtleder(repositoryProvider),
                 AndreinstansService(repositoryProvider, GatewayProvider),
+                TrekkKlageService(repositoryProvider),
             )
         }
 

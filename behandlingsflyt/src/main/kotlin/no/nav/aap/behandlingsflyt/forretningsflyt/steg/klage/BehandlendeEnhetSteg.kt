@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Avslått
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -17,7 +18,8 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class BehandlendeEnhetSteg private constructor(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val klageresultatUtleder: KlageresultatUtleder
+    private val klageresultatUtleder: KlageresultatUtleder,
+    private val trekkKlageService: TrekkKlageService
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val resultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
@@ -25,9 +27,13 @@ class BehandlendeEnhetSteg private constructor(
             return Fullført
         }
 
-        return if (avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-                .harIkkeBlittLøst(Definisjon.FASTSETT_BEHANDLENDE_ENHET)
-        ) {
+        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        if(trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
+            avklaringsbehov.avbrytForSteg(type())
+            return Fullført
+        }
+
+        return if (avklaringsbehov.harIkkeBlittLøst(Definisjon.FASTSETT_BEHANDLENDE_ENHET)) {
             FantAvklaringsbehov(Definisjon.FASTSETT_BEHANDLENDE_ENHET)
         } else {
             Fullført
@@ -36,7 +42,11 @@ class BehandlendeEnhetSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
-            return BehandlendeEnhetSteg(repositoryProvider.provide(), KlageresultatUtleder(repositoryProvider))
+            return BehandlendeEnhetSteg(
+                repositoryProvider.provide(),
+                KlageresultatUtleder(repositoryProvider),
+                TrekkKlageService(repositoryProvider)
+            )
         }
 
         override fun type(): StegType {

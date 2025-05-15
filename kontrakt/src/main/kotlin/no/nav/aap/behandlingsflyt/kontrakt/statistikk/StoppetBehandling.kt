@@ -72,6 +72,7 @@ public enum class ÅrsakTilBehandling {
     UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT, // Utenlandsopphold før søknadstidspunkt
     VURDER_RETTIGHETSPERIODE, // Må ta stilling til rettighetsperioden
     SØKNAD_TRUKKET,
+    KLAGE_TRUKKET,
 }
 
 /**

@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FormkravReposit
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.KlagebehandlingKontorRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.KlagebehandlingNayRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.PåklagetBehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.TrekkKlageRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
@@ -113,5 +114,6 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<BehandlingRepositoryImpl>()
     .register<KlagebehandlingKontorRepositoryImpl>()
     .register<KlagebehandlingNayRepositoryImpl>()
+    .register<TrekkKlageRepositoryImpl>()
     .register<GjenopptakRepositoryImpl>()
     .register<ManuellInntektGrunnlagRepositoryImpl>()
