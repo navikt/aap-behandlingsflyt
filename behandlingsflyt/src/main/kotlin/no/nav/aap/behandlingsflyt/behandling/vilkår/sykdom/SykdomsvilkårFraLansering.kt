@@ -82,6 +82,9 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
             if (yrkesskadeVurdering != null && yrkesskadeVurdering.erÅrsakssammenheng) {
                 innvilgelsesårsak = Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG
             }
+            if (sykepengerVurdering?.harRettPå == true) {
+                innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING
+            }
         } else {
             utfall = Utfall.IKKE_OPPFYLT
             avslagsårsak = if (sykdomVurdering?.erSkadeSykdomEllerLyteVesentligdel == false) {
@@ -94,7 +97,7 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
                 Avslagsårsak.MANGLENDE_DOKUMENTASJON // TODO noe mer rett
             }
 
-            if (sykepengerVurdering?.harRettPå == true && avslagsårsak == Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET) {
+            if (sykepengerVurdering?.harRettPå == true) {
                 utfall = Utfall.OPPFYLT
                 innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING
                 avslagsårsak = null
