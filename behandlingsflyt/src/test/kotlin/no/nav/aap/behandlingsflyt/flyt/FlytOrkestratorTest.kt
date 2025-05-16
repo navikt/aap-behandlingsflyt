@@ -53,6 +53,7 @@ import no.nav.aap.behandlingsflyt.drift.Driftfunksjoner
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriodeDto
@@ -65,6 +66,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.flate.BehandlendeEnhetLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate.FormkravVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.Hjemmel
@@ -2716,7 +2718,8 @@ class FlytOrkestratorTest {
     fun `kan hente inn manuell inntektsdata i grunnlag og benytte i beregning`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        val nedsattDato = LocalDate.now().plusYears(1) // Ett år fram, Liten hack for å slippe å fjase med default inntektlisten som brukes overalt ellers
+        val nedsattDato = LocalDate.now()
+            .plusYears(1) // Ett år fram, Liten hack for å slippe å fjase med default inntektlisten som brukes overalt ellers
 
         // Oppretter vanlig søknad
         hendelsesMottak.håndtere(
@@ -2766,14 +2769,18 @@ class FlytOrkestratorTest {
         )
 
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertTrue(åpneAvklaringsbehov.none { Definisjon.FASTSETT_MANUELL_INNTEKT == it.definisjon })
+        assertThat(åpneAvklaringsbehov).noneMatch { it.definisjon == Definisjon.FASTSETT_MANUELL_INNTEKT }
 
-        dataSource.transaction {
-            val beregningsgrunnlag = BeregningsgrunnlagRepositoryImpl(it).hentHvisEksisterer(behandling.id) as Grunnlag11_19
-            val sisteInntekt = beregningsgrunnlag.inntekter().first{inntekt -> inntekt.år.value == nedsattDato.minusYears(1).year}
-            assertTrue(sisteInntekt.år.value == nedsattDato.minusYears(1).year)
-            assertTrue(sisteInntekt.inntektIKroner == Beløp(300000))
+        val beregningsGrunnlag = dataSource.transaction {
+            BeregningsgrunnlagRepositoryImpl(it).hentHvisEksisterer(behandling.id) as Grunnlag11_19
         }
+
+        val sisteInntekt =
+            beregningsGrunnlag.inntekter().first { inntekt -> inntekt.år.value == nedsattDato.minusYears(1).year }
+
+        assertThat(sisteInntekt)
+            .extracting(GrunnlagInntekt::år, GrunnlagInntekt::inntektIKroner)
+            .containsExactly(nedsattDato.minusYears(1).year.let { Year.of(it)}, Beløp(BigDecimal(300000)))
     }
 
     @Test

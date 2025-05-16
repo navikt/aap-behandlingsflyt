@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Year
 
@@ -20,11 +21,10 @@ class AvklarManuellInntektVurderingLøser(
         løsning: AvklarManuellInntektVurderingLøsning
     ): LøsningsResultat {
         manuellInntektGrunnlagRepository.lagre(
-            sakId = kontekst.kontekst.sakId,
             behandlingId = kontekst.behandlingId(),
             manuellVurdering = ManuellInntektVurdering(
                 begrunnelse = løsning.manuellVurderingForManglendeInntekt.begrunnelse,
-                belop = løsning.manuellVurderingForManglendeInntekt.belop,
+                belop = løsning.manuellVurderingForManglendeInntekt.belop.let(::Beløp),
                 vurdertAv = løsning.manuellVurderingForManglendeInntekt.vurdertAv,
                 år = Year.of(
                     løsning.manuellVurderingForManglendeInntekt.år

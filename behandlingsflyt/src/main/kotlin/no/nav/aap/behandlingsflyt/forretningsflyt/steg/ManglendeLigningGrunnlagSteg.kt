@@ -73,10 +73,11 @@ class ManglendeLigningGrunnlagSteg private constructor(
         val relevantBeregningsPeriode = beregningService.utledRelevanteBeregningsÅr(kontekst.behandlingId)
         val sisteRelevanteÅr = relevantBeregningsPeriode.max()
 
-        val sisteÅrInntektGrunnlag = inntektGrunnlag.inntekter.firstOrNull{ it.år == sisteRelevanteÅr }
+        val sisteÅrInntektGrunnlag = inntektGrunnlag.inntekter.firstOrNull { it.år == sisteRelevanteÅr }
         val manuellInntektGrunnlag = manuellInnektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        val harManuellInntektPåManglendeÅr = manuellInntektGrunnlag?.manuelleInntekter?.firstOrNull{ sisteRelevanteÅr == it.år }
+        val harManuellInntektPåManglendeÅr =
+            manuellInntektGrunnlag?.manuelleInntekter?.firstOrNull { sisteRelevanteÅr == it.år }
 
         if (sisteÅrInntektGrunnlag == null && harManuellInntektPåManglendeÅr == null) {
             return FantAvklaringsbehov(Definisjon.FASTSETT_MANUELL_INNTEKT)

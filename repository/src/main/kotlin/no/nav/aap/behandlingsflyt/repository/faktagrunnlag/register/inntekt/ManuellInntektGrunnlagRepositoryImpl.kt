@@ -4,13 +4,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 import java.time.Year
 
-class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection) : ManuellInntektGrunnlagRepository {
+class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
+    ManuellInntektGrunnlagRepository {
     private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<ManuellInntektGrunnlagRepositoryImpl> {
@@ -24,16 +25,20 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
             SELECT * FROM MANUELL_INNTEKT_VURDERING_GRUNNLAG WHERE behandling_id = ? and aktiv = true
         """.trimIndent()
 
-        return connection.queryFirstOrNull(query) {
+        val manuellInntektVurderingId = connection.queryFirstOrNull(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper {
-                ManuellInntektGrunnlag(
-                    manuelleInntekter = hentManuellInntektVurderinger(it.getLong("MANUELL_INNTEKT_VURDERINGER_ID"))
-                )
+                it.getLong("MANUELL_INNTEKT_VURDERINGER_ID")
             }
         }
+
+        if (manuellInntektVurderingId == null) return null
+
+        return ManuellInntektGrunnlag(
+            manuelleInntekter = hentManuellInntektVurderinger(manuellInntektVurderingId)
+        )
     }
 
     private fun hentManuellInntektVurderinger(vurderingerId: Long): Set<ManuellInntektVurdering> {
@@ -49,14 +54,14 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
                 ManuellInntektVurdering(
                     år = Year.of(it.getInt("ar")),
                     begrunnelse = it.getString("begrunnelse"),
-                    belop = it.getBigDecimal("belop"),
+                    belop = it.getBigDecimal("belop").let(::Beløp),
                     vurdertAv = it.getString("vurdert_av")
                 )
             }
         }
     }
 
-    override fun lagre(sakId: SakId, behandlingId: BehandlingId, manuellVurdering: ManuellInntektVurdering) {
+    override fun lagre(behandlingId: BehandlingId, manuellVurdering: ManuellInntektVurdering) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         if (eksisterendeGrunnlag != null) {
             deaktiverEksisterende(behandlingId)
@@ -65,17 +70,21 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
         val manuellInntektVurderingerQuery = """
             INSERT INTO MANUELL_INNTEKT_VURDERINGER DEFAULT VALUES
         """.trimIndent()
-        val manuellInntektVurderingerId = connection.executeReturnKey(manuellInntektVurderingerQuery)
-        lagreVurdering(manuellVurdering, eksisterendeGrunnlag?.manuelleInntekter, manuellInntektVurderingerId)
+        val manuellInntektVurderingerId =
+            connection.executeReturnKey(manuellInntektVurderingerQuery)
+        lagreVurdering(
+            manuellVurdering,
+            eksisterendeGrunnlag?.manuelleInntekter,
+            manuellInntektVurderingerId
+        )
 
         val grunnlagQuery = """
-            INSERT INTO MANUELL_INNTEKT_VURDERING_GRUNNLAG (BEHANDLING_ID, SAK_ID, MANUELL_INNTEKT_VURDERINGER_ID) VALUES (?, ?, ?)
+            INSERT INTO MANUELL_INNTEKT_VURDERING_GRUNNLAG (BEHANDLING_ID, MANUELL_INNTEKT_VURDERINGER_ID) VALUES (?, ?)
         """.trimIndent()
         connection.execute(grunnlagQuery) {
             setParams {
                 setLong(1, behandlingId.toLong())
-                setLong(2, sakId.id)
-                setLong(3, manuellInntektVurderingerId)
+                setLong(2, manuellInntektVurderingerId)
             }
         }
     }
@@ -96,7 +105,7 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
             setParams {
                 setInt(1, it.år.value)
                 setString(2, it.begrunnelse)
-                setBigDecimal(3, it.belop)
+                setBigDecimal(3, it.belop.verdi)
                 setString(4, it.vurdertAv)
                 setLong(5, manuellInntektVurderingerId)
             }
@@ -107,7 +116,7 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
         """
             SELECT MANUELL_INNTEKT_VURDERINGER_ID
             FROM MANUELL_INNTEKT_VURDERING_GRUNNLAG
-            WHERE behandling_id = ? AND MANUELL_INNTEKT_VURDERINGER_ID is not null
+            WHERE behandling_id = ?
          """.trimIndent()
     ) {
         setParams { setLong(1, behandlingId.id) }
@@ -119,10 +128,11 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
     override fun slett(behandlingId: BehandlingId) {
         val manuellInntektVurderingerIds = hentVurderingerIds(behandlingId)
 
+        // TODO: burde ikke det slettes rader fra MANUELL_INNTEKT_VURDERINGER også?
         val deletedRows = connection.executeReturnUpdated(
             """
-            delete from MANUELL_INNTEKT_VURDERING_GRUNNLAG where id = ?;
-            delete from MANUELL_INNTEKT_VURDERING where id = ANY(?::bigint[]);  
+            delete from MANUELL_INNTEKT_VURDERING_GRUNNLAG where behandling_id = ?;
+            delete from MANUELL_INNTEKT_VURDERING where id = ANY(?::bigint[]);
         """.trimIndent()
         ) {
             setParams {
@@ -149,8 +159,8 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
 
         val query = """
             INSERT INTO MANUELL_INNTEKT_VURDERING_GRUNNLAG 
-                (behandling_id, sak_id, MANUELL_INNTEKT_VURDERINGER_ID) 
-            SELECT ?, sak_id, MANUELL_INNTEKT_VURDERINGER_ID
+                (behandling_id, MANUELL_INNTEKT_VURDERINGER_ID) 
+            SELECT ?, MANUELL_INNTEKT_VURDERINGER_ID
                 from MANUELL_INNTEKT_VURDERING_GRUNNLAG 
                 where behandling_id = ? and aktiv
         """.trimIndent()

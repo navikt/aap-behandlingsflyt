@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVur
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 import java.time.Year
@@ -57,7 +56,10 @@ class BeregningService(
         val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
 
         val kombinertInntekt =
-            kombinerInntektOgManuellInntekt(inntektGrunnlag.inntekter, manuellInntektGrunnlag?.manuelleInntekter)
+            kombinerInntektOgManuellInntekt(
+                inntektGrunnlag.inntekter,
+                manuellInntektGrunnlag?.manuelleInntekter.orEmpty()
+            )
 
         val input = utledInput(
             studentVurdering = student?.studentvurdering,
@@ -88,6 +90,7 @@ class BeregningService(
 
         val nedsettelsesDato =
             utledNedsettelsesdato(beregningVurdering?.tidspunktVurdering, studentGrunnlag?.studentvurdering)
+        // TODO: her lages Inntektsbehov kun for å bruke utledAlleRelevanteÅr. Trekk ut metoder i felles sted
         val behov = Inntektsbehov(
             Input(
                 nedsettelsesDato = nedsettelsesDato,
@@ -103,14 +106,24 @@ class BeregningService(
 
     private fun kombinerInntektOgManuellInntekt(
         inntekter: Set<InntektPerÅr>,
-        manuelleInnteker: Set<ManuellInntektVurdering>?
+        manuelleInntekter: Set<ManuellInntektVurdering>
     ): Set<InntektPerÅr> {
-        if (manuelleInnteker == null) return inntekter
+        val manuelleByÅr = manuelleInntekter
+            .map { InntektPerÅr(it.år, it.belop, it) }
+            .groupBy { it.år }
+            .mapValues {
+                require(it.value.size == 1)
+                it.value.first()
+            }
 
-        return (inntekter + manuelleInnteker
-            .filter { it.år !in inntekter.map { i -> i.år }.toSet() }
-            .map { InntektPerÅr(it.år, Beløp(it.belop), it) })
-            .toSortedSet()
+        val inntekterByÅr = inntekter
+            .groupBy { it.år }
+            .mapValues {
+                require(it.value.size == 1)
+                it.value.first()
+            }
+
+        return (inntekterByÅr + manuelleByÅr).values.toSet()
     }
 
     private fun utledInput(
