@@ -91,7 +91,7 @@ class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRep
         // Gjør ingenting
     }
 
-    override fun slett(fraBehandling: BehandlingId) {
+    override fun slett(behandlingId: BehandlingId) {
         // Gjør ingenting
     }
 

@@ -85,7 +85,7 @@ class KlagebehandlingNayRepositoryImpl(private val connection: DBConnection) : K
         // Gjør ingenting
     }
 
-    override fun slett(fraBehandling: BehandlingId) {
+    override fun slett(behandlingId: BehandlingId) {
         // Gjør ingenting
     }
 
