@@ -200,20 +200,7 @@ class InformasjonskravGrunnlagTest {
     }
 
     @Test
-    fun `Førstegangsbehandling medfører henting av barn fra registeret - ingen endring hvis ingen barn`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
-            val (_, kontekst) = klargjør(connection, VurderingType.FØRSTEGANGSBEHANDLING)
-            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
-            val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnService)
-
-            val initiell = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(kravKonstruktører, kontekst)
-
-            assertThat(initiell).isEmpty()
-        }
-    }
-
-    @Test
-    fun `Førstegangsbehandling medfører henting av barn fra registeret - endring hvis nytt barn fra register`() {
+    fun `Førstegangsbehandling medfører henting av barn fra registeret`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val (ident, kontekst) = klargjør(connection, VurderingType.FØRSTEGANGSBEHANDLING)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))

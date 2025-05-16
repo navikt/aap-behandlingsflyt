@@ -63,10 +63,10 @@ class BarnService private constructor(
 
         oppdaterPersonIdenter(barn.alleBarn().map { it.ident }.toSet())
 
-        val identifisertNyeBarnFraRegister = identifisertNyeBarnFraRegister(registerBarnIdenter, barnGrunnlag)
+        val manglerBarnGrunnlagEllerFantNyeBarnFraRegister = manglerBarnGrunnlagEllerFantNyeBarnFraRegister(registerBarnIdenter, barnGrunnlag)
         val personopplysningerForBarnErOppdatert = personopplysningerForBarnErOppdatert(barn.alleBarn(), relatertePersonopplysninger)
 
-        if (identifisertNyeBarnFraRegister || personopplysningerForBarnErOppdatert) {
+        if (manglerBarnGrunnlagEllerFantNyeBarnFraRegister || personopplysningerForBarnErOppdatert) {
             barnRepository.lagreRegisterBarn(behandlingId, registerBarnIdenter)
             personopplysningRepository.lagre(behandlingId, barn.alleBarn())
             return ENDRET
@@ -103,12 +103,11 @@ class BarnService private constructor(
         return barn.toSet() != eksisterendeData
     }
 
-    private fun identifisertNyeBarnFraRegister(
-        barnIdenterFraRegister: Set<Ident>,
+    private fun manglerBarnGrunnlagEllerFantNyeBarnFraRegister(
+        barnIdenter: Set<Ident>,
         barnGrunnlag: BarnGrunnlag?
     ): Boolean {
-        val barnIdenterFraGrunnlag = barnGrunnlag?.registerbarn?.identer?.toSet() ?: emptySet()
-        return barnIdenterFraRegister != barnIdenterFraGrunnlag
+        return barnIdenter != barnGrunnlag?.registerbarn?.identer?.toSet()
     }
 
     companion object : Informasjonskravkonstruktør {
