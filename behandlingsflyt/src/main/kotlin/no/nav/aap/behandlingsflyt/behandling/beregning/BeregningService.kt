@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Innte
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
@@ -13,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
@@ -20,6 +22,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadev
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
+import java.time.Year
 
 class BeregningService(
     private val inntektGrunnlagRepository: InntektGrunnlagRepository,
@@ -28,7 +31,8 @@ class BeregningService(
     private val uføreRepository: UføreRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
-    private val yrkesskadeRepository: YrkesskadeRepository
+    private val yrkesskadeRepository: YrkesskadeRepository,
+    private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository
 ) {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
@@ -39,21 +43,29 @@ class BeregningService(
         beregningsgrunnlagRepository = repositoryProvider.provide(),
         beregningVurderingRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
+        manuellInntektGrunnlagRepository = repositoryProvider.provide()
     )
 
     fun beregnGrunnlag(behandlingId: BehandlingId): Beregningsgrunnlag {
         val inntektGrunnlag = inntektGrunnlagRepository.hent(behandlingId)
+        val manuellInntektGrunnlag = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId)
         val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
         val uføre = uføreRepository.hentHvisEksisterer(behandlingId)
         val student = studentRepository.hentHvisEksisterer(behandlingId)
         val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
         val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
 
+        val kombinertInntekt =
+            kombinerInntektOgManuellInntekt(
+                inntektGrunnlag.inntekter,
+                manuellInntektGrunnlag?.manuelleInntekter.orEmpty()
+            )
+
         val input = utledInput(
             studentVurdering = student?.studentvurdering,
             yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
             vurdering = beregningVurdering,
-            inntekter = inntektGrunnlag.inntekter,
+            inntekter = kombinertInntekt,
             uføregrad = uføre?.vurderinger ?: emptyList(),
             registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader
         )
@@ -67,6 +79,51 @@ class BeregningService(
 
     fun deaktiverGrunnlag(behandlingId: BehandlingId) {
         beregningsgrunnlagRepository.deaktiver(behandlingId)
+    }
+
+    fun utledRelevanteBeregningsÅr(behandlingId: BehandlingId): Set<Year> {
+        val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
+        val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
+        val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+        val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
+        val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
+
+        val nedsettelsesDato =
+            utledNedsettelsesdato(beregningVurdering?.tidspunktVurdering, studentGrunnlag?.studentvurdering)
+        // TODO: her lages Inntektsbehov kun for å bruke utledAlleRelevanteÅr. Trekk ut metoder i felles sted
+        val behov = Inntektsbehov(
+            Input(
+                nedsettelsesDato = nedsettelsesDato,
+                inntekter = setOf(),
+                uføregrad = uføreGrunnlag?.vurderinger ?: emptyList(),
+                yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
+                registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
+                beregningGrunnlag = beregningVurdering
+            )
+        )
+        return behov.utledAlleRelevanteÅr()
+    }
+
+    private fun kombinerInntektOgManuellInntekt(
+        inntekter: Set<InntektPerÅr>,
+        manuelleInntekter: Set<ManuellInntektVurdering>
+    ): Set<InntektPerÅr> {
+        val manuelleByÅr = manuelleInntekter
+            .map { InntektPerÅr(it.år, it.belop, it) }
+            .groupBy { it.år }
+            .mapValues {
+                require(it.value.size == 1)
+                it.value.first()
+            }
+
+        val inntekterByÅr = inntekter
+            .groupBy { it.år }
+            .mapValues {
+                require(it.value.size == 1)
+                it.value.first()
+            }
+
+        return (inntekterByÅr + manuelleByÅr).values.toSet()
     }
 
     private fun utledInput(

@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.Pers
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt.InntektGrunnlagRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre.UføreRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
@@ -278,6 +279,7 @@ fun main()
         PipRepositoryImpl(connection).slett(BehandlingId(1L))
         PersonRepositoryImpl(connection).slett(BehandlingId(1L))
         SakRepositoryImpl(connection).slett(BehandlingId(1L))
+        ManuellInntektGrunnlagRepositoryImpl(connection).slett(BehandlingId(1L))
     }
 
 }

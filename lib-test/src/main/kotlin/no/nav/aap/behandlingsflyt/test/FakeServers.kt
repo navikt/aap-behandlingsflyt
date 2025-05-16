@@ -262,7 +262,7 @@ object FakeServers : AutoCloseable {
                 val person = hentEllerGenererTestPerson(req.fnr)
 
                 for (år in req.fomAr..req.tomAr) {
-                    person.leggTilInntektHvisÅrMangler(Year.of(år), Beløp("0"))
+                    //person.leggTilInntektHvisÅrMangler(Year.of(år), Beløp("0")) //TODO: Fjern denne helt
                 }
 
                 call.respond(

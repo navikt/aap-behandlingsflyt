@@ -46,7 +46,7 @@ class AvklarSamordningUføreLøser(
         val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId = behandlingId)
         val vurderinger = løsning.samordningUføreVurdering.vurderingPerioder
         val harVurdertAllePerioder = uføreGrunnlag?.vurderinger?.all { uføre ->
-            vurderinger.any { vurdering -> vurdering.virkningstidspunkt == uføre.virkningstidspunkt } ?: false
+            vurderinger.any { vurdering -> vurdering.virkningstidspunkt == uføre.virkningstidspunkt }
         } ?: true
         if (!harVurdertAllePerioder) {
             throw UgyldigForespørselException(message = "Har ikke vurdert alle perioder for samordning med delvis uføre")
