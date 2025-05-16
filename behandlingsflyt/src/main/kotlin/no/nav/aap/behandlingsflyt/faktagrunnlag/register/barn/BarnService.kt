@@ -19,7 +19,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
 
@@ -31,13 +35,18 @@ class BarnService private constructor(
     private val barnGateway: BarnGateway,
     private val pdlGateway: IdentGateway,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val unleashGateway: UnleashGateway
 ) : Informasjonskrav {
 
     override val navn = Companion.navn
 
     override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
         // Kun gjøre oppslag mot register ved førstegangsbehandling og revurdering av barnetillegg (Se AAP-933).
-        return (kontekst.erFørstegangsbehandling() || kontekst.erRevurderingMedÅrsak(BARNETILLEGG)) &&
+        val gyldigBehandling = if (unleashGateway.isEnabled(BehandlingsflytFeature.FjernAutomatiskOppdateringAvBarnetillegg)) {
+            kontekst.erFørstegangsbehandling() || kontekst.erRevurderingMedÅrsak(BARNETILLEGG)
+        } else kontekst.erFørstegangsbehandlingEllerRevurdering()
+
+        return gyldigBehandling &&
                 oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
                 tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
     }
@@ -114,6 +123,7 @@ class BarnService private constructor(
                 repositoryProvider.provide<PersonopplysningRepository>()
             val barnGateway = GatewayProvider.provide(BarnGateway::class)
             val identGateway = GatewayProvider.provide(IdentGateway::class)
+            val unleashGateway = GatewayProvider.provide(UnleashGateway::class)
             return BarnService(
                 SakService(sakRepository),
                 repositoryProvider.provide(),
@@ -122,6 +132,7 @@ class BarnService private constructor(
                 barnGateway,
                 identGateway,
                 TidligereVurderingerImpl(repositoryProvider),
+                unleashGateway,
             )
         }
     }
