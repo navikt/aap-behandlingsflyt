@@ -2,9 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
-import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.http.*
+import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -21,13 +20,21 @@ import java.time.MonthDay
 import java.time.Year
 import javax.sql.DataSource
 
-data class ManuellInntektGrunnlagResponse(
+data class ManuellInntektVurderingGrunnlagResponse(
     val begrunnelse: String,
     val vurdertAv: String,
     val tidspunkt: LocalDate,
     val ar: Int,
     val belop: BigDecimal,
-    val gVerdi: BigDecimal
+)
+
+/**
+ * @param [ar] Året som det skal gjøres vurdering for. Er med i begge objektene fordi de teoretisk kan være forskjellige.
+ */
+data class ManuellInntektGrunnlagResponse(
+    val ar: Int,
+    val gVerdi: BigDecimal,
+    val vurdering: ManuellInntektVurderingGrunnlagResponse?,
 )
 
 private val log = LoggerFactory.getLogger("ManuellInntektGrunnlagApi")
@@ -40,13 +47,14 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(dataSource: DataSource, repositoryRe
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
             ) { req ->
-                val manuellInntekt = dataSource.transaction {
+                val (manuellInntekt, år) = dataSource.transaction {
                     val provider = repositoryRegistry.provider(it)
                     val behandlingRepository = provider.provide<BehandlingRepository>()
                     val manuellInntektRepository = provider.provide<ManuellInntektGrunnlagRepository>()
+                    val beregningService = BeregningService(provider)
 
                     val behandling = behandlingRepository.hent(req.referanse.let(::BehandlingReferanse))
-
+                    val relevanteÅr = beregningService.utledRelevanteBeregningsÅr(behandling.id)
 
                     val grunnlag = manuellInntektRepository.hentHvisEksisterer(behandling.id)
                     val manuellInntekter = grunnlag?.manuelleInntekter
@@ -55,31 +63,31 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(dataSource: DataSource, repositoryRe
                         log.warn("Fant flere manuelle inntekter for behandling ${behandling.id}. Per nå gjør vi antakelse om kun én.")
                     }
 
-                    manuellInntekter?.firstOrNull()
+                    Pair(manuellInntekter?.firstOrNull(), relevanteÅr.max())
                 }
 
-
-                if (manuellInntekt != null) {
-                    // Gjennomsnittlig G-verdi første januar i året vi er interessert i
-                    val gVerdi = Grunnbeløp.tilTidslinjeGjennomsnitt().segment(
-                        Year.of(manuellInntekt.år.value).atMonthDay(
-                            MonthDay.of(1, 1)
-                        )
-                    )!!.verdi
-
-                    respond(
-                        ManuellInntektGrunnlagResponse(
-                            begrunnelse = manuellInntekt.begrunnelse,
-                            vurdertAv = manuellInntekt.vurdertAv,
-                            tidspunkt = manuellInntekt.opprettet.toLocalDate(),
-                            ar = manuellInntekt.år.value,
-                            belop = manuellInntekt.belop.verdi,
-                            gVerdi = gVerdi.verdi,
-                        )
+                // Gjennomsnittlig G-verdi første januar i året vi er interessert i
+                val gVerdi = Grunnbeløp.tilTidslinjeGjennomsnitt().segment(
+                    Year.of(år.value).atMonthDay(
+                        MonthDay.of(1, 1)
                     )
-                } else {
-                    respondWithStatus(HttpStatusCode.NoContent)
-                }
+                )!!.verdi
+
+
+                respond(
+                    ManuellInntektGrunnlagResponse(
+                        ar = år.value,
+                        gVerdi = gVerdi.verdi,
+                        vurdering = manuellInntekt?.let {
+                            ManuellInntektVurderingGrunnlagResponse(
+                                begrunnelse = it.begrunnelse,
+                                vurdertAv = it.vurdertAv,
+                                tidspunkt = it.opprettet.toLocalDate(),
+                                ar = it.år.value,
+                                belop = it.belop.verdi,
+                            )
+                        }
+                    ))
             }
         }
     }
