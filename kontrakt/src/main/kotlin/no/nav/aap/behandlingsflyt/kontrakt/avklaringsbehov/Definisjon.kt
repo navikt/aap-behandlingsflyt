@@ -142,6 +142,13 @@ public enum class Definisjon(
         kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
+    FASTSETT_MANUELL_INNTEKT(
+        kode = AvklaringsbehovKode.`7001`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.MANGLENDE_LIGNING,
+        kreverToTrinn = true,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
     FRITAK_MELDEPLIKT(
         kode = AvklaringsbehovKode.`5005`,
         type = BehovType.MANUELT_FRIVILLIG,
