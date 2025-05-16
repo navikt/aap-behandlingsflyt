@@ -19,6 +19,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.Year
 
 class ManuellInntektGrunnlagRepositoryImplTest {
@@ -54,6 +55,7 @@ class ManuellInntektGrunnlagRepositoryImplTest {
                     { a, b -> a.minus(b).abs().toDouble() < 0.0001 },
                     BigDecimal::class.java
                 )
+                .ignoringFields("opprettet")
                 .isEqualTo(setOf(manuellVurdering))
         }
 
@@ -68,6 +70,7 @@ class ManuellInntektGrunnlagRepositoryImplTest {
                     { a, b -> a.minus(b).abs().toDouble() < 0.0001 },
                     BigDecimal::class.java
                 )
+                .ignoringFields("opprettet")
                 .isEqualTo(setOf(manuellVurdering.copy(belop = BigDecimal(123.41).let(::Beløp))))
         }
 
