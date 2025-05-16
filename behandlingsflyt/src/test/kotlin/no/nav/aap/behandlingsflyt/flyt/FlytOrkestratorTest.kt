@@ -60,6 +60,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.flate.BehandlendeEnhetLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate.FormkravVurderingLøsningDto
@@ -120,6 +121,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
@@ -179,7 +181,6 @@ import no.nav.aap.motor.testutil.TestUtil
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Condition
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
@@ -189,7 +190,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
 import java.util.*
-import java.util.function.Consumer
 
 @Fakes
 class FlytOrkestratorTest {
@@ -2791,14 +2791,16 @@ class FlytOrkestratorTest {
             typeBehandling = TypeBehandling.Førstegangsbehandling
         )
 
+        val kravMottatt = LocalDate.now().minusDays(10)
         val nyBehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("21"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 InnsendingType.KLAGE,
-                strukturertDokument = null,
+                strukturertDokument = StrukturertDokument(KlageV0(kravMottatt = kravMottatt)),
                 periode
             )
+
         )
 
         assertThat(nyBehandling.typeBehandling() == TypeBehandling.Klage)
@@ -2808,6 +2810,7 @@ class FlytOrkestratorTest {
         assertTrue(åpneAvklaringsbehov.erÅpent())
         assertTrue(åpneAvklaringsbehov.erVentepunkt())
         assertThat(åpneAvklaringsbehov.definisjon).isEqualTo(Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON)
+
         System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
     }
 
@@ -2843,18 +2846,27 @@ class FlytOrkestratorTest {
         assertThat(avslåttFørstegang)
             .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
             .extracting { b -> b.status().erAvsluttet() }.isEqualTo(true)
-
+        val kravMottatt = LocalDate.now().minusMonths(1)
         val klagebehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("21"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 InnsendingType.KLAGE,
-                strukturertDokument = null,
+                strukturertDokument = StrukturertDokument(KlageV0(kravMottatt = kravMottatt)),
                 periode
             )
         )
         assertThat(klagebehandling.referanse).isNotEqualTo(avslåttFørstegang.referanse)
         assertThat(klagebehandling.typeBehandling()).isEqualTo(TypeBehandling.Klage)
+
+        dataSource.transaction { connection ->
+            val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
+            val klageDokumenter =
+                mottattDokumentRepository.hentDokumenterAvType(klagebehandling.sakId, InnsendingType.KLAGE)
+            assertThat(klageDokumenter).hasSize(1)
+            assertThat(klageDokumenter.first().strukturertDokument).isNotNull
+            assertThat(klageDokumenter.first().strukturerteData<KlageV0>()?.data?.kravMottatt).isEqualTo(kravMottatt)
+        }
 
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
@@ -2905,7 +2917,7 @@ class FlytOrkestratorTest {
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_KONTOR)
-        
+
         løsAvklaringsBehov(
             klagebehandling,
             avklaringsBehovLøsning = VurderKlageKontorLøsning(
@@ -2918,10 +2930,10 @@ class FlytOrkestratorTest {
                 )
             )
         )
+
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
-
 
         // TODO: Lukk avklaringsbehovet og gå til neste steg når neste steg er implementert
     }

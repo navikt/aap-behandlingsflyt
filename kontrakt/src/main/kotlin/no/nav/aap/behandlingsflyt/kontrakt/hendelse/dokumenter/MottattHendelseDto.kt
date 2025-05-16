@@ -70,7 +70,7 @@ public class Innsending(
             
             InnsendingType.KLAGE -> {
                 require(referanse.type == InnsendingReferanse.Type.JOURNALPOST)
-                require(melding == null) { "Klage har ikke payload. Kun journalpost-ID." } // TODO: Undersøk om klage skal ha melding
+                require(melding is Klage)
             }
         }
     }
@@ -92,6 +92,7 @@ public fun Melding.innsendingType(): InnsendingType = when (this) {
     is Søknad -> InnsendingType.SØKNAD
     is AnnetRelevantDokument -> InnsendingType.ANNET_RELEVANT_DOKUMENT
     is ManuellRevurdering -> InnsendingType.MANUELL_REVURDERING
+    is KlageV0 -> InnsendingType.KLAGE
 }
 
 /**
@@ -116,6 +117,9 @@ private fun example(innsending: Innsending) {
 
         is ManuellRevurdering,
 
+        is KlageV0 -> TODO()
+
         null -> TODO()
+
     }
 }
