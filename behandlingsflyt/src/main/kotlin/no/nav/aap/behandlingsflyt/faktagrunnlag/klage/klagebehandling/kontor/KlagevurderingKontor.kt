@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.Hjemmel
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlageInnstilling
 import java.time.Instant
 
 data class KlagevurderingKontor(

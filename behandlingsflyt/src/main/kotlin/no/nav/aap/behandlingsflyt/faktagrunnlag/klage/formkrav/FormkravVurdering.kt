@@ -8,4 +8,9 @@ data class FormkravVurdering(
     val erKonkret: Boolean,
     val erSignert: Boolean,
     val vurdertAv: String
-)
+) {
+    fun erOppfylt() = erBrukerPart
+            && (erFristOverholdt || likevelBehandles == true)
+            && erKonkret
+            && erSignert
+}

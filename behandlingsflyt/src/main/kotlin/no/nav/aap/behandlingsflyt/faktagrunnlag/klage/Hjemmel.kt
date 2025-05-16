@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling
+package no.nav.aap.behandlingsflyt.faktagrunnlag.klage
 
 // TODO: Fyll på, evt. se om vi skal bruke Vilkårtype
 enum class Hjemmel(val hjemmel: String) {
