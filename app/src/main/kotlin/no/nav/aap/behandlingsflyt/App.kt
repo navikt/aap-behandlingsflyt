@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon.refusjonGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepengergrunnlag.sykepengerGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt.manglendeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt.beregningVurderingAPI
 import no.nav.aap.behandlingsflyt.behandling.brev.brevApi
 import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.aktivitetspliktApi
@@ -179,6 +180,7 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
                 aktivitetspliktApi(dataSource, repositoryRegistry)
                 auditlogApi(dataSource, repositoryRegistry)
                 refusjonGrunnlagAPI(dataSource, repositoryRegistry)
+                manglendeGrunnlagApi(dataSource, repositoryRegistry)
                 //Klage
                 påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry)
                 formkravGrunnlagApi(dataSource, repositoryRegistry)
