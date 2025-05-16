@@ -15,6 +15,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class ManglendeLigningGrunnlagSteg private constructor(
@@ -42,6 +45,10 @@ class ManglendeLigningGrunnlagSteg private constructor(
             return Fullført
         }
 
+        if (!GatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.Manuellinntekt)) {
+            return Fullført
+        }
+
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, BeregningAvklarFaktaSteg.type())) {
@@ -53,8 +60,7 @@ class ManglendeLigningGrunnlagSteg private constructor(
             }
 
             VurderingType.REVURDERING -> {
-                // What do?
-                // vurderInntekter(kontekst)?
+                vurderInntekter(kontekst)
             }
 
             VurderingType.MELDEKORT,
