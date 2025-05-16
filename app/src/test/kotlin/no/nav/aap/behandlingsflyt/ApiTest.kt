@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemK
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.flate.MedlemskapGrunnlagDto
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
@@ -170,7 +169,7 @@ class ApiTest {
                 listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
                 TypeBehandling.Førstegangsbehandling, null
             )
-            val medlRepo = MedlemskapRepositoryImpl(connection)
+            val medlRepo = postgresRepositoryRegistry.provider(connection).provide<MedlemskapRepository>()
             medlRepo.lagreUnntakMedlemskap(
                 behandlingId = behandling.id,
                 listOf(
@@ -257,7 +256,7 @@ class ApiTest {
             )
             behandling.referanse
         }
-        
+
         val dagensDato = LocalDate.now()
 
         val asJSON: JsonNode? = client.get(
@@ -481,16 +480,16 @@ class ApiTest {
         }
         return null
     }
-    
+
     private fun azpAuth(azp: Azp) = Header(
-            "Authorization",
-            "Bearer ${
-                AzureTokenGen("behandlingsflyt", "behandlingsflyt").generate(
-                    true,
-                    azp.uuid.toString()
-                )
-            }"
-        )
+        "Authorization",
+        "Bearer ${
+            AzureTokenGen("behandlingsflyt", "behandlingsflyt").generate(
+                true,
+                azp.uuid.toString()
+            )
+        }"
+    )
 }
 
 

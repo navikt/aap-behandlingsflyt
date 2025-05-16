@@ -37,7 +37,7 @@ data class ManuellInntektVurderingGrunnlagResponse(
  */
 data class ManuellInntektGrunnlagResponse(
     val ar: Int,
-    val gVerdi: BigDecimal,
+    val gverdi: BigDecimal,
     val vurdering: ManuellInntektVurderingGrunnlagResponse?,
     val harTilgangTilÅSaksbehandle: Boolean,
 )
@@ -87,7 +87,7 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(dataSource: DataSource, repositoryRe
                 respond(
                     ManuellInntektGrunnlagResponse(
                         ar = år.value,
-                        gVerdi = gVerdi.verdi,
+                        gverdi = gVerdi.verdi,
                         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         vurdering = manuellInntekt?.let {
                             ManuellInntektVurderingGrunnlagResponse(
