@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.tilgang
 
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.tilgang.BehandlingTilgangRequest
@@ -7,16 +8,19 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakTilgangRequest
 import no.nav.aap.tilgang.TilgangGateway.harTilgangTilBehandling
 import no.nav.aap.tilgang.TilgangGateway.harTilgangTilSak
-import java.util.UUID
-
+import java.util.*
 
 object TilgangGatewayImpl : TilgangGateway {
 
-    override fun sjekkTilgangTilBehandling(behandlingsreferanse: UUID, avklaringsbehovKode: String, token: OidcToken): Boolean {
+    override fun sjekkTilgangTilBehandling(
+        behandlingsreferanse: UUID,
+        avklaringsbehov: Definisjon,
+        token: OidcToken
+    ): Boolean {
         return harTilgangTilBehandling(
             BehandlingTilgangRequest(
                 behandlingsreferanse = behandlingsreferanse,
-                avklaringsbehovKode = avklaringsbehovKode,
+                avklaringsbehovKode = avklaringsbehov.kode.toString(),
                 operasjon = Operasjon.SAKSBEHANDLE
             ), token
         )

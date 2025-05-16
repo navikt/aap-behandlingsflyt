@@ -9,8 +9,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -21,13 +22,13 @@ import java.time.LocalDate
 import javax.sql.DataSource
 
 
-class RettighetsperiodeGrunnlagResponse(
+data class RettighetsperiodeGrunnlagResponse(
     val vurdering: RettighetsperiodeVurderingResponse?,
     val søknadsdato: LocalDate?,
     val harTilgangTilÅSaksbehandle: Boolean
 )
 
-class RettighetsperiodeVurderingResponse(
+data class RettighetsperiodeVurderingResponse(
     val begrunnelse: String,
     val harRettUtoverSøknadsdato: Boolean,
     val startDato: LocalDate?,
@@ -49,9 +50,9 @@ fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(dataSource: DataSource, repo
             val rettighetsperiodeRepository = repositoryProvider.provide<VurderRettighetsperiodeRepository>()
             val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
             val søknadsdatoUtleder = SøknadsdatoUtleder(mottattDokumentRepository)
-            val hartilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
+            val hartilgangTilÅSaksbehandle = GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
                 req.referanse,
-                Definisjon.VURDER_RETTIGHETSPERIODE.kode.toString(),
+                Definisjon.VURDER_RETTIGHETSPERIODE,
                 token()
             )
 

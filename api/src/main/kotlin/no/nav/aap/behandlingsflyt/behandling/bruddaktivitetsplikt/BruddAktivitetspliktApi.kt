@@ -24,7 +24,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.brev.kontrakt.Status
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -45,7 +45,7 @@ import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.aktivitetspliktApi( dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api").tag(Tags.Aktivitetsplikt) {
         route("/behandling/{referanse}/aktivitetsplikt/effektuer").authorizedGet<BehandlingReferanse, Effektuer11_7Dto>(
             AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
@@ -86,9 +86,9 @@ fun NormalOpenAPIRoute.aktivitetspliktApi( dataSource: DataSource, repositoryReg
                     ?.takeIf { it.status == Status.FERDIGSTILT }
                     ?.oppdatert?.toLocalDate()
 
-                val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
+                val harTilgangTilÅSaksbehandle = GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
                     behandlingReferanse.referanse,
-                    Definisjon.EFFEKTUER_11_7.kode.toString(),
+                    Definisjon.EFFEKTUER_11_7,
                     token()
                 )
 

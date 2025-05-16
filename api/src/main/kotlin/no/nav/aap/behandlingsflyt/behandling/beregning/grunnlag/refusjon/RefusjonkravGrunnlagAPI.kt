@@ -8,8 +8,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -24,9 +25,10 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/refusjon") {
             authorizedGet<BehandlingReferanse, RefusjonkravGrunnlagDto>(
-                AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse")
-                    )
-                ) { req ->
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse")
+                )
+            ) { req ->
                 val response = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
@@ -37,11 +39,12 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
                     val gjeldendeVurdering = refusjonkravRepository.hentHvisEksisterer(behandling.id)
                     val historiskeVurderinger = refusjonkravRepository.hentAlleVurderingerPåSak(behandling.sakId)
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
-                        req.referanse,
-                        Definisjon.REFUSJON_KRAV.kode.toString(),
-                        token()
-                    )
+                    val harTilgangTilÅSaksbehandle =
+                        GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
+                            req.referanse,
+                            Definisjon.REFUSJON_KRAV,
+                            token()
+                        )
 
                     RefusjonkravGrunnlagDto(
                         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,

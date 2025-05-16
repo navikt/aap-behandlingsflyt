@@ -6,9 +6,13 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -35,6 +39,7 @@ data class ManuellInntektGrunnlagResponse(
     val ar: Int,
     val gVerdi: BigDecimal,
     val vurdering: ManuellInntektVurderingGrunnlagResponse?,
+    val harTilgangTilÅSaksbehandle: Boolean,
 )
 
 private val log = LoggerFactory.getLogger("ManuellInntektGrunnlagApi")
@@ -73,11 +78,17 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(dataSource: DataSource, repositoryRe
                     )
                 )!!.verdi
 
+                val harTilgangTilÅSaksbehandle = GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
+                    req.referanse,
+                    Definisjon.FASTSETT_MANUELL_INNTEKT,
+                    token()
+                )
 
                 respond(
                     ManuellInntektGrunnlagResponse(
                         ar = år.value,
                         gVerdi = gVerdi.verdi,
+                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         vurdering = manuellInntekt?.let {
                             ManuellInntektVurderingGrunnlagResponse(
                                 begrunnelse = it.begrunnelse,

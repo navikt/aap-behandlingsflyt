@@ -12,8 +12,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -33,9 +34,10 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(dataSource: DataSource, repository
             )
         ) { behandlingReferanse ->
 
-            arbeidsevneGrunnlag(dataSource, behandlingReferanse, token(), repositoryRegistry)?.let { respond(it) } ?: respondWithStatus(
-                HttpStatusCode.NoContent
-            )
+            arbeidsevneGrunnlag(dataSource, behandlingReferanse, token(), repositoryRegistry)?.let { respond(it) }
+                ?: respondWithStatus(
+                    HttpStatusCode.NoContent
+                )
         }
 
         route("/simulering") {
@@ -68,9 +70,9 @@ private fun arbeidsevneGrunnlag(
             behandling.forrigeBehandlingId?.let { arbeidsevneRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
         val historikk = arbeidsevneRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
 
-        val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
+        val harTilgangTilÅSaksbehandle = GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
             behandlingReferanse.referanse,
-            Definisjon.FASTSETT_ARBEIDSEVNE.kode.toString(),
+            Definisjon.FASTSETT_ARBEIDSEVNE,
             token
         )
 
