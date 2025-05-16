@@ -97,10 +97,11 @@ class BarnService private constructor(
     }
 
     private fun identifisertNyeBarnFraRegister(
-        barnIdenter: Set<Ident>,
-        eksisterendeData: BarnGrunnlag?
+        barnIdenterFraRegister: Set<Ident>,
+        barnGrunnlag: BarnGrunnlag?
     ): Boolean {
-        return barnIdenter != eksisterendeData?.registerbarn?.identer?.toSet()
+        val barnIdenterFraGrunnlag = barnGrunnlag?.registerbarn?.identer?.toSet() ?: emptySet()
+        return barnIdenterFraRegister != barnIdenterFraGrunnlag
     }
 
     companion object : Informasjonskravkonstruktør {

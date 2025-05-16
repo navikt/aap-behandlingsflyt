@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRelasjonDataRe
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRequest
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlResponseHandler
 import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -21,7 +22,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.Client
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import java.net.URI
 
-object PdlBarnGateway : BarnGateway {
+class PdlBarnGateway : BarnGateway {
 
     private val url = URI.create(requiredConfigForKey("integrasjon.pdl.url"))
     private val config = ClientConfig(
@@ -34,6 +35,12 @@ object PdlBarnGateway : BarnGateway {
         responseHandler = PdlResponseHandler(),
         prometheus = prometheus
     )
+
+    companion object : Factory<BarnGateway> {
+        override fun konstruer(): BarnGateway {
+            return PdlBarnGateway()
+        }
+    }
 
     override fun hentBarn(person: Person, relaterteBarnIdenter: List<Ident>): BarnInnhentingRespons {
         val barnRelasjoner = hentBarnRelasjoner(person)
