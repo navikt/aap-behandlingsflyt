@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagevurderingKontor
 import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 
 data class KlagevurderingKontorLøsningDto(
     val begrunnelse: String,
@@ -13,16 +14,24 @@ data class KlagevurderingKontorLøsningDto(
     val vilkårSomOmgjøres: List<Hjemmel>,
 ) {
     init {
-        require(
-            when (innstilling) {
-                KlageInnstilling.OPPRETTHOLD -> vilkårSomOpprettholdes.isNotEmpty() && vilkårSomOmgjøres.isEmpty()
-                KlageInnstilling.OMGJØR -> vilkårSomOmgjøres.isNotEmpty() && vilkårSomOpprettholdes.isEmpty()
-                KlageInnstilling.DELVIS_OMGJØR -> vilkårSomOmgjøres.isNotEmpty()
-                        && vilkårSomOpprettholdes.isNotEmpty()
-                        && vilkårSomOmgjøres != vilkårSomOpprettholdes
+        when (innstilling) {
+            KlageInnstilling.OPPRETTHOLD -> {
+                if (vilkårSomOpprettholdes.isEmpty()) throw UgyldigForespørselException("Må sette vilkår som skal opprettholdes dersom innstilling er 'OPPRETTHOLD' ")
+                if (vilkårSomOmgjøres.isNotEmpty()) throw UgyldigForespørselException("Kan ikke sette vilkår som skal omgjøres dersom innstilling er 'OPPRETTHOLD' ")
             }
-        ) {
-            "Ugyldig kombinasjon av innstilling og vilkår"
+
+            KlageInnstilling.OMGJØR -> {
+                if (vilkårSomOmgjøres.isEmpty()) throw UgyldigForespørselException("Må sette vilkår som skal omgjøres dersom innstilling er 'OMGJØR' ")
+                if (vilkårSomOpprettholdes.isNotEmpty()) throw UgyldigForespørselException("Kan ikke sette vilkår som skal opprettholdes dersom innstilling er 'OMGJØR' ")
+            }
+
+            KlageInnstilling.DELVIS_OMGJØR -> {
+                if (vilkårSomOmgjøres.isEmpty()) throw UgyldigForespørselException("Må sette vilkår som skal omgjøres dersom innstilling er 'DELVIS_OMGJØR' ")
+                if (vilkårSomOpprettholdes.isEmpty()) throw UgyldigForespørselException("Må sette vilkår som skal opprettholdes dersom innstilling er 'DELVIS_OMGJØR' ")
+                if (vilkårSomOmgjøres.intersect(vilkårSomOpprettholdes.toSet()).isNotEmpty()) {
+                    throw UgyldigForespørselException("Kan ikke sette vilkår som både skal opprettholdes og omgjøres")
+                }
+            }
         }
     }
 
