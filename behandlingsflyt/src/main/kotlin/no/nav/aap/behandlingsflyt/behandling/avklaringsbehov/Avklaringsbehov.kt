@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSet
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import java.time.LocalDate
 
 class Avklaringsbehov(
@@ -85,14 +86,14 @@ class Avklaringsbehov(
         )
     }
 
-    internal fun reåpne(frist: LocalDate? = null, begrunnelse: String = "", grunn: ÅrsakTilSettPåVent? = null) {
+    internal fun reåpne(frist: LocalDate? = null, begrunnelse: String = "", grunn: ÅrsakTilSettPåVent? = null, bruker: Bruker = SYSTEMBRUKER) {
         require(historikk.last().status.erAvsluttet())
         historikk += Endring(
             status = Status.OPPRETTET,
             begrunnelse = begrunnelse,
             grunn = grunn,
             frist = frist,
-            endretAv = SYSTEMBRUKER.ident
+            endretAv = bruker.ident
         )
     }
 

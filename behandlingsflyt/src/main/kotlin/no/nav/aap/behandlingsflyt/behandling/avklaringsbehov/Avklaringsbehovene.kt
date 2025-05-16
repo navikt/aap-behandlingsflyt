@@ -80,7 +80,7 @@ class Avklaringsbehovene(
             val avklaringsbehov = hentBehovForDefinisjon(definisjon)
             if (avklaringsbehov != null) {
                 if (avklaringsbehov.erAvsluttet()) {
-                    avklaringsbehov.reåpne(utledFrist(definisjon, frist), begrunnelse, grunn)
+                    avklaringsbehov.reåpne(utledFrist(definisjon, frist), begrunnelse, grunn, bruker)
                     if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erBrevVentebehov() || avklaringsbehov.erAutomatisk()) {
                         // TODO: Vurdere om funnet steg bør ligge på endringen...
                         repository.endreVentepunkt(avklaringsbehov.id, avklaringsbehov.historikk.last(), funnetISteg)
