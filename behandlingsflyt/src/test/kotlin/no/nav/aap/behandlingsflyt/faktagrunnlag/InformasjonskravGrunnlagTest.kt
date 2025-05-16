@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.Med
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
@@ -80,6 +81,7 @@ class InformasjonskravGrunnlagTest {
             .register<TrukketSøknadRepositoryImpl>()
             .register<MedlemskapRepositoryImpl>()
             .register<BarnRepositoryImpl>()
+            .register<ManuellInntektGrunnlagRepositoryImpl>()
 
     @BeforeEach
     fun setUp() {

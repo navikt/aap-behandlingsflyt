@@ -33,9 +33,6 @@ internal class BarnRepositoryImplTest {
             val barnRepository = BarnRepositoryImpl(connection)
             val barn = barnRepository.hentHvisEksisterer(behandling.id)
             assertThat(barn?.registerbarn?.identer).isNullOrEmpty()
-
-            val barnViaReferanse = barnRepository.hentHvisEksisterer(behandling.referanse)
-            assertThat(barnViaReferanse?.registerbarn?.identer).isNullOrEmpty()
         }
     }
 
@@ -51,34 +48,6 @@ internal class BarnRepositoryImplTest {
             barnRepository.lagreRegisterBarn(behandling.id, barnListe)
             val barn = barnRepository.hent(behandling.id)
             assertThat(barn.registerbarn?.identer).containsExactlyInAnyOrderElementsOf(barnListe)
-
-            val barnViaReferanse = barnRepository.hentHvisEksisterer(behandling.referanse)
-            assertThat(barnViaReferanse?.registerbarn?.identer).size().isEqualTo(2)
-            assertThat(barnViaReferanse?.registerbarn?.identer).containsExactlyInAnyOrderElementsOf(barnListe)
-
-            val barnPåSak = barnRepository.hentHvisEksisterer(sak.saksnummer)
-            assertThat(barnPåSak?.registerbarn?.identer).size().isEqualTo(2)
-            assertThat(barnPåSak?.registerbarn?.identer).containsExactlyInAnyOrderElementsOf(barnListe)
-        }
-    }
-
-    @Test
-    fun `Henter barn for saker`() {
-        dataSource.transaction { connection ->
-            val sak = sak(connection)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-            val barnRepository = BarnRepositoryImpl(connection)
-            val registerBarn = setOf(Ident("1234567890"), Ident("1337"))
-            val oppgitteBarn = OppgitteBarn(null, setOf(Ident("0987654321")))
-            barnRepository.lagreRegisterBarn(behandling.id, registerBarn)
-            barnRepository.lagreOppgitteBarn(behandling.id, oppgitteBarn)
-
-            val oppgitteBarnForSak = barnRepository.hentOppgitteBarnForSaker(listOf(sak.saksnummer, Saksnummer("1234")))
-            val registerBarnForSak = barnRepository.hentRegisterBarnForSaker(listOf(sak.saksnummer, Saksnummer("1234")))
-            assertThat(registerBarnForSak[sak.saksnummer]).hasSize(2)
-            assertThat(registerBarnForSak[Saksnummer("1234")]).isNullOrEmpty()
-            assertThat(oppgitteBarnForSak[sak.saksnummer]).hasSize(1)
-            assertThat(oppgitteBarnForSak[Saksnummer("1234")]).isNullOrEmpty()
         }
     }
 

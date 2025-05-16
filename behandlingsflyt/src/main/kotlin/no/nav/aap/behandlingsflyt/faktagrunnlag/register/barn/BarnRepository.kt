@@ -9,11 +9,7 @@ import no.nav.aap.lookup.repository.Repository
 
 interface BarnRepository : Repository{
     fun hentHvisEksisterer(behandlingId: BehandlingId): BarnGrunnlag?
-    fun hentHvisEksisterer(behandlingsreferanse: BehandlingReferanse): BarnGrunnlag?
-    fun hentHvisEksisterer(saksnummer: Saksnummer): BarnGrunnlag?
     fun hent(behandlingId: BehandlingId): BarnGrunnlag
-    fun hentOppgitteBarnForSaker(saksnumre: List<Saksnummer>): Map<Saksnummer, List<String>>
-    fun hentRegisterBarnForSaker(saksnumre: List<Saksnummer>): Map<Saksnummer, List<String>>
     fun lagreOppgitteBarn(behandlingId: BehandlingId, oppgitteBarn: OppgitteBarn?)
     fun lagreRegisterBarn(behandlingId: BehandlingId, barn: Set<Ident>)
     fun lagreVurderinger(behandlingId: BehandlingId, vurderteBarn: List<VurdertBarn>)

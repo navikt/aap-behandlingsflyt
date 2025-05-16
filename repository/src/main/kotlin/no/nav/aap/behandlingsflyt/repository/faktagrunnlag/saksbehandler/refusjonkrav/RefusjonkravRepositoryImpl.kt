@@ -67,13 +67,13 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
         }
     }
 
-    override fun lagre(sakId: SakId, behandlingId: BehandlingId, refusjonkravVurdering: RefusjonkravVurdering) {
+    override fun lagre(sakId: SakId, behandlingId: BehandlingId, refusjonkravVurderinger: RefusjonkravVurdering) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         if (eksisterendeGrunnlag != null) {
             deaktiverEksisterende(behandlingId)
         }
 
-        val vurderingId = lagreVurdering(refusjonkravVurdering)
+        val vurderingId = lagreVurdering(refusjonkravVurderinger)
 
         val grunnlagQuery = """
             INSERT INTO REFUSJONKRAV_GRUNNLAG (BEHANDLING_ID, SAK_ID, REFUSJONKRAV_VURDERING_ID) VALUES (?, ?, ?)

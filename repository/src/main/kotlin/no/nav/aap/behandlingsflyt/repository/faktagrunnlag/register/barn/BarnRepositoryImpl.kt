@@ -1,9 +1,12 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.*
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.RegisterBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.VurderteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -16,7 +19,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-   companion object : Factory<BarnRepository> {
+    companion object : Factory<BarnRepository> {
         override fun konstruer(connection: DBConnection): BarnRepository {
             return BarnRepositoryImpl(connection)
         }
@@ -32,55 +35,6 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         ) {
             setParams {
                 setLong(1, behandlingId.id)
-            }
-            setRowMapper {
-                BarnGrunnlag(
-                    registerbarn = hentBarn(it.getLongOrNull("register_barn_id")),
-                    oppgitteBarn = hentOppgittBarn(it.getLongOrNull("oppgitt_barn_id")),
-                    vurderteBarn = hentVurderteBarn(it.getLongOrNull("vurderte_barn_id"))
-                )
-            }
-        }
-
-        return grunnlag
-    }
-
-    override fun hentHvisEksisterer(behandlingsreferanse: BehandlingReferanse): BarnGrunnlag? {
-        val grunnlag = connection.queryFirstOrNull(
-            """
-            SELECT * 
-            FROM BARNOPPLYSNING_GRUNNLAG g
-            INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
-            WHERE g.AKTIV AND b.REFERANSE = ?
-        """.trimIndent()
-        ) {
-            setParams {
-                setUUID(1, behandlingsreferanse.referanse)
-            }
-            setRowMapper {
-                BarnGrunnlag(
-                    registerbarn = hentBarn(it.getLongOrNull("register_barn_id")),
-                    oppgitteBarn = hentOppgittBarn(it.getLongOrNull("oppgitt_barn_id")),
-                    vurderteBarn = hentVurderteBarn(it.getLongOrNull("vurderte_barn_id"))
-                )
-            }
-        }
-
-        return grunnlag
-    }
-
-    override fun hentHvisEksisterer(saksnummer: Saksnummer): BarnGrunnlag? {
-        val grunnlag = connection.queryFirstOrNull(
-            """
-            SELECT * 
-            FROM BARNOPPLYSNING_GRUNNLAG g
-            INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
-            INNER JOIN SAK s ON b.SAK_ID = s.ID
-            WHERE g.AKTIV AND s.SAKSNUMMER = ?
-        """.trimIndent()
-        ) {
-            setParams {
-                setString(1, saksnummer.toString())
             }
             setRowMapper {
                 BarnGrunnlag(
@@ -191,52 +145,6 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                     )
                 }
             })
-    }
-
-    override fun hentOppgitteBarnForSaker(saksnumre: List<Saksnummer>): Map<Saksnummer, List<String>> {
-        require(saksnumre.isNotEmpty())
-        val res = connection.queryList(
-            """
-            SELECT DISTINCT s.SAKSNUMMER, ob.IDENT
-            FROM BARNOPPLYSNING_GRUNNLAG g
-            INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
-            INNER JOIN SAK s ON b.SAK_ID = s.ID
-            INNER JOIN OPPGITT_BARN ob ON ob.ID = g.OPPGITT_BARN_ID
-            WHERE g.AKTIV AND s.SAKSNUMMER = ANY(?::text[])
-        """.trimIndent()
-        ) {
-            setParams {
-                setArray(1, saksnumre.map { it.toString() })
-            }
-            setRowMapper {
-                Pair(Saksnummer(it.getString("saksnummer")), it.getString("ident"))
-            }
-        }
-        return res
-            .groupBy({ it.first }, { it.second })
-    }
-
-    override fun hentRegisterBarnForSaker(saksnumre: List<Saksnummer>): Map<Saksnummer, List<String>> {
-        require(saksnumre.isNotEmpty())
-        val res = connection.queryList(
-            """
-            SELECT DISTINCT s.SAKSNUMMER, rb.IDENT
-            FROM BARNOPPLYSNING_GRUNNLAG g
-            INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
-            INNER JOIN SAK s ON b.SAK_ID = s.ID
-            INNER JOIN BARNOPPLYSNING rb ON rb.BGB_ID = g.REGISTER_BARN_ID
-            WHERE g.AKTIV AND s.SAKSNUMMER = ANY(?::text[])
-        """.trimIndent()
-        ) {
-            setParams {
-                setArray(1, saksnumre.map { it.toString() })
-            }
-            setRowMapper {
-                Pair(Saksnummer(it.getString("saksnummer")), it.getString("ident"))
-            }
-        }
-        return res
-            .groupBy({ it.first }, { it.second })
     }
 
     override fun lagreOppgitteBarn(behandlingId: BehandlingId, oppgitteBarn: OppgitteBarn?) {

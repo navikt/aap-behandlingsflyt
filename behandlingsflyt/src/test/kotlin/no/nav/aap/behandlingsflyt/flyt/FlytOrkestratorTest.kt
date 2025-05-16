@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSet
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarLovvalgMedlemskapLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOverstyrtForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOverstyrtLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
@@ -40,6 +41,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedta
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TrekkSøknadLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderFormkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKlageKontorLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKlageNayLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
@@ -50,6 +52,8 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
 import no.nav.aap.behandlingsflyt.drift.Driftfunksjoner
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriodeDto
@@ -60,12 +64,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.flate.BehandlendeEnhetLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate.FormkravVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.flate.KlagevurderingKontorLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagevurderingNay
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.flate.KlagevurderingNayLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.flate.PåklagetBehandlingVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
@@ -76,6 +84,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
@@ -113,6 +122,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.utbetaling.UtbetalingGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_KLAGE_KONTOR_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingLøsningStatus
@@ -120,6 +130,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
@@ -162,6 +173,7 @@ import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
+import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
@@ -179,17 +191,16 @@ import no.nav.aap.motor.testutil.TestUtil
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Condition
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
 import java.util.*
-import java.util.function.Consumer
 
 @Fakes
 class FlytOrkestratorTest {
@@ -254,11 +265,10 @@ class FlytOrkestratorTest {
                     identer = setOf(Ident("1234123")),
                     fødselsdato = Fødselsdato(LocalDate.now().minusYears(3)),
                     yrkesskade = listOf(),
-                    barn = listOf(),
-                    inntekter = listOf()
+                    barn = listOf()
                 )
             ),
-            inntekter = listOf(
+            inntekter = mutableListOf(
                 InntektPerÅr(
                     Year.now().minusYears(1),
                     Beløp(1000000)
@@ -1572,7 +1582,7 @@ class FlytOrkestratorTest {
                 identer = setOf(ident),
                 fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
                 yrkesskade = listOf(TestYrkesskade()),
-                inntekter = listOf(
+                inntekter = mutableListOf(
                     InntektPerÅr(Year.now().minusYears(1), Beløp("1000000.0")),
                     InntektPerÅr(Year.now().minusYears(2), Beløp("1000000.0")),
                     InntektPerÅr(Year.now().minusYears(3), Beløp("1000000.0")),
@@ -2705,6 +2715,114 @@ class FlytOrkestratorTest {
     }
 
     @Test
+    fun `kan hente inn manuell inntektsdata i grunnlag og benytte i beregning`() {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val nedsattDato = LocalDate.now()
+            .plusYears(1) // Ett år fram, Liten hack for å slippe å fjase med default inntektlisten som brukes overalt ellers
+
+        // Oppretter vanlig søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("451"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
+                    ),
+                ),
+                periode = periode
+            )
+        )
+        util.ventPåSvar()
+
+        val sak = hentSak(ident, periode)
+        val behandling = hentBehandling(sak.id)
+
+        løsFramTilGrunnlag(behandling)
+
+        løsAvklaringsBehov(
+            behandling,
+            FastsettBeregningstidspunktLøsning(
+                beregningVurdering = BeregningstidspunktVurdering(
+                    begrunnelse = "Trenger hjelp fra Nav",
+                    nedsattArbeidsevneDato = nedsattDato,
+                    ytterligereNedsattArbeidsevneDato = null,
+                    ytterligereNedsattBegrunnelse = null
+                ),
+            ),
+        )
+        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        assertTrue(åpneAvklaringsbehov.all { Definisjon.FASTSETT_MANUELL_INNTEKT == it.definisjon })
+
+        løsAvklaringsBehov(
+            behandling,
+            AvklarManuellInntektVurderingLøsning(
+                manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
+                    begrunnelse = "Mangler ligning",
+                    belop = BigDecimal(300000),
+                )
+            )
+        )
+
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        assertThat(åpneAvklaringsbehov).noneMatch { it.definisjon == Definisjon.FASTSETT_MANUELL_INNTEKT }
+
+        val beregningsGrunnlag = dataSource.transaction {
+            BeregningsgrunnlagRepositoryImpl(it).hentHvisEksisterer(behandling.id) as Grunnlag11_19
+        }
+
+        val sisteInntekt =
+            beregningsGrunnlag.inntekter().first { inntekt -> inntekt.år.value == nedsattDato.minusYears(1).year }
+
+        assertThat(sisteInntekt)
+            .extracting(GrunnlagInntekt::år, GrunnlagInntekt::inntektIKroner)
+            .containsExactly(nedsattDato.minusYears(1).year.let { Year.of(it)}, Beløp(BigDecimal(300000)))
+    }
+
+    @Test
+    fun `henter ikke inn manuell inntektsdata i grunnlag om inntektsdata eksisterer fra før`() {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        // Oppretter vanlig søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("451"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
+                    ),
+                ),
+                periode = periode
+            )
+        )
+        util.ventPåSvar()
+
+        val sak = hentSak(ident, periode)
+        val behandling = hentBehandling(sak.id)
+
+        løsFramTilGrunnlag(behandling)
+
+        løsAvklaringsBehov(
+            behandling,
+            FastsettBeregningstidspunktLøsning(
+                beregningVurdering = BeregningstidspunktVurdering(
+                    begrunnelse = "Trenger hjelp fra Nav",
+                    nedsattArbeidsevneDato = LocalDate.now(),
+                    ytterligereNedsattArbeidsevneDato = null,
+                    ytterligereNedsattBegrunnelse = null
+                ),
+            ),
+        )
+        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        assertTrue(åpneAvklaringsbehov.none { it.definisjon == Definisjon.FASTSETT_MANUELL_INNTEKT })
+    }
+
+    @Test
     fun `kan tilbakeføre behandling til start`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
@@ -2791,14 +2909,16 @@ class FlytOrkestratorTest {
             typeBehandling = TypeBehandling.Førstegangsbehandling
         )
 
+        val kravMottatt = LocalDate.now().minusDays(10)
         val nyBehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("21"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 InnsendingType.KLAGE,
-                strukturertDokument = null,
+                strukturertDokument = StrukturertDokument(KlageV0(kravMottatt = kravMottatt)),
                 periode
             )
+
         )
 
         assertThat(nyBehandling.typeBehandling() == TypeBehandling.Klage)
@@ -2808,6 +2928,7 @@ class FlytOrkestratorTest {
         assertTrue(åpneAvklaringsbehov.erÅpent())
         assertTrue(åpneAvklaringsbehov.erVentepunkt())
         assertThat(åpneAvklaringsbehov.definisjon).isEqualTo(Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON)
+
         System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
     }
 
@@ -2843,18 +2964,27 @@ class FlytOrkestratorTest {
         assertThat(avslåttFørstegang)
             .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
             .extracting { b -> b.status().erAvsluttet() }.isEqualTo(true)
-
+        val kravMottatt = LocalDate.now().minusMonths(1)
         val klagebehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("21"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 InnsendingType.KLAGE,
-                strukturertDokument = null,
+                strukturertDokument = StrukturertDokument(KlageV0(kravMottatt = kravMottatt)),
                 periode
             )
         )
         assertThat(klagebehandling.referanse).isNotEqualTo(avslåttFørstegang.referanse)
         assertThat(klagebehandling.typeBehandling()).isEqualTo(TypeBehandling.Klage)
+
+        dataSource.transaction { connection ->
+            val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
+            val klageDokumenter =
+                mottattDokumentRepository.hentDokumenterAvType(klagebehandling.sakId, InnsendingType.KLAGE)
+            assertThat(klageDokumenter).hasSize(1)
+            assertThat(klageDokumenter.first().strukturertDokument).isNotNull
+            assertThat(klageDokumenter.first().strukturerteData<KlageV0>()?.data?.kravMottatt).isEqualTo(kravMottatt)
+        }
 
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
@@ -2896,7 +3026,7 @@ class FlytOrkestratorTest {
             klagebehandling,
             avklaringsBehovLøsning = FastsettBehandlendeEnhetLøsning(
                 behandlendeEnhetVurdering = BehandlendeEnhetLøsningDto(
-                    skalBehandlesAvNay = false,
+                    skalBehandlesAvNay = true,
                     skalBehandlesAvKontor = true
                 )
             )
@@ -2905,7 +3035,7 @@ class FlytOrkestratorTest {
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_KONTOR)
-        
+
         løsAvklaringsBehov(
             klagebehandling,
             avklaringsBehovLøsning = VurderKlageKontorLøsning(
@@ -2922,7 +3052,54 @@ class FlytOrkestratorTest {
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
 
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = KvalitetssikringLøsning(
+                vurderinger = listOf(
+                    TotrinnsVurdering(
+                        begrunnelse = "Begrunnelse",
+                        godkjent = true,
+                        definisjon = Definisjon.VURDER_KLAGE_KONTOR.kode,
+                        grunner = emptyList(),
+                    )
+                )
+            )
+        )
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_NAY)
 
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = VurderKlageNayLøsning(
+                klagevurderingNay = KlagevurderingNayLøsningDto(
+                    begrunnelse = "Begrunnelse",
+                    notat = null,
+                    innstilling = KlageInnstilling.OPPRETTHOLD,
+                    vilkårSomOmgjøres = emptyList(),
+                    vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
+                )
+            )
+        )
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FATTE_VEDTAK)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = FatteVedtakLøsning(
+                vurderinger = listOf(
+                    TotrinnsVurdering(
+                        begrunnelse = "Begrunnelse",
+                        godkjent = true,
+                        definisjon = Definisjon.VURDER_KLAGE_NAY.kode,
+                        grunner = emptyList(),
+                    )
+                )
+            )
+        )
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(0)
         // TODO: Lukk avklaringsbehovet og gå til neste steg når neste steg er implementert
     }
 
@@ -3003,6 +3180,37 @@ class FlytOrkestratorTest {
         }
         util.ventPåSvar(behandling.sakId.id, behandling.id.id)
         return hentBehandling(behandling.sakId)
+    }
+
+    private fun løsFramTilGrunnlag(behandling: Behandling) {
+        var behandling = behandling
+        behandling = løsSykdom(behandling)
+        behandling = løsAvklaringsBehov(
+            behandling,
+            AvklarBistandsbehovLøsning(
+                bistandsVurdering = BistandVurderingLøsningDto(
+                    begrunnelse = "Trenger hjelp fra nav",
+                    erBehovForAktivBehandling = true,
+                    erBehovForArbeidsrettetTiltak = false,
+                    erBehovForAnnenOppfølging = null,
+                    skalVurdereAapIOvergangTilUføre = null,
+                    skalVurdereAapIOvergangTilArbeid = null,
+                    overgangBegrunnelse = null
+                ),
+            ),
+        )
+
+        behandling = løsAvklaringsBehov(
+            behandling,
+            RefusjonkravLøsning(
+                RefusjonkravVurdering(
+                    harKrav = true,
+                    fom = LocalDate.now(),
+                    tom = null
+                )
+            )
+        )
+        kvalitetssikre(behandling)
     }
 
     private fun løsSykdom(behandling: Behandling): Behandling {
@@ -3211,10 +3419,12 @@ class FlytOrkestratorTest {
     private fun nyPerson(
         harYrkesskade: Boolean,
         harUtenlandskOpphold: Boolean,
+        inntekter: MutableList<InntektPerÅr>? = null
     ): Ident {
         val ident = ident()
         val person = TestPerson(
             identer = setOf(ident),
+            inntekter = inntekter ?: defaultInntekt(),
             statsborgerskap = if (harUtenlandskOpphold) listOf(
                 PdlStatsborgerskap(
                     "MAC",

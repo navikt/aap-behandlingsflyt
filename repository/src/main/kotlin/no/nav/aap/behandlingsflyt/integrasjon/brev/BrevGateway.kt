@@ -11,9 +11,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.brev.kontrakt.AvbrytBrevbestillingRequest
 import no.nav.aap.brev.kontrakt.BestillBrevRequest
 import no.nav.aap.brev.kontrakt.BestillBrevResponse
+import no.nav.aap.brev.kontrakt.BestillBrevV2Request
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
+import no.nav.aap.brev.kontrakt.Faktagrunnlag
 import no.nav.aap.brev.kontrakt.FerdigstillBrevRequest
 import no.nav.aap.brev.kontrakt.ForhandsvisBrevRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerRequest
@@ -61,6 +63,48 @@ class BrevGateway : BrevbestillingGateway {
         prometheus = prometheus
     )
 
+    override fun bestillBrevV2(
+        saksnummer: Saksnummer,
+        brukerIdent: Ident,
+        behandlingReferanse: BehandlingReferanse,
+        unikReferanse: String,
+        typeBrev: TypeBrev,
+        vedlegg: Vedlegg?,
+        faktagrunnlag: Set<Faktagrunnlag>,
+        ferdigstillAutomatisk: Boolean,
+    ): BrevbestillingReferanse {
+        val request = BestillBrevV2Request(
+            saksnummer = saksnummer.toString(),
+            brukerIdent = brukerIdent.identifikator,
+            behandlingReferanse = behandlingReferanse.referanse,
+            brevtype = mapTypeBrev(typeBrev),
+            unikReferanse = unikReferanse,
+            sprak = Språk.NB, // TODO språk
+            faktagrunnlag = faktagrunnlag,
+            ferdigstillAutomatisk = ferdigstillAutomatisk,
+            vedlegg = vedlegg?.let { setOf(it) } ?: setOf()
+        )
+        val httpRequest = PostRequest(
+            body = request,
+            additionalHeaders = listOf(
+                Header("Accept", "application/json")
+            )
+        )
+
+        val url = baseUri.resolve("/api/v2/bestill")
+
+        val response: BestillBrevResponse = requireNotNull(
+            client.post(
+                uri = url,
+                request = httpRequest,
+                mapper = { body, _ ->
+                    DefaultJsonMapper.fromJson(body)
+                })
+        )
+
+        return BrevbestillingReferanse(response.referanse)
+    }
+
     override fun bestillBrev(
         saksnummer: Saksnummer,
         brukerIdent: Ident,
@@ -80,7 +124,7 @@ class BrevGateway : BrevbestillingGateway {
             vedlegg = vedlegg?.let { setOf(it) } ?: setOf()
         )
 
-        val httpRequest = PostRequest<BestillBrevRequest>(
+        val httpRequest = PostRequest(
             body = request,
             additionalHeaders = listOf(
                 Header("Accept", "application/json")

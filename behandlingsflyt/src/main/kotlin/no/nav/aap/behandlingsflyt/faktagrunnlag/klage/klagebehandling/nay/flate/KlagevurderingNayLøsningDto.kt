@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagevurderingNay
 import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 
 data class KlagevurderingNayLøsningDto(
     val begrunnelse: String,
@@ -12,6 +13,28 @@ data class KlagevurderingNayLøsningDto(
     val vilkårSomOpprettholdes: List<Hjemmel>,
     val vilkårSomOmgjøres: List<Hjemmel>,
 ) {
+    init {
+        when (innstilling) {
+            KlageInnstilling.OPPRETTHOLD -> {
+                if (vilkårSomOpprettholdes.isEmpty()) throw UgyldigForespørselException("Må sette vilkår som skal opprettholdes dersom innstilling er 'OPPRETTHOLD' ")
+                if (vilkårSomOmgjøres.isNotEmpty()) throw UgyldigForespørselException("Kan ikke sette vilkår som skal omgjøres dersom innstilling er 'OPPRETTHOLD' ")
+            }
+
+            KlageInnstilling.OMGJØR -> {
+                if (vilkårSomOmgjøres.isEmpty()) throw UgyldigForespørselException("Må sette vilkår som skal omgjøres dersom innstilling er 'OMGJØR' ")
+                if (vilkårSomOpprettholdes.isNotEmpty()) throw UgyldigForespørselException("Kan ikke sette vilkår som skal opprettholdes dersom innstilling er 'OMGJØR' ")
+            }
+
+            KlageInnstilling.DELVIS_OMGJØR -> {
+                if (vilkårSomOmgjøres.isEmpty()) throw UgyldigForespørselException("Må sette vilkår som skal omgjøres dersom innstilling er 'DELVIS_OMGJØR' ")
+                if (vilkårSomOpprettholdes.isEmpty()) throw UgyldigForespørselException("Må sette vilkår som skal opprettholdes dersom innstilling er 'DELVIS_OMGJØR' ")
+                if (vilkårSomOmgjøres.intersect(vilkårSomOpprettholdes.toSet()).isNotEmpty()) {
+                    throw UgyldigForespørselException("Kan ikke sette vilkår som både skal opprettholdes og omgjøres")
+                }
+            }
+        }
+    }
+
     fun tilVurdering(vurdertAv: Bruker) = KlagevurderingNay(
         begrunnelse = begrunnelse,
         notat = notat,

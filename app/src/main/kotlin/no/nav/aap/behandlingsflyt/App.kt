@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon.refusjonGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepengergrunnlag.sykepengerGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt.manglendeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt.beregningVurderingAPI
 import no.nav.aap.behandlingsflyt.behandling.brev.brevApi
 import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.aktivitetspliktApi
@@ -43,6 +44,8 @@ import no.nav.aap.behandlingsflyt.drift.driftAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.flate.behandlendeEnhetGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate.formkravGrunnlagApi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.flate.klagebehandlingKontorGrunnlagApi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.flate.klagebehandlingNayGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.flate.påklagetBehandlingGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.arbeidsevneGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.bistandsgrunnlagApi
@@ -177,10 +180,13 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
                 aktivitetspliktApi(dataSource, repositoryRegistry)
                 auditlogApi(dataSource, repositoryRegistry)
                 refusjonGrunnlagAPI(dataSource, repositoryRegistry)
+                manglendeGrunnlagApi(dataSource, repositoryRegistry)
                 //Klage
                 påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry)
                 formkravGrunnlagApi(dataSource, repositoryRegistry)
                 behandlendeEnhetGrunnlagApi(dataSource, repositoryRegistry)
+                klagebehandlingKontorGrunnlagApi(dataSource, repositoryRegistry)
+                klagebehandlingNayGrunnlagApi(dataSource, repositoryRegistry)
                 // Flytt
                 brevApi(dataSource, repositoryRegistry)
                 dokumentinnhentingAPI(dataSource, repositoryRegistry)

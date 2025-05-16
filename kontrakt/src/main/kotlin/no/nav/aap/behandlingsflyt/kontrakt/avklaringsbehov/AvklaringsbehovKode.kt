@@ -42,6 +42,7 @@ public const val VURDER_TREKK_AV_SØKNAD_KODE: String = "5028"
 public const val REFUSJON_KRAV: String = "5026"
 public const val FASTSETT_PÅKLAGET_BEHANDLING_KODE: String = "5999"
 public const val SAMORDNING_REFUSJONS_KRAV = "5056"
+public const val FASTSETT_MANUELL_INNTEKT: String = "7001"
 public const val VURDER_FORMKRAV_KODE: String = "6000"
 public const val FASTSETT_BEHANDLENDE_ENHET_KODE: String = "6001"
 public const val VURDER_KLAGE_KONTOR_KODE: String = "6002"
@@ -199,6 +200,10 @@ public enum class AvklaringsbehovKode {
     /**
      * [VURDER_KLAGE_NAY_KODE]
      */
-    `6003`
+    `6003`,
 
+    /**
+     * [FASTSETT_MANUELL_INNTEKT]
+     */
+    `7001`
 }

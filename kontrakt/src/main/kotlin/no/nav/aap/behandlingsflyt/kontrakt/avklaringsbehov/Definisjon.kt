@@ -142,6 +142,13 @@ public enum class Definisjon(
         kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
+    FASTSETT_MANUELL_INNTEKT(
+        kode = AvklaringsbehovKode.`7001`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.MANGLENDE_LIGNING,
+        kreverToTrinn = true,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
     FRITAK_MELDEPLIKT(
         kode = AvklaringsbehovKode.`5005`,
         type = BehovType.MANUELT_FRIVILLIG,
@@ -319,6 +326,8 @@ public enum class Definisjon(
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.SAMORDNING_TJENESTEPENSJON_REFUSJONSKRAV,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = true,
+        kvalitetssikres = true,
     ),
     VURDER_FORMKRAV(
         kode = AvklaringsbehovKode.`6000`,
@@ -343,7 +352,8 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`6003`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.KLAGEBEHANDLING_NAY,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = true
     );
 
     public companion object {

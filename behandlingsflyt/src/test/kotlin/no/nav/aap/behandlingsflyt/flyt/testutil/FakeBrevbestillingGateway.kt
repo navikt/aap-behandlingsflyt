@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
+import no.nav.aap.brev.kontrakt.Faktagrunnlag
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.brev.kontrakt.Språk
@@ -42,6 +43,19 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
                     status = Status.REGISTRERT
                 )
             }
+    }
+
+    override fun bestillBrevV2(
+        saksnummer: Saksnummer,
+        brukerIdent: Ident,
+        behandlingReferanse: BehandlingReferanse,
+        unikReferanse: String,
+        typeBrev: TypeBrev,
+        vedlegg: Vedlegg?,
+        faktagrunnlag: Set<Faktagrunnlag>,
+        ferdigstillAutomatisk: Boolean
+    ): BrevbestillingReferanse {
+        return BrevbestillingReferanse(UUID.randomUUID())
     }
 
     override fun ferdigstill(referanse: BrevbestillingReferanse, signaturer: List<SignaturGrunnlag>): Boolean {

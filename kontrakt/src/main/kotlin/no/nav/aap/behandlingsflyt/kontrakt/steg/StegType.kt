@@ -91,6 +91,10 @@ public enum class StegType(
         gruppe = StegGruppe.GRUNNLAG,
         status = Status.UTREDES
     ),
+    MANGLENDE_LIGNING(
+        gruppe = StegGruppe.GRUNNLAG,
+        status = Status.UTREDES
+    ),
     SAMORDNING_UFØRE(
         gruppe = StegGruppe.SAMORDNING,
         status = Status.UTREDES

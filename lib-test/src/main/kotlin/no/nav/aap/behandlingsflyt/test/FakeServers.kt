@@ -84,6 +84,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.brev.kontrakt.BestillBrevRequest
 import no.nav.aap.brev.kontrakt.BestillBrevResponse
+import no.nav.aap.brev.kontrakt.BestillBrevV2Request
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
@@ -261,7 +262,7 @@ object FakeServers : AutoCloseable {
                 val person = hentEllerGenererTestPerson(req.fnr)
 
                 for (år in req.fomAr..req.tomAr) {
-                    person.leggTilInntektHvisÅrMangler(Year.of(år), Beløp("0"))
+                    //person.leggTilInntektHvisÅrMangler(Year.of(år), Beløp("0")) //TODO: Fjern denne helt
                 }
 
                 call.respond(
@@ -1488,6 +1489,35 @@ object FakeServers : AutoCloseable {
 
         val brevStore = mutableListOf<BrevbestillingResponse>()
         val mutex = Any()
+        fun brev(brevbestillingReferanse: UUID, status: Status) = BrevbestillingResponse(
+            referanse = brevbestillingReferanse,
+            brev = Brev(
+                kanSendesAutomatisk = false,
+                journalpostTittel = "En tittel",
+                overskrift = "Overskrift H1", tekstbolker = listOf(
+                    Tekstbolk(
+                        id = UUID.randomUUID(),
+                        overskrift = "Overskrift H2",
+                        innhold = listOf(
+                            Innhold(
+                                id = UUID.randomUUID(),
+                                overskrift = "Overskrift H3",
+                                blokker = emptyList(),
+                                kanRedigeres = true,
+                                erFullstendig = false
+                            )
+                        )
+                    )
+                )
+            ),
+            opprettet = LocalDateTime.now(),
+            oppdatert = LocalDateTime.now(),
+            behandlingReferanse = UUID.randomUUID(),
+            brevtype = Brevtype.INNVILGELSE,
+            språk = Språk.NB,
+            status = status,
+        )
+
 
         routing {
             route("/api") {
@@ -1496,34 +1526,7 @@ object FakeServers : AutoCloseable {
                     val brevbestillingReferanse = UUID.randomUUID()
 
                     synchronized(mutex) {
-                        brevStore += BrevbestillingResponse(
-                            referanse = brevbestillingReferanse,
-                            brev = Brev(
-                                kanSendesAutomatisk = false,
-                                journalpostTittel = "En tittel",
-                                overskrift = "Overskrift", tekstbolker = listOf(
-                                    Tekstbolk(
-                                        id = UUID.randomUUID(),
-                                        overskrift = "En fin overskrift",
-                                        innhold = listOf(
-                                            Innhold(
-                                                id = UUID.randomUUID(),
-                                                overskrift = "Enda en overskrift",
-                                                blokker = emptyList(),
-                                                kanRedigeres = true,
-                                                erFullstendig = false
-                                            )
-                                        )
-                                    )
-                                )
-                            ),
-                            opprettet = LocalDateTime.now(),
-                            oppdatert = LocalDateTime.now(),
-                            behandlingReferanse = UUID.randomUUID(),
-                            brevtype = Brevtype.INNVILGELSE,
-                            språk = Språk.NB,
-                            status = Status.REGISTRERT,
-                        )
+                        brevStore += brev(brevbestillingReferanse, Status.REGISTRERT)
                     }
 
                     call.respond(status = HttpStatusCode.Created, BestillBrevResponse(brevbestillingReferanse))
@@ -1548,6 +1551,18 @@ object FakeServers : AutoCloseable {
                             )
                         )
                         client.post<_, Unit>(uri = uri, request = httpRequest)
+                    }
+                }
+
+                route("/v2") {
+                    post("/bestill") {
+                        val request = call.receive< BestillBrevV2Request>()
+                        val brevbestillingReferanse = UUID.randomUUID()
+
+                        synchronized(mutex) {
+                            brevStore += brev(brevbestillingReferanse, Status.UNDER_ARBEID)
+                        }
+                        call.respond(status = HttpStatusCode.Created, BestillBrevResponse(brevbestillingReferanse))
                     }
                 }
                 route("/bestilling/{referanse}") { ->

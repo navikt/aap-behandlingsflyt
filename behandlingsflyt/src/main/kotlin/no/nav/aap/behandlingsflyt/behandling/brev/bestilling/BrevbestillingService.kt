@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
+import no.nav.aap.brev.kontrakt.Faktagrunnlag
 import no.nav.aap.brev.kontrakt.Vedlegg
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.Bruker
@@ -19,7 +20,7 @@ class BrevbestillingService(
     private val behandlingRepository: BehandlingRepository,
     private val sakRepository: SakRepository,
 ) {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         signaturService = SignaturService(repositoryProvider),
         brevbestillingGateway = GatewayProvider.provide(),
         brevbestillingRepository = repositoryProvider.provide(),
@@ -53,6 +54,43 @@ class BrevbestillingService(
             typeBrev = typeBrev,
             bestillingReferanse = bestillingReferanse,
             status = Status.SENDT,
+        )
+        return bestillingReferanse.brevbestillingReferanse
+    }
+
+    fun bestillV2(
+        behandlingId: BehandlingId,
+        typeBrev: TypeBrev,
+        unikReferanse: String,
+        ferdigstillAutomatisk: Boolean,
+        faktagrunnlag: Set<Faktagrunnlag>,
+        vedlegg: Vedlegg? = null
+    ): UUID {
+        val behandling = behandlingRepository.hent(behandlingId)
+        val sak = sakRepository.hent(behandling.sakId)
+
+        val bestillingReferanse = brevbestillingGateway.bestillBrevV2(
+            saksnummer = sak.saksnummer,
+            brukerIdent = sak.person.aktivIdent(),
+            behandlingReferanse = behandling.referanse,
+            unikReferanse = unikReferanse,
+            typeBrev = typeBrev,
+            vedlegg = vedlegg,
+            faktagrunnlag = faktagrunnlag,
+            ferdigstillAutomatisk = ferdigstillAutomatisk,
+        )
+
+        val status = if (ferdigstillAutomatisk) {
+            Status.FULLFØRT
+        } else {
+            Status.FORHÅNDSVISNING_KLAR
+        }
+
+        brevbestillingRepository.lagre(
+            behandlingId = behandlingId,
+            typeBrev = typeBrev,
+            bestillingReferanse = bestillingReferanse,
+            status = status,
         )
         return bestillingReferanse.brevbestillingReferanse
     }

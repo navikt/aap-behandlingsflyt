@@ -26,6 +26,7 @@ class FakeUnleash(private val flags: Map<FeatureToggle, Boolean>): UnleashGatewa
             return FakeUnleash(mapOf(
                 BehandlingsflytFeature.OverstyrStarttidspunkt to true,
                 BehandlingsflytFeature.AvventUtbetaling to true,
+                BehandlingsflytFeature.Manuellinntekt to true
             ))
         }
     }
