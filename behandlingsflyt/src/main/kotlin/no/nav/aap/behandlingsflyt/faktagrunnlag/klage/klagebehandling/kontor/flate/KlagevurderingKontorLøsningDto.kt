@@ -12,6 +12,20 @@ data class KlagevurderingKontorLøsningDto(
     val vilkårSomOpprettholdes: List<Hjemmel>,
     val vilkårSomOmgjøres: List<Hjemmel>,
 ) {
+    init {
+        require(
+            when (innstilling) {
+                KlageInnstilling.OPPRETTHOLD -> vilkårSomOpprettholdes.isNotEmpty() && vilkårSomOmgjøres.isEmpty()
+                KlageInnstilling.OMGJØR -> vilkårSomOmgjøres.isNotEmpty() && vilkårSomOpprettholdes.isEmpty()
+                KlageInnstilling.DELVIS_OMGJØR -> vilkårSomOmgjøres.isNotEmpty()
+                        && vilkårSomOpprettholdes.isNotEmpty()
+                        && vilkårSomOmgjøres != vilkårSomOpprettholdes
+            }
+        ) {
+            "Ugyldig kombinasjon av innstilling og vilkår"
+        }
+    }
+
     fun tilVurdering(vurdertAv: Bruker) = KlagevurderingKontor(
         begrunnelse = begrunnelse,
         notat = notat,
