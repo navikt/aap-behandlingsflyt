@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -14,7 +16,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -23,6 +24,7 @@ class RettighetsperiodeSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sakService: SakService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
 
     private val logger = LoggerFactory.getLogger(RettighetsperiodeSteg::class.java)
@@ -30,10 +32,17 @@ class RettighetsperiodeSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         logger.info("Utfører rettighetsperiodesteg for behandling=${kontekst.behandlingId}")
 
+
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
+                val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    avklaringsbehovene.avbrytForSteg(type())
+                    return Fullført
+                }
+
                 if (erRelevant(kontekst)) {
-                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
                     if (erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene)) {
                         avklaringsbehovene.avbrytÅpneAvklaringsbehov()
                         return FantAvklaringsbehov(Definisjon.VURDER_RETTIGHETSPERIODE)
@@ -83,14 +92,11 @@ class RettighetsperiodeSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
-            val sakRepository = repositoryProvider.provide<SakRepository>()
-            val vilkårsresultatRepository =
-                repositoryProvider.provide<VilkårsresultatRepository>()
-            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
             return RettighetsperiodeSteg(
-                vilkårsresultatRepository,
-                SakService(sakRepository),
-                avklaringsbehovRepository
+                vilkårsresultatRepository = repositoryProvider.provide(),
+                sakService = SakService(repositoryProvider),
+                avklaringsbehovRepository = repositoryProvider.provide(),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
             )
         }
 
