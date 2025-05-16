@@ -40,6 +40,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedta
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TrekkSøknadLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderFormkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKlageKontorLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKlageNayLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
@@ -67,6 +68,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate.FormkravVur
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.flate.KlagevurderingKontorLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagevurderingNay
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.flate.KlagevurderingNayLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.flate.PåklagetBehandlingVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
@@ -114,6 +117,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.utbetaling.UtbetalingGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_KLAGE_KONTOR_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingLøsningStatus
@@ -2908,7 +2912,7 @@ class FlytOrkestratorTest {
             klagebehandling,
             avklaringsBehovLøsning = FastsettBehandlendeEnhetLøsning(
                 behandlendeEnhetVurdering = BehandlendeEnhetLøsningDto(
-                    skalBehandlesAvNay = false,
+                    skalBehandlesAvNay = true,
                     skalBehandlesAvKontor = true
                 )
             )
@@ -2930,11 +2934,58 @@ class FlytOrkestratorTest {
                 )
             )
         )
-
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
 
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = KvalitetssikringLøsning(
+                vurderinger = listOf(
+                    TotrinnsVurdering(
+                        begrunnelse = "Begrunnelse",
+                        godkjent = true,
+                        definisjon = Definisjon.VURDER_KLAGE_KONTOR.kode,
+                        grunner = emptyList(),
+                    )
+                )
+            )
+        )
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_NAY)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = VurderKlageNayLøsning(
+                klagevurderingNay = KlagevurderingNayLøsningDto(
+                    begrunnelse = "Begrunnelse",
+                    notat = null,
+                    innstilling = KlageInnstilling.OPPRETTHOLD,
+                    vilkårSomOmgjøres = emptyList(),
+                    vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
+                )
+            )
+        )
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FATTE_VEDTAK)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = FatteVedtakLøsning(
+                vurderinger = listOf(
+                    TotrinnsVurdering(
+                        begrunnelse = "Begrunnelse",
+                        godkjent = true,
+                        definisjon = Definisjon.VURDER_KLAGE_NAY.kode,
+                        grunner = emptyList(),
+                    )
+                )
+            )
+        )
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(0)
         // TODO: Lukk avklaringsbehovet og gå til neste steg når neste steg er implementert
     }
 

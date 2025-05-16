@@ -352,7 +352,8 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`6003`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.KLAGEBEHANDLING_NAY,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = true
     );
 
     public companion object {
