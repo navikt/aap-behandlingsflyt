@@ -1,5 +1,8 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonkskravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection

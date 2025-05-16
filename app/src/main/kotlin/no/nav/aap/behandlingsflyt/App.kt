@@ -70,6 +70,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGat
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.TjenestePensjonGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
+import no.nav.aap.behandlingsflyt.integrasjon.tilgang.TilgangGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreGateway
 import no.nav.aap.behandlingsflyt.integrasjon.unleash.UnleashService
 import no.nav.aap.behandlingsflyt.integrasjon.utbetaling.UtbetalingGatewayImpl
@@ -80,7 +81,6 @@ import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.gateway.GatewayRegistry
