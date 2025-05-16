@@ -2760,10 +2760,8 @@ class FlytOrkestratorTest {
             behandling,
             AvklarManuellInntektVurderingLøsning(
                 manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
-                    år = nedsattDato.minusYears(1).year,
                     begrunnelse = "Mangler ligning",
                     belop = BigDecimal(300000),
-                    vurdertAv = "Ronny Rudolf"
                 )
             )
         )
