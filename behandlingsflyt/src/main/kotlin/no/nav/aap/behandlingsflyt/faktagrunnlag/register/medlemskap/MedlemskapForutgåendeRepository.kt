@@ -177,7 +177,7 @@ class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection)
     ) {
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
-            row.getLong("medlemskap_unntak_person_id")
+            row.getLong("medlemskap_forutgaaende_unntak_person_id")
         }
     }
 
