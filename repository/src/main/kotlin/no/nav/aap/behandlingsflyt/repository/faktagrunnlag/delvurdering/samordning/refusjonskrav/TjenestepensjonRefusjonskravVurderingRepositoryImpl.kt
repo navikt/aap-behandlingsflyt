@@ -8,11 +8,12 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
-class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection: DBConnection) : TjenestepensjonRefusjonsKravVurderingRepository {
+class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection: DBConnection) :
+    TjenestepensjonRefusjonsKravVurderingRepository {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    companion object : Factory<TjenestepensjonRefusjonskravVurderingRepositoryImpl>{
+    companion object : Factory<TjenestepensjonRefusjonskravVurderingRepositoryImpl> {
         override fun konstruer(connection: DBConnection): TjenestepensjonRefusjonskravVurderingRepositoryImpl {
             return TjenestepensjonRefusjonskravVurderingRepositoryImpl(connection)
         }
@@ -33,7 +34,7 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
         }
     }
 
-    private fun hentTjenestepensjonRefusjonskravVurdering(vurderingId: Long):TjenestepensjonRefusjonskravVurdering{
+    private fun hentTjenestepensjonRefusjonskravVurdering(vurderingId: Long): TjenestepensjonRefusjonskravVurdering {
         val query = """
             SELECT * FROM TJENESTEPENSJON_REFUSJONSKRAV_VURDERING WHERE ID = ?
         """.trimIndent()
@@ -52,13 +53,14 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
             }
         }
     }
+
     override fun hent(behandlingId: BehandlingId): TjenestepensjonRefusjonskravVurdering {
         return requireNotNull(hentHvisEksisterer(behandlingId))
     }
 
     override fun lagre(sakId: SakId, behandlingId: BehandlingId, vurdering: TjenestepensjonRefusjonskravVurdering) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
-        if (eksisterendeGrunnlag != null){
+        if (eksisterendeGrunnlag != null) {
             deaktiverEksisterende(behandlingId)
         }
 
@@ -77,7 +79,7 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
         }
     }
 
-    private fun lagreVurdering(vurdering: TjenestepensjonRefusjonskravVurdering): Long{
+    private fun lagreVurdering(vurdering: TjenestepensjonRefusjonskravVurdering): Long {
         val query = """
             INSERT INTO TJENESTEPENSJON_REFUSJONSKRAV_VURDERING (HAR_KRAV, FOM, TOM, BEGRUNNELSE) VALUES (?, ?, ?, ?)
         """.trimIndent()
@@ -126,13 +128,15 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
 
         val refusjonsKravVurderingIds = getRefusjonsKravVurderingIds(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated("""
-            delete from tjenestepensjon_refusjonskrav_grunnlag where behandling_id = ?; 
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from tjenestepensjon_refusjonskrav_vurdering where id = ANY(?::bigint[]);
-        """.trimIndent()) {
+            delete from tjenestepensjon_refusjonskrav_grunnlag where behandling_id = ?; 
+        """.trimIndent()
+        ) {
             setParams {
-                setLong(1, behandlingId.id)
-                setLongArray(2, refusjonsKravVurderingIds)
+                setLongArray(1, refusjonsKravVurderingIds)
+                setLong(2, behandlingId.id)
             }
         }
         log.info("Slettet $deletedRows fra tjenestepensjon_refusjonskrav_grunnlag")

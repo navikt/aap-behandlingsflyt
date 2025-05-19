@@ -2362,6 +2362,9 @@ class FlytOrkestratorTest {
         val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
         assertTrue(åpneAvklaringsbehov.none { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
         assertTrue(vilkårsResultat.all { it.erOppfylt() })
+
+        // Teste å trekke søknad
+        leggTilÅrsakForBehandling(behandling, listOf(Årsak(ÅrsakTilBehandling.SØKNAD_TRUKKET)))
     }
 
     @Test
@@ -2775,7 +2778,7 @@ class FlytOrkestratorTest {
 
         assertThat(sisteInntekt)
             .extracting(GrunnlagInntekt::år, GrunnlagInntekt::inntektIKroner)
-            .containsExactly(nedsattDato.minusYears(1).year.let { Year.of(it)}, Beløp(BigDecimal(300000)))
+            .containsExactly(nedsattDato.minusYears(1).year.let { Year.of(it) }, Beløp(BigDecimal(300000)))
     }
 
     @Test
@@ -3486,5 +3489,6 @@ class FlytOrkestratorTest {
                 )
             )
         }
+        util.ventPåSvar(behandling.sakId.id, behandling.id.id)
     }
 }
