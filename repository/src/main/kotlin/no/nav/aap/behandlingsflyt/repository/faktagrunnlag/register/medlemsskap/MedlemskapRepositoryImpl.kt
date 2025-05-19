@@ -166,6 +166,7 @@ class MedlemskapRepositoryImpl(private val connection: DBConnection) : Medlemska
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        hentHvisEksisterer(fraBehandling) ?: return
         require(fraBehandling != tilBehandling) { "Kan ikke kopiere medlemsskapgrunnlag til samme behandling" }
 
         connection.execute(

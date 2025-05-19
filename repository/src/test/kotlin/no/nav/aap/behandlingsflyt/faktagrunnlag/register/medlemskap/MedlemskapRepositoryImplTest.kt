@@ -86,7 +86,7 @@ internal class MedlemskapRepositoryTest {
             )
         )
 
-        // Test kpier-metode
+        // Test kopier-metode
         val nyBehandling = dataSource.transaction {
             BehandlingRepositoryImpl(it).oppdaterBehandlingStatus(behandlingId, no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET)
             finnEllerOpprettBehandling(it, sak)

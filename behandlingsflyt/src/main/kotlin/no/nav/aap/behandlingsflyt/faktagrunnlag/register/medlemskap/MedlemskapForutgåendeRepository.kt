@@ -10,7 +10,7 @@ import no.nav.aap.lookup.repository.Repository
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
-interface MedlemskapForutgåendeRepository: Repository {
+interface MedlemskapForutgåendeRepository : Repository {
     fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapDataIntern>): Long
     fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapUnntakGrunnlag?
     override fun slett(behandlingId: BehandlingId)
@@ -129,19 +129,36 @@ class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection)
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        // TODO
-        log.warn("ingen kopier-metode for $javaClass. Burde vi implementere kopier-metode her?")
+        hentHvisEksisterer(fraBehandling) ?: return
+
+        require(fraBehandling != tilBehandling) { "Kan ikke kopiere medlemsskapgrunnlag til samme behandling" }
+
+        connection.execute(
+            """
+            INSERT INTO MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG (behandling_id, MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON_ID)
+            select ?, MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON_ID
+            from MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG
+            where behandling_id = ? and aktiv
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, tilBehandling.toLong())
+                setLong(2, fraBehandling.toLong())
+            }
+        }
     }
 
-        override fun slett(behandlingId: BehandlingId) {
+    override fun slett(behandlingId: BehandlingId) {
 
-            val medlemskapForutgaaendeUnntakPersonIds = getMedlemskapForutgaaendeUnntakPersonIds(behandlingId)
+        val medlemskapForutgaaendeUnntakPersonIds = getMedlemskapForutgaaendeUnntakPersonIds(behandlingId)
 
-            connection.execute("""
+        connection.execute(
+            """
             delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG where behandling_id = ?; 
             delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK where medlemskap_forutgaaende_unntak_person_id = ANY(?::bigint[]);
             delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON where id = ANY(?::bigint[]);
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, medlemskapForutgaaendeUnntakPersonIds)
@@ -150,21 +167,21 @@ class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection)
         }
     }
 
-        private fun getMedlemskapForutgaaendeUnntakPersonIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
-            """
+    private fun getMedlemskapForutgaaendeUnntakPersonIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
                     SELECT medlemskap_forutgaaende_unntak_person_id
                     FROM MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG
                     WHERE behandling_id = ?
                  
                 """.trimIndent()
-        ) {
-            setParams { setLong(1, behandlingId.id) }
-            setRowMapper { row ->
-                row.getLong("medlemskap_unntak_person_id")
-            }
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("medlemskap_unntak_person_id")
         }
+    }
 
-    companion object: RepositoryFactory<MedlemskapForutgåendeRepository> {
+    companion object : RepositoryFactory<MedlemskapForutgåendeRepository> {
         override fun konstruer(connection: DBConnection): MedlemskapForutgåendeRepository {
             return MedlemskapForutgåendeRepositoryImpl(connection)
         }
