@@ -26,6 +26,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDate
 
@@ -40,6 +41,8 @@ class InntektService private constructor(
     private val inntektRegisterGateway: InntektRegisterGateway,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override val navn = Companion.navn
 
@@ -67,6 +70,10 @@ class InntektService private constructor(
                 val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
 
                 val sak = sakService.hent(kontekst.sakId)
+                if (beregningVurdering?.tidspunktVurdering == null && studentGrunnlag == null) {
+                    log.error("Verken tidspunktVurdering eller studentGrunnlag fantes. Returner IKKE_ENDRET.")
+                    return IKKE_ENDRET
+                }
                 val nedsettelsesDato = utledNedsettelsesdato(beregningVurdering?.tidspunktVurdering, studentGrunnlag)
                 val behov = Inntektsbehov(
                     Input(
