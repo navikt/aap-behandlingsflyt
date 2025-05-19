@@ -176,7 +176,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                 setLongArray(6, manuellVurderingIds)
             }
         }
-        log.info("Slettet $deletedRows fra FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG")
+        log.info("Slettet $deletedRows raderfra FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG")
     }
 
     private fun getManuellVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

@@ -180,7 +180,7 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                 setLongArray(3, sykepengeVurderingIds)
             }
         }
-        log.info("Slettet $deletedRows fra sykepenge_erstatning_grunnlag")
+        log.info("Slettet $deletedRows raderfra sykepenge_erstatning_grunnlag")
     }
 
     private fun getSykepengeVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

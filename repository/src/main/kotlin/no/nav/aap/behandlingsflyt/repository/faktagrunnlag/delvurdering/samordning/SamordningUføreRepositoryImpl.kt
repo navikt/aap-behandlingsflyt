@@ -131,7 +131,7 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
                 setLongArray(3, samordningUforeVurderingIds)
             }
         }
-        log.info("Slettet $deletedRows fra samordning_ufore_grunnlag")
+        log.info("Slettet $deletedRows raderfra samordning_ufore_grunnlag")
     }
 
     private fun getSamordningUforeVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

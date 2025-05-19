@@ -323,7 +323,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
 
             }
         }
-        log.info("Slettet $deletedRows fra barnopplysning_grunnlag")
+        log.info("Slettet $deletedRows raderfra barnopplysning_grunnlag")
     }
 
     private fun getOppgittBarnIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

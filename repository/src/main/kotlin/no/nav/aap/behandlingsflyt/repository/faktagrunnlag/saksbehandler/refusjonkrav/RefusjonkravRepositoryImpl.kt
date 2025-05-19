@@ -101,7 +101,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
                 setLongArray(2, refusjonskravVurderingIds)
             }
         }
-        log.info("Slettet $deletedRows fra REFUSJONKRAV_GRUNNLAG")
+        log.info("Slettet $deletedRows raderfra REFUSJONKRAV_GRUNNLAG")
     }
 
     private fun getRefusjonskravVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

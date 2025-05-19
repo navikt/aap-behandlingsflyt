@@ -142,7 +142,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
                 setLongArray(4, sporingIds)
             }
         }
-        log.info("Slettet $deletedRows fra underveis_grunnlag")
+        log.info("Slettet $deletedRows raderfra underveis_grunnlag")
     }
 
     private fun getSporingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

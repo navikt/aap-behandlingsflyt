@@ -96,7 +96,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                 setLong(2, behandlingId.id)
             }
         }
-        log.info("Slettet $deletedRows fra tilkjent_periode")
+        log.info("Slettet $deletedRows raderfra tilkjent_periode")
     }
 
     private fun lagrePeriode(tilkjentYtelseId: Long, periode: Periode, tilkjent: Tilkjent) {

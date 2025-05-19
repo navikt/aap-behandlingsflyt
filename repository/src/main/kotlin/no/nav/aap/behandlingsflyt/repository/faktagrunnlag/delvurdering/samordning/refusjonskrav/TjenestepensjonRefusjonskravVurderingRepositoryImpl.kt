@@ -130,16 +130,16 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
 
         val deletedRows = connection.executeReturnUpdated(
             """
-            delete from tjenestepensjon_refusjonskrav_vurdering where id = ANY(?::bigint[]);
             delete from tjenestepensjon_refusjonskrav_grunnlag where behandling_id = ?; 
+            delete from tjenestepensjon_refusjonskrav_vurdering where id = ANY(?::bigint[]);       
         """.trimIndent()
         ) {
             setParams {
-                setLongArray(1, refusjonsKravVurderingIds)
-                setLong(2, behandlingId.id)
+                setLong(1, behandlingId.id)
+                setLongArray(2, refusjonsKravVurderingIds)
             }
         }
-        log.info("Slettet $deletedRows fra tjenestepensjon_refusjonskrav_grunnlag")
+        log.info("Slettet $deletedRows raderfra tjenestepensjon_refusjonskrav_grunnlag")
     }
 
     private fun getRefusjonsKravVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
