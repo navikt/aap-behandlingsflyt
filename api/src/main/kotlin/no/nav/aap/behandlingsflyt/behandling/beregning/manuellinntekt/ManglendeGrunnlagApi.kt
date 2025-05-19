@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -19,15 +20,13 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
-import java.time.LocalDate
 import java.time.MonthDay
 import java.time.Year
 import javax.sql.DataSource
 
 data class ManuellInntektVurderingGrunnlagResponse(
     val begrunnelse: String,
-    val vurdertAv: String,
-    val tidspunkt: LocalDate,
+    val vurdertAv: VurdertAvResponse,
     val ar: Int,
     val belop: BigDecimal,
 )
@@ -92,8 +91,7 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(dataSource: DataSource, repositoryRe
                         vurdering = manuellInntekt?.let {
                             ManuellInntektVurderingGrunnlagResponse(
                                 begrunnelse = it.begrunnelse,
-                                vurdertAv = it.vurdertAv,
-                                tidspunkt = it.opprettet.toLocalDate(),
+                                vurdertAv = VurdertAvResponse(it.vurdertAv, it.opprettet.toLocalDate()),
                                 ar = it.år.value,
                                 belop = it.belop.verdi,
                             )

@@ -238,7 +238,7 @@ private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak
     )
     val sak = datasource.transaction { connection ->
         val sakService = PersonOgSakService(
-            PdlIdentGateway,
+            PdlIdentGateway(),
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
         )

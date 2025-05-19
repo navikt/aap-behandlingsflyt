@@ -1,4 +1,5 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade
+
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
@@ -157,6 +158,31 @@ class YrkesskadeRepositoryImplTest {
             assertThat(yrkesskadeGrunnlag?.yrkesskader).isEqualTo(
                 Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 mai 2019)))
             )
+        }
+    }
+
+    @Test
+    fun `test sletting`() {
+        InitTestDatabase.freshDatabase().transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
+            yrkesskadeRepository.lagre(
+                behandling.id,
+                Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 juni 2019)))
+            )
+
+            yrkesskadeRepository.lagre(
+                behandling.id,
+                Yrkesskader(
+                    listOf(
+                        Yrkesskade(ref = "rexxf", skadedato = 5 juni 2019),
+                        Yrkesskade(ref = "rxef", skadedato = 8 mai 2019)
+                    )
+                )
+            )
+
+            assertDoesNotThrow { yrkesskadeRepository.slett(behandling.id) }
         }
     }
 

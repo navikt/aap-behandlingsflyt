@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.lookup.repository.Repository
 
-interface BarnRepository : Repository{
+interface BarnRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): BarnGrunnlag?
     fun hent(behandlingId: BehandlingId): BarnGrunnlag
     fun lagreOppgitteBarn(behandlingId: BehandlingId, oppgitteBarn: OppgitteBarn?)

@@ -86,14 +86,15 @@ class Avklaringsbehov(
         )
     }
 
-    internal fun reåpne(frist: LocalDate? = null, begrunnelse: String = "", grunn: ÅrsakTilSettPåVent? = null, bruker: Bruker = SYSTEMBRUKER) {
+    internal fun reåpne(
+        frist: LocalDate? = null,
+        begrunnelse: String = "",
+        grunn: ÅrsakTilSettPåVent? = null,
+        bruker: Bruker = SYSTEMBRUKER
+    ) {
         require(historikk.last().status.erAvsluttet())
         historikk += Endring(
-            status = Status.OPPRETTET,
-            begrunnelse = begrunnelse,
-            grunn = grunn,
-            frist = frist,
-            endretAv = bruker.ident
+            status = Status.OPPRETTET, begrunnelse = begrunnelse, grunn = grunn, frist = frist, endretAv = bruker.ident
         )
     }
 
@@ -172,6 +173,7 @@ class Avklaringsbehov(
 
     fun frist(): LocalDate {
         return requireNotNull(historikk.last { it.status == Status.OPPRETTET }.frist)
+        { "Prøvde å finne frist, men historikk er tom. Definisjon $definisjon. Funnet i steg $funnetISteg. ID: $id." }
     }
 
     fun fristUtløpt(): Boolean {

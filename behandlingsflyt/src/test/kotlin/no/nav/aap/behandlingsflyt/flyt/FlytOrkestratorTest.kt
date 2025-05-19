@@ -66,13 +66,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.flate.BehandlendeEnhetLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate.FormkravVurderingLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.Hjemmel
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.flate.KlagevurderingKontorLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagevurderingNay
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.flate.KlagevurderingNayLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.flate.PåklagetBehandlingVurderingLøsningDto
@@ -122,7 +120,6 @@ import no.nav.aap.behandlingsflyt.integrasjon.utbetaling.UtbetalingGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_KLAGE_KONTOR_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingLøsningStatus
@@ -2365,6 +2362,9 @@ class FlytOrkestratorTest {
         val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
         assertTrue(åpneAvklaringsbehov.none { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
         assertTrue(vilkårsResultat.all { it.erOppfylt() })
+
+        // Teste å trekke søknad
+        leggTilÅrsakForBehandling(behandling, listOf(Årsak(ÅrsakTilBehandling.SØKNAD_TRUKKET)))
     }
 
     @Test
@@ -2778,7 +2778,7 @@ class FlytOrkestratorTest {
 
         assertThat(sisteInntekt)
             .extracting(GrunnlagInntekt::år, GrunnlagInntekt::inntektIKroner)
-            .containsExactly(nedsattDato.minusYears(1).year.let { Year.of(it)}, Beløp(BigDecimal(300000)))
+            .containsExactly(nedsattDato.minusYears(1).year.let { Year.of(it) }, Beløp(BigDecimal(300000)))
     }
 
     @Test
@@ -3042,9 +3042,9 @@ class FlytOrkestratorTest {
                 klagevurderingKontor = KlagevurderingKontorLøsningDto(
                     begrunnelse = "Begrunnelse",
                     notat = null,
-                    innstilling = KlageInnstilling.OPPRETTHOLD,
-                    vilkårSomOmgjøres = emptyList(),
-                    vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
+                    innstilling = KlageInnstilling.OMGJØR,
+                    vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
+                    vilkårSomOpprettholdes = emptyList()
                 )
             )
         )
@@ -3075,9 +3075,9 @@ class FlytOrkestratorTest {
                 klagevurderingNay = KlagevurderingNayLøsningDto(
                     begrunnelse = "Begrunnelse",
                     notat = null,
-                    innstilling = KlageInnstilling.OPPRETTHOLD,
-                    vilkårSomOmgjøres = emptyList(),
-                    vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
+                    innstilling = KlageInnstilling.OMGJØR,
+                    vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
+                    vilkårSomOpprettholdes = emptyList()
                 )
             )
         )
@@ -3099,8 +3099,8 @@ class FlytOrkestratorTest {
             )
         )
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(0)
-        // TODO: Lukk avklaringsbehovet og gå til neste steg når neste steg er implementert
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.OPPRETT_REVURDERING_VED_OMGJØRING)
     }
 
     @Test
@@ -3489,5 +3489,6 @@ class FlytOrkestratorTest {
                 )
             )
         }
+        util.ventPåSvar(behandling.sakId.id, behandling.id.id)
     }
 }
