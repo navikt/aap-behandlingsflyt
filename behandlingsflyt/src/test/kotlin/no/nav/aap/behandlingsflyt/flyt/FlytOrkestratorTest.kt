@@ -3039,9 +3039,9 @@ class FlytOrkestratorTest {
                 klagevurderingKontor = KlagevurderingKontorLøsningDto(
                     begrunnelse = "Begrunnelse",
                     notat = null,
-                    innstilling = KlageInnstilling.OPPRETTHOLD,
-                    vilkårSomOmgjøres = emptyList(),
-                    vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
+                    innstilling = KlageInnstilling.OMGJØR,
+                    vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
+                    vilkårSomOpprettholdes = emptyList()
                 )
             )
         )
@@ -3072,9 +3072,9 @@ class FlytOrkestratorTest {
                 klagevurderingNay = KlagevurderingNayLøsningDto(
                     begrunnelse = "Begrunnelse",
                     notat = null,
-                    innstilling = KlageInnstilling.OPPRETTHOLD,
-                    vilkårSomOmgjøres = emptyList(),
-                    vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
+                    innstilling = KlageInnstilling.OMGJØR,
+                    vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
+                    vilkårSomOpprettholdes = emptyList()
                 )
             )
         )
@@ -3096,8 +3096,8 @@ class FlytOrkestratorTest {
             )
         )
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(0)
-        // TODO: Lukk avklaringsbehovet og gå til neste steg når neste steg er implementert
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.OPPRETT_REVURDERING_VED_OMGJØRING)
     }
 
     @Test

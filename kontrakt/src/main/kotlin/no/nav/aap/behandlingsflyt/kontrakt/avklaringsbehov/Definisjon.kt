@@ -354,6 +354,12 @@ public enum class Definisjon(
         løsesISteg = StegType.KLAGEBEHANDLING_NAY,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true
+    ),
+    OPPRETT_REVURDERING_VED_OMGJØRING(
+        kode = AvklaringsbehovKode.`6004`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.OMGJØRING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     );
 
     public companion object {
