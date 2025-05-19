@@ -26,7 +26,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafHentDokumentGa
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokument
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokumentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.token
@@ -64,7 +64,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
                     repositoryProvider.provide<SakRepository>().finnSakerFor(person)
                         .map { sak ->
                             val førstegangsbehandling = if (sak.status() == Status.AVSLUTTET) {
-                                behandlingRepository.hentAlleFor(sak.id).first{
+                                behandlingRepository.hentAlleFor(sak.id).first {
                                     it.typeBehandling() == TypeBehandling.Førstegangsbehandling
                                 }
                             } else null
@@ -110,7 +110,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
 
                     saker.map { sak ->
                         val førstegangsbehandling = if (sak.status() == Status.AVSLUTTET) {
-                            behandlingRepository.hentAlleFor(sak.id).first{
+                            behandlingRepository.hentAlleFor(sak.id).first {
                                 it.typeBehandling() == TypeBehandling.Førstegangsbehandling
                             }
                         } else null
@@ -143,7 +143,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
             } else {
                 val sakerMedTilgang =
                     saker.filter { sak ->
-                        TilgangGatewayImpl.sjekkTilgangTilSak(
+                        GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilSak(
                             Saksnummer(sak.saksnummer),
                             token(),
                             Operasjon.SE

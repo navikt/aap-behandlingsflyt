@@ -28,7 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -171,11 +171,12 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                         }
                     }
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
-                        behandlingReferanse.referanse,
-                        Definisjon.SKRIV_BREV.kode.toString(),
-                        token()
-                    )
+                    val harTilgangTilÅSaksbehandle =
+                        GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
+                            behandlingReferanse.referanse,
+                            Definisjon.SKRIV_BREV,
+                            token()
+                        )
 
                     respond(
                         BrevGrunnlag(

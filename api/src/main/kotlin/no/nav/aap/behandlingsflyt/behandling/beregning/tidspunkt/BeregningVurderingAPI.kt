@@ -12,8 +12,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -43,11 +44,12 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource, repositoryR
                         repositoryProvider.provide<BeregningVurderingRepository>()
                             .hentHvisEksisterer(behandlingId = behandling.id)
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
-                        req.referanse,
-                        Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT.kode.toString(),
-                        token()
-                    )
+                    val harTilgangTilÅSaksbehandle =
+                        GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
+                            req.referanse,
+                            Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
+                            token()
+                        )
 
 
                     BeregningTidspunktAvklaringDto(
@@ -88,11 +90,12 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource, repositoryR
 
                     yrkesskadevurdering?.relevanteSaker
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
-                        req.referanse,
-                        Definisjon.FASTSETT_YRKESSKADEINNTEKT.kode.toString(),
-                        token()
-                    )
+                    val harTilgangTilÅSaksbehandle =
+                        GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
+                            req.referanse,
+                            Definisjon.FASTSETT_YRKESSKADEINNTEKT,
+                            token()
+                        )
 
 
                     BeregningYrkesskadeAvklaringDto(

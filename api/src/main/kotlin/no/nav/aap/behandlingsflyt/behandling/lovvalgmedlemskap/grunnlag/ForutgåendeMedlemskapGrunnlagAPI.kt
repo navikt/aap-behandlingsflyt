@@ -8,8 +8,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGatewayImpl
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -34,11 +35,12 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapAPI(dataSource: DataSource, reposit
                     val historiskeManuelleVurderinger =
                         forutgåendeRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
 
-                    val harTilgangTilÅSaksbehandle = TilgangGatewayImpl.sjekkTilgangTilBehandling(
-                        req.referanse,
-                        Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP.kode.toString(),
-                        token()
-                    )
+                    val harTilgangTilÅSaksbehandle =
+                        GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
+                            req.referanse,
+                            Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP,
+                            token()
+                        )
 
                     ForutgåendeMedlemskapGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,

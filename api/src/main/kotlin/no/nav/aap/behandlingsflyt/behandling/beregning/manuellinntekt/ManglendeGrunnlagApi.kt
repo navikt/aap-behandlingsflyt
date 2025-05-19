@@ -4,11 +4,16 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -22,7 +27,7 @@ import javax.sql.DataSource
 
 data class ManuellInntektVurderingGrunnlagResponse(
     val begrunnelse: String,
-    val vurdertAv: String,
+    val vurdertAv: VurdertAvResponse,
     val tidspunkt: LocalDate,
     val ar: Int,
     val belop: BigDecimal,
@@ -33,8 +38,9 @@ data class ManuellInntektVurderingGrunnlagResponse(
  */
 data class ManuellInntektGrunnlagResponse(
     val ar: Int,
-    val gVerdi: BigDecimal,
+    val gverdi: BigDecimal,
     val vurdering: ManuellInntektVurderingGrunnlagResponse?,
+    val harTilgangTilÅSaksbehandle: Boolean,
 )
 
 private val log = LoggerFactory.getLogger("ManuellInntektGrunnlagApi")
@@ -73,15 +79,21 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(dataSource: DataSource, repositoryRe
                     )
                 )!!.verdi
 
+                val harTilgangTilÅSaksbehandle = GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
+                    req.referanse,
+                    Definisjon.FASTSETT_MANUELL_INNTEKT,
+                    token()
+                )
 
                 respond(
                     ManuellInntektGrunnlagResponse(
                         ar = år.value,
-                        gVerdi = gVerdi.verdi,
+                        gverdi = gVerdi.verdi,
+                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         vurdering = manuellInntekt?.let {
                             ManuellInntektVurderingGrunnlagResponse(
                                 begrunnelse = it.begrunnelse,
-                                vurdertAv = it.vurdertAv,
+                                vurdertAv = VurdertAvResponse(it.vurdertAv, it.opprettet.toLocalDate()),
                                 tidspunkt = it.opprettet.toLocalDate(),
                                 ar = it.år.value,
                                 belop = it.belop.verdi,
