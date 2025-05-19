@@ -13,14 +13,6 @@ import no.nav.aap.komponenter.gateway.Gateway
 import java.io.InputStream
 
 interface BrevbestillingGateway : Gateway {
-    fun bestillBrev(
-        saksnummer: Saksnummer,
-        brukerIdent: Ident,
-        behandlingReferanse: BehandlingReferanse,
-        unikReferanse: String,
-        typeBrev: TypeBrev,
-        vedlegg: Vedlegg?
-    ): BrevbestillingReferanse
 
     fun bestillBrevV2(
         saksnummer: Saksnummer,

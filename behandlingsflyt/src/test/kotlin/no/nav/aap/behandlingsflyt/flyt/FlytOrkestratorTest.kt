@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHend
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.BREV_SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.ÅrsakTilReturKode
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
@@ -25,7 +24,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykd
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BrevbestillingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBehandlendeEnhetLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettPåklagetBehandlingLøsning
@@ -44,7 +42,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKlag
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKlageNayLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
@@ -122,8 +119,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingLøsningStatus
-import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
@@ -507,16 +502,9 @@ class FlytOrkestratorTest {
         val vedtak = hentVedtak(behandling.id)
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
-        alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        // Det er bestilt vedtaksbrev
-        assertThat(alleAvklaringsbehov).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.BESTILL_BREV) }
-
         var brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
 
-        behandling =
-            løsAvklaringsBehov(behandling, brevbestillingLøsning(behandling, brevbestilling), BREV_SYSTEMBRUKER)
-        brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
-        // Brevet er klar for forhåndsvisning og editering
+        // Det er bestilt vedtaksbrev som er klar for forhåndsvisning og editering
         assertThat(brevbestilling.status).isEqualTo(
             no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FORHÅNDSVISNING_KLAR
         )
@@ -780,21 +768,10 @@ class FlytOrkestratorTest {
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
         behandling = fattVedtak(behandling)
-
-        alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        // Det er bestilt vedtaksbrev
-        assertThat(alleAvklaringsbehov).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.BESTILL_BREV) }
-        assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
-
         var brevBestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
 
-        behandling = løsAvklaringsBehov(
-            behandling, brevbestillingLøsning(behandling, brevBestilling), BREV_SYSTEMBRUKER
-        )
-
-        brevBestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
-
-        // Brevet er klar for forhåndsvisning og editering
+        assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
+        // Det er bestilt vedtaksbrev som er klar for forhåndsvisning og editering
         assertThat(brevBestilling.status).isEqualTo(no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FORHÅNDSVISNING_KLAR)
 
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
@@ -942,12 +919,6 @@ class FlytOrkestratorTest {
 
         var brevBestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
 
-        behandling = løsAvklaringsBehov(
-            behandling, brevbestillingLøsning(behandling, brevBestilling), BREV_SYSTEMBRUKER
-        )
-
-
-        brevBestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
         behandling =
             løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevBestilling.referanse.brevbestillingReferanse))
 
@@ -1082,14 +1053,8 @@ class FlytOrkestratorTest {
             dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
 
-        var brevBestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
+        val brevBestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
 
-        behandling = løsAvklaringsBehov(
-            behandling, brevbestillingLøsning(behandling, brevBestilling), BREV_SYSTEMBRUKER
-        )
-
-
-        brevBestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
         behandling =
             løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevBestilling.referanse.brevbestillingReferanse))
 
@@ -1279,11 +1244,7 @@ class FlytOrkestratorTest {
         // Verifiser at samordningen ble fanget opp
         assertThat(periodeMedPositivSamordning.tom).isEqualTo(sykePengerPeriode.tom)
 
-        var brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
-        behandling = løsAvklaringsBehov(
-            behandling, brevbestillingLøsning(behandling, brevbestilling), BREV_SYSTEMBRUKER
-        )
-        brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
+        val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
         val behandlingReferanse = behandling.referanse
         behandling =
             løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
@@ -1379,19 +1340,11 @@ class FlytOrkestratorTest {
         val vedtak = hentVedtak(behandling.id)
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
-        alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        // Det er bestilt vedtaksbrev
-        assertThat(alleAvklaringsbehov).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.BESTILL_BREV) }
-
         val resultat = dataSource.transaction {
             ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id)
         }
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
-        var brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
-
-        behandling =
-            løsAvklaringsBehov(behandling, brevbestillingLøsning(behandling, brevbestilling), BREV_SYSTEMBRUKER)
-        brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
+        val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
 
         behandling =
             løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
@@ -1543,11 +1496,7 @@ class FlytOrkestratorTest {
         // Verifiser at samordningen ble fanget opp
         assertThat(periodeMedPositivSamordning.tom).isEqualTo(sykePengerPeriode.tom)
 
-        var brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
-        behandling = løsAvklaringsBehov(
-            behandling, brevbestillingLøsning(behandling, brevbestilling), BREV_SYSTEMBRUKER
-        )
-        brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
+        val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
         val behandlingReferanse = behandling.referanse
         behandling =
             løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
@@ -1852,15 +1801,7 @@ class FlytOrkestratorTest {
         val status = behandling.status()
         assertThat(status).isEqualTo(Status.IVERKSETTES)
 
-        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        assertThat(alleAvklaringsbehov).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(AvklaringsbehovKode.`9002`) }
-
-        var brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
-        behandling = løsAvklaringsBehov(
-            behandling, brevbestillingLøsning(behandling, brevbestilling), BREV_SYSTEMBRUKER
-        )
-
-        brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
+        val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
         behandling =
             løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
 
@@ -1872,17 +1813,6 @@ class FlytOrkestratorTest {
         assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
         assertThat(hendelser.last().behandlingStatus).isEqualTo(Status.AVSLUTTET)
     }
-
-    private fun brevbestillingLøsning(
-        behandling: Behandling,
-        brevbestilling: Brevbestilling
-    ) = BrevbestillingLøsning(
-        LøsBrevbestillingDto(
-            behandlingReferanse = behandling.referanse.referanse,
-            bestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
-            status = BrevbestillingLøsningStatus.KLAR_FOR_EDITERING
-        )
-    )
 
     @Test
     fun `Blir satt på vent for etterspørring av informasjon`() {
