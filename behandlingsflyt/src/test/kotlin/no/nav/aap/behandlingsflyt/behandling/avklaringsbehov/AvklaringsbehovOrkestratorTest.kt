@@ -6,8 +6,6 @@ import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
@@ -73,10 +71,12 @@ class AvklaringsbehovOrkestratorTest {
     }
 
     private fun sak(connection: DBConnection): Sak {
+        val provider = postgresRepositoryRegistry.provider(connection)
+
         return PersonOgSakService(
             FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
+            provider.provide(),
+            provider.provide()
         ).finnEllerOpprett(
             ident(),
             Periode(LocalDate.now(), LocalDate.now().plusYears(3))
