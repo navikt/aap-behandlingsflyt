@@ -22,28 +22,6 @@ import java.util.*
 
 class FakeBrevbestillingGateway : BrevbestillingGateway {
     var brevbestillingResponse: BrevbestillingResponse? = null
-    override fun bestillBrev(
-        saksnummer: Saksnummer,
-        brukerIdent: Ident,
-        behandlingReferanse: BehandlingReferanse,
-        unikReferanse: String,
-        typeBrev: TypeBrev,
-        vedlegg: Vedlegg?
-    ): BrevbestillingReferanse {
-        return BrevbestillingReferanse(UUID.randomUUID())
-            .also {
-                brevbestillingResponse = BrevbestillingResponse(
-                    referanse = it.brevbestillingReferanse,
-                    brev = null,
-                    opprettet = LocalDateTime.now(),
-                    oppdatert = LocalDateTime.now(),
-                    behandlingReferanse = behandlingReferanse.referanse,
-                    brevtype = Brevtype.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT,
-                    språk = Språk.NB,
-                    status = Status.REGISTRERT
-                )
-            }
-    }
 
     override fun bestillBrevV2(
         saksnummer: Saksnummer,
@@ -56,6 +34,18 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
         ferdigstillAutomatisk: Boolean
     ): BrevbestillingReferanse {
         return BrevbestillingReferanse(UUID.randomUUID())
+            .also {
+                brevbestillingResponse = BrevbestillingResponse(
+                    referanse = it.brevbestillingReferanse,
+                    brev = null,
+                    opprettet = LocalDateTime.now(),
+                    oppdatert = LocalDateTime.now(),
+                    behandlingReferanse = behandlingReferanse.referanse,
+                    brevtype = Brevtype.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT,
+                    språk = Språk.NB,
+                    status = Status.UNDER_ARBEID
+                )
+            }
     }
 
     override fun ferdigstill(referanse: BrevbestillingReferanse, signaturer: List<SignaturGrunnlag>): Boolean {
