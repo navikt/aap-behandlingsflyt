@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.effektuer11_7
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING
 import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
@@ -19,6 +18,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
 import no.nav.aap.behandlingsflyt.flyt.testutil.FakeBrevbestillingGateway
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.Effektuer11_7Steg
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.EFFEKTUER_11_7
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AdjustableClock
+import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBrevbestillingRepository
@@ -51,8 +52,6 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.util.*
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.Effektuer11_7Steg
-import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 
 class Effektuer11_7StegTest {
     @Test
@@ -142,11 +141,7 @@ class Effektuer11_7StegTest {
         val kontekst = kontekst(sak, behandling.id, TypeBehandling.Førstegangsbehandling)
 
         steg.utfør(kontekst).also {
-            assertEquals(
-                FantVentebehov(
-                    Ventebehov(definisjon = Definisjon.BESTILL_BREV, grunn = VENTER_PÅ_MASKINELL_AVKLARING)
-                ), it
-            )
+            assertEquals(FantAvklaringsbehov(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV), it)
         }
 
         BrevbestillingReferanse(brevbestillingGateway.brevbestillingResponse!!.referanse).let { ref ->
