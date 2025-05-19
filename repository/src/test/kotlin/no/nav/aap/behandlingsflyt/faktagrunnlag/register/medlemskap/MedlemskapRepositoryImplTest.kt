@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap
 
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.MedlemskapRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -21,19 +22,22 @@ internal class MedlemskapRepositoryTest {
 
     @Test
     fun `lagre og hente inn unntak`() {
-        val behandlingId = dataSource.transaction { connection ->
-            // SETUP
+        // SETUP
+        val (sak, behandling) = dataSource.transaction {
             val sak = PersonOgSakService(
                 FakePdlGateway,
-                PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
+                PersonRepositoryImpl(it),
+                SakRepositoryImpl(it)
             ).finnEllerOpprett(
                 ident(),
                 Periode(fom = LocalDate.now().minusYears(2), tom = LocalDate.now())
             )
-            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(it, sak)
+            Pair(sak, behandling)
+        }
 
-            // ACT
+        // ACT
+        val behandlingId = dataSource.transaction { connection ->
             val repo = MedlemskapRepositoryImpl(connection)
             repo.lagreUnntakMedlemskap(
                 behandlingId = behandling.id,
@@ -81,5 +85,19 @@ internal class MedlemskapRepositoryTest {
                 )
             )
         )
+
+        // Test kpier-metode
+        val nyBehandling = dataSource.transaction {
+            BehandlingRepositoryImpl(it).oppdaterBehandlingStatus(behandlingId, no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET)
+            finnEllerOpprettBehandling(it, sak)
+        }
+        val nyBehandlingId = nyBehandling.id
+
+        // Hent ut kopi
+        val res = dataSource.transaction {
+            MedlemskapRepositoryImpl(it).hentHvisEksisterer(nyBehandlingId)
+        }
+
+        assertThat(res).isNotNull
     }
 }

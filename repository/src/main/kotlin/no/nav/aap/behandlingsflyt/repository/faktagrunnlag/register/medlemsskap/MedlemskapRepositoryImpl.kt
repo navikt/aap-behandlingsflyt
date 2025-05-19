@@ -166,7 +166,21 @@ class MedlemskapRepositoryImpl(private val connection: DBConnection) : Medlemska
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        log.warn("mangler kopier-metode for $javaClass. Skal denne klassen ha kopier-metode?")
+        require(fraBehandling != tilBehandling) { "Kan ikke kopiere medlemsskapgrunnlag til samme behandling" }
+
+        connection.execute(
+            """
+            INSERT INTO MEDLEMSKAP_UNNTAK_GRUNNLAG (behandling_id, medlemskap_unntak_person_id)
+            select ?, medlemskap_unntak_person_id
+            from medlemskap_unntak_grunnlag
+            where behandling_id = ? and aktiv
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, tilBehandling.toLong())
+                setLong(2, fraBehandling.toLong())
+            }
+        }
     }
 
     companion object : RepositoryFactory<MedlemskapRepository> {

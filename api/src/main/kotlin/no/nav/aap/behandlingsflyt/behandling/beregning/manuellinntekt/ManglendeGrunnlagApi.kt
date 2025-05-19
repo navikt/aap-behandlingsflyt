@@ -20,7 +20,6 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
-import java.time.LocalDate
 import java.time.MonthDay
 import java.time.Year
 import javax.sql.DataSource
@@ -28,7 +27,6 @@ import javax.sql.DataSource
 data class ManuellInntektVurderingGrunnlagResponse(
     val begrunnelse: String,
     val vurdertAv: VurdertAvResponse,
-    val tidspunkt: LocalDate,
     val ar: Int,
     val belop: BigDecimal,
 )
@@ -94,7 +92,6 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(dataSource: DataSource, repositoryRe
                             ManuellInntektVurderingGrunnlagResponse(
                                 begrunnelse = it.begrunnelse,
                                 vurdertAv = VurdertAvResponse(it.vurdertAv, it.opprettet.toLocalDate()),
-                                tidspunkt = it.opprettet.toLocalDate(),
                                 ar = it.år.value,
                                 belop = it.belop.verdi,
                             )
