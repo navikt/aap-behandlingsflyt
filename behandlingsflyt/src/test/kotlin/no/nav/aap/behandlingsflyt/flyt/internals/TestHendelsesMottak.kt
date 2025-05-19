@@ -26,7 +26,7 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
     fun håndtere(key: Ident, hendelse: PersonHendelse) {
         val saksnummer: Saksnummer = dataSource.transaction { connection ->
             val sak = PersonOgSakService(
-                PdlIdentGateway,
+                PdlIdentGateway(),
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection)
             ).finnEllerOpprett(key, hendelse.periode())

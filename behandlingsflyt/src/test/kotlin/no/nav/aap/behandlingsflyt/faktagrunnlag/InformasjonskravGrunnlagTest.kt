@@ -3,12 +3,15 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeService
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.integrasjon.aaregisteret.AARegisterGateway
+import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
+import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -21,6 +24,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.Med
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.MedlemskapRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
@@ -37,6 +41,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import no.nav.aap.behandlingsflyt.test.FakePersoner
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -77,13 +82,18 @@ class InformasjonskravGrunnlagTest {
             .register<RefusjonkravRepositoryImpl>()
             .register<TrukketSøknadRepositoryImpl>()
             .register<MedlemskapRepositoryImpl>()
+            .register<BarnRepositoryImpl>()
             .register<ManuellInntektGrunnlagRepositoryImpl>()
 
     @BeforeEach
     fun setUp() {
-
-        GatewayRegistry.register<MedlemskapGateway>().register<AARegisterGateway>()
+        GatewayRegistry
+            .register<MedlemskapGateway>()
+            .register<AARegisterGateway>()
             .register<YrkesskadeRegisterGatewayImpl>()
+            .register<PdlBarnGateway>()
+            .register<PdlIdentGateway>()
+            .register<FakeUnleash>()
     }
 
     @Test
@@ -194,7 +204,69 @@ class InformasjonskravGrunnlagTest {
         }
     }
 
-    private fun klargjør(connection: DBConnection): Pair<Ident, FlytKontekstMedPerioder> {
+    @Test
+    fun `Førstegangsbehandling medfører henting av barn fra registeret`() {
+        InitTestDatabase.freshDatabase().transaction { connection ->
+            val (ident, kontekst) = klargjør(connection, VurderingType.FØRSTEGANGSBEHANDLING)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
+            val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnService)
+
+            leggTilBarnPåPerson(ident)
+
+            val initiell = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(kravKonstruktører, kontekst)
+
+            assertThat(initiell)
+                .hasSize(1)
+                .allMatch { it === BarnService }
+
+            val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(kravKonstruktører, kontekst)
+
+            assertThat(erOppdatert).isEmpty()
+        }
+    }
+
+    @Test
+    fun `Revurdering med årsak barnetillegg medfører ny henting av barn fra registeret`() {
+        InitTestDatabase.freshDatabase().transaction { connection ->
+            val (ident, kontekst) = klargjør(connection, VurderingType.REVURDERING, setOf(ÅrsakTilBehandling.BARNETILLEGG))
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
+            val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnService)
+
+            leggTilBarnPåPerson(ident)
+
+            val initiell = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(kravKonstruktører, kontekst)
+
+            assertThat(initiell)
+                .hasSize(1)
+                .allMatch { it === BarnService }
+
+            val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(kravKonstruktører, kontekst)
+
+            assertThat(erOppdatert).isEmpty()
+        }
+    }
+
+    @Test
+    fun `Revurdering med årsak annen enn barnetillegg medfører ingen oppdatering av barn fra registeret`() {
+        InitTestDatabase.freshDatabase().transaction { connection ->
+            val (ident, kontekst) = klargjør(connection, VurderingType.REVURDERING, setOf(ÅrsakTilBehandling.REVURDER_MEDLEMSKAP))
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
+            val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnService)
+
+            leggTilBarnPåPerson(ident)
+
+            val initiell = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(kravKonstruktører, kontekst)
+
+            assertThat(initiell).hasSize(0)
+        }
+    }
+
+    private fun klargjør(
+        connection: DBConnection,
+        vurderingType: VurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+        årsakerTilBehandling: Set<ÅrsakTilBehandling> = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD)
+
+    ): Pair<Ident, FlytKontekstMedPerioder> {
         val ident = ident()
         val sak = PersonOgSakService(
             FakePdlGateway,
@@ -220,9 +292,22 @@ class InformasjonskravGrunnlagTest {
             flytKontekst.forrigeBehandlingId,
             behandling.typeBehandling(),
             VurderingTilBehandling(
-                vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                vurderingType = vurderingType,
+                årsakerTilBehandling = årsakerTilBehandling,
                 rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
+            )
+        )
+    }
+
+    private fun leggTilBarnPåPerson(ident: Ident) {
+        FakePersoner.leggTil(
+            TestPerson(
+                identer = setOf(ident),
+                barn = listOf(
+                    TestPerson(
+                        fødselsdato = Fødselsdato(LocalDate.now().minusYears(5)),
+                    )
+                )
             )
         )
     }

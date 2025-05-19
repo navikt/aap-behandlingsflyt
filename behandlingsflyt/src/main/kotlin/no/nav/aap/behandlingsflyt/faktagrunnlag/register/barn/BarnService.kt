@@ -14,10 +14,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Rela
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling.BARNETILLEGG
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
@@ -30,34 +33,41 @@ class BarnService private constructor(
     private val barnGateway: BarnGateway,
     private val pdlGateway: IdentGateway,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val unleashGateway: UnleashGateway
 ) : Informasjonskrav {
 
     override val navn = Companion.navn
 
     override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
-        return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
+        // Kun gjøre oppslag mot register ved førstegangsbehandling og revurdering av barnetillegg (Se AAP-933).
+        val gyldigBehandling = if (unleashGateway.isEnabled(BehandlingsflytFeature.FjernAutomatiskOppdateringAvBarnetillegg)) {
+            kontekst.erFørstegangsbehandling() || kontekst.erRevurderingMedÅrsak(BARNETILLEGG)
+        } else kontekst.erFørstegangsbehandlingEllerRevurdering()
+
+        return gyldigBehandling &&
                 oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
                 tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val behandlingId = kontekst.behandlingId
-        val eksisterendeData = barnRepository.hentHvisEksisterer(behandlingId)
-
-        val oppgitteIdenter = eksisterendeData?.oppgitteBarn?.identer?.toList() ?: emptyList()
         val sak = sakService.hent(kontekst.sakId)
-        val barn = barnGateway.hentBarn(sak.person, oppgitteIdenter)
+        val barnGrunnlag = barnRepository.hentHvisEksisterer(behandlingId)
+
+        val oppgitteBarnIdenter = barnGrunnlag?.oppgitteBarn?.identer?.toList() ?: emptyList()
+        val barn = barnGateway.hentBarn(sak.person, oppgitteBarnIdenter)
+        val registerBarnIdenter = barn.registerBarn.map { it.ident }.toSet()
 
         val relatertePersonopplysninger =
             personopplysningRepository.hentHvisEksisterer(behandlingId)?.relatertePersonopplysninger?.personopplysninger
-        val barnIdenter = barn.registerBarn.map { it.ident }.toSet()
 
         oppdaterPersonIdenter(barn.alleBarn().map { it.ident }.toSet())
 
-        if (harEndringerIIdenter(barnIdenter, eksisterendeData)
-            || harEndringerIPersonopplysninger(barn.alleBarn(), relatertePersonopplysninger)
-        ) {
-            barnRepository.lagreRegisterBarn(behandlingId, barnIdenter)
+        val manglerBarnGrunnlagEllerFantNyeBarnFraRegister = manglerBarnGrunnlagEllerFantNyeBarnFraRegister(registerBarnIdenter, barnGrunnlag)
+        val personopplysningerForBarnErOppdatert = personopplysningerForBarnErOppdatert(barn.alleBarn(), relatertePersonopplysninger)
+
+        if (manglerBarnGrunnlagEllerFantNyeBarnFraRegister || personopplysningerForBarnErOppdatert) {
+            barnRepository.lagreRegisterBarn(behandlingId, registerBarnIdenter)
             personopplysningRepository.lagre(behandlingId, barn.alleBarn())
             return ENDRET
         }
@@ -75,7 +85,7 @@ class BarnService private constructor(
         }
     }
 
-    private fun harEndringerIPersonopplysninger(
+    private fun personopplysningerForBarnErOppdatert(
         barn: Set<Barn>,
         relatertePersonopplysninger: List<RelatertPersonopplysning>?
     ): Boolean {
@@ -93,11 +103,11 @@ class BarnService private constructor(
         return barn.toSet() != eksisterendeData
     }
 
-    private fun harEndringerIIdenter(
+    private fun manglerBarnGrunnlagEllerFantNyeBarnFraRegister(
         barnIdenter: Set<Ident>,
-        eksisterendeData: BarnGrunnlag?
+        barnGrunnlag: BarnGrunnlag?
     ): Boolean {
-        return barnIdenter != eksisterendeData?.registerbarn?.identer?.toSet()
+        return barnIdenter != barnGrunnlag?.registerbarn?.identer?.toSet()
     }
 
     companion object : Informasjonskravkonstruktør {
@@ -110,6 +120,7 @@ class BarnService private constructor(
                 repositoryProvider.provide<PersonopplysningRepository>()
             val barnGateway = GatewayProvider.provide(BarnGateway::class)
             val identGateway = GatewayProvider.provide(IdentGateway::class)
+            val unleashGateway = GatewayProvider.provide(UnleashGateway::class)
             return BarnService(
                 SakService(sakRepository),
                 repositoryProvider.provide(),
@@ -118,6 +129,7 @@ class BarnService private constructor(
                 barnGateway,
                 identGateway,
                 TidligereVurderingerImpl(repositoryProvider),
+                unleashGateway,
             )
         }
     }
