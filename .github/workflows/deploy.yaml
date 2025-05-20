@@ -32,7 +32,7 @@ jobs:
       - name: Bygg & test
         run: gradle test buildFatJar --continue --stacktrace
 
-      - uses: dorny/test-reporter@v2.0.0
+      - uses: dorny/test-reporter@v2.1.0
         if: success() || failure()
         with:
           name: test
