@@ -16,12 +16,9 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.utbetal.kodeverk.AvventÅrsak
-import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseAvventDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDetaljerDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelsePeriodeDto
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 class UtbetalingService(
@@ -63,7 +60,12 @@ class UtbetalingService(
             }
             val unleashGateway = GatewayProvider.provide<UnleashGateway>()
             val avventUtbetaling = if (unleashGateway.isEnabled(BehandlingsflytFeature.AvventUtbetaling)) {
-                finnEventuellAvventUtbetaling(behandlingId, vedtakstidspunkt, tilkjentYtelse.finnHelePerioden())
+                if (tilkjentYtelse.isNotEmpty()) {
+                    AvventUtbetalingService(refusjonskravRepository, tjenestepensjonRefusjonsKravVurderingRepository).
+                        finnEventuellAvventUtbetaling(behandlingId, vedtakstidspunkt, tilkjentYtelse.finnHelePerioden())
+                } else {
+                    null
+                }
             } else {
                 null
             }
@@ -83,13 +85,6 @@ class UtbetalingService(
             null
         }
     }
-
-    private fun tilPeriode(fom: LocalDate?, tom: LocalDate?) =
-        Periode(
-            fom = fom ?: LocalDate.MIN,
-            tom = tom ?: LocalDate.MAX,
-
-        )
 
     private fun List<TilkjentYtelsePeriode>.finnHelePerioden() =
         Periode(
@@ -119,33 +114,5 @@ class UtbetalingService(
             )
         }
 
-    private fun finnEventuellAvventUtbetaling(behandlingId: BehandlingId, vedtakstidspunkt: LocalDateTime, tilkjentYtelseHelePerioden: Periode): TilkjentYtelseAvventDto? {
-        val sosialRefusjonkrav = refusjonskravRepository.hentHvisEksisterer(behandlingId)
-        val tpRefusjonskrav = tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(behandlingId)
-
-        val overlapperMedSosialRefusjon = sosialRefusjonkrav != null && sosialRefusjonkrav.harKrav
-                && tilkjentYtelseHelePerioden.overlapper(tilPeriode(sosialRefusjonkrav.fom, sosialRefusjonkrav.tom))
-
-        val overlapperMedTjenestepensjonRefusjon = tpRefusjonskrav != null && tpRefusjonskrav.harKrav
-                && tilkjentYtelseHelePerioden.overlapper(tilPeriode(tpRefusjonskrav.fom, tpRefusjonskrav.tom))
-
-        val (frist, fom, tom) = when {
-            overlapperMedTjenestepensjonRefusjon -> Triple(42L, tpRefusjonskrav.fom!!, tpRefusjonskrav.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1))
-            overlapperMedSosialRefusjon -> Triple(21L, sosialRefusjonkrav.fom!!, sosialRefusjonkrav.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1))
-            else -> Triple(null, null, null)
-        }
-
-        return if (frist != null) {
-            TilkjentYtelseAvventDto(
-                fom = fom!!,
-                tom = tom!!,
-                overføres = tom.plusDays(frist),
-                årsak = AvventÅrsak.AVVENT_REFUSJONSKRAV,
-                feilregistrering = false
-            )
-        } else {
-            null
-        }
-    }
 
 }
