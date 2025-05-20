@@ -166,6 +166,16 @@ internal class BeregningsgrunnlagRepositoryImplTest {
                 .isEqualTo(inntektPerÅrUføre.map(InntekterForUføre::grunnlagInntekt))
             assertThat(beregningsgrunnlag).isEqualTo(grunnlagUføre)
         }
+
+        // Test sletting
+        dataSource.transaction { connection ->
+            BeregningsgrunnlagRepositoryImpl(connection).slett(behandling.id)
+        }
+
+        dataSource.transaction { connection ->
+            BeregningsgrunnlagRepositoryImpl(connection).hentHvisEksisterer(behandling.id)
+                .also { assertThat(it).isNull() }
+        }
     }
 
     @Test

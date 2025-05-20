@@ -45,8 +45,19 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImplTest {
         val uthentet = dataSource.transaction {
             TjenestepensjonRefusjonskravVurderingRepositoryImpl(it).hent(behandling.id)
         }
-
         assertThat(uthentet).isEqualTo(vurdering)
+
+        // Lagre enda en
+        val nyVurdering = vurdering.copy(begrunnelse = "ny begrunnelse")
+        val uthentet2 = dataSource.transaction {
+            TjenestepensjonRefusjonskravVurderingRepositoryImpl(it).lagre(
+                sak.id, behandling.id,
+                nyVurdering
+            )
+            TjenestepensjonRefusjonskravVurderingRepositoryImpl(it).hent(behandling.id)
+        }
+
+        assertThat(uthentet2).isEqualTo(nyVurdering)
 
         // SLETT
 

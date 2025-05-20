@@ -11,6 +11,7 @@ import java.time.Year
 
 class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : BeregningsgrunnlagRepository {
     private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<BeregningsgrunnlagRepositoryImpl> {
         override fun konstruer(connection: DBConnection): BeregningsgrunnlagRepositoryImpl {
             return BeregningsgrunnlagRepositoryImpl(connection)
@@ -32,22 +33,22 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
 
         val beregningUforeIds = getBeregningUforeIds(beregningIds)
 
-        val deletedRows = connection.executeReturnUpdated("""
-            delete from beregning_hoved where beregning_id = ANY(?::BIGINT[]);
-            delete from beregning_yrkesskade where beregning_id = ANY(?::BIGINT[]);
-        
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from beregning_inntekt where beregning_hoved_id = ANY(?::BIGINT[]);
             delete from beregning_ufore_inntekt where beregning_ufore_id = ANY(?::BIGINT[]);
-        
             delete from beregning_ufore where beregning_id = ANY(?::BIGINT[]);
+            delete from beregning_hoved where beregning_id = ANY(?::BIGINT[]);
+            delete from beregning_yrkesskade where beregning_id = ANY(?::BIGINT[]);
             delete from beregningsgrunnlag where behandling_id = ?;  
             delete from beregning where id = ANY(?::BIGINT[]);
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
-                setLongArray(1, beregningIds)
-                setLongArray(2, beregningIds)
-                setLongArray(3, beregningHovedIds)
-                setLongArray(4, beregningUforeIds)
+                setLongArray(1, beregningHovedIds)
+                setLongArray(2, beregningUforeIds)
+                setLongArray(3, beregningIds)
+                setLongArray(4, beregningIds)
                 setLongArray(5, beregningIds)
                 setLong(6, behandlingId.id)
                 setLongArray(7, beregningIds)
