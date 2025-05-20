@@ -53,6 +53,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
     }
 
     override fun hentAlleVurderingerPåSak(sakId: SakId): List<RefusjonkravVurdering> {
+        // TODO: trenger ikke lagre sak_id i tabell
         val query = """
             SELECT * FROM REFUSJONKRAV_GRUNNLAG WHERE sak_id = ? and aktiv = true
         """.trimIndent()
@@ -91,7 +92,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
 
         val refusjonskravVurderingIds = getRefusjonskravVurderingIds(behandlingId)
         val deletedRows = connection.executeReturnUpdated("""
-            delete from REFUSJONKRAV_GRUNNLAG where id = ?;
+            delete from REFUSJONKRAV_GRUNNLAG where behandling_id = ?;
             delete from REFUSJONKRAV_VURDERING where id = ANY(?::bigint[]);
           
             
@@ -101,14 +102,15 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
                 setLongArray(2, refusjonskravVurderingIds)
             }
         }
-        log.info("Slettet $deletedRows raderfra REFUSJONKRAV_GRUNNLAG")
+        log.info("Slettet $deletedRows rader fra REFUSJONKRAV_GRUNNLAG")
     }
 
     private fun getRefusjonskravVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
         """
                     SELECT refusjonkrav_vurdering_id
                     FROM REFUSJONKRAV_GRUNNLAG
-                    WHERE behandling_id = ? AND refusjonkrav_vurdering_id is not null
+                    WHERE behandling_id = ?
+                      AND refusjonkrav_vurdering_id is not null
                  
                 """.trimIndent()
     ) {
