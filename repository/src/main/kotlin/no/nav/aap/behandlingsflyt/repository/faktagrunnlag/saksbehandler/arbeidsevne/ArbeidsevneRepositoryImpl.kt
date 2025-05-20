@@ -183,7 +183,7 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
 
             }
         }
-        log.info("Slettet $deletedRows fra arbeidsevne_grunnlag")
+        log.info("Slettet $deletedRows raderfra arbeidsevne_grunnlag")
     }
 
     private fun getArbeidsevneIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

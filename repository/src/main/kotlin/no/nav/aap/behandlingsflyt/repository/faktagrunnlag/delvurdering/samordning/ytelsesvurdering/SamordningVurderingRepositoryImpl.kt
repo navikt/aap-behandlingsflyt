@@ -214,7 +214,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
                 setLongArray(4, samordningVurderingIds)
             }
         }
-        log.info("Slettet $deletedRows fra samordning_ytelsevurdering_grunnlag")
+        log.info("Slettet $deletedRows raderfra samordning_ytelsevurdering_grunnlag")
     }
 
     private fun getSamordningYtelseVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

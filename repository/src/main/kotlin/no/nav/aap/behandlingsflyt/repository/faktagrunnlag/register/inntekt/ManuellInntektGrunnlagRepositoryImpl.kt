@@ -140,7 +140,7 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
                 setLongArray(2, manuellInntektVurderingerIds)
             }
         }
-        log.info("Slettet $deletedRows fra MANUELL_INNTEKT_VURDERING_GRUNNLAG")
+        log.info("Slettet $deletedRows raderfra MANUELL_INNTEKT_VURDERING_GRUNNLAG")
     }
 
     private fun deaktiverEksisterende(behandlingId: BehandlingId) {

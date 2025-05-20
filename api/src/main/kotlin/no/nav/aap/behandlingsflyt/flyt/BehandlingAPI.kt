@@ -34,8 +34,11 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
+import org.slf4j.LoggerFactory
 import javax.sql.DataSource
-import kotlin.collections.set
+
+
+private val log = LoggerFactory.getLogger("behandlingApi")
 
 fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling").tag(Tags.Behandling) {
@@ -57,11 +60,16 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
 
                     val behandling = behandling(behandlingRepository, req)
                     val virkningstidspunkt =
-                        if (behandling.typeBehandling() == TypeBehandling.Klage) null else VirkningstidspunktUtleder(
-                            vilkårsresultatRepository = vilkårsresultatRepository
-                        ).utledVirkningsTidspunkt(
-                            behandling.id
-                        )
+                        runCatching {
+                            if (behandling.typeBehandling() == TypeBehandling.Klage) null else VirkningstidspunktUtleder(
+                                vilkårsresultatRepository = vilkårsresultatRepository
+                            ).utledVirkningsTidspunkt(
+                                behandling.id
+                            )
+                        }.getOrElse {
+                            log.warn("Feil ved utleding av virkningstidspunkt for behandling ${behandling.id}", it)
+                            null
+                        }
                     val flyt = utledType(behandling.typeBehandling()).flyt()
                     DetaljertBehandlingDTO(
                         referanse = behandling.referanse.referanse,

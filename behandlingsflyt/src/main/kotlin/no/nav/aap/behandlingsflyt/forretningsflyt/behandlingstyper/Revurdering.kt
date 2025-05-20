@@ -64,18 +64,14 @@ object Revurdering : BehandlingType {
         return BehandlingFlytBuilder()
             .medSteg(steg = StartBehandlingSteg, informasjonskrav = listOf(SøknadService))
             .medSteg(
+                steg = SøknadSteg,
+                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.SØKNAD_TRUKKET),
+                informasjonskrav = listOf(TrukketSøknadService),
+            )
+            .medSteg(
                 steg = RettighetsperiodeSteg,
                 informasjonskrav = listOf(VurderRettighetsperiodeService),
                 årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE)
-            )
-            .medSteg(
-                steg = SøknadSteg,
-                årsakRelevanteForSteg = listOf(
-                    ÅrsakTilBehandling.SØKNAD_TRUKKET,
-                ),
-                informasjonskrav = listOf(
-                    TrukketSøknadService,
-                ),
             )
             .medSteg(
                 steg = VurderLovvalgSteg,

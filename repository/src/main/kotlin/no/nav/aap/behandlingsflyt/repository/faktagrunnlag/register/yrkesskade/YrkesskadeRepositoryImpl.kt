@@ -116,29 +116,30 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
     }
 
     override fun slett(behandlingId: BehandlingId) {
-
         val yrkesskadeIds = getYrkesskadeIds(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
+            delete from yrkesskade_dato where yrkesskade_id = ANY(?::bigint[]);
             delete from yrkesskade_grunnlag where behandling_id = ?; 
-            delete from yrkesskade_dato where id = ANY(?::bigint[]);
             delete from yrkesskade where id = ANY(?::bigint[]);
-         
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
-                setLong(1, behandlingId.id)
-                setLongArray(2, yrkesskadeIds)
+                setLongArray(1, yrkesskadeIds)
+                setLong(2, behandlingId.id)
                 setLongArray(3, yrkesskadeIds)
             }
         }
-        log.info("Slettet $deletedRows fra yrkesskade_grunnlag")
+        log.info("Slettet $deletedRows rader fra yrkesskade_grunnlag")
     }
 
     private fun getYrkesskadeIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
         """
                     SELECT yrkesskade_id
                     FROM yrkesskade_grunnlag
-                    WHERE behandling_id = ? AND yrkesskade_id is not null
+                    WHERE behandling_id = ?
+                      AND yrkesskade_id is not null
                  
                 """.trimIndent()
     ) {

@@ -80,7 +80,7 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
                 setLongArray(3, uforeIds)
             }
         }
-        log.info("Slettet $deletedRows fra UFORE_GRUNNLAG")
+        log.info("Slettet $deletedRows raderfra UFORE_GRUNNLAG")
     }
 
     private fun getUforeIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

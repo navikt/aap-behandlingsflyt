@@ -211,7 +211,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
                 setLongArray(4, samordningYtelserIds)
             }
         }
-        log.info("Slettet $deletedRows fra samordning_ytelse_grunnlag")
+        log.info("Slettet $deletedRows raderfra samordning_ytelse_grunnlag")
     }
 
     private fun getSamordningYtelserIds(behandlingId: BehandlingId): List<Long> = dbConnection.queryList(

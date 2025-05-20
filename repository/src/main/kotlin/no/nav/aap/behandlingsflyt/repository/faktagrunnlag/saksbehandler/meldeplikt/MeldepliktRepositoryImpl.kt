@@ -157,7 +157,7 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
                 setLongArray(3, meldepliktIds)
             }
         }
-        log.info("Slettet $deletedRows fra meldeplikt_fritak_grunnlag")
+        log.info("Slettet $deletedRows raderfra meldeplikt_fritak_grunnlag")
     }
 
     private fun getMeldepiktIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

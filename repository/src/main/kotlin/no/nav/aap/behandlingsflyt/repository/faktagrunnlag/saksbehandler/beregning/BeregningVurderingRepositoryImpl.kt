@@ -188,7 +188,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
                 setLongArray(4, beregningYrkesskadeIds)
             }
         }
-        log.info("Slettet $deletedRows fra BEREGNINGSFAKTA_GRUNNLAG")
+        log.info("Slettet $deletedRows raderfra BEREGNINGSFAKTA_GRUNNLAG")
     }
 
     private fun getBeregningYrkesskadeIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

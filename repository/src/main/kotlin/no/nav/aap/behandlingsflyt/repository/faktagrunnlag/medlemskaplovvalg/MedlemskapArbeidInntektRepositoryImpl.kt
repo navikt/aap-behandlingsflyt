@@ -565,7 +565,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLongArray(9, inntektINorgeIds)
             }
         }
-        log.info("Slettet $deletedRows fra MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG")
+        log.info("Slettet $deletedRows raderfra MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG")
     }
 
 

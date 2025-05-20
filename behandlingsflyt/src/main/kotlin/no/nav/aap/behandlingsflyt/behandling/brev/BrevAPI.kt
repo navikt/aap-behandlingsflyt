@@ -109,7 +109,13 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
 
                         val skrivBrevAvklaringsbehov = avklaringsbehovRepository
                             .hentAvklaringsbehovene(behandling.id)
-                            .hentBehovForDefinisjon(listOf(Definisjon.SKRIV_BREV, Definisjon.SKRIV_VEDTAKSBREV))
+                            .hentBehovForDefinisjon(
+                                listOf(
+                                    Definisjon.SKRIV_BREV,
+                                    Definisjon.SKRIV_VEDTAKSBREV,
+                                    Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV
+                                )
+                            )
                             .filter { it.erÅpent() }
 
                         if (skrivBrevAvklaringsbehov.size > 1) {
@@ -233,15 +239,16 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
 
                                     avklaringsbehovene.validateTilstand(behandling = behandling)
                                     avklaringsbehovene.leggTil(
-                                        definisjoner = listOf(Definisjon.BESTILL_BREV),
+                                        definisjoner = listOf(Definisjon.SKRIV_BREV),
                                         funnetISteg = behandling.aktivtSteg()
                                     )
                                     avklaringsbehovene.validerPlassering(behandling = behandling)
 
-                                    val bestillingReferanse = service.bestill(
+                                    val bestillingReferanse = service.bestillV2(
                                         behandlingId = behandling.id,
                                         typeBrev = TypeBrev.VARSEL_OM_BESTILLING,
                                         unikReferanse = req.dialogmeldingUuid.toString(),
+                                        ferdigstillAutomatisk = false,
                                         vedlegg = req.vedlegg
                                     )
                                     taSkriveLåsRepository.verifiserSkrivelås(lås)

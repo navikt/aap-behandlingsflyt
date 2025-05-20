@@ -195,7 +195,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
                 setLongArray(4, tjenestePensjonOrdningIds)
             }
         }
-        log.info("Slettet $deletedRows fra tjenestepensjon_forhold_grunnlag")
+        log.info("Slettet $deletedRows raderfra tjenestepensjon_forhold_grunnlag")
     }
 
     private fun getTjenestepensjonOrdningerIds(behandlingId: BehandlingId): List<Long> = dbConnection.queryList(

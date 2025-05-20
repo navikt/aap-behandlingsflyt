@@ -98,7 +98,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 setLongArray(7, yrkesskadevurderingIds)
             }
         }
-        log.info("Slettet $deletedRows fra sykdom_grunnlag")
+        log.info("Slettet $deletedRows raderfra sykdom_grunnlag")
     }
 
     private fun getSykdomVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

@@ -37,33 +37,12 @@ class BrevbestillingService(
         return bestillinger
     }
 
-    fun bestill(behandlingId: BehandlingId, typeBrev: TypeBrev, unikReferanse: String, vedlegg: Vedlegg? = null): UUID {
-        val behandling = behandlingRepository.hent(behandlingId)
-        val sak = sakRepository.hent(behandling.sakId)
-
-        val bestillingReferanse = brevbestillingGateway.bestillBrev(
-            saksnummer = sak.saksnummer,
-            brukerIdent = sak.person.aktivIdent(),
-            behandlingReferanse = behandling.referanse,
-            unikReferanse = unikReferanse,
-            typeBrev = typeBrev,
-            vedlegg = vedlegg
-        )
-        brevbestillingRepository.lagre(
-            behandlingId = behandlingId,
-            typeBrev = typeBrev,
-            bestillingReferanse = bestillingReferanse,
-            status = Status.SENDT,
-        )
-        return bestillingReferanse.brevbestillingReferanse
-    }
-
     fun bestillV2(
         behandlingId: BehandlingId,
         typeBrev: TypeBrev,
         unikReferanse: String,
         ferdigstillAutomatisk: Boolean,
-        faktagrunnlag: Set<Faktagrunnlag>,
+        faktagrunnlag: Set<Faktagrunnlag> = emptySet(),
         vedlegg: Vedlegg? = null
     ): UUID {
         val behandling = behandlingRepository.hent(behandlingId)

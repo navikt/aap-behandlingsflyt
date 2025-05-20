@@ -1568,7 +1568,9 @@ object FakeServers : AutoCloseable {
             brev = Brev(
                 kanSendesAutomatisk = false,
                 journalpostTittel = "En tittel",
-                overskrift = "Overskrift H1", tekstbolker = listOf(
+                overskrift = "Overskrift H1",
+                kanOverstyreBrevtittel = false,
+                tekstbolker = listOf(
                     Tekstbolk(
                         id = UUID.randomUUID(),
                         overskrift = "Overskrift H2",

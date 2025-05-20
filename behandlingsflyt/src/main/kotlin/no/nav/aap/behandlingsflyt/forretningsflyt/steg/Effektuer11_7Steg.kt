@@ -22,7 +22,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.BESTILL_BREV
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.EFFEKTUER_11_7
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.SKRIV_BREV
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV
@@ -96,11 +95,12 @@ class Effektuer11_7Steg(
 
             val vårReferanse = "${behandling.referanse}-$typeBrev-${effektuer117grunnlag?.varslinger?.size ?: 0}"
 
-            // XXX: skulle gjerne "avbrutt" tidligere bestilling av brev, men det er ikke mulig i dag.
-            val brevReferanse = brevbestillingService.bestill(
-                kontekst.behandlingId,
-                typeBrev,
-                vårReferanse
+            // TODO: skulle gjerne "avbrutt" tidligere bestilling av brev, det er mulig i dag.
+            val brevReferanse = brevbestillingService.bestillV2(
+                behandlingId = kontekst.behandlingId,
+                typeBrev = typeBrev,
+                unikReferanse = vårReferanse,
+                ferdigstillAutomatisk = false,
             )
 
             effektuer117repository.lagreVarsel(
@@ -113,12 +113,7 @@ class Effektuer11_7Steg(
                 ),
             )
 
-            return FantVentebehov(
-                Ventebehov(
-                    definisjon = BESTILL_BREV,
-                    grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING
-                )
-            )
+            return FantAvklaringsbehov(SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
         }
 
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)

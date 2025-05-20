@@ -64,7 +64,7 @@ class InformasjonskravRepositoryImpl(
                 setLong(1, behandlingId.id)
             }
         }
-        log.info("Slettet $deletedRows fra mottatt_dokument")
+        log.info("Slettet $deletedRows raderfra mottatt_dokument")
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
