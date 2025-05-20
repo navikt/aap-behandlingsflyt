@@ -55,17 +55,17 @@ class BarnetilleggRepositoryImpl(private val connection: DBConnection) : Barneti
 
         val deletedRows = connection.executeReturnUpdated("""
             delete from barnetillegg_grunnlag where behandling_id = ?; 
+            delete from barn_tillegg where barnetillegg_periode_id = ANY(?::bigint[]);
             delete from barnetillegg_periode where perioder_id = ANY(?::bigint[]);
             delete from barnetillegg_perioder where id = ANY(?::bigint[]);
-            delete from barn_tillegg where barnetillegg_periode_id = ANY(?::bigint[]);
+            
            
         """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId.id)
-                setLongArray(2, barnetilleggPerioderIds)
+                setLongArray(2, barnetilleggPeriodeIds)
                 setLongArray(3, barnetilleggPerioderIds)
-                setLongArray(4, barnetilleggPeriodeIds)
-
+                setLongArray(4, barnetilleggPerioderIds)
             }
         }
         log.info("Slettet $deletedRows raderfra barnetillegg_grunnlag")
@@ -89,7 +89,7 @@ class BarnetilleggRepositoryImpl(private val connection: DBConnection) : Barneti
         """
                     SELECT id
                     FROM barnetillegg_periode
-                    WHERE perioder_id = ANY(?::bigint[]);
+                    WHERE perioder_id = ANY(?::bigint[]) AND perioder_id is not null;
                  
                 """.trimIndent()
     ) {

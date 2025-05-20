@@ -80,8 +80,9 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         val oppgittStudentIds = getOppgittStudentIds(behandlingId)
         val deletedRows = connection.executeReturnUpdated("""
             delete from STUDENT_GRUNNLAG where behandling_id = ?;
-            delete from OPPGITT_STUDENT where id = ANY(?::bigint[]);
             delete from STUDENT_VURDERING where id = ANY(?::bigint[]);
+            delete from OPPGITT_STUDENT where id = ANY(?::bigint[]);
+         
         """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId.id)

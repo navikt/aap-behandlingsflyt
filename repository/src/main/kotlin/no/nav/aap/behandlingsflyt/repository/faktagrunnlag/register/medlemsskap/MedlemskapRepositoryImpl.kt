@@ -136,7 +136,8 @@ class MedlemskapRepositoryImpl(private val connection: DBConnection) : Medlemska
         val deletedRows = connection.executeReturnUpdated(
             """
             delete from MEDLEMSKAP_UNNTAK_GRUNNLAG where behandling_id = ?;
-             delete from MEDLEMSKAP_UNNTAK where medlemskap_unntak_person_id = ANY(?::bigint[]);
+            delete from MEDLEMSKAP_UNNTAK where medlemskap_unntak_person_id = ANY(?::bigint[]);
+            delete from MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where medlemskap_unntak_person_id = ANY(?::bigint[]); 
             delete from MEDLEMSKAP_UNNTAK_PERSON where id = ANY(?::bigint[]);
         """.trimIndent()
         ) {
@@ -144,7 +145,7 @@ class MedlemskapRepositoryImpl(private val connection: DBConnection) : Medlemska
                 setLong(1, behandlingId.id)
                 setLongArray(2, medlemskapUnntakPersonIds)
                 setLongArray(3, medlemskapUnntakPersonIds)
-
+                setLongArray(4, medlemskapUnntakPersonIds)
             }
         }
         log.info("Slettet $deletedRows raderfra MEDLEMSKAP_UNNTAK_GRUNNLAG")
