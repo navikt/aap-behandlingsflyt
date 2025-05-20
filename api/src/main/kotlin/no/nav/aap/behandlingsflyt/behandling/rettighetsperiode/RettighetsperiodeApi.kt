@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.rettighetsperiode
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.søknad.SøknadsdatoUtleder
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
@@ -57,6 +58,10 @@ fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(dataSource: DataSource, repo
             )
 
             val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
+            val vurdering = rettighetsperiodeRepository.hentVurdering(behandling.id)
+
+            val ansattNavnOgEnhet = vurdering?.let { AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv) }
+
             RettighetsperiodeGrunnlagResponse(
                 vurdering =
                     rettighetsperiodeRepository.hentVurdering(behandling.id)?.let {
@@ -70,7 +75,9 @@ fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(dataSource: DataSource, repo
                                     ident = it.vurdertAv,
                                     dato =
                                         it.vurdertDato?.toLocalDate()
-                                            ?: error("Mangler vurdertdato på rettighetsperiodevurderingen")
+                                            ?: error("Mangler vurdertdato på rettighetsperiodevurderingen"),
+                                    ansattnavn = ansattNavnOgEnhet?.navn,
+                                    enhetsnavn = ansattNavnOgEnhet?.enhet
                                 )
                         )
                     },

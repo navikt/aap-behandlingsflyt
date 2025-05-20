@@ -117,6 +117,10 @@ spec:
           namespace: pensjon-q2
           cluster: dev-fss
         - application: api-intern
+        - application: nom-api
+          namespace: nom
+        - application: norg2
+          namespace: org
 
   env:
     - name: INTEGRASJON_PDL_URL
@@ -211,3 +215,9 @@ spec:
       value: 4745039f-999c-476d-805f-c4c1f23b8188
     - name: INTEGRASJON_SAKSBEHANDLING_AZP
       value: 4920ff1d-0f6b-407f-8630-695e3360d3d3
+    - name: INTEGRASJON_NOM_URL
+      value: http://nom-api.nom/graphql
+    - name: INTEGRASJON_NOM_SCOPE
+      value: api://dev-gcp.nom.nom-api/.default
+    - name: INTEGRASJON_NORG_URL
+      value: http://norg2.org

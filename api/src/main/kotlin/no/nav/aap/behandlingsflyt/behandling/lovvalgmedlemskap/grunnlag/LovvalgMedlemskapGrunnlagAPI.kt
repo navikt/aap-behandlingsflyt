@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -40,6 +41,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(
                             lovvalgMedlemskapRepository.hentHvisEksisterer(behandling.id)?.manuellVurdering
                         val historiskeManuelleVurderinger =
                             lovvalgMedlemskapRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
+                        val ansattNavnOgEnhet = gjeldendeManuellVurdering?.let { AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv)}
 
                         val harTilgangTilÅSaksbehandle =
                             GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
@@ -50,7 +52,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(
 
                         LovvalgMedlemskapGrunnlagResponse(
                             harTilgangTilÅSaksbehandle,
-                            gjeldendeManuellVurdering?.toResponse(),
+                            gjeldendeManuellVurdering?.toResponse(ansattNavnOgEnhet),
                             historiskeManuelleVurderinger.map { it.toResponse() }
                         )
                     }

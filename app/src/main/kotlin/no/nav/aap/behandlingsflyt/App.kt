@@ -67,6 +67,9 @@ import no.nav.aap.behandlingsflyt.integrasjon.inntekt.InntektGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.integrasjon.meldekort.MeldekortGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoGateway
+import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
+import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.TjenestePensjonGatewayImpl
@@ -229,6 +232,8 @@ private fun registerGateways() {
         .register<TilgangGatewayImpl>()
         .register<TjenestePensjonGatewayImpl>()
         .register<UnleashService>()
+        .register<NomInfoGateway>()
+        .register<NorgGateway>()
         .status()
 }
 

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag
 
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattNavnOgEnhet
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.HistoriskManuellVurderingForLovvalgMedlemskap
@@ -47,7 +48,7 @@ class HistoriskManuellVurderingForLovvalgMedlemskapResponse(
         vurdering
     )
 
-fun ManuellVurderingForLovvalgMedlemskap.toResponse() =
+fun ManuellVurderingForLovvalgMedlemskap.toResponse(ansattNavnOgEnhet: AnsattNavnOgEnhet?) =
     ManuellVurderingForLovvalgMedlemskapResponse(
         lovvalgVedSøknadsTidspunkt = lovvalgVedSøknadsTidspunkt.toResponse(),
         medlemskapVedSøknadsTidspunkt = medlemskapVedSøknadsTidspunkt?.toResponse(),
@@ -56,7 +57,9 @@ fun ManuellVurderingForLovvalgMedlemskap.toResponse() =
                 ident = vurdertAv,
                 dato =
                     vurdertDato?.toLocalDate()
-                        ?: error("Mangler vurdertDato på ManuellVurderingForLovvalgMedlemskap")
+                        ?: error("Mangler vurdertDato på ManuellVurderingForLovvalgMedlemskap"),
+                ansattnavn = ansattNavnOgEnhet?.navn,
+                enhetsnavn = ansattNavnOgEnhet?.enhet
             ),
         overstyrt = overstyrt
     )
@@ -79,5 +82,5 @@ fun HistoriskManuellVurderingForLovvalgMedlemskap.toResponse() =
         vurdertAvIdent = vurdertAvIdent,
         erGjeldendeVurdering = erGjeldendeVurdering,
         periode = periode,
-        vurdering = vurdering.toResponse()
+        vurdering = vurdering.toResponse(ansattNavnOgEnhet = null)
     )
