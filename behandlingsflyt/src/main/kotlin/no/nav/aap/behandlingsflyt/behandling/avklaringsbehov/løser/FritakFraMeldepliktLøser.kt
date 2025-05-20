@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FritakMeld
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktFritaksperioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -26,7 +25,13 @@ class FritakFraMeldepliktLøser(
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val fritaksvurderinger =
-            løsning.fritaksvurderinger.map(FritaksvurderingDto::toFritaksvurdering)
+            løsning.fritaksvurderinger.map { Fritaksvurdering(
+                harFritak = it.harFritak,
+                fraDato = it.fraDato,
+                begrunnelse = it.begrunnelse,
+                vurdertAv = kontekst.bruker.ident,
+                opprettetTid = null,
+            ) }
         val eksisterendeFritaksperioder = MeldepliktFritaksperioder(
             behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }?.vurderinger
                 ?: emptyList()

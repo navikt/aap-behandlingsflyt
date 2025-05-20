@@ -17,6 +17,12 @@ class MeldepliktFritaksperioder private constructor(private val tidslinje: Tidsl
 
     fun gjeldendeFritaksvurderinger(): List<Fritaksvurdering> {
         return tidslinje.komprimer()
-            .map { Fritaksvurdering(it.verdi.harFritak, it.periode.fom, it.verdi.begrunnelse, it.verdi.opprettetTid) }
+            .map { Fritaksvurdering(
+                harFritak = it.verdi.harFritak,
+                fraDato = it.periode.fom,
+                begrunnelse = it.verdi.begrunnelse,
+                vurdertAv = it.verdi.vurdertAv,
+                opprettetTid = it.verdi.opprettetTid,
+            ) }
     }
 }

@@ -56,6 +56,10 @@ class MeldepliktFritaksperioderTest {
     }
 
     private fun fritaksvurdering(harFritak: Boolean, fraDato: LocalDate) = Fritaksvurdering(
-        harFritak, fraDato, UUID.randomUUID().toString(), LocalDateTime.now()
+        harFritak = harFritak,
+        fraDato = fraDato,
+        begrunnelse = UUID.randomUUID().toString(),
+        vurdertAv = "saksbehandler",
+        opprettetTid = LocalDateTime.now()
     )
 }

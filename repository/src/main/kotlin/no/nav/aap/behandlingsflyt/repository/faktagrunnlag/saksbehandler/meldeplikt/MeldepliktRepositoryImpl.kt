@@ -23,7 +23,7 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): MeldepliktGrunnlag? {
         val query = """
-            SELECT f.ID AS MELDEPLIKT_ID, v.HAR_FRITAK, v.FRA_DATO, v.BEGRUNNELSE, v.OPPRETTET_TID
+            SELECT f.ID AS MELDEPLIKT_ID, v.HAR_FRITAK, v.FRA_DATO, v.BEGRUNNELSE, v.OPPRETTET_TID, v.VURDERT_AV
             FROM MELDEPLIKT_FRITAK_GRUNNLAG g
             INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
             INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
@@ -38,6 +38,7 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
                     harFritak = row.getBoolean("HAR_FRITAK"),
                     fraDato = row.getLocalDate("FRA_DATO"),
                     begrunnelse = row.getString("BEGRUNNELSE"),
+                    vurdertAv = row.getString("VURDERT_AV"),
                     vurderingOpprettet = row.getLocalDateTime("OPPRETTET_TID"),
                 )
             }
@@ -46,7 +47,7 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
 
     override fun hentAlleVurderinger(sakId: SakId, behandlingId: BehandlingId): Set<Fritaksvurdering> {
         val query = """
-            SELECT f.ID AS MELDEPLIKT_ID, v.HAR_FRITAK, v.FRA_DATO, v.BEGRUNNELSE, v.OPPRETTET_TID
+            SELECT f.ID AS MELDEPLIKT_ID, v.HAR_FRITAK, v.FRA_DATO, v.BEGRUNNELSE, v.OPPRETTET_TID, v.VURDERT_AV
             FROM MELDEPLIKT_FRITAK_GRUNNLAG g
             INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
             INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
@@ -65,7 +66,8 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
                     harFritak = row.getBoolean("HAR_FRITAK"),
                     fraDato = row.getLocalDate("FRA_DATO"),
                     begrunnelse = row.getString("BEGRUNNELSE"),
-                    vurderingOpprettet = row.getLocalDateTime("OPPRETTET_TID"),
+                    vurdertAv = row.getString("VURDERT_AV"),
+                    vurderingOpprettet = row.getLocalDateTime("OPPRETTET_TID")
                 )
             }
         }.map { it.toFritaksvurdering() }.toSet()
@@ -77,10 +79,17 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
         val harFritak: Boolean,
         val fraDato: LocalDate,
         val begrunnelse: String,
-        val vurderingOpprettet: LocalDateTime
+        val vurdertAv: String,
+        val vurderingOpprettet: LocalDateTime,
     ) {
         fun toFritaksvurdering(): Fritaksvurdering {
-            return Fritaksvurdering(harFritak, fraDato, begrunnelse, vurderingOpprettet)
+            return Fritaksvurdering(
+                harFritak = harFritak,
+                fraDato = fraDato,
+                begrunnelse = begrunnelse,
+                vurdertAv = vurdertAv,
+                opprettetTid = vurderingOpprettet
+            )
         }
     }
 
@@ -112,7 +121,7 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
         connection.executeBatch(
             """
             INSERT INTO MELDEPLIKT_FRITAK_VURDERING 
-            (MELDEPLIKT_ID, BEGRUNNELSE, HAR_FRITAK, FRA_DATO) VALUES (?, ?, ?, ?)
+            (MELDEPLIKT_ID, BEGRUNNELSE, HAR_FRITAK, FRA_DATO, VURDERT_AV) VALUES (?, ?, ?, ?, ?)
             """.trimIndent(),
             nyeVurderinger
         ) {
@@ -121,13 +130,14 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
                 setString(2, it.begrunnelse)
                 setBoolean(3, it.harFritak)
                 setLocalDate(4, it.fraDato)
+                setString(5, it.vurdertAv)
             }
         }
 
         connection.executeBatch(
             """
             INSERT INTO MELDEPLIKT_FRITAK_VURDERING 
-            (MELDEPLIKT_ID, BEGRUNNELSE, HAR_FRITAK, FRA_DATO, OPPRETTET_TID) VALUES (?, ?, ?, ?, ?)
+            (MELDEPLIKT_ID, BEGRUNNELSE, HAR_FRITAK, FRA_DATO, VURDERT_AV, OPPRETTET_TID) VALUES (?, ?, ?, ?, ?, ?)
             """.trimIndent(),
             vurderinger.filter { it.opprettetTid != null }
         ) {
@@ -136,6 +146,7 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
                 setString(2, it.begrunnelse)
                 setBoolean(3, it.harFritak)
                 setLocalDate(4, it.fraDato)
+                setString(5, it.vurdertAv)
                 setLocalDateTime(5, it.opprettetTid)
             }
         }
