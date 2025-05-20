@@ -9,4 +9,5 @@ public sealed interface Klage : Melding
 @JsonIgnoreProperties(ignoreUnknown = true)
 public data class KlageV0(
     public val kravMottatt: LocalDate,
+    public val skalOppretteNyBehandling: Boolean = true
 ) : Klage
