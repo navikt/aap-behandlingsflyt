@@ -32,6 +32,7 @@ import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.aktivitetsplik
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.institusjonAPI
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.klage.resultat.klageresultatApi
 import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringApi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.forutgåendeMedlemskapAPI
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.lovvalgMedlemskapGrunnlagAPI
@@ -187,6 +188,7 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
                 behandlendeEnhetGrunnlagApi(dataSource, repositoryRegistry)
                 klagebehandlingKontorGrunnlagApi(dataSource, repositoryRegistry)
                 klagebehandlingNayGrunnlagApi(dataSource, repositoryRegistry)
+                klageresultatApi(dataSource, repositoryRegistry)
                 // Flytt
                 brevApi(dataSource, repositoryRegistry)
                 dokumentinnhentingAPI(dataSource, repositoryRegistry)

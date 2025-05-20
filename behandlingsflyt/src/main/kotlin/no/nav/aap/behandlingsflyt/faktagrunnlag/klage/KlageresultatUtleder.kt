@@ -25,7 +25,7 @@ class KlageresultatUtleder(
         klagebehandlingNayRepository = repositoryProvider.provide()
     )
 
-    fun utledKlagebehandlingResultat(behandlingId: BehandlingId): KlageResultat? {
+    fun utledKlagebehandlingResultat(behandlingId: BehandlingId): KlageResultat {
         val formkrav = formkravRepository.hentHvisEksisterer(behandlingId)
         val behandlendeEnhet = behandlendeEnhetRepository.hentHvisEksisterer(behandlingId)
         val klagebehandlingVurderingKontor = klagebehandlingKontorRepository.hentHvisEksisterer(behandlingId)
@@ -46,7 +46,7 @@ class KlageresultatUtleder(
             behandlendeEnhetVurdering: BehandlendeEnhetVurdering?,
             klagebehandlingNayVurdering: KlagevurderingNay?,
             klagebehandlingKontorVurdering: KlagevurderingKontor?
-        ): KlageResultat? {
+        ): KlageResultat {
             val manglerVurdering = manglerVurdering(
                 formkravVurdering,
                 behandlendeEnhetVurdering,
