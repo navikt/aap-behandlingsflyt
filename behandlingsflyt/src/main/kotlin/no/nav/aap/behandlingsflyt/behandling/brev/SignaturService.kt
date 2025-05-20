@@ -16,7 +16,7 @@ import no.nav.aap.brev.kontrakt.Rolle as SignaturRolle
 class SignaturService(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
     )
 
@@ -26,7 +26,8 @@ class SignaturService(
         }
 
         return when (brevbestilling.typeBrev) {
-            TypeBrev.VEDTAK_AVSLAG, TypeBrev.VEDTAK_INNVILGELSE, TypeBrev.VEDTAK_ENDRING -> {
+            TypeBrev.VEDTAK_AVSLAG, TypeBrev.VEDTAK_INNVILGELSE, TypeBrev.VEDTAK_ENDRING,
+            TypeBrev.KLAGE_AVVIST, TypeBrev.KLAGE_OPPRETTHOLDELSE, TypeBrev.KLAGE_TRUKKET -> {
 
                 val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(brevbestilling.behandlingId)
                 listOfNotNull(

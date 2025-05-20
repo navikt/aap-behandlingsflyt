@@ -223,5 +223,8 @@ class BrevGateway : BrevbestillingGateway {
         TypeBrev.VEDTAK_ENDRING -> Brevtype.VEDTAK_ENDRING
         TypeBrev.VARSEL_OM_BESTILLING -> Brevtype.VARSEL_OM_BESTILLING
         TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT -> Brevtype.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT
+        TypeBrev.KLAGE_AVVIST -> Brevtype.KLAGE_AVVIST
+        TypeBrev.KLAGE_OPPRETTHOLDELSE -> Brevtype.KLAGE_OPPRETTHOLDELSE
+        TypeBrev.KLAGE_TRUKKET -> Brevtype.KLAGE_TRUKKET
     }
 }

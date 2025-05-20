@@ -19,6 +19,9 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VARSEL_OM_
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_AVSLAG
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_ENDRING
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_INNVILGELSE
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.KLAGE_AVVIST
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.KLAGE_OPPRETTHOLDELSE
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.KLAGE_TRUKKET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -164,6 +167,9 @@ class BehandlingHendelseServiceImpl(
             VEDTAK_ENDRING -> TypeBrev.VEDTAK_ENDRING
             VARSEL_OM_BESTILLING -> TypeBrev.VARSEL_OM_BESTILLING
             FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT -> TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT
+            KLAGE_AVVIST -> TypeBrev.KLAGE_AVVIST
+            KLAGE_OPPRETTHOLDELSE -> TypeBrev.KLAGE_OPPRETTHOLDELSE
+            KLAGE_TRUKKET -> TypeBrev.KLAGE_TRUKKET
         }
     }
 }

@@ -5,10 +5,20 @@ enum class TypeBrev {
     VEDTAK_INNVILGELSE,
     VEDTAK_ENDRING,
     VARSEL_OM_BESTILLING,
-    FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT;
+    FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT,
+    KLAGE_AVVIST,
+    KLAGE_OPPRETTHOLDELSE,
+    KLAGE_TRUKKET;
 
 
     fun erVedtak(): Boolean {
-        return setOf(VEDTAK_AVSLAG, VEDTAK_INNVILGELSE, VEDTAK_ENDRING).contains(this)
+        return setOf(
+            VEDTAK_AVSLAG,
+            VEDTAK_INNVILGELSE,
+            VEDTAK_ENDRING,
+            KLAGE_AVVIST,
+            KLAGE_OPPRETTHOLDELSE,
+            KLAGE_TRUKKET
+        ).contains(this)
     }
 }
