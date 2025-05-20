@@ -58,6 +58,7 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
         return requireNotNull(hentHvisEksisterer(behandlingId))
     }
 
+    // TODO: ingen grunn til å lagre SakId her: gitt behandlingId er den implisitt
     override fun lagre(sakId: SakId, behandlingId: BehandlingId, vurdering: TjenestepensjonRefusjonskravVurdering) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         if (eksisterendeGrunnlag != null) {
@@ -130,8 +131,12 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
 
         val deletedRows = connection.executeReturnUpdated(
             """
-            delete from tjenestepensjon_refusjonskrav_grunnlag where behandling_id = ?; 
-            delete from tjenestepensjon_refusjonskrav_vurdering where id = ANY(?::bigint[]);       
+            delete
+            from tjenestepensjon_refusjonskrav_grunnlag
+            where behandling_id = ?;
+            delete
+            from tjenestepensjon_refusjonskrav_vurdering
+            where id = ANY (?::bigint[]);
         """.trimIndent()
         ) {
             setParams {
@@ -146,7 +151,8 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
         """
                     SELECT REFUSJONKRAV_VURDERING_ID
                     FROM tjenestepensjon_refusjonskrav_grunnlag
-                    WHERE behandling_id = ? AND REFUSJONKRAV_VURDERING_ID is not null
+                    WHERE behandling_id = ?
+                      AND REFUSJONKRAV_VURDERING_ID is not null
                  
                 """.trimIndent()
     ) {
