@@ -3040,6 +3040,98 @@ class FlytOrkestratorTest {
     }
 
     @Test
+    fun `Klage - Skal gå rett til brev ved avslag på formkrav`() {
+        val person = TestPerson(
+            fødselsdato = Fødselsdato(LocalDate.now().minusYears(14)),
+            yrkesskade = listOf(TestYrkesskade()),
+        )
+        FakePersoner.leggTil(person)
+
+        val ident = person.aktivIdent()
+
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        // Avslås pga. alder
+        val avslåttFørstegang = sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("19"),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(4),
+                InnsendingType.SØKNAD,
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"),
+                        yrkesskade = "NEI",
+                        oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
+                    ),
+                ),
+                periode
+            )
+        )
+        assertThat(avslåttFørstegang)
+            .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
+            .extracting { b -> b.status().erAvsluttet() }.isEqualTo(true)
+        val kravMottatt = LocalDate.now().minusMonths(1)
+        val klagebehandling = sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("21"),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+                InnsendingType.KLAGE,
+                strukturertDokument = StrukturertDokument(KlageV0(kravMottatt = kravMottatt)),
+                periode
+            )
+        )
+        assertThat(klagebehandling.referanse).isNotEqualTo(avslåttFørstegang.referanse)
+        assertThat(klagebehandling.typeBehandling()).isEqualTo(TypeBehandling.Klage)
+
+        dataSource.transaction { connection ->
+            val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
+            val klageDokumenter =
+                mottattDokumentRepository.hentDokumenterAvType(klagebehandling.sakId, InnsendingType.KLAGE)
+            assertThat(klageDokumenter).hasSize(1)
+            assertThat(klageDokumenter.first().strukturertDokument).isNotNull
+            assertThat(klageDokumenter.first().strukturerteData<KlageV0>()?.data?.kravMottatt).isEqualTo(kravMottatt)
+        }
+
+        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            .isEqualTo(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = FastsettPåklagetBehandlingLøsning(
+                påklagetBehandlingVurdering = PåklagetBehandlingVurderingLøsningDto(
+                    påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
+                    påklagetBehandling = avslåttFørstegang.referanse.referanse,
+                )
+            )
+        )
+
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = VurderFormkravLøsning(
+                formkravVurdering = FormkravVurderingLøsningDto(
+                    begrunnelse = "Begrunnelse",
+                    erBrukerPart = false,
+                    erFristOverholdt = true,
+                    likevelBehandles = true,
+                    erKonkret = true,
+                    erSignert = true
+                )
+            )
+        )
+
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            .isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+
+    }
+
+    @Test
     fun `Skal kunne overstyre rettighetsperioden`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))

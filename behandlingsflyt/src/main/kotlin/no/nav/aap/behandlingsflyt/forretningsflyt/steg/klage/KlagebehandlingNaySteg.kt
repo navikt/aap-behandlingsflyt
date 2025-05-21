@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Avslått
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
@@ -16,9 +18,15 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class KlagebehandlingNaySteg private constructor(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val behandlendeEnhetRepository: BehandlendeEnhetRepository
+    private val behandlendeEnhetRepository: BehandlendeEnhetRepository,
+    private val klageresultatUtleder: KlageresultatUtleder
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        val resultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
+        if (resultat is Avslått) {
+            return Fullført
+        }
+
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val behandlendeEnhetVurdering = behandlendeEnhetRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurdering
         requireNotNull(behandlendeEnhetVurdering) {
@@ -27,7 +35,7 @@ class KlagebehandlingNaySteg private constructor(
         return if (behandlendeEnhetVurdering.skalBehandlesAvNay && avklaringsbehov.harIkkeBlittLøst(Definisjon.VURDER_KLAGE_NAY)) {
             FantAvklaringsbehov(Definisjon.VURDER_KLAGE_NAY)
         } else {
-            avbrytHvisFinnes(avklaringsbehov, Definisjon.VURDER_KLAGE_NAY)
+            avklaringsbehov.avbrytForSteg(type())
             /** TODO: Eventuell utnulling av vurdering kan skje i senere steg.
              *Vil kanskje ta vare på vurderingen "så lenge som mulig" i tilfelle man ombestemmer seg
              * **/
@@ -37,7 +45,11 @@ class KlagebehandlingNaySteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
-            return KlagebehandlingNaySteg(repositoryProvider.provide(), repositoryProvider.provide())
+            return KlagebehandlingNaySteg(
+                repositoryProvider.provide(),
+                repositoryProvider.provide(),
+                KlageresultatUtleder(repositoryProvider)
+            )
         }
 
         override fun type(): StegType {
@@ -49,13 +61,5 @@ class KlagebehandlingNaySteg private constructor(
         return this.alle()
             .filter { it.definisjon == definisjon }
             .none { it.status() == Status.AVSLUTTET }
-    }
-
-    private fun avbrytHvisFinnes(avklaringsbehovene: Avklaringsbehovene, definisjon: Definisjon) {
-        val eksisterendeBehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
-
-        if (eksisterendeBehov?.erÅpent() == true) {
-            avklaringsbehovene.avbryt(definisjon)
-        }
     }
 }
