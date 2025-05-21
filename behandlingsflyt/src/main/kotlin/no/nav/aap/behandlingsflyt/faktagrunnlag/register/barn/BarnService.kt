@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.time.Duration
 
 class BarnService private constructor(
@@ -35,6 +36,8 @@ class BarnService private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
     private val unleashGateway: UnleashGateway
 ) : Informasjonskrav {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override val navn = Companion.navn
 
@@ -50,6 +53,8 @@ class BarnService private constructor(
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
+        log.info("Oppdaterer barnegrunnlag for behandling ${kontekst.behandlingId} av type ${kontekst.behandlingType} med årsak(er) ${kontekst.vurdering.årsakerTilBehandling}")
+
         val behandlingId = kontekst.behandlingId
         val sak = sakService.hent(kontekst.sakId)
         val barnGrunnlag = barnRepository.hentHvisEksisterer(behandlingId)
