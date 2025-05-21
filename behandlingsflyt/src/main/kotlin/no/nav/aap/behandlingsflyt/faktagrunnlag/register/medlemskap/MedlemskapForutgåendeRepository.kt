@@ -156,6 +156,7 @@ class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection)
             """
             delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG where behandling_id = ?; 
             delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK where medlemskap_forutgaaende_unntak_person_id = ANY(?::bigint[]);
+            delete from FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where medlemskap_unntak_person_id = ANY(?::bigint[]);
             delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON where id = ANY(?::bigint[]);
         """.trimIndent()
         ) {
@@ -163,6 +164,7 @@ class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection)
                 setLong(1, behandlingId.id)
                 setLongArray(2, medlemskapForutgaaendeUnntakPersonIds)
                 setLongArray(3, medlemskapForutgaaendeUnntakPersonIds)
+                setLongArray(4, medlemskapForutgaaendeUnntakPersonIds)
             }
         }
     }
