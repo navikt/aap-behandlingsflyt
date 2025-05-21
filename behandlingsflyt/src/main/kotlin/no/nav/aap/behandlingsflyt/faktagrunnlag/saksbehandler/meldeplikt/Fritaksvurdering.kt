@@ -12,19 +12,21 @@ data class Fritaksvurdering(
     val harFritak: Boolean,
     val fraDato: LocalDate,
     val begrunnelse: String,
+    val vurdertAv: String,
     val opprettetTid: LocalDateTime?
 ) {
 
     fun tidslinje(): Tidslinje<FritaksvurderingData> {
         return Tidslinje(
-            listOf(Segment(Periode(fraDato, Tid.MAKS), FritaksvurderingData(harFritak, begrunnelse, opprettetTid)))
+            listOf(Segment(Periode(fraDato, Tid.MAKS), FritaksvurderingData(harFritak, begrunnelse, vurdertAv, opprettetTid)))
         )
     }
 
     data class FritaksvurderingData(
         val harFritak: Boolean,
         val begrunnelse: String,
-        val opprettetTid: LocalDateTime?
+        val vurdertAv: String,
+        val opprettetTid: LocalDateTime?,
     )
 
     companion object {
