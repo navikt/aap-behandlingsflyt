@@ -29,6 +29,7 @@ class FakeUnleash(private val flags: Map<FeatureToggle, Boolean>): UnleashGatewa
                 BehandlingsflytFeature.Manuellinntekt to true,
                 BehandlingsflytFeature.FjernAutomatiskOppdateringAvBarnetillegg to true,
                 BehandlingsflytFeature.IkkeMeldepliktForVirkningstidspunkt to true,
+                BehandlingsflytFeature.Samvarsling to true
             ))
         }
     }
