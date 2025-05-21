@@ -333,7 +333,8 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`6000`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.FORMKRAV,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = true
     ),
     FASTSETT_BEHANDLENDE_ENHET(
         kode = AvklaringsbehovKode.`6001`,
@@ -350,7 +351,7 @@ public enum class Definisjon(
             Rolle.SAKSBEHANDLER_OPPFOLGING
         ),
         kreverToTrinn = true
-        
+
     ),
     VURDER_KLAGE_NAY(
         kode = AvklaringsbehovKode.`6003`,

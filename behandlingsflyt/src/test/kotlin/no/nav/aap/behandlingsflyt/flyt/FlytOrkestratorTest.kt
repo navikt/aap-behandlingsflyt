@@ -3040,7 +3040,7 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `Klage - Skal gå rett til brev ved avslag på formkrav`() {
+    fun `Klage - Skal gå rett til beslutter ved avslag på formkrav`() {
         val person = TestPerson(
             fødselsdato = Fødselsdato(LocalDate.now().minusYears(14)),
             yrkesskade = listOf(TestYrkesskade()),
@@ -3127,7 +3127,7 @@ class FlytOrkestratorTest {
 
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
-            .isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+            .isEqualTo(Definisjon.FATTE_VEDTAK)
 
     }
 
