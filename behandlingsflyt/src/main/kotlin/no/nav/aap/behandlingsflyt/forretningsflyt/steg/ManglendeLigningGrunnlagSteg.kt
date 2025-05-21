@@ -45,7 +45,7 @@ class ManglendeLigningGrunnlagSteg private constructor(
             return Fullført
         }
 
-        if (!GatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.Manuellinntekt)) {
+        if (GatewayProvider.provide<UnleashGateway>().isDisabled(BehandlingsflytFeature.Manuellinntekt)) {
             return Fullført
         }
 
