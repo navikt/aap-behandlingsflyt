@@ -346,7 +346,11 @@ public enum class Definisjon(
         kvalitetssikres = true,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.KLAGEBEHANDLING_KONTOR,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_OPPFOLGING
+        ),
+        kreverToTrinn = true
+        
     ),
     VURDER_KLAGE_NAY(
         kode = AvklaringsbehovKode.`6003`,

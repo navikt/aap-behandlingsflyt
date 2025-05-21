@@ -2972,9 +2972,9 @@ class FlytOrkestratorTest {
                 klagevurderingKontor = KlagevurderingKontorLøsningDto(
                     begrunnelse = "Begrunnelse",
                     notat = null,
-                    innstilling = KlageInnstilling.OMGJØR,
-                    vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
-                    vilkårSomOpprettholdes = emptyList()
+                    innstilling = KlageInnstilling.OPPRETTHOLD,
+                    vilkårSomOmgjøres = emptyList(),
+                    vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_6)
                 )
             )
         )
@@ -3023,6 +3023,12 @@ class FlytOrkestratorTest {
                         begrunnelse = "Begrunnelse",
                         godkjent = true,
                         definisjon = Definisjon.VURDER_KLAGE_NAY.kode,
+                        grunner = emptyList(),
+                    ),
+                    TotrinnsVurdering(
+                        begrunnelse = "Begrunnelse",
+                        godkjent = true,
+                        definisjon = Definisjon.VURDER_KLAGE_KONTOR.kode,
                         grunner = emptyList(),
                     )
                 )
