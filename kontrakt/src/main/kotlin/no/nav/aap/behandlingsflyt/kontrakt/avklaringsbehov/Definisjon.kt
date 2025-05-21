@@ -360,6 +360,7 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true
     ),
+    @Deprecated("Revurdering opprettes automatisk i OmgjøringSteg")
     OPPRETT_REVURDERING_VED_OMGJØRING(
         kode = AvklaringsbehovKode.`6004`,
         type = BehovType.MANUELT_PÅKREVD,
