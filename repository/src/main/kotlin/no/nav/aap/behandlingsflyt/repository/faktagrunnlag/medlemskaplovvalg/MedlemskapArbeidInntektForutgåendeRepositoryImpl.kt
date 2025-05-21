@@ -8,9 +8,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -20,7 +20,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
-class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: DBConnection):
+class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: DBConnection) :
     MedlemskapArbeidInntektForutgåendeRepository {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -51,7 +51,10 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         }
     }
 
-    override fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<HistoriskManuellVurderingForForutgåendeMedlemskap> {
+    override fun hentHistoriskeVurderinger(
+        sakId: SakId,
+        behandlingId: BehandlingId
+    ): List<HistoriskManuellVurderingForForutgåendeMedlemskap> {
         val query = """
             SELECT vurdering.*
             FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG grunnlag
@@ -83,7 +86,10 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         }
     }
 
-    override fun lagreManuellVurdering(behandlingId: BehandlingId, manuellVurdering: ManuellVurderingForForutgåendeMedlemskap){
+    override fun lagreManuellVurdering(
+        behandlingId: BehandlingId,
+        manuellVurdering: ManuellVurderingForForutgåendeMedlemskap
+    ) {
         val grunnlagOppslag = hentGrunnlag(behandlingId)
         val eksisterendeManuellVurdering = hentManuellVurdering(grunnlagOppslag?.manuellVurderingId)
         val overstyrt = manuellVurdering.overstyrt || eksisterendeManuellVurdering?.overstyrt == true
@@ -156,24 +162,23 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         val arbeidIds = getArbeidIds(behandlingId)
         val inntekterIds = getInntekterIds(behandlingId)
         val manuellVurderingIds = getManuellVurderingIds(behandlingId)
-        val medlemsskapUnntakPersonIds = getMedlemsskapUnntakPersonIds(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ?; 
             delete from INNTEKT_I_NORGE_FORUTGAAENDE where id = ANY(?::bigint[]);
-            delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON where id = ANY(?::bigint[]);
             delete from ARBEID_FORUTGAAENDE where arbeider_id = ANY(?::bigint[]);
             delete from ARBEIDER_FORUTGAAENDE where id = ANY(?::bigint[]);
             delete from FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING where id = ANY(?::bigint[]);
            
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, inntekterIds)
-                setLongArray(3, medlemsskapUnntakPersonIds)
+                setLongArray(3, arbeidIds)
                 setLongArray(4, arbeidIds)
-                setLongArray(5, arbeidIds)
-                setLongArray(6, manuellVurderingIds)
+                setLongArray(5, manuellVurderingIds)
             }
         }
         log.info("Slettet $deletedRows raderfra FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG")
@@ -207,20 +212,6 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         }
     }
 
-    private fun getMedlemsskapUnntakPersonIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
-        """
-                    SELECT medlemskap_unntak_person_id
-                    FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
-                    WHERE behandling_id = ? AND medlemskap_unntak_person_id is not null
-                 
-                """.trimIndent()
-    ) {
-        setParams { setLong(1, behandlingId.id) }
-        setRowMapper { row ->
-            row.getLong("medlemskap_unntak_person_id")
-        }
-    }
-
     private fun getInntekterIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
         """
                     SELECT inntekter_i_norge_id
@@ -235,7 +226,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         }
     }
 
-    private fun lagreArbeidGrunnlag (arbeidGrunnlag: List<ArbeidINorgeGrunnlag>): Long? {
+    private fun lagreArbeidGrunnlag(arbeidGrunnlag: List<ArbeidINorgeGrunnlag>): Long? {
         if (arbeidGrunnlag.isEmpty()) return null
 
         val arbeiderQuery = """
@@ -248,7 +239,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                 INSERT INTO ARBEID_FORUTGAAENDE (identifikator, arbeidsforhold_kode, arbeider_id, startdato, sluttdato) VALUES (?, ?, ?, ?, ?)
             """.trimIndent()
 
-            connection.execute(arbeidQuery)  {
+            connection.execute(arbeidQuery) {
                 setParams {
                     setString(1, forhold.identifikator)
                     setString(2, forhold.arbeidsforholdKode)
@@ -261,7 +252,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         return arbeiderId
     }
 
-    private fun lagreArbeidsInntektGrunnlag (arbeidsInntektGrunnlag: List<ArbeidsInntektMaaned>): Long? {
+    private fun lagreArbeidsInntektGrunnlag(arbeidsInntektGrunnlag: List<ArbeidsInntektMaaned>): Long? {
         if (arbeidsInntektGrunnlag.isEmpty()) return null
 
         val inntekterINorgeQuery = """
@@ -277,7 +268,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
 
                 val tomFallback = inntekt.opptjeningsperiodeFom ?: entry.aarMaaned.atDay(1)
 
-                connection.execute(inntektQuery)  {
+                connection.execute(inntektQuery) {
                     setParams {
                         setString(1, inntekt.virksomhet.identifikator)
                         setDouble(2, inntekt.beloep)
@@ -285,7 +276,13 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                         setString(4, inntekt.opptjeningsland)
                         setString(5, inntekt.beskrivelse)
                         setLong(6, inntekterINorgeId)
-                        setPeriode(7, Periode(inntekt.opptjeningsperiodeFom?: entry.aarMaaned.atDay(1), inntekt.opptjeningsperiodeTom?: tomFallback))
+                        setPeriode(
+                            7,
+                            Periode(
+                                inntekt.opptjeningsperiodeFom ?: entry.aarMaaned.atDay(1),
+                                inntekt.opptjeningsperiodeTom ?: tomFallback
+                            )
+                        )
                     }
                 }
             }
@@ -293,13 +290,13 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         return inntekterINorgeId
     }
 
-    private fun hentManuellVurdering(vurderingId: Long?): ManuellVurderingForForutgåendeMedlemskap?{
+    private fun hentManuellVurdering(vurderingId: Long?): ManuellVurderingForForutgåendeMedlemskap? {
         if (vurderingId == null) return null
         val query = """
             SELECT * FROM FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING WHERE ID = ?
         """.trimIndent()
 
-        return connection.queryFirst(query){
+        return connection.queryFirst(query) {
             setParams {
                 setLong(1, vurderingId)
             }
@@ -343,7 +340,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                 )
             }
         }.toList()
-       return MedlemskapUnntakGrunnlag(data)
+        return MedlemskapUnntakGrunnlag(data)
     }
 
     private fun hentKildesystem(row: Row): KildesystemMedl? {

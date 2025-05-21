@@ -14,7 +14,11 @@ data class ArbeidsInntektMaaned(
 
 data class ArbeidsInntektInformasjon(
     val inntektListe: List<Inntekt>
-)
+) {
+    init {
+        require(inntektListe.isNotEmpty()) { "Inntektliste kan ikke være tom" }
+    }
+}
 
 data class Inntekt(
     val beloep: Double,

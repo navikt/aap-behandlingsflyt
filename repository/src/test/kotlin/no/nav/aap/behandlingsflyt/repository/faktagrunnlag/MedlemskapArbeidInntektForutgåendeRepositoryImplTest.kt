@@ -23,7 +23,6 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -31,14 +30,16 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     private val dataSource = InitTestDatabase.freshDatabase()
 
     @Test
-    fun kanHenteSisteRelevanteUtenlandsopplysning() {
+    fun `kan hente siste relevante utenlandsopplysning`() {
         val sak = dataSource.transaction { connection ->
-            val personOgSakService = PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
+            val personOgSakService =
+                PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
 
         val sak2 = dataSource.transaction { connection ->
-            val personOgSakService = PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
+            val personOgSakService =
+                PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
 
@@ -46,35 +47,58 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val arbeidInntektRepo = MedlemskapArbeidInntektRepositoryImpl(connection)
 
-            val førstegangsBehandling = opprettBehandlingMedVurdering(TypeBehandling.Førstegangsbehandling, sak.id, null, listOf(), null)
-            val revurdering = opprettBehandlingMedVurdering(TypeBehandling.Revurdering, sak.id, førstegangsBehandling.id, listOf(), UtenlandsOppholdData(true, false, false, false, null))
-            opprettBehandlingMedVurdering(TypeBehandling.Revurdering, sak.id, revurdering.id, listOf(Årsak(ÅrsakTilBehandling.REVURDER_MEDLEMSKAP)), null)
+            val førstegangsBehandling =
+                opprettBehandlingMedVurdering(TypeBehandling.Førstegangsbehandling, sak.id, null, listOf(), null)
+            val revurdering = opprettBehandlingMedVurdering(
+                TypeBehandling.Revurdering,
+                sak.id,
+                førstegangsBehandling.id,
+                listOf(),
+                UtenlandsOppholdData(true, false, false, false, null)
+            )
+            opprettBehandlingMedVurdering(
+                TypeBehandling.Revurdering,
+                sak.id,
+                revurdering.id,
+                listOf(Årsak(ÅrsakTilBehandling.REVURDER_MEDLEMSKAP)),
+                null
+            )
 
             // Random ny behandling uten kobling
             behandlingRepo.opprettBehandling(sak2.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
 
-            val sisteUtenlandsOppholdData = arbeidInntektRepo.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(sak.id)
+            val sisteUtenlandsOppholdData =
+                arbeidInntektRepo.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(sak.id)
             assertEquals(sisteUtenlandsOppholdData?.harBoddINorgeSiste5År, true)
         }
     }
 
     @Test
-    fun henterRelaterteHistoriskeVurderinger() {
+    fun `henter relaterte historiske vurderinger`() {
         val sak = dataSource.transaction { connection ->
-            val personOgSakService = PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
+            val personOgSakService =
+                PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
 
         val sak2 = dataSource.transaction { connection ->
-            val personOgSakService = PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
+            val personOgSakService =
+                PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
 
         dataSource.transaction { connection ->
             val forutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
 
-            val førstegangsBehandling = opprettBehandlingMedVurdering(TypeBehandling.Førstegangsbehandling, sak.id, null, listOf(), null)
-            val revurdering = opprettBehandlingMedVurdering(TypeBehandling.Revurdering, sak.id, førstegangsBehandling.id, listOf(), null)
+            val førstegangsBehandling =
+                opprettBehandlingMedVurdering(TypeBehandling.Førstegangsbehandling, sak.id, null, listOf(), null)
+            val revurdering = opprettBehandlingMedVurdering(
+                TypeBehandling.Revurdering,
+                sak.id,
+                førstegangsBehandling.id,
+                listOf(),
+                null
+            )
 
             val historikk = forutgåendeRepo.hentHistoriskeVurderinger(sak.id, revurdering.id)
             assertEquals(1, historikk.size)
@@ -90,8 +114,9 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
         sakId: SakId,
         forrigeBehandlingId: BehandlingId?,
         årsaker: List<Årsak>,
-        utenlandsOppholdData: UtenlandsOppholdData?)
-    : Behandling {
+        utenlandsOppholdData: UtenlandsOppholdData?
+    )
+            : Behandling {
         return dataSource.transaction { connection ->
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val forutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
@@ -109,10 +134,15 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
         utenlandsOppholdData: UtenlandsOppholdData? = UtenlandsOppholdData(false, false, false, false, null)
     ) {
         val lovvalgRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
-        if (utenlandsOppholdData != null) lovvalgRepository.lagreOppgittUtenlandsOppplysninger(behandlingId, JournalpostId("1"), utenlandsOppholdData)
+        if (utenlandsOppholdData != null) lovvalgRepository.lagreOppgittUtenlandsOppplysninger(
+            behandlingId,
+            JournalpostId("1"),
+            utenlandsOppholdData
+        )
 
         forutgåendeRepository.lagreArbeidsforholdOgInntektINorge(behandlingId, listOf(), listOf(), null)
-        forutgåendeRepository.lagreManuellVurdering(behandlingId,
+        forutgåendeRepository.lagreManuellVurdering(
+            behandlingId,
             ManuellVurderingForForutgåendeMedlemskap(
                 begrunnelse = begrunnelse,
                 harForutgåendeMedlemskap = true,
