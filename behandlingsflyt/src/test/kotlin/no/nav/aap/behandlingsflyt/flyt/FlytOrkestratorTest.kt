@@ -3030,6 +3030,12 @@ class FlytOrkestratorTest {
                         godkjent = true,
                         definisjon = Definisjon.VURDER_KLAGE_KONTOR.kode,
                         grunner = emptyList(),
+                    ),
+                    TotrinnsVurdering(
+                        begrunnelse = "Begrunnelse",
+                        godkjent = true,
+                        definisjon = Definisjon.VURDER_FORMKRAV.kode,
+                        grunner = emptyList()
                     )
                 )
             )
