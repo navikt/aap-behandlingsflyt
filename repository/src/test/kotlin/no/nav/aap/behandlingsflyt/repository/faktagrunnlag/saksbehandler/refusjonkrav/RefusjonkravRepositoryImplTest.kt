@@ -33,7 +33,8 @@ class RefusjonkravRepositoryImplTest {
         val vurdering = RefusjonkravVurdering(
             harKrav = true,
             fom = periode.fom,
-            tom = periode.tom
+            tom = periode.tom,
+            vurdertAv = "saksbehandler",
         )
         dataSource.transaction {
             RefusjonkravRepositoryImpl(it).lagre(
@@ -44,7 +45,10 @@ class RefusjonkravRepositoryImplTest {
         val uthentet = dataSource.transaction {
             RefusjonkravRepositoryImpl(it).hentHvisEksisterer(behandling.id)
         }
-        assertThat(uthentet).isEqualTo(vurdering)
+        assertThat(uthentet?.harKrav).isEqualTo(vurdering.harKrav)
+        assertThat(uthentet?.fom).isEqualTo(vurdering.fom)
+        assertThat(uthentet?.tom).isEqualTo(vurdering.tom)
+        assertThat(uthentet?.vurdertAv).isEqualTo(vurdering.vurdertAv)
 
         // Lagre ny vurdering
         val vurdering2 = vurdering.copy(harKrav = false)
@@ -56,7 +60,10 @@ class RefusjonkravRepositoryImplTest {
         val uthentet2 = dataSource.transaction {
             RefusjonkravRepositoryImpl(it).hentHvisEksisterer(behandling.id)
         }
-        assertThat(uthentet2).isEqualTo(vurdering2)
+        assertThat(uthentet2?.harKrav).isEqualTo(vurdering2.harKrav)
+        assertThat(uthentet2?.fom).isEqualTo(vurdering2.fom)
+        assertThat(uthentet2?.tom).isEqualTo(vurdering2.tom)
+        assertThat(uthentet2?.vurdertAv).isEqualTo(vurdering2.vurdertAv)
 
         // SLETT
         dataSource.transaction {

@@ -38,7 +38,7 @@ class AvventUtbetalingServiceTest {
     fun `Refusjonskrav utenfor ytelsesperiodenmskal føre til ingen avvent utbetaling`() {
         val refusjonkravRepositoryMock = mockk<RefusjonkravRepository>()
         val tjenestepensjonRefusjonsKravVurderingRepositoryMock = mockk<TjenestepensjonRefusjonsKravVurderingRepository>()
-        every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns RefusjonkravVurdering(true, LocalDate.parse("2024-01-01"), LocalDate.parse("2024-01-31"))
+        every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns RefusjonkravVurdering(true, LocalDate.parse("2024-01-01"), LocalDate.parse("2024-01-31"), "saksbehandler")
         every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns null
         val service = AvventUtbetalingService(refusjonkravRepositoryMock, tjenestepensjonRefusjonsKravVurderingRepositoryMock)
 
@@ -56,7 +56,7 @@ class AvventUtbetalingServiceTest {
         val refusjonkravRepositoryMock = mockk<RefusjonkravRepository>()
         val tjenestepensjonRefusjonsKravVurderingRepositoryMock = mockk<TjenestepensjonRefusjonsKravVurderingRepository>()
         every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns
-                RefusjonkravVurdering(true, LocalDate.parse("2025-01-10"), null)
+                RefusjonkravVurdering(true, LocalDate.parse("2025-01-10"), null, "saksbehandler")
         every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns null
         val service = AvventUtbetalingService(refusjonkravRepositoryMock, tjenestepensjonRefusjonsKravVurderingRepositoryMock)
 
