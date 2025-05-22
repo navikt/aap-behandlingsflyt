@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -19,8 +20,12 @@ class RefusjonkravLøser(
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: RefusjonkravLøsning): LøsningsResultat {
-        val vurdering = validerRefusjonDato(kontekst, løsning)
-
+        val vurdering = validerRefusjonDato(kontekst, løsning).let { RefusjonkravVurdering(
+            harKrav = it.harKrav,
+            fom = it.fom,
+            tom = it.tom,
+            vurdertAv = kontekst.bruker.ident
+        ) }
         refusjonkravRepository.lagre(kontekst.kontekst.sakId, kontekst.behandlingId(), vurdering)
         return LøsningsResultat("Vurdert refusjonskrav")
     }
@@ -32,7 +37,7 @@ class RefusjonkravLøser(
     private fun validerRefusjonDato(
         kontekst: AvklaringsbehovKontekst,
         løsning: RefusjonkravLøsning
-    ): RefusjonkravVurdering {
+    ): RefusjonkravVurderingDto {
         if (løsning.refusjonkravVurdering.harKrav) {
             val sak = sakRepository.hent(kontekst.kontekst.sakId)
             val kravDato = sak.rettighetsperiode.fom
@@ -47,7 +52,7 @@ class RefusjonkravLøser(
             if (refusjonTomDato != null && refusjonFomDato.isAfter(refusjonTomDato)) {
                 throw IllegalArgumentException("Tom (${refusjonTomDato}) er før fom(${refusjonFomDato})")
             }
-            return RefusjonkravVurdering(løsning.refusjonkravVurdering.harKrav, refusjonFomDato, refusjonTomDato)
+            return RefusjonkravVurderingDto(løsning.refusjonkravVurdering.harKrav, refusjonFomDato, refusjonTomDato)
         }
         return løsning.refusjonkravVurdering
     }

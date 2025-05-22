@@ -3,7 +3,10 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -24,38 +27,57 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
 ) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/refusjon") {
-            authorizedGet<BehandlingReferanse, RefusjonkravGrunnlagDto>(
+            authorizedGet<BehandlingReferanse, RefusjonkravGrunnlagResponse>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
             ) { req ->
-                val response = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
+                val response =
+                    dataSource.transaction(readOnly = true) { connection ->
+                        val repositoryProvider = repositoryRegistry.provider(connection)
+                        val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
 
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+                        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                        val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
 
-                    val gjeldendeVurdering = refusjonkravRepository.hentHvisEksisterer(behandling.id)
-                    val historiskeVurderinger = refusjonkravRepository.hentAlleVurderingerPåSak(behandling.sakId)
+                        val gjeldendeVurdering = refusjonkravRepository.hentHvisEksisterer(behandling.id)?.tilResponse()
+                        val historiskeVurderinger =
+                            refusjonkravRepository
+                                .hentAlleVurderingerPåSak(
+                                    behandling.sakId
+                                ).map { it.tilResponse() }
 
-                    val harTilgangTilÅSaksbehandle =
-                        GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                            req.referanse,
-                            Definisjon.REFUSJON_KRAV,
-                            token()
+                        val harTilgangTilÅSaksbehandle =
+                            GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
+                                req.referanse,
+                                Definisjon.REFUSJON_KRAV,
+                                token()
+                            )
+
+                        RefusjonkravGrunnlagResponse(
+                            harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+                            gjeldendeVurdering = gjeldendeVurdering,
+                            historiskeVurderinger = historiskeVurderinger
                         )
-
-                    RefusjonkravGrunnlagDto(
-                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
-                        gjeldendeVurdering = gjeldendeVurdering,
-                        historiskeVurderinger = historiskeVurderinger
-                    )
-                }
-
+                    }
                 respond(response)
             }
         }
     }
 }
 
+private fun RefusjonkravVurdering.tilResponse(): RefusjonkravVurderingResponse {
+    val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv)
+    return RefusjonkravVurderingResponse(
+        harKrav = harKrav,
+        fom = fom,
+        tom = tom,
+        vurdertAv =
+            VurdertAvResponse(
+                ident = vurdertAv,
+                dato = opprettetTid?.toLocalDate() ?: error("Fant ikke opprettet tid for refusjonkrav vurdering"),
+                ansattnavn = navnOgEnhet?.navn,
+                enhetsnavn = navnOgEnhet?.enhet
+            )
+    )
+}

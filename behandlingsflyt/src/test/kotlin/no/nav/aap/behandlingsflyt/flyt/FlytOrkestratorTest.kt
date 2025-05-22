@@ -61,7 +61,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.flate.BehandlendeEnhetLøsningDto
@@ -84,7 +83,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
@@ -96,9 +95,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.Yrkes
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestratorTest.Companion.util
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.BehandlendeEnhetSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.FormkravSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.KlagebehandlingNaySteg
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.integrasjon.aaregisteret.AARegisterGateway
@@ -126,7 +122,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
@@ -327,10 +322,10 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurdering(
+                RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
-                    tom = null
+                    tom = null,
                 )
             )
         )
@@ -440,7 +435,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurdering(
+                RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null
@@ -712,7 +707,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurdering(
+                RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null
@@ -866,7 +861,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurdering(
+                RefusjonkravVurderingDto(
                     harKrav = false,
                     fom = LocalDate.now(),
                     tom = null
@@ -1142,7 +1137,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurdering(
+                RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null
@@ -1431,7 +1426,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurdering(
+                RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null
@@ -1614,7 +1609,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurdering(
+                RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null
@@ -3275,7 +3270,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurdering(
+                RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null
@@ -3426,7 +3421,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurdering(
+                RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null
