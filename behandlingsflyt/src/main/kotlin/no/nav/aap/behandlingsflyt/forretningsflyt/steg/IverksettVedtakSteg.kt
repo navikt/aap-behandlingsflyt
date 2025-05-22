@@ -65,7 +65,7 @@ class IverksettVedtakSteg private constructor(
         } else {
             log.error("Fant ikke tilkjent ytelse for behandingsref ${kontekst.behandlingId}")
         }
-        if (!GatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.Samvarsling)) {
+        if (GatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.Samvarsling)) {
             flytJobbRepository.leggTil(
                 jobbInput = JobbInput(jobb = VarsleVedtakJobbUtfører).medPayload(kontekst.behandlingId)
             )
