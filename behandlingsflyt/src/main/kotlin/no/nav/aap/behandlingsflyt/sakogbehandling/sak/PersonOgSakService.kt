@@ -44,7 +44,6 @@ class PersonOgSakService(
                 listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
             )
             if (behandling != null) {
-
                 if (trukketSøknadService.søknadErTrukket(behandling.id)) {
                     return sakRepository.finnEllerOpprett(person, periode)
                 }

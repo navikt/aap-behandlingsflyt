@@ -46,7 +46,7 @@ class SøknadSteg(
         log.info("sletter vurderinger og registerdata i alle repositories for {}", behandlingId)
         repositoryProvider.provideAlle().forEach { repository ->
             if (repository is no.nav.aap.lookup.repository.Repository) {
-                repository.slett(behandlingId)
+                //repository.slett(behandlingId)
             }
         }
     }
