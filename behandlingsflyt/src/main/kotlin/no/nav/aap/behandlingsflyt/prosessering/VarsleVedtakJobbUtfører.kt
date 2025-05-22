@@ -33,7 +33,7 @@ class VarsleVedtakJobbUtfører(
         val request = SamordneVedtakRequest(
             pid = sak.person.aktivIdent().identifikator.toString(),
             vedtakId = behandling.referanse.toString(),
-            sakId = sak.id.id,
+            sakId = sak.saksnummer,
             virkFom = vedtak!!.vedtakstidspunkt.toLocalDate(),
             virkTom = sak.rettighetsperiode.tom,
             fagomrade = "AAP",
