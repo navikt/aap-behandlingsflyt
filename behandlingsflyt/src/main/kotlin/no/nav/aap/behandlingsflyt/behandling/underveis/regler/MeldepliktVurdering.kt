@@ -4,14 +4,18 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.F
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.FREMTIDIG_OPPFYLT
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.FRITAK
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.FØR_VEDTAK
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.FØRSTE_MELDEPERIODE_MED_RETT
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.IKKE_MELDT_SEG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.MELDT_SEG
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.UTEN_RETT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.verdityper.dokument.JournalpostId
 
 enum class MeldepliktStatus {
     FØR_VEDTAK,
+    FØRSTE_MELDEPERIODE_MED_RETT,
+    UTEN_RETT,
     FRITAK,
     MELDT_SEG,
     IKKE_MELDT_SEG,
@@ -34,6 +38,18 @@ interface MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
         override val årsak = null
         override val status = FØR_VEDTAK
+    }
+
+    data object UtenRett: MeldepliktVurdering {
+        override val utfall = Utfall.OPPFYLT
+        override val årsak = null
+        override val status = UTEN_RETT
+    }
+
+    data object FørsteMeldeperiodeMedRett: MeldepliktVurdering {
+        override val utfall = Utfall.OPPFYLT
+        override val årsak = null
+        override val status = FØRSTE_MELDEPERIODE_MED_RETT
     }
 
     data class MeldtSeg(

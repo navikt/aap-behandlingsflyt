@@ -1,15 +1,20 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.mars
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
@@ -254,6 +259,118 @@ class MeldepliktRegelTest {
                 fom = 4 mai 2020,
                 tom = 19 april 2021,
                 vurdering = MeldepliktVurdering.Fritak
+            )
+        )
+    }
+
+    /*
+                 April                      May                       June
+          Mo  Tu We Th Fr  Sa  Su      Mo  Tu  We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
+                  1  2  3   4   5                     1  2  3       1  2  3  4  5  6  7
+
+           6   7  8  9 10  11  12       4   5   6  7  8  9 10       8  9 10 11 12 13 14
+          13  14 15 16 17  18  19      11 [12] 13 14 15 16 17      15 16 17 18 19 20 21
+
+         [20] 21 22 23 24 [25] 26      18  19  20 21 22 23 24      22 23 24 25 26 27 28
+          27  28 29 30                 25  26  27 28 29 30 31      29 30
+
+          søknadsdato 20. april
+          vedtaksdato 25. april
+          virkningstidspunkt fra 12. mai (meldeperiode 4. – 17. mai)
+          ----
+          hele meldeperioden (4. – 17. mai) regnes som oppfylt, selv uten meldekort
+         */
+    @Test
+    fun `Meldeplikten inntrer først etter virkningstidspunktet`() {
+        val rettighetsperiode = Periode(20 april 2020, 19 april 2021)
+        val input = tomUnderveisInput(
+            rettighetsperiode = rettighetsperiode,
+        )
+
+        val vurdertTidslinje = vurder(
+            input, nå = 20 april 2022,
+            tidslinjeOf(
+                Periode(20 april 2020, 11 mai 2020) to Vurdering(fårAapEtter = null),
+                Periode(12 mai 2020, 19 april 2021) to Vurdering(fårAapEtter = RettighetsType.BISTANDSBEHOV),
+            )
+        )
+
+        assertVurdering(
+            vurdertTidslinje, rettighetsperiode,
+            Forventer(
+                fom = 20 april 2020,
+                tom = 3 mai 2020,
+                vurdering = MeldepliktVurdering.FørVedtak,
+            ),
+            Forventer(
+                fom = 4 mai 2020,
+                tom = 17 mai 2020,
+                vurdering = MeldepliktVurdering.UtenRett,
+            ),
+            Forventer(
+                fom = 18 mai 2020,
+                tom = 19 april 2021,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
+            )
+        )
+    }
+
+    /*
+                 April                     May                       June
+          Mo  Tu We Th Fr  Sa  Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
+                  1  2  3   4   5                   1  2  3       1  2  3  4  5  6  7
+
+           6   7  8  9 10  11  12       4  5  6  7  8  9 10       8  9 10 11 12 13 14
+          13  14 15 16 17  18  19      11 12 13 14 15 16 17      15 16 17 18 19 20 21
+
+         [20] 21 22 23 24 [25] 26      18 19 20 21 22 23 24      22 23 24 25 26 27 28
+          27  28 29 30                 25 26 27 28 29 30 31      29 30
+
+          søknadsdato og vedtaksdato 20. april
+          virkningstidspunkt fra 25. april (meldeperiode 20. april – 3. mai)
+          ikke rett i meldeperioden fra 4. mai til 17. mai
+          rett igjen fra  17. mai
+          ----
+          første meldeperiode er oppfylt fordi medlemmet anses som meldt på vedtaksdato
+          tredje meldeperiode er oppfylt fordi det er første meldeperiode i en ny periode
+         */
+    @Test
+    fun `Anser som meldt seg i overgangen fra ingen rett til å ha rett`() {
+        val rettighetsperiode = Periode(20 april 2020, 19 april 2021)
+        val input = tomUnderveisInput(
+            rettighetsperiode = rettighetsperiode,
+        )
+
+        val vurdertTidslinje = vurder(
+            input, nå = 20 april 2022,
+            tidslinjeOf(
+                Periode(20 april 2020, 3 mai 2020) to Vurdering(fårAapEtter = RettighetsType.BISTANDSBEHOV),
+                Periode(4 mai 2020, 17 mai 2020) to Vurdering(fårAapEtter = null),
+                Periode(18 mai 2020, 19 april 2021) to Vurdering(fårAapEtter = RettighetsType.BISTANDSBEHOV),
+            )
+        )
+
+        assertVurdering(
+            vurdertTidslinje, rettighetsperiode,
+            Forventer(
+                fom = 20 april 2020,
+                tom = 3 mai 2020,
+                vurdering = MeldepliktVurdering.FørVedtak,
+            ),
+            Forventer(
+                fom = 4 mai 2020,
+                tom = 17 mai 2020,
+                vurdering = MeldepliktVurdering.UtenRett,
+            ),
+            Forventer(
+                fom = 18 mai 2020,
+                tom = 31 mai 2020,
+                vurdering = MeldepliktVurdering.FørsteMeldeperiodeMedRett,
+            ),
+            Forventer(
+                fom = 1 juni 2020,
+                tom = 19 april 2021,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             )
         )
     }
@@ -875,11 +992,21 @@ class MeldepliktRegelTest {
     }
 
 
-    private fun vurder(input: UnderveisInput, nå: LocalDate): Tidslinje<Vurdering> {
+    private fun vurder(
+        input: UnderveisInput,
+        nå: LocalDate,
+        vurderinger: Tidslinje<Vurdering> = Tidslinje(
+            input.rettighetsperiode,
+            Vurdering(fårAapEtter = RettighetsType.BISTANDSBEHOV)
+        ),
+    ): Tidslinje<Vurdering> {
         val zone = ZoneId.systemDefault()
         val now = nå.atStartOfDay(zone).toInstant()
-        return MeldepliktRegel(clock = Clock.fixed(now, zone))
-            .vurder(input, UtledMeldeperiodeRegel().vurder(input, Tidslinje()))
+        return MeldepliktRegel(
+            clock = Clock.fixed(now, zone),
+            unleashGateway = FakeUnleash(mapOf(BehandlingsflytFeature.IkkeMeldepliktForVirkningstidspunkt to true))
+        )
+            .vurder(input, UtledMeldeperiodeRegel().vurder(input, vurderinger))
     }
 
     private fun assertVurdering(
