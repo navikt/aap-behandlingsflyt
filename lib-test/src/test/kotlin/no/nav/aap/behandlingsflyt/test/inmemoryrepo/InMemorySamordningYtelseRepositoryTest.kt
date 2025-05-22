@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
+import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -420,6 +422,11 @@ class InMemorySamordningYtelseRepositoryTest {
             },
             InMemoryPersonRepository,
             InMemorySakRepository,
+            InMemoryBehandlingRepository,
+            trukketSøknadService = TrukketSøknadService(
+                InMemoryAvklaringsbehovRepository,
+                InMemoryTrukketSøknadRepository
+            ),
         ).finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
     }
 

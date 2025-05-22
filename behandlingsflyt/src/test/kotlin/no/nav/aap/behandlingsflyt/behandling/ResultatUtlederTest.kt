@@ -134,6 +134,11 @@ class ResultatUtlederTest {
             FakePdlGateway,
             InMemoryPersonRepository,
             InMemorySakRepository,
+            InMemoryBehandlingRepository,
+            TrukketSøknadService(
+                InMemoryAvklaringsbehovRepository,
+                InMemoryTrukketSøknadRepository
+            ),
         ).finnEllerOpprett(ident(), periode)
     }
 

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag
 
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -16,6 +17,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
@@ -33,13 +36,31 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     fun `kan hente siste relevante utenlandsopplysning`() {
         val sak = dataSource.transaction { connection ->
             val personOgSakService =
-                PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
+                PersonOgSakService(
+                    FakePdlGateway,
+                    PersonRepositoryImpl(connection),
+                    SakRepositoryImpl(connection),
+                    BehandlingRepositoryImpl(connection),
+                    TrukketSøknadService(
+                        InMemoryAvklaringsbehovRepository,
+                        InMemoryTrukketSøknadRepository
+                    ),
+                )
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
 
         val sak2 = dataSource.transaction { connection ->
             val personOgSakService =
-                PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
+                PersonOgSakService(
+                    FakePdlGateway,
+                    PersonRepositoryImpl(connection),
+                    SakRepositoryImpl(connection),
+                    BehandlingRepositoryImpl(connection),
+                    TrukketSøknadService(
+                        InMemoryAvklaringsbehovRepository,
+                        InMemoryTrukketSøknadRepository
+                    ),
+                )
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
 
@@ -77,13 +98,31 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     fun `henter relaterte historiske vurderinger`() {
         val sak = dataSource.transaction { connection ->
             val personOgSakService =
-                PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
+                PersonOgSakService(
+                    FakePdlGateway,
+                    PersonRepositoryImpl(connection),
+                    SakRepositoryImpl(connection),
+                    BehandlingRepositoryImpl(connection),
+                    TrukketSøknadService(
+                        InMemoryAvklaringsbehovRepository,
+                        InMemoryTrukketSøknadRepository
+                    ),
+                )
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
 
         val sak2 = dataSource.transaction { connection ->
             val personOgSakService =
-                PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
+                PersonOgSakService(
+                    FakePdlGateway,
+                    PersonRepositoryImpl(connection),
+                    SakRepositoryImpl(connection),
+                    BehandlingRepositoryImpl(connection),
+                    TrukketSøknadService(
+                        InMemoryAvklaringsbehovRepository,
+                        InMemoryTrukketSøknadRepository
+                    ),
+                )
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
 

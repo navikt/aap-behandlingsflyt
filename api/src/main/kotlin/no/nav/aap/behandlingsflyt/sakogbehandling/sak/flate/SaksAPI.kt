@@ -10,6 +10,7 @@ import com.papsign.ktor.openapigen.route.tag
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -223,7 +224,9 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
                     val sak = PersonOgSakService(
                         pdlGateway = GatewayProvider.provide(IdentGateway::class),
                         personRepository = repositoryProvider.provide<PersonRepository>(),
-                        sakRepository = repositoryProvider.provide<SakRepository>()
+                        sakRepository = repositoryProvider.provide<SakRepository>(),
+                        behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
+                        trukketSøknadService = TrukketSøknadService(repositoryProvider)
                     ).finnEllerOpprett(ident = ident, periode = periode)
 
                     SaksinfoDTO(

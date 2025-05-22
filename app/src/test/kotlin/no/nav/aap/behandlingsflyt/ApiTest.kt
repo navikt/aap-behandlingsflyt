@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.GrunnDTO
 import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.OpprettAktivitetspliktDTO
 import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.PeriodeDTO
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.MedlemskapGrunnlagDto
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
@@ -47,6 +48,8 @@ import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -158,7 +161,12 @@ class ApiTest {
             val personOgSakService = PersonOgSakService(
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
+                SakRepositoryImpl(connection),
+                BehandlingRepositoryImpl(connection),
+                TrukketSøknadService(
+                    InMemoryAvklaringsbehovRepository,
+                    InMemoryTrukketSøknadRepository
+                ),
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
 
@@ -209,7 +217,12 @@ class ApiTest {
             val personOgSakService = PersonOgSakService(
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
+                SakRepositoryImpl(connection),
+                BehandlingRepositoryImpl(connection),
+                TrukketSøknadService(
+                    InMemoryAvklaringsbehovRepository,
+                    InMemoryTrukketSøknadRepository
+                ),
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val sak =

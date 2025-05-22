@@ -132,7 +132,12 @@ class StatistikkJobbUtførerTest {
             val sak = PersonOgSakService(
                 identGateway,
                 PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
+                SakRepositoryImpl(connection),
+                BehandlingRepositoryImpl(connection),
+                TrukketSøknadService(
+                    InMemoryAvklaringsbehovRepository,
+                    InMemoryTrukketSøknadRepository
+                ),
             ).finnEllerOpprett(
                 ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
             )
@@ -246,7 +251,12 @@ class StatistikkJobbUtførerTest {
             val sak = PersonOgSakService(
                 identGateway,
                 PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
+                SakRepositoryImpl(connection),
+                BehandlingRepositoryImpl(connection),
+                TrukketSøknadService(
+                    InMemoryAvklaringsbehovRepository,
+                    InMemoryTrukketSøknadRepository
+                ),
             ).finnEllerOpprett(
                 ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
             )
