@@ -3,9 +3,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingJobbUtfører.Companion.skjedulerProsesserBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -20,7 +18,6 @@ import java.time.LocalDateTime
 
 class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
     private val sakService: SakService,
-    private val behandlingRepository: BehandlingRepository,
     private val underveisRepository: UnderveisRepository,
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val flytJobbRepository: FlytJobbRepository,
@@ -33,12 +30,7 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
             return
         }
 
-        val behandling = behandlingRepository.finnSisteBehandlingFor(
-            sak.id, listOf(
-                TypeBehandling.Førstegangsbehandling,
-                TypeBehandling.Revurdering
-            )
-        ) ?: return
+        val behandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id) ?: return
 
         if (behandling.status().erÅpen() && ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT in behandling.årsaker().map { it.type }) {
             return
@@ -76,7 +68,6 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
         override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
             return OpprettBehandlingFastsattPeriodePassertJobbUtfører(
                 sakService = SakService(repositoryProvider),
-                behandlingRepository = repositoryProvider.provide(),
                 underveisRepository = repositoryProvider.provide(),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
                 flytJobbRepository = repositoryProvider.provide(),

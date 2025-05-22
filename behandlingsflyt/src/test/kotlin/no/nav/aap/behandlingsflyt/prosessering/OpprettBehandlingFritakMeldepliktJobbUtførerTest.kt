@@ -19,7 +19,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
@@ -83,7 +82,6 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
         årsakerPåTidligereBehandling: List<Årsak> = emptyList(),
     ): OpprettBehandlingFritakMeldepliktJobbUtfører {
         val sakServiceMock = mockk<SakService>()
-        val behandlingRepoMock = mockk<BehandlingRepository>()
         val underveisRepositoryMock = mockk<UnderveisRepository>()
         val flytJobbRepository = mockk<FlytJobbRepository>(relaxed = true)
 
@@ -113,7 +111,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             versjon = 0L
         )
 
-        every {behandlingRepoMock.finnSisteBehandlingFor(sakId, any())} returns fakeBehandling
+        every {sakOgBehandlingServiceMock.finnSisteYtelsesbehandlingFor(sakId)} returns fakeBehandling
 
         every {underveisRepositoryMock.hentHvisEksisterer(any())} returns UnderveisGrunnlag(
             id = 1L,
@@ -144,7 +142,6 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
         return OpprettBehandlingFritakMeldepliktJobbUtfører(
             sakService = sakServiceMock,
-            behandlingRepository = behandlingRepoMock,
             underveisRepository = underveisRepositoryMock,
             sakOgBehandlingService = sakOgBehandlingServiceMock,
             flytJobbRepository = flytJobbRepository,

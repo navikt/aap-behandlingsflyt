@@ -38,11 +38,15 @@ class SakOgBehandlingService(
         return behandlingRepository.hent(behandlingReferanse)
     }
 
-    fun finnEllerOpprettBehandling(sakId: SakId, årsaker: List<Årsak>): BeriketBehandling {
-        val sisteBehandlingForSak = behandlingRepository.finnSisteBehandlingFor(
+    fun finnSisteYtelsesbehandlingFor(sakId: SakId): Behandling? {
+        return behandlingRepository.finnSisteBehandlingFor(
             sakId,
             listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
         )
+    }
+
+    fun finnEllerOpprettBehandling(sakId: SakId, årsaker: List<Årsak>): BeriketBehandling {
+        val sisteBehandlingForSak = finnSisteYtelsesbehandlingFor(sakId)
 
         val behandlingstype = utledBehandlingstype(sisteBehandlingForSak, årsaker)
 

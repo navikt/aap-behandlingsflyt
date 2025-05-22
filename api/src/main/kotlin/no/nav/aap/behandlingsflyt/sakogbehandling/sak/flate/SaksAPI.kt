@@ -10,6 +10,7 @@ import com.papsign.ktor.openapigen.route.tag
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -172,6 +173,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
             { _, dto ->
                 val behandlinger: SakOgBehandlingDTO? = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
+                    val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider)
                     val ident = Ident(dto.ident)
                     val person = repositoryProvider.provide<PersonRepository>().finn(ident)
 
@@ -183,15 +185,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
                                 sak.rettighetsperiode.inneholder(dto.mottattTidspunkt) && sak.status() != Status.AVSLUTTET
                             }.minByOrNull { it.opprettetTidspunkt }!!
 
-                        val behandling =
-                            repositoryProvider.provide<BehandlingRepository>()
-                                .finnSisteBehandlingFor(
-                                    sak.id,
-                                    behandlingstypeFilter = listOf(
-                                        TypeBehandling.Førstegangsbehandling,
-                                        TypeBehandling.Revurdering
-                                    )
-                                )
+                        val behandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
 
                         SakOgBehandlingDTO(
                             personIdent = sak.person.aktivIdent().toString(),
