@@ -150,8 +150,7 @@ fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): S�
 }
 
 private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak {
-   // val ident = genererIdent(dto.fødselsdato)
-    val ident = no.nav.aap.behandlingsflyt.sakogbehandling.Ident("01410040154")
+    val ident = genererIdent(dto.fødselsdato)
     val barn = dto.barn.filter { it.harRelasjon }.map { genererBarn(it) }
     val urelaterteBarn = dto.barn.filter { !it.harRelasjon }.map { genererBarn(it) }
     barn.forEach { FakePersoner.leggTil(it) }
