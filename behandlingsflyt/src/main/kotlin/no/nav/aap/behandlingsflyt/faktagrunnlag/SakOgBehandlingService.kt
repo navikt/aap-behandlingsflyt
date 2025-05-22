@@ -12,8 +12,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.BehandlingTilstand
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.BeriketBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -27,7 +25,7 @@ class SakOgBehandlingService(
     private val behandlingRepository: BehandlingRepository,
     private val trukketSøknadService: TrukketSøknadService,
 ) {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         grunnlagKopierer = GrunnlagKopiererImpl(repositoryProvider),
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
@@ -45,75 +43,85 @@ class SakOgBehandlingService(
         )
     }
 
-    fun finnEllerOpprettBehandling(sakId: SakId, årsaker: List<Årsak>): BeriketBehandling {
-        val sisteBehandlingForSak = finnSisteYtelsesbehandlingFor(sakId)
+    fun finnEllerOpprettBehandling(sakId: SakId, årsaker: List<Årsak>): Behandling {
+        val sisteYtelsesbehandling = finnSisteYtelsesbehandlingFor(sakId)
 
-        val behandlingstype = utledBehandlingstype(sisteBehandlingForSak, årsaker)
+        return when {
+            årsaker.any { it.type == ÅrsakTilBehandling.MOTATT_KLAGE } ->
+                opprettKlagebehandling(sisteYtelsesbehandling, sakId, årsaker)
 
-        if (sisteBehandlingForSak != null && behandlingstype in listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)) {
-            check(!trukketSøknadService.søknadErTrukket(sisteBehandlingForSak.id)) {
-                "ikke lov å opprette ny behandling for trukket søknad $sakId"
-            }
-        }
+            /* Tilbakekreving kommer kanskje som et case her ... */
 
-        if (behandlingstype == TypeBehandling.Klage) {
-            // TODO: Se på om vi må knytte klagebehandling mot en gitt behandling
-            return BeriketBehandling(
-                behandling = behandlingRepository.opprettBehandling(
-                    sakId = sakId,
-                    årsaker = årsaker,
-                    typeBehandling = behandlingstype,
-                    forrigeBehandlingId = null
-                ), tilstand = BehandlingTilstand.NY, sisteAvsluttedeBehandling = null
-            )
-        } else if (sisteBehandlingForSak == null) {
-            return BeriketBehandling(
-                behandling = behandlingRepository.opprettBehandling(
-                    sakId = sakId,
-                    årsaker = årsaker,
-                    typeBehandling = behandlingstype,
-                    forrigeBehandlingId = null
-                ), tilstand = BehandlingTilstand.NY, sisteAvsluttedeBehandling = null
-            )
+            sisteYtelsesbehandling == null ->
+                opprettFørstegangsbehandling(sakId, årsaker)
 
-        } else {
-            if (sisteBehandlingForSak.status().erAvsluttet()) {
-                val nyBehandling = behandlingRepository.opprettBehandling(
-                    sakId = sakId,
-                    årsaker = årsaker,
-                    typeBehandling = behandlingstype,
-                    forrigeBehandlingId = sisteBehandlingForSak.id
-                )
+            sisteYtelsesbehandling.status().erAvsluttet() ->
+                opprettRevurdering(sisteYtelsesbehandling, årsaker)
 
-                val beriketBehandling = BeriketBehandling(
-                    behandling = nyBehandling,
-                    tilstand = BehandlingTilstand.NY,
-                    sisteAvsluttedeBehandling = sisteBehandlingForSak.id
-                )
-                if (beriketBehandling.skalKopierFraSisteBehandling()) {
-                    grunnlagKopierer.overfør(
-                        requireNotNull(beriketBehandling.sisteAvsluttedeBehandling),
-                        nyBehandling.id
-                    )
-                }
+            sisteYtelsesbehandling.status().erÅpen() ->
+                oppdaterÅrsaker(sisteYtelsesbehandling, årsaker)
 
-                return beriketBehandling
-
-            } else {
-                // Valider at behandlingen står i et sted hvor den kan data
-                validerStegStatus(sisteBehandlingForSak)
-                // Oppdater årsaker hvis nødvendig
-                behandlingRepository.oppdaterÅrsaker(sisteBehandlingForSak, årsaker)
-                return BeriketBehandling(
-                    behandling = sisteBehandlingForSak,
-                    tilstand = BehandlingTilstand.EKSISTERENDE,
-                    sisteAvsluttedeBehandling = null
-                )
-            }
+            else -> error("greier ikke å finne eller opprette behandling, uventet tilstand i saken")
         }
     }
 
-    fun finnEllerOpprettBehandling(saksnummer: Saksnummer, årsaker: List<Årsak>): BeriketBehandling {
+    private fun opprettKlagebehandling(
+        sisteYtelsesbehandling: Behandling?,
+        sakId: SakId,
+        årsaker: List<Årsak>
+    ): Behandling {
+        requireNotNull(sisteYtelsesbehandling) {
+            "Mottok klage, men det finnes ingen eksisterende behandling"
+        }
+        return behandlingRepository.opprettBehandling(
+            sakId = sakId,
+            årsaker = årsaker,
+            typeBehandling = TypeBehandling.Klage,
+            forrigeBehandlingId = null,
+        )
+    }
+
+    private fun opprettFørstegangsbehandling(
+        sakId: SakId,
+        årsaker: List<Årsak>
+    ): Behandling = behandlingRepository.opprettBehandling(
+        sakId = sakId,
+        årsaker = årsaker,
+        typeBehandling = TypeBehandling.Førstegangsbehandling,
+        forrigeBehandlingId = null,
+    )
+
+    private fun opprettRevurdering(
+        sisteYtelsesbehandling: Behandling,
+        årsaker: List<Årsak>
+    ): Behandling {
+        check(!trukketSøknadService.søknadErTrukket(sisteYtelsesbehandling.id)) {
+            "ikke lov å opprette ny behandling for trukket søknad ${sisteYtelsesbehandling.sakId}"
+        }
+        return behandlingRepository.opprettBehandling(
+            sakId = sisteYtelsesbehandling.sakId,
+            årsaker = årsaker,
+            typeBehandling = TypeBehandling.Revurdering,
+            forrigeBehandlingId = sisteYtelsesbehandling.id,
+        ).also { behandling ->
+            grunnlagKopierer.overfør(sisteYtelsesbehandling.id, behandling.id)
+        }
+    }
+
+    private fun oppdaterÅrsaker(
+        sisteYtelsesbehandling: Behandling,
+        årsaker: List<Årsak>
+    ): Behandling {
+        check(!trukketSøknadService.søknadErTrukket(sisteYtelsesbehandling.id)) {
+            "ikke lov å oppdatere behandling for trukket søknad ${sisteYtelsesbehandling.sakId}"
+        }
+        // Valider at behandlingen står i et sted hvor den kan data
+        validerStegStatus(sisteYtelsesbehandling)
+        behandlingRepository.oppdaterÅrsaker(sisteYtelsesbehandling, årsaker)
+        return sisteYtelsesbehandling
+    }
+
+    fun finnEllerOpprettBehandling(saksnummer: Saksnummer, årsaker: List<Årsak>): Behandling {
         val sak = sakRepository.hent(saksnummer)
 
         return finnEllerOpprettBehandling(sak.id, årsaker)
@@ -185,20 +193,6 @@ class SakOgBehandlingService(
         // Om den skal tilbake krever det endringer for å ta hensyn til disse
         if (!flyt.skalOppdatereFaktagrunnlag()) {
             throw IllegalStateException("Behandlingen[${behandling.referanse}] kan ikke motta opplysinger nå, avventer fullføring av steg som ligger etter at oppdatering av faktagrunnlag opphører.")
-        }
-    }
-
-    private fun utledBehandlingstype(sisteBehandlingForSak: Behandling?, årsaker: List<Årsak>): TypeBehandling {
-        return if (årsaker.any { it.type == ÅrsakTilBehandling.MOTATT_KLAGE }) {
-            when (sisteBehandlingForSak) {
-                null -> throw IllegalArgumentException("Mottok klage, men det finnes ingen eksisterende behandling")
-                else -> TypeBehandling.Klage
-            }
-        } else {
-            when (sisteBehandlingForSak) {
-                null -> TypeBehandling.Førstegangsbehandling
-                else -> TypeBehandling.Revurdering
-            }
         }
     }
 }

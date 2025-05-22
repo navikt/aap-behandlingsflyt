@@ -59,7 +59,7 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
                     type = ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT,
                 )
             )
-        ).behandling
+        )
 
         flytJobbRepository.skjedulerProsesserBehandling(fastsattPeriodePassertBehandling)
     }

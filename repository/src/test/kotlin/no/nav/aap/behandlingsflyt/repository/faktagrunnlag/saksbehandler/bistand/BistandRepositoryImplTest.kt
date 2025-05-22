@@ -617,7 +617,7 @@ internal class BistandRepositoryImplTest {
             .finnEllerOpprettBehandling(
                 sak.saksnummer,
                 listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
-            ).behandling
+            )
     }
 
     private fun revurdering(connection: DBConnection, behandling: Behandling, sak: Sak): Behandling {

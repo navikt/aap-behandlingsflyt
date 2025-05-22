@@ -23,8 +23,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.BehandlingTilstand
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.BeriketBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -132,13 +130,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             ))
         )
 
-        every {sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any())} returns BeriketBehandling(
-            behandling = fakeBehandling,
-            tilstand = BehandlingTilstand.NY,
-            sisteAvsluttedeBehandling = BehandlingId(9L)
-        )
-
-
+        every {sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any())} returns fakeBehandling
 
         return OpprettBehandlingFritakMeldepliktJobbUtfører(
             sakService = sakServiceMock,

@@ -277,6 +277,5 @@ class SamordningPeriodeSammenlignerTest {
     private fun opprettBehandling(sak: Sak): Behandling {
         return InMemorySakOgBehandlingService
             .finnEllerOpprettBehandling(sak.saksnummer, listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD)))
-            .behandling
     }
 }

@@ -40,7 +40,7 @@ class OpprettRevurderingSteg(
                 if (!erUsikkerhetTilknyttetMaksSykepengerDato(samordningVurdering)) return Fullført
 
                 logger.info("Oppretter revurdering. SakID: ${kontekst.sakId}")
-                val beriketBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
+                val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
                     sakId = kontekst.sakId,
                     årsaker = listOf(
                         Årsak(
@@ -50,12 +50,9 @@ class OpprettRevurderingSteg(
                 )
 
                 val behandlingSkrivelås =
-                    låsRepository.låsBehandling(beriketBehandling.behandling.id)
+                    låsRepository.låsBehandling(behandling.id)
 
-                prosesserBehandling.triggProsesserBehandling(
-                    beriketBehandling.behandling.sakId,
-                    beriketBehandling.behandling.id,
-                )
+                prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
                 låsRepository.verifiserSkrivelås(behandlingSkrivelås)
 
                 return Fullført

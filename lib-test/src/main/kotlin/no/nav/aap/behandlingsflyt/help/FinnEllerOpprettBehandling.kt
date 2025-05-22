@@ -31,4 +31,3 @@ fun finnEllerOpprettBehandling(
     årsaker: List<Årsak> = listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
 ) = SakOgBehandlingService(repositoryProvider)
     .finnEllerOpprettBehandling(saksnummer, årsaker)
-    .behandling

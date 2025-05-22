@@ -30,7 +30,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
             val fritakMeldepliktBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
                 sak.id,
                 listOf(Årsak(type = ÅrsakTilBehandling.FRITAK_MELDEPLIKT))
-            ).behandling
+            )
 
             flytJobbRepository.skjedulerProsesserBehandling(fritakMeldepliktBehandling)
         }
