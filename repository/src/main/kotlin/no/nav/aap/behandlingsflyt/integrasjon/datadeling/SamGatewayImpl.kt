@@ -28,7 +28,7 @@ class SamGatewayImpl : SamGateway {
         prometheus = prometheus
     )
 
-    val uri = URI.create(requiredConfigForKey("sam.url"))
+    val uri = URI.create(requiredConfigForKey("integrasjon.sam.url"))
 
 
     override fun varsleVedtak(request: SamordneVedtakRequest) {
