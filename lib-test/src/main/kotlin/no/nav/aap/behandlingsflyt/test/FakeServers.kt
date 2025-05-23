@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.BestillLegeerkl�
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.HentStatusLegeerklæring
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.PurringLegeerklæringRequest
+import no.nav.aap.behandlingsflyt.datadeling.sam.HentSamIdResponse
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
@@ -277,7 +278,21 @@ object FakeServers : AutoCloseable {
                     ))
                 }
                 get{
-                    call.respond(HttpStatusCode.OK, "")
+                    val params = call.queryParameters
+                    call.respond(HttpStatusCode.OK, listOf(HentSamIdResponse(
+                        samordningVedtakId = 12345678,
+                        fagsystem = "AAP",
+                        saksId = params["sakId"]!!.toLong(),
+                        saksKode = "",
+                        vedtakId = 0L,
+                        vedtakstatusKode = "LØPENDE",
+                        etterbetaling = false,
+                        utvidetSamordningsfrist = false,
+                        virkningFom = LocalDate.now(),
+                        virkningTom = LocalDate.now(),
+                        versjon = 1L,
+                        samordningsmeldinger = emptyList()
+                    )))
                 }
             }
         }

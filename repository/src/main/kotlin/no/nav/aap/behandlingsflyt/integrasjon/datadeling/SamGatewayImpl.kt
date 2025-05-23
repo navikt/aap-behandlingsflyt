@@ -44,14 +44,14 @@ class SamGatewayImpl : SamGateway {
         )
     }
 
-    override fun hentSamId(ident: Ident, sakId: String, vedtakId: String): HentSamIdResponse {
+    override fun hentSamId(ident: Ident, sakId: String, vedtakId: String): Long { //returnerer List<SamordningsvedtakApi> ????????
         return requireNotNull(restClient.get(
             uri = uri.resolve("/api/vedtak?sakId=$sakId&vedtakId=$vedtakId&fagomrade=AAP"),
             request = GetRequest(
                 additionalHeaders = listOf(Header("pid", ident.identifikator))
             ),
             mapper = { body, _ ->
-                HentSamIdResponse(SamId(DefaultJsonMapper.fromJson<String>(body)))
+                DefaultJsonMapper.fromJson<List<HentSamIdResponse>>(body).first().samordningVedtakId
             }
         ))
     }

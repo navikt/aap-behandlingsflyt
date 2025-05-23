@@ -6,5 +6,5 @@ import no.nav.aap.komponenter.gateway.Gateway
 
 interface SamGateway: Gateway {
     fun varsleVedtak(request: SamordneVedtakRequest)
-    fun hentSamId(ident: Ident, sakId: String, vedtakId: String): HentSamIdResponse
+    fun hentSamId(ident: Ident, sakId: String, vedtakId: String): Long
 }
