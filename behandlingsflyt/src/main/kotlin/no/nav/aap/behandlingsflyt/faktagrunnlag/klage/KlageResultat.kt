@@ -1,6 +1,14 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.klage
 
-sealed interface KlageResultat
+sealed interface KlageResultat {
+    fun hjemlerSomSkalOpprettholdes(): List<Hjemmel> {
+        return when (this) {
+            is Opprettholdes -> vilkårSomSkalOpprettholdes
+            is DelvisOmgjøres -> vilkårSomSkalOpprettholdes
+            else -> emptyList()
+        }
+    }
+}
 
 data class Opprettholdes(
     val vilkårSomSkalOpprettholdes: List<Hjemmel>

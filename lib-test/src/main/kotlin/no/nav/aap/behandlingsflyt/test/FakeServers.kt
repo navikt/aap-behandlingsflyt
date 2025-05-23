@@ -109,7 +109,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.JournalpostTilgangRequest
@@ -121,7 +120,6 @@ import java.io.ByteArrayInputStream
 import java.net.URI
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.Year
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -153,6 +151,7 @@ object FakeServers : AutoCloseable {
     private val unleash = embeddedServer(Netty, port = 0, module = { unleashFake() })
     private val norg = embeddedServer(Netty, port = 0, module = { norgFake() })
     private val nom = embeddedServer(Netty, port = 0, module = { nomFake() })
+    private val kabal = embeddedServer(Netty, port = 0, module = { kabalFake() })
 
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
@@ -819,6 +818,30 @@ object FakeServers : AutoCloseable {
         routing {
             post("/api/v2/arbeidstaker/arbeidsforholdoversikt") {
                 call.respond(aaregResponse)
+            }
+        }
+    }
+
+    private fun Application.kabalFake() {
+        install(ContentNegotiation) {
+            jackson()
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@kabalFake.log.info(
+                    "KABAL :: Ukjent feil ved kall til '{}'",
+                    call.request.local.uri,
+                    cause
+                )
+                call.respond(
+                    status = HttpStatusCode.InternalServerError,
+                    message = ErrorRespons(cause.message)
+                )
+            }
+        }
+        routing {
+            post("/api/oversendelse/v4/sak") {
+                call.respond(HttpStatusCode.OK)
             }
         }
     }
@@ -1515,7 +1538,6 @@ object FakeServers : AutoCloseable {
     }
 
 
-
     private fun Application.norgFake() {
         install(ContentNegotiation) {
             jackson {
@@ -1632,7 +1654,7 @@ object FakeServers : AutoCloseable {
 
                 route("/v2") {
                     post("/bestill") {
-                        val request = call.receive< BestillBrevV2Request>()
+                        val request = call.receive<BestillBrevV2Request>()
                         val brevbestillingReferanse = UUID.randomUUID()
 
                         synchronized(mutex) {
@@ -1731,6 +1753,7 @@ object FakeServers : AutoCloseable {
         unleash.start()
         nom.start()
         norg.start()
+        kabal.start()
 
         println("AZURE PORT ${azure.port()}")
 
@@ -1850,6 +1873,10 @@ object FakeServers : AutoCloseable {
         // NOM
         System.setProperty("integrasjon.nom.url", "http://localhost:${nom.port()}/graphql")
         System.setProperty("integrasjon.nom.scope", "scope")
+        
+        // Kabal
+        System.setProperty("integrasjon.kabal.url", "http://localhost:${kabal.port()}")
+        System.setProperty("integrasjon.kabal.scope", "scope")
     }
 
     override fun close() {
@@ -1879,6 +1906,7 @@ object FakeServers : AutoCloseable {
         unleash.stop(0L, 0L)
         nom.stop(0L, 0L)
         norg.stop(0L, 0L)
+        kabal.stop(0L, 0L)
     }
 }
 

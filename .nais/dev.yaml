@@ -221,3 +221,7 @@ spec:
       value: api://dev-gcp.nom.nom-api/.default
     - name: INTEGRASJON_NORG_URL
       value: http://norg2.org
+    - name: INTEGRASJON_KABAL_URL
+      value: http://kabal-api.klage
+    - name: INTEGRASJON_KABAL_SCOPE
+      value: api://dev-gcp.klage.kabal-api/.default

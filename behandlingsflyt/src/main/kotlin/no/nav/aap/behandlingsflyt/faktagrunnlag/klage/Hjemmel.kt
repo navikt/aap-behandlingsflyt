@@ -39,7 +39,7 @@ enum class Hjemmel(val hjemmel: String) {
     // FOLKETRYGDLOVEN_11_30("§ 11-30"), TODO: Hva kan klages på her?
     // FOLKETRYGDLOVEN_11_31("§ 11-31"), TODO: Hva kan klages på her?
     // FOLKETRYGDLOVEN_21_3("§ 21-3"), TODO: Hva kan klages på her?
-    // FOLKETRYGDLOVEN_22_13("§ 22-13"), TODO: Hva kan klages på her?
+    // FOLKETRYGDLOVEN_22_13("§  "), TODO: Hva kan klages på her?
     // FOLKETRYGDLOVEN_22_15("§ 22-15"), TODO: Må videre til Team Tilbake?
     // FOLKETRYGDLOVEN_22_17("§ 22-17"), TODO: Hva kan klages på her?
     // REFUSJON("Refusjon"), TODO: Hva kan klages på her?
