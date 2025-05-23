@@ -126,9 +126,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
 
     private fun finnSakerFor(person: Person, periode: Periode): List<Sak> {
         return connection.queryList(
-            "SELECT * " +
-                    "FROM SAK " +
-                    "WHERE person_id = ? AND rettighetsperiode && ?::daterange"
+            """SELECT * FROM SAK WHERE person_id = ? AND rettighetsperiode && ?::daterange"""
         ) {
             setParams {
                 setLong(1, person.id)

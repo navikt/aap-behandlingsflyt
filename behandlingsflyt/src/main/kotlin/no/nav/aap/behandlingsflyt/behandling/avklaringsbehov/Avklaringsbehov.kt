@@ -173,7 +173,7 @@ class Avklaringsbehov(
 
     fun frist(): LocalDate {
         return requireNotNull(historikk.last { it.status == Status.OPPRETTET }.frist)
-        { "Prøvde å finne frist, men historikk er tom. Definisjon $definisjon. Funnet i steg $funnetISteg. ID: $id." }
+        { "Prøvde å finne frist, men historikk er tom. Definisjon $definisjon. Funnet i steg $funnetISteg. ID: $id. Historikk: $historikk." }
     }
 
     fun fristUtløpt(): Boolean {

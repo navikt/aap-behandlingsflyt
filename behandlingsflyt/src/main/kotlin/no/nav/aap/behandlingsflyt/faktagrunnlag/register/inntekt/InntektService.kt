@@ -70,11 +70,14 @@ class InntektService private constructor(
                 val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
 
                 val sak = sakService.hent(kontekst.sakId)
-                if (beregningVurdering?.tidspunktVurdering == null && studentGrunnlag == null) {
+                if (beregningVurdering?.tidspunktVurdering?.nedsattArbeidsevneDato == null && studentGrunnlag?.studentvurdering?.avbruttStudieDato == null) {
                     log.error("Verken tidspunktVurdering eller studentGrunnlag fantes. Returner IKKE_ENDRET.")
                     return IKKE_ENDRET
                 }
-                val nedsettelsesDato = utledNedsettelsesdato(beregningVurdering?.tidspunktVurdering, studentGrunnlag)
+                val nedsettelsesDato = utledNedsettelsesdato(
+                    beregningVurdering?.tidspunktVurdering?.nedsattArbeidsevneDato,
+                    studentGrunnlag?.studentvurdering?.avbruttStudieDato
+                )
                 val behov = Inntektsbehov(
                     Input(
                         nedsettelsesDato = nedsettelsesDato,
@@ -98,12 +101,12 @@ class InntektService private constructor(
     }
 
     private fun utledNedsettelsesdato(
-        beregningVurdering: BeregningstidspunktVurdering?,
-        studentGrunnlag: StudentGrunnlag?
+        nedsattArbeidsevneDato: LocalDate?,
+        avbruttStudieDato: LocalDate?
     ): LocalDate {
         val nedsettelsesdatoer = setOf(
-            beregningVurdering?.nedsattArbeidsevneDato,
-            studentGrunnlag?.studentvurdering?.avbruttStudieDato
+            nedsattArbeidsevneDato,
+            avbruttStudieDato
         ).filterNotNull()
 
         return nedsettelsesdatoer.min()
