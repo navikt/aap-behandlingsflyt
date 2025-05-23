@@ -172,7 +172,7 @@ class Avklaringsbehov(
     }
 
     fun frist(): LocalDate {
-        return requireNotNull(historikk.last { it.status == Status.OPPRETTET }.frist)
+        return requireNotNull(historikk.last { it.status == Status.OPPRETTET && it.frist != null }.frist)
         { "Prøvde å finne frist, men historikk er tom. Definisjon $definisjon. Funnet i steg $funnetISteg. ID: $id. Historikk: $historikk." }
     }
 
