@@ -19,7 +19,7 @@ data class VurderingerForSamordning(
             for (i in 0 until sortedPerioder.size - 1) {
                 val current = sortedPerioder[i]
                 val next = sortedPerioder[i + 1]
-                require(!current.overlapper(next)) { "Perioder kan ikke overlappe for samme ytelsetype: ${current} og ${next}" }
+                require(!current.overlapper(next)) { "Perioder kan ikke overlappe for samme ytelsetype: $current og $next" }
             }
         }
     }

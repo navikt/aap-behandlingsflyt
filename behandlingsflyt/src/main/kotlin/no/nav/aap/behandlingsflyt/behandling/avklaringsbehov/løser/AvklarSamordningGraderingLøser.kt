@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -31,20 +32,19 @@ class AvklarSamordningGraderingLøser(
             begrunnelse = vurderingerForSamordning.begrunnelse,
             maksDatoEndelig = vurderingerForSamordning.maksDatoEndelig,
             maksDato = vurderingerForSamordning.maksDato,
-            vurderinger = vurderingerForSamordning.vurderteSamordningerData.groupBy { it.ytelseType }.map {
+            vurderinger = vurderingerForSamordning.vurderteSamordningerData.groupBy { it.ytelseType }.map { it ->
                 SamordningVurdering(
                     ytelseType = it.key,
-                    vurderingPerioder = it.value.map {
+                    vurderingPerioder = it.value.map { vurdering ->
                         SamordningVurderingPeriode(
-                            periode = it.periode,
-                            gradering = it.gradering?.let(::Prosent),
-                            kronesum = it.kronesum,
-                            manuell = it.manuell,
+                            periode = vurdering.periode,
+                            gradering = vurdering.gradering?.let(::Prosent),
+                            kronesum = vurdering.kronesum,
+                            manuell = vurdering.manuell,
                         )
                     },
                 )
-            }
-        )
+            })
 
         val perioderSomIkkeHarBlittVurdert = samordningService.perioderSomIkkeHarBlittVurdert(
             samordningYtelseGrunnlag, samordningService.tidligereVurderinger(samordningsvurderinger)
@@ -57,6 +57,10 @@ class AvklarSamordningGraderingLøser(
         samordningYtelseVurderingRepository.lagreVurderinger(
             kontekst.kontekst.behandlingId, samordningsvurderinger
         )
+
+        if (kontekst.kontekst.behandlingType == TypeBehandling.Revurdering && vurderingerForSamordning.maksDatoEndelig != true && vurderingerForSamordning.maksDato != null) {
+            throw UgyldigForespørselException(message = "Virkningstidspunkt må være bekreftet for å gå videre i behandlingen.")
+        }
 
         return LøsningsResultat("Vurdert samordning")
     }

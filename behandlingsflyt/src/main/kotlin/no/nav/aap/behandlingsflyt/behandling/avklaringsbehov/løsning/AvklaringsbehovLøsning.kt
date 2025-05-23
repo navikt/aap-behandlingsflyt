@@ -12,7 +12,10 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 sealed interface AvklaringsbehovLøsning {
     fun definisjon(): Definisjon {
         if (this.javaClass.isAnnotationPresent(JsonTypeName::class.java)) {
-            return Definisjon.entries.first { it.kode == AvklaringsbehovKode.valueOf(this.javaClass.getDeclaredAnnotation(JsonTypeName::class.java).value) }
+            return Definisjon.entries.first {
+                @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+                it.kode == AvklaringsbehovKode.valueOf(this.javaClass.getDeclaredAnnotation(JsonTypeName::class.java).value)
+            }
         }
         throw IllegalStateException("Utvikler-feil:" + this.javaClass.getSimpleName() + " er uten JsonTypeName annotation.")
     }
