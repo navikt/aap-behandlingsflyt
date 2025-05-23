@@ -93,6 +93,9 @@ class Avklaringsbehov(
         bruker: Bruker = SYSTEMBRUKER
     ) {
         require(historikk.last().status.erAvsluttet())
+        if (definisjon.erVentebehov()) {
+            requireNotNull(frist)
+        }
         historikk += Endring(
             status = Status.OPPRETTET, begrunnelse = begrunnelse, grunn = grunn, frist = frist, endretAv = bruker.ident
         )
