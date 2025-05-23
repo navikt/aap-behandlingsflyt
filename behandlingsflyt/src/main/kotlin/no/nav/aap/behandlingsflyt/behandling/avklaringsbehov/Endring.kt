@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class Endring(
+data class Endring(
     val status: Status,
     val tidsstempel: LocalDateTime = LocalDateTime.now(),
     val begrunnelse: String,
