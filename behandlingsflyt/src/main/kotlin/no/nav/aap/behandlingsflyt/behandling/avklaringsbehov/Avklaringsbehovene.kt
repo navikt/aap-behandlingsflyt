@@ -162,7 +162,12 @@ class Avklaringsbehovene(
 
     fun reåpne(definisjon: Definisjon) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
-        avklaringsbehov.reåpne(frist = avklaringsbehov.frist())
+        val frist = if (definisjon.erVentebehov()) {
+            avklaringsbehov.frist()
+        } else {
+            null
+        }
+        avklaringsbehov.reåpne(frist = frist)
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
