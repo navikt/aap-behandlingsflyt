@@ -68,6 +68,10 @@ class Effektuer11_7Steg(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (kontekst.vurdering.vurderingType in listOf(VurderingType.MELDEKORT, VurderingType.IKKE_RELEVANT)) {
+            return Fullført
+        }
+
         if (kontekst.vurdering.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
             if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                 avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)

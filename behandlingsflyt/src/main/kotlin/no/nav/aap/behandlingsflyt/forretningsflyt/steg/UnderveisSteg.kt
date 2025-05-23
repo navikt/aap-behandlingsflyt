@@ -30,8 +30,16 @@ class UnderveisSteg(
             }
         }
 
-        // Skal alltid kjøres uavhengig av vurderingstype
-        underveisService.vurder(kontekst.sakId, kontekst.behandlingId)
+        when (kontekst.vurdering.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING,
+            VurderingType.REVURDERING,
+            VurderingType.MELDEKORT -> {
+                underveisService.vurder(kontekst.sakId, kontekst.behandlingId)
+            }
+
+            VurderingType.IKKE_RELEVANT -> {
+            }
+        }
         return Fullført
     }
 

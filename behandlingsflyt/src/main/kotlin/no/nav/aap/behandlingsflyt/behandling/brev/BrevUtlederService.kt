@@ -5,24 +5,24 @@ import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Avslått
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.DelvisOmgjøres
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Opprettholdes
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling.MOTTATT_MELDEKORT
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class BrevUtlederService(
     private val behandlingRepository: BehandlingRepository,
     private val resultatUtleder: ResultatUtleder,
-    private val klageresultatUtleder: KlageresultatUtleder
+    private val klageresultatUtleder: KlageresultatUtleder,
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
         resultatUtleder = ResultatUtleder(repositoryProvider),
-        klageresultatUtleder = KlageresultatUtleder(repositoryProvider)
+        klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
     )
 
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov {
@@ -40,10 +40,8 @@ class BrevUtlederService(
             }
 
             TypeBehandling.Revurdering -> {
-                val årsakerTilBehandling = behandling.årsaker().map { it.type }.distinct()
-                if (årsakerTilBehandling.size == 1 &&
-                    årsakerTilBehandling.contains(ÅrsakTilBehandling.MOTTATT_MELDEKORT)
-                ) {
+                val årsakerTilBehandling = behandling.årsaker().map { it.type }.toSet()
+                if (setOf(MOTTATT_MELDEKORT, FASTSATT_PERIODE_PASSERT).containsAll(årsakerTilBehandling)) {
                     return BrevBehov(null)
                 }
                 return BrevBehov(TypeBrev.VEDTAK_ENDRING)
