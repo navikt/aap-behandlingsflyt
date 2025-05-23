@@ -167,7 +167,7 @@ class Avklaringsbehovene(
         } else {
             null
         }
-        avklaringsbehov.reåpne(frist = frist)
+        avklaringsbehov.reåpne(frist = frist, grunn = avklaringsbehov.grunn())
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 

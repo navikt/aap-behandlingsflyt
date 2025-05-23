@@ -95,6 +95,7 @@ class Avklaringsbehov(
         require(historikk.last().status.erAvsluttet())
         if (definisjon.erVentebehov()) {
             requireNotNull(frist)
+            requireNotNull(grunn)
         }
         historikk += Endring(
             status = Status.OPPRETTET, begrunnelse = begrunnelse, grunn = grunn, frist = frist, endretAv = bruker.ident
@@ -143,7 +144,7 @@ class Avklaringsbehov(
     }
 
     fun begrunnelse(): String = historikk.maxOf { it }.begrunnelse
-    fun grunn(): ÅrsakTilSettPåVent = requireNotNull(historikk.maxOf { it }.grunn)
+    fun grunn(): ÅrsakTilSettPåVent? = historikk.maxOf { it }.grunn
     fun endretAv(): String = historikk.maxOf { it }.endretAv
     fun årsakTilRetur(): List<ÅrsakTilRetur> = historikk.maxOf { it }.årsakTilRetur
 
