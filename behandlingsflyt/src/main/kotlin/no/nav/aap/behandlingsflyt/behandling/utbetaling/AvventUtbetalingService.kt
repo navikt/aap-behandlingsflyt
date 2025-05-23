@@ -25,8 +25,8 @@ class AvventUtbetalingService(
                 && tilkjentYtelseHelePerioden.overlapper(tilPeriode(tpRefusjonskrav.fom, tpRefusjonskrav.tom))
 
         val (frist, fom, tom) = when {
-            overlapperMedTjenestepensjonRefusjon -> Triple(42L, tpRefusjonskrav.fom!!, tpRefusjonskrav.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1))
-            overlapperMedSosialRefusjon -> Triple(21L, sosialRefusjonskrav.fom!!, sosialRefusjonskrav.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1))
+            overlapperMedTjenestepensjonRefusjon -> Triple(42L, tpRefusjonskrav.fom!!, tpRefusjonskrav.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(tpRefusjonskrav.fom))
+            overlapperMedSosialRefusjon -> Triple(21L, sosialRefusjonskrav.fom!!, sosialRefusjonskrav.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(sosialRefusjonskrav.fom))
             else -> Triple(null, null, null)
         }
 
