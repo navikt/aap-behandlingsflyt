@@ -189,7 +189,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
         val arbeidInntektINorgeGrunnlag = if (harArbeidInntektINorge) {
             grunnlag?.inntekterINorgeGrunnlag?.map {
                 ArbeidInntektINorgeGrunnlag(
-                    identifikator = it.identifikator,
+                    virksomhetId = it.identifikator,
                     beloep = it.beloep,
                     periode = Periode(it.periode.fom, it.periode.tom),
                 )

@@ -34,7 +34,7 @@ data class VedtakIMEDLGrunnlag(
 )
 
 data class ArbeidInntektINorgeGrunnlag(
-    val identifikator: String,
+    val virksomhetId: String,
     val beloep: Double,
     val periode: Periode,
 )
