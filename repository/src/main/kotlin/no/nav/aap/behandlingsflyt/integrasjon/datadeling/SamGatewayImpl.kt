@@ -51,7 +51,7 @@ class SamGatewayImpl : SamGateway {
                 additionalHeaders = listOf(Header("pid", ident.identifikator))
             ),
             mapper = { body, _ ->
-                HentSamIdResponse(DefaultJsonMapper.fromJson<String>(body))
+                HentSamIdResponse(SamId(DefaultJsonMapper.fromJson<String>(body)))
             }
         ))
     }

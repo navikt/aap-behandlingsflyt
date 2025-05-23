@@ -18,6 +18,8 @@ object ProsesseringsJobber {
             MeldeperiodeTilMeldekortBackendJobbUtfører,
             OpprettJobbForFastsattPeriodeJobbUtfører,
             OpprettBehandlingFastsattPeriodePassertJobbUtfører,
+            HentSamIdJobbUtfører,
+            VarsleVedtakJobbUtfører
         )
     }
 }

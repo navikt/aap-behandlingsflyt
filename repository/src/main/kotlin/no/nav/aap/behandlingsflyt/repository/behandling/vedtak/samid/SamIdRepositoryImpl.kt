@@ -3,8 +3,16 @@ package no.nav.aap.behandlingsflyt.repository.behandling.vedtak.samid
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.Factory
 
 class SamIdRepositoryImpl(private val connection: DBConnection) : SamIdRepository {
+
+    companion object : Factory<SamIdRepository> {
+        override fun konstruer(connection: DBConnection): SamIdRepository {
+            return SamIdRepositoryImpl(connection)
+        }
+    }
+
     override fun hentHvisEksisterer(behandlingId: BehandlingId): String? {
         val query = """
             SELECT * FROM SAM_ID WHERE behandling_id = ?

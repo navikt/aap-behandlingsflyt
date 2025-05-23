@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.datadeling.sam
 
 import com.fasterxml.jackson.annotation.JsonFormat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamId
 import java.time.LocalDate
 
 
@@ -22,5 +23,5 @@ data class SamordneVedtakRequest(
 data class SamordneVedtakRespons(val ventPaaSvar: Boolean)
 
 data class HentSamIdResponse(
-    val sakId: String,
+    val samId: SamId
 )

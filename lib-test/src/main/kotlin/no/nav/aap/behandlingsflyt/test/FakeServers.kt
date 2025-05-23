@@ -19,6 +19,8 @@ import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.BestillLegeerkl�
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.HentStatusLegeerklæring
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.PurringLegeerklæringRequest
+import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
+import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Anvist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
@@ -154,6 +156,7 @@ object FakeServers : AutoCloseable {
     private val kabal = embeddedServer(Netty, port = 0, module = { kabalFake() })
 
 
+
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
 
@@ -247,6 +250,36 @@ object FakeServers : AutoCloseable {
                 }
             }
 
+        }
+    }
+
+    private fun Application.sam(){
+        install(ContentNegotiation) {
+            jackson()
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@sam.log.info("Inntekt :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                call.respond(
+                    status = HttpStatusCode.InternalServerError,
+                    message = ErrorRespons(cause.message)
+                )
+            }
+        }
+
+        routing {
+            route("/api/vedtak"){
+                post{
+                    val req = call.receive<SamordneVedtakRequest>()
+
+                    call.respond(SamordneVedtakRespons(
+                        ventPaaSvar = false
+                    ))
+                }
+                get{
+                    call.respond(HttpStatusCode.OK, "")
+                }
+            }
         }
     }
 
