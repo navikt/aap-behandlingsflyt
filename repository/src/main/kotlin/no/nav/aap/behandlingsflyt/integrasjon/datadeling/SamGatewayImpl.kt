@@ -1,8 +1,10 @@
 package no.nav.aap.behandlingsflyt.integrasjon.datadeling
 
+import no.nav.aap.behandlingsflyt.datadeling.sam.HentSamIdResponse
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamGateway
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRespons
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamId
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -13,6 +15,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import java.net.URI
 
 class SamGatewayImpl : SamGateway {
@@ -32,24 +35,24 @@ class SamGatewayImpl : SamGateway {
 
 
     override fun varsleVedtak(request: SamordneVedtakRequest) {
-        restClient.post<SamordneVedtakRequest, _>(
+        restClient.post<SamordneVedtakRequest, SamordneVedtakRespons>(
             uri = uri.resolve("/api/vedtak"),
             request = PostRequest(body = request),
-            mapper = { samordneVedtakRespons, _ ->
-                samordneVedtakRespons
+            mapper = { body, _ ->
+                DefaultJsonMapper.fromJson(body)
             }
         )
     }
 
-    override fun hentSamId(ident: Ident, sakId: String, vedtakId: String) {
-        restClient.get(
+    override fun hentSamId(ident: Ident, sakId: String, vedtakId: String): HentSamIdResponse {
+        return requireNotNull(restClient.get(
             uri = uri.resolve("/api/vedtak?sakId=$sakId&vedtakId=$vedtakId&fagomrade=AAP"),
             request = GetRequest(
                 additionalHeaders = listOf(Header("pid", ident.identifikator))
             ),
-            mapper = { SamIdRespons, _ ->
-
+            mapper = { body, _ ->
+                HentSamIdResponse(DefaultJsonMapper.fromJson<String>(body))
             }
-        )
+        ))
     }
 }

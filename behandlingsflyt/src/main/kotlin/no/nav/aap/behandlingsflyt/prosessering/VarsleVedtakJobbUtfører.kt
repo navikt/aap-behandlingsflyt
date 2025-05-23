@@ -19,26 +19,24 @@ class VarsleVedtakJobbUtfører(
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository,
     private val vedtakRepository: VedtakRepository,
-    private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository,
     private val flytJobbRepository: FlytJobbRepository,
     private val samGateway: SamGateway
 ) : JobbUtfører {
     override fun utfør(input: JobbInput) {
-        val behandlingId = input.payload<BehandlingId>() //endre payload
+        val behandlingId = input.payload<BehandlingId>()
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
-        val tjenestepensjonRefusjonsKravVurdering = tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(behandling.id)
         val vedtak = vedtakRepository.hent(behandling.id)
 
         val request = SamordneVedtakRequest(
             pid = sak.person.aktivIdent().identifikator.toString(),
             vedtakId = behandling.referanse.toString(),
-            sakId = sak.saksnummer,
+            sakId = sak.saksnummer.toString(),
             virkFom = vedtak!!.vedtakstidspunkt.toLocalDate(),
             virkTom = sak.rettighetsperiode.tom,
             fagomrade = "AAP",
             ytelseType = "AAP",
-            etterbetaling = sak.rettighetsperiode.fom < vedtak.vedtakstidspunkt.toLocalDate(),
+            etterbetaling = sak.rettighetsperiode.fom < vedtak.virkningstidspunkt,
             utvidetFrist = null, //SPK kan få utvidet frist dersom etterbetaling er over 2G
         )
 
@@ -48,7 +46,6 @@ class VarsleVedtakJobbUtfører(
     companion object : ProviderJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
             return VarsleVedtakJobbUtfører(
-                repositoryProvider.provide(),
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),
