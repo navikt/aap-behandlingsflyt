@@ -105,9 +105,12 @@ import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.inntekt.InntektGatewayImpl
+import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.integrasjon.meldekort.MeldekortGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
+import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
+import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.TjenestePensjonGatewayImpl
@@ -231,6 +234,9 @@ class FlytOrkestratorTest {
                 .register<MeldekortGatewayImpl>()
                 .register<TjenestePensjonGatewayImpl>()
                 .register<FakeUnleash>()
+                .register<NomInfoGateway>()
+                .register<KabalGateway>()
+                .register<NorgGateway>()
             motor.start()
 
 
@@ -2983,7 +2989,7 @@ class FlytOrkestratorTest {
                 )
             )
         )
-        
+
         // KvalitetssikringsSteg
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1)
@@ -3020,7 +3026,7 @@ class FlytOrkestratorTest {
                 )
             )
         )
-        
+
         // FatteVedtakSteg
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1)
@@ -3049,7 +3055,8 @@ class FlytOrkestratorTest {
                         grunner = emptyList()
                     )
                 )
-            )
+            ),
+            Bruker("X123456")
         )
         util.ventPåSvar()
 
@@ -3071,6 +3078,10 @@ class FlytOrkestratorTest {
 
         val revurdering = hentBehandling(klagebehandling.sakId)
         assertThat(revurdering.årsaker()).containsExactly(Årsak(ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
+
+        // OpprettholdelseSteg
+        val steghistorikk = hentStegHistorikk(klagebehandling.id)
+        assertTrue(steghistorikk.any { it.steg() == StegType.OPPRETTHOLDELSE && it.status() == StegStatus.AVSLUTTER })
 
         // MeldingOmVedtakBrevSteg
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)

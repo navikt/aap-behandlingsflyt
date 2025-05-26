@@ -57,7 +57,7 @@ class OmgjøringSteg private constructor(
         require(klageresultat is DelvisOmgjøres || klageresultat is Omgjøres) {
             "Klagebehandlingresultat skal være Omgjøres eller DelvisOmgjøres"
         }
-        val hjemler = utledHjemlerForOmgjøring(klageresultat)
+        val hjemler = klageresultat.hjemlerSomSkalOmgjøres()
         val beskrivelse = konstruerBegrunnelse(hjemler)
         val årsaker = hjemler.map { it.tilÅrsak() }
 
@@ -71,20 +71,6 @@ class OmgjøringSteg private constructor(
         return "Revurdering etter klage som tas til følge. Følgende vilkår omgjøres: ${
             hjemler.map { it.hjemmel }.joinToString(", ")
         }"
-    }
-
-    private fun utledHjemlerForOmgjøring(klageresultat: KlageResultat): List<Hjemmel> {
-        return when (klageresultat) {
-            is Omgjøres -> {
-                klageresultat.vilkårSomSkalOmgjøres
-            }
-
-            is DelvisOmgjøres -> {
-                klageresultat.vilkårSomSkalOmgjøres
-            }
-
-            else -> throw IllegalArgumentException("Kan ikke hente omgjøringshjemler for klage som ikke skal omgjøres: $klageresultat")
-        }
     }
 
     companion object : FlytSteg {

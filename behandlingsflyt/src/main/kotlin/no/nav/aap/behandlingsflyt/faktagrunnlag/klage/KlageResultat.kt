@@ -8,6 +8,13 @@ sealed interface KlageResultat {
             else -> emptyList()
         }
     }
+    fun hjemlerSomSkalOmgjøres(): List<Hjemmel> {
+        return when (this) {
+            is Omgjøres -> vilkårSomSkalOmgjøres
+            is DelvisOmgjøres -> vilkårSomSkalOmgjøres
+            else -> emptyList()
+        }
+    }
 }
 
 data class Opprettholdes(

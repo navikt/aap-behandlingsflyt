@@ -19,4 +19,14 @@ class AnsattInfoService {
             return null
         }
     }
+    
+    fun hentAnsattEnhet(navIdent: String): String? {
+        return try {
+            val ansattInfo = ansattInfoGateway.hentAnsattInfo(navIdent)
+            ansattInfo.enhetsnummer
+        } catch (e: Exception) {
+            logger.warn("Kunne ikke hente enhet. Fortsetter uten disse verdiene.", e)
+            null
+        }
+    }
 }

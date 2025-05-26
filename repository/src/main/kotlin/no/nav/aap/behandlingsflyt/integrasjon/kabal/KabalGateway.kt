@@ -78,6 +78,7 @@ class KabalGateway : AndreinstansGateway {
 
         val url = baseUri.resolve("/api/oversendelse/v4/sak")
 
+        log.info("Oversender klage til Kabal")
         client.post(uri = url, request = request, mapper = { _, _ -> })
     }
 }

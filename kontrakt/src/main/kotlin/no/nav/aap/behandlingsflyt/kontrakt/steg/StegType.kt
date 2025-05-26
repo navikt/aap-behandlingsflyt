@@ -179,6 +179,10 @@ public enum class StegType(
         gruppe = StegGruppe.OMGJØRING,
         status = Status.IVERKSETTES
     ),
+    OPPRETTHOLDELSE(
+        gruppe = StegGruppe.OPPRETTHOLDELSE,
+        status = Status.IVERKSETTES
+    ),
     UDEFINERT(
         gruppe = StegGruppe.UDEFINERT,
         status = Status.UTREDES,

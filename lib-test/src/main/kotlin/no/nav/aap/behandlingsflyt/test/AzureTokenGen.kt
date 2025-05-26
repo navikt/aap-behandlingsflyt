@@ -51,7 +51,7 @@ class AzureTokenGen(private val issuer: String, private val audience: String) {
                     "azp", azp
                 )
         } else {
-            builder.claim("NAVident", "Lokalsaksbehandler")
+            builder.claim("NAVident", "X123456")
         }
 
         return builder.build()

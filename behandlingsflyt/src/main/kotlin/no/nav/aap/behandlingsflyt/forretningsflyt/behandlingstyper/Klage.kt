@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.FormkravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.KlagebehandlingKontorSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.KlagebehandlingNaySteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.OmgjøringSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.OpprettholdelseSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.PåklagetBehandlingSteg
 
 object Klage : BehandlingType {
@@ -26,6 +27,7 @@ object Klage : BehandlingType {
             .medSteg(steg = KlagebehandlingNaySteg)
             .medSteg(steg = FatteVedtakSteg)
             .medSteg(steg = OmgjøringSteg)
+            .medSteg(steg = OpprettholdelseSteg)
             .medSteg(steg = MeldingOmVedtakBrevSteg)
             .build()
     }
