@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
@@ -231,6 +232,10 @@ private fun sendInnKlage(datasource: DataSource, sak: Sak) {
                 dokumentReferanse = InnsendingReferanse(JournalpostId("" + System.currentTimeMillis())),
                 brevkategori = InnsendingType.KLAGE,
                 kanal = Kanal.DIGITAL,
+                melding = KlageV0(
+                    kravMottatt = LocalDate.now().minusWeeks(1),
+                    skalOppretteNyBehandling = true
+                ),
                 mottattTidspunkt = LocalDateTime.now(),
             )
         )
