@@ -61,7 +61,11 @@ object InntektGatewayImpl : InntektRegisterGateway {
                     Year.of(inntekt.inntektAr),
                     Beløp(inntekt.belop)
                 )
-            }.toSet()
+            }
+            .also { inntekter ->
+                require(inntekter.map { it.år }
+                    .toSet().size == inntekter.map { it.år }.size) { "Godtar ikke overlappende år." }
+            }
+            .toSet()
     }
-
 }
