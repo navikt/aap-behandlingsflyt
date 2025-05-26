@@ -46,7 +46,10 @@ class ManglendeLigningGrunnlagSteg private constructor(
         }
 
         if (GatewayProvider.provide<UnleashGateway>().isDisabled(BehandlingsflytFeature.Manuellinntekt)) {
-            avklaringsbehovene.avbryt(Definisjon.FASTSETT_MANUELL_INNTEKT)
+            val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FASTSETT_MANUELL_INNTEKT)
+            if (avklaringsbehov?.erÅpent() == true) {
+                avklaringsbehovene.avbryt(Definisjon.FASTSETT_MANUELL_INNTEKT)
+            }
             return Fullført
         }
 
