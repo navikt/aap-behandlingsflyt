@@ -14,6 +14,7 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProviderJobbSpesifikasjon
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class OpprettBehandlingFritakMeldepliktJobbUtfører(
     private val sakService: SakService,
@@ -24,8 +25,8 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
 
     override fun utfør(input: JobbInput) {
         val sak = sakService.hent(SakId(input.sakId()))
-
-        if (!sak.rettighetsperiode.inneholder(LocalDate.now())) {
+        val nå = LocalDate.now()
+        if (!sak.rettighetsperiode.inneholder(nå)) {
             return
         }
 
@@ -52,7 +53,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
         val startNesteMeldeperiode =
             førsteAntatteMeldeperiode.meldePeriode.fom
 
-        if (LocalDate.now() < startNesteMeldeperiode) {
+        if (nå < startNesteMeldeperiode) {
             return
         }
 
