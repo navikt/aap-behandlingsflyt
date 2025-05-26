@@ -144,6 +144,7 @@ class StatistikkJobbUtfører(
                     ÅrsakTilBehandling.SØKNAD_TRUKKET -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.SØKNAD_TRUKKET
                     ÅrsakTilBehandling.KLAGE_TRUKKET -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.KLAGE_TRUKKET
                     ÅrsakTilBehandling.REVURDER_MANUELL_INNTEKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REVURDER_MANUELL_INNTEKT
+                    ÅrsakTilBehandling.FRITAK_MELDEPLIKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.FRITAK_MELDEPLIKT
                 }
             }.distinct()
         )
