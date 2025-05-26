@@ -12,6 +12,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling.SØKNAD_TRUKKET
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -25,6 +27,7 @@ import org.slf4j.LoggerFactory
  */
 class SøknadSteg(
     private val trukketSøknadRepository: TrukketSøknadRepository,
+    private val sakRepository: SakRepository,
     private val repositoryProvider: RepositoryProvider,
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -35,6 +38,10 @@ class SøknadSteg(
         }
 
         if (trukketSøknadRepository.hentTrukketSøknadVurderinger(kontekst.behandlingId).isNotEmpty()) {
+            val sak = sakRepository.hent(kontekst.sakId)
+            // setter ny rettighetsperiode til en dag lang
+            val nyRettighetsPeriode = Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom)
+            sakRepository.oppdaterRettighetsperiode(kontekst.sakId, nyRettighetsPeriode)
             slettVurderingerOgRegisterdata(kontekst.behandlingId)
             return Fullført
         } else {
@@ -46,7 +53,7 @@ class SøknadSteg(
         log.info("sletter vurderinger og registerdata i alle repositories for {}", behandlingId)
         repositoryProvider.provideAlle().forEach { repository ->
             if (repository is no.nav.aap.lookup.repository.Repository) {
-                //repository.slett(behandlingId)
+                repository.slett(behandlingId)
             }
         }
     }
@@ -61,6 +68,7 @@ class SøknadSteg(
             return SøknadSteg(
                 trukketSøknadRepository = repositoryProvider.provide(),
                 repositoryProvider = repositoryProvider,
+                sakRepository = repositoryProvider.provide()
             )
         }
 

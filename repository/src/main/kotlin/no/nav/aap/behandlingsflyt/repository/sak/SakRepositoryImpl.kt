@@ -32,9 +32,6 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
             return opprett(person, periode)
         }
 
-        if (relevantesaker.size != 1) {
-            throw IllegalStateException("Fant flere saker som er relevant: $relevantesaker")
-        }
         return relevantesaker.first()
     }
 
