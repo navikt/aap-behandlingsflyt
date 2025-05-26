@@ -4,7 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.behandling.søknad.SøknadsdatoUtleder
+import no.nav.aap.behandlingsflyt.behandling.søknad.DatoFraDokumentUtleder
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -50,7 +50,7 @@ fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(dataSource: DataSource, repo
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val rettighetsperiodeRepository = repositoryProvider.provide<VurderRettighetsperiodeRepository>()
             val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
-            val søknadsdatoUtleder = SøknadsdatoUtleder(mottattDokumentRepository)
+            val datoFraDokumentUtleder = DatoFraDokumentUtleder(mottattDokumentRepository)
             val hartilgangTilÅSaksbehandle = GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
                 req.referanse,
                 Definisjon.VURDER_RETTIGHETSPERIODE,
@@ -81,7 +81,7 @@ fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(dataSource: DataSource, repo
                                 )
                         )
                     },
-                søknadsdato = søknadsdatoUtleder.utledSøknadsdatoForSak(behandling.sakId)?.toLocalDate(),
+                søknadsdato = datoFraDokumentUtleder.utledSøknadsdatoForSak(behandling.sakId)?.toLocalDate(),
                 harTilgangTilÅSaksbehandle = hartilgangTilÅSaksbehandle
             )
         }
