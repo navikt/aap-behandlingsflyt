@@ -13,6 +13,7 @@ object Grunnbeløp {
     private val gjennomsnittsbeløpene = sortedSetOf<GjennomsnittElement>()
 
     init {
+        element(2025, 5, 130_160, 128_116)
         element(2024, 5, 124_028, 122_225)
         element(2023, 5, 118_620, 116_239)
         element(2022, 5, 111_477, 109_784)
