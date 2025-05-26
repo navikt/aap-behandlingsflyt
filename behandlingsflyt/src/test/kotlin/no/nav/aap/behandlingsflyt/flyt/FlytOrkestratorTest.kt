@@ -2911,7 +2911,7 @@ class FlytOrkestratorTest {
         dataSource.transaction { connection ->
             val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
             val klageDokumenter =
-                mottattDokumentRepository.hentDokumenterAvType(klagebehandling.sakId, InnsendingType.KLAGE)
+                mottattDokumentRepository.hentDokumenterAvType(klagebehandling.id, InnsendingType.KLAGE)
             assertThat(klageDokumenter).hasSize(1)
             assertThat(klageDokumenter.first().strukturertDokument).isNotNull
             assertThat(klageDokumenter.first().strukturerteData<KlageV0>()?.data?.kravMottatt).isEqualTo(kravMottatt)

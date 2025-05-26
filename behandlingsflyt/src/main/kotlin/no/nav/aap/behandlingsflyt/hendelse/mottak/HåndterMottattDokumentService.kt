@@ -1,10 +1,13 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Aktivitetskort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDokumentV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
@@ -25,6 +28,7 @@ class HåndterMottattDokumentService(
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val låsRepository: TaSkriveLåsRepository,
     private val prosesserBehandling: ProsesserBehandlingService,
+    private val mottaDokumentService: MottaDokumentService
 ) {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
@@ -32,10 +36,12 @@ class HåndterMottattDokumentService(
         sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
         låsRepository = repositoryProvider.provide(),
         prosesserBehandling = ProsesserBehandlingService(repositoryProvider),
+        mottaDokumentService = MottaDokumentService(repositoryProvider)
     )
 
     fun håndterMottatteDokumenter(
         sakId: SakId,
+        referanse: InnsendingReferanse,
         mottattTidspunkt: LocalDateTime,
         brevkategori: InnsendingType,
         melding: Melding?,
@@ -52,6 +58,12 @@ class HåndterMottattDokumentService(
         val behandlingSkrivelås = låsRepository.låsBehandling(beriketBehandling.behandling.id)
 
         sakOgBehandlingService.oppdaterRettighetsperioden(sakId, brevkategori, mottattTidspunkt.toLocalDate())
+
+        // Knytter klage direkte til behandlingen den opprettet, i stedet for via informasjonskrav.
+        // Dette fordi vi kan ha flere åpne klagebehandlinger.
+        if (melding is Klage) {
+            mottaDokumentService.knyttTilBehandling(sakId, beriketBehandling.behandling.id, referanse)
+        }
 
         prosesserBehandling.triggProsesserBehandling(
             sakId,
