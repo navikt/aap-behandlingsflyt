@@ -47,19 +47,21 @@ object InntektGatewayImpl : InntektRegisterGateway {
     }
 
     override fun innhent(person: Person, år: Set<Year>): Set<InntektPerÅr> {
-        val request = InntektRequest(
-            person.identer().map { it.identifikator }.first(),
-            fomAr = år.min().value,
-            tomAr = år.max().value
-        )
-        val inntektRes = query(request)
-
-        return inntektRes.inntekter.map { inntekt ->
-            InntektPerÅr(
-                Year.of(inntekt.inntektAr),
-                Beløp(inntekt.belop)
+        return person.identer().map { ident ->
+            val request = InntektRequest(
+                ident.identifikator,
+                fomAr = år.min().value,
+                tomAr = år.max().value
             )
-        }.toSet()
+            query(request)
+        }
+            .flatMap { it.inntekter }
+            .map { inntekt ->
+                InntektPerÅr(
+                    Year.of(inntekt.inntektAr),
+                    Beløp(inntekt.belop)
+                )
+            }.toSet()
     }
 
 }
