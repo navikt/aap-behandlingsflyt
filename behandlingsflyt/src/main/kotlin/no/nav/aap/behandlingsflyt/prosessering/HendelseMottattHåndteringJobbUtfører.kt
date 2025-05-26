@@ -64,6 +64,7 @@ class HendelseMottattHåndteringJobbUtfører(
 
         hånderMottattDokumentService.håndterMottatteDokumenter(
             sakId,
+            referanse,
             mottattTidspunkt,
             innsendingType,
             parsedMelding,
