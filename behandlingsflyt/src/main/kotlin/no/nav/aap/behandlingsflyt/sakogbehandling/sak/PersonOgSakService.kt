@@ -47,10 +47,6 @@ class PersonOgSakService(
                 if (trukketSøknadService.søknadErTrukket(behandling.id)) {
                     return sakRepository.finnEllerOpprett(person, periode)
                 }
-                /*val resultat = resultatUtleder.utledResultat(behandling.id)
-                if (resultat == Resultat.TRUKKET) {
-                    return sakRepository.finnEllerOpprett(person, periode)
-                }*/
             }
         }
 
