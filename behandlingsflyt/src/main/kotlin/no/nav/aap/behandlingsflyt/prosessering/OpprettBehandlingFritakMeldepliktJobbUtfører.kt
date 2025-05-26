@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -14,7 +15,6 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProviderJobbSpesifikasjon
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 class OpprettBehandlingFritakMeldepliktJobbUtfører(
     private val sakService: SakService,
@@ -25,9 +25,19 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
 
     override fun utfør(input: JobbInput) {
         val sak = sakService.hent(SakId(input.sakId()))
+
+        if (skalHaFritakForPassertMeldeperiode(sak)) {
+            sakOgBehandlingService.finnEllerOpprettBehandling(
+                sak.id,
+                listOf(Årsak(type = ÅrsakTilBehandling.FRITAK_MELDEPLIKT))
+            )
+        }
+    }
+
+    private fun skalHaFritakForPassertMeldeperiode(sak: Sak):Boolean {
         val nå = LocalDate.now()
         if (!sak.rettighetsperiode.inneholder(nå)) {
-            return
+            return false
         }
 
         val behandling = behandlingRepository.finnSisteBehandlingFor(
@@ -35,37 +45,27 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
                 TypeBehandling.Førstegangsbehandling,
                 TypeBehandling.Revurdering
             )
-        ) ?: return
+        ) ?: return false
 
         if (behandling.status().erÅpen() && ÅrsakTilBehandling.FRITAK_MELDEPLIKT in behandling.årsaker().map { it.type }) {
-            return
+            return false
         }
 
         val underveisperioder = underveisRepository.hentHvisEksisterer(behandling.id)
             ?.perioder
-            ?: return
+            ?: return false
 
         val førsteAntatteMeldeperiode = underveisperioder
             .filter { it.meldepliktStatus == MeldepliktStatus.FREMTIDIG_OPPFYLT }
             .minByOrNull { it.meldePeriode }
-            ?: return
+            ?: return false
 
-        val startNesteMeldeperiode =
-            førsteAntatteMeldeperiode.meldePeriode.fom
+        val startNesteMeldeperiode = førsteAntatteMeldeperiode.meldePeriode.fom
 
-        if (nå < startNesteMeldeperiode) {
-            return
-        }
-
-        sakOgBehandlingService.finnEllerOpprettBehandling(
-            sak.id,
-            listOf(
-                Årsak(
-                    type = ÅrsakTilBehandling.FRITAK_MELDEPLIKT,
-                )
-            )
-        )
+        return nå >= startNesteMeldeperiode
     }
+
+
     companion object : ProviderJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
             return OpprettBehandlingFritakMeldepliktJobbUtfører(
