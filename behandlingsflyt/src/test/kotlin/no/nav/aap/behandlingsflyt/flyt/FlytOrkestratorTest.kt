@@ -3209,7 +3209,9 @@ class FlytOrkestratorTest {
 
         val sak = hentSak(ident, periode)
         val behandling = hentBehandling(sak.id)
-
+        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            .isEqualTo(Definisjon.AVKLAR_SYKDOM)
         løsAvklaringsBehov(
             behandling = behandling,
             avklaringsBehovLøsning = VurderRettighetsperiodeLøsning(
@@ -3221,6 +3223,9 @@ class FlytOrkestratorTest {
                 )
             )
         )
+
+        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            .isEqualTo(Definisjon.AVKLAR_SYKDOM)
 
         val oppdatertSak = hentSak(ident, periode)
 

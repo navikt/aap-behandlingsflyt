@@ -105,8 +105,7 @@ class VurderSykdomSteg private constructor(
     private fun erIkkeVurdertTidligereIBehandlingen(
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
-        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
-        return (avklaringsbehov == null || avklaringsbehov.erÅpent())
+        return !avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.AVKLAR_SYKDOM)
     }
 
     private fun skalStoppeIFørstegangsbehandling(

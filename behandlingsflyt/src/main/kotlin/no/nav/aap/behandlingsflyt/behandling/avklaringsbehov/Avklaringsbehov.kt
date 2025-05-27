@@ -139,6 +139,10 @@ class Avklaringsbehov(
         return status().erAvsluttet()
     }
 
+    fun harAvsluttetStatusIHistorikken(): Boolean {
+        return historikk.any { it.status == Status.AVSLUTTET }
+    }
+
     fun status(): Status {
         return historikk.maxOf { it }.status
     }

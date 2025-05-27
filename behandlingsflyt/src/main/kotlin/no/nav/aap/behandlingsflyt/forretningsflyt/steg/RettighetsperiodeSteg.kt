@@ -63,8 +63,7 @@ class RettighetsperiodeSteg private constructor(
     private fun erIkkeVurdertTidligereIBehandlingen(
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
-        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VURDER_RETTIGHETSPERIODE)
-        return (avklaringsbehov == null || avklaringsbehov.erÅpent())
+        return !avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.VURDER_RETTIGHETSPERIODE)
     }
 
     private fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
