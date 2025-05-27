@@ -59,6 +59,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadReposi
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
@@ -433,8 +434,8 @@ internal class BeregningsgrunnlagRepositoryImplTest {
             SakRepositoryImpl(connection),
             BehandlingRepositoryImpl(connection),
             TrukketSøknadService(
-                InMemoryAvklaringsbehovRepository,
-                InMemoryTrukketSøknadRepository
+                AvklaringsbehovRepositoryImpl(connection),
+                TrukketSøknadRepositoryImpl(connection)
             ),
         ).finnEllerOpprett(ident(), periode)
     }

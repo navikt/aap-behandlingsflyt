@@ -12,7 +12,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
+import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -206,8 +208,8 @@ internal class LegeerklæringVentebehovEvaluererTest {
             SakRepositoryImpl(connection),
             BehandlingRepositoryImpl(connection),
             TrukketSøknadService(
-                InMemoryAvklaringsbehovRepository,
-                InMemoryTrukketSøknadRepository
+                AvklaringsbehovRepositoryImpl(connection),
+                TrukketSøknadRepositoryImpl(connection)
             ),
         ).finnEllerOpprett(
             ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3))

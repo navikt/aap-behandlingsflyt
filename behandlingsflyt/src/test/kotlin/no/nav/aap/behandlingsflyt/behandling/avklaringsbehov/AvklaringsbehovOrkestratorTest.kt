@@ -82,8 +82,7 @@ class AvklaringsbehovOrkestratorTest {
             provider.provide(),
             provider.provide(),
             TrukketSøknadService(
-                InMemoryAvklaringsbehovRepository,
-                InMemoryTrukketSøknadRepository
+                provider
             ),
         ).finnEllerOpprett(
             ident(),

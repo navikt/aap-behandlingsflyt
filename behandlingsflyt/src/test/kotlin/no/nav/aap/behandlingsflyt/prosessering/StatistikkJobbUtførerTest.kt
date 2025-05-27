@@ -53,11 +53,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.pip.IdentPåSak
 import no.nav.aap.behandlingsflyt.pip.PipRepository
+import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -84,6 +86,7 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
@@ -128,15 +131,14 @@ class StatistikkJobbUtførerTest {
                     return listOf(ident)
                 }
             }
-
             val sak = PersonOgSakService(
                 identGateway,
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection),
                 BehandlingRepositoryImpl(connection),
                 TrukketSøknadService(
-                    InMemoryAvklaringsbehovRepository,
-                    InMemoryTrukketSøknadRepository
+                    AvklaringsbehovRepositoryImpl(connection),
+                    TrukketSøknadRepositoryImpl(connection)
                 ),
             ).finnEllerOpprett(
                 ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
