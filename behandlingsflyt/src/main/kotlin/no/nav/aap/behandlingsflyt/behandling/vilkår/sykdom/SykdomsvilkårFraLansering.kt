@@ -97,7 +97,7 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
                 Avslagsårsak.MANGLENDE_DOKUMENTASJON // TODO noe mer rett
             }
 
-            if (sykepengerVurdering?.harRettPå == true) {
+            if (sykepengerVurdering?.harRettPå == true && avslagsårsak == Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET) {
                 utfall = Utfall.OPPFYLT
                 innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING
                 avslagsårsak = null
