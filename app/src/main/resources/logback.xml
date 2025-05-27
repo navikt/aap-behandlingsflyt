@@ -11,6 +11,10 @@
         </encoder>
     </appender>
 
+    <appender name="OTEL" class="io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender">
+      <appender-ref ref="STDOUT" />
+    </appender>
+
     <appender name="secureLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>/secure-logs/secure.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
@@ -56,6 +60,7 @@
 
     <root level="INFO">
         <appender-ref ref="json"/>
+        <appender-ref ref="OTEL" />
     </root>
 
 </configuration>

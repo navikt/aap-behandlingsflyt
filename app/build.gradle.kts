@@ -4,6 +4,8 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 val ktorVersion = "3.1.3"
 val komponenterVersjon = "1.0.247"
 val junitVersjon = "5.12.2"
+val opentelemetryVersion = "2.16.0-alpha"
+
 
 plugins {
     id("behandlingsflyt.conventions")
@@ -95,6 +97,8 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql:11.8.2")
     runtimeOnly("org.postgresql:postgresql:42.7.5")
     implementation("ch.qos.logback:logback-classic:1.5.18")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:${opentelemetryVersion}")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:${opentelemetryVersion}")
 
     testImplementation(project(":lib-test"))
     testImplementation("no.nav.aap.kelvin:dbtest:$komponenterVersjon")
