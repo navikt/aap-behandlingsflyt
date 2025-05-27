@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.Rolle
 import java.time.LocalDate
@@ -48,7 +49,11 @@ class AndreinstansService(
         )
         val avklarinsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(klageBehandlingId)
         val beslutter = utledBeslutter(avklarinsbehovene)
-        val besluttersEnhet = ansattInfoService.hentAnsattEnhet(beslutter)
+        val besluttersEnhet = if (Miljø.erDev()) {
+            "0300" // Det finnes ikke testdata i NOM - bruker hardkodet enhet i dev
+        } else {
+            ansattInfoService.hentAnsattEnhet(beslutter)
+        }
         requireNotNull(besluttersEnhet) {
             "Fant ikke beslutters enhet"
         }
