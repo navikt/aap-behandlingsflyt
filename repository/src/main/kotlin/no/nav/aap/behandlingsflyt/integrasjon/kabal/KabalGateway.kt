@@ -1,22 +1,16 @@
 package no.nav.aap.behandlingsflyt.integrasjon.kabal
 
 import no.nav.aap.behandlingsflyt.behandling.klage.andreinstans.AndreinstansGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageResultat
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
-import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient.Companion.withDefaultResponseHandler
-import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
-import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import org.slf4j.LoggerFactory
@@ -55,9 +49,11 @@ class KabalGateway : AndreinstansGateway {
         val request = PostRequest(
             body = OversendtKlageAnkeV4(
                 type = OversendtKlageAnkeV4Type.KLAGE,
-                sakenGjelder = OversendtPartId(
-                    type = OversendtPartIdType.PERSON,
-                    verdi = klagenGjelder.aktivIdent().identifikator
+                sakenGjelder = SakenGjelder(
+                    id = OversendtPartId(
+                        type = OversendtPartIdType.PERSON,
+                        verdi = klagenGjelder.aktivIdent().identifikator
+                    )
                 ),
                 fagsak = OversendtSak(
                     fagsakId = saksnummer.toString(),
@@ -68,7 +64,7 @@ class KabalGateway : AndreinstansGateway {
                 forrigeBehandlendeEnhet = saksbehandlersEnhet,
                 tilknyttedeJournalposter = emptyList(), // TODO: Send med relevante journalposter?
                 brukersKlageMottattVedtaksinstans = kravDato, // TODO: Må hente kravdato. Dokument er ikke knyttet mot behandling, så undersøk hvordan dette skal gjøres. Må evt. legges på behandling
-                hindreAutomatiskSvarBrev = false,
+                hindreAutomatiskSvarbrev = false,
                 kildeReferanse = behandlingsreferanse.referanse.toString()
             ),
             additionalHeaders = listOf(
@@ -85,14 +81,14 @@ class KabalGateway : AndreinstansGateway {
 
 data class OversendtKlageAnkeV4(
     val type: OversendtKlageAnkeV4Type,
-    val sakenGjelder: OversendtPartId,
+    val sakenGjelder: SakenGjelder,
     val fagsak: OversendtSak,
     val hjemler: List<String>,
     val ytelse: Ytelse,
     val forrigeBehandlendeEnhet: String,
     val tilknyttedeJournalposter: List<String>,
     val brukersKlageMottattVedtaksinstans: LocalDate,
-    val hindreAutomatiskSvarBrev: Boolean,
+    val hindreAutomatiskSvarbrev: Boolean,
     val kildeReferanse: String
     // TODO: Legg til støtte for prosessfullmektig
 )
@@ -101,6 +97,10 @@ enum class OversendtKlageAnkeV4Type {
     KLAGE,
     ANKE
 }
+
+data class SakenGjelder(
+    val id: OversendtPartId,
+)
 
 data class OversendtPartId(
     val type: OversendtPartIdType,
@@ -133,7 +133,7 @@ enum class MottakDokumentType {
 }
 
 enum class Fagsystem {
-    KELVIN, 
+    KELVIN,
     AO01 // Arena
 }
 
