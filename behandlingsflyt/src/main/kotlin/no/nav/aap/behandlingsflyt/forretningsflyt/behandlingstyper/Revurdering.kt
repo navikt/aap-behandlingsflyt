@@ -182,7 +182,10 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = BarnetilleggSteg,
                 informasjonskrav = listOf(BarnService),
-                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.BARNETILLEGG)
+                årsakRelevanteForSteg = listOf(
+                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
+                    ÅrsakTilBehandling.BARNETILLEGG,
+                )
             )
             .medSteg(
                 steg = EtAnnetStedSteg,
