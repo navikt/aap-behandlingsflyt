@@ -192,7 +192,6 @@ class MeldepliktRegel(
                 else -> null
             }
         }
-        println("vurderMeldeperiode($meldeperiode) førsteDokument=$førsteDokument")
 
         val vanligVurdering = vurderMeldeperiodeIsolert(meldeperiode, førsteDokument)
 
@@ -260,7 +259,8 @@ class MeldepliktRegel(
         førsteDokument: Segment<out MeldepliktVurdering>?,
     ): Tidslinje<MeldepliktVurdering> {
         val meldefrist = meldeperiode.fom.plusDays(7)
-        val meldepliktVurderings: Tidslinje<MeldepliktVurdering> = when {
+
+        return when {
             førsteDokument == null ->
                 /* ikke meldt seg */
                 Tidslinje(
@@ -292,7 +292,6 @@ class MeldepliktRegel(
                 )
             }
         }
-        return meldepliktVurderings .also { println("Vurderer i isolasjon $meldeperiode $førsteDokument $it\n") }
     }
 
 }
