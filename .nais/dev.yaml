@@ -121,6 +121,8 @@ spec:
           namespace: nom
         - application: norg2
           namespace: org
+        - application: kabal-api
+          namespace: klage
 
   env:
     - name: INTEGRASJON_PDL_URL
