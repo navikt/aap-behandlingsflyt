@@ -56,7 +56,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
             ?: return false
 
         val førsteAntatteMeldeperiode = underveisperioder
-            .filter { it.meldepliktStatus == MeldepliktStatus.FREMTIDIG_OPPFYLT }
+            .filter { it.meldepliktStatus == MeldepliktStatus.FRITAK }
             .minByOrNull { it.meldePeriode }
             ?: return false
 
