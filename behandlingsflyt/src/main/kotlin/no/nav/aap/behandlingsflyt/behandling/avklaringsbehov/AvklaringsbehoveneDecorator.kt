@@ -10,4 +10,6 @@ interface AvklaringsbehoveneDecorator {
     fun hentBehovForDefinisjon(definisjon: Definisjon): Avklaringsbehov?
     fun skalTilbakeføresEtterKvalitetssikring(): Boolean
     fun harÅpentBrevVentebehov(): Boolean
+
+    fun erVurdertTidligereIBehandlingen(definisjon: Definisjon): Boolean
 }

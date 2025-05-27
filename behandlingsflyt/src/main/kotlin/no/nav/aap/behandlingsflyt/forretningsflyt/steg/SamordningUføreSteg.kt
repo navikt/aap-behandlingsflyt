@@ -86,8 +86,7 @@ class SamordningUføreSteg(
     private fun erIkkeVurdertTidligereIBehandlingen(
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
-        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_UFØRE)
-        return (avklaringsbehov == null || avklaringsbehov.erÅpent())
+        return !avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.AVKLAR_SAMORDNING_UFØRE)
     }
 
     companion object : FlytSteg {

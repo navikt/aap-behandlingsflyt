@@ -266,6 +266,11 @@ class Avklaringsbehovene(
         return alle().any { avklaringsbehov -> avklaringsbehov.erBrevVentebehov() && avklaringsbehov.erÅpent() }
     }
 
+    override fun erVurdertTidligereIBehandlingen(definisjon: Definisjon): Boolean {
+        val avklaringsbehov = hentBehovForDefinisjon(definisjon)
+        return avklaringsbehov != null && avklaringsbehov.harAvsluttetStatusIHistorikken()
+    }
+
     override fun toString(): String {
         return "Behov[${avklaringsbehovene.joinToString { it.toString() }}. For ID $behandlingId.]"
     }

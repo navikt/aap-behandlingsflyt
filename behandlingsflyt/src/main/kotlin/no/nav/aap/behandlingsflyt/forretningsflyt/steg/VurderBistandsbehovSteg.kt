@@ -138,8 +138,7 @@ class VurderBistandsbehovSteg private constructor(
     private fun erIkkeVurdertTidligereIBehandlingen(
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
-        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)
-        return (avklaringsbehov == null || avklaringsbehov.erÅpent())
+        return !avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.AVKLAR_BISTANDSBEHOV)
     }
 
     private fun postcondition(vilkår: Vilkår) {

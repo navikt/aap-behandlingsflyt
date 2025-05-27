@@ -104,8 +104,7 @@ class BeregningAvklarFaktaSteg private constructor(
         avklaringsbehovene: Avklaringsbehovene,
         definisjon: Definisjon
     ): Boolean {
-        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
-        return (avklaringsbehov == null || avklaringsbehov.erÅpent())
+        return !avklaringsbehovene.erVurdertTidligereIBehandlingen(definisjon)
     }
 
     private fun erIkkeStudent(vilkårsresultat: Vilkårsresultat): Boolean {
