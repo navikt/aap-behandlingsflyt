@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.math.BigDecimal
@@ -27,7 +28,7 @@ class AvklarManuellInntektVurderingLøser(
         val sisteRelevanteÅr = relevanteÅr.max()
 
         if (løsning.manuellVurderingForManglendeInntekt.belop < BigDecimal.ZERO) {
-            throw IllegalArgumentException("Inntekt kan ikke være negativ")
+            throw UgyldigForespørselException("Inntekt kan ikke være negativ")
         }
 
         manuellInntektGrunnlagRepository.lagre(

@@ -2801,7 +2801,7 @@ class FlytOrkestratorTest {
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
         assertTrue(åpneAvklaringsbehov.all { Definisjon.FASTSETT_MANUELL_INNTEKT == it.definisjon })
 
-        assertThrows<IllegalArgumentException> {
+        assertThrows<UgyldigForespørselException> {
             løsAvklaringsBehov(
                 behandling,
                 AvklarManuellInntektVurderingLøsning(
