@@ -51,8 +51,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.test.ident
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
@@ -114,8 +112,8 @@ internal class BehandlingRepositoryImplTest {
                 SakRepositoryImpl(connection),
                 BehandlingRepositoryImpl(connection),
                 TrukketSøknadService(
-                    InMemoryAvklaringsbehovRepository,
-                    InMemoryTrukketSøknadRepository
+                    AvklaringsbehovRepositoryImpl(connection),
+                    TrukketSøknadRepositoryImpl(connection)
                 ),
             ).finnEllerOpprett(
                 ident(),
@@ -151,8 +149,8 @@ internal class BehandlingRepositoryImplTest {
                 SakRepositoryImpl(connection),
                 BehandlingRepositoryImpl(connection),
                 TrukketSøknadService(
-                    InMemoryAvklaringsbehovRepository,
-                    InMemoryTrukketSøknadRepository
+                    AvklaringsbehovRepositoryImpl(connection),
+                    TrukketSøknadRepositoryImpl(connection)
                 ),
             ).finnEllerOpprett(
                 ident(),
@@ -206,8 +204,8 @@ internal class BehandlingRepositoryImplTest {
                 SakRepositoryImpl(connection),
                 BehandlingRepositoryImpl(connection),
                 TrukketSøknadService(
-                    InMemoryAvklaringsbehovRepository,
-                    InMemoryTrukketSøknadRepository
+                    AvklaringsbehovRepositoryImpl(connection),
+                    TrukketSøknadRepositoryImpl(connection)
                 ),
             ).finnEllerOpprett(
                 ident(),

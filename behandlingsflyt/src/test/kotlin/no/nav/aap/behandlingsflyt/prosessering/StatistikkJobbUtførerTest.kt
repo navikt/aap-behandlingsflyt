@@ -86,7 +86,6 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit

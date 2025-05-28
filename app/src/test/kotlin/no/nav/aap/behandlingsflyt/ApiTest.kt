@@ -31,7 +31,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskap
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -48,8 +50,6 @@ import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.ident
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -164,8 +164,8 @@ class ApiTest {
                 SakRepositoryImpl(connection),
                 BehandlingRepositoryImpl(connection),
                 TrukketSøknadService(
-                    InMemoryAvklaringsbehovRepository,
-                    InMemoryTrukketSøknadRepository
+                    AvklaringsbehovRepositoryImpl(connection),
+                    TrukketSøknadRepositoryImpl(connection)
                 ),
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
@@ -220,8 +220,8 @@ class ApiTest {
                 SakRepositoryImpl(connection),
                 BehandlingRepositoryImpl(connection),
                 TrukketSøknadService(
-                    InMemoryAvklaringsbehovRepository,
-                    InMemoryTrukketSøknadRepository
+                    AvklaringsbehovRepositoryImpl(connection),
+                    TrukketSøknadRepositoryImpl(connection)
                 ),
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
