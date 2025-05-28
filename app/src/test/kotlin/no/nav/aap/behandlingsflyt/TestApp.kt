@@ -201,7 +201,7 @@ private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak
         val sakService = PersonOgSakService(
             PdlIdentGateway(),
             PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection),
+            SakRepositoryImpl(connection)
         )
         val sak = sakService.finnEllerOpprett(ident, periode)
 

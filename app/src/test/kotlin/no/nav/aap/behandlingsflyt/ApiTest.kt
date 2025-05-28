@@ -158,7 +158,7 @@ class ApiTest {
             val personOgSakService = PersonOgSakService(
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
 
@@ -209,7 +209,7 @@ class ApiTest {
             val personOgSakService = PersonOgSakService(
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val sak =

@@ -34,7 +34,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             val personOgSakService = PersonOgSakService(
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val repo = MedlemskapArbeidInntektRepositoryImpl(connection)

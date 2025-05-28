@@ -100,7 +100,7 @@ class MeldekortRepositoryImplTest {
         return PersonOgSakService(
             FakePdlGateway,
             PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection),
+            SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident(), periode)
     }
 }

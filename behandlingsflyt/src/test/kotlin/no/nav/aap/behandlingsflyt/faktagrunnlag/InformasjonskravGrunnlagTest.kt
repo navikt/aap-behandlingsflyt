@@ -271,7 +271,7 @@ class InformasjonskravGrunnlagTest {
         val sak = PersonOgSakService(
             FakePdlGateway,
             PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection),
+            SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident, periode)
         val behandling = finnEllerOpprettBehandling(connection, sak)
         val personopplysningRepository = PersonopplysningRepositoryImpl(

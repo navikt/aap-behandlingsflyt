@@ -71,7 +71,7 @@ internal class GjenopptakRepositoryTest {
         return PersonOgSakService(
             FakePdlGateway,
             PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection),
+            SakRepositoryImpl(connection)
         ).finnEllerOpprett(
             ident(),
             Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))

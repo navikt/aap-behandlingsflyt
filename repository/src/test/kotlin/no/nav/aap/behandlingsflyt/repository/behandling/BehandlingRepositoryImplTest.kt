@@ -67,7 +67,7 @@ internal class BehandlingRepositoryImplTest {
             val sak = PersonOgSakService(
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
             ).finnEllerOpprett(
                 ident(),
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
@@ -102,7 +102,7 @@ internal class BehandlingRepositoryImplTest {
             val sak = PersonOgSakService(
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
             ).finnEllerOpprett(
                 ident(),
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
@@ -134,7 +134,7 @@ internal class BehandlingRepositoryImplTest {
             val sak = PersonOgSakService(
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
             ).finnEllerOpprett(
                 ident(),
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
@@ -184,7 +184,7 @@ internal class BehandlingRepositoryImplTest {
             val sak = PersonOgSakService(
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
             ).finnEllerOpprett(
                 ident(),
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))

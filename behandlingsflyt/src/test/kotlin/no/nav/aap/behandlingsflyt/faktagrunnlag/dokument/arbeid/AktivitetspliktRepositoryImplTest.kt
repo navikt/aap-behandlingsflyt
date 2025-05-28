@@ -169,7 +169,7 @@ fun nySak(connection: DBConnection): Sak {
     return PersonOgSakService(
         FakePdlGateway,
         PersonRepositoryImpl(connection),
-        SakRepositoryImpl(connection),
+        SakRepositoryImpl(connection)
     )
         .finnEllerOpprett(
             ident(),

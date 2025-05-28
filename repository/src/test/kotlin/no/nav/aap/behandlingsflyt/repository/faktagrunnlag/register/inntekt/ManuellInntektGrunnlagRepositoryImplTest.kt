@@ -85,7 +85,7 @@ class ManuellInntektGrunnlagRepositoryImplTest {
         return PersonOgSakService(
             FakePdlGateway,
             PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection),
+            SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident(), periode)
     }
 }

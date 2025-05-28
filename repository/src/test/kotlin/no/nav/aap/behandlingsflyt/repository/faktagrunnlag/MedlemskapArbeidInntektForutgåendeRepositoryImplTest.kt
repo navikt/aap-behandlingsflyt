@@ -36,7 +36,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
                 PersonOgSakService(
                     FakePdlGateway,
                     PersonRepositoryImpl(connection),
-                    SakRepositoryImpl(connection),
+                    SakRepositoryImpl(connection)
                 )
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
@@ -46,7 +46,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
                 PersonOgSakService(
                     FakePdlGateway,
                     PersonRepositoryImpl(connection),
-                    SakRepositoryImpl(connection),
+                    SakRepositoryImpl(connection)
                 )
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
@@ -88,7 +88,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
                 PersonOgSakService(
                     FakePdlGateway,
                     PersonRepositoryImpl(connection),
-                    SakRepositoryImpl(connection),
+                    SakRepositoryImpl(connection)
                 )
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
@@ -98,7 +98,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
                 PersonOgSakService(
                     FakePdlGateway,
                     PersonRepositoryImpl(connection),
-                    SakRepositoryImpl(connection),
+                    SakRepositoryImpl(connection)
                 )
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }

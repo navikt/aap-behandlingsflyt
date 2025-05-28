@@ -28,7 +28,7 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
             val sak = PersonOgSakService(
                 PdlIdentGateway(),
                 PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
             ).finnEllerOpprett(key, hendelse.periode())
             sak.saksnummer
         }

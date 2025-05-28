@@ -83,7 +83,7 @@ class StudentRepositoryImplTest {
         return PersonOgSakService(
             FakePdlGateway,
             PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection),
+            SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident(), Periode(1 januar 2022, 31.desember(2023)))
     }
 }

@@ -177,7 +177,7 @@ internal class MottattDokumentRepositoryImplTest {
         return PersonOgSakService(
             FakePdlGateway,
             PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection),
+            SakRepositoryImpl(connection)
         ).finnEllerOpprett(
             ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         )
