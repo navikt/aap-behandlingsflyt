@@ -140,7 +140,10 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                 sakenGjelderFor = sak.rettighetsperiode.somKontraktperiode,
                 meldeperioder = meldeperioder.somKontraktperioder,
                 opplysningsbehov = underveisperioder
-                    .mapNotNull { if (it.verdi.rettighetsType != null) it.periode else null }
+                    .mapValue { it.rettighetsType != null }
+                    .filter { it.verdi }
+                    .komprimer()
+                    .map { it.periode }
                     .somKontraktperioder,
                 meldeplikt = MeldepliktRegel().fastsatteDagerMedMeldeplikt(
                     vedtaksdatoFørstegangsbehandling = vedtak?.virkningstidspunkt,
