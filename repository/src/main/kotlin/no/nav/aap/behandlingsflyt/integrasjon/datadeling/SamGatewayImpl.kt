@@ -17,6 +17,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import java.net.URI
+import java.time.LocalDate
 
 class SamGatewayImpl : SamGateway {
     companion object : Factory<SamGateway> {
@@ -51,8 +52,36 @@ class SamGatewayImpl : SamGateway {
                 additionalHeaders = listOf(Header("pid", ident.identifikator))
             ),
             mapper = { body, _ ->
-                DefaultJsonMapper.fromJson<List<HentSamIdResponse>>(body).first().samordningVedtakId
+                DefaultJsonMapper.fromJson<List<SamordningsvedtakApi>>(body).first().samordningsmeldinger.first().samId //todo: kast feil dersom vi får flere
             }
         ))
     }
+
+
+    data class SamordningsvedtakApi(
+        val samordningVedtakId: Long,
+        val fagsystem: String,
+        val saksId: Long,
+        val saksKode: String,
+        val vedtakId: Long,
+        val vedtakstatusKode: String?,
+        val etterbetaling: Boolean,
+        val utvidetSamordningsfrist: Boolean,
+        val virkningFom: LocalDate,
+        val virkningTom: LocalDate?,
+        val versjon: Long,
+        val samordningsmeldinger: List<SamordningsmeldingApi> = emptyList()
+    )
+
+    data class SamordningsmeldingApi(
+        val samId: Long,
+        val meldingstatusKode: String,
+        val tpNr: String,
+        val tpNavn: String,
+        val sendtDato: LocalDate,
+        val svartDato: LocalDate?,
+        val purretDato: LocalDate?,
+        val refusjonskrav: Boolean,
+        val versjon: Long
+    )
 }

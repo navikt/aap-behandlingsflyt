@@ -20,7 +20,7 @@ class HentSamIdJobbUtfører(
 
     ): JobbUtfører {
     override fun utfør(input: JobbInput) {
-        val behandlingId = input.payload<HentSamId>().behandlingId
+        val behandlingId = input.payload<BehandlingId>()
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
         val samId = samGateway.hentSamId(sak.person.aktivIdent(),sak.id.id,behandling.id.id)

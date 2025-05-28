@@ -41,6 +41,8 @@ class VarsleVedtakJobbUtfører(
         )
 
         samGateway.varsleVedtak(request)
+
+        flytJobbRepository.leggTil(JobbInput(HentSamIdJobbUtfører).medPayload(behandling.id))
     }
 
     companion object : ProviderJobbSpesifikasjon {
