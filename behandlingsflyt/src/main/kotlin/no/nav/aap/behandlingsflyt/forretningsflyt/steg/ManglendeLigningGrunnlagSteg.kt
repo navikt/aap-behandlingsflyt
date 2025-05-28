@@ -64,7 +64,7 @@ class ManglendeLigningGrunnlagSteg private constructor(
             }
 
             VurderingType.REVURDERING -> {
-                vurderInntekter(kontekst)
+                return FantAvklaringsbehov(Definisjon.FASTSETT_MANUELL_INNTEKT)
             }
 
             VurderingType.MELDEKORT,

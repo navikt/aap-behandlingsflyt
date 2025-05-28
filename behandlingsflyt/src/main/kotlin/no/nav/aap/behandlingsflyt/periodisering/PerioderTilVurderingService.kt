@@ -87,6 +87,7 @@ class PerioderTilVurderingService(
             ÅrsakTilBehandling.REFUSJONSKRAV,
             ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE,
             ÅrsakTilBehandling.SØKNAD_TRUKKET,
+            ÅrsakTilBehandling.REVURDER_MANUELL_INNTEKT,
             ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT ->
                 REVURDERING
 
