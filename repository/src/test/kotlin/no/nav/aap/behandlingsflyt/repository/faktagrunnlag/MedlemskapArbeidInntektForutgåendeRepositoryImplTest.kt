@@ -33,13 +33,21 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     fun `kan hente siste relevante utenlandsopplysning`() {
         val sak = dataSource.transaction { connection ->
             val personOgSakService =
-                PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
+                PersonOgSakService(
+                    FakePdlGateway,
+                    PersonRepositoryImpl(connection),
+                    SakRepositoryImpl(connection)
+                )
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
 
         val sak2 = dataSource.transaction { connection ->
             val personOgSakService =
-                PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
+                PersonOgSakService(
+                    FakePdlGateway,
+                    PersonRepositoryImpl(connection),
+                    SakRepositoryImpl(connection)
+                )
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
 
@@ -77,13 +85,21 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     fun `henter relaterte historiske vurderinger`() {
         val sak = dataSource.transaction { connection ->
             val personOgSakService =
-                PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
+                PersonOgSakService(
+                    FakePdlGateway,
+                    PersonRepositoryImpl(connection),
+                    SakRepositoryImpl(connection)
+                )
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
 
         val sak2 = dataSource.transaction { connection ->
             val personOgSakService =
-                PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
+                PersonOgSakService(
+                    FakePdlGateway,
+                    PersonRepositoryImpl(connection),
+                    SakRepositoryImpl(connection)
+                )
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
 

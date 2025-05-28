@@ -31,12 +31,18 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
     fun henterRelaterteHistoriskeVurderinger() {
         // Førstegangsbehandling
         val behandling = dataSource.transaction { connection ->
-            val personOgSakService = PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
+            val personOgSakService = PersonOgSakService(
+                FakePdlGateway,
+                PersonRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
+            )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val repo = MedlemskapArbeidInntektRepositoryImpl(connection)
 
-            val sak = personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
-            val behandling = behandlingRepo.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+            val sak =
+                personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            val behandling =
+                behandlingRepo.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
             lagNyFullVurdering(behandling.id, repo, "Første begrunnelse")
 
             val historikk = repo.hentHistoriskeVurderinger(sak.id, behandling.id)
@@ -50,7 +56,8 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val repo = MedlemskapArbeidInntektRepositoryImpl(connection)
 
-            val revurdering = behandlingRepo.opprettBehandling(behandling.sakId, listOf(), TypeBehandling.Revurdering, behandling.id)
+            val revurdering =
+                behandlingRepo.opprettBehandling(behandling.sakId, listOf(), TypeBehandling.Revurdering, behandling.id)
 
             val historikk = repo.hentHistoriskeVurderinger(revurdering.sakId, revurdering.id)
             lagNyFullVurdering(revurdering.id, repo, "Andre begrunnelse")
@@ -58,9 +65,14 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         }
     }
 
-    private fun lagNyFullVurdering(behandlingId: BehandlingId, repo: MedlemskapArbeidInntektRepositoryImpl, begrunnelse: String) {
+    private fun lagNyFullVurdering(
+        behandlingId: BehandlingId,
+        repo: MedlemskapArbeidInntektRepositoryImpl,
+        begrunnelse: String
+    ) {
         repo.lagreArbeidsforholdOgInntektINorge(behandlingId, listOf(), listOf(), null)
-        repo.lagreManuellVurdering(behandlingId,
+        repo.lagreManuellVurdering(
+            behandlingId,
             ManuellVurderingForLovvalgMedlemskap(
                 LovvalgVedSøknadsTidspunktDto(begrunnelse, EØSLand.NOR),
                 MedlemskapVedSøknadsTidspunktDto(begrunnelse, true),
@@ -68,6 +80,10 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
                 LocalDateTime.now()
             )
         )
-        repo.lagreOppgittUtenlandsOppplysninger(behandlingId, JournalpostId("1"), UtenlandsOppholdData(true, false, false, false, null))
+        repo.lagreOppgittUtenlandsOppplysninger(
+            behandlingId,
+            JournalpostId("1"),
+            UtenlandsOppholdData(true, false, false, false, null)
+        )
     }
 }

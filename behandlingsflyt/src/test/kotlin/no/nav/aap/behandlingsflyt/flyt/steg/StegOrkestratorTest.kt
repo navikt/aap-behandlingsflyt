@@ -35,7 +35,6 @@ internal class StegOrkestratorTest {
         dataSource.transaction { connection ->
             val ident = Ident("123123123126")
             val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-
             val sak = PersonOgSakService(
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),

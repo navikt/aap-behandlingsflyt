@@ -16,10 +16,8 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-import java.time.LocalDate
 import java.time.Year
 
 class ManuellInntektGrunnlagRepositoryImplTest {

@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -42,7 +43,13 @@ class TilkjentYtelseRepositoryImplTest {
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(999),
-                            gradering = TilkjentGradering(Prosent.`66_PROSENT`, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`),
+                            gradering = TilkjentGradering(
+                                Prosent.`66_PROSENT`,
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`
+                            ),
                             barnetillegg = Beløp(999),
                             grunnlagsfaktor = GUnit("1.0"),
                             grunnlag = Beløp(999),
@@ -59,7 +66,13 @@ class TilkjentYtelseRepositoryImplTest {
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(1000),
-                            gradering = TilkjentGradering(Prosent.`50_PROSENT`, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`),
+                            gradering = TilkjentGradering(
+                                Prosent.`50_PROSENT`,
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`
+                            ),
                             barnetillegg = Beløp(1000),
                             grunnlagsfaktor = GUnit("1.0"),
                             grunnlag = Beløp(1000),
@@ -90,6 +103,117 @@ class TilkjentYtelseRepositoryImplTest {
             val tilkjentYtelseRepository = TilkjentYtelseRepositoryImpl(connection)
             val tilkjentYtelseHentet = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
             assertNull(tilkjentYtelseHentet)
+        }
+    }
+
+    @Test
+    fun `test sletting`() {
+        InitTestDatabase.freshDatabase().transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val tilkjentYtelseRepository = TilkjentYtelseRepositoryImpl(connection)
+            tilkjentYtelseRepository.lagre(
+                behandling.id, listOf(
+                    TilkjentYtelsePeriode(
+                        periode = Periode(
+                            LocalDate.now(),
+                            LocalDate.now().plusDays(1)
+                        ),
+                        tilkjent = Tilkjent(
+                            dagsats = Beløp(999),
+                            gradering = TilkjentGradering(
+                                Prosent.`66_PROSENT`,
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`
+                            ),
+                            barnetillegg = Beløp(999),
+                            grunnlagsfaktor = GUnit("1.0"),
+                            grunnlag = Beløp(999),
+                            antallBarn = 1,
+                            barnetilleggsats = Beløp(999),
+                            grunnbeløp = Beløp(1000),
+                            utbetalingsdato = LocalDate.now().plusDays(14)
+                        )
+                    ),
+                    TilkjentYtelsePeriode(
+                        periode = Periode(
+                            LocalDate.now().plusDays(2),
+                            LocalDate.now().plusDays(3)
+                        ),
+                        tilkjent = Tilkjent(
+                            dagsats = Beløp(1000),
+                            gradering = TilkjentGradering(
+                                Prosent.`50_PROSENT`,
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`
+                            ),
+                            barnetillegg = Beløp(1000),
+                            grunnlagsfaktor = GUnit("1.0"),
+                            grunnlag = Beløp(1000),
+                            antallBarn = 1,
+                            barnetilleggsats = Beløp(1000),
+                            grunnbeløp = Beløp(1000),
+                            utbetalingsdato = LocalDate.now().plusDays(14)
+                        )
+                    ),
+                )
+
+            )
+            tilkjentYtelseRepository.lagre(
+                behandling.id, listOf(
+                    TilkjentYtelsePeriode(
+                        periode = Periode(
+                            LocalDate.now(),
+                            LocalDate.now().plusDays(1)
+                        ),
+                        tilkjent = Tilkjent(
+                            dagsats = Beløp(999),
+                            gradering = TilkjentGradering(
+                                Prosent.`66_PROSENT`,
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`
+                            ),
+                            barnetillegg = Beløp(999),
+                            grunnlagsfaktor = GUnit("1.0"),
+                            grunnlag = Beløp(999),
+                            antallBarn = 1,
+                            barnetilleggsats = Beløp(999),
+                            grunnbeløp = Beløp(1000),
+                            utbetalingsdato = LocalDate.now().plusDays(14)
+                        )
+                    ),
+                    TilkjentYtelsePeriode(
+                        periode = Periode(
+                            LocalDate.now().plusDays(4),
+                            LocalDate.now().plusDays(5)
+                        ),
+                        tilkjent = Tilkjent(
+                            dagsats = Beløp(1000),
+                            gradering = TilkjentGradering(
+                                Prosent.`50_PROSENT`,
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`
+                            ),
+                            barnetillegg = Beløp(1000),
+                            grunnlagsfaktor = GUnit("1.0"),
+                            grunnlag = Beløp(1000),
+                            antallBarn = 1,
+                            barnetilleggsats = Beløp(1000),
+                            grunnbeløp = Beløp(1000),
+                            utbetalingsdato = LocalDate.now().plusDays(14)
+                        )
+                    ),
+                )
+            )
+            assertDoesNotThrow { tilkjentYtelseRepository.slett(behandling.id) }
         }
     }
 

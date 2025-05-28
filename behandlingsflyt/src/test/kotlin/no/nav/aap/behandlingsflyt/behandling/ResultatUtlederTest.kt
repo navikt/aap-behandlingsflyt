@@ -133,7 +133,7 @@ class ResultatUtlederTest {
         return PersonOgSakService(
             FakePdlGateway,
             InMemoryPersonRepository,
-            InMemorySakRepository,
+            InMemorySakRepository
         ).finnEllerOpprett(ident(), periode)
     }
 
