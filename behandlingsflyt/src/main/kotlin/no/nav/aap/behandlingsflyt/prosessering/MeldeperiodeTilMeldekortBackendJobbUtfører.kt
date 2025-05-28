@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -80,7 +79,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                         .map { Periode(it.fom, it.tom) },
                     opplysningsbehov =
                         underveisperioder
-                            .mapNotNull { if (it.verdi.utfall == Utfall.OPPFYLT) it.periode else null }
+                            .mapNotNull { if (it.verdi.rettighetsType != null) it.periode else null }
                             .map { Periode(it.fom, it.tom) },
                     meldeplikt = MeldepliktRegel()
                         .fastsatteDagerMedMeldeplikt(
