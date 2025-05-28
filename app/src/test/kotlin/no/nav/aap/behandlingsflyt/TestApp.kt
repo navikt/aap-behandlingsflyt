@@ -6,7 +6,6 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerForholdDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerYtelseDto
@@ -26,9 +25,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskap
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
-import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -77,7 +73,7 @@ fun main() {
 
         val datasource = initDatasource(dbConfig)
 
-        opprettTestKlage(datasource, alderIkkeOppfyltTestCase)
+        //opprettTestKlage(datasource, alderIkkeOppfyltTestCase)
 
         apiRouting {
             route("/test") {
@@ -150,7 +146,8 @@ fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): S�
 }
 
 private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak {
-    val ident = genererIdent(dto.fødselsdato)
+    //val ident = genererIdent(dto.fødselsdato)
+    val ident = no.nav.aap.behandlingsflyt.sakogbehandling.Ident("01410040154")
     val barn = dto.barn.filter { it.harRelasjon }.map { genererBarn(it) }
     val urelaterteBarn = dto.barn.filter { !it.harRelasjon }.map { genererBarn(it) }
     barn.forEach { FakePersoner.leggTil(it) }
@@ -205,11 +202,6 @@ private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak
             PdlIdentGateway(),
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection),
-            BehandlingRepositoryImpl(connection),
-            TrukketSøknadService(
-                AvklaringsbehovRepositoryImpl(connection),
-                TrukketSøknadRepositoryImpl(connection)
-            ),
         )
         val sak = sakService.finnEllerOpprett(ident, periode)
 

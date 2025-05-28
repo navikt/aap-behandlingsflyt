@@ -1,20 +1,15 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap
 
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.MedlemskapRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.test.MockConnection
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -33,11 +28,6 @@ internal class MedlemskapRepositoryTest {
                 FakePdlGateway,
                 PersonRepositoryImpl(it),
                 SakRepositoryImpl(it),
-                BehandlingRepositoryImpl(it),
-                TrukketSøknadService(
-                    AvklaringsbehovRepositoryImpl(it),
-                    TrukketSøknadRepositoryImpl(it)
-                ),
             ).finnEllerOpprett(
                 ident(),
                 Periode(fom = LocalDate.now().minusYears(2), tom = LocalDate.now())

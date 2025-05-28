@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.gjenopptak
 
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -8,7 +7,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -74,11 +72,6 @@ internal class GjenopptakRepositoryTest {
             FakePdlGateway,
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection),
-            BehandlingRepositoryImpl(connection),
-            TrukketSøknadService(
-                AvklaringsbehovRepositoryImpl(connection),
-                TrukketSøknadRepositoryImpl(connection)
-            ),
         ).finnEllerOpprett(
             ident(),
             Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))

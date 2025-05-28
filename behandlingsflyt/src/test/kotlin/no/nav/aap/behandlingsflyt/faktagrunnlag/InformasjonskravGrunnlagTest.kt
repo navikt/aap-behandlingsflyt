@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgService
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnService
@@ -273,11 +272,6 @@ class InformasjonskravGrunnlagTest {
             FakePdlGateway,
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection),
-            BehandlingRepositoryImpl(connection),
-            TrukketSøknadService(
-                AvklaringsbehovRepositoryImpl(connection),
-                TrukketSøknadRepositoryImpl(connection)
-            ),
         ).finnEllerOpprett(ident, periode)
         val behandling = finnEllerOpprettBehandling(connection, sak)
         val personopplysningRepository = PersonopplysningRepositoryImpl(

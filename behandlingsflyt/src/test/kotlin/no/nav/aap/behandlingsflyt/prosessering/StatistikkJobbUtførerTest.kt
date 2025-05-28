@@ -134,11 +134,6 @@ class StatistikkJobbUtførerTest {
                 identGateway,
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection),
-                BehandlingRepositoryImpl(connection),
-                TrukketSøknadService(
-                    AvklaringsbehovRepositoryImpl(connection),
-                    TrukketSøknadRepositoryImpl(connection)
-                ),
             ).finnEllerOpprett(
                 ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
             )
@@ -253,11 +248,6 @@ class StatistikkJobbUtførerTest {
                 identGateway,
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection),
-                BehandlingRepositoryImpl(connection),
-                TrukketSøknadService(
-                    InMemoryAvklaringsbehovRepository,
-                    InMemoryTrukketSøknadRepository
-                ),
             ).finnEllerOpprett(
                 ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
             )

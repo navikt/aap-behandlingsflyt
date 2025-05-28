@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
@@ -78,10 +77,6 @@ class AvklaringsbehovOrkestratorTest {
             FakePdlGateway,
             provider.provide(),
             provider.provide(),
-            provider.provide(),
-            TrukketSøknadService(
-                provider
-            ),
         ).finnEllerOpprett(
             ident(),
             Periode(LocalDate.now(), LocalDate.now().plusYears(3))

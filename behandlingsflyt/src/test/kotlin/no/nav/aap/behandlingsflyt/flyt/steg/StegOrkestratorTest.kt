@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.InformasjonskravRepositoryImpl
@@ -10,7 +9,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -41,11 +39,6 @@ internal class StegOrkestratorTest {
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection),
-                BehandlingRepositoryImpl(connection),
-                TrukketSøknadService(
-                    AvklaringsbehovRepositoryImpl(connection),
-                    TrukketSøknadRepositoryImpl(connection)
-                ),
             ).finnEllerOpprett(ident, periode)
 
             val behandling = finnEllerOpprettBehandling(connection, sak)

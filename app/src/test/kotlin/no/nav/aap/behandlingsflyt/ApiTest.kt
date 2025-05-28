@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.GrunnDTO
 import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.OpprettAktivitetspliktDTO
 import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.PeriodeDTO
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.MedlemskapGrunnlagDto
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
@@ -31,9 +30,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskap
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -162,11 +159,6 @@ class ApiTest {
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection),
-                BehandlingRepositoryImpl(connection),
-                TrukketSøknadService(
-                    AvklaringsbehovRepositoryImpl(connection),
-                    TrukketSøknadRepositoryImpl(connection)
-                ),
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
 
@@ -218,11 +210,6 @@ class ApiTest {
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection),
-                BehandlingRepositoryImpl(connection),
-                TrukketSøknadService(
-                    AvklaringsbehovRepositoryImpl(connection),
-                    TrukketSøknadRepositoryImpl(connection)
-                ),
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val sak =

@@ -1,9 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.behandling
 
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
@@ -70,11 +68,6 @@ internal class BehandlingRepositoryImplTest {
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection),
-                BehandlingRepositoryImpl(connection),
-                TrukketSøknadService(
-                    AvklaringsbehovRepositoryImpl(connection),
-                    TrukketSøknadRepositoryImpl(connection),
-                ),
             ).finnEllerOpprett(
                 ident(),
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
@@ -110,11 +103,6 @@ internal class BehandlingRepositoryImplTest {
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection),
-                BehandlingRepositoryImpl(connection),
-                TrukketSøknadService(
-                    AvklaringsbehovRepositoryImpl(connection),
-                    TrukketSøknadRepositoryImpl(connection)
-                ),
             ).finnEllerOpprett(
                 ident(),
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
@@ -147,11 +135,6 @@ internal class BehandlingRepositoryImplTest {
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection),
-                BehandlingRepositoryImpl(connection),
-                TrukketSøknadService(
-                    AvklaringsbehovRepositoryImpl(connection),
-                    TrukketSøknadRepositoryImpl(connection)
-                ),
             ).finnEllerOpprett(
                 ident(),
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
@@ -202,11 +185,6 @@ internal class BehandlingRepositoryImplTest {
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection),
-                BehandlingRepositoryImpl(connection),
-                TrukketSøknadService(
-                    AvklaringsbehovRepositoryImpl(connection),
-                    TrukketSøknadRepositoryImpl(connection)
-                ),
             ).finnEllerOpprett(
                 ident(),
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
