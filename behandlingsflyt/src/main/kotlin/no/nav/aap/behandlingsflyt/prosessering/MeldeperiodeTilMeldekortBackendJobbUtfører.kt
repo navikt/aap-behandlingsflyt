@@ -2,15 +2,19 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
+import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -40,78 +44,29 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
         val behandlingId = BehandlingId(input.behandlingId())
         val sak = sakService.hent(sakId)
         val behandling = behandlingRepository.hent(behandlingId)
-
-        val identer = sak.person.identer().map { it.identifikator }
         val meldeperioder = meldeperiodeRepository.hent(behandlingId)
-        val sakenGjelderFor = Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
 
-        if (trukketSøknadService.søknadErTrukket(behandlingId)) {
-            meldekortGateway.oppdaterMeldeperioder(
-                MeldeperioderV0(
-                    identer = identer,
-                    saksnummer = sak.saksnummer.toString(),
-                    sakStatus = SakStatus.AVSLUTTET,
-                    sakenGjelderFor = sakenGjelderFor,
-                    meldeperioder = listOf(),
-                    meldeplikt = listOf(),
-                    opplysningsbehov = listOf(),
-                )
-            )
-        } else if (behandling.status().erAvsluttet()) {
-            val underveisperioder = underveisRepository.hentHvisEksisterer(behandlingId)
-                ?.perioder
-                .orEmpty()
-                .map { Segment(it.periode, it) }
-                .let(::Tidslinje)
+        val opplysningerTilMeldekortBackend = when {
+            trukketSøknadService.søknadErTrukket(behandling.id) ->
+                opplysningerVedTrukketSøknad(sak)
 
-            val fritaksvurderinger: Tidslinje<Fritaksvurdering.FritaksvurderingData> =
-                meldepliktRepository.hentHvisEksisterer(behandlingId)
-                    ?.tilTidslinje()
-                    ?: Tidslinje()
+            behandling.status().erAvsluttet() ->
+                opplysningerVedVedtak(
+                    sak = sak,
+                    meldeperioder = meldeperioder,
+                    vedtak = vedtakRepository.hent(behandling.id),
+                    meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id),
+                    underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
+                )
 
-            meldekortGateway.oppdaterMeldeperioder(
-                MeldeperioderV0(
-                    sakStatus = mapStatusTilMeldekortSakStatus(sak.status()),
-                    saksnummer = sak.saksnummer.toString(),
-                    identer = identer,
-                    sakenGjelderFor = sakenGjelderFor,
-                    meldeperioder = meldeperioder
-                        .map { Periode(it.fom, it.tom) },
-                    opplysningsbehov =
-                        underveisperioder
-                            .mapNotNull { if (it.verdi.rettighetsType != null) it.periode else null }
-                            .map { Periode(it.fom, it.tom) },
-                    meldeplikt = MeldepliktRegel()
-                        .fastsatteDagerMedMeldeplikt(
-                            vedtaksdatoFørstegangsbehandling = vedtakRepository.hent(behandlingId)?.virkningstidspunkt,
-                            fritak = fritaksvurderinger,
-                            meldeperioder = meldeperioder,
-                            underveis = underveisperioder
-                        )
-                        .map { Periode(it.fom, it.tom) }
-                )
-            )
-        } else if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
-            meldekortGateway.oppdaterMeldeperioder(
-                MeldeperioderV0(
-                    saksnummer = sak.saksnummer.toString(),
-                    identer = identer,
-                    sakenGjelderFor = sakenGjelderFor,
-                    meldeperioder = meldeperioder
-                        .map { Periode(it.fom, it.tom) },
-                    opplysningsbehov = listOf(Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)),
-                    meldeplikt = emptyList(),
-                )
-            )
+            behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling ->
+                opplysningerFørVedtak(sak, meldeperioder)
+
+            else -> null
         }
-    }
 
-    private fun mapStatusTilMeldekortSakStatus(status: Status): SakStatus? {
-        return when (status) {
-            Status.OPPRETTET -> null
-            Status.UTREDES -> SakStatus.UTREDES
-            Status.LØPENDE -> SakStatus.LØPENDE
-            Status.AVSLUTTET -> SakStatus.AVSLUTTET
+        if (opplysningerTilMeldekortBackend != null) {
+            meldekortGateway.oppdaterMeldeperioder(opplysningerTilMeldekortBackend)
         }
     }
 
@@ -143,5 +98,76 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
             .apply {
                 forBehandling(sakId.toLong(), behandlingId.toLong())
             }
+
+        internal fun opplysningerVedTrukketSøknad(sak: Sak) =
+            MeldeperioderV0(
+                identer = sak.person.identer().map { it.identifikator },
+                saksnummer = sak.saksnummer.toString(),
+                sakStatus = SakStatus.AVSLUTTET,
+                sakenGjelderFor = sak.rettighetsperiode.somKontraktperiode,
+                meldeperioder = listOf(),
+                meldeplikt = listOf(),
+                opplysningsbehov = listOf(),
+            )
+
+        internal fun opplysningerVedVedtak(
+            sak: Sak,
+            meldeperioder: List<no.nav.aap.komponenter.type.Periode>,
+            vedtak: Vedtak?,
+            meldepliktGrunnlag: MeldepliktGrunnlag?,
+            underveisGrunnlag: UnderveisGrunnlag?
+        ): MeldeperioderV0 {
+            val underveisperioder = underveisGrunnlag
+                ?.perioder
+                .orEmpty()
+                .map { Segment(it.periode, it) }
+                .let(::Tidslinje)
+
+            val fritaksvurderinger: Tidslinje<Fritaksvurdering.FritaksvurderingData> =
+                meldepliktGrunnlag
+                    ?.tilTidslinje()
+                    ?: Tidslinje()
+
+            return MeldeperioderV0(
+                sakStatus = when (sak.status()) {
+                    Status.OPPRETTET -> null
+                    Status.UTREDES -> SakStatus.UTREDES
+                    Status.LØPENDE -> SakStatus.LØPENDE
+                    Status.AVSLUTTET -> SakStatus.AVSLUTTET
+                },
+                saksnummer = sak.saksnummer.toString(),
+                identer = sak.person.identer().map { it.identifikator },
+                sakenGjelderFor = sak.rettighetsperiode.somKontraktperiode,
+                meldeperioder = meldeperioder.somKontraktperioder,
+                opplysningsbehov = underveisperioder
+                    .mapNotNull { if (it.verdi.rettighetsType != null) it.periode else null }
+                    .somKontraktperioder,
+                meldeplikt = MeldepliktRegel().fastsatteDagerMedMeldeplikt(
+                    vedtaksdatoFørstegangsbehandling = vedtak?.virkningstidspunkt,
+                    fritak = fritaksvurderinger,
+                    meldeperioder = meldeperioder,
+                    underveis = underveisperioder
+                )
+                    .somKontraktperioder
+            )
+        }
+
+        internal fun opplysningerFørVedtak(
+            sak: Sak,
+            meldeperioder: List<no.nav.aap.komponenter.type.Periode>
+        ): MeldeperioderV0 = MeldeperioderV0(
+            saksnummer = sak.saksnummer.toString(),
+            identer = sak.person.identer().map { it.identifikator },
+            sakenGjelderFor = sak.rettighetsperiode.somKontraktperiode,
+            meldeperioder = meldeperioder.somKontraktperioder,
+            opplysningsbehov = listOf(sak.rettighetsperiode.somKontraktperiode),
+            meldeplikt = emptyList(),
+        )
+
+        private val no.nav.aap.komponenter.type.Periode.somKontraktperiode:  Periode
+            get() = Periode(fom, tom)
+
+        private val List<no.nav.aap.komponenter.type.Periode>.somKontraktperioder:  List<Periode>
+            get() = map { it.somKontraktperiode }
     }
 }
