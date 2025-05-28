@@ -76,7 +76,7 @@ class AvklaringsbehovOrkestratorTest {
         return PersonOgSakService(
             FakePdlGateway,
             provider.provide(),
-            provider.provide(),
+            provider.provide()
         ).finnEllerOpprett(
             ident(),
             Periode(LocalDate.now(), LocalDate.now().plusYears(3))

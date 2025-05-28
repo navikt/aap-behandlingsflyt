@@ -223,7 +223,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
                     val sak = PersonOgSakService(
                         pdlGateway = GatewayProvider.provide(IdentGateway::class),
                         personRepository = repositoryProvider.provide<PersonRepository>(),
-                        sakRepository = repositoryProvider.provide<SakRepository>(),
+                        sakRepository = repositoryProvider.provide<SakRepository>()
                     ).finnEllerOpprett(ident = ident, periode = periode)
 
                     SaksinfoDTO(

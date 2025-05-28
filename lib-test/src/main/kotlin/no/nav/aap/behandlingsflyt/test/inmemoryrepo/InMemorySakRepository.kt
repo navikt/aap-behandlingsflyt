@@ -44,12 +44,6 @@ object InMemorySakRepository : SakRepository {
         }
     }
 
-    override fun finnSakerFor(person: Person, periode: Periode): List<Sak> {
-        synchronized(lock) {
-            return memory.values.filter { sak -> sak.person == person }
-        }
-    }
-
     override fun finnAlle(): List<Sak> {
         return memory.values.toList()
     }

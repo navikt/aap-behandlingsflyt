@@ -27,7 +27,7 @@ internal class MedlemskapRepositoryTest {
             val sak = PersonOgSakService(
                 FakePdlGateway,
                 PersonRepositoryImpl(it),
-                SakRepositoryImpl(it),
+                SakRepositoryImpl(it)
             ).finnEllerOpprett(
                 ident(),
                 Periode(fom = LocalDate.now().minusYears(2), tom = LocalDate.now())
