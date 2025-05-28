@@ -181,10 +181,11 @@ class MedlemskapLovvalgVurderingService {
     }
 
     private fun mottarSykepenger(grunnlag: MedlemskapArbeidInntektGrunnlag?): TilhørighetVurdering{
-        val mottarSykepenger = grunnlag?.inntekterINorgeGrunnlag?.firstOrNull{
-                inntekt -> inntekt.inntektType?.uppercase() in enumValues<InntektTyper>().map { it.name }
+        val sykepengerInntektGrunnlag = grunnlag?.inntekterINorgeGrunnlag?.filter { inntekt ->
+            inntekt.inntektType?.uppercase() in enumValues<InntektTyper>().map { it.name }
         }
-        val mottarSykepengerGrunnlag = grunnlag?.inntekterINorgeGrunnlag?.map {
+
+        val mottarSykepengerGrunnlag = sykepengerInntektGrunnlag?.map {
             MottarSykepengerGrunnlag(
                 identifikator = it.identifikator,
                 inntektType = it.inntektType,
@@ -197,7 +198,7 @@ class MedlemskapLovvalgVurderingService {
             kilde = listOf(Kilde.A_INNTEKT),
             indikasjon = Indikasjon.I_NORGE,
             opplysning = "Mottar sykepenger",
-            resultat = mottarSykepenger != null,
+            resultat = !sykepengerInntektGrunnlag.isNullOrEmpty(),
             mottarSykepengerGrunnlag = mottarSykepengerGrunnlag,
             fordypelse = jsonGrunnlag
         )
