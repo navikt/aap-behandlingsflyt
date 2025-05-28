@@ -44,7 +44,7 @@ class SamGatewayImpl : SamGateway {
         )
     }
 
-    override fun hentSamId(ident: Ident, sakId: String, vedtakId: String): Long { //returnerer List<SamordningsvedtakApi> ????????
+    override fun hentSamId(ident: Ident, sakId: Long, vedtakId: Long): Long { //returnerer List<SamordningsvedtakApi> ????????
         return requireNotNull(restClient.get(
             uri = uri.resolve("/api/vedtak?sakId=$sakId&vedtakId=$vedtakId&fagomrade=AAP"),
             request = GetRequest(

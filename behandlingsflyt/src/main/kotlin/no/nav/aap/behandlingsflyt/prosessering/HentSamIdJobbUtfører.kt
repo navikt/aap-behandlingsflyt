@@ -23,9 +23,9 @@ class HentSamIdJobbUtfører(
         val behandlingId = input.payload<HentSamId>().behandlingId
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
-        val samId = samGateway.hentSamId(sak.person.aktivIdent(),sak.id.id.toString(),behandling.referanse.toString())
+        val samId = samGateway.hentSamId(sak.person.aktivIdent(),sak.id.id,behandling.id.id)
 
-        samIdRepository.lagre(behandlingId, samId.samId.toString()) //TODO: finn ut av riktig typeklasse
+        samIdRepository.lagre(behandlingId, samId.toString())
     }
 
 
