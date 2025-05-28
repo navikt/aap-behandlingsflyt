@@ -2760,6 +2760,64 @@ class FlytOrkestratorTest {
     }
 
     @Test
+    fun `kan ikke sende inn negativ manuell inntekt`() {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val nedsattDato = LocalDate.now()
+            .plusYears(1) // Ett år fram, Liten hack for å slippe å fjase med default inntektlisten som brukes overalt ellers
+
+        // Oppretter vanlig søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("451"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
+                    ),
+                ),
+                periode = periode
+            )
+        )
+        util.ventPåSvar()
+
+        val sak = hentSak(ident, periode)
+        val behandling = hentBehandling(sak.id)
+
+        løsFramTilGrunnlag(behandling)
+
+        løsAvklaringsBehov(
+            behandling,
+            FastsettBeregningstidspunktLøsning(
+                beregningVurdering = BeregningstidspunktVurdering(
+                    begrunnelse = "Trenger hjelp fra Nav",
+                    nedsattArbeidsevneDato = nedsattDato,
+                    ytterligereNedsattArbeidsevneDato = null,
+                    ytterligereNedsattBegrunnelse = null
+                ),
+            ),
+        )
+        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        assertTrue(åpneAvklaringsbehov.all { Definisjon.FASTSETT_MANUELL_INNTEKT == it.definisjon })
+
+        assertThrows<IllegalArgumentException> {
+            løsAvklaringsBehov(
+                behandling,
+                AvklarManuellInntektVurderingLøsning(
+                    manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
+                        begrunnelse = "Mangler ligning",
+                        belop = BigDecimal(-1),
+                    )
+                )
+            )
+        }
+
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        assertThat(åpneAvklaringsbehov).anyMatch { it.definisjon == Definisjon.FASTSETT_MANUELL_INNTEKT }
+    }
+
+    @Test
     fun `kan tilbakeføre behandling til start`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))

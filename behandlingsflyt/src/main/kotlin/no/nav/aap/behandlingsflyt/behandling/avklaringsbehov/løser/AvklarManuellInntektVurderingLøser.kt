@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellI
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.math.BigDecimal
 
 class AvklarManuellInntektVurderingLøser(
     private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
@@ -24,6 +25,10 @@ class AvklarManuellInntektVurderingLøser(
     ): LøsningsResultat {
         val relevanteÅr = beregningService.utledRelevanteBeregningsÅr(kontekst.behandlingId())
         val sisteRelevanteÅr = relevanteÅr.max()
+
+        if (løsning.manuellVurderingForManglendeInntekt.belop < BigDecimal.ZERO) {
+            throw IllegalArgumentException("Inntekt kan ikke være negativ")
+        }
 
         manuellInntektGrunnlagRepository.lagre(
             behandlingId = kontekst.behandlingId(),
