@@ -35,7 +35,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.bruker
+import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -100,7 +102,6 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource, repositoryRegistry: Repos
                     // Henter denne ut etter status er utledet for å være sikker på at dataene er i rett tilstand
                     behandling = behandling(behandlingRepository, req)
                     val flyt = utledType(behandling.typeBehandling()).flyt()
-
                     val stegGrupper: Map<StegGruppe, List<StegType>> =
                         flyt.stegene().groupBy { steg -> steg.gruppe }
                     val aktivtSteg = behandling.aktivtSteg()
@@ -169,7 +170,8 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource, repositoryRegistry: Repos
                             alleAvklaringsbehovInkludertFrivillige = alleAvklaringsbehovInkludertFrivillige,
                             status = prosessering.status,
                             typeBehandling = behandling.typeBehandling(),
-                            avklaringsbehov = alleAvklaringsbehov
+                            avklaringsbehov = alleAvklaringsbehov,
+                            bruker = bruker()
                         )
                     )
                 }
@@ -344,11 +346,13 @@ private fun utledVisning(
     alleAvklaringsbehovInkludertFrivillige: FrivilligeAvklaringsbehov,
     status: ProsesseringStatus,
     typeBehandling: TypeBehandling,
-    avklaringsbehov: List<Avklaringsbehov>
+    avklaringsbehov: List<Avklaringsbehov>,
+    bruker: Bruker
 ): Visning {
 
-    val brukerHarKvalitetssikret = avklaringsbehov.filter { it.definisjon === Definisjon.KVALITETSSIKRING }.any { it.brukere().contains("X123456") }
-    val brukerHarBesluttet = avklaringsbehov.filter { it.definisjon === Definisjon.FATTE_VEDTAK }.any { it.brukere().contains("X123456") }
+
+    val brukerHarKvalitetssikret = avklaringsbehov.filter { it.definisjon === Definisjon.KVALITETSSIKRING }.any { it.brukere().contains(bruker.ident) }
+    val brukerHarBesluttet = avklaringsbehov.filter { it.definisjon === Definisjon.FATTE_VEDTAK }.any { it.brukere().contains(bruker.ident) }
 
     val jobberEllerFeilet = status in listOf(ProsesseringStatus.JOBBER, ProsesseringStatus.FEILET)
     val påVent = alleAvklaringsbehovInkludertFrivillige.erSattPåVent()
