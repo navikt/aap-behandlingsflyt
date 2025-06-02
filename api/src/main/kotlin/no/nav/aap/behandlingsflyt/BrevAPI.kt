@@ -26,6 +26,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.FaktagrunnlagDto
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.HentFaktaGrunnlagRequest
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
+import no.nav.aap.behandlingsflyt.mdc.LogKontekst
+import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
@@ -213,52 +215,51 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                     dataSource.transaction { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
 
-                        val taSkriveLåsRepository =
-                            repositoryProvider.provide<TaSkriveLåsRepository>()
+                        LoggingKontekst(
+                            repositoryProvider,
+                            LogKontekst(referanse = req.behandlingsReferanse)
+                        ).use {
+                            val behandlingRepository =
+                                repositoryProvider.provide<BehandlingRepository>()
 
-                        val lås = taSkriveLåsRepository.lås(req.behandlingsReferanse.referanse)
+                            val behandling =
+                                behandlingRepository.hent(req.behandlingsReferanse)
 
-                        MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
-                            MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString())
-                                .use {
-                                    val behandlingRepository =
-                                        repositoryProvider.provide<BehandlingRepository>()
+                            val brevbestillingService = BrevbestillingService(repositoryProvider)
 
-                                    val behandling =
-                                        behandlingRepository.hent(req.behandlingsReferanse)
+                            val ferdigstillAutomatisk = Miljø.erDev()
+                            if (ferdigstillAutomatisk) {
+                                brevbestillingService.bestillV2(
+                                    behandlingId = behandling.id,
+                                    typeBrev = TypeBrev.VARSEL_OM_BESTILLING,
+                                    unikReferanse = req.dialogmeldingUuid.toString(),
+                                    ferdigstillAutomatisk = true,
+                                    vedlegg = req.vedlegg
+                                )
+                            } else {
+                                val taSkriveLåsRepository =
+                                    repositoryProvider.provide<TaSkriveLåsRepository>()
 
-                                    val brevbestillingService = BrevbestillingService(repositoryProvider)
+                                val lås = taSkriveLåsRepository.lås(req.behandlingsReferanse.referanse)
+                                val avklaringsbehovene =
+                                    repositoryProvider.provide<AvklaringsbehovRepository>()
+                                        .hentAvklaringsbehovene(behandling.id)
 
-                                    val ferdigstillAutomatisk = Miljø.erDev()
-                                    if (ferdigstillAutomatisk) {
-                                        brevbestillingService.bestillV2(
-                                            behandlingId = behandling.id,
-                                            typeBrev = TypeBrev.VARSEL_OM_BESTILLING,
-                                            unikReferanse = req.dialogmeldingUuid.toString(),
-                                            ferdigstillAutomatisk = true,
-                                            vedlegg = req.vedlegg
-                                        )
-                                    } else {
-                                        val avklaringsbehovene =
-                                            repositoryProvider.provide<AvklaringsbehovRepository>()
-                                                .hentAvklaringsbehovene(behandling.id)
-
-                                        avklaringsbehovene.validateTilstand(behandling = behandling)
-                                        avklaringsbehovene.leggTil(
-                                            definisjoner = listOf(Definisjon.SKRIV_BREV),
-                                            funnetISteg = behandling.aktivtSteg()
-                                        )
-                                        avklaringsbehovene.validerPlassering(behandling = behandling)
-                                        brevbestillingService.bestillV2(
-                                            behandlingId = behandling.id,
-                                            typeBrev = TypeBrev.VARSEL_OM_BESTILLING,
-                                            unikReferanse = req.dialogmeldingUuid.toString(),
-                                            ferdigstillAutomatisk = false,
-                                            vedlegg = req.vedlegg
-                                        )
-                                        taSkriveLåsRepository.verifiserSkrivelås(lås)
-                                    }
-                                }
+                                avklaringsbehovene.validateTilstand(behandling = behandling)
+                                avklaringsbehovene.leggTil(
+                                    definisjoner = listOf(Definisjon.SKRIV_BREV),
+                                    funnetISteg = behandling.aktivtSteg()
+                                )
+                                avklaringsbehovene.validerPlassering(behandling = behandling)
+                                brevbestillingService.bestillV2(
+                                    behandlingId = behandling.id,
+                                    typeBrev = TypeBrev.VARSEL_OM_BESTILLING,
+                                    unikReferanse = req.dialogmeldingUuid.toString(),
+                                    ferdigstillAutomatisk = false,
+                                    vedlegg = req.vedlegg
+                                )
+                                taSkriveLåsRepository.verifiserSkrivelås(lås)
+                            }
                         }
                     }
                     respond("{}", HttpStatusCode.Accepted)
