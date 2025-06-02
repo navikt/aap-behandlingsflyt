@@ -48,6 +48,7 @@ public const val FASTSETT_BEHANDLENDE_ENHET_KODE: String = "6001"
 public const val VURDER_KLAGE_KONTOR_KODE: String = "6002"
 public const val VURDER_KLAGE_NAY_KODE: String = "6003"
 public const val OPPRETT_REVURDERING_VED_OMGJØRING_KODE: String = "6004"
+public const val BEKREFT_TOTALVURDERING_KLAGE: String = "6005"
 
 @Suppress("EnumEntryName")
 public enum class AvklaringsbehovKode {
@@ -207,6 +208,11 @@ public enum class AvklaringsbehovKode {
      * [OPPRETT_REVURDERING_VED_OMGJØRING_KODE]
      */
     `6004`,
+
+    /**
+     * [BEKREFT_TOTALVURDERING_KLAGE]
+     */
+    `6005`,
 
     /**
      * [FASTSETT_MANUELL_INNTEKT]

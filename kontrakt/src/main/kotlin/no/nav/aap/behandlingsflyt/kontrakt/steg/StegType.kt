@@ -175,6 +175,10 @@ public enum class StegType(
         gruppe = StegGruppe.KLAGEBEHANDLING_NAY,
         status = Status.UTREDES
     ),
+    KLAGEBEHANDLING_OPPSUMMERING(
+        gruppe = StegGruppe.KLAGEBEHANDLING_NAY,
+        status = Status.UTREDES
+    ),
     OMGJØRING(
         gruppe = StegGruppe.OMGJØRING,
         status = Status.IVERKSETTES

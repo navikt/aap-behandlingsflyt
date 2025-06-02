@@ -360,6 +360,13 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true
     ),
+    BEKREFT_TOTALVURDERING_KLAGE(
+        kode = AvklaringsbehovKode.`6005`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.KLAGEBEHANDLING_OPPSUMMERING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = false
+    ),
     @Deprecated("Revurdering opprettes automatisk i OmgjøringSteg")
     OPPRETT_REVURDERING_VED_OMGJØRING(
         kode = AvklaringsbehovKode.`6004`,

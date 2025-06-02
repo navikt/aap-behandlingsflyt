@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykd
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BekreftTotalvurderingKlageLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBehandlendeEnhetLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettPåklagetBehandlingLøsning
@@ -3025,6 +3026,17 @@ class FlytOrkestratorTest {
                     vilkårSomOpprettholdes = emptyList()
                 )
             )
+        )
+
+
+        // Totalvurdering
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.BEKREFT_TOTALVURDERING_KLAGE)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = BekreftTotalvurderingKlageLøsning()
         )
 
         // FatteVedtakSteg
