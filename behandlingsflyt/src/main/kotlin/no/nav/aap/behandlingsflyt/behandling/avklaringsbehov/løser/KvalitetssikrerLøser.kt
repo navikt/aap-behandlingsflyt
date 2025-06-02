@@ -1,12 +1,17 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.KanIkkeVurdereEgneVurderingerException
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.miljo.Miljø
+import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class KvalitetssikrerLøser(
@@ -30,6 +35,8 @@ class KvalitetssikrerLøser(
         val relevanteVurderinger =
             løsning.vurderinger.filter { Definisjon.forKode(it.definisjon).kvalitetssikres }
         relevanteVurderinger.all { it.valider() }
+
+        validerAvklaringsbehovOppMotBruker(avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }, kontekst.bruker)
 
         if (skalSendesTilbake(relevanteVurderinger)) {
             val flyt = utledType(behandling.typeBehandling()).flyt()
@@ -103,5 +110,11 @@ class KvalitetssikrerLøser(
 
     override fun forBehov(): Definisjon {
         return Definisjon.KVALITETSSIKRING
+    }
+
+    private fun validerAvklaringsbehovOppMotBruker(avklaringsbehovene: List<Avklaringsbehov>, bruker: Bruker) {
+        if (Miljø.er() == MiljøKode.PROD && avklaringsbehovene.any { it.brukere().contains(bruker.ident) }) {
+            throw KanIkkeVurdereEgneVurderingerException()
+        }
     }
 }
