@@ -1,6 +1,5 @@
-package no.nav.aap.behandlingsflyt.behandling.brev
+package no.nav.aap.behandlingsflyt
 
-import com.papsign.ktor.openapigen.content.type.binary.BinaryResponse
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
@@ -10,7 +9,11 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.BREV_SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BrevbestillingLøsning
+import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag.Brev.Mottaker
+import no.nav.aap.behandlingsflyt.behandling.brev.FaktagrunnlagService
+import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
+import no.nav.aap.behandlingsflyt.behandling.brev.VarselOmBrevbestillingDto
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
@@ -28,6 +31,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.DokumentResponsDTO
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -45,7 +49,6 @@ import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.authorizedPut
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
-import java.io.InputStream
 import java.util.*
 import javax.sql.DataSource
 
@@ -348,7 +351,3 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
         }
     }
 }
-
-// TODO duplisert og kan slettes når denne filen er flyttet til api-modulen
-@BinaryResponse(contentTypes = ["application/pdf"])
-data class DokumentResponsDTO(val stream: InputStream)
