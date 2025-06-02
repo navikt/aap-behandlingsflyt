@@ -28,6 +28,7 @@ enum class ÅrsakTilBehandling {
     REFUSJONSKRAV,              // Refusjonskrav
     UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT, // Utenlandsopphold før søknadstidspunkt
     FASTSATT_PERIODE_PASSERT,
+    FRITAK_MELDEPLIKT,
     VURDER_RETTIGHETSPERIODE;
 
     companion object {
@@ -76,6 +77,7 @@ fun EksponertÅrsak.tilÅrsakTilBehandling() =
         EksponertÅrsak.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT -> ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT
         EksponertÅrsak.VURDER_RETTIGHETSPERIODE -> ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE
         EksponertÅrsak.SØKNAD_TRUKKET -> ÅrsakTilBehandling.SØKNAD_TRUKKET
+        EksponertÅrsak.FRITAK_MELDEPLIKT -> ÅrsakTilBehandling.FRITAK_MELDEPLIKT
         EksponertÅrsak.KLAGE_TRUKKET -> ÅrsakTilBehandling.KLAGE_TRUKKET
         EksponertÅrsak.REVURDER_MANUELL_INNTEKT -> ÅrsakTilBehandling.REVURDER_MANUELL_INNTEKT
     }
