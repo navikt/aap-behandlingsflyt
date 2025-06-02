@@ -87,6 +87,7 @@ class PerioderTilVurderingService(
             ÅrsakTilBehandling.REFUSJONSKRAV,
             ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE,
             ÅrsakTilBehandling.SØKNAD_TRUKKET,
+            ÅrsakTilBehandling.REVURDER_MANUELL_INNTEKT,
             ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT ->
                 REVURDERING
 
@@ -96,8 +97,14 @@ class PerioderTilVurderingService(
                     MELDEKORT
                 else
                     REVURDERING
+            ÅrsakTilBehandling.FRITAK_MELDEPLIKT ->
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.FasttrackMeldekort))
+                    MELDEKORT
+                else
+                    REVURDERING
 
-            ÅrsakTilBehandling.MOTATT_KLAGE ->
+            ÅrsakTilBehandling.MOTATT_KLAGE,
+            ÅrsakTilBehandling.KLAGE_TRUKKET ->
                 IKKE_RELEVANT // TODO: Verifiser at dette er korrekt.
         }
     }

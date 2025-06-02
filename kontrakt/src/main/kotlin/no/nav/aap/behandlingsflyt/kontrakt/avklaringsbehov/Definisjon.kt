@@ -361,18 +361,34 @@ public enum class Definisjon(
         kreverToTrinn = true
     ),
     BEKREFT_TOTALVURDERING_KLAGE(
-        kode = AvklaringsbehovKode.`6005`,
+        kode = AvklaringsbehovKode.`6006`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.KLAGEBEHANDLING_OPPSUMMERING,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = false
     ),
-    @Deprecated("Revurdering opprettes automatisk i OmgjøringSteg")
-    OPPRETT_REVURDERING_VED_OMGJØRING(
+    FORHÅNDSVARSEL_KLAGE_FORMKRAV(
         kode = AvklaringsbehovKode.`6004`,
-        type = BehovType.MANUELT_PÅKREVD,
-        løsesISteg = StegType.OMGJØRING,
+        type = BehovType.BREV_VENTEPUNKT,
+        løsesISteg = StegType.EFFEKTUER_AVVIST_PÅ_FORMKRAV,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
+    VURDER_TREKK_AV_KLAGE(
+        kode = AvklaringsbehovKode.`6010`,
+        løsesISteg = StegType.TREKK_KLAGE,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_OPPFOLGING,
+            Rolle.SAKSBEHANDLER_NASJONAL
+        ),
+    ),
+    SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV(
+        kode = AvklaringsbehovKode.`6005`,
+        løsesISteg = StegType.EFFEKTUER_AVVIST_PÅ_FORMKRAV,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_NASJONAL
+        )
     );
 
     public companion object {

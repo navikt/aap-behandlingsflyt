@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -15,9 +16,15 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class PåklagetBehandlingSteg private constructor(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val trekkKlageService: TrekkKlageService,
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+
+        if(trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
+            avklaringsbehov.avbrytForSteg(type())
+            return Fullført
+        }
 
         return if (avklaringsbehov.harIkkeBlittLøst(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)) {
             FantAvklaringsbehov(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
@@ -26,7 +33,10 @@ class PåklagetBehandlingSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
-            return PåklagetBehandlingSteg(repositoryProvider.provide<AvklaringsbehovRepository>())
+            return PåklagetBehandlingSteg(
+                repositoryProvider.provide<AvklaringsbehovRepository>(),
+                TrekkKlageService(repositoryProvider)
+            )
         }
 
         override fun type(): StegType {

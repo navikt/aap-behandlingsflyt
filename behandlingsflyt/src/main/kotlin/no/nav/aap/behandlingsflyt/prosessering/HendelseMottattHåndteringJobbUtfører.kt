@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -25,7 +26,7 @@ private const val MOTTATT_TIDSPUNKT = "mottattTidspunkt"
 
 class HendelseMottattHåndteringJobbUtfører(
     private val låsRepository: TaSkriveLåsRepository,
-    private val hånderMottattDokumentService: HåndterMottattDokumentService,
+    private val håndterMottattDokumentService: HåndterMottattDokumentService,
     private val mottaDokumentService: MottaDokumentService,
     private val mottattDokumentRepository: MottattDokumentRepository
 ) : JobbUtfører {
@@ -62,13 +63,25 @@ class HendelseMottattHåndteringJobbUtfører(
             strukturertDokument = if (payloadAsString != null) UnparsedStrukturertDokument(payloadAsString) else null
         )
 
-        hånderMottattDokumentService.håndterMottatteDokumenter(
-            sakId,
-            referanse,
-            mottattTidspunkt,
-            innsendingType,
-            parsedMelding,
-        )
+        when(innsendingType) {
+            InnsendingType.NY_ÅRSAK_TIL_BEHANDLING -> {
+                require(parsedMelding is NyÅrsakTilBehandlingV0) { "Melding må være av typen NyÅrsakTilBehandlingV0" }
+                håndterMottattDokumentService.oppdaterÅrsakerTilBehandlingPåEksisterendeÅpenBehandling(
+                    sakId = sakId,
+                    behandlingsreferanse = referanse.asBehandlingReferanse,
+                    melding = parsedMelding
+                )
+            }
+            else -> {
+                håndterMottattDokumentService.håndterMottatteDokumenter(
+                    sakId,
+                    referanse,
+                    mottattTidspunkt,
+                    innsendingType,
+                    parsedMelding
+                )
+            }
+        }
 
         låsRepository.verifiserSkrivelås(sakSkrivelås)
     }
@@ -105,7 +118,7 @@ class HendelseMottattHåndteringJobbUtfører(
         override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
             return HendelseMottattHåndteringJobbUtfører(
                 låsRepository = repositoryProvider.provide(),
-                hånderMottattDokumentService = HåndterMottattDokumentService(repositoryProvider),
+                håndterMottattDokumentService = HåndterMottattDokumentService(repositoryProvider),
                 mottaDokumentService = MottaDokumentService(repositoryProvider),
                 mottattDokumentRepository = repositoryProvider.provide()
             )

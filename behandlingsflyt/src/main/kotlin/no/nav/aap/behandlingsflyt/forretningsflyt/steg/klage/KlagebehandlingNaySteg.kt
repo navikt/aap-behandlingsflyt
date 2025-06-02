@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Avslått
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetRepository
@@ -19,7 +20,8 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class KlagebehandlingNaySteg private constructor(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val behandlendeEnhetRepository: BehandlendeEnhetRepository,
-    private val klageresultatUtleder: KlageresultatUtleder
+    private val klageresultatUtleder: KlageresultatUtleder,
+    private val trekkKlageService: TrekkKlageService,
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val resultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
@@ -28,6 +30,12 @@ class KlagebehandlingNaySteg private constructor(
         }
 
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+
+        if(trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
+            avklaringsbehov.avbrytForSteg(type())
+            return Fullført
+        }
+
         val behandlendeEnhetVurdering = behandlendeEnhetRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurdering
         requireNotNull(behandlendeEnhetVurdering) {
             "Behandlende enhet skal være satt"
@@ -48,7 +56,8 @@ class KlagebehandlingNaySteg private constructor(
             return KlagebehandlingNaySteg(
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),
-                KlageresultatUtleder(repositoryProvider)
+                KlageresultatUtleder(repositoryProvider),
+                TrekkKlageService(repositoryProvider)
             )
         }
 

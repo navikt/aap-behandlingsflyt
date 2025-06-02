@@ -13,7 +13,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     AvventUtbetaling,
     Manuellinntekt,
     FjernAutomatiskOppdateringAvBarnetillegg,
-    IkkeMeldepliktForVirkningstidspunkt,
+    FritakMeldeplikt,
     ;
 
     override fun key(): String = name

@@ -7,7 +7,7 @@ import no.nav.aap.komponenter.type.Periode
 class PersonOgSakService(
     private val pdlGateway: IdentGateway,
     private val personRepository: PersonRepository,
-    private val sakRepository: SakRepository
+    private val sakRepository: SakRepository,
 ) {
 
     fun finnEllerOpprett(ident: Ident, periode: Periode): Sak {

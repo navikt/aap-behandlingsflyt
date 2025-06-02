@@ -16,6 +16,7 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 internal class SamordningAndreStatligeYtelserRepositoryImplTest {
@@ -41,9 +42,9 @@ internal class SamordningAndreStatligeYtelserRepositoryImplTest {
                     ytelse = AndreStatligeYtelser.DAGPENGER,
                 ),
                 SamordningAndreStatligeYtelserVurderingPeriode(
-                periode = periodeTo,
-                beløp = 399,
-                ytelse = AndreStatligeYtelser.BARNEPENSJON,
+                    periode = periodeTo,
+                    beløp = 399,
+                    ytelse = AndreStatligeYtelser.BARNEPENSJON,
                 )
             )
         )
@@ -57,6 +58,54 @@ internal class SamordningAndreStatligeYtelserRepositoryImplTest {
 
         assertThat(uthentet).isNotNull
         assertThat(uthentet?.vurdering).isEqualTo(vurdering)
+    }
+
+    @Test
+    fun `test sletting`() {
+        InitTestDatabase.freshDatabase().transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val samordningAndreStatligeYtelserRepository = SamordningAndreStatligeYtelserRepositoryImpl(connection)
+            samordningAndreStatligeYtelserRepository.lagre(
+                behandling.id, SamordningAndreStatligeYtelserVurdering(
+                    begrunnelse = "En fin begrunnelse",
+                    vurdertAv = "Lokalsaksbehandler",
+                    vurderingPerioder = listOf(
+                        SamordningAndreStatligeYtelserVurderingPeriode(
+                            periode = periode,
+                            beløp = 344,
+                            ytelse = AndreStatligeYtelser.DAGPENGER,
+                        ),
+                        SamordningAndreStatligeYtelserVurderingPeriode(
+                            periode = periodeTo,
+                            beløp = 399,
+                            ytelse = AndreStatligeYtelser.BARNEPENSJON,
+                        )
+                    )
+                )
+            )
+            samordningAndreStatligeYtelserRepository.lagre(
+                behandling.id, SamordningAndreStatligeYtelserVurdering(
+                    begrunnelse = "En fin begrunnelse",
+                    vurdertAv = "Lokalsaksbehandler",
+                    vurderingPerioder = listOf(
+                        SamordningAndreStatligeYtelserVurderingPeriode(
+                            periode = periode,
+                            beløp = 1000,
+                            ytelse = AndreStatligeYtelser.OMSTILLINGSSTØNAD,
+                        ),
+                        SamordningAndreStatligeYtelserVurderingPeriode(
+                            periode = periodeTo,
+                            beløp = 2500,
+                            ytelse = AndreStatligeYtelser.TILTAKSPENGER,
+                        )
+                    )
+                )
+            )
+            assertDoesNotThrow {
+                samordningAndreStatligeYtelserRepository.slett(behandling.id)
+            }
+        }
     }
 
     private fun sak(connection: DBConnection): Sak {

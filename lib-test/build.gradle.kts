@@ -1,7 +1,7 @@
 val ktorVersion = "3.1.3"
 val komponenterVersjon = "1.0.247"
 val tilgangVersjon = "1.0.69"
-val junitVersjon = "5.12.2"
+val junitVersjon = "5.13.0"
 
 plugins {
     id("behandlingsflyt.conventions")
@@ -13,7 +13,7 @@ dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation(project(":kontrakt"))
-    implementation("no.nav.aap.brev:kontrakt:0.0.117")
+    implementation("no.nav.aap.brev:kontrakt:0.0.119")
     implementation("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")

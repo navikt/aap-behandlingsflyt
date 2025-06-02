@@ -9,7 +9,11 @@ import java.util.*
 interface TaSkriveLåsRepository: Repository {
     fun lås(sakId: SakId, behandlingId: BehandlingId): Skrivelås
 
+    fun withLås(sakId: SakId, behandlingId: BehandlingId, block: (it: Skrivelås) -> Unit)
+
     fun låsBehandling(behandlingId: BehandlingId): BehandlingSkrivelås
+
+    fun withLåstBehandling(behandlingId: BehandlingId, block: (it: BehandlingSkrivelås) -> Unit)
 
     fun lås(behandlingUUid: UUID): Skrivelås
 

@@ -15,11 +15,20 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.KlagebehandlingNayS
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.OmgjøringSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.OpprettholdelseSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.PåklagetBehandlingSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.TrekkKlageSteg
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import kotlin.collections.listOf
 
 object Klage : BehandlingType {
     override fun flyt(): BehandlingFlyt {
+
         return BehandlingFlytBuilder()
             .medSteg(steg = StartBehandlingSteg)
+            .medSteg(
+                steg = TrekkKlageSteg,
+                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.KLAGE_TRUKKET),
+                informasjonskrav = listOf(TrekkKlageInfornmasjonskravService)
+            )
             .medSteg(steg = PåklagetBehandlingSteg)
             .medSteg(steg = FormkravSteg)
             .medSteg(steg = BehandlendeEnhetSteg)
@@ -27,6 +36,7 @@ object Klage : BehandlingType {
             .medSteg(steg = KvalitetssikringsSteg)
             .medSteg(steg = KlagebehandlingNaySteg)
             .medSteg(steg = KlagebehandlingNayOppsummeringSteg)
+            .sluttÅOppdatereFaktagrunnlag()
             .medSteg(steg = FatteVedtakSteg)
             .medSteg(steg = OmgjøringSteg)
             .medSteg(steg = OpprettholdelseSteg)

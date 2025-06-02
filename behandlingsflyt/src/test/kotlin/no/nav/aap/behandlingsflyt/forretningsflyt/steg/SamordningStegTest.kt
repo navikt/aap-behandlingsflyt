@@ -476,7 +476,7 @@ class SamordningStegTest {
         return PersonOgSakService(
             FakePdlGateway,
             InMemoryPersonRepository,
-            InMemorySakRepository,
+            InMemorySakRepository
         ).finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
     }
 

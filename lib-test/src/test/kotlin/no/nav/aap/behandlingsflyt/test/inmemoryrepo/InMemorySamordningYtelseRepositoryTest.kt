@@ -419,7 +419,7 @@ class InMemorySamordningYtelseRepositoryTest {
                 }
             },
             InMemoryPersonRepository,
-            InMemorySakRepository,
+            InMemorySakRepository
         ).finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
     }
 

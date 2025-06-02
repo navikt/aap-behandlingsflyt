@@ -109,6 +109,18 @@ class UføreRepositoryImplTest {
     }
 
     @Test
+    fun `test sletting`() {
+        InitTestDatabase.freshDatabase().transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val uføreRepository = UføreRepositoryImpl(connection)
+            uføreRepository.lagre(behandling.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
+            uføreRepository.lagre(behandling.id, listOf(Uføre(LocalDate.now(), Prosent(50))))
+            assertDoesNotThrow { uføreRepository.slett(behandling.id) }
+        }
+    }
+
+    @Test
     fun `Kopiering av uføre fra en behandling uten opplysningene skal ikke føre til feil`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val uføreRepository = UføreRepositoryImpl(connection)

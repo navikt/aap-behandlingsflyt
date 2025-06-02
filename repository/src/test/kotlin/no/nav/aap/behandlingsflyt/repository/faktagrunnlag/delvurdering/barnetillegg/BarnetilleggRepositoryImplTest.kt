@@ -16,6 +16,7 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 internal class BarnetilleggRepositoryImplTest {
@@ -129,6 +130,34 @@ internal class BarnetilleggRepositoryImplTest {
                         setOf(Ident("12345678910"), Ident("12345678911"))
                     ),
                 )
+        }
+    }
+
+    @Test
+    fun `test sletting`() {
+        InitTestDatabase.freshDatabase().transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val barnetilleggRepository = BarnetilleggRepositoryImpl(connection)
+            barnetilleggRepository.lagre(
+                behandling.id, listOf(
+                    BarnetilleggPeriode(
+                        Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1).plusYears(18)),
+                        setOf(Ident("12345678910"))
+                    )
+                )
+            )
+            barnetilleggRepository.lagre(
+                behandling.id, listOf(
+                    BarnetilleggPeriode(
+                        Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1).plusYears(18)),
+                        setOf(Ident("12345678910"))
+                    )
+                )
+            )
+            assertDoesNotThrow {
+                barnetilleggRepository.slett(behandling.id)
+            }
         }
     }
 

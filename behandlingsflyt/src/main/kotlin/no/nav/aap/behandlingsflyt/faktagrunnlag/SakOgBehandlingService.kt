@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.flyt.utledType
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -33,6 +34,10 @@ class SakOgBehandlingService(
         behandlingRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
     )
+
+    fun finnBehandling(behandlingReferanse: BehandlingReferanse): Behandling {
+        return behandlingRepository.hent(behandlingReferanse)
+    }
 
     fun finnEllerOpprettBehandling(sakId: SakId, årsaker: List<Årsak>): BeriketBehandling {
         val sisteBehandlingForSak = behandlingRepository.finnSisteBehandlingFor(
@@ -133,7 +138,7 @@ class SakOgBehandlingService(
     }
 
     fun oppdaterRettighetsperioden(sakId: SakId, brevkategori: InnsendingType, mottattDato: LocalDate) {
-        if (setOf(InnsendingType.SØKNAD).contains(brevkategori)) {
+        if (brevkategori == InnsendingType.SØKNAD) {
             val rettighetsperiode = sakRepository.hent(sakId).rettighetsperiode
             val fom = if (rettighetsperiode.fom.isAfter(mottattDato)) {
                 mottattDato
@@ -153,6 +158,10 @@ class SakOgBehandlingService(
                 sakRepository.oppdaterRettighetsperiode(sakId, periode)
             }
         }
+    }
+
+    fun oppdaterÅrsakerTilBehandling(behandling: Behandling, nyeÅrsaker: List<Årsak>) {
+        behandlingRepository.oppdaterÅrsaker(behandling, nyeÅrsaker)
     }
 
     fun overstyrRettighetsperioden(sakId: SakId, startDato: LocalDate, sluttDato: LocalDate) {

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -10,15 +11,23 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class FastsettBeregningstidspunktLøser(
     private val behandlingRepository: BehandlingRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository
 ) : AvklaringsbehovsLøser<FastsettBeregningstidspunktLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
         beregningVurderingRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide()
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FastsettBeregningstidspunktLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
+
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.kontekst.behandlingId)
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FASTSETT_MANUELL_INNTEKT)
+        if (avklaringsbehov?.erÅpent() == true) {
+            avklaringsbehovene.avbryt(Definisjon.FASTSETT_MANUELL_INNTEKT)
+        }
 
         beregningVurderingRepository.lagre(
             behandlingId = behandling.id,
