@@ -42,7 +42,7 @@ class SignaturService(
                 listOf(SignaturGrunnlag(bruker.ident, null)) // TODO dette brevet skal være automatisk men er manuelt nå
             }
 
-            TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT -> {
+            TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT, TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV -> {
                 listOf(SignaturGrunnlag(bruker.ident, null))
             }
         }

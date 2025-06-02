@@ -360,11 +360,10 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true
     ),
-    @Deprecated("Revurdering opprettes automatisk i OmgjøringSteg")
-    OPPRETT_REVURDERING_VED_OMGJØRING(
+    FORHÅNDSVARSEL_KLAGE_FORMKRAV(
         kode = AvklaringsbehovKode.`6004`,
-        type = BehovType.MANUELT_PÅKREVD,
-        løsesISteg = StegType.OMGJØRING,
+        type = BehovType.BREV_VENTEPUNKT,
+        løsesISteg = StegType.EFFEKTUER_AVVIST_PÅ_FORMKRAV,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     VURDER_TREKK_AV_KLAGE(
@@ -375,6 +374,14 @@ public enum class Definisjon(
             Rolle.SAKSBEHANDLER_OPPFOLGING,
             Rolle.SAKSBEHANDLER_NASJONAL
         ),
+    ),
+    SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV(
+        kode = AvklaringsbehovKode.`6005`,
+        løsesISteg = StegType.EFFEKTUER_AVVIST_PÅ_FORMKRAV,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_NASJONAL
+        )
     );
 
     public companion object {

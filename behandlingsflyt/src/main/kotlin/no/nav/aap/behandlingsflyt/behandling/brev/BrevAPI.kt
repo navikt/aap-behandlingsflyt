@@ -149,6 +149,10 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                                     Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV
                                 }
 
+                                brevbestilling.typeBrev == TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV && skrivBrevAvklaringsbehov.any { it.definisjon == Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV } -> {
+                                    Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV
+                                }
+
                                 else -> {
                                     Definisjon.SKRIV_BREV
                                 }

@@ -187,6 +187,10 @@ public enum class StegType(
         gruppe = StegGruppe.OPPRETTHOLDELSE,
         status = Status.IVERKSETTES
     ),
+    EFFEKTUER_AVVIST_PÅ_FORMKRAV(
+        gruppe = StegGruppe.FORMKRAV,
+        status = Status.IVERKSETTES
+    ),
     UDEFINERT(
         gruppe = StegGruppe.UDEFINERT,
         status = Status.UTREDES,
