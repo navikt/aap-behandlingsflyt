@@ -34,6 +34,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -219,44 +220,41 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                                 .use {
                                     val behandlingRepository =
                                         repositoryProvider.provide<BehandlingRepository>()
-                                    val sakRepository =
-                                        repositoryProvider.provide<SakRepository>()
-                                    val brevbestillingRepository =
-                                        repositoryProvider.provide<BrevbestillingRepository>()
-                                    val avklaringsbehovRepository =
-                                        repositoryProvider.provide<AvklaringsbehovRepository>()
 
                                     val behandling =
                                         behandlingRepository.hent(req.behandlingsReferanse)
 
-                                    val service = BrevbestillingService(
-                                        signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository),
-                                        brevbestillingGateway = brevbestillingGateway,
-                                        brevbestillingRepository = brevbestillingRepository,
-                                        behandlingRepository = behandlingRepository,
-                                        sakRepository = sakRepository
-                                    )
+                                    val brevbestillingService = BrevbestillingService(repositoryProvider)
 
-                                    val avklaringsbehovene =
-                                        repositoryProvider.provide<AvklaringsbehovRepository>()
-                                            .hentAvklaringsbehovene(behandling.id)
+                                    val ferdigstillAutomatisk = Miljø.erDev()
+                                    if (ferdigstillAutomatisk) {
+                                        brevbestillingService.bestillV2(
+                                            behandlingId = behandling.id,
+                                            typeBrev = TypeBrev.VARSEL_OM_BESTILLING,
+                                            unikReferanse = req.dialogmeldingUuid.toString(),
+                                            ferdigstillAutomatisk = true,
+                                            vedlegg = req.vedlegg
+                                        )
+                                    } else {
+                                        val avklaringsbehovene =
+                                            repositoryProvider.provide<AvklaringsbehovRepository>()
+                                                .hentAvklaringsbehovene(behandling.id)
 
-                                    avklaringsbehovene.validateTilstand(behandling = behandling)
-                                    avklaringsbehovene.leggTil(
-                                        definisjoner = listOf(Definisjon.SKRIV_BREV),
-                                        funnetISteg = behandling.aktivtSteg()
-                                    )
-                                    avklaringsbehovene.validerPlassering(behandling = behandling)
-
-                                    val bestillingReferanse = service.bestillV2(
-                                        behandlingId = behandling.id,
-                                        typeBrev = TypeBrev.VARSEL_OM_BESTILLING,
-                                        unikReferanse = req.dialogmeldingUuid.toString(),
-                                        ferdigstillAutomatisk = false,
-                                        vedlegg = req.vedlegg
-                                    )
-                                    taSkriveLåsRepository.verifiserSkrivelås(lås)
-                                    bestillingReferanse
+                                        avklaringsbehovene.validateTilstand(behandling = behandling)
+                                        avklaringsbehovene.leggTil(
+                                            definisjoner = listOf(Definisjon.SKRIV_BREV),
+                                            funnetISteg = behandling.aktivtSteg()
+                                        )
+                                        avklaringsbehovene.validerPlassering(behandling = behandling)
+                                        brevbestillingService.bestillV2(
+                                            behandlingId = behandling.id,
+                                            typeBrev = TypeBrev.VARSEL_OM_BESTILLING,
+                                            unikReferanse = req.dialogmeldingUuid.toString(),
+                                            ferdigstillAutomatisk = false,
+                                            vedlegg = req.vedlegg
+                                        )
+                                        taSkriveLåsRepository.verifiserSkrivelås(lås)
+                                    }
                                 }
                         }
                     }
