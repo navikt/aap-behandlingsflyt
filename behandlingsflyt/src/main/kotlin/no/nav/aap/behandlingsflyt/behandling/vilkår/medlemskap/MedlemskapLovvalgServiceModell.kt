@@ -16,7 +16,6 @@ data class TilhørighetVurdering (
     val indikasjon: Indikasjon,
     val opplysning: String,
     val resultat: Boolean,
-    val fordypelse: String?, // Todo: fjern meg når FE er klar
     val vedtakImedlGrunnlag: List<VedtakIMEDLGrunnlag>? = null,
     val mottarSykepengerGrunnlag: List<MottarSykepengerGrunnlag>? = null,
     val arbeidInntektINorgeGrunnlag: List<ArbeidInntektINorgeGrunnlag>? = null,
