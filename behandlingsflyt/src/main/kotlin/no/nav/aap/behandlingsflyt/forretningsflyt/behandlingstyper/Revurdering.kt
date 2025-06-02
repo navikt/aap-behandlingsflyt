@@ -167,7 +167,8 @@ object Revurdering : BehandlingType {
                 steg = FastsettGrunnlagSteg, årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.REVURDER_BEREGNING,
-                    ÅrsakTilBehandling.REVURDER_YRKESSKADE
+                    ÅrsakTilBehandling.REVURDER_YRKESSKADE,
+                    ÅrsakTilBehandling.REVURDER_MANUELL_INNTEKT
                 )
             )
             .medSteg(

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -64,7 +65,7 @@ class ManglendeLigningGrunnlagSteg private constructor(
             }
 
             VurderingType.REVURDERING -> {
-                vurderInntekter(kontekst)
+                return revurderInntekter(avklaringsbehovene, kontekst)
             }
 
             VurderingType.MELDEKORT,
@@ -88,11 +89,20 @@ class ManglendeLigningGrunnlagSteg private constructor(
 
         val harManuellInntektPåManglendeÅr =
             manuellInntektGrunnlag?.manuelleInntekter?.firstOrNull { sisteRelevanteÅr == it.år }
-
         if (sisteÅrInntektGrunnlag == null && harManuellInntektPåManglendeÅr == null) {
             return FantAvklaringsbehov(Definisjon.FASTSETT_MANUELL_INNTEKT)
         }
 
+        return Fullført
+    }
+
+    private fun revurderInntekter(avklaringsbehovene: Avklaringsbehovene, kontekst: FlytKontekstMedPerioder): StegResultat {
+        val erIkkeVurdertTidligereIBehandlingen = !avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.FASTSETT_MANUELL_INNTEKT)
+        val manuellInntektGrunnlag = manuellInnektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+        if (erIkkeVurdertTidligereIBehandlingen || manuellInntektGrunnlag == null) {
+            return FantAvklaringsbehov(Definisjon.FASTSETT_MANUELL_INNTEKT)
+        }
         return Fullført
     }
 
