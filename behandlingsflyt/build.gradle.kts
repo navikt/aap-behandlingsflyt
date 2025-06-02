@@ -31,7 +31,7 @@ dependencies {
     implementation(kotlin("reflect"))
     // TODO: fjern når alle api er flyttet til api-modul
     compileOnly("io.ktor:ktor-http-jvm:$ktorVersion")
-    implementation("org.flywaydb:flyway-database-postgresql:11.8.2")
+    implementation("org.flywaydb:flyway-database-postgresql:11.9.0")
     runtimeOnly("org.postgresql:postgresql:42.7.6")
 
 
