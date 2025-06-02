@@ -17,6 +17,7 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 
@@ -32,7 +33,7 @@ class TjenestePensjonRepositoryImplTest {
 
             val tjenestePensjon = listOf(TjenestePensjonForhold(
                 ordning = TjenestePensjonOrdning(
-                    navn = "Statens Pensjon Kasse",
+                    navn = "Statens PensjonsKasse",
                     tpNr = "3010",
                     orgNr = "123445675645"
                 ),
@@ -61,6 +62,51 @@ class TjenestePensjonRepositoryImplTest {
             assertThat(hentetTjenestePensjon).isEqualTo(tjenestePensjon)
         }
     }
+
+    @Test
+    fun `test sletting`() {
+        InitTestDatabase.freshDatabase().transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val tjenestePensjonRepository = TjenestePensjonRepositoryImpl(connection)
+            tjenestePensjonRepository.lagre(
+                behandling.id,
+                listOf(TjenestePensjonForhold(
+                    ordning = TjenestePensjonOrdning(
+                        navn = "navn",
+                        tpNr = "tpNr",
+                        orgNr = "orgNr",
+                    ),
+                    ytelser = listOf( TjenestePensjonYtelse(
+                        innmeldtYtelseFom = null,
+                        ytelseType = YtelseTypeCode.BETINGET_TP,
+                        ytelseIverksattFom = LocalDate.of(2021, 1, 1),
+                        ytelseIverksattTom = LocalDate.of(2021, 12, 31),
+                        ytelseId = 1235L
+                    )),
+                )
+            ))
+            tjenestePensjonRepository.lagre(
+                behandling.id,
+                listOf(TjenestePensjonForhold(
+                    ordning = TjenestePensjonOrdning(
+                        navn = "navn",
+                        tpNr = "tpNr",
+                        orgNr = "orgNr",
+                    ),
+                    ytelser = listOf( TjenestePensjonYtelse(
+                        innmeldtYtelseFom = null,
+                        ytelseType = YtelseTypeCode.BETINGET_TP,
+                        ytelseIverksattFom = LocalDate.of(2020, 1, 1),
+                        ytelseIverksattTom = LocalDate.of(2020, 12, 31),
+                        ytelseId = 1235L
+                    )),
+                )
+                ))
+            assertDoesNotThrow {
+                tjenestePensjonRepository.slett(behandling.id)
+            }
+        }}
 
     private fun sak(connection: DBConnection): Sak {
         return PersonOgSakService(
