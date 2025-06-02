@@ -36,7 +36,7 @@ class MedlemskapLovvalgVurderingService {
     // Ingen kan inntreffe
     private fun vurderAndreDelKriterier(grunnlag: MedlemskapLovvalgGrunnlag, rettighetsPeriode: Periode): List<TilhørighetVurdering> {
         val harJobbetIUtland = oppgittJobbetIUtland(grunnlag.nyeSoknadGrunnlag, rettighetsPeriode )
-        val harHattUtenlandsOpphold = oppgittUtenlandsOpphold(grunnlag.nyeSoknadGrunnlag)
+        val harHattUtenlandsOpphold = oppgittUtenlandsOpphold(grunnlag.nyeSoknadGrunnlag, rettighetsPeriode)
         val harUtenlandsAdresse = utenlandskAdresse(grunnlag.personopplysningGrunnlag)
         val annetLovvalgsland = lovvalgslandIkkeErNorge(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag)
         val utenforEØS = manglerStatsborgerskapIEØS(grunnlag.personopplysningGrunnlag)
@@ -96,17 +96,30 @@ class MedlemskapLovvalgVurderingService {
         )
     }
 
-    private fun oppgittUtenlandsOpphold(grunnlag: UtenlandsOppholdData?): TilhørighetVurdering {
+    private fun oppgittUtenlandsOpphold(grunnlag: UtenlandsOppholdData?, rettighetsPeriode: Periode): TilhørighetVurdering {
         if (grunnlag == null) {
             return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Mangler utenlandsdata fra søknad", true, "Mangler utenlandsdata fra søknad")
         }
+
+        val relevantePerioder = grunnlag.utenlandsOpphold?.filter {
+            (it.tilDato != null && rettighetsPeriode.inneholder(it.tilDato)) || (it.fraDato != null && rettighetsPeriode.inneholder(it.fraDato)) && !it.iArbeid
+        }
+
+        val oppholdUtlandPerioder = relevantePerioder?.map {
+            OppgittUtenlandsOppholdGrunnlag(
+                land = it.land,
+                tilDato = it.tilDato,
+                fraDato = it.fraDato,
+            )
+        }
+
         val jsonGrunnlag = DefaultJsonMapper.toJson(grunnlag) // Todo: fjern meg når FE er klar
         return TilhørighetVurdering(
             kilde = listOf(Kilde.SØKNAD),
             indikasjon = Indikasjon.UTENFOR_NORGE,
             opplysning = "Opphold i utland",
             resultat = !grunnlag.harBoddINorgeSiste5År,
-            oppgittUtenlandsOppholdGrunnlag = grunnlag.harBoddINorgeSiste5År,
+            oppgittUtenlandsOppholdGrunnlag = oppholdUtlandPerioder,
             fordypelse = jsonGrunnlag
         )
     }

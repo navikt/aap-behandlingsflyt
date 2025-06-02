@@ -22,7 +22,7 @@ data class TilhørighetVurdering (
     val arbeidInntektINorgeGrunnlag: List<ArbeidInntektINorgeGrunnlag>? = null,
     val manglerStatsborgerskapGrunnlag: List<ManglerStatsborgerskapGrunnlag>? = null,
     val oppgittJobbetIUtlandGrunnlag: List<OppgittJobbetIUtlandGrunnlag>? = null,
-    val oppgittUtenlandsOppholdGrunnlag: Boolean? = null,
+    val oppgittUtenlandsOppholdGrunnlag: List<OppgittUtenlandsOppholdGrunnlag>? = null,
     val utenlandsAddresserGrunnlag: List<UtenlandsAdresseGrunnlag>? = null,
 )
 
@@ -55,6 +55,12 @@ data class OppgittJobbetIUtlandGrunnlag(
     val land: String?,
     val tilDato: LocalDate?,
     val fraDato: LocalDate?,
+)
+
+data class OppgittUtenlandsOppholdGrunnlag(
+    val land: String?,
+    val tilDato: LocalDate?,
+    val fraDato: LocalDate?
 )
 
 data class UtenlandsAdresseGrunnlag(
