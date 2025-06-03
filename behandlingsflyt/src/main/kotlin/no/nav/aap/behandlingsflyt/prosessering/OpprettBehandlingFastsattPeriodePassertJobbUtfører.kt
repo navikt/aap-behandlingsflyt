@@ -4,12 +4,14 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingJobbUtfører.Companion.skjedulerProsesserBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProviderJobbSpesifikasjon
@@ -21,6 +23,7 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
     private val behandlingRepository: BehandlingRepository,
     private val underveisRepository: UnderveisRepository,
     private val sakOgBehandlingService: SakOgBehandlingService,
+    private val flytJobbRepository: FlytJobbRepository,
 ) : JobbUtfører {
 
     override fun utfør(input: JobbInput) {
@@ -57,14 +60,16 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
             return
         }
 
-        sakOgBehandlingService.finnEllerOpprettBehandling(
+        val fastsattPeriodePassertBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
             sak.id,
             listOf(
                 Årsak(
                     type = ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT,
                 )
             )
-        )
+        ).behandling
+
+        flytJobbRepository.skjedulerProsesserBehandling(fastsattPeriodePassertBehandling)
     }
 
     companion object : ProviderJobbSpesifikasjon {
@@ -74,6 +79,7 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
                 behandlingRepository = repositoryProvider.provide(),
                 underveisRepository = repositoryProvider.provide(),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
+                flytJobbRepository = repositoryProvider.provide(),
             )
         }
 
