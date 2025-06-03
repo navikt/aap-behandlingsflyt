@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
@@ -102,30 +101,14 @@ class FlytOrkestrator(
 
         // fjerner av ventepunkt med utløpt frist
         if (avklaringsbehovene.erSattPåVent()) {
-            // TODO: Vurdere om det hendelser som trigger prosesserBehandling
-            //  (f.eks ankommet dokument) skal ta behandling av vent
-            val kandidatBehov = avklaringsbehovene.hentÅpneVentebehov()
-
-            val behovSomErLøst =
-                kandidatBehov.filter { behov ->
-                    ventebehovEvaluererService.ansesSomLøst(
-                        behandling.id,
-                        behov,
-                        kontekst.sakId
-                    )
-                }
-            behovSomErLøst.forEach { avklaringsbehovene.løsAvklaringsbehov(
-                definisjon = it.definisjon,
-                begrunnelse = "Ventebehov løst.",
-                endretAv = SYSTEMBRUKER.ident
-            ) }
+            val behovSomBleLøst = ventebehovEvaluererService.løsVentebehov(kontekst, avklaringsbehovene)
 
             // Hvis fortsatt på vent
             if (avklaringsbehovene.erSattPåVent()) {
                 return // Bail out
             } else {
-                // Behandlingen er tatt av vent pga frist og flyten flyttes tilbake til steget hvor den sto på vent
-                val tilbakeflyt = behandlingFlyt.tilbakeflyt(behovSomErLøst)
+                // Behandlingen er tatt av vent og flyten flyttes tilbake til steget hvor den sto på vent
+                val tilbakeflyt = behandlingFlyt.tilbakeflyt(behovSomBleLøst)
                 if (!tilbakeflyt.erTom()) {
                     log.info(
                         "Tilbakeført etter tatt av vent fra '{}' til '{}'",

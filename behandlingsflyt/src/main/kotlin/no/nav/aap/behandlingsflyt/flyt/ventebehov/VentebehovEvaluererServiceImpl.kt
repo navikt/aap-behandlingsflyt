@@ -1,8 +1,9 @@
 package no.nav.aap.behandlingsflyt.flyt.ventebehov
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.komponenter.repository.RepositoryProvider
 
 class VentebehovEvaluererServiceImpl(private val repositoryProvider: RepositoryProvider) : VentebehovEvaluererService {
@@ -15,12 +16,33 @@ class VentebehovEvaluererServiceImpl(private val repositoryProvider: RepositoryP
             .call(repositoryProvider)
     }
 
-    override fun ansesSomLøst(behandlingId: BehandlingId, avklaringsbehov: Avklaringsbehov, sakId: SakId): Boolean {
+    private fun ansesSomLøst(kontekst: FlytKontekst, avklaringsbehov: Avklaringsbehov): Boolean {
         if (fristEvaluerer.ansesSomLøst(avklaringsbehov)) {
             return true
         }
 
         return evaluerere.filter { it.definisjon() == avklaringsbehov.definisjon }
-            .any { it.ansesSomLøst(behandlingId, avklaringsbehov, sakId) }
+            .any { it.ansesSomLøst(kontekst.behandlingId, avklaringsbehov, kontekst.sakId) }
+    }
+
+    override fun løsVentebehov(
+        kontekst: FlytKontekst,
+        avklaringsbehovene: Avklaringsbehovene
+    ): List<Avklaringsbehov> {
+        // TODO: Vurdere om det hendelser som trigger prosesserBehandling
+        //  (f.eks ankommet dokument) skal ta behandling av vent
+
+        val ventebehovSomErLøst = avklaringsbehovene.hentÅpneVentebehov()
+            .filter { behov -> ansesSomLøst(kontekst, behov) }
+
+        for (ventebehov in ventebehovSomErLøst) {
+            avklaringsbehovene.løsAvklaringsbehov(
+                definisjon = ventebehov.definisjon,
+                begrunnelse = "Ventebehov løst.",
+                endretAv = SYSTEMBRUKER.ident
+            )
+        }
+
+        return ventebehovSomErLøst
     }
 }
