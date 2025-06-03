@@ -231,14 +231,14 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
-    private fun getSamordningVurderingIds(vurderingIds: List<Long>): List<Long> = connection.queryList(
+    private fun getSamordningVurderingIds(vurderingerIds: List<Long>): List<Long> = connection.queryList(
         """
                     SELECT id
                     FROM samordning_vurdering
                     WHERE vurderinger_id = ANY(?::bigint[]);
                 """.trimIndent()
     ) {
-        setParams { setLongArray(1, vurderingIds) }
+        setParams { setLongArray(1, vurderingerIds) }
         setRowMapper { row ->
             row.getLong("id")
         }
