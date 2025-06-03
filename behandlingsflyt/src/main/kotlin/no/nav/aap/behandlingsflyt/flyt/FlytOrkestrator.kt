@@ -92,7 +92,7 @@ class FlytOrkestrator(
 
         avklaringsbehovene.validateTilstand(behandling = behandling)
 
-        val behandlingFlyt = utledFlytFra(behandling)
+        val behandlingFlyt = behandling.flyt()
 
         if (!behandling.harBehandlingenStartet()) {
             sakRepository.oppdaterSakStatus(kontekst.sakId, UTREDES)
@@ -175,7 +175,7 @@ class FlytOrkestrator(
             return // Bail out
         }
 
-        val behandlingFlyt = utledFlytFra(behandling)
+        val behandlingFlyt = behandling.flyt()
 
         var gjeldendeSteg = behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
 
@@ -263,7 +263,7 @@ class FlytOrkestrator(
         kontekst: FlytKontekst,
         bruker: Bruker
     ) {
-        val flyt = utledFlytFra(behandling)
+        val flyt = behandling.flyt()
         flyt.forberedFlyt(behandling.aktivtSteg())
 
         opprettAvklaringsbehovHvisMangler(behovDefinisjon, kontekst, bruker)
@@ -355,7 +355,4 @@ class FlytOrkestrator(
             throw IllegalStateException("Har uhåndterte behov som skulle vært håndtert før nåværende steg = '$nesteSteg'. Behov: ${uhåndterteBehov.map { it.definisjon }}")
         }
     }
-
-    private fun utledFlytFra(behandling: Behandling) = utledType(behandling.typeBehandling()).flyt()
-
 }

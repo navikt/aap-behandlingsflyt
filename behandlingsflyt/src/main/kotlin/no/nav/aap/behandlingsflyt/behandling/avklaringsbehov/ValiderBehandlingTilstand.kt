@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
-import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -25,7 +24,7 @@ internal object ValiderBehandlingTilstand {
                 log.warn("Forsøker å løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen, har $eksisterendeAvklaringsbehov")
                 throw UgyldigForespørselException("Forsøker å løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen, har $eksisterendeAvklaringsbehov")
             }
-            val flyt = utledType(behandling.typeBehandling()).flyt()
+            val flyt = behandling.flyt()
             if (!flyt.erStegFørEllerLik(avklaringsbehov.løsesISteg, behandling.aktivtSteg())) {
                 val errorMsg = "Forsøker å løse avklaringsbehov $avklaringsbehov som er definert i et steg etter " +
                         "nåværende steg[${behandling.aktivtSteg()}] ${behandling.typeBehandling().toLogString()}"

@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.periodisering
 
-import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -39,7 +38,7 @@ class PerioderTilVurderingService(
                 årsakerTilBehandling = behandling.årsaker().map { it.type }.toSet()
             )
         }
-        val flyt = utledType(behandling.typeBehandling()).flyt()
+        val flyt = behandling.flyt()
         val årsakerRelevantForSteg = flyt.årsakerRelevantForSteg(stegType)
 
         val relevanteÅrsak = behandling.årsaker()

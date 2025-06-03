@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.KanIkkeVurdereEgneVurderingerException
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
-import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.httpklient.auth.Bruker
@@ -39,7 +38,7 @@ class KvalitetssikrerLøser(
         validerAvklaringsbehovOppMotBruker(avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }, kontekst.bruker)
 
         if (skalSendesTilbake(relevanteVurderinger)) {
-            val flyt = utledType(behandling.typeBehandling()).flyt()
+            val flyt = behandling.flyt()
             val vurderingerSomErSendtTilbake = relevanteVurderinger
                 .filter { it.godkjent == false }
 

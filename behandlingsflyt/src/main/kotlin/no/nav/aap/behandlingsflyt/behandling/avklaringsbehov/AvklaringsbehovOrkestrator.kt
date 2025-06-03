@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSet
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
-import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
@@ -67,8 +66,7 @@ class AvklaringsbehovOrkestrator(
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
 
         if (ingenEndringIGruppe && avklaringsbehovene.harVærtSendtTilbakeFraBeslutterTidligere()) {
-            val typeBehandling = behandling.typeBehandling()
-            val flyt = utledType(typeBehandling).flyt()
+            val flyt = behandling.flyt()
 
             flyt.forberedFlyt(behandling.aktivtSteg())
             val gjenståendeStegIGruppe = flyt.gjenståendeStegIAktivGruppe()

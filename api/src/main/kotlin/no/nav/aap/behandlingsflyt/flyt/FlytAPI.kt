@@ -98,7 +98,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource, repositoryRegistry: Repos
                             })
                     // Henter denne ut etter status er utledet for å være sikker på at dataene er i rett tilstand
                     behandling = behandling(behandlingRepository, req)
-                    val flyt = utledType(behandling.typeBehandling()).flyt()
+                    val flyt = behandling.flyt()
 
                     val stegGrupper: Map<StegGruppe, List<StegType>> =
                         flyt.stegene().groupBy { steg -> steg.gruppe }
