@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.verdityper.dokument.Kanal
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 class MottaDokumentService(
@@ -24,6 +25,8 @@ class MottaDokumentService(
         mottattDokumentRepository = repositoryProvider.provide(),
     )
 
+    private val log = LoggerFactory.getLogger(javaClass)
+
     fun mottattDokument(
         referanse: InnsendingReferanse,
         sakId: SakId,
@@ -32,6 +35,7 @@ class MottaDokumentService(
         kanal: Kanal,
         strukturertDokument: StrukturerteData?
     ) {
+        log.info("Lagrer mottatt dokument. Referanse: ${referanse}, SakId: $sakId, Brevkategori: $brevkategori, MottattTidspunkt: $mottattTidspunkt, Kanal: $kanal")
         mottattDokumentRepository.lagre(
             MottattDokument(
                 referanse = referanse,
