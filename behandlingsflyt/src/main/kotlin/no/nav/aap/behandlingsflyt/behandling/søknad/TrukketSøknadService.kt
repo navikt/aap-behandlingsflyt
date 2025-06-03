@@ -34,7 +34,7 @@ class TrukketSøknadService(
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return ÅrsakTilBehandling.SØKNAD_TRUKKET in kontekst.vurdering.årsakerTilBehandling
+        return ÅrsakTilBehandling.SØKNAD_TRUKKET in kontekst.årsakerTilBehandling
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {

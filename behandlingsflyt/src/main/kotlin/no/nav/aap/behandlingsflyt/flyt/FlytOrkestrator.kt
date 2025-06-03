@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES
-import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
+import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory
  *
  */
 class FlytOrkestrator(
-    private val perioderTilVurderingService: PerioderTilVurderingService,
+    private val flytKontekstMedPeriodeService: FlytKontekstMedPeriodeService,
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val informasjonskravGrunnlag: InformasjonskravGrunnlag,
     private val sakRepository: SakRepository,
@@ -59,7 +59,7 @@ class FlytOrkestrator(
         avklaringsbehovRepository = repositoryProvider.provide(),
         informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(repositoryProvider),
         sakRepository = repositoryProvider.provide(),
-        perioderTilVurderingService = PerioderTilVurderingService(repositoryProvider),
+        flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(repositoryProvider),
         sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
         behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider),
         stegOrkestrator = StegOrkestrator(repositoryProvider),
@@ -137,7 +137,7 @@ class FlytOrkestrator(
         val oppdaterFaktagrunnlagForKravliste =
             informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
                 kravkonstruktører = behandlingFlyt.alleFaktagrunnlagFørGjeldendeSteg(),
-                kontekst = perioderTilVurderingService.medPerioder(kontekst, behandling.aktivtSteg()),
+                kontekst = flytKontekstMedPeriodeService.utled(kontekst, behandling.aktivtSteg()),
             )
 
         val tilbakeføringsflyt = behandlingFlyt.tilbakeflytEtterEndringer(oppdaterFaktagrunnlagForKravliste)
@@ -169,7 +169,7 @@ class FlytOrkestrator(
 
         while (true) {
 
-            val kontekstMedPerioder = perioderTilVurderingService.medPerioder(kontekst, gjeldendeSteg.type())
+            val kontekstMedPerioder = flytKontekstMedPeriodeService.utled(kontekst, gjeldendeSteg.type())
             val result = stegOrkestrator.utfør(
                 gjeldendeSteg,
                 kontekstMedPerioder,
@@ -299,7 +299,7 @@ class FlytOrkestrator(
             }
             stegOrkestrator.utførTilbakefør(
                 aktivtSteg = neste,
-                kontekstMedPerioder = perioderTilVurderingService.medPerioder(kontekst, neste.type()),
+                kontekstMedPerioder = flytKontekstMedPeriodeService.utled(kontekst, neste.type()),
                 behandling = behandling
             )
             neste = behandlingFlyt.neste()

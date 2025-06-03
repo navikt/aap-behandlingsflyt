@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.InformasjonskravRepos
 import no.nav.aap.behandlingsflyt.flyt.steg.internal.StegKonstruktørImpl
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
+import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -56,11 +56,11 @@ internal class StegOrkestratorTest {
                 stegKonstruktør = StegKonstruktørImpl(postgresRepositoryRegistry.provider(connection))
             ).utfør(
                 TestFlytSteg,
-                PerioderTilVurderingService(
+                FlytKontekstMedPeriodeService(
                     SakService(SakRepositoryImpl(connection)),
                     BehandlingRepositoryImpl(connection),
                     FakeUnleash(mapOf()),
-                ).medPerioder(kontekst, TestFlytSteg.type()),
+               ).utled(kontekst, TestFlytSteg.type()),
                 behandling,
                 listOf()
             )

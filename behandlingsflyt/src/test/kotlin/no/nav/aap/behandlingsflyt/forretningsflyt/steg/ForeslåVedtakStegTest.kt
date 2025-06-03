@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
@@ -40,11 +39,10 @@ class ForeslåVedtakStegTest {
         val behandling =
             behandlingRepository.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
         val kontekstMedPerioder = FlytKontekstMedPerioder(
-            sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(), VurderingTilBehandling(
+            sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
                 årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
                 rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
-            )
         )
 
         val resultat = steg.utfør(kontekstMedPerioder)
@@ -66,11 +64,10 @@ class ForeslåVedtakStegTest {
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "ja", "TESTEN")
         val kontekstMedPerioder = FlytKontekstMedPerioder(
-            sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(), VurderingTilBehandling(
+            sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
                 årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
                 rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
-            )
         )
 
         val resultat = steg.utfør(kontekstMedPerioder)
@@ -97,11 +94,10 @@ class ForeslåVedtakStegTest {
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.FORESLÅ_VEDTAK, "ja", "TESTEN")
         val kontekstMedPerioder = FlytKontekstMedPerioder(
-            sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(), VurderingTilBehandling(
+            sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
                 årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
                 rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
-            )
         )
 
         steg.vedTilbakeføring(kontekstMedPerioder)

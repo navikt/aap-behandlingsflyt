@@ -29,7 +29,7 @@ class StartBehandlingSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (kontekst.behandlingType == TypeBehandling.Førstegangsbehandling) {
             val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-            val rettighetsperiode = kontekst.vurdering.rettighetsperiode
+            val rettighetsperiode = kontekst.rettighetsperiode
             Vilkårtype
                 .entries
                 .filter { it.obligatorisk }
@@ -43,7 +43,7 @@ class StartBehandlingSteg private constructor(
         }
 
         if (kontekst.behandlingType == TypeBehandling.Revurdering) {
-            if (kontekst.vurdering.årsakerTilBehandling.contains(ÅrsakTilBehandling.REVURDER_SAMORDNING)) {
+            if (kontekst.årsakerTilBehandling.contains(ÅrsakTilBehandling.REVURDER_SAMORDNING)) {
                 val ventTil =
                     requireNotNull(samordningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId))
                     { "Forventet å finne samordningvurdering ved revurdering med årsak ${ÅrsakTilBehandling.REVURDER_SAMORDNING}" }

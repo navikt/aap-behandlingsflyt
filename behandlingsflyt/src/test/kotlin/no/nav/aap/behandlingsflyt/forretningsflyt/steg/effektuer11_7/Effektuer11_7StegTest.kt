@@ -23,7 +23,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.EFFEKTUER_11_7
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -320,11 +319,9 @@ class Effektuer11_7StegTest {
             behandlingId = behandlingId,
             behandlingType = typeBehandling,
             forrigeBehandlingId = null,
-            vurdering = VurderingTilBehandling(
-                vurderingType = vurderingType,
-                årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
-                rettighetsperiode = sak.rettighetsperiode
-            ),
+            vurderingType = vurderingType,
+            årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+            rettighetsperiode = sak.rettighetsperiode
         )
     }
 

@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
+import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
@@ -39,7 +39,7 @@ class EnklereFlytOrkestratorTest {
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
 
     private val flytOrkestrator = FlytOrkestrator(
-        perioderTilVurderingService = PerioderTilVurderingService(
+        flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(
             sakService = sakService,
             behandlingRepository = behandlingRepository,
             unleashGateway = FakeUnleash(mapOf()),
@@ -94,7 +94,7 @@ class EnklereFlytOrkestratorTest {
             }
         }
         val flytOrkestrator = FlytOrkestrator(
-            perioderTilVurderingService = PerioderTilVurderingService(
+            flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(
                 sakService = sakService,
                 behandlingRepository = behandlingRepository,
                 unleashGateway = FakeUnleash(mapOf()),

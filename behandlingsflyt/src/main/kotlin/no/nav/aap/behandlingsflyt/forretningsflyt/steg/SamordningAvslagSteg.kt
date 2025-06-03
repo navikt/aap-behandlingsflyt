@@ -45,7 +45,7 @@ class SamordningAvslagSteg(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (kontekst.vurdering.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
+        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
             if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                 return Fullført
             }
@@ -56,7 +56,7 @@ class SamordningAvslagSteg(
         if (tidligereVurderinger.girAvslag(kontekst, type())) {
             vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SAMORDNING).leggTilVurdering(
                 Vilkårsperiode(
-                    kontekst.vurdering.rettighetsperiode,
+                    kontekst.rettighetsperiode,
                     Vilkårsvurdering(
                         utfall = Utfall.IKKE_VURDERT,
                         manuellVurdering = false,
@@ -68,7 +68,7 @@ class SamordningAvslagSteg(
             return Fullført
         }
 
-        val rettighetsperiode = kontekst.vurdering.rettighetsperiode
+        val rettighetsperiode = kontekst.rettighetsperiode
 
         val samordningTidslinje = samordningService.tidslinje(kontekst.behandlingId)
         val samordningUføreTidslinje = uføreService.tidslinje(kontekst.behandlingId)

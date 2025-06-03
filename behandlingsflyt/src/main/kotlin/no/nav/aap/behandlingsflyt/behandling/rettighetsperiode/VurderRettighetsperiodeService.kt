@@ -25,7 +25,7 @@ class VurderRettighetsperiodeService(
 
     override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE in kontekst.vurdering.årsakerTilBehandling
+        return ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE in kontekst.årsakerTilBehandling
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {

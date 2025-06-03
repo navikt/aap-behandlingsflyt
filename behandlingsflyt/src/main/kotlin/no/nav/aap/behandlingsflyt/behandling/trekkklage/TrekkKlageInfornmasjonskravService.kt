@@ -30,7 +30,7 @@ class TrekkKlageInfornmasjonskravService (
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return ÅrsakTilBehandling.KLAGE_TRUKKET in kontekst.vurdering.årsakerTilBehandling
+        return ÅrsakTilBehandling.KLAGE_TRUKKET in kontekst.årsakerTilBehandling
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
