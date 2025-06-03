@@ -144,7 +144,7 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
                 setLongArray(2, refusjonsKravVurderingIds)
             }
         }
-        log.info("Slettet $deletedRows raderfra tjenestepensjon_refusjonskrav_grunnlag")
+        log.info("Slettet $deletedRows rader fra tjenestepensjon_refusjonskrav_grunnlag")
     }
 
     private fun getRefusjonsKravVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

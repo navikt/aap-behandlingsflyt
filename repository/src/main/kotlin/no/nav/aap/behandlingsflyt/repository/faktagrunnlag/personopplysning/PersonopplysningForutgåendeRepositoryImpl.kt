@@ -203,7 +203,7 @@ class PersonopplysningForutgåendeRepositoryImpl(
                 setLongArray(6, personopplysningerIds)
             }
         }
-        log.info("Slettet $deletedRows raderfra personopplysning_forutgaaende_grunnlag")
+        log.info("Slettet $deletedRows rader fra personopplysning_forutgaaende_grunnlag")
     }
 
     private fun getBrukerPersonopplysningIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

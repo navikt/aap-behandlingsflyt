@@ -202,19 +202,19 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
 
         val deletedRows = connection.executeReturnUpdated("""
             delete from samordning_ytelsevurdering_grunnlag where behandling_id = ?; 
+            delete from samordning_vurdering_periode where vurdering_id = ANY(?::bigint[]);
             delete from samordning_vurdering where vurderinger_id = ANY(?::bigint[]);
             delete from samordning_vurderinger where id = ANY(?::bigint[]);
-            delete from samordning_vurdering_periode where vurdering_id = ANY(?::bigint[]);
            
         """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId.id)
-                setLongArray(2, samordningVurderingYtelseIds)
+                setLongArray(2, samordningVurderingIds)
                 setLongArray(3, samordningVurderingYtelseIds)
-                setLongArray(4, samordningVurderingIds)
+                setLongArray(4, samordningVurderingYtelseIds)
             }
         }
-        log.info("Slettet $deletedRows raderfra samordning_ytelsevurdering_grunnlag")
+        log.info("Slettet $deletedRows rader fra samordning_ytelsevurdering_grunnlag")
     }
 
     private fun getSamordningYtelseVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

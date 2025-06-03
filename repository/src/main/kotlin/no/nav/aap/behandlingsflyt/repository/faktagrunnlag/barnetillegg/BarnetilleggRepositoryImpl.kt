@@ -68,7 +68,7 @@ class BarnetilleggRepositoryImpl(private val connection: DBConnection) : Barneti
                 setLongArray(4, barnetilleggPerioderIds)
             }
         }
-        log.info("Slettet $deletedRows raderfra barnetillegg_grunnlag")
+        log.info("Slettet $deletedRows rader fra barnetillegg_grunnlag")
     }
 
     private fun getBarnetilleggPerioderIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

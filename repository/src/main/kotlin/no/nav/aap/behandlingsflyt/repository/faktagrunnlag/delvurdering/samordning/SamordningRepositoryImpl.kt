@@ -129,7 +129,7 @@ class SamordningRepositoryImpl(private val connection: DBConnection) : Samordnin
                 setLongArray(3, smaordningPerioderIds)
             }
         }
-        log.info("Slettet $deletedRows raderfra samordning_grunnlag")
+        log.info("Slettet $deletedRows rader fra samordning_grunnlag")
     }
 
     private fun getSamordningPerioderIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

@@ -89,7 +89,7 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
                 setLong(1, behandlingId.id)
             }
         }
-        log.info("Slettet $deletedRows raderfra mottatt_dokument")
+        log.info("Slettet $deletedRows rader fra mottatt_dokument")
     }
 
     private fun mapMottattDokument(row: Row): MottattDokument {

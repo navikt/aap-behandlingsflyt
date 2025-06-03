@@ -1,16 +1,21 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningAndreStatligeYtelserRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
@@ -277,6 +282,52 @@ internal class SamordningVurderingRepositoryImplTest {
         assertThat(opplæringspengerPeriode2.gradering?.prosentverdi()).isEqualTo(33)
         assertThat(opplæringspengerPeriode2.kronesum).isNull()
         assertThat(opplæringspengerPeriode2.manuell).isFalse()
+    }
+
+    @Test
+    fun `test sletting`() {
+        InitTestDatabase.freshDatabase().transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val samordningVurderingRepository = SamordningVurderingRepositoryImpl(connection)
+            samordningVurderingRepository.lagreVurderinger(
+                behandling.id,  SamordningVurderingGrunnlag(
+                    begrunnelse = "begrunnelse1",
+                    maksDatoEndelig = false,
+                    maksDato = null,
+                    vurderinger = listOf(SamordningVurdering(
+                        ytelseType = Ytelse.SYKEPENGER,
+                        vurderingPerioder = listOf(
+                            SamordningVurderingPeriode(
+                                periode = Periode(5 januar 2024, 10 januar 2024),
+                                gradering = Prosent.`50_PROSENT`,
+                                manuell = false,
+                            )
+                        )
+                    ))
+                )
+            )
+            samordningVurderingRepository.lagreVurderinger(
+                behandling.id,  SamordningVurderingGrunnlag(
+                    begrunnelse = "begrunnelse2",
+                    maksDatoEndelig = false,
+                    maksDato = null,
+                    vurderinger = listOf(SamordningVurdering(
+                        ytelseType = Ytelse.SYKEPENGER,
+                        vurderingPerioder = listOf(
+                            SamordningVurderingPeriode(
+                                periode = Periode(11 januar 2024, 15 januar 2024),
+                                gradering = Prosent.`50_PROSENT`,
+                                manuell = false,
+                            )
+                        )
+                    ))
+                )
+            )
+            assertDoesNotThrow {
+                samordningVurderingRepository.slett(behandling.id)
+            }
+        }
     }
 
     private fun sak(connection: DBConnection): Sak {

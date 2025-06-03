@@ -90,7 +90,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
                 setLongArray(3, oppgittStudentIds)
             }
         }
-        log.info("Slettet $deletedRows raderfra STUDENT_GRUNNLAG")
+        log.info("Slettet $deletedRows rader fra STUDENT_GRUNNLAG")
     }
 
     private fun getStudentIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

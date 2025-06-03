@@ -136,7 +136,7 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
                 setLongArray(3, samordningStatligYtelseVurderingIds)
             }
         }
-        log.info("Slettet $deletedRows raderfra samordning_andre_statlige_ytelser_grunnlag")
+        log.info("Slettet $deletedRows rader fra samordning_andre_statlige_ytelser_grunnlag")
     }
 
     private fun getSamordningStatligYtelseVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
