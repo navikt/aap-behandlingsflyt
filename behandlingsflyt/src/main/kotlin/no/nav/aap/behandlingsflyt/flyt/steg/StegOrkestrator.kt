@@ -38,13 +38,18 @@ class StegOrkestrator(
     private val informasjonskravGrunnlag: InformasjonskravGrunnlag,
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val stegKonstruktør: StegKonstruktør
+    private val stegKonstruktør: StegKonstruktør,
+    private val markSavepointAt: Set<StegStatus> = setOf(StegStatus.START, StegStatus.OPPDATER_FAKTAGRUNNLAG),
 ) {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(
+        repositoryProvider: RepositoryProvider,
+        markSavepointAt: Set<StegStatus> = setOf(StegStatus.START, StegStatus.OPPDATER_FAKTAGRUNNLAG)
+    ) : this(
         informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         stegKonstruktør = StegKonstruktørImpl(repositoryProvider),
+        markSavepointAt = markSavepointAt,
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -77,7 +82,7 @@ class StegOrkestrator(
                                 behandling,
                                 faktagrunnlagForGjeldendeSteg
                             )
-                            if (gjeldendeStegStatus in setOf(StegStatus.START, StegStatus.OPPDATER_FAKTAGRUNNLAG)) {
+                            if (gjeldendeStegStatus in markSavepointAt) {
                                 // Legger denne her slik at vi får savepoint på at vi har byttet steg, slik at vi starter opp igjen på rett sted når prosessen dras i gang igjen
                                 behandlingRepository.markerSavepoint()
                             }
