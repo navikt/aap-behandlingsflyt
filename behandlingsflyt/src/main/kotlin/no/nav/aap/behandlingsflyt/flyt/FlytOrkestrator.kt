@@ -8,12 +8,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.StegKonstruktør
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraBeslutter
 import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraKvalitetssikrer
 import no.nav.aap.behandlingsflyt.flyt.steg.Transisjon
-import no.nav.aap.behandlingsflyt.flyt.steg.internal.StegKonstruktørImpl
 import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererService
 import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
@@ -25,7 +23,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.httpklient.auth.Bruker
@@ -46,7 +43,6 @@ import org.slf4j.LoggerFactory
  *
  */
 class FlytOrkestrator(
-    private val stegKonstruktør: StegKonstruktør,
     private val perioderTilVurderingService: PerioderTilVurderingService,
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val informasjonskravGrunnlag: InformasjonskravGrunnlag,
@@ -54,10 +50,10 @@ class FlytOrkestrator(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val behandlingRepository: BehandlingRepository,
     private val behandlingHendelseService: BehandlingHendelseService,
-    private val ventebehovEvaluererService: VentebehovEvaluererService
+    private val ventebehovEvaluererService: VentebehovEvaluererService,
+    private val stegOrkestrator: StegOrkestrator,
 ) {
     constructor(repositoryProvider: RepositoryProvider): this(
-        stegKonstruktør = StegKonstruktørImpl(repositoryProvider),
         ventebehovEvaluererService = VentebehovEvaluererServiceImpl(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
@@ -66,6 +62,7 @@ class FlytOrkestrator(
         perioderTilVurderingService = PerioderTilVurderingService(repositoryProvider),
         sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
         behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider),
+        stegOrkestrator = StegOrkestrator(repositoryProvider),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -140,16 +137,7 @@ class FlytOrkestrator(
         val oppdaterFaktagrunnlagForKravliste =
             informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
                 kravkonstruktører = behandlingFlyt.alleFaktagrunnlagFørGjeldendeSteg(),
-                kontekst = FlytKontekstMedPerioder(
-                    sakId = kontekst.sakId,
-                    behandlingId = kontekst.behandlingId,
-                    forrigeBehandlingId = kontekst.forrigeBehandlingId,
-                    behandlingType = kontekst.behandlingType,
-                    vurdering = perioderTilVurderingService.utled(
-                        kontekst = kontekst,
-                        stegType = behandling.aktivtSteg()
-                    )
-                )
+                kontekst = perioderTilVurderingService.medPerioder(kontekst, behandling.aktivtSteg()),
             )
 
         val tilbakeføringsflyt = behandlingFlyt.tilbakeflytEtterEndringer(oppdaterFaktagrunnlagForKravliste)
@@ -181,15 +169,10 @@ class FlytOrkestrator(
 
         while (true) {
 
-            val result = StegOrkestrator(
-                aktivtSteg = gjeldendeSteg,
-                informasjonskravGrunnlag = informasjonskravGrunnlag,
-                behandlingRepository = behandlingRepository,
-                avklaringsbehovRepository = avklaringsbehovRepository,
-                perioderTilVurderingService = perioderTilVurderingService,
-                stegKonstruktør = stegKonstruktør
-            ).utfør(
-                kontekst,
+            val kontekstMedPerioder = perioderTilVurderingService.medPerioder(kontekst, gjeldendeSteg.type())
+            val result = stegOrkestrator.utfør(
+                gjeldendeSteg,
+                kontekstMedPerioder,
                 behandling,
                 behandlingFlyt.faktagrunnlagForGjeldendeSteg()
             )
@@ -314,14 +297,9 @@ class FlytOrkestrator(
                 }
                 return
             }
-            StegOrkestrator(
-                aktivtSteg = neste, informasjonskravGrunnlag = informasjonskravGrunnlag,
-                behandlingRepository = behandlingRepository,
-                avklaringsbehovRepository = avklaringsbehovRepository,
-                perioderTilVurderingService = perioderTilVurderingService,
-                stegKonstruktør = stegKonstruktør
-            ).utførTilbakefør(
-                kontekst = kontekst,
+            stegOrkestrator.utførTilbakefør(
+                aktivtSteg = neste,
+                kontekstMedPerioder = perioderTilVurderingService.medPerioder(kontekst, neste.type()),
                 behandling = behandling
             )
             neste = behandlingFlyt.neste()

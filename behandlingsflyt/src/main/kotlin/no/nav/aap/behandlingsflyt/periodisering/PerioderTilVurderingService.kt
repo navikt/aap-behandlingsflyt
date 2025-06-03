@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.FØRSTEGANGSBEHANDLING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.IKKE_RELEVANT
@@ -26,6 +27,16 @@ class PerioderTilVurderingService(
         behandlingRepository = repositoryProvider.provide(),
         unleashGateway = GatewayProvider.provide(),
     )
+
+    fun medPerioder(kontekst: FlytKontekst, stegType: StegType): FlytKontekstMedPerioder {
+        return FlytKontekstMedPerioder(
+            sakId = kontekst.sakId,
+            behandlingId = kontekst.behandlingId,
+            forrigeBehandlingId = kontekst.forrigeBehandlingId,
+            behandlingType = kontekst.behandlingType,
+            vurdering = utled(kontekst, stegType)
+        )
+    }
 
     fun utled(kontekst: FlytKontekst, stegType: StegType): VurderingTilBehandling {
         val sak = sakService.hent(kontekst.sakId)

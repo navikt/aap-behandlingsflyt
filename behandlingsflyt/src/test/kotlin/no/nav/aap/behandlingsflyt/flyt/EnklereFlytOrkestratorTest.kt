@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyBehandlingHendelseService
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyInformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyStegKonstruktør
@@ -38,19 +39,24 @@ class EnklereFlytOrkestratorTest {
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
 
     private val flytOrkestrator = FlytOrkestrator(
-        stegKonstruktør = DummyStegKonstruktør(),
         perioderTilVurderingService = PerioderTilVurderingService(
             sakService = sakService,
             behandlingRepository = behandlingRepository,
             unleashGateway = FakeUnleash(mapOf()),
         ),
+        sakOgBehandlingService = InMemorySakOgBehandlingService,
         informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
-        behandlingRepository = behandlingRepository,
-        ventebehovEvaluererService = DummyVentebehovEvaluererService(),
         sakRepository = sakRepository,
         avklaringsbehovRepository = avklaringsbehovRepository,
+        behandlingRepository = behandlingRepository,
+        ventebehovEvaluererService = DummyVentebehovEvaluererService(),
         behandlingHendelseService = DummyBehandlingHendelseService,
-        sakOgBehandlingService = InMemorySakOgBehandlingService,
+        stegOrkestrator = StegOrkestrator(
+            informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
+            behandlingRepository = behandlingRepository,
+            avklaringsbehovRepository = avklaringsbehovRepository,
+            stegKonstruktør = DummyStegKonstruktør(),
+        )
     )
 
     @Test
@@ -88,7 +94,6 @@ class EnklereFlytOrkestratorTest {
             }
         }
         val flytOrkestrator = FlytOrkestrator(
-            stegKonstruktør = DummyStegKonstruktør(),
             perioderTilVurderingService = PerioderTilVurderingService(
                 sakService = sakService,
                 behandlingRepository = behandlingRepository,
@@ -101,6 +106,12 @@ class EnklereFlytOrkestratorTest {
             avklaringsbehovRepository = avklaringsbehovRepository,
             behandlingHendelseService = behandlingHendelseService,
             sakOgBehandlingService = InMemorySakOgBehandlingService,
+            stegOrkestrator = StegOrkestrator(
+                informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
+                behandlingRepository = behandlingRepository,
+                avklaringsbehovRepository = avklaringsbehovRepository,
+                stegKonstruktør = DummyStegKonstruktør(),
+            )
         )
 
         val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)

@@ -47,21 +47,20 @@ internal class StegOrkestratorTest {
             val kontekst = behandling.flytKontekst()
 
             val resultat = StegOrkestrator(
-                aktivtSteg = TestFlytSteg,
                 informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                     InformasjonskravRepositoryImpl(connection),
                     postgresRepositoryRegistry.provider(connection),
                 ),
                 behandlingRepository = BehandlingRepositoryImpl(connection),
                 avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection),
-                perioderTilVurderingService = PerioderTilVurderingService(
+                stegKonstruktør = StegKonstruktørImpl(postgresRepositoryRegistry.provider(connection))
+            ).utfør(
+                TestFlytSteg,
+                PerioderTilVurderingService(
                     SakService(SakRepositoryImpl(connection)),
                     BehandlingRepositoryImpl(connection),
                     FakeUnleash(mapOf()),
-                ),
-                stegKonstruktør = StegKonstruktørImpl(postgresRepositoryRegistry.provider(connection))
-            ).utfør(
-                kontekst,
+                ).medPerioder(kontekst, TestFlytSteg.type()),
                 behandling,
                 listOf()
             )
