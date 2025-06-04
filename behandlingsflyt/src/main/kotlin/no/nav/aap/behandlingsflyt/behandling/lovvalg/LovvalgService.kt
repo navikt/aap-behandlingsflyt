@@ -58,12 +58,12 @@ class LovvalgService private constructor(
             medlemskapGateway.innhent(sak.person, Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom))
         val arbeidGrunnlag = innhentAARegisterGrunnlag(sak)
         val inntektGrunnlag = innhentAInntektGrunnlag(sak)
-        val innhentEnhetGrunnlag = if (unleashGateway.isEnabled(BehandlingsflytFeature.InnhentEnhetsregisterData)) {
+        val enhetGrunnlag = if (unleashGateway.isEnabled(BehandlingsflytFeature.InnhentEnhetsregisterData)) {
             innhentEREGGrunnlag(inntektGrunnlag)
         } else listOf()
 
         val eksisterendeData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
-        lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, innhentEnhetGrunnlag)
+        lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag)
         val nyeData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         return if (nyeData == eksisterendeData) IKKE_ENDRET else ENDRET
@@ -84,9 +84,10 @@ class LovvalgService private constructor(
             it.arbeidsInntektInformasjon.inntektListe.map {
                 inntekt -> inntekt.virksomhet.identifikator
             }
-        }
+        }.toSet()
         val gateway = GatewayProvider.provide<EnhetsregisteretGateway>()
 
+        // Er ikke noe batch endepunkt her?
         val enhetsGrunnlag = orgnumre.mapNotNull {
             val response = gateway.hentEREGData(EnhetsregisterOrganisasjonRequest(it)) ?: return@mapNotNull null
             EnhetGrunnlag(

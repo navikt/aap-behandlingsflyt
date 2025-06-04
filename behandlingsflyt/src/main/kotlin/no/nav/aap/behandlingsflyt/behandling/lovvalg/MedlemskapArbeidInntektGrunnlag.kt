@@ -28,6 +28,7 @@ data class InntektINorgeGrunnlag(
     val opptjeningsLand: String?,
     val inntektType: String?,
     val periode: Periode,
+    val organisasjonsNavn: String?
 )
 
 data class ArbeidINorgeGrunnlag(

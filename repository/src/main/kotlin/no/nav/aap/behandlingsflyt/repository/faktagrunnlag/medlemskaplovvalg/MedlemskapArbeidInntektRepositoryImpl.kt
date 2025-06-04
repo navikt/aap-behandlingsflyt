@@ -229,8 +229,9 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
         for (entry in arbeidsInntektGrunnlag) {
             for (inntekt in entry.arbeidsInntektInformasjon.inntektListe) {
+                val orgNavn = enhetGrunnlag.firstOrNull{it.orgnummer == inntekt.virksomhet.identifikator}?.orgNavn
                 val inntektQuery = """
-                    INSERT INTO INNTEKT_I_NORGE (identifikator, beloep, skattemessig_bosatt_land, opptjenings_land, inntekt_type, inntekter_i_norge_id, periode) VALUES (?, ?, ?, ?, ?, ?, ?::daterange)
+                    INSERT INTO INNTEKT_I_NORGE (identifikator, beloep, skattemessig_bosatt_land, opptjenings_land, inntekt_type, inntekter_i_norge_id, periode, organisasjonsnavn) VALUES (?, ?, ?, ?, ?, ?, ?::daterange, ?)
                 """.trimIndent()
 
                 val tomFallback = inntekt.opptjeningsperiodeFom ?: entry.aarMaaned.atDay(1)
@@ -250,6 +251,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                                 inntekt.opptjeningsperiodeTom ?: tomFallback
                             )
                         )
+                        setString(8, orgNavn)
                     }
                 }
             }
@@ -472,7 +474,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                     skattemessigBosattLand = it.getStringOrNull("skattemessig_bosatt_land"),
                     opptjeningsLand = it.getStringOrNull("opptjenings_land"),
                     inntektType = it.getStringOrNull("inntekt_type"),
-                    periode = it.getPeriode("periode")
+                    periode = it.getPeriode("periode"),
+                    organisasjonsNavn = it.getStringOrNull("organisasjonsnavn"),
                 )
             }
         }

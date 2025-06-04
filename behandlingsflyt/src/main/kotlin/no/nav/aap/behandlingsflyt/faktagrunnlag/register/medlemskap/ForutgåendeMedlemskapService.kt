@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
@@ -14,12 +15,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.Arbeidsfor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.adapter.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.EnhetsregisteretGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.adapter.EnhetsregisterOrganisasjonRequest
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -33,6 +38,7 @@ class ForutgåendeMedlemskapService private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav {
     private val medlemskapGateway = GatewayProvider.provide<MedlemskapGateway>()
+    private val unleashGateway = GatewayProvider.provide<UnleashGateway>()
 
     override val navn = Companion.navn
 
@@ -49,10 +55,12 @@ class ForutgåendeMedlemskapService private constructor(
         val medlemskapPerioder = medlemskapGateway.innhent(sak.person, Periode(sak.rettighetsperiode.fom.minusYears(5), sak.rettighetsperiode.fom))
         val arbeidGrunnlag = innhentAARegisterGrunnlag5år(sak)
         val inntektGrunnlag = innhentAInntektGrunnlag5år(sak)
-        // TODO: val innhentEREG og map om
+        val enhetGrunnlag = if (unleashGateway.isEnabled(BehandlingsflytFeature.InnhentEnhetsregisterData)) {
+            innhentEREGGrunnlag(inntektGrunnlag)
+        } else listOf()
 
         val eksisterendeData = grunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
-        lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag)
+        lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag)
 
         val nyeData = grunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
 
@@ -76,9 +84,36 @@ class ForutgåendeMedlemskapService private constructor(
         ).arbeidsInntektMaaned
     }
 
-    private fun lagre(behandlingId: BehandlingId, medlemskapGrunnlag: List<MedlemskapDataIntern>, arbeidGrunnlag: List<ArbeidINorgeGrunnlag>, inntektGrunnlag: List<ArbeidsInntektMaaned>) {
+    private fun innhentEREGGrunnlag(inntektGrunnlag: List<ArbeidsInntektMaaned>): List<EnhetGrunnlag> {
+        if (inntektGrunnlag.isEmpty()) return emptyList()
+
+        val orgnumre = inntektGrunnlag.flatMap {
+            it.arbeidsInntektInformasjon.inntektListe.map {
+                    inntekt -> inntekt.virksomhet.identifikator
+            }
+        }.toSet()
+        val gateway = GatewayProvider.provide<EnhetsregisteretGateway>()
+
+        // Er ikke noe batch endepunkt her?
+        val enhetsGrunnlag = orgnumre.mapNotNull {
+            val response = gateway.hentEREGData(EnhetsregisterOrganisasjonRequest(it)) ?: return@mapNotNull null
+            EnhetGrunnlag(
+                orgnummer = response.organisasjonsnummer,
+                orgNavn = response.navn.sammensattnavn
+            )
+        }
+        return enhetsGrunnlag
+    }
+
+    private fun lagre(
+        behandlingId: BehandlingId,
+        medlemskapGrunnlag: List<MedlemskapDataIntern>,
+        arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
+        inntektGrunnlag: List<ArbeidsInntektMaaned>,
+        enhetGrunnlag: List<EnhetGrunnlag>
+    ) {
         val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapForutgåendeRepository.lagreUnntakMedlemskap(behandlingId, medlemskapGrunnlag) else null
-        grunnlagRepository.lagreArbeidsforholdOgInntektINorge(behandlingId, arbeidGrunnlag, inntektGrunnlag, medlId)
+        grunnlagRepository.lagreArbeidsforholdOgInntektINorge(behandlingId, arbeidGrunnlag, inntektGrunnlag, medlId, enhetGrunnlag)
     }
 
     companion object : Informasjonskravkonstruktør {
