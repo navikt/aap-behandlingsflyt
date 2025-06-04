@@ -63,7 +63,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             return Fullført
         }
 
-        when (kontekst.vurdering.vurderingType) {
+        when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
@@ -98,13 +98,13 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         if (harYrkesskadeSammenheng == true) {
             ForutgåendeMedlemskapvilkåret(
                 vilkårsresultat,
-                kontekst.vurdering.rettighetsperiode
+                kontekst.rettighetsperiode
             ).leggTilYrkesskadeVurdering()
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
             return Fullført
         }
 
-        if (kontekst.vurdering.skalVurdereNoe()) {
+        if (kontekst.harNoeTilBehandling()) {
             val personopplysningForutgåendeGrunnlag =
                 personopplysningForutgåendeRepository.hentHvisEksisterer(kontekst.behandlingId)
                     ?: throw IllegalStateException("Forventet å finne personopplysninger")
@@ -117,7 +117,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
                         kontekst.sakId
                     )
 
-            ForutgåendeMedlemskapvilkåret(vilkårsresultat, kontekst.vurdering.rettighetsperiode).vurder(
+            ForutgåendeMedlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode).vurder(
                 ForutgåendeMedlemskapGrunnlag(
                     forutgåendeMedlemskapArbeidInntektGrunnlag,
                     personopplysningForutgåendeGrunnlag,
@@ -143,7 +143,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         manuellVurdering: ManuellVurderingForForutgåendeMedlemskap?
     ): Boolean {
         val erSpesifiktTriggetRevurderMedlemskap =
-            kontekst.vurdering.årsakerTilBehandling.any { it == ÅrsakTilBehandling.REVURDER_MEDLEMSKAP }
+            kontekst.årsakerTilBehandling.any { it == ÅrsakTilBehandling.REVURDER_MEDLEMSKAP }
         return erSpesifiktTriggetRevurderMedlemskap && manuellVurdering == null
     }
 

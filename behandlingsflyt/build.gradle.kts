@@ -4,8 +4,8 @@ plugins {
 
 val komponenterVersjon = "1.0.247"
 val ktorVersion = "3.1.3"
-val tilgangVersjon = "1.0.69"
-val utbetalVersjon = "0.0.44"
+val tilgangVersjon = "1.0.70"
+val utbetalVersjon = "0.0.45"
 val junitVersjon = "5.13.0"
 
 dependencies {
@@ -16,7 +16,7 @@ dependencies {
 
     api("no.nav.aap.tilgang:plugin:$tilgangVersjon")
     api("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
-    api("no.nav.aap.brev:kontrakt:0.0.119")
+    api("no.nav.aap.brev:kontrakt:0.0.120")
     api("no.nav.aap.meldekort:kontrakt:0.0.45")
     api("no.nav.aap.kelvin:motor:$komponenterVersjon")
     api("no.nav.aap.kelvin:gateway:$komponenterVersjon")
@@ -31,7 +31,7 @@ dependencies {
     implementation(kotlin("reflect"))
     // TODO: fjern når alle api er flyttet til api-modul
     compileOnly("io.ktor:ktor-http-jvm:$ktorVersion")
-    implementation("org.flywaydb:flyway-database-postgresql:11.8.2")
+    implementation("org.flywaydb:flyway-database-postgresql:11.9.0")
     runtimeOnly("org.postgresql:postgresql:42.7.6")
 
 

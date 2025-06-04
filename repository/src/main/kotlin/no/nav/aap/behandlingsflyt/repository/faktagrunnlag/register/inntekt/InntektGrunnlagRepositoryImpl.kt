@@ -128,7 +128,7 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
                 setLongArray(2, inntektIds)
             }
         }
-        log.info("Slettet $deletedRows raderfra inntekt_grunnlag")
+        log.info("Slettet $deletedRows rader fra inntekt_grunnlag")
     }
 
     private fun getInntektIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

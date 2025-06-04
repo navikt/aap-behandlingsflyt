@@ -195,7 +195,7 @@ WHERE behandling_id = ?
                 setLong(3, behandlingId.id)
             }
         }
-        log.info("Slettet $deletedRows raderfra vilkar_periode")
+        log.info("Slettet $deletedRows rader fra vilkar_periode")
     }
 
     private fun getVilkarResultatIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

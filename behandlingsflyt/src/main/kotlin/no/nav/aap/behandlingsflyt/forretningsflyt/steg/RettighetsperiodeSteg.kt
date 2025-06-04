@@ -33,7 +33,7 @@ class RettighetsperiodeSteg private constructor(
         logger.info("Utfører rettighetsperiodesteg for behandling=${kontekst.behandlingId}")
 
 
-        when (kontekst.vurdering.vurderingType) {
+        when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
                 val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
@@ -67,7 +67,7 @@ class RettighetsperiodeSteg private constructor(
     }
 
     private fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-        return (ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE in kontekst.vurdering.årsakerTilBehandling)
+        return (ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE in kontekst.årsakerTilBehandling)
     }
 
     private fun oppdaterVilkårsresultatForNyPeriode(kontekst: FlytKontekstMedPerioder) {

@@ -54,7 +54,7 @@ class ManglendeLigningGrunnlagSteg private constructor(
             return Fullført
         }
 
-        when (kontekst.vurdering.vurderingType) {
+        when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, BeregningAvklarFaktaSteg.type())) {
                     avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)

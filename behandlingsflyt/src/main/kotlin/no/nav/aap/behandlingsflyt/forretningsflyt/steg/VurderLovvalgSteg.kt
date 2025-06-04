@@ -46,7 +46,7 @@ class VurderLovvalgSteg private constructor(
 
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        when (kontekst.vurdering.vurderingType) {
+        when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     avklaringsbehovService.avbrytForSteg(kontekst.behandlingId, type())
@@ -78,7 +78,7 @@ class VurderLovvalgSteg private constructor(
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
 
         if (kontekst.harNoeTilBehandling()) {
-            val rettighetsperiode = kontekst.vurdering.rettighetsperiode
+            val rettighetsperiode = kontekst.rettighetsperiode
             val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)
                 ?: throw IllegalStateException("Forventet å finne personopplysninger")
             val medlemskapArbeidInntektGrunnlag =
@@ -127,7 +127,7 @@ class VurderLovvalgSteg private constructor(
         manuellVurdering: ManuellVurderingForLovvalgMedlemskap?
     ): Boolean {
         val erSpesifiktTriggetRevurderLovvalg =
-            kontekst.vurdering.årsakerTilBehandling.any { it == ÅrsakTilBehandling.REVURDER_LOVVALG }
+            kontekst.årsakerTilBehandling.any { it == ÅrsakTilBehandling.REVURDER_LOVVALG }
         return erSpesifiktTriggetRevurderLovvalg && manuellVurdering == null
     }
 

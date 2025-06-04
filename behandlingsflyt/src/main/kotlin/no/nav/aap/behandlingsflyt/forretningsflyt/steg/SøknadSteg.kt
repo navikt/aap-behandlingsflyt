@@ -60,7 +60,7 @@ class SøknadSteg(
 
     private fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
         return (kontekst.behandlingType == TypeBehandling.Førstegangsbehandling)
-                && (SØKNAD_TRUKKET in kontekst.vurdering.årsakerTilBehandling)
+                && (SØKNAD_TRUKKET in kontekst.årsakerTilBehandling)
     }
 
     companion object : FlytSteg {

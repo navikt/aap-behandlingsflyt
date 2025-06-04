@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -177,7 +176,7 @@ class SakOgBehandlingService(
 
 
     private fun validerStegStatus(behandling: Behandling) {
-        val flyt = utledType(behandling.typeBehandling()).flyt()
+        val flyt = behandling.flyt()
         // TODO Utvide med regler for hva som kan knyttes til en behandling og når den eventuelt skal tilbake likevel
         // Om den skal tilbake krever det endringer for å ta hensyn til disse
         if (!flyt.skalOppdatereFaktagrunnlag()) {

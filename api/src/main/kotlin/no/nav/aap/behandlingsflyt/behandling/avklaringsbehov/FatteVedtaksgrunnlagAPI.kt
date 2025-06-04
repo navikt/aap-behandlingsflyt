@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.DefinisjonEnd
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Historikk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
-import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -51,7 +50,7 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource, repository
                         BehandlingReferanseService(behandlingRepository).behandling(req)
                     val avklaringsbehovene =
                         avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                    val flyt = utledType(behandling.typeBehandling()).flyt()
+                    val flyt = behandling.flyt()
 
                     val vurderinger = beslutterVurdering(avklaringsbehovene, flyt)
 

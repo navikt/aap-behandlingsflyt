@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.innsendingType
-import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
@@ -111,10 +110,8 @@ class AktivitetspliktInformasjonskravTest {
             behandlingId = behandling.id,
             forrigeBehandlingId = behandling.forrigeBehandlingId,
             behandlingType = TypeBehandling.Førstegangsbehandling,
-            vurdering = VurderingTilBehandling(
-                vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
-                rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
-            ),
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+            årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         )
 }

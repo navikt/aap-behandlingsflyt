@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.integrasjon.aaregisteret
+package no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway

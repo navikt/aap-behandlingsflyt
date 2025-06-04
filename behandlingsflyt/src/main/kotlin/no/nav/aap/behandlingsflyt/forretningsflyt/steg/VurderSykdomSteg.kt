@@ -43,7 +43,7 @@ class VurderSykdomSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        when (kontekst.vurdering.vurderingType) {
+        when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     log.info("Tidligere vurderinger gir ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.SYKDOMSVILKÅRET} for behandlingId ${kontekst.behandlingId}")
@@ -70,7 +70,7 @@ class VurderSykdomSteg private constructor(
             }
 
             VurderingType.REVURDERING -> {
-                if (ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND in kontekst.vurdering.årsakerTilBehandling) {
+                if (ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND in kontekst.årsakerTilBehandling) {
                     val forrigeBehandlingId = requireNotNull(kontekst.forrigeBehandlingId) {
                         "En revurdering skal alltid ha en en ID for forrige behandling"
                     }

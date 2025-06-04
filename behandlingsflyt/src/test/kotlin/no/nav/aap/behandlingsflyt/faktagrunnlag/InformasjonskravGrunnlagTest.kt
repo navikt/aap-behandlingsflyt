@@ -9,13 +9,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeService
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.integrasjon.aaregisteret.AARegisterGateway
+import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.InformasjonskravRepositoryImpl
@@ -291,11 +290,9 @@ class InformasjonskravGrunnlagTest {
             flytKontekst.behandlingId,
             flytKontekst.forrigeBehandlingId,
             behandling.typeBehandling(),
-            VurderingTilBehandling(
-                vurderingType = vurderingType,
-                årsakerTilBehandling = årsakerTilBehandling,
-                rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
-            )
+            vurderingType = vurderingType,
+            årsakerTilBehandling = årsakerTilBehandling,
+            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now()),
         )
     }
 

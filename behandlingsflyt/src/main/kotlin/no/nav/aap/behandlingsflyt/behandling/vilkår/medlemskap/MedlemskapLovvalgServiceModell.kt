@@ -16,6 +16,7 @@ data class TilhørighetVurdering (
     val indikasjon: Indikasjon,
     val opplysning: String,
     val resultat: Boolean,
+    val vurdertPeriode: Periode,
     val vedtakImedlGrunnlag: List<VedtakIMEDLGrunnlag>? = null,
     val mottarSykepengerGrunnlag: List<MottarSykepengerGrunnlag>? = null,
     val arbeidInntektINorgeGrunnlag: List<ArbeidInntektINorgeGrunnlag>? = null,

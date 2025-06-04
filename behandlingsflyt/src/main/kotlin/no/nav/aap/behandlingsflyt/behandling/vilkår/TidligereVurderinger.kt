@@ -65,7 +65,7 @@ class TidligereVurderingerImpl(
     private val definerteSjekkerFørstegangsbehandling = listOf(
         Sjekk(StegType.SØKNAD) { _, kontekst ->
             Tidslinje(
-                kontekst.vurdering.rettighetsperiode,
+                kontekst.rettighetsperiode,
                 if (trukketSøknadService.søknadErTrukket(kontekst.behandlingId))
                     IKKE_BEHANDLINGSGRUNNLAG
                 else
@@ -181,11 +181,11 @@ class TidligereVurderingerImpl(
             .map { it.sjekk(vilkårsresultat, kontekst) }
             .asIterable()
             .outerJoin { it.minOrNull() ?: UKJENT }
-            .begrensetTil(kontekst.vurdering.rettighetsperiode)
+            .begrensetTil(kontekst.rettighetsperiode)
 
         return when {
             utfall.isEmpty() || !utfall.erSammenhengende() -> UKJENT
-            utfall.helePerioden() != kontekst.vurdering.rettighetsperiode -> UKJENT
+            utfall.helePerioden() != kontekst.rettighetsperiode -> UKJENT
             utfall.any { it.verdi == IKKE_BEHANDLINGSGRUNNLAG } -> IKKE_BEHANDLINGSGRUNNLAG
             utfall.all { it.verdi == UUNGÅELIG_AVSLAG } -> UUNGÅELIG_AVSLAG
             else -> UKJENT
