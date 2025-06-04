@@ -6,7 +6,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 
-class VurdertBarn(val ident: Ident, val vurderinger: List<VurderingAvForeldreAnsvar>) {
+data class VurdertBarn(val ident: Ident, val vurderinger: List<VurderingAvForeldreAnsvar>) {
     fun tilTidslinje(): Tidslinje<ForeldreansvarVurdering> {
         return vurderinger.sortedBy { it.fraDato }.map {
             Tidslinje(

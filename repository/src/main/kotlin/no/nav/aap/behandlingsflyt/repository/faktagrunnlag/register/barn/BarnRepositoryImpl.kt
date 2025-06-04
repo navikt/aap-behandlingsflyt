@@ -302,8 +302,8 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         val deletedRows = connection.executeReturnUpdated(
             """
             delete from barnopplysning_grunnlag where behandling_id = ?;
+            delete from barn_vurdering_periode where barn_vurdering_id = ANY(?::bigint[]);
             delete from barn_vurdering where id = ANY(?::bigint[]);
-            delete from barn_vurdering_periode where id = ANY(?::bigint[]);
             delete from barn_vurderinger where id = ANY(?::bigint[]);
             delete from barnopplysning where id = ANY(?::bigint[]);
             delete from barnopplysning_grunnlag_barnopplysning where id = ANY(?::bigint[]);
