@@ -1555,12 +1555,13 @@ object FakeServers : AutoCloseable {
             }
         }
         routing {
-            post("/token") {
+            post("/token/{NAVident}") {
                 val body = call.receiveText()
+                val NAVident = call.parameters["NAVident"]
                 val token = AzureTokenGen(
                     issuer = "behandlingsflyt",
                     audience = "behandlingsflyt"
-                ).generate(body.contains("grant_type=client_credentials"), azp = "behandlingsflyt")
+                ).generate(body.contains("grant_type=client_credentials"), azp = "behandlingsflyt", NAVident)
                 call.respond(TestToken(access_token = token))
             }
             get("/jwks") {
@@ -1888,7 +1889,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun setAzureProperties() {
-        System.setProperty("azure.openid.config.token.endpoint", "http://localhost:${azure.port()}/token")
+        System.setProperty("azure.openid.config.token.endpoint", "http://localhost:${azure.port()}/token/x12345")
         System.setProperty("azure.app.client.id", "behandlingsflyt")
         System.setProperty("azure.app.client.secret", "")
         System.setProperty("azure.openid.config.jwks.uri", "http://localhost:${azure.port()}/jwks")
