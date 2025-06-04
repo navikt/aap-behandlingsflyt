@@ -49,6 +49,7 @@ class ForutgåendeMedlemskapService private constructor(
         val medlemskapPerioder = medlemskapGateway.innhent(sak.person, Periode(sak.rettighetsperiode.fom.minusYears(5), sak.rettighetsperiode.fom))
         val arbeidGrunnlag = innhentAARegisterGrunnlag5år(sak)
         val inntektGrunnlag = innhentAInntektGrunnlag5år(sak)
+        // TODO: val innhentEREG og map om
 
         val eksisterendeData = grunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
         lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag)

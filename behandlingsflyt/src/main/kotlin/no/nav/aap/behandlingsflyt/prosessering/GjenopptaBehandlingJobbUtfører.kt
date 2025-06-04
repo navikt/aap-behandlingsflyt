@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.forretningsflyt.gjenopptak.GjenopptakRepository
+import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingJobbUtfører.Companion.skjedulerProsesserBehandling
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -17,16 +18,7 @@ class GjenopptaBehandlingJobbUtfører(
         val behandlingerForGjennopptak = gjenopptakRepository.finnBehandlingerForGjennopptak()
 
         behandlingerForGjennopptak.forEach { sakOgBehandling ->
-            val jobberPåBehandling = flytJobbRepository.hentJobberForBehandling(sakOgBehandling.behandlingId.toLong())
-
-            if (jobberPåBehandling.none { it.type() == ProsesserBehandlingJobbUtfører.type }) {
-                flytJobbRepository.leggTil(
-                    JobbInput(ProsesserBehandlingJobbUtfører).forBehandling(
-                        sakID = sakOgBehandling.sakId.toLong(),
-                        behandlingId = sakOgBehandling.behandlingId.toLong()
-                    )
-                )
-            }
+            flytJobbRepository.skjedulerProsesserBehandling(sakOgBehandling.sakId, sakOgBehandling.behandlingId)
         }
     }
 

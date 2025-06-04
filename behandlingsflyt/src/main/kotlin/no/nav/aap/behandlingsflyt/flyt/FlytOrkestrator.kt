@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
@@ -18,6 +17,7 @@ import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -52,8 +52,9 @@ class FlytOrkestrator(
     private val behandlingHendelseService: BehandlingHendelseService,
     private val ventebehovEvaluererService: VentebehovEvaluererService,
     private val stegOrkestrator: StegOrkestrator,
+    private val stoppFør: StegType? = null,
 ) {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider, stoppFør: StegType? = null): this(
         ventebehovEvaluererService = VentebehovEvaluererServiceImpl(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
@@ -63,6 +64,7 @@ class FlytOrkestrator(
         sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
         behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider),
         stegOrkestrator = StegOrkestrator(repositoryProvider),
+        stoppFør = stoppFør,
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -99,30 +101,14 @@ class FlytOrkestrator(
 
         // fjerner av ventepunkt med utløpt frist
         if (avklaringsbehovene.erSattPåVent()) {
-            // TODO: Vurdere om det hendelser som trigger prosesserBehandling
-            //  (f.eks ankommet dokument) skal ta behandling av vent
-            val kandidatBehov = avklaringsbehovene.hentÅpneVentebehov()
-
-            val behovSomErLøst =
-                kandidatBehov.filter { behov ->
-                    ventebehovEvaluererService.ansesSomLøst(
-                        behandling.id,
-                        behov,
-                        kontekst.sakId
-                    )
-                }
-            behovSomErLøst.forEach { avklaringsbehovene.løsAvklaringsbehov(
-                definisjon = it.definisjon,
-                begrunnelse = "Ventebehov løst.",
-                endretAv = SYSTEMBRUKER.ident
-            ) }
+            val behovSomBleLøst = ventebehovEvaluererService.løsVentebehov(kontekst, avklaringsbehovene)
 
             // Hvis fortsatt på vent
             if (avklaringsbehovene.erSattPåVent()) {
                 return // Bail out
             } else {
-                // Behandlingen er tatt av vent pga frist og flyten flyttes tilbake til steget hvor den sto på vent
-                val tilbakeflyt = behandlingFlyt.tilbakeflyt(behovSomErLøst)
+                // Behandlingen er tatt av vent og flyten flyttes tilbake til steget hvor den sto på vent
+                val tilbakeflyt = behandlingFlyt.tilbakeflyt(behovSomBleLøst)
                 if (!tilbakeflyt.erTom()) {
                     log.info(
                         "Tilbakeført etter tatt av vent fra '{}' til '{}'",
@@ -177,7 +163,6 @@ class FlytOrkestrator(
                 behandlingFlyt.faktagrunnlagForGjeldendeSteg()
             )
 
-            val avklaringsbehov = avklaringsbehovene.åpne()
             if (result.erTilbakeføring()) {
                 val tilbakeføringsflyt = when (result) {
                     is TilbakeførtFraBeslutter -> behandlingFlyt.tilbakeflyt(avklaringsbehovene.tilbakeførtFraBeslutter())
@@ -193,11 +178,12 @@ class FlytOrkestrator(
                 )
                 tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene, false)
             }
-            validerPlassering(behandlingFlyt, avklaringsbehov)
+
+            validerPlassering(behandlingFlyt, avklaringsbehovene.åpne())
 
             val neste = utledNesteSteg(result, behandlingFlyt)
 
-            if (!result.kanFortsette() || neste == null) {
+            if (!result.kanFortsette() || neste == null || neste.type() == stoppFør) {
                 if (neste == null) {
                     log.info("Behandlingen har nådd slutten, avslutter behandling")
 

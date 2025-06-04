@@ -46,19 +46,11 @@ class Behandling(
             throw IllegalStateException("Utvikler feil, prøver legge til steg med aktivtflagg false.")
         }
         stegTilstand = nyStegTilstand
-
-        oppdaterStatus(nyStegTilstand)
+        status = nyStegTilstand.steg().status
     }
 
     fun årsaker(): List<Årsak> {
         return årsaker.toList()
-    }
-
-    private fun oppdaterStatus(stegTilstand: StegTilstand) {
-        val stegStatus = stegTilstand.steg().status
-        if (status != stegStatus) {
-            status = stegStatus
-        }
     }
 
     fun status(): Status = status

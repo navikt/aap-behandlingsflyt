@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingJobbUtfører.Companion.skjedulerProsesserBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
@@ -11,6 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProviderJobbSpesifikasjon
@@ -21,16 +23,19 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
     private val behandlingRepository: BehandlingRepository,
     private val underveisRepository: UnderveisRepository,
     private val sakOgBehandlingService: SakOgBehandlingService,
+    private val flytJobbRepository: FlytJobbRepository,
 ) : JobbUtfører {
 
     override fun utfør(input: JobbInput) {
         val sak = sakService.hent(SakId(input.sakId()))
 
         if (skalHaFritakForPassertMeldeperiode(sak)) {
-            sakOgBehandlingService.finnEllerOpprettBehandling(
+            val fritakMeldepliktBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
                 sak.id,
                 listOf(Årsak(type = ÅrsakTilBehandling.FRITAK_MELDEPLIKT))
-            )
+            ).behandling
+
+            flytJobbRepository.skjedulerProsesserBehandling(fritakMeldepliktBehandling)
         }
     }
 
@@ -73,6 +78,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
                 behandlingRepository = repositoryProvider.provide(),
                 underveisRepository = repositoryProvider.provide(),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
+                flytJobbRepository = repositoryProvider.provide(),
             )
         }
 

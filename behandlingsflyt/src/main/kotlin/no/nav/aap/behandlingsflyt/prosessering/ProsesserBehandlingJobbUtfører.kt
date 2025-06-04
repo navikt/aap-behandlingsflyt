@@ -1,10 +1,12 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProviderJobbSpesifikasjon
@@ -43,5 +45,22 @@ class ProsesserBehandlingJobbUtfører(
         override val type = "flyt.prosesserBehandling"
         override val navn = "Prosesser behandling"
         override val beskrivelse = "Ansvarlig for å drive prosessen på en gitt behandling"
+
+        fun FlytJobbRepository.skjedulerProsesserBehandling(behandling: Behandling) {
+            skjedulerProsesserBehandling(behandling.sakId, behandling.id)
+        }
+
+        fun FlytJobbRepository.skjedulerProsesserBehandling(sakId: SakId, behandlingId: BehandlingId) {
+            val jobberPåBehandling = hentJobberForBehandling(behandlingId.toLong())
+
+            if (jobberPåBehandling.none { it.type() == type }) {
+                leggTil(
+                    JobbInput(ProsesserBehandlingJobbUtfører).forBehandling(
+                        sakID = sakId.toLong(),
+                        behandlingId = behandlingId.toLong()
+                    )
+                )
+            }
+        }
     }
 }

@@ -2,9 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.komponenter.httpklient.auth.Bruker
-import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant
 import java.time.LocalDate
@@ -62,39 +60,5 @@ data class SykdomsvurderingLøsningDto(
     }
 }
 
-data class SykdomsvurderingDto(
-    val begrunnelse: String,
 
-    /** Hvis null, så gjelder den fra starten. */
-    val vurderingenGjelderFra: LocalDate?,
-    val dokumenterBruktIVurdering: List<JournalpostId>,
-    val erArbeidsevnenNedsatt: Boolean?,
-    val harSkadeSykdomEllerLyte: Boolean,
-    val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
-    val erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?,
-    val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean?,
-    val erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean?,
-    val yrkesskadeBegrunnelse: String?,
-    val kodeverk: String? = null,
-    val hoveddiagnose: String? = null,
-    val bidiagnoser: List<String>? = emptyList(),
 
-    val vurdertAvIdent: String,
-    val vurdertDato: LocalDate,
-)
-
-data class YrkesskadevurderingDto(
-    val begrunnelse: String,
-    val relevanteSaker: List<String>,
-    val andelAvNedsettelsen: Int?,
-    val erÅrsakssammenheng: Boolean
-) {
-    fun toYrkesskadevurdering(): Yrkesskadevurdering {
-        return Yrkesskadevurdering(
-            begrunnelse = begrunnelse,
-            relevanteSaker = relevanteSaker,
-            erÅrsakssammenheng = erÅrsakssammenheng,
-            andelAvNedsettelsen = this@YrkesskadevurderingDto.andelAvNedsettelsen?.let { Prosent(it) }
-        )
-    }
-}

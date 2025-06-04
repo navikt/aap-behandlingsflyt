@@ -14,6 +14,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.adapter.AR
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.adapter.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.EnhetsregisteretGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.adapter.EnhetsregisterOrganisasjonRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapGateway
@@ -24,6 +26,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -39,13 +43,13 @@ class LovvalgService private constructor(
     override val navn = Companion.navn
 
     private val medlemskapGateway = GatewayProvider.provide<MedlemskapGateway>()
+    private val unleashGateway = GatewayProvider.provide<UnleashGateway>()
 
     override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
-                oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
-                tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
+            oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
+            tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
     }
-
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
@@ -54,9 +58,12 @@ class LovvalgService private constructor(
             medlemskapGateway.innhent(sak.person, Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom))
         val arbeidGrunnlag = innhentAARegisterGrunnlag(sak)
         val inntektGrunnlag = innhentAInntektGrunnlag(sak)
+        val innhentEnhetGrunnlag = if (unleashGateway.isEnabled(BehandlingsflytFeature.InnhentEnhetsregisterData)) {
+            innhentEREGGrunnlag(inntektGrunnlag)
+        } else listOf()
 
         val eksisterendeData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
-        lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag)
+        lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, innhentEnhetGrunnlag)
         val nyeData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         return if (nyeData == eksisterendeData) IKKE_ENDRET else ENDRET
@@ -68,6 +75,26 @@ class LovvalgService private constructor(
             arbeidsforholdstatuser = listOf(ARBEIDSFORHOLDSTATUSER.AKTIV.toString())
         )
         return GatewayProvider.provide<ArbeidsforholdGateway>().hentAARegisterData(request)
+    }
+
+    private fun innhentEREGGrunnlag(inntektGrunnlag: List<ArbeidsInntektMaaned>): List<EnhetGrunnlag> {
+        if (inntektGrunnlag.isEmpty()) return emptyList()
+
+        val orgnumre = inntektGrunnlag.flatMap {
+            it.arbeidsInntektInformasjon.inntektListe.map {
+                inntekt -> inntekt.virksomhet.identifikator
+            }
+        }
+        val gateway = GatewayProvider.provide<EnhetsregisteretGateway>()
+
+        val enhetsGrunnlag = orgnumre.mapNotNull {
+            val response = gateway.hentEREGData(EnhetsregisterOrganisasjonRequest(it)) ?: return@mapNotNull null
+            EnhetGrunnlag(
+                orgnummer = response.organisasjonsnummer,
+                orgNavn = response.navn.sammensattnavn
+            )
+        }
+        return enhetsGrunnlag
     }
 
     private fun innhentAInntektGrunnlag(sak: Sak): List<ArbeidsInntektMaaned> {
@@ -83,17 +110,20 @@ class LovvalgService private constructor(
         behandlingId: BehandlingId,
         medlemskapGrunnlag: List<MedlemskapDataIntern>,
         arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
-        inntektGrunnlag: List<ArbeidsInntektMaaned>
+        inntektGrunnlag: List<ArbeidsInntektMaaned>,
+        enhetGrunnlag: List<EnhetGrunnlag>,
     ) {
         val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapRepository.lagreUnntakMedlemskap(
             behandlingId,
             medlemskapGrunnlag
         ) else null
+
         medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
             behandlingId,
             arbeidGrunnlag,
             inntektGrunnlag,
-            medlId
+            medlId,
+            enhetGrunnlag
         )
     }
 

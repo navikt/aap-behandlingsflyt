@@ -1,10 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 
 class BistandVurdering(
     val begrunnelse: String,
@@ -18,19 +15,6 @@ class BistandVurdering(
     val vurderingenGjelderFra: LocalDate?,
     val opprettet: Instant? = null
 ) {
-    fun toDto() = BistandVurderingDto(
-        begrunnelse = begrunnelse,
-        erBehovForAktivBehandling = erBehovForAktivBehandling,
-        erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
-        erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
-        vurderingenGjelderFra = vurderingenGjelderFra,
-        overgangBegrunnelse = overgangBegrunnelse,
-        skalVurdereAapIOvergangTilUføre = skalVurdereAapIOvergangTilUføre,
-        skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
-        vurdertAv = vurdertAv,
-        vurdertDato = opprettet?.atZone(ZoneId.of("Europe/Oslo"))?.toLocalDate(),
-    )
-
     fun erBehovForBistand(): Boolean {
         return (erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak || erBehovForAnnenOppfølging == true)
     }

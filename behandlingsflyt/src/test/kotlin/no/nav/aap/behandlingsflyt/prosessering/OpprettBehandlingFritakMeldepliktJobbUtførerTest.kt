@@ -34,6 +34,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
+import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -84,7 +85,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
         val sakServiceMock = mockk<SakService>()
         val behandlingRepoMock = mockk<BehandlingRepository>()
         val underveisRepositoryMock = mockk<UnderveisRepository>()
-
+        val flytJobbRepository = mockk<FlytJobbRepository>(relaxed = true)
 
         every {sakServiceMock.hent(any<SakId>())} returns Sak(
             id = sakId,
@@ -139,11 +140,14 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             sisteAvsluttedeBehandling = BehandlingId(9L)
         )
 
+
+
         return OpprettBehandlingFritakMeldepliktJobbUtfører(
             sakService = sakServiceMock,
             behandlingRepository = behandlingRepoMock,
             underveisRepository = underveisRepositoryMock,
-            sakOgBehandlingService = sakOgBehandlingServiceMock
+            sakOgBehandlingService = sakOgBehandlingServiceMock,
+            flytJobbRepository = flytJobbRepository,
         )
     }
 

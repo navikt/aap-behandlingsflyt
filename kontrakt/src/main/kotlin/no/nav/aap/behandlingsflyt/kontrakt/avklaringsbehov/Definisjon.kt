@@ -360,6 +360,13 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true
     ),
+    BEKREFT_TOTALVURDERING_KLAGE(
+        kode = AvklaringsbehovKode.`6006`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.KLAGEBEHANDLING_OPPSUMMERING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = false
+    ),
     FORHÅNDSVARSEL_KLAGE_FORMKRAV(
         kode = AvklaringsbehovKode.`6004`,
         type = BehovType.BREV_VENTEPUNKT,

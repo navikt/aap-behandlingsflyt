@@ -49,6 +49,7 @@ public const val VURDER_KLAGE_KONTOR_KODE: String = "6002"
 public const val VURDER_KLAGE_NAY_KODE: String = "6003"
 public const val FORHÅNDSVARSEL_KLAGE_FORMKRAV_KODE: String = "6004"
 public const val SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV_KODE: String = "6005"
+public const val BEKREFT_TOTALVURDERING_KLAGE: String = "6006"
 public const val VURDER_TREKK_AV_KLAGE_KODE: String = "6010"
 
 @Suppress("EnumEntryName")
@@ -216,9 +217,15 @@ public enum class AvklaringsbehovKode {
     `6005`,
 
     /**
+     * [BEKREFT_TOTALVURDERING_KLAGE]
+     */
+    `6006`,
+
+    /**
      * [VURDER_TREKK_AV_KLAGE_KODE]
      */
     `6010`,
+
 
     /**
      * [FASTSETT_MANUELL_INNTEKT]
