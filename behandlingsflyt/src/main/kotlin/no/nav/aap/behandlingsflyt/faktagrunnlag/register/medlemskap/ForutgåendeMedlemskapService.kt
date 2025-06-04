@@ -94,7 +94,7 @@ class ForutgåendeMedlemskapService private constructor(
         }.toSet()
         val gateway = GatewayProvider.provide<EnhetsregisteretGateway>()
 
-        // Er ikke noe batch endepunkt her?
+        // EREG har ikke batch-oppslag
         val enhetsGrunnlag = orgnumre.mapNotNull {
             val response = gateway.hentEREGData(EnhetsregisterOrganisasjonRequest(it)) ?: return@mapNotNull null
             EnhetGrunnlag(
