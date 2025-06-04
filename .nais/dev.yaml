@@ -229,6 +229,6 @@ spec:
     - name: INTEGRASJON_KABAL_SCOPE
       value: api://dev-gcp.klage.kabal-api/.default
     - name: INTEGRASJON_EREG_URL
-      value: https://ereg-services-q2.dev-fss-pub.nais.io/api/v2
+      value: https://ereg-services-q2.dev-fss-pub.nais.io
     - name: INTEGRASJON_EREG_SCOPE
       value: api://dev-fss.arbeidsforhold.ereg-services-q2/.default

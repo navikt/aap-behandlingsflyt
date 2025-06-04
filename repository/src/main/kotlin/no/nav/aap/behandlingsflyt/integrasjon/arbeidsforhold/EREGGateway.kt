@@ -16,7 +16,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.Client
 import java.net.URI
 
 class EREGGateway : EnhetsregisteretGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.ereg.url") + "/organisasjon")
+    private val url = URI.create(requiredConfigForKey("integrasjon.ereg.url") + "/api/v2/organisasjon")
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.ereg.scope"))
 
     companion object : Factory<EnhetsregisteretGateway> {
