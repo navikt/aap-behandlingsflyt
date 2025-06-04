@@ -16,13 +16,14 @@ import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.httpklient.auth.Bruker
@@ -52,9 +53,13 @@ class FlytOrkestrator(
     private val behandlingHendelseService: BehandlingHendelseService,
     private val ventebehovEvaluererService: VentebehovEvaluererService,
     private val stegOrkestrator: StegOrkestrator,
-    private val stoppFør: StegType? = null,
+    private val stoppNårStatus: Set<Status> = emptySet(),
 ) {
-    constructor(repositoryProvider: RepositoryProvider, stoppFør: StegType? = null): this(
+    constructor(
+        repositoryProvider: RepositoryProvider,
+        stoppNårStatus: Set<Status> = emptySet(),
+        markSavepointAt: Set<StegStatus>? = null,
+    ) : this(
         ventebehovEvaluererService = VentebehovEvaluererServiceImpl(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
@@ -63,8 +68,8 @@ class FlytOrkestrator(
         flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(repositoryProvider),
         sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
         behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider),
-        stegOrkestrator = StegOrkestrator(repositoryProvider),
-        stoppFør = stoppFør,
+        stegOrkestrator = StegOrkestrator(repositoryProvider, markSavepointAt),
+        stoppNårStatus = stoppNårStatus,
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -154,6 +159,12 @@ class FlytOrkestrator(
         var gjeldendeSteg = behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
 
         while (true) {
+            if (behandling.status() in stoppNårStatus) {
+                loggStopp(behandling, avklaringsbehovene)
+                val oppdatertBehandling = behandlingRepository.hent(behandling.id)
+                behandlingHendelseService.stoppet(oppdatertBehandling, avklaringsbehovene)
+                return
+            }
 
             val kontekstMedPerioder = flytKontekstMedPeriodeService.utled(kontekst, gjeldendeSteg.type())
             val result = stegOrkestrator.utfør(
@@ -182,8 +193,7 @@ class FlytOrkestrator(
             validerPlassering(behandlingFlyt, avklaringsbehovene.åpne())
 
             val neste = utledNesteSteg(result, behandlingFlyt)
-
-            if (!result.kanFortsette() || neste == null || neste.type() == stoppFør) {
+            if (!result.kanFortsette() || neste == null) {
                 if (neste == null) {
                     log.info("Behandlingen har nådd slutten, avslutter behandling")
 

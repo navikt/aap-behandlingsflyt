@@ -2880,7 +2880,7 @@ class FlytOrkestratorTest {
             assertThat(behandlingRepo.hent(behandlingId).aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
 
             // Tilbakefør med hjelpefunksjon
-            Driftfunksjoner(postgresRepositoryRegistry).flyttBehandlingTilStart(behandlingId, connection)
+            Driftfunksjoner(postgresRepositoryRegistry.provider(connection)).flyttBehandlingTilStart(behandlingId, connection)
 
             // Validér avklaring
             assertThat(behandlingRepo.hent(behandlingId).aktivtSteg()).isEqualTo(StegType.START_BEHANDLING)

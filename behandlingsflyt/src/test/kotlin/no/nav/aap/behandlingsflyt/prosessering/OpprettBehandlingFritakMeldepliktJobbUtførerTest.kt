@@ -31,7 +31,6 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
-import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -50,7 +49,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
         utfører.utfør(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id))
 
-        verify {sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any())}
+        verify {sakOgBehandlingServiceMock.finnEllerOpprettBehandlingFasttrack(any<SakId>(), any())}
     }
 
     @Test
@@ -60,7 +59,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
         utfører.utfør(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id))
 
-        verify(exactly = 0) {sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any())}
+        verify(exactly = 0) {sakOgBehandlingServiceMock.finnEllerOpprettBehandlingFasttrack(any<SakId>(), any())}
     }
 
     @Test
@@ -81,7 +80,6 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
     ): OpprettBehandlingFritakMeldepliktJobbUtfører {
         val sakServiceMock = mockk<SakService>()
         val underveisRepositoryMock = mockk<UnderveisRepository>()
-        val flytJobbRepository = mockk<FlytJobbRepository>(relaxed = true)
 
         every {sakServiceMock.hent(any<SakId>())} returns Sak(
             id = sakId,
@@ -110,6 +108,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
         )
 
         every {sakOgBehandlingServiceMock.finnSisteYtelsesbehandlingFor(sakId)} returns fakeBehandling
+        every {sakOgBehandlingServiceMock.finnEllerOpprettBehandlingFasttrack(sakId, any())} returns SakOgBehandlingService.Ordinær(fakeBehandling)
 
         every {underveisRepositoryMock.hentHvisEksisterer(any())} returns UnderveisGrunnlag(
             id = 1L,
@@ -136,8 +135,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             sakService = sakServiceMock,
             underveisRepository = underveisRepositoryMock,
             sakOgBehandlingService = sakOgBehandlingServiceMock,
-            flytJobbRepository = flytJobbRepository,
+            prosesserBehandlingService = mockk<ProsesserBehandlingService>(relaxed = true)
         )
     }
-
 }

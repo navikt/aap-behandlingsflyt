@@ -3,13 +3,11 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingJobbUtfører.Companion.skjedulerProsesserBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.lookup.repository.RepositoryProvider
-import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProviderJobbSpesifikasjon
@@ -20,7 +18,7 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
     private val sakService: SakService,
     private val underveisRepository: UnderveisRepository,
     private val sakOgBehandlingService: SakOgBehandlingService,
-    private val flytJobbRepository: FlytJobbRepository,
+    private val prosesserBehandlingService: ProsesserBehandlingService,
 ) : JobbUtfører {
 
     override fun utfør(input: JobbInput) {
@@ -52,16 +50,12 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
             return
         }
 
-        val fastsattPeriodePassertBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
+        val fastsattPeriodePassertBehandling = sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(
             sak.id,
-            listOf(
-                Årsak(
-                    type = ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT,
-                )
-            )
+            listOf(Årsak(type = ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT))
         )
 
-        flytJobbRepository.skjedulerProsesserBehandling(fastsattPeriodePassertBehandling)
+        prosesserBehandlingService.triggProsesserBehandling(fastsattPeriodePassertBehandling)
     }
 
     companion object : ProviderJobbSpesifikasjon {
@@ -70,7 +64,7 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
                 sakService = SakService(repositoryProvider),
                 underveisRepository = repositoryProvider.provide(),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
-                flytJobbRepository = repositoryProvider.provide(),
+                prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider),
             )
         }
 

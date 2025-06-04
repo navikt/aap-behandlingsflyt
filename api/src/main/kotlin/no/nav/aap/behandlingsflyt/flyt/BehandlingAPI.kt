@@ -146,7 +146,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                         && behandling.harIkkeVærtAktivitetIDetSiste()
                         && flytJobbRepository.hentJobberForBehandling(behandling.id.toLong()).isEmpty()
                     ) {
-                        ProsesserBehandlingService(flytJobbRepository).triggProsesserBehandling(
+                        ProsesserBehandlingService(repositoryProvider).triggProsesserBehandling(
                             behandling.sakId,
                             behandling.id
                         )

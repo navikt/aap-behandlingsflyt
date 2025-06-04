@@ -207,6 +207,12 @@ class SakOgBehandlingService(
         return finnEllerOpprettBehandling(sak.id, årsaker)
     }
 
+    fun finnEllerOpprettBehandlingFasttrack(saksnummer: Saksnummer, årsaker: List<Årsak>): OpprettetBehandling {
+        val sak = sakRepository.hent(saksnummer)
+
+        return finnEllerOpprettBehandlingFasttrack(sak.id, årsaker)
+    }
+
     fun lukkBehandling(behandlingId: BehandlingId) {
         // Valider siste stegstatus behandlingen
         validerAtSisteStegstatusErAvsluttet(behandlingId)
