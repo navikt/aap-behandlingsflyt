@@ -583,7 +583,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             AvklarSykdomLøsning(
-                sykdomsvurdering = SykdomsvurderingLøsningDto(
+                sykdomsvurderinger = listOf(SykdomsvurderingLøsningDto(
                     begrunnelse = "Er syk nok",
                     dokumenterBruktIVurdering = listOf(JournalpostId("1349532")),
                     harSkadeSykdomEllerLyte = true,
@@ -594,7 +594,7 @@ class FlytOrkestratorTest {
                     erArbeidsevnenNedsatt = true,
                     yrkesskadeBegrunnelse = null,
                     vurderingenGjelderFra = null,
-                )
+                ))
             ),
         )
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
@@ -851,7 +851,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             AvklarSykdomLøsning(
-                sykdomsvurdering = SykdomsvurderingLøsningDto(
+                sykdomsvurderinger = listOf(SykdomsvurderingLøsningDto(
                     begrunnelse = "Er syk nok",
                     dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                     harSkadeSykdomEllerLyte = true,
@@ -863,7 +863,7 @@ class FlytOrkestratorTest {
                     erArbeidsevnenNedsatt = true,
                     yrkesskadeBegrunnelse = null,
                     vurderingenGjelderFra = null,
-                )
+                ))
             ),
         )
 
@@ -984,7 +984,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             AvklarSykdomLøsning(
-                sykdomsvurdering = SykdomsvurderingLøsningDto(
+                sykdomsvurderinger = listOf(SykdomsvurderingLøsningDto(
                     begrunnelse = "Er syk nok",
                     dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                     harSkadeSykdomEllerLyte = true,
@@ -995,7 +995,7 @@ class FlytOrkestratorTest {
                     erArbeidsevnenNedsatt = true,
                     yrkesskadeBegrunnelse = null,
                     vurderingenGjelderFra = null,
-                )
+                ))
             ),
         )
 
@@ -1310,7 +1310,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             AvklarSykdomLøsning(
-                sykdomsvurdering = SykdomsvurderingLøsningDto(
+                sykdomsvurderinger = listOf(SykdomsvurderingLøsningDto(
                     begrunnelse = "Er ikke syk nok",
                     dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                     harSkadeSykdomEllerLyte = false,
@@ -1321,7 +1321,7 @@ class FlytOrkestratorTest {
                     erNedsettelseIArbeidsevneMerEnnHalvparten = null,
                     erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                     yrkesskadeBegrunnelse = null,
-                )
+                ))
             ),
         )
 
@@ -1585,7 +1585,7 @@ class FlytOrkestratorTest {
 
         behandling = løsAvklaringsBehov(
             behandling, AvklarSykdomLøsning(
-                sykdomsvurdering = SykdomsvurderingLøsningDto(
+                sykdomsvurderinger = listOf(SykdomsvurderingLøsningDto(
                     begrunnelse = "Arbeidsevnen er nedsatt med mer enn halvparten",
                     dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                     harSkadeSykdomEllerLyte = true,
@@ -1596,7 +1596,7 @@ class FlytOrkestratorTest {
                     erArbeidsevnenNedsatt = true,
                     yrkesskadeBegrunnelse = null,
                     vurderingenGjelderFra = null,
-                )
+                ))
             )
         )
 
@@ -1700,7 +1700,7 @@ class FlytOrkestratorTest {
 
         behandling = løsAvklaringsBehov(
             behandling, AvklarSykdomLøsning(
-                sykdomsvurdering = SykdomsvurderingLøsningDto(
+                sykdomsvurderinger = listOf(SykdomsvurderingLøsningDto(
                     begrunnelse = "Er syk nok",
                     dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                     harSkadeSykdomEllerLyte = true,
@@ -1711,7 +1711,7 @@ class FlytOrkestratorTest {
                     erArbeidsevnenNedsatt = true,
                     yrkesskadeBegrunnelse = null,
                     vurderingenGjelderFra = null,
-                )
+                ))
             ),
             ingenEndringIGruppe = true,
             bruker = Bruker("SAKSBEHANDLER")
@@ -3372,7 +3372,7 @@ class FlytOrkestratorTest {
         return løsAvklaringsBehov(
             behandling,
             AvklarSykdomLøsning(
-                sykdomsvurdering = SykdomsvurderingLøsningDto(
+                sykdomsvurderinger = listOf(SykdomsvurderingLøsningDto(
                     begrunnelse = "Er syk nok",
                     dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                     harSkadeSykdomEllerLyte = true,
@@ -3383,7 +3383,7 @@ class FlytOrkestratorTest {
                     erArbeidsevnenNedsatt = true,
                     yrkesskadeBegrunnelse = null,
                     vurderingenGjelderFra = null,
-                )
+                ))
             ),
         )
     }
