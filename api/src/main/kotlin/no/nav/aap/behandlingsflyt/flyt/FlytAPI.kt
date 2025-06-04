@@ -38,6 +38,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -351,8 +352,8 @@ private fun utledVisning(
 ): Visning {
 
 
-    val brukerHarKvalitetssikret = avklaringsbehov.filter { it.definisjon === Definisjon.KVALITETSSIKRING }.any { it.brukere().contains(bruker.ident) }
-    val brukerHarBesluttet = avklaringsbehov.filter { it.definisjon === Definisjon.FATTE_VEDTAK }.any { it.brukere().contains(bruker.ident) }
+    val brukerHarKvalitetssikret = if (Miljø.erProd()) avklaringsbehov.filter { it.definisjon === Definisjon.KVALITETSSIKRING }.any { it.brukere().contains(bruker.ident) } else false
+    val brukerHarBesluttet = if (Miljø.erProd()) avklaringsbehov.filter { it.definisjon === Definisjon.FATTE_VEDTAK }.any { it.brukere().contains(bruker.ident) }  else false
 
     val jobberEllerFeilet = status in listOf(ProsesseringStatus.JOBBER, ProsesseringStatus.FEILET)
     val påVent = alleAvklaringsbehovInkludertFrivillige.erSattPåVent()
