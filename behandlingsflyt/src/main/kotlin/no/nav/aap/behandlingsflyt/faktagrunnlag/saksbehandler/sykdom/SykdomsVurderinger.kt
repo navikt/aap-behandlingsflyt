@@ -1,14 +1,11 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 
 class Sykdomsvurdering(
     val id: Long? = null,
@@ -28,26 +25,6 @@ class Sykdomsvurdering(
     val opprettet: Instant,
     val vurdertAv: Bruker,
 ) {
-    fun toDto(): SykdomsvurderingDto {
-        return SykdomsvurderingDto(
-            begrunnelse = begrunnelse,
-            vurderingenGjelderFra = vurderingenGjelderFra,
-            dokumenterBruktIVurdering = dokumenterBruktIVurdering,
-            erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
-            harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
-            erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
-            erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
-            erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
-            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
-            yrkesskadeBegrunnelse = yrkesskadeBegrunnelse,
-            kodeverk = kodeverk,
-            hoveddiagnose = hoveddiagnose,
-            bidiagnoser = bidiagnoser,
-            vurdertAvIdent = vurdertAv.ident,
-            vurdertDato = opprettet.atZone(ZoneId.of("Europe/Oslo")).toLocalDate(),
-        )
-    }
-
     private fun erAndelNedsattNok(): Boolean {
         return erNedsettelseIArbeidsevneMerEnnHalvparten == true || erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true
     }
@@ -97,3 +74,23 @@ class Yrkesskadevurdering(
         )
     }
 }
+
+data class YrkesskadevurderingDto(
+    val begrunnelse: String,
+    val relevanteSaker: List<String>,
+    val andelAvNedsettelsen: Int?,
+    val erÅrsakssammenheng: Boolean
+) {
+    fun toYrkesskadevurdering(): Yrkesskadevurdering {
+        return Yrkesskadevurdering(
+            begrunnelse = begrunnelse,
+            relevanteSaker = relevanteSaker,
+            erÅrsakssammenheng = erÅrsakssammenheng,
+            andelAvNedsettelsen = this@YrkesskadevurderingDto.andelAvNedsettelsen?.let { Prosent(it) }
+        )
+    }
+}
+
+
+
+
