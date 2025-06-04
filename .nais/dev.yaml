@@ -196,9 +196,9 @@ spec:
     - name: INTEGRASJON_AAREG_SCOPE
       value: api://dev-fss.arbeidsforhold.aareg-services-nais/.default
     - name: INTEGRASJON_INNTEKTSKOMPONENTEN_URL
-      value: https://team-inntekt-proxy.dev-fss-pub.nais.io/proxy/inntektskomponenten-q2/rs/api/v1
+      value: https://ikomp-q2.dev-fss-pub.nais.io/rs/api/v1
     - name: INTEGRASJON_INNTEKTSKOMPONENTEN_SCOPE
-      value: api://dev-fss.team-inntekt.inntektskomponenten/.default
+      value: api://dev-fss.team-inntekt.ikomp-q2/.default
     - name: INTEGRASJON_DATADELING_URL
       value: http://api-intern
     - name: INTEGRASJON_DATADELING_SCOPE
