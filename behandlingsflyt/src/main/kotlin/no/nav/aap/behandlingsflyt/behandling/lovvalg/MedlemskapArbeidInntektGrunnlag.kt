@@ -37,6 +37,11 @@ data class ArbeidINorgeGrunnlag(
     val sluttdato: LocalDate?
 )
 
+data class EnhetGrunnlag(
+    val orgnummer: String,
+    val orgNavn: String
+)
+
 enum class InntektTyper {
     SYKEPENGER,
     SYKEPENGERTILFISKERSOMBAREHARHYRE,

@@ -13,11 +13,13 @@ import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import org.slf4j.LoggerFactory
 import java.net.URI
 
 class EREGGateway : EnhetsregisteretGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.ereg.url") + "/api/v2/organisasjon")
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.ereg.scope"))
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<EnhetsregisteretGateway> {
         override fun konstruer(): EnhetsregisteretGateway {
@@ -53,7 +55,9 @@ class EREGGateway : EnhetsregisteretGateway {
             // Fant ikke ident i EREG, de returnerer 404
             null
         } catch (e: Exception) {
-            throw RuntimeException("Feil ved henting av data i EREG: ${e.message}", e)
+            // Ikke stopp opp flyten når vi ikke greier å hente data fra EREG, ikke kritisk nok til å stoppe flyt?
+            log.warn("Feil ved henting av data i EREG: ${e.message}")
+            return null
         }
     }
 }

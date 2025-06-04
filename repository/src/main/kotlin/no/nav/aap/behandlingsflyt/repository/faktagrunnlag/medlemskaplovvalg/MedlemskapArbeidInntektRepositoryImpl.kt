@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.HistoriskManuellVurderingForLovvalgMedlemskap
@@ -120,7 +121,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         behandlingId: BehandlingId,
         arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
         inntektGrunnlag: List<ArbeidsInntektMaaned>,
-        medlId: Long?
+        medlId: Long?,
+        enhetGrunnlag: List<EnhetGrunnlag>
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val grunnlagOppslag = hentGrunnlag(behandlingId)
@@ -129,7 +131,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
 
         val arbeiderId = lagreArbeidGrunnlag(arbeidGrunnlag)
-        val inntekterINorgeId = lagreArbeidsInntektGrunnlag(inntektGrunnlag)
+        val inntekterINorgeId = lagreArbeidsInntektGrunnlag(inntektGrunnlag, enhetGrunnlag)
 
         val grunnlagQuery = """
             INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, manuell_vurdering_id) VALUES (?, ?, ?, ?, ?)
@@ -217,7 +219,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         return arbeiderId
     }
 
-    private fun lagreArbeidsInntektGrunnlag(arbeidsInntektGrunnlag: List<ArbeidsInntektMaaned>): Long? {
+    private fun lagreArbeidsInntektGrunnlag(arbeidsInntektGrunnlag: List<ArbeidsInntektMaaned>, enhetGrunnlag: List<EnhetGrunnlag>): Long? {
         if (arbeidsInntektGrunnlag.isEmpty()) return null
 
         val inntekterINorgeQuery = """
