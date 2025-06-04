@@ -92,6 +92,7 @@ spec:
         - host: pensjon-popp.prod-fss-pub.nais.io
         - host: fpabakus.prod-fss-pub.nais.io
         - host: aareg-services.prod-fss-pub.nais.io
+        - host: ereg-services.prod-fss-pub.nais.io
         - host: pensjon-pen.prod-fss-pub.nais.io
         - host: tp-api.prod-fss-pub.nais.io
         - host: aap-unleash-api.nav.cloud.nais.io
@@ -215,3 +216,7 @@ spec:
       value: api://prod-gcp.nom.nom-api/.default
     - name: INTEGRASJON_NORG_URL
       value: http://norg2.org
+    - name: INTEGRASJON_EREG_URL
+      value: https://ereg-services.prod-fss-pub.nais.io
+    - name: INTEGRASJON_EREG_SCOPE
+      value: prod-fss.arbeidsforhold.ereg-services/.default

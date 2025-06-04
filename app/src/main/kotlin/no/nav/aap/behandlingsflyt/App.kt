@@ -67,6 +67,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.integrasjon.meldekort.MeldekortGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
 import no.nav.aap.behandlingsflyt.behandling.klage.trekk.trekkKlageGrunnlagAPI
+import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
 import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
@@ -223,6 +224,7 @@ private fun registerGateways() {
         .register<ApiInternGatewayImpl>()
         .register<UtbetalingGatewayImpl>()
         .register<AARegisterGateway>()
+        .register<EREGGateway>()
         .register<StatistikkGatewayImpl>()
         .register<InntektGatewayImpl>()
         .register<BrevGateway>()

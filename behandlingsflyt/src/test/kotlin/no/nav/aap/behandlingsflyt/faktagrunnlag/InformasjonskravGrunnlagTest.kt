@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Stat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeService
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.AARegisterGateway
+import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
@@ -89,6 +90,7 @@ class InformasjonskravGrunnlagTest {
         GatewayRegistry
             .register<MedlemskapGateway>()
             .register<AARegisterGateway>()
+            .register<EREGGateway>()
             .register<YrkesskadeRegisterGatewayImpl>()
             .register<PdlBarnGateway>()
             .register<PdlIdentGateway>()
