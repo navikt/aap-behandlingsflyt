@@ -113,16 +113,20 @@ class BehandlingHendelseServiceImpl(
         log.info("Legger til flytjobber til statistikk og stoppethendelse for behandling: ${behandling.id}")
         flytJobbRepository.leggTil(
             JobbInput(jobb = StoppetHendelseJobbUtfører).medPayload(hendelse)
+                .forBehandling(sak.id.id, behandling.id.id)
         )
         flytJobbRepository.leggTil(
             JobbInput(jobb = StatistikkJobbUtfører).medPayload(hendelse)
+                .forBehandling(sak.id.id, behandling.id.id)
         )
         flytJobbRepository.leggTil(
             JobbInput(jobb = DatadelingMeldePerioderJobbUtfører).medPayload(hendelse)
+                .forBehandling(sak.id.id, behandling.id.id)
         )
 
         flytJobbRepository.leggTil(
             JobbInput(jobb = DatadelingSakStatusJobbUtfører).medPayload(hendelse)
+                .forBehandling(sak.id.id, behandling.id.id)
         )
 
         if (behandling.typeBehandling() in listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)) {
@@ -132,6 +136,7 @@ class BehandlingHendelseServiceImpl(
         if (behandling.status().erAvsluttet()) {
             flytJobbRepository.leggTil(
                 JobbInput(jobb = DatadelingBehandlingJobbUtfører).medPayload(hendelse)
+                    .forBehandling(sak.id.id, behandling.id.id)
             )
         }
     }
