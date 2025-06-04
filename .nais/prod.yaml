@@ -217,6 +217,6 @@ spec:
     - name: INTEGRASJON_NORG_URL
       value: http://norg2.org
     - name: INTEGRASJON_EREG_URL
-      value: https://ereg-services.prod-fss-pub.nais.io
+      value: https://ereg-services.prod-fss-pub.nais.io/api/v2
     - name: INTEGRASJON_EREG_SCOPE
       value: prod-fss.arbeidsforhold.ereg-services/.default
