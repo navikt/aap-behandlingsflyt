@@ -8,6 +8,8 @@ data class BehandlendeEnhetVurdering(
     val vurdertAv: String,
     val opprettet: Instant? = null
 ) {
+    fun skalBehandlesAvBådeNavKontorOgNay(): Boolean = skalBehandlesAvNay && skalBehandlesAvKontor
+
     init {
         require(skalBehandlesAvNay || skalBehandlesAvKontor) {
             "Minst én av skalBehandlesAvNay eller skalBehandlesAvKontor må være true"
