@@ -352,8 +352,8 @@ private fun utledVisning(
 ): Visning {
 
 
-    val brukerHarKvalitetssikret = if (Miljø.erProd()) avklaringsbehov.filter { it.definisjon === Definisjon.KVALITETSSIKRING }.any { it.brukere().contains(bruker.ident) } else false
-    val brukerHarBesluttet = if (Miljø.erProd()) avklaringsbehov.filter { it.definisjon === Definisjon.FATTE_VEDTAK }.any { it.brukere().contains(bruker.ident) }  else false
+    val brukerHarKvalitetssikret =  avklaringsbehov.filter { it.definisjon === Definisjon.KVALITETSSIKRING }.any { it.brukere().contains(bruker.ident) }
+    val brukerHarBesluttet = avklaringsbehov.filter { it.definisjon === Definisjon.FATTE_VEDTAK }.any { it.brukere().contains(bruker.ident) }
 
     val jobberEllerFeilet = status in listOf(ProsesseringStatus.JOBBER, ProsesseringStatus.FEILET)
     val påVent = alleAvklaringsbehovInkludertFrivillige.erSattPåVent()
@@ -379,7 +379,9 @@ private fun utledVisning(
             visKvalitetssikringKort = visKvalitetssikringKort,
             visVentekort = påVent,
             visBrevkort = false,
-            typeBehandling = typeBehandling
+            typeBehandling = typeBehandling,
+            brukerHarBesluttet = brukerHarBesluttet,
+            brukerHarKvlaitetsikret = brukerHarKvalitetssikret
         )
     } else {
         return Visning(
@@ -390,7 +392,9 @@ private fun utledVisning(
             visKvalitetssikringKort = visKvalitetssikringKort,
             visVentekort = påVent,
             visBrevkort = visBrevkort,
-            typeBehandling = typeBehandling
+            typeBehandling = typeBehandling,
+            brukerHarBesluttet = brukerHarBesluttet,
+            brukerHarKvlaitetsikret = brukerHarKvalitetssikret
         )
     }
 }
