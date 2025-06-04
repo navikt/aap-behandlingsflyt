@@ -52,10 +52,10 @@ class EREGGateway : EnhetsregisteretGateway {
         return try {
             query(request)
         } catch (e: IkkeFunnetException) {
-            log.warn("Fant ikke hente organisasjonsnavn. Fortsetter uten verdi.", e)
+            log.warn("Fant ikke organisasjon i EREG. Fortsetter uten verdi.", e)
             null
         } catch (e: Exception) {
-            log.warn("Feil ved henting av data i EREG. Fortsetter uten", e)
+            log.warn("Feil ved henting av data i EREG. Fortsetter uten verdi.", e)
             return null
         }
     }
