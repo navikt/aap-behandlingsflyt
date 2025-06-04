@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeService
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.integrasjon.aaregisteret.AARegisterGateway
+import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
