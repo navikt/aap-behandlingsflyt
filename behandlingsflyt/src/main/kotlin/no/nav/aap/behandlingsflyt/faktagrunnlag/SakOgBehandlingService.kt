@@ -15,6 +15,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
@@ -24,12 +27,14 @@ class SakOgBehandlingService(
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository,
     private val trukketSøknadService: TrukketSøknadService,
+    private val unleashGateway: UnleashGateway,
 ) {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, unleashGateway: UnleashGateway = GatewayProvider.provide()) : this(
         grunnlagKopierer = GrunnlagKopiererImpl(repositoryProvider),
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
+        unleashGateway = unleashGateway,
     )
 
     fun finnBehandling(behandlingReferanse: BehandlingReferanse): Behandling {
@@ -43,25 +48,77 @@ class SakOgBehandlingService(
         )
     }
 
-    fun finnEllerOpprettBehandling(sakId: SakId, årsaker: List<Årsak>): Behandling {
+    sealed interface OpprettetBehandling {
+       val åpenBehandling: Behandling?
+    }
+
+    /* Dette er en vanlig, åpen behandling og behandlignen kan være åpen over tid, på tvers av
+     * transaksjoner. */
+    data class Ordinær(override val åpenBehandling: Behandling) : OpprettetBehandling
+
+    /** Det er nå, potensielt, to åpne behandlinger. For at det ikke skal være observerbart, så
+     * må denne nye behandlingen være i tilstanden IVERKSETTES eller AVSLUTTET om transaksjonen
+     * commites. Hvis det ikke er mulig å avslutte behandlingen i transaksjonen,
+     * så må transaksjonen avbrytes.
+     *
+     * Også hvis det ikke finnes en [åpenBehandling] så må [nyBehandling] avsluttes, ellers
+     * vil senere hendelser kunne legge seg på feil behandling.
+     *
+     * @param nyBehandling Ny-opprettet behandling som må avsluttes (status: IVERKSETTES eller AVSLUTTET) i denne transaksjonen.
+     *
+     * @param åpenBehandling  Eksisterende åpen behandling.
+     *
+     * [forrigeBehandling][Behandling.forrigeBehandlingId] i [åpenBehandling] peker på [nyBehandling]. Men det er kaller sitt ansvar å
+     * kopiere relevante opplysninger inn i [åpenBehandling] fra [nyBehandling].
+     */
+    data class MåBehandlesAtomært(
+        val nyBehandling: Behandling,
+        override val åpenBehandling: Behandling?,
+    ) : OpprettetBehandling
+
+    private val fasttrackKandidater = listOf(
+        ÅrsakTilBehandling.FRITAK_MELDEPLIKT,
+        ÅrsakTilBehandling.MOTTATT_MELDEKORT,
+        ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT
+    )
+
+    fun finnEllerOpprettBehandlingFasttrack(sakId: SakId, årsaker: List<Årsak>): OpprettetBehandling {
         val sisteYtelsesbehandling = finnSisteYtelsesbehandlingFor(sakId)
+        val fasttrackkandidat = årsaker.isNotEmpty()
+                && årsaker.all { it.type in fasttrackKandidater }
+                && unleashGateway.isEnabled(BehandlingsflytFeature.FasttrackMeldekort)
 
         return when {
             årsaker.any { it.type == ÅrsakTilBehandling.MOTATT_KLAGE } ->
-                opprettKlagebehandling(sisteYtelsesbehandling, sakId, årsaker)
+                Ordinær(opprettKlagebehandling(sisteYtelsesbehandling, sakId, årsaker))
 
             /* Tilbakekreving kommer kanskje som et case her ... */
 
             sisteYtelsesbehandling == null ->
-                opprettFørstegangsbehandling(sakId, årsaker)
+                Ordinær(opprettFørstegangsbehandling(sakId, årsaker))
 
             sisteYtelsesbehandling.status().erAvsluttet() ->
-                opprettRevurdering(sisteYtelsesbehandling, årsaker)
+                if (fasttrackkandidat)
+                    MåBehandlesAtomært(opprettRevurdering(sisteYtelsesbehandling, årsaker), null)
+                else
+                    Ordinær(opprettRevurdering(sisteYtelsesbehandling, årsaker))
+
 
             sisteYtelsesbehandling.status().erÅpen() ->
-                oppdaterÅrsaker(sisteYtelsesbehandling, årsaker)
+                if (fasttrackkandidat && sisteYtelsesbehandling.typeBehandling() != TypeBehandling.Førstegangsbehandling)
+                    MåBehandlesAtomært(opprettRevurderingForranÅpenBehandling(sisteYtelsesbehandling, årsaker), sisteYtelsesbehandling)
+                else
+                    Ordinær(oppdaterÅrsaker(sisteYtelsesbehandling, årsaker))
 
-            else -> error("greier ikke å finne eller opprette behandling, uventet tilstand i saken")
+            else ->
+                error("greier ikke å finne eller opprette behandling, uventet tilstand i saken")
+        }
+    }
+
+    fun finnEllerOpprettBehandling(sakId: SakId, årsaker: List<Årsak>): Behandling {
+        return when (val b = finnEllerOpprettBehandlingFasttrack(sakId, årsaker)) {
+            is MåBehandlesAtomært -> error("skal ikke føre til atmoær behandling")
+            is Ordinær -> b.åpenBehandling
         }
     }
 
@@ -105,6 +162,29 @@ class SakOgBehandlingService(
             forrigeBehandlingId = sisteYtelsesbehandling.id,
         ).also { behandling ->
             grunnlagKopierer.overfør(sisteYtelsesbehandling.id, behandling.id)
+        }
+    }
+
+    private fun opprettRevurderingForranÅpenBehandling(
+        apenRevurdering: Behandling,
+        årsaker: List<Årsak>
+    ): Behandling {
+        check(apenRevurdering.status().erÅpen())
+        check(apenRevurdering.typeBehandling() == TypeBehandling.Revurdering)
+        check(!trukketSøknadService.søknadErTrukket(apenRevurdering.id)) {
+            "ikke lov å opprette ny behandling for trukket søknad ${apenRevurdering.sakId}"
+        }
+
+        val sisteAvsluttedeYtelsesvurdering = behandlingRepository.hent(apenRevurdering.forrigeBehandlingId!!)
+
+        return behandlingRepository.opprettBehandling(
+            sakId = apenRevurdering.sakId,
+            årsaker = årsaker,
+            typeBehandling = TypeBehandling.Revurdering,
+            forrigeBehandlingId = sisteAvsluttedeYtelsesvurdering.id,
+        ).also { behandling ->
+            grunnlagKopierer.overfør(sisteAvsluttedeYtelsesvurdering.id, behandling.id)
+            behandlingRepository.flyttForrigeBehandlingId(apenRevurdering.id, behandling.id)
         }
     }
 

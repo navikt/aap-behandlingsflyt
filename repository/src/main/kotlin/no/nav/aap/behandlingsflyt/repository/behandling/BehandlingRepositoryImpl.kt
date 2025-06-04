@@ -167,6 +167,22 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
+    override fun flyttForrigeBehandlingId(
+        behandlingId: BehandlingId,
+        nyForrigeBehandlingId: BehandlingId
+    ) {
+        connection.execute("""
+            update behandling
+            set forrige_id = ?
+            where id = ?
+        """) {
+            setParams {
+                setLong(1, nyForrigeBehandlingId.id)
+                setLong(2, behandlingId.id)
+            }
+        }
+    }
+
     fun hentAktivtSteg(behandlingId: BehandlingId): StegTilstand? {
         val query = """
             SELECT * FROM STEG_HISTORIKK WHERE behandling_id = ? AND AKTIV = true

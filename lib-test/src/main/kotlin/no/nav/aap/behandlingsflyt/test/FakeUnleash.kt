@@ -9,7 +9,8 @@ object FakeUnleash : UnleashGateway {
         BehandlingsflytFeature.OverstyrStarttidspunkt to true,
         BehandlingsflytFeature.AvventUtbetaling to true,
         BehandlingsflytFeature.FjernAutomatiskOppdateringAvBarnetillegg to true,
-        BehandlingsflytFeature.InnhentEnhetsregisterData to true
+        BehandlingsflytFeature.InnhentEnhetsregisterData to true,
+        BehandlingsflytFeature.FasttrackMeldekort to false,
     )
 
     override fun isEnabled(featureToggle: FeatureToggle) = requireNotNull(flags[featureToggle]) {

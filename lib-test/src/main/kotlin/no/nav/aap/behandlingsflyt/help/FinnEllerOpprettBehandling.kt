@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -29,5 +30,5 @@ fun finnEllerOpprettBehandling(
     repositoryProvider: RepositoryProvider,
     saksnummer: Saksnummer,
     årsaker: List<Årsak> = listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
-) = SakOgBehandlingService(repositoryProvider)
+) = SakOgBehandlingService(repositoryProvider, FakeUnleash)
     .finnEllerOpprettBehandling(saksnummer, årsaker)
