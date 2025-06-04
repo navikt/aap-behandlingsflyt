@@ -3,8 +3,11 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.InnhentetSykdomsOpplysninger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.RegistrertYrkesskade
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -21,12 +24,13 @@ import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import java.time.LocalDate
+import java.time.ZoneId
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/sykdom/sykdom") {
-            authorizedGet<BehandlingReferanse, SykdomGrunnlagDto>(
+            authorizedGet<BehandlingReferanse, SykdomGrunnlagResponse>(
                 AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
             ) { req ->
                 val response = dataSource.transaction(readOnly = true) { connection ->
@@ -62,7 +66,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource, repositoryRegi
                         )
 
 
-                    SykdomGrunnlagDto(
+                    SykdomGrunnlagResponse(
                         opplysninger = InnhentetSykdomsOpplysninger(
                             oppgittYrkesskadeISøknad = false,
                             innhentedeYrkesskader = innhentedeYrkesskader,
@@ -133,5 +137,30 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource, repositoryRegi
             }
         }
     }
+}
+
+private fun Sykdomsvurdering.toDto(): SykdomsvurderingResponse {
+    val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv.ident)
+    return SykdomsvurderingResponse(
+        begrunnelse = begrunnelse,
+        vurderingenGjelderFra = vurderingenGjelderFra,
+        dokumenterBruktIVurdering = dokumenterBruktIVurdering,
+        erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
+        harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
+        erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
+        erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
+        erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
+        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
+        yrkesskadeBegrunnelse = yrkesskadeBegrunnelse,
+        kodeverk = kodeverk,
+        hoveddiagnose = hoveddiagnose,
+        bidiagnoser = bidiagnoser,
+        vurdertAv = VurdertAvResponse(
+            ident = vurdertAv.ident,
+            dato = opprettet.atZone(ZoneId.of("Europe/Oslo")).toLocalDate(),
+            ansattnavn = navnOgEnhet?.navn,
+            enhetsnavn = navnOgEnhet?.enhet,
+        ),
+    )
 }
 
