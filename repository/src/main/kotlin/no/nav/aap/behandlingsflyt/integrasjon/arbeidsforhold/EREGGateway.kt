@@ -52,11 +52,10 @@ class EREGGateway : EnhetsregisteretGateway {
         return try {
             query(request)
         } catch (e: IkkeFunnetException) {
-            // Fant ikke ident i EREG, de returnerer 404
+            log.warn("Fant ikke hente organisasjonsnavn. Fortsetter uten verdi.", e)
             null
         } catch (e: Exception) {
-            // Ikke stopp opp flyten når vi ikke greier å hente data fra EREG, ikke kritisk nok til å stoppe flyt?
-            log.warn("Feil ved henting av data i EREG: ${e.message}")
+            log.warn("Feil ved henting av data i EREG. Fortsetter uten", e)
             return null
         }
     }
