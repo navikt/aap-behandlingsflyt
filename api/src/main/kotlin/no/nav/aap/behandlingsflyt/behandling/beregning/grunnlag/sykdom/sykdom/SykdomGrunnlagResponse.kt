@@ -9,10 +9,6 @@ data class SykdomGrunnlagResponse(
     val harTilgangTilÅSaksbehandle: Boolean,
     val skalVurdereYrkesskade: Boolean,
     val opplysninger: InnhentetSykdomsOpplysninger,
-
-    @Deprecated("kan være mer enn 1, bruk sykdomsvurderinger")
-    val sykdomsvurdering: SykdomsvurderingResponse?,
-
     val sykdomsvurderinger: List<SykdomsvurderingResponse>,
     val historikkSykdomsvurderinger: List<SykdomsvurderingResponse>,
     val gjeldendeVedtatteSykdomsvurderinger: List<SykdomsvurderingResponse>,

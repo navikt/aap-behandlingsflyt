@@ -72,9 +72,6 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource, repositoryRegi
                             innhentedeYrkesskader = innhentedeYrkesskader,
                         ),
                         skalVurdereYrkesskade = innhentedeYrkesskader.isNotEmpty(),
-                        sykdomsvurdering = sykdomsvurderinger
-                            .maxByOrNull { it.opprettet }
-                            ?.toDto(),
                         sykdomsvurderinger = sykdomsvurderinger
                             .sortedBy { it.vurderingenGjelderFra ?: LocalDate.MIN }
                             .map { it.toDto() },
