@@ -70,7 +70,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         repo: MedlemskapArbeidInntektRepositoryImpl,
         begrunnelse: String
     ) {
-        repo.lagreArbeidsforholdOgInntektINorge(behandlingId, listOf(), listOf(), null)
+        repo.lagreArbeidsforholdOgInntektINorge(behandlingId, listOf(), listOf(), null, emptyList())
         repo.lagreManuellVurdering(
             behandlingId,
             ManuellVurderingForLovvalgMedlemskap(
