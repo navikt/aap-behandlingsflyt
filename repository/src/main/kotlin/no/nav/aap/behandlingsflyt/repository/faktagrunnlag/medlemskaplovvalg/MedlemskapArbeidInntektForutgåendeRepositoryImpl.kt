@@ -254,7 +254,10 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         return arbeiderId
     }
 
-    private fun lagreArbeidsInntektGrunnlag(arbeidsInntektGrunnlag: List<ArbeidsInntektMaaned>, enhetGrunnlag: List<EnhetGrunnlag>): Long? {
+    private fun lagreArbeidsInntektGrunnlag(
+        arbeidsInntektGrunnlag: List<ArbeidsInntektMaaned>,
+        enhetGrunnlag: List<EnhetGrunnlag>
+    ): Long? {
         if (arbeidsInntektGrunnlag.isEmpty()) return null
 
         val inntekterINorgeQuery = """
@@ -262,33 +265,40 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         """.trimIndent()
         val inntekterINorgeId = connection.executeReturnKey(inntekterINorgeQuery)
 
-        for (entry in arbeidsInntektGrunnlag) {
-            for (inntekt in entry.arbeidsInntektInformasjon.inntektListe) {
-                val orgNavn = enhetGrunnlag.firstOrNull{it.orgnummer == inntekt.virksomhet.identifikator}?.orgNavn
-                val inntektQuery = """
+        val inntektQuery = """
                     INSERT INTO INNTEKT_I_NORGE_FORUTGAAENDE (identifikator, beloep, skattemessig_bosatt_land, opptjenings_land, inntekt_type, inntekter_i_norge_id, periode, organisasjonsnavn) VALUES (?, ?, ?, ?, ?, ?, ?::daterange, ?)
                 """.trimIndent()
 
-                val tomFallback = inntekt.opptjeningsperiodeFom ?: entry.aarMaaned.atDay(1)
-
-                connection.execute(inntektQuery) {
-                    setParams {
-                        setString(1, inntekt.virksomhet.identifikator)
-                        setDouble(2, inntekt.beloep)
-                        setString(3, inntekt.skattemessigBosattLand)
-                        setString(4, inntekt.opptjeningsland)
-                        setString(5, inntekt.beskrivelse)
-                        setLong(6, inntekterINorgeId)
-                        setPeriode(
-                            7,
-                            Periode(
-                                inntekt.opptjeningsperiodeFom ?: entry.aarMaaned.atDay(1),
-                                inntekt.opptjeningsperiodeTom ?: tomFallback
-                            )
-                        )
-                        setString(8, orgNavn)
-                    }
+        connection.executeBatch(
+            inntektQuery,
+            arbeidsInntektGrunnlag.flatMap {
+                it.arbeidsInntektInformasjon.inntektListe.map { inntekt ->
+                    Pair(
+                        it.aarMaaned,
+                        inntekt
+                    )
                 }
+            }
+        ) {
+            setParams { (årMåned, inntekt) ->
+                val orgNavn =
+                    enhetGrunnlag.firstOrNull { it.orgnummer == inntekt.virksomhet.identifikator }?.orgNavn
+                val tomFallback = inntekt.opptjeningsperiodeFom ?: årMåned.atDay(1)
+
+                setString(1, inntekt.virksomhet.identifikator)
+                setDouble(2, inntekt.beloep)
+                setString(3, inntekt.skattemessigBosattLand)
+                setString(4, inntekt.opptjeningsland)
+                setString(5, inntekt.beskrivelse)
+                setLong(6, inntekterINorgeId)
+                setPeriode(
+                    7,
+                    Periode(
+                        inntekt.opptjeningsperiodeFom ?: årMåned.atDay(1),
+                        inntekt.opptjeningsperiodeTom ?: tomFallback
+                    )
+                )
+                setString(8, orgNavn)
             }
         }
         return inntekterINorgeId
