@@ -79,9 +79,6 @@ class EffektuerAvvistPåFormkravLøserTest {
 
         val effektuerLøser = EffektuerAvvistPåFormkravLøser(formkravMock, effektuerMock)
 
-        val datoVarslet = LocalDate.now()
-        val frist = datoVarslet.plusWeeks(2)
-
         every { formkravMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(
             vurdering = FormkravVurdering(
                 begrunnelse = "Test begrunnelse",
@@ -93,16 +90,6 @@ class EffektuerAvvistPåFormkravLøserTest {
                 vurdertAv = "Saksbehandler"
             )
         )
-
-        every { effektuerMock.hentHvisEksisterer(any()) } returns
-                EffektuerAvvistPåFormkravGrunnlag(
-                    varsel = ForhåndsvarselKlageFormkrav(
-                        datoVarslet = datoVarslet,
-                        frist = frist,
-                        referanse = BrevbestillingReferanse(UUID.randomUUID())
-                    ),
-                    vurdering = null
-                )
 
         val løsning = EffektuerAvvistPåFormkravLøsning(
             EffektuerAvvistPåFormkravLøsningDto(skalEndeligAvvises = false),
@@ -123,10 +110,7 @@ class EffektuerAvvistPåFormkravLøserTest {
         val formkravMock = mockk<FormkravRepository>()
 
         val effektuerLøser = EffektuerAvvistPåFormkravLøser(formkravMock, effektuerMock)
-
-        val datoVarslet = LocalDate.now()
-        val frist = datoVarslet.plusWeeks(2)
-
+        
         every { formkravMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(
             vurdering = FormkravVurdering(
                 begrunnelse = "Test begrunnelse",
@@ -138,16 +122,6 @@ class EffektuerAvvistPåFormkravLøserTest {
                 vurdertAv = "Saksbehandler"
             )
         )
-
-        every { effektuerMock.hentHvisEksisterer(any()) } returns
-                EffektuerAvvistPåFormkravGrunnlag(
-                    varsel = ForhåndsvarselKlageFormkrav(
-                        datoVarslet = datoVarslet,
-                        frist = frist,
-                        referanse = BrevbestillingReferanse(UUID.randomUUID())
-                    ),
-                    vurdering = null
-                )
 
         val løsning = EffektuerAvvistPåFormkravLøsning(
             EffektuerAvvistPåFormkravLøsningDto(skalEndeligAvvises = false),
@@ -167,10 +141,7 @@ class EffektuerAvvistPåFormkravLøserTest {
         val formkravMock = mockk<FormkravRepository>()
 
         val effektuerLøser = EffektuerAvvistPåFormkravLøser(formkravMock, effektuerMock)
-
-        val datoVarslet = LocalDate.now().minusWeeks(4)
-        val frist = datoVarslet.plusWeeks(3)
-
+        
         every { formkravMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(
             vurdering = FormkravVurdering(
                 begrunnelse = "Test begrunnelse",
@@ -182,16 +153,6 @@ class EffektuerAvvistPåFormkravLøserTest {
                 vurdertAv = "Saksbehandler"
             )
         )
-
-        every { effektuerMock.hentHvisEksisterer(any()) } returns
-                EffektuerAvvistPåFormkravGrunnlag(
-                    varsel = ForhåndsvarselKlageFormkrav(
-                        datoVarslet = datoVarslet,
-                        frist = frist,
-                        referanse = BrevbestillingReferanse(UUID.randomUUID())
-                    ),
-                    vurdering = null
-                )
 
         val løsning = EffektuerAvvistPåFormkravLøsning(
             EffektuerAvvistPåFormkravLøsningDto(skalEndeligAvvises = true),
