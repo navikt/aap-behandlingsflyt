@@ -38,13 +38,12 @@ class SignaturService(
                 )
             }
 
-            TypeBrev.VARSEL_OM_BESTILLING -> {
-                listOf(SignaturGrunnlag(bruker.ident, null)) // TODO dette brevet skal være automatisk men er manuelt nå
-            }
-
             TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT, TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV -> {
                 listOf(SignaturGrunnlag(bruker.ident, null))
             }
+
+            // Automatiske brev
+            TypeBrev.VARSEL_OM_BESTILLING, TypeBrev.FORVALTNINGSMELDING -> emptyList()
         }
     }
 

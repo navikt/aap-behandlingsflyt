@@ -2,8 +2,9 @@ package no.nav.aap.behandlingsflyt.hendelse.mottak
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Aktivitetskort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
@@ -15,14 +16,19 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
+import no.nav.aap.behandlingsflyt.prosessering.SendForvaltningsmeldingJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.tilÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.BehandlingTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.JobbInput
 import java.time.LocalDateTime
 
 class HåndterMottattDokumentService(
@@ -30,7 +36,8 @@ class HåndterMottattDokumentService(
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val låsRepository: TaSkriveLåsRepository,
     private val prosesserBehandling: ProsesserBehandlingService,
-    private val mottaDokumentService: MottaDokumentService
+    private val mottaDokumentService: MottaDokumentService,
+    private val flytJobbRepository: FlytJobbRepository,
 ) {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
@@ -38,7 +45,8 @@ class HåndterMottattDokumentService(
         sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
         låsRepository = repositoryProvider.provide(),
         prosesserBehandling = ProsesserBehandlingService(repositoryProvider),
-        mottaDokumentService = MottaDokumentService(repositoryProvider)
+        mottaDokumentService = MottaDokumentService(repositoryProvider),
+        flytJobbRepository = repositoryProvider.provide(),
     )
 
     fun håndterMottatteDokumenter(
@@ -73,6 +81,17 @@ class HåndterMottattDokumentService(
             beriketBehandling.behandling.id,
             listOf("trigger" to årsaker.map { it.type.name }.toString())
         )
+        if (Miljø.erDev() &&
+            beriketBehandling.tilstand == BehandlingTilstand.NY &&
+            brevkategori == InnsendingType.SØKNAD &&
+            beriketBehandling.behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling
+            ) {
+            flytJobbRepository.leggTil(
+                JobbInput(jobb = SendForvaltningsmeldingJobbUtfører).forBehandling(
+                    sakID = sakId.id, behandlingId = beriketBehandling.behandling.id.id
+                )
+            )
+        }
         låsRepository.verifiserSkrivelås(behandlingSkrivelås)
     }
 
