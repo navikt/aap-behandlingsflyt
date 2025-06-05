@@ -174,13 +174,15 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
         val beregningYrkesskadeIds = getBeregningYrkesskadeIds(behandlingId)
         val yrkesskadeInntekterIds = getYrkesskadeInntekterIds(beregningYrkesskadeIds)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from BEREGNINGSFAKTA_GRUNNLAG where behandling_id = ?; 
             delete from BEREGNINGSTIDSPUNKT_VURDERING where id = ANY(?::bigint[]);
             delete from YRKESSKADE_INNTEKT where inntekter_id = ANY(?::bigint[]);
             delete from YRKESSKADE_INNTEKTER where id = ANY(?::bigint[]);
-           
-        """.trimIndent()) {
+
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, beregningTidspunktVurderingIds)
@@ -196,7 +198,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
                     SELECT yrkesskade_vurdering_id
                     FROM BEREGNINGSFAKTA_GRUNNLAG
                     WHERE behandling_id = ? AND yrkesskade_vurdering_id is not null
-                 
+
                 """.trimIndent()
     ) {
         setParams { setLong(1, behandlingId.id) }
@@ -229,7 +231,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
     ) {
         setParams { setLongArray(1, yrkeskadeInntekterIds) }
         setRowMapper { row ->
-            row.getLong("yrkesskade_id")
+            row.getLong("id")
         }
     }
 
