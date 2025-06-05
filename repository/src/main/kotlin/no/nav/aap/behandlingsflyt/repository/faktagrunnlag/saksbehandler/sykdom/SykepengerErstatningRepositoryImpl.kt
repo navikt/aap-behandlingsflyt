@@ -39,7 +39,7 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
         var vurderingId: Long? = null
         if (vurdering != null) {
             val query = """
-            INSERT INTO SYKEPENGE_VURDERING (begrunnelse, oppfylt, grunn) VALUES (?, ?, ?)
+            INSERT INTO SYKEPENGE_VURDERING (begrunnelse, oppfylt, grunn, vurdert_av) VALUES (?, ?, ?, ?)
         """.trimIndent()
 
             vurderingId = connection.executeReturnKey(query) {
@@ -47,6 +47,7 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                     setString(1, vurdering.begrunnelse)
                     setBoolean(2, vurdering.harRettPå)
                     setEnumName(3, vurdering.grunn)
+                    setString(4, vurdering.vurdertAv)
                 }
             }
 
@@ -138,10 +139,12 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
             }
             setRowMapper { row ->
                 SykepengerVurdering(
-                    row.getString("begrunnelse"),
-                    hentDokumenter(vurderingId),
-                    row.getBoolean("oppfylt"),
-                    row.getEnumOrNull("grunn")
+                    begrunnelse = row.getString("begrunnelse"),
+                    dokumenterBruktIVurdering = hentDokumenter(vurderingId),
+                    harRettPå = row.getBoolean("oppfylt"),
+                    grunn = row.getEnumOrNull("grunn"),
+                    vurdertAv = row.getString("vurdert_av"),
+                    vurdertTidspunkt = row.getLocalDateTime("opprettet_tid"),
                 )
             }
         }

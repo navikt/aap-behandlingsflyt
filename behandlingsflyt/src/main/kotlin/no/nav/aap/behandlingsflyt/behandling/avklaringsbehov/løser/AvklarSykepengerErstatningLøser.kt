@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -25,7 +26,13 @@ class AvklarSykepengerErstatningLøser(
 
         sykepengerErstatningRepository.lagre(
             behandlingId = behandling.id,
-            vurdering = løsning.sykepengeerstatningVurdering
+            vurdering = SykepengerVurdering(
+                begrunnelse = løsning.sykepengeerstatningVurdering.begrunnelse,
+                dokumenterBruktIVurdering = løsning.sykepengeerstatningVurdering.dokumenterBruktIVurdering,
+                harRettPå = løsning.sykepengeerstatningVurdering.harRettPå,
+                grunn = løsning.sykepengeerstatningVurdering.grunn,
+                vurdertAv = kontekst.bruker.ident,
+            )
         )
 
         return LøsningsResultat(
