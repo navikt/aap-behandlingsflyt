@@ -49,8 +49,8 @@ class LovvalgService private constructor(
     override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
             && (oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
-                || kontekst.årsakerTilBehandling.contains(ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE)
-            && tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg))
+                || kontekst.årsakerTilBehandling.contains(ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE))
+            && tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
