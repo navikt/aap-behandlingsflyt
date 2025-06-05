@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.adapter.Enhetsregi
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -43,9 +44,10 @@ class ForutgåendeMedlemskapService private constructor(
     override val navn = Companion.navn
 
     override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
-        return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
-                oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
-                tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
+        return kontekst.erFørstegangsbehandlingEllerRevurdering()
+            && (oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
+                || kontekst.årsakerTilBehandling.contains(ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE))
+            && tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
     }
 
 
@@ -94,7 +96,7 @@ class ForutgåendeMedlemskapService private constructor(
         }.toSet()
         val gateway = GatewayProvider.provide<EnhetsregisteretGateway>()
 
-        // Er ikke noe batch endepunkt her?
+        // EREG har ikke batch-oppslag
         val enhetsGrunnlag = orgnumre.mapNotNull {
             val response = gateway.hentEREGData(EnhetsregisterOrganisasjonRequest(it)) ?: return@mapNotNull null
             EnhetGrunnlag(

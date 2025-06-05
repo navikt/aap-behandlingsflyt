@@ -1094,6 +1094,8 @@ object FakeServers : AutoCloseable {
                                   "journalposter": [
                                     {
                                       "journalpostId": "453877977",
+                                      "journalstatus": "FERDIGSTILT",
+                                      "journalposttype": "I",
                                       "behandlingstema": null,
                                       "antallRetur": null,
                                       "kanal": "NAV_NO",
@@ -1144,6 +1146,8 @@ object FakeServers : AutoCloseable {
                                     },
                                     {
                                       "journalpostId": "453873496",
+                                      "journalstatus": "FERDIGSTILT",
+                                      "journalposttype": "I",
                                       "behandlingstema": null,
                                       "antallRetur": null,
                                       "kanal": "NAV_NO",

@@ -165,6 +165,8 @@ class AvklaringsbehovOrkestrator(
             Definisjon.SKRIV_VEDTAKSBREV
         } else if (typeBrev == TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT) {
             Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV
+        } else if (typeBrev == TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV) {
+            Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV
         } else {
             Definisjon.SKRIV_BREV
         }

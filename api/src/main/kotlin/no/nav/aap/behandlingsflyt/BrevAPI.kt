@@ -118,7 +118,8 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                                 listOf(
                                     Definisjon.SKRIV_BREV,
                                     Definisjon.SKRIV_VEDTAKSBREV,
-                                    Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV
+                                    Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV,
+                                    Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV
                                 )
                             )
                             .filter { it.erÅpent() }

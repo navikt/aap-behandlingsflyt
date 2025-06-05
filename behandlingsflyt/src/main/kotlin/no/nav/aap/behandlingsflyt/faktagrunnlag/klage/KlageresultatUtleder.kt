@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.klage
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.effektueravvistpåformkrav.EffektuerAvvistPåFormkravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.effektueravvistpåformkrav.EffektuerAvvistPåFormkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagebehandlingKontorRepository
@@ -16,13 +18,15 @@ class KlageresultatUtleder(
     private val formkravRepository: FormkravRepository,
     private val behandlendeEnhetRepository: BehandlendeEnhetRepository,
     private val klagebehandlingKontorRepository: KlagebehandlingKontorRepository,
-    private val klagebehandlingNayRepository: KlagebehandlingNayRepository
+    private val klagebehandlingNayRepository: KlagebehandlingNayRepository,
+    private val effektuerAvvistPåFormkravRepository: EffektuerAvvistPåFormkravRepository
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         formkravRepository = repositoryProvider.provide(),
         behandlendeEnhetRepository = repositoryProvider.provide(),
         klagebehandlingKontorRepository = repositoryProvider.provide(),
-        klagebehandlingNayRepository = repositoryProvider.provide()
+        klagebehandlingNayRepository = repositoryProvider.provide(),
+        effektuerAvvistPåFormkravRepository = repositoryProvider.provide()
     )
 
     fun utledKlagebehandlingResultat(behandlingId: BehandlingId): KlageResultat {
@@ -30,12 +34,14 @@ class KlageresultatUtleder(
         val behandlendeEnhet = behandlendeEnhetRepository.hentHvisEksisterer(behandlingId)
         val klagebehandlingVurderingKontor = klagebehandlingKontorRepository.hentHvisEksisterer(behandlingId)
         val klagebehandlingVurderingNay = klagebehandlingNayRepository.hentHvisEksisterer(behandlingId)
+        val effektuerAvvistPåFormkravRepository = effektuerAvvistPåFormkravRepository.hentHvisEksisterer(behandlingId)
 
         val innstilling = utledKlagebehandlingResultat(
             formkrav?.vurdering,
             behandlendeEnhet?.vurdering,
             klagebehandlingVurderingNay?.vurdering,
-            klagebehandlingVurderingKontor?.vurdering
+            klagebehandlingVurderingKontor?.vurdering,
+            effektuerAvvistPåFormkravRepository?.vurdering
         )
         return innstilling
     }
@@ -45,7 +51,8 @@ class KlageresultatUtleder(
             formkravVurdering: FormkravVurdering?,
             behandlendeEnhetVurdering: BehandlendeEnhetVurdering?,
             klagebehandlingNayVurdering: KlagevurderingNay?,
-            klagebehandlingKontorVurdering: KlagevurderingKontor?
+            klagebehandlingKontorVurdering: KlagevurderingKontor?,
+            effektuerAvvistPåFormkravVurdering: EffektuerAvvistPåFormkravVurdering?
         ): KlageResultat {
             val manglerVurdering = manglerVurdering(
                 formkravVurdering,
@@ -58,7 +65,10 @@ class KlageresultatUtleder(
                         && (klagebehandlingKontorVurdering == null || klagebehandlingKontorVurdering.innstilling == KlageInnstilling.OMGJØR)
             val skalOpprettholdes =
                 (klagebehandlingNayVurdering == null || klagebehandlingNayVurdering.innstilling == KlageInnstilling.OPPRETTHOLD) && (klagebehandlingKontorVurdering == null || klagebehandlingKontorVurdering.innstilling == KlageInnstilling.OPPRETTHOLD)
-            val erInkonsistent = erInkonsistent(
+            val erInkonsistent = erInkosnistentFormkravVurdering(
+                formkravVurdering,
+                effektuerAvvistPåFormkravVurdering
+            ) || erInkonsistentKlageVurdering(
                 klagebehandlingNayVurdering,
                 klagebehandlingKontorVurdering
             )
@@ -66,8 +76,9 @@ class KlageresultatUtleder(
             return when {
                 manglerVurdering -> Ufullstendig(ÅrsakTilUfullstendigResultat.MANGLER_VURDERING)
                 erInkonsistent -> Ufullstendig(ÅrsakTilUfullstendigResultat.INKONSISTENT_VURDERING)
-
-                formkravVurdering?.erOppfylt() == false -> Avslått(årsak = ÅrsakTilAvslag.IKKE_OVERHOLDT_FORMKRAV)
+                formkravVurdering?.erFristOverholdt() == false -> Avslått(årsak = ÅrsakTilAvslag.IKKE_OVERHOLDT_FRIST)
+                effektuerAvvistPåFormkravVurdering?.skalEndeligAvvises == true -> Avslått(årsak = ÅrsakTilAvslag.IKKE_OVERHOLDT_FORMKRAV)
+                formkravVurdering?.erOppfylt() == false -> Ufullstendig(ÅrsakTilUfullstendigResultat.VENTER_PÅ_SVAR_FRA_BRUKER)
 
                 skalOmgjøres -> Omgjøres(
                     vilkårSomSkalOmgjøres = ((klagebehandlingNayVurdering?.vilkårSomOmgjøres
@@ -93,7 +104,17 @@ class KlageresultatUtleder(
             }
         }
 
-        private fun erInkonsistent(
+        private fun erInkosnistentFormkravVurdering(
+            formkravVurdering: FormkravVurdering?,
+            effektuerAvvistPåFormkravVurdering: EffektuerAvvistPåFormkravVurdering?
+        ): Boolean {
+            if (formkravVurdering == null || effektuerAvvistPåFormkravVurdering == null) {
+                return false
+            }
+            return formkravVurdering.erOppfylt() == effektuerAvvistPåFormkravVurdering.skalEndeligAvvises
+        }
+
+        private fun erInkonsistentKlageVurdering(
             klagebehandlingNayVurdering: KlagevurderingNay?,
             klagebehandlingKontorVurdering: KlagevurderingKontor?
         ): Boolean {

@@ -227,6 +227,7 @@ public enum class Definisjon(
         løsesISteg = StegType.SAMORDNING_ANDRE_STATLIGE_YTELSER,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
+    @Deprecated("Ikke i bruk")
     FORHÅNDSVARSEL_AKTIVITETSPLIKT(
         kode = AvklaringsbehovKode.`5016`,
         type = BehovType.BREV_VENTEPUNKT,
@@ -367,9 +368,9 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = false
     ),
-    FORHÅNDSVARSEL_KLAGE_FORMKRAV(
+    EFFEKTUER_AVVIST_PÅ_FORMKRAV(
         kode = AvklaringsbehovKode.`6004`,
-        type = BehovType.BREV_VENTEPUNKT,
+        type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.EFFEKTUER_AVVIST_PÅ_FORMKRAV,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
@@ -389,6 +390,13 @@ public enum class Definisjon(
         løsesAv = listOf(
             Rolle.SAKSBEHANDLER_NASJONAL
         )
+    ),
+    VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV(
+        kode = AvklaringsbehovKode.`6007`,
+        type = BehovType.VENTEPUNKT,
+        løsesISteg = StegType.EFFEKTUER_AVVIST_PÅ_FORMKRAV,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        defaultFrist = Period.ofWeeks(3),
     );
 
     public companion object {
