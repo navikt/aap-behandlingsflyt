@@ -2658,12 +2658,11 @@ class FlytOrkestratorTest {
         assertTrue(overstyrtManuellVurdering == true)
     }
 
-    //@Test
+    @Test
     fun `kan hente inn manuell inntektsdata i grunnlag og benytte i beregning`() {
-        val ident = ident()
+        val ident = nyPerson(false, false, mutableListOf())
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val nedsattDato = LocalDate.now()
-            .plusYears(1) // Ett år fram, Liten hack for å slippe å fjase med default inntektlisten som brukes overalt ellers
 
         // Oppretter vanlig søknad
         hendelsesMottak.håndtere(
@@ -2766,12 +2765,11 @@ class FlytOrkestratorTest {
         assertTrue(åpneAvklaringsbehov.none { it.definisjon == Definisjon.FASTSETT_MANUELL_INNTEKT })
     }
 
-    //@Test
+    @Test
     fun `kan ikke sende inn negativ manuell inntekt`() {
-        val ident = ident()
+        val ident = nyPerson(false, false, mutableListOf())
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val nedsattDato = LocalDate.now()
-            .plusYears(1) // Ett år fram, Liten hack for å slippe å fjase med default inntektlisten som brukes overalt ellers
 
         // Oppretter vanlig søknad
         hendelsesMottak.håndtere(
