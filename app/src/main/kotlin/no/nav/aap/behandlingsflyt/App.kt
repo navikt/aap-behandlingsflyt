@@ -199,6 +199,7 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
                 // Flytt
                 brevApi(dataSource, repositoryRegistry)
                 dokumentinnhentingAPI(dataSource, repositoryRegistry)
+                dokumentAPI()
                 mottattHendelseApi(dataSource, repositoryRegistry)
                 underveisVurderingerAPI(dataSource, repositoryRegistry)
                 lovvalgMedlemskapAPI(dataSource, repositoryRegistry)

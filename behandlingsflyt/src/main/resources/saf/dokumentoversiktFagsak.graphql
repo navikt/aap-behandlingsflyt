@@ -1,0 +1,49 @@
+query ($fagsakId: String!) {
+    dokumentoversiktFagsak(
+        fagsak: { fagsakId: $fagsakId, fagsaksystem: "KELVIN" }
+        fraDato: null
+        foerste: 100
+        tema: []
+        journalposttyper: []
+        journalstatuser: []
+    ) {
+        journalposter {
+            journalpostId
+            journalposttype
+            journalstatus
+            behandlingstema
+            relevanteDatoer {
+                dato
+                datotype
+            }
+            antallRetur
+            kanal
+            innsynsregelBeskrivelse
+            behandlingstema
+            dokumenter {
+                dokumentInfoId
+                tittel
+                brevkode
+                dokumentstatus
+                datoFerdigstilt
+                originalJournalpostId
+                skjerming
+                logiskeVedlegg {
+                    logiskVedleggId
+                    tittel
+                }
+                dokumentvarianter {
+                    variantformat
+                    saksbehandlerHarTilgang
+                    skjerming
+                }
+            }
+        }
+        sideInfo {
+            sluttpeker
+            finnesNesteSide
+            antall
+            totaltAntall
+        }
+    }
+}
