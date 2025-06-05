@@ -68,7 +68,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.flate.BehandlendeEnhetLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate.FormkravVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.effektueravvistpåformkrav.EffektuerAvvistPåFormkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.flate.KlagevurderingKontorLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.flate.KlagevurderingNayLøsningDto
@@ -92,9 +91,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.Samordn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestratorTest.Companion.util
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
@@ -889,7 +888,7 @@ class FlytOrkestratorTest {
 
         behandling = løsAvklaringsBehov(
             behandling, AvklarSykepengerErstatningLøsning(
-                sykepengeerstatningVurdering = SykepengerVurdering(
+                sykepengeerstatningVurdering = SykepengerVurderingDto(
                     begrunnelse = "...",
                     dokumenterBruktIVurdering = listOf(),
                     harRettPå = true,
@@ -1026,7 +1025,7 @@ class FlytOrkestratorTest {
 
         behandling = løsAvklaringsBehov(
             behandling, AvklarSykepengerErstatningLøsning(
-                sykepengeerstatningVurdering = SykepengerVurdering(
+                sykepengeerstatningVurdering = SykepengerVurderingDto(
                     begrunnelse = "...",
                     dokumenterBruktIVurdering = listOf(),
                     harRettPå = true,

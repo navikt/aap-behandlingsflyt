@@ -3,7 +3,10 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepeng
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -23,7 +26,7 @@ import javax.sql.DataSource
 fun NormalOpenAPIRoute.sykepengerGrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/sykdom/sykepengergrunnlag") {
-            authorizedGet<BehandlingReferanse, SykepengerGrunnlagDto>(
+            authorizedGet<BehandlingReferanse, SykepengerGrunnlagResponse>(
                 AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
             ) { req ->
                 val sykepengerErstatningGrunnlag = dataSource.transaction(readOnly = true) { connection ->
@@ -43,12 +46,28 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(dataSource: DataSource, repositoryR
 
 
                 respond(
-                    SykepengerGrunnlagDto(
+                    SykepengerGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
-                        sykepengerErstatningGrunnlag?.vurdering
+                        sykepengerErstatningGrunnlag?.vurdering?.tilResponse()
                     )
                 )
             }
         }
     }
+}
+
+private fun SykepengerVurdering.tilResponse(): SykepengerVurderingResponse {
+    val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv)
+    return SykepengerVurderingResponse(
+        begrunnelse = begrunnelse,
+        dokumenterBruktIVurdering = dokumenterBruktIVurdering,
+        harRettPå = harRettPå,
+        grunn = grunn,
+        vurdertAv = VurdertAvResponse(
+            ident = vurdertAv,
+            dato = vurdertTidspunkt?.toLocalDate() ?: error("Mangler dato for sykepengervurdering"),
+            ansattnavn = navnOgEnhet?.navn,
+            enhetsnavn = navnOgEnhet?.enhet
+        )
+    )
 }
