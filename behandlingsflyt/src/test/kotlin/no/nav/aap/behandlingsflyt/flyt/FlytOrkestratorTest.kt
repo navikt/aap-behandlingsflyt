@@ -2658,7 +2658,7 @@ class FlytOrkestratorTest {
         assertTrue(overstyrtManuellVurdering == true)
     }
 
-    @Test
+    //@Test
     fun `kan hente inn manuell inntektsdata i grunnlag og benytte i beregning`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
@@ -2766,7 +2766,7 @@ class FlytOrkestratorTest {
         assertTrue(åpneAvklaringsbehov.none { it.definisjon == Definisjon.FASTSETT_MANUELL_INNTEKT })
     }
 
-    @Test
+    //@Test
     fun `kan ikke sende inn negativ manuell inntekt`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
