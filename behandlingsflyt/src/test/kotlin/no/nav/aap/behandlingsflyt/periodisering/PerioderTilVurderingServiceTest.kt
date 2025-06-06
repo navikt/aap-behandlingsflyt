@@ -42,7 +42,7 @@ class PerioderTilVurderingServiceTest {
                 sakRepository = InMemorySakRepository
             ),
             behandlingRepository = InMemoryBehandlingRepository,
-            unleashGateway = FakeUnleash(mapOf())
+            unleashGateway = FakeUnleash
         )
 
         val res = flytKontekstMedPeriodeService.utled(

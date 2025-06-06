@@ -78,7 +78,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.samordning.TjenestePensjonGatewayI
 import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.tilgang.TilgangGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreGateway
-import no.nav.aap.behandlingsflyt.integrasjon.unleash.UnleashService
+import no.nav.aap.behandlingsflyt.integrasjon.unleash.UnleashGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.utbetaling.UtbetalingGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
@@ -237,7 +237,7 @@ private fun registerGateways() {
         .register<MeldekortGatewayImpl>()
         .register<TilgangGatewayImpl>()
         .register<TjenestePensjonGatewayImpl>()
-        .register<UnleashService>()
+        .register<UnleashGatewayImpl>()
         .register<NomInfoGateway>()
         .register<NorgGateway>()
         .register<KabalGateway>()
