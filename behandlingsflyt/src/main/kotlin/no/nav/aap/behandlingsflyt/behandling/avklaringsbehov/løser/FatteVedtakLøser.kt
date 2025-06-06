@@ -9,8 +9,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedta
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.httpklient.auth.Bruker
-import no.nav.aap.komponenter.miljo.Miljø
-import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class FatteVedtakLøser(
@@ -105,7 +103,7 @@ class FatteVedtakLøser(
     }
 
     private fun validerAvklaringsbehovOppMotBruker(avklaringsbehovene: List<Avklaringsbehov>, bruker: Bruker) {
-        if (Miljø.er() == MiljøKode.PROD && avklaringsbehovene.any { it.brukere().contains(bruker.ident) }) {
+        if (avklaringsbehovene.any { it.brukere().contains(bruker.ident) }) {
             throw KanIkkeVurdereEgneVurderingerException()
         }
     }
