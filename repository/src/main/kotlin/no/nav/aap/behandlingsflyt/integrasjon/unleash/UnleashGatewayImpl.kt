@@ -6,15 +6,8 @@ import io.getunleash.util.UnleashConfig
 import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
-import no.nav.aap.komponenter.gateway.Factory
 
-class UnleashService : UnleashGateway {
-    companion object : Factory<UnleashService> {
-        override fun konstruer(): UnleashService {
-            return UnleashService()
-        }
-    }
-
+object UnleashGatewayImpl : UnleashGateway {
     private val unleash = DefaultUnleash(
         UnleashConfig
             .builder()

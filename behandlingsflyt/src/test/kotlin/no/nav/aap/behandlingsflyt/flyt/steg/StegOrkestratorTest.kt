@@ -59,7 +59,7 @@ internal class StegOrkestratorTest {
                 FlytKontekstMedPeriodeService(
                     SakService(SakRepositoryImpl(connection)),
                     BehandlingRepositoryImpl(connection),
-                    FakeUnleash(mapOf()),
+                    FakeUnleash,
                ).utled(kontekst, TestFlytSteg.type()),
                 behandling,
                 listOf()
