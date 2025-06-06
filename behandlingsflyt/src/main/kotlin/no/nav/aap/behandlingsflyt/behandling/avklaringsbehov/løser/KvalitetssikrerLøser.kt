@@ -112,7 +112,7 @@ class KvalitetssikrerLøser(
     }
 
     private fun validerAvklaringsbehovOppMotBruker(avklaringsbehovene: List<Avklaringsbehov>, bruker: Bruker) {
-        if (avklaringsbehovene.any { it.brukere().contains(bruker.ident) }) {
+        if (Miljø.er() == MiljøKode.PROD && avklaringsbehovene.any { it.brukere().contains(bruker.ident) }) {
             throw KanIkkeVurdereEgneVurderingerException()
         }
     }
