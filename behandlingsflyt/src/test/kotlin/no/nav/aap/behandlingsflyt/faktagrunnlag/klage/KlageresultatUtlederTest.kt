@@ -72,7 +72,7 @@ class KlageresultatUtlederTest {
         )
 
         assertThat(klageresultat).isEqualTo(
-            Ufullstendig(årsak = ÅrsakTilUfullstendigResultat.INKONSISTENT_VURDERING)
+            Ufullstendig(årsak = ÅrsakTilUfullstendigResultat.INKONSISTENT_FORMKRAV_VURDERING)
         )
     }
 
@@ -106,7 +106,7 @@ class KlageresultatUtlederTest {
         )
 
         assertThat(klageresultat).isEqualTo(
-            Ufullstendig(årsak = ÅrsakTilUfullstendigResultat.INKONSISTENT_VURDERING)
+            Ufullstendig(årsak = ÅrsakTilUfullstendigResultat.INKONSISTENT_FORMKRAV_VURDERING)
         )
     }
 
@@ -354,7 +354,7 @@ class KlageresultatUtlederTest {
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
             oppfylteFormkrav, behandlendeEnhetVurdering, nayVurdering, kontorVurdering, null
         )
-        assertThat(klageresultat).isEqualTo(Ufullstendig(ÅrsakTilUfullstendigResultat.INKONSISTENT_VURDERING))
+        assertThat(klageresultat).isEqualTo(Ufullstendig(ÅrsakTilUfullstendigResultat.INKONSISTENT_KLAGE_VURDERING))
     }
 
     companion object {
