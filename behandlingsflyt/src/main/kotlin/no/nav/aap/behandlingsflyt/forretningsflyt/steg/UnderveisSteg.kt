@@ -24,13 +24,13 @@ class UnderveisSteg(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (kontekst.vurdering.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
+        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
             if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                 return Fullført
             }
         }
 
-        when (kontekst.vurdering.vurderingType) {
+        when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING,
             VurderingType.MELDEKORT -> {

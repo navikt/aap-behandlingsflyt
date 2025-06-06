@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
+import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
+import no.nav.aap.behandlingsflyt.flyt.flyt
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -22,6 +24,8 @@ class Behandling(
     val versjon: Long
 ) : Comparable<Behandling> {
 
+    fun flyt(): BehandlingFlyt = typeBehandling.flyt()
+
     fun typeBehandling(): TypeBehandling = typeBehandling
 
     fun flytKontekst(): FlytKontekst {
@@ -42,19 +46,11 @@ class Behandling(
             throw IllegalStateException("Utvikler feil, prøver legge til steg med aktivtflagg false.")
         }
         stegTilstand = nyStegTilstand
-
-        oppdaterStatus(nyStegTilstand)
+        status = nyStegTilstand.steg().status
     }
 
     fun årsaker(): List<Årsak> {
         return årsaker.toList()
-    }
-
-    private fun oppdaterStatus(stegTilstand: StegTilstand) {
-        val stegStatus = stegTilstand.steg().status
-        if (status != stegStatus) {
-            status = stegStatus
-        }
     }
 
     fun status(): Status = status

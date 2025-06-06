@@ -4,17 +4,18 @@ import io.micrometer.core.instrument.Timer
 import io.opentelemetry.api.GlobalOpenTelemetry
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.flyt.steg.internal.StegKonstruktørImpl
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
+import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import java.util.function.Supplier
@@ -34,21 +35,29 @@ import java.util.function.Supplier
  * @see StegStatus.AVSLUTTER:        Teknisk markør for avslutting av steget
  */
 class StegOrkestrator(
-    private val aktivtSteg: FlytSteg,
     private val informasjonskravGrunnlag: InformasjonskravGrunnlag,
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val perioderTilVurderingService: PerioderTilVurderingService,
-    stegKonstruktør: StegKonstruktør
+    private val stegKonstruktør: StegKonstruktør,
+    private val markSavepointAt: Set<StegStatus> = setOf(StegStatus.START, StegStatus.OPPDATER_FAKTAGRUNNLAG),
 ) {
+    constructor(
+        repositoryProvider: RepositoryProvider,
+        markSavepointAt: Set<StegStatus> = setOf(StegStatus.START, StegStatus.OPPDATER_FAKTAGRUNNLAG)
+    ) : this(
+        informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(repositoryProvider),
+        behandlingRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        stegKonstruktør = StegKonstruktørImpl(repositoryProvider),
+        markSavepointAt = markSavepointAt,
+    )
 
     private val log = LoggerFactory.getLogger(javaClass)
     private val tracer = GlobalOpenTelemetry.getTracer("stegorkestrator")
 
-    private val behandlingSteg = stegKonstruktør.konstruer(aktivtSteg)
-
     fun utfør(
-        kontekst: FlytKontekst,
+        aktivtSteg: FlytSteg,
+        kontekstMedPerioder: FlytKontekstMedPerioder,
         behandling: Behandling,
         faktagrunnlagForGjeldendeSteg: List<Pair<StegType, Informasjonskravkonstruktør>>,
     ): Transisjon {
@@ -60,16 +69,6 @@ class StegOrkestrator(
                 var gjeldendeStegStatus = StegStatus.START
                 log.info("Behandler steg '{}'. Behandling-ref: ${behandling.referanse}", aktivtSteg.type())
 
-                val kontekstMedPerioder = FlytKontekstMedPerioder(
-                    sakId = kontekst.sakId,
-                    behandlingId = kontekst.behandlingId,
-                    forrigeBehandlingId = behandling.forrigeBehandlingId,
-                    behandlingType = kontekst.behandlingType,
-                    vurdering = perioderTilVurderingService.utled(
-                        kontekst = kontekst,
-                        stegType = aktivtSteg.type()
-                    )
-                )
 
                 while (true) {
                     val statusSpan = tracer.spanBuilder("steg status ${gjeldendeStegStatus.name}")
@@ -77,12 +76,13 @@ class StegOrkestrator(
                     try {
                         MDC.putCloseable("stegStatus", gjeldendeStegStatus.name).use {
                             val resultat = utførTilstandsEndring(
+                                aktivtSteg,
                                 kontekstMedPerioder,
                                 gjeldendeStegStatus,
                                 behandling,
                                 faktagrunnlagForGjeldendeSteg
                             )
-                            if (gjeldendeStegStatus in setOf(StegStatus.START, StegStatus.OPPDATER_FAKTAGRUNNLAG)) {
+                            if (gjeldendeStegStatus in markSavepointAt) {
                                 // Legger denne her slik at vi får savepoint på at vi har byttet steg, slik at vi starter opp igjen på rett sted når prosessen dras i gang igjen
                                 behandlingRepository.markerSavepoint()
                             }
@@ -107,7 +107,8 @@ class StegOrkestrator(
     }
 
     fun utførTilbakefør(
-        kontekst: FlytKontekst,
+        aktivtSteg: FlytSteg,
+        kontekstMedPerioder: FlytKontekstMedPerioder,
         behandling: Behandling
     ): Transisjon {
         val stegSpan = tracer.spanBuilder("utførTilbakefør ${aktivtSteg.type().name}")
@@ -117,17 +118,8 @@ class StegOrkestrator(
         try {
             MDC.putCloseable("stegType", aktivtSteg.type().name).use {
                 MDC.putCloseable("stegStatus", StegStatus.TILBAKEFØRT.name).use {
-                    val kontekstMedPerioder = FlytKontekstMedPerioder(
-                        sakId = kontekst.sakId,
-                        behandlingId = kontekst.behandlingId,
-                        behandlingType = kontekst.behandlingType,
-                        forrigeBehandlingId = kontekst.forrigeBehandlingId,
-                        vurdering = perioderTilVurderingService.utled(
-                            kontekst = kontekst,
-                            stegType = aktivtSteg.type()
-                        )
-                    )
                     return utførTilstandsEndring(
+                        aktivtSteg,
                         kontekstMedPerioder,
                         StegStatus.TILBAKEFØRT,
                         behandling,
@@ -141,11 +133,14 @@ class StegOrkestrator(
     }
 
     private fun utførTilstandsEndring(
+        aktivtSteg: FlytSteg,
         kontekst: FlytKontekstMedPerioder,
         gjeldendeStegStatus: StegStatus,
         behandling: Behandling,
         faktagrunnlagForGjeldendeSteg: List<Pair<StegType, Informasjonskravkonstruktør>>
     ): Transisjon {
+        val behandlingSteg = stegKonstruktør.konstruer(aktivtSteg)
+
         log.debug(
             "Behandler steg({}) med status({})",
             aktivtSteg.type(),
@@ -153,11 +148,11 @@ class StegOrkestrator(
         )
 
         val transisjon = when (gjeldendeStegStatus) {
-            StegStatus.UTFØRER -> behandleSteg(kontekst)
+            StegStatus.UTFØRER -> behandleSteg(aktivtSteg, behandlingSteg, kontekst)
             StegStatus.OPPDATER_FAKTAGRUNNLAG -> oppdaterFaktagrunnlag(kontekst, faktagrunnlagForGjeldendeSteg)
-            StegStatus.AVKLARINGSPUNKT -> harAvklaringspunkt(aktivtSteg.type(), kontekst.behandlingId)
+            StegStatus.AVKLARINGSPUNKT -> harAvklaringspunkt(aktivtSteg, kontekst.behandlingId)
             StegStatus.AVSLUTTER -> Fortsett
-            StegStatus.TILBAKEFØRT -> behandleStegBakover(kontekst)
+            StegStatus.TILBAKEFØRT -> behandleStegBakover(behandlingSteg, kontekst)
             else -> Fortsett
         }
 
@@ -178,7 +173,7 @@ class StegOrkestrator(
         return Fortsett
     }
 
-    private fun behandleSteg(kontekstMedPerioder: FlytKontekstMedPerioder): Transisjon {
+    private fun behandleSteg(aktivtSteg: FlytSteg, behandlingSteg: BehandlingSteg, kontekstMedPerioder: FlytKontekstMedPerioder): Transisjon {
         val simpleName = behandlingSteg.javaClass.simpleName
         val utførStegTimer =
             Timer.builder("behandlingsflyt_utfør_steg_tid")
@@ -221,7 +216,7 @@ class StegOrkestrator(
     }
 
     private fun harAvklaringspunkt(
-        steg: StegType,
+        aktivtSteg: FlytSteg,
         behandlingId: BehandlingId
     ): Transisjon {
         val relevanteAvklaringsbehov =
@@ -230,14 +225,14 @@ class StegOrkestrator(
                 .filter { behov -> behov.skalLøsesISteg(aktivtSteg.type()) }
 
 
-        if (relevanteAvklaringsbehov.any { behov -> behov.skalStoppeHer(steg) }) {
+        if (relevanteAvklaringsbehov.any { behov -> behov.skalStoppeHer(aktivtSteg.type()) }) {
             return Stopp
         }
 
         return Fortsett
     }
 
-    private fun behandleStegBakover(kontekst: FlytKontekstMedPerioder): Transisjon {
+    private fun behandleStegBakover(behandlingSteg: BehandlingSteg, kontekst: FlytKontekstMedPerioder): Transisjon {
         behandlingSteg.vedTilbakeføring(kontekst)
         return Fortsett
     }

@@ -127,7 +127,7 @@ class AktivitetspliktRepositoryImpl(private val connection: DBConnection) : Akti
                 setLong(3, behandlingId.id)
             }
         }
-        log.info("Slettet $deletedRows raderfra brudd_aktivitetsplikt_grunnlag")
+        log.info("Slettet $deletedRows rader fra brudd_aktivitetsplikt_grunnlag")
     }
 
     private fun finnGrunnlagId(behandlingId: BehandlingId): Long? =

@@ -18,7 +18,7 @@ class VilkårService(
         vilkårtype: Vilkårtype,
         begrunnelse: String? = null,
     ) {
-        ingenNyeVurderinger(kontekst.behandlingId, vilkårtype, kontekst.vurdering.rettighetsperiode, begrunnelse)
+        ingenNyeVurderinger(kontekst.behandlingId, vilkårtype, kontekst.rettighetsperiode, begrunnelse)
     }
 
     /** Fyll hull i vilkårsvurderingene for [vilkårtype] som `IKKE_VURDERT`. */

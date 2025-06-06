@@ -92,6 +92,7 @@ spec:
         - host: pensjon-popp.prod-fss-pub.nais.io
         - host: fpabakus.prod-fss-pub.nais.io
         - host: aareg-services.prod-fss-pub.nais.io
+        - host: ereg-services.prod-fss-pub.nais.io
         - host: pensjon-pen.prod-fss-pub.nais.io
         - host: tp-api.prod-fss-pub.nais.io
         - host: aap-unleash-api.nav.cloud.nais.io
@@ -188,9 +189,9 @@ spec:
     - name: INTEGRASJON_AAREG_SCOPE
       value: api://prod-fss.arbeidsforhold.aareg-services-nais/.default
     - name: INTEGRASJON_INNTEKTSKOMPONENTEN_URL
-      value: https://team-inntekt-proxy.prod-fss-pub.nais.io/proxy/inntektskomponenten/rs/api/v1
+      value: https://ikomp.prod-fss-pub.nais.io/rs/api/v1
     - name: INTEGRASJON_INNTEKTSKOMPONENTEN_SCOPE
-      value: api://prod-fss.team-inntekt.inntektskomponenten/.default
+      value: api://prod-fss.team-inntekt.ikomp/.default
     - name: INTEGRASJON_DATADELING_URL
       value: http://api-intern
     - name: INTEGRASJON_DATADELING_SCOPE
@@ -215,3 +216,7 @@ spec:
       value: api://prod-gcp.nom.nom-api/.default
     - name: INTEGRASJON_NORG_URL
       value: http://norg2.org
+    - name: INTEGRASJON_EREG_URL
+      value: https://ereg-services.prod-fss-pub.nais.io
+    - name: INTEGRASJON_EREG_SCOPE
+      value: prod-fss.arbeidsforhold.ereg-services/.default

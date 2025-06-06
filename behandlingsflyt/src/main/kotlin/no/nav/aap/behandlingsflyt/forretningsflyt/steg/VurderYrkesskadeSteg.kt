@@ -46,7 +46,7 @@ class VurderYrkesskadeSteg private constructor(
         val sykdomsvurderingTidslinje = sykdomsgrunnlag?.somSykdomsvurderingstidslinje(LocalDate.MIN)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 
-        when (kontekst.vurdering.vurderingType) {
+        when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)

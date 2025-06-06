@@ -80,6 +80,7 @@ object Revurdering : BehandlingType {
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.REVURDER_LOVVALG,
                     ÅrsakTilBehandling.LOVVALG_OG_MEDLEMSKAP,
+                    ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE,
                 )
             )
             .medSteg(steg = FastsettMeldeperiodeSteg)
@@ -167,7 +168,8 @@ object Revurdering : BehandlingType {
                 steg = FastsettGrunnlagSteg, årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.REVURDER_BEREGNING,
-                    ÅrsakTilBehandling.REVURDER_YRKESSKADE
+                    ÅrsakTilBehandling.REVURDER_YRKESSKADE,
+                    ÅrsakTilBehandling.REVURDER_MANUELL_INNTEKT
                 )
             )
             .medSteg(
@@ -178,6 +180,7 @@ object Revurdering : BehandlingType {
                     ÅrsakTilBehandling.REVURDER_MEDLEMSKAP,
                     ÅrsakTilBehandling.FORUTGAENDE_MEDLEMSKAP,
                     ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT,
+                    ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE,
                 )
             )
             .medSteg(

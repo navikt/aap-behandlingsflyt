@@ -330,7 +330,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                 setLongArray(7, oppholdPersonIds)
             }
         }
-        log.info("Slettet $deletedRows raderfra opphold_grunnlag")
+        log.info("Slettet $deletedRows rader fra opphold_grunnlag")
     }
 
     private fun getOppholdPersonIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

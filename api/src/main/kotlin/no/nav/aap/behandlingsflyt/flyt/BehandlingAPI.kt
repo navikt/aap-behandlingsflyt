@@ -70,13 +70,13 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                             log.warn("Feil ved utleding av virkningstidspunkt for behandling ${behandling.id}", it)
                             null
                         }
-                    val flyt = utledType(behandling.typeBehandling()).flyt()
+                    val flyt = behandling.flyt()
                     DetaljertBehandlingDTO(
                         referanse = behandling.referanse.referanse,
                         type = behandling.typeBehandling().name,
                         status = behandling.status(),
                         opprettet = behandling.opprettetTidspunkt,
-                        skalForberede = behandling.harIkkeVærtAktivitetIDetSiste(),
+                        skalForberede = behandling.harIkkeVærtAktivitetIDetSiste() && !behandling.status().erAvsluttet(),
                         avklaringsbehov = FrivilligeAvklaringsbehov(
                             avklaringsbehov(
                                 avklaringsbehovRepository,

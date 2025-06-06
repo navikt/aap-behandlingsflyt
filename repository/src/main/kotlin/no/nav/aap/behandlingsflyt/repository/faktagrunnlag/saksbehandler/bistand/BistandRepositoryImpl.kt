@@ -121,7 +121,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 setLongArray(3, bistandVurderingerIds)
             }
         }
-        log.info("Slettet $deletedRows raderfra bistand_grunnlag")
+        log.info("Slettet $deletedRows rader fra bistand_grunnlag")
     }
 
     private fun getBistandVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

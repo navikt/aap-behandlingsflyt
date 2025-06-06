@@ -308,6 +308,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
             }
         }
 
+        // TODO: Fjerne når DokumentAPI er testet OK
         route("/{saksnummer}/dokumenter") {
             authorizedGet<HentSakDTO, List<SafListDokument>>(
                 AuthorizationParamPathConfig(
@@ -321,6 +322,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
                 )
             }
         }
+        // TODO: Fjerne når DokumentAPI er testet OK
         route("/dokument/{journalpostId}/{dokumentinfoId}") {
             authorizedGet<HentDokumentDTO, DokumentResponsDTO>(
                 AuthorizationParamPathConfig(

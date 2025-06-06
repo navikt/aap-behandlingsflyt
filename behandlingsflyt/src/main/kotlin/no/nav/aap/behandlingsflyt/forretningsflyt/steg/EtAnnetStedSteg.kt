@@ -33,7 +33,7 @@ class EtAnnetStedSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        if (kontekst.vurdering.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
+        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
             if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                 avklaringsbehovene.avbrytForSteg(type())
                 return Fullført

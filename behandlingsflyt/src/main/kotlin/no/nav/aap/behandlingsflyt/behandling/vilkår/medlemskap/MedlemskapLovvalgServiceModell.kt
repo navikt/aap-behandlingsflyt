@@ -16,13 +16,13 @@ data class TilhørighetVurdering (
     val indikasjon: Indikasjon,
     val opplysning: String,
     val resultat: Boolean,
-    val fordypelse: String?, // Todo: fjern meg når FE er klar
+    val vurdertPeriode: Periode,
     val vedtakImedlGrunnlag: List<VedtakIMEDLGrunnlag>? = null,
     val mottarSykepengerGrunnlag: List<MottarSykepengerGrunnlag>? = null,
     val arbeidInntektINorgeGrunnlag: List<ArbeidInntektINorgeGrunnlag>? = null,
     val manglerStatsborgerskapGrunnlag: List<ManglerStatsborgerskapGrunnlag>? = null,
     val oppgittJobbetIUtlandGrunnlag: List<OppgittJobbetIUtlandGrunnlag>? = null,
-    val oppgittUtenlandsOppholdGrunnlag: Boolean? = null,
+    val oppgittUtenlandsOppholdGrunnlag: List<OppgittUtenlandsOppholdGrunnlag>? = null,
     val utenlandsAddresserGrunnlag: List<UtenlandsAdresseGrunnlag>? = null,
 )
 
@@ -55,6 +55,12 @@ data class OppgittJobbetIUtlandGrunnlag(
     val land: String?,
     val tilDato: LocalDate?,
     val fraDato: LocalDate?,
+)
+
+data class OppgittUtenlandsOppholdGrunnlag(
+    val land: String?,
+    val tilDato: LocalDate?,
+    val fraDato: LocalDate?
 )
 
 data class UtenlandsAdresseGrunnlag(

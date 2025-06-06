@@ -227,6 +227,7 @@ public enum class Definisjon(
         løsesISteg = StegType.SAMORDNING_ANDRE_STATLIGE_YTELSER,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
+    @Deprecated("Ikke i bruk")
     FORHÅNDSVARSEL_AKTIVITETSPLIKT(
         kode = AvklaringsbehovKode.`5016`,
         type = BehovType.BREV_VENTEPUNKT,
@@ -360,11 +361,17 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true
     ),
-    @Deprecated("Revurdering opprettes automatisk i OmgjøringSteg")
-    OPPRETT_REVURDERING_VED_OMGJØRING(
+    BEKREFT_TOTALVURDERING_KLAGE(
+        kode = AvklaringsbehovKode.`6006`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.KLAGEBEHANDLING_OPPSUMMERING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = false
+    ),
+    EFFEKTUER_AVVIST_PÅ_FORMKRAV(
         kode = AvklaringsbehovKode.`6004`,
         type = BehovType.MANUELT_PÅKREVD,
-        løsesISteg = StegType.OMGJØRING,
+        løsesISteg = StegType.EFFEKTUER_AVVIST_PÅ_FORMKRAV,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     VURDER_TREKK_AV_KLAGE(
@@ -375,6 +382,21 @@ public enum class Definisjon(
             Rolle.SAKSBEHANDLER_OPPFOLGING,
             Rolle.SAKSBEHANDLER_NASJONAL
         ),
+    ),
+    SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV(
+        kode = AvklaringsbehovKode.`6005`,
+        løsesISteg = StegType.EFFEKTUER_AVVIST_PÅ_FORMKRAV,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_NASJONAL
+        )
+    ),
+    VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV(
+        kode = AvklaringsbehovKode.`6007`,
+        type = BehovType.VENTEPUNKT,
+        løsesISteg = StegType.EFFEKTUER_AVVIST_PÅ_FORMKRAV,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        defaultFrist = Period.ofWeeks(3),
     );
 
     public companion object {

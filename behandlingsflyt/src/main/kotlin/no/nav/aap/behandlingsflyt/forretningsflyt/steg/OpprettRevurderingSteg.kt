@@ -27,7 +27,7 @@ class OpprettRevurderingSteg(
 ) : BehandlingSteg {
     private val logger = LoggerFactory.getLogger(javaClass)
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        return when (kontekst.vurdering.vurderingType) {
+        return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (trukketSøknadService.søknadErTrukket(kontekst.behandlingId)) {
                     return Fullført

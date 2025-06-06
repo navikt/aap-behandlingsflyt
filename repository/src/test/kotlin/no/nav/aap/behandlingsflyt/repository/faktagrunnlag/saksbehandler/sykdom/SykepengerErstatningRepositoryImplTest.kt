@@ -30,7 +30,8 @@ internal class SykepengerErstatningRepositoryImplTest {
             begrunnelse = "yolo",
             dokumenterBruktIVurdering = listOf(JournalpostId("123")),
             harRettPå = true,
-            grunn = null
+            grunn = null,
+            vurdertAv = "saksbehandler"
         )
         dataSource.transaction { connection ->
             SykepengerErstatningRepositoryImpl(connection).lagre(behandling.id, vurdering)
@@ -40,7 +41,13 @@ internal class SykepengerErstatningRepositoryImplTest {
             SykepengerErstatningRepositoryImpl(it).hent(behandling.id)
         }
 
-        assertThat(res.vurdering).isEqualTo(vurdering)
+        assertThat(res.vurdering?.begrunnelse).isEqualTo(vurdering.begrunnelse)
+        assertThat(res.vurdering?.dokumenterBruktIVurdering).isEqualTo(vurdering.dokumenterBruktIVurdering)
+        assertThat(res.vurdering?.harRettPå).isEqualTo(vurdering.harRettPå)
+        assertThat(res.vurdering?.grunn).isEqualTo(vurdering.grunn)
+        assertThat(res.vurdering?.vurdertAv).isEqualTo(vurdering.vurdertAv)
+        assertThat(res.vurdering?.vurdertTidspunkt).isNotNull()
+
     }
 
     private fun sak(connection: DBConnection): Sak {

@@ -28,4 +28,5 @@ public enum class StegGruppe(public val skalVises: Boolean, public val obligator
     OMGJØRING(true, false),
     TREKK_KLAGE(true, false),
     OPPRETTHOLDELSE(true, false),
+    KLAGE_AVVIST_PÅ_FORMKRAV(true, false),
 }

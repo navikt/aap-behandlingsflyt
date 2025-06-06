@@ -36,7 +36,7 @@ class IverksettVedtakSteg private constructor(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (kontekst.vurdering.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && trukketSøknadService.søknadErTrukket(kontekst.behandlingId)) {
+        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && trukketSøknadService.søknadErTrukket(kontekst.behandlingId)) {
             return Fullført
         }
 

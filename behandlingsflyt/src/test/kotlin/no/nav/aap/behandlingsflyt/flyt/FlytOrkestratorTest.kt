@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykd
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BekreftTotalvurderingKlageLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBehandlendeEnhetLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettPåklagetBehandlingLøsning
@@ -35,6 +36,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Kvalitetss
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SamordningVentPaVirkningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivForhåndsvarselKlageFormkravBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TrekkSøknadLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderFormkravLøsning
@@ -89,15 +91,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.Samordn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestratorTest.Companion.util
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
-import no.nav.aap.behandlingsflyt.integrasjon.aaregisteret.AARegisterGateway
+import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.AARegisterGateway
+import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.integrasjon.brev.BrevGateway
 import no.nav.aap.behandlingsflyt.integrasjon.dokumentinnhenting.DokumentinnhentingGatewayImpl
@@ -143,6 +146,7 @@ import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentY
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.EffektuerAvvistPåFormkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -191,6 +195,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -225,6 +230,7 @@ class FlytOrkestratorTest {
                 .register<FakeApiInternGateway>()
                 .register<UtbetalingGatewayImpl>()
                 .register<AARegisterGateway>()
+                .register<EREGGateway>()
                 .register<StatistikkGatewayImpl>()
                 .register<InntektGatewayImpl>()
                 .register<BrevGateway>()
@@ -580,7 +586,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             AvklarSykdomLøsning(
-                sykdomsvurdering = SykdomsvurderingLøsningDto(
+                sykdomsvurderinger = listOf(SykdomsvurderingLøsningDto(
                     begrunnelse = "Er syk nok",
                     dokumenterBruktIVurdering = listOf(JournalpostId("1349532")),
                     harSkadeSykdomEllerLyte = true,
@@ -591,7 +597,7 @@ class FlytOrkestratorTest {
                     erArbeidsevnenNedsatt = true,
                     yrkesskadeBegrunnelse = null,
                     vurderingenGjelderFra = null,
-                )
+                ))
             ),
         )
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
@@ -848,7 +854,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             AvklarSykdomLøsning(
-                sykdomsvurdering = SykdomsvurderingLøsningDto(
+                sykdomsvurderinger = listOf(SykdomsvurderingLøsningDto(
                     begrunnelse = "Er syk nok",
                     dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                     harSkadeSykdomEllerLyte = true,
@@ -860,7 +866,7 @@ class FlytOrkestratorTest {
                     erArbeidsevnenNedsatt = true,
                     yrkesskadeBegrunnelse = null,
                     vurderingenGjelderFra = null,
-                )
+                ))
             ),
         )
 
@@ -882,7 +888,7 @@ class FlytOrkestratorTest {
 
         behandling = løsAvklaringsBehov(
             behandling, AvklarSykepengerErstatningLøsning(
-                sykepengeerstatningVurdering = SykepengerVurdering(
+                sykepengeerstatningVurdering = SykepengerVurderingDto(
                     begrunnelse = "...",
                     dokumenterBruktIVurdering = listOf(),
                     harRettPå = true,
@@ -981,7 +987,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             AvklarSykdomLøsning(
-                sykdomsvurdering = SykdomsvurderingLøsningDto(
+                sykdomsvurderinger = listOf(SykdomsvurderingLøsningDto(
                     begrunnelse = "Er syk nok",
                     dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                     harSkadeSykdomEllerLyte = true,
@@ -992,7 +998,7 @@ class FlytOrkestratorTest {
                     erArbeidsevnenNedsatt = true,
                     yrkesskadeBegrunnelse = null,
                     vurderingenGjelderFra = null,
-                )
+                ))
             ),
         )
 
@@ -1019,7 +1025,7 @@ class FlytOrkestratorTest {
 
         behandling = løsAvklaringsBehov(
             behandling, AvklarSykepengerErstatningLøsning(
-                sykepengeerstatningVurdering = SykepengerVurdering(
+                sykepengeerstatningVurdering = SykepengerVurderingDto(
                     begrunnelse = "...",
                     dokumenterBruktIVurdering = listOf(),
                     harRettPå = true,
@@ -1307,7 +1313,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             AvklarSykdomLøsning(
-                sykdomsvurdering = SykdomsvurderingLøsningDto(
+                sykdomsvurderinger = listOf(SykdomsvurderingLøsningDto(
                     begrunnelse = "Er ikke syk nok",
                     dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                     harSkadeSykdomEllerLyte = false,
@@ -1318,7 +1324,7 @@ class FlytOrkestratorTest {
                     erNedsettelseIArbeidsevneMerEnnHalvparten = null,
                     erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                     yrkesskadeBegrunnelse = null,
-                )
+                ))
             ),
         )
 
@@ -1582,7 +1588,7 @@ class FlytOrkestratorTest {
 
         behandling = løsAvklaringsBehov(
             behandling, AvklarSykdomLøsning(
-                sykdomsvurdering = SykdomsvurderingLøsningDto(
+                sykdomsvurderinger = listOf(SykdomsvurderingLøsningDto(
                     begrunnelse = "Arbeidsevnen er nedsatt med mer enn halvparten",
                     dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                     harSkadeSykdomEllerLyte = true,
@@ -1593,7 +1599,7 @@ class FlytOrkestratorTest {
                     erArbeidsevnenNedsatt = true,
                     yrkesskadeBegrunnelse = null,
                     vurderingenGjelderFra = null,
-                )
+                ))
             )
         )
 
@@ -1697,7 +1703,7 @@ class FlytOrkestratorTest {
 
         behandling = løsAvklaringsBehov(
             behandling, AvklarSykdomLøsning(
-                sykdomsvurdering = SykdomsvurderingLøsningDto(
+                sykdomsvurderinger = listOf(SykdomsvurderingLøsningDto(
                     begrunnelse = "Er syk nok",
                     dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                     harSkadeSykdomEllerLyte = true,
@@ -1708,7 +1714,7 @@ class FlytOrkestratorTest {
                     erArbeidsevnenNedsatt = true,
                     yrkesskadeBegrunnelse = null,
                     vurderingenGjelderFra = null,
-                )
+                ))
             ),
             ingenEndringIGruppe = true,
             bruker = Bruker("SAKSBEHANDLER")
@@ -2653,10 +2659,9 @@ class FlytOrkestratorTest {
 
     @Test
     fun `kan hente inn manuell inntektsdata i grunnlag og benytte i beregning`() {
-        val ident = ident()
+        val ident = nyPerson(false, false, mutableListOf())
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val nedsattDato = LocalDate.now()
-            .plusYears(1) // Ett år fram, Liten hack for å slippe å fjase med default inntektlisten som brukes overalt ellers
 
         // Oppretter vanlig søknad
         hendelsesMottak.håndtere(
@@ -2761,10 +2766,9 @@ class FlytOrkestratorTest {
 
     @Test
     fun `kan ikke sende inn negativ manuell inntekt`() {
-        val ident = ident()
+        val ident = nyPerson(false, false, mutableListOf())
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val nedsattDato = LocalDate.now()
-            .plusYears(1) // Ett år fram, Liten hack for å slippe å fjase med default inntektlisten som brukes overalt ellers
 
         // Oppretter vanlig søknad
         hendelsesMottak.håndtere(
@@ -3085,6 +3089,17 @@ class FlytOrkestratorTest {
             )
         )
 
+
+        // Totalvurdering
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.BEKREFT_TOTALVURDERING_KLAGE)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = BekreftTotalvurderingKlageLøsning()
+        )
+
         // FatteVedtakSteg
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1)
@@ -3148,7 +3163,99 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `Klage - Skal gå rett til beslutter ved avslag på formkrav`() {
+    fun `Klage - Skal gå rett til beslutter ved avslag på frist`() {
+        val person = TestPerson(
+            fødselsdato = Fødselsdato(LocalDate.now().minusYears(14)),
+            yrkesskade = listOf(TestYrkesskade()),
+        )
+        FakePersoner.leggTil(person)
+
+        val ident = person.aktivIdent()
+
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        // Avslås pga. alder
+        val avslåttFørstegang = sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("19"),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(4),
+                InnsendingType.SØKNAD,
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"),
+                        yrkesskade = "NEI",
+                        oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
+                    ),
+                ),
+                periode
+            )
+        )
+        assertThat(avslåttFørstegang)
+            .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
+            .extracting { b -> b.status().erAvsluttet() }.isEqualTo(true)
+        val kravMottatt = LocalDate.now().minusMonths(1)
+        val klagebehandling = sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("21"),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+                InnsendingType.KLAGE,
+                strukturertDokument = StrukturertDokument(KlageV0(kravMottatt = kravMottatt)),
+                periode
+            )
+        )
+        assertThat(klagebehandling.referanse).isNotEqualTo(avslåttFørstegang.referanse)
+        assertThat(klagebehandling.typeBehandling()).isEqualTo(TypeBehandling.Klage)
+
+        dataSource.transaction { connection ->
+            val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
+            val klageDokumenter =
+                mottattDokumentRepository.hentDokumenterAvType(klagebehandling.sakId, InnsendingType.KLAGE)
+            assertThat(klageDokumenter).hasSize(1)
+            assertThat(klageDokumenter.first().strukturertDokument).isNotNull
+            assertThat(klageDokumenter.first().strukturerteData<KlageV0>()?.data?.kravMottatt).isEqualTo(kravMottatt)
+        }
+
+        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            .isEqualTo(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = FastsettPåklagetBehandlingLøsning(
+                påklagetBehandlingVurdering = PåklagetBehandlingVurderingLøsningDto(
+                    påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
+                    påklagetBehandling = avslåttFørstegang.referanse.referanse,
+                )
+            )
+        )
+
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = VurderFormkravLøsning(
+                formkravVurdering = FormkravVurderingLøsningDto(
+                    begrunnelse = "Begrunnelse",
+                    erBrukerPart = true,
+                    erFristOverholdt = false,
+                    likevelBehandles = false,
+                    erKonkret = true,
+                    erSignert = true
+                )
+            )
+        )
+
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            .isEqualTo(Definisjon.FATTE_VEDTAK)
+
+    }
+
+    @Test
+    fun `Klage - skal sende forhåndsvarsel ved avvist på formkrav`() {
         val person = TestPerson(
             fødselsdato = Fødselsdato(LocalDate.now().minusYears(14)),
             yrkesskade = listOf(TestYrkesskade()),
@@ -3235,8 +3342,27 @@ class FlytOrkestratorTest {
 
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
-            .isEqualTo(Definisjon.FATTE_VEDTAK)
+            .isEqualTo(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
 
+        val brevreferanse = dataSource.transaction {
+            val effektuerAvvistPåFormkravRepository = EffektuerAvvistPåFormkravRepositoryImpl(it)
+            effektuerAvvistPåFormkravRepository.hentHvisEksisterer(klagebehandling.id)?.varsel?.referanse
+
+        }
+        assertNotNull(brevreferanse)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = SkrivForhåndsvarselKlageFormkravBrevLøsning(
+                brevbestillingReferanse = brevreferanse.brevbestillingReferanse,
+                handling = SkrivBrevAvklaringsbehovLøsning.Handling.FERDIGSTILL,
+                behovstype = Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV.kode,
+            )
+        )
+
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            .isEqualTo(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV)
     }
 
     @Test
@@ -3358,7 +3484,7 @@ class FlytOrkestratorTest {
         return løsAvklaringsBehov(
             behandling,
             AvklarSykdomLøsning(
-                sykdomsvurdering = SykdomsvurderingLøsningDto(
+                sykdomsvurderinger = listOf(SykdomsvurderingLøsningDto(
                     begrunnelse = "Er syk nok",
                     dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                     harSkadeSykdomEllerLyte = true,
@@ -3369,7 +3495,7 @@ class FlytOrkestratorTest {
                     erArbeidsevnenNedsatt = true,
                     yrkesskadeBegrunnelse = null,
                     vurderingenGjelderFra = null,
-                )
+                ))
             ),
         )
     }

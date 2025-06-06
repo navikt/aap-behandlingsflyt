@@ -98,6 +98,7 @@ spec:
         - host: pensjon-popp-q2.dev-fss-pub.nais.io
         - host: fpabakus.dev-fss-pub.nais.io
         - host: aareg-services-q1.dev-fss-pub.nais.io
+        - host: ereg-services-q2.dev-fss-pub.nais.io
         - host: pensjon-pen-q2.dev-fss-pub.nais.io
         - host: tp-api.dev-fss-pub.nais.io
         - host: aap-unleash-api.nav.cloud.nais.io
@@ -196,9 +197,9 @@ spec:
     - name: INTEGRASJON_AAREG_SCOPE
       value: api://dev-fss.arbeidsforhold.aareg-services-nais/.default
     - name: INTEGRASJON_INNTEKTSKOMPONENTEN_URL
-      value: https://team-inntekt-proxy.dev-fss-pub.nais.io/proxy/inntektskomponenten-q2/rs/api/v1
+      value: https://ikomp-q2.dev-fss-pub.nais.io/rs/api/v1
     - name: INTEGRASJON_INNTEKTSKOMPONENTEN_SCOPE
-      value: api://dev-fss.team-inntekt.inntektskomponenten/.default
+      value: api://dev-fss.team-inntekt.ikomp-q2/.default
     - name: INTEGRASJON_DATADELING_URL
       value: http://api-intern
     - name: INTEGRASJON_DATADELING_SCOPE
@@ -227,3 +228,7 @@ spec:
       value: http://kabal-api.klage
     - name: INTEGRASJON_KABAL_SCOPE
       value: api://dev-gcp.klage.kabal-api/.default
+    - name: INTEGRASJON_EREG_URL
+      value: https://ereg-services-q2.dev-fss-pub.nais.io
+    - name: INTEGRASJON_EREG_SCOPE
+      value: api://dev-fss.arbeidsforhold.ereg-services/.default

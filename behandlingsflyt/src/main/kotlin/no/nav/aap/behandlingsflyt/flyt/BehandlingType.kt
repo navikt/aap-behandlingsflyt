@@ -10,11 +10,9 @@ interface BehandlingType {
     fun flyt(): BehandlingFlyt
 }
 
-fun utledType(identifikator: TypeBehandling): BehandlingType {
-    return when (identifikator) {
-        TypeBehandling.Førstegangsbehandling -> Førstegangsbehandling
-        TypeBehandling.Revurdering -> Revurdering
-        TypeBehandling.Tilbakekreving -> Tilbakekreving
-        TypeBehandling.Klage -> Klage
-    }
+fun TypeBehandling.flyt(): BehandlingFlyt = when (this) {
+    TypeBehandling.Førstegangsbehandling -> Førstegangsbehandling.flyt()
+    TypeBehandling.Revurdering -> Revurdering.flyt()
+    TypeBehandling.Tilbakekreving -> Tilbakekreving.flyt()
+    TypeBehandling.Klage -> Klage.flyt()
 }

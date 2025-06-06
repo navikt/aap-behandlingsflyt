@@ -48,7 +48,7 @@ class VurderSykepengeErstatningSteg private constructor(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        return when (kontekst.vurdering.vurderingType) {
+        return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
                     log.info("Ingen behandlingsgrunnlag for behandlingId ${kontekst.behandlingId}, avbryter steg ${type()}")
@@ -93,7 +93,7 @@ class VurderSykepengeErstatningSteg private constructor(
             val grunnlag = sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
 
             if (grunnlag?.vurdering != null) {
-                val rettighetsperiode = kontekst.vurdering.rettighetsperiode
+                val rettighetsperiode = kontekst.rettighetsperiode
                 val vurderingsdato = rettighetsperiode.fom
                 val faktagrunnlag = SykepengerErstatningFaktagrunnlag(
                     vurderingsdato,

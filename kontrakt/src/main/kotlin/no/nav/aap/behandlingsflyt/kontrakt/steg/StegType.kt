@@ -175,6 +175,10 @@ public enum class StegType(
         gruppe = StegGruppe.KLAGEBEHANDLING_NAY,
         status = Status.UTREDES
     ),
+    KLAGEBEHANDLING_OPPSUMMERING(
+        gruppe = StegGruppe.KLAGEBEHANDLING_NAY,
+        status = Status.UTREDES
+    ),
     OMGJØRING(
         gruppe = StegGruppe.OMGJØRING,
         status = Status.IVERKSETTES
@@ -185,6 +189,10 @@ public enum class StegType(
     ),
     OPPRETTHOLDELSE(
         gruppe = StegGruppe.OPPRETTHOLDELSE,
+        status = Status.IVERKSETTES
+    ),
+    EFFEKTUER_AVVIST_PÅ_FORMKRAV(
+        gruppe = StegGruppe.KLAGE_AVVIST_PÅ_FORMKRAV,
         status = Status.IVERKSETTES
     ),
     UDEFINERT(

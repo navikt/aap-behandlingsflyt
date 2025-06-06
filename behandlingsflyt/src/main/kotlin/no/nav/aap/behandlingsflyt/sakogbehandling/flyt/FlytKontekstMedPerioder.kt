@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.flyt
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.komponenter.type.Periode
 
 /**
  * Kontekst for behandlingen som inneholder hvilke perioder som er til vurdering for det enkelte steget som skal vurderes
@@ -14,22 +14,24 @@ data class FlytKontekstMedPerioder(
     val behandlingId: BehandlingId,
     val forrigeBehandlingId: BehandlingId?,
     val behandlingType: TypeBehandling,
-    val vurdering: VurderingTilBehandling
+    val vurderingType: VurderingType,
+    val rettighetsperiode: Periode,
+    val årsakerTilBehandling: Set<ÅrsakTilBehandling>
 ) {
     fun harNoeTilBehandling(): Boolean {
-        return vurdering.skalVurdereNoe()
+        return vurderingType != VurderingType.IKKE_RELEVANT
     }
 
     fun erFørstegangsbehandlingEllerRevurdering(): Boolean {
-        return vurdering.vurderingType in setOf(VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING)
+        return vurderingType in setOf(VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING)
     }
 
     fun erFørstegangsbehandling(): Boolean {
-        return vurdering.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING
+        return vurderingType == VurderingType.FØRSTEGANGSBEHANDLING
     }
 
     fun erRevurderingMedÅrsak(årsak: ÅrsakTilBehandling): Boolean {
-        return vurdering.vurderingType == VurderingType.REVURDERING
-                && vurdering.årsakerTilBehandling.contains(årsak)
+        return vurderingType == VurderingType.REVURDERING
+                && årsakerTilBehandling.contains(årsak)
     }
 }

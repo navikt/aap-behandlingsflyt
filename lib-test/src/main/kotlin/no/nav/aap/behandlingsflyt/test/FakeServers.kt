@@ -152,6 +152,7 @@ object FakeServers : AutoCloseable {
     private val norg = embeddedServer(Netty, port = 0, module = { norgFake() })
     private val nom = embeddedServer(Netty, port = 0, module = { nomFake() })
     private val kabal = embeddedServer(Netty, port = 0, module = { kabalFake() })
+    private val ereg = embeddedServer(Netty, port = 0, module = { eregFake() })
 
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
@@ -846,6 +847,129 @@ object FakeServers : AutoCloseable {
         }
     }
 
+    private fun Application.eregFake() {
+        @Language("JSON")
+        val eregResponse = """
+            {
+              "organisasjonsnummer": "990983666",
+              "type": "Virksomhet",
+              "navn": {
+                "sammensattnavn": "NAV IKT",
+                "navnelinje1": "NAV IKT",
+                "bruksperiode": {
+                  "fom": "2015-02-23T08:04:53.2"
+                },
+                "gyldighetsperiode": {
+                  "fom": "2010-04-09"
+                }
+              },
+              "organisasjonDetaljer": {
+                "registreringsdato": "2007-03-05T00:00:00",
+                "enhetstyper": [
+                  {
+                    "enhetstype": "BEDR",
+                    "bruksperiode": {
+                      "fom": "2014-05-21T15:46:47.225"
+                    },
+                    "gyldighetsperiode": {
+                      "fom": "2007-03-05"
+                    }
+                  }
+                ],
+                "navn": [
+                  {
+                    "sammensattnavn": "NAV IKT",
+                    "navnelinje1": "NAV IKT",
+                    "bruksperiode": {
+                      "fom": "2015-02-23T08:04:53.2"
+                    },
+                    "gyldighetsperiode": {
+                      "fom": "2010-04-09"
+                    }
+                  }
+                ],
+                "naeringer": [
+                  {
+                    "naeringskode": "84.300",
+                    "hjelpeenhet": false,
+                    "bruksperiode": {
+                      "fom": "2014-05-22T01:18:10.661"
+                    },
+                    "gyldighetsperiode": {
+                      "fom": "2006-07-01"
+                    }
+                  }
+                ],
+                "forretningsadresser": [
+                  {
+                    "type": "Forretningsadresse",
+                    "adresselinje1": "Sannergata 2",
+                    "postnummer": "0557",
+                    "landkode": "NO",
+                    "kommunenummer": "0301",
+                    "bruksperiode": {
+                      "fom": "2015-02-23T10:38:34.403"
+                    },
+                    "gyldighetsperiode": {
+                      "fom": "2007-08-23"
+                    }
+                  }
+                ],
+                "postadresser": [
+                  {
+                    "type": "Postadresse",
+                    "adresselinje1": "Postboks 5 St Olavs plass",
+                    "postnummer": "0130",
+                    "landkode": "NO",
+                    "kommunenummer": "0301",
+                    "bruksperiode": {
+                      "fom": "2015-02-23T10:38:34.403"
+                    },
+                    "gyldighetsperiode": {
+                      "fom": "2010-10-08"
+                    }
+                  }
+                ],
+                "navSpesifikkInformasjon": {
+                  "erIA": true,
+                  "bruksperiode": {
+                    "fom": "2015-01-27T16:01:18.562"
+                  },
+                  "gyldighetsperiode": {
+                    "fom": "2015-01-27"
+                  }
+                },
+                "sistEndret": "2014-02-17"
+              },
+              "virksomhetDetaljer": {
+                "enhetstype": "BEDR",
+                "oppstartsdato": "2006-07-01"
+              }
+            }
+        """.trimIndent()
+        install(ContentNegotiation) {
+            jackson()
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@eregFake.log.info(
+                    "EREG :: Ukjent feil ved kall til '{}'",
+                    call.request.local.uri,
+                    cause
+                )
+                call.respond(
+                    status = HttpStatusCode.InternalServerError,
+                    message = ErrorRespons(cause.message)
+                )
+            }
+        }
+        routing {
+            get("/api/v2/organisasjon/{orgnummer}") {
+                call.respond(eregResponse)
+            }
+        }
+    }
+
     private fun Application.ainntektFake() {
         @Language("JSON")
         val ainntektResponse = """
@@ -970,6 +1094,8 @@ object FakeServers : AutoCloseable {
                                   "journalposter": [
                                     {
                                       "journalpostId": "453877977",
+                                      "journalstatus": "FERDIGSTILT",
+                                      "journalposttype": "I",
                                       "behandlingstema": null,
                                       "antallRetur": null,
                                       "kanal": "NAV_NO",
@@ -1020,6 +1146,8 @@ object FakeServers : AutoCloseable {
                                     },
                                     {
                                       "journalpostId": "453873496",
+                                      "journalstatus": "FERDIGSTILT",
+                                      "journalposttype": "I",
                                       "behandlingstema": null,
                                       "antallRetur": null,
                                       "kanal": "NAV_NO",
@@ -1754,6 +1882,7 @@ object FakeServers : AutoCloseable {
         nom.start()
         norg.start()
         kabal.start()
+        ereg.start()
 
         println("AZURE PORT ${azure.port()}")
 
@@ -1877,6 +2006,10 @@ object FakeServers : AutoCloseable {
         // Kabal
         System.setProperty("integrasjon.kabal.url", "http://localhost:${kabal.port()}")
         System.setProperty("integrasjon.kabal.scope", "scope")
+
+        //Enhetsregisteret
+        System.setProperty("integrasjon.ereg.url", "http://localhost:${ereg.port()}")
+        System.setProperty("integrasjon.ereg.scope", "scope")
     }
 
     override fun close() {
@@ -1907,6 +2040,7 @@ object FakeServers : AutoCloseable {
         nom.stop(0L, 0L)
         norg.stop(0L, 0L)
         kabal.stop(0L, 0L)
+        ereg.stop(0L, 0L)
     }
 }
 

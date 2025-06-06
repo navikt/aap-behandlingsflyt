@@ -1,0 +1,56 @@
+query(
+    $brukerId: BrukerIdInput!,
+    $tema: [Tema!]!,
+    $journalstatuser: [Journalstatus!],
+    $journalposttyper: [Journalposttype!],
+    $foerste: Int!,
+    $etter: String,
+) {
+    dokumentoversiktBruker(
+        brukerId: $brukerId,
+        tema: $tema,
+        journalstatuser: $journalstatuser,
+        journalposttyper: $journalposttyper,
+        foerste: $foerste,
+        etter: $etter
+    ) {
+        journalposter {
+            journalpostId
+            tittel
+            journalposttype
+            journalstatus
+            tema
+            temanavn
+            sak {
+                fagsakId
+                fagsaksystem
+                sakstype
+            }
+            dokumenter {
+                dokumentInfoId
+                tittel
+                dokumentvarianter {
+                    variantformat
+                    saksbehandlerHarTilgang
+                }
+            }
+            bruker {
+                id
+                type
+            }
+            avsenderMottaker {
+                id
+                navn
+                erLikBruker
+            }
+            kanal
+            datoOpprettet
+        }
+        sideInfo {
+            sluttpeker
+            finnesNesteSide
+            antall
+            totaltAntall
+        }
+    }
+}

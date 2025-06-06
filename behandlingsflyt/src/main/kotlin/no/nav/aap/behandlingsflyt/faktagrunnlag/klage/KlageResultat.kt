@@ -40,9 +40,11 @@ data class Ufullstendig(
 
 enum class ÅrsakTilUfullstendigResultat {
     MANGLER_VURDERING,
-    INKONSISTENT_VURDERING
+    INKONSISTENT_VURDERING,
+    VENTER_PÅ_SVAR_FRA_BRUKER
 }
 
 enum class ÅrsakTilAvslag {
-    IKKE_OVERHOLDT_FORMKRAV
+    IKKE_OVERHOLDT_FORMKRAV,
+    IKKE_OVERHOLDT_FRIST
 }

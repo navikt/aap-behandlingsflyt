@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyBehandlingHendelseService
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyInformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyStegKonstruktør
@@ -11,7 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
+import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
@@ -38,19 +39,24 @@ class EnklereFlytOrkestratorTest {
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
 
     private val flytOrkestrator = FlytOrkestrator(
-        stegKonstruktør = DummyStegKonstruktør(),
-        perioderTilVurderingService = PerioderTilVurderingService(
+        flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(
             sakService = sakService,
             behandlingRepository = behandlingRepository,
             unleashGateway = FakeUnleash(mapOf()),
         ),
+        sakOgBehandlingService = InMemorySakOgBehandlingService,
         informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
-        behandlingRepository = behandlingRepository,
-        ventebehovEvaluererService = DummyVentebehovEvaluererService(),
         sakRepository = sakRepository,
         avklaringsbehovRepository = avklaringsbehovRepository,
+        behandlingRepository = behandlingRepository,
+        ventebehovEvaluererService = DummyVentebehovEvaluererService(),
         behandlingHendelseService = DummyBehandlingHendelseService,
-        sakOgBehandlingService = InMemorySakOgBehandlingService,
+        stegOrkestrator = StegOrkestrator(
+            informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
+            behandlingRepository = behandlingRepository,
+            avklaringsbehovRepository = avklaringsbehovRepository,
+            stegKonstruktør = DummyStegKonstruktør(),
+        )
     )
 
     @Test
@@ -88,8 +94,7 @@ class EnklereFlytOrkestratorTest {
             }
         }
         val flytOrkestrator = FlytOrkestrator(
-            stegKonstruktør = DummyStegKonstruktør(),
-            perioderTilVurderingService = PerioderTilVurderingService(
+            flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(
                 sakService = sakService,
                 behandlingRepository = behandlingRepository,
                 unleashGateway = FakeUnleash(mapOf()),
@@ -101,6 +106,12 @@ class EnklereFlytOrkestratorTest {
             avklaringsbehovRepository = avklaringsbehovRepository,
             behandlingHendelseService = behandlingHendelseService,
             sakOgBehandlingService = InMemorySakOgBehandlingService,
+            stegOrkestrator = StegOrkestrator(
+                informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
+                behandlingRepository = behandlingRepository,
+                avklaringsbehovRepository = avklaringsbehovRepository,
+                stegKonstruktør = DummyStegKonstruktør(),
+            )
         )
 
         val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)

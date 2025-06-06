@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDate
 
 class FastsettBeregningstidspunktLøser(
     private val behandlingRepository: BehandlingRepository,
@@ -23,6 +24,9 @@ class FastsettBeregningstidspunktLøser(
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FastsettBeregningstidspunktLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
+        if (løsning.beregningVurdering.nedsattArbeidsevneDato.isAfter(LocalDate.now())) {
+            throw IllegalArgumentException("Kan ikke sette beregningstidspunkt frem i tid.")
+        }
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.kontekst.behandlingId)
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FASTSETT_MANUELL_INNTEKT)
         if (avklaringsbehov?.erÅpent() == true) {

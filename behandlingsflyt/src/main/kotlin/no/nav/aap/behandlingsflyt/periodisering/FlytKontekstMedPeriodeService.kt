@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.periodisering
 
-import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.FØRSTEGANGSBEHANDLING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.IKKE_RELEVANT
@@ -17,7 +17,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class PerioderTilVurderingService(
+class FlytKontekstMedPeriodeService(
     private val sakService: SakService,
     private val behandlingRepository: BehandlingRepository,
     private val unleashGateway: UnleashGateway,
@@ -28,18 +28,22 @@ class PerioderTilVurderingService(
         unleashGateway = GatewayProvider.provide(),
     )
 
-    fun utled(kontekst: FlytKontekst, stegType: StegType): VurderingTilBehandling {
+    fun utled(kontekst: FlytKontekst, stegType: StegType): FlytKontekstMedPerioder {
         val sak = sakService.hent(kontekst.sakId)
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
 
         if (kontekst.behandlingType == TypeBehandling.Førstegangsbehandling) {
-            return VurderingTilBehandling(
+            return FlytKontekstMedPerioder(
+                sakId = kontekst.sakId,
+                behandlingId = kontekst.behandlingId,
+                forrigeBehandlingId = kontekst.forrigeBehandlingId,
+                behandlingType = kontekst.behandlingType,
                 vurderingType = FØRSTEGANGSBEHANDLING,
                 rettighetsperiode = sak.rettighetsperiode,
                 årsakerTilBehandling = behandling.årsaker().map { it.type }.toSet()
             )
         }
-        val flyt = utledType(behandling.typeBehandling()).flyt()
+        val flyt = behandling.flyt()
         val årsakerRelevantForSteg = flyt.årsakerRelevantForSteg(stegType)
 
         val relevanteÅrsak = behandling.årsaker()
@@ -47,7 +51,11 @@ class PerioderTilVurderingService(
             .filter { årsak -> årsakerRelevantForSteg.contains(årsak) }
             .toSet()
 
-        return VurderingTilBehandling(
+        return FlytKontekstMedPerioder(
+            sakId = kontekst.sakId,
+            behandlingId = kontekst.behandlingId,
+            forrigeBehandlingId = kontekst.forrigeBehandlingId,
+            behandlingType = kontekst.behandlingType,
             vurderingType = prioritertType(relevanteÅrsak.map { årsakTilType(it) }.toSet()),
             rettighetsperiode = sak.rettighetsperiode,
             årsakerTilBehandling = relevanteÅrsak
@@ -97,9 +105,14 @@ class PerioderTilVurderingService(
                     MELDEKORT
                 else
                     REVURDERING
+            ÅrsakTilBehandling.FRITAK_MELDEPLIKT ->
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.FasttrackMeldekort))
+                    MELDEKORT
+                else
+                    REVURDERING
 
             ÅrsakTilBehandling.MOTATT_KLAGE,
-             ÅrsakTilBehandling.KLAGE_TRUKKET ->
+            ÅrsakTilBehandling.KLAGE_TRUKKET ->
                 IKKE_RELEVANT // TODO: Verifiser at dette er korrekt.
         }
     }
