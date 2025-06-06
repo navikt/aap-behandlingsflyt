@@ -13,6 +13,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.miljo.Miljø
 import java.net.URI
 import java.time.LocalDate
 
@@ -35,10 +36,15 @@ class NomInfoGateway : AnsattInfoGateway {
     )
 
     override fun hentAnsattInfo(navIdent: String): AnsattInfo {
+        if (Miljø.erLokal()) {
+            return AnsattInfo(navIdent = navIdent, navn = navIdent, enhetsnummer = "2024")
+        }
+
         val request = GraphqlRequest(ressursQuery, NomRessursVariables(navIdent))
         val response = checkNotNull(query(request).data) {
             "Fant ikke ansatt i NOM"
         }
+
         return mapResponse(navIdent, checkNotNull(response.ressurs))
     }
 
