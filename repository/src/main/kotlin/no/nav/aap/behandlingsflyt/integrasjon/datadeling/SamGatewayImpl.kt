@@ -58,7 +58,7 @@ class SamGatewayImpl : SamGateway {
     }
 
 
-    data class SamordningsvedtakApi(
+    private data class SamordningsvedtakApi(
         val samordningVedtakId: Long,
         val fagsystem: String,
         val saksId: Long,
@@ -73,7 +73,7 @@ class SamGatewayImpl : SamGateway {
         val samordningsmeldinger: List<SamordningsmeldingApi> = emptyList()
     )
 
-    data class SamordningsmeldingApi(
+    private data class SamordningsmeldingApi(
         val samId: Long,
         val meldingstatusKode: String,
         val tpNr: String,
