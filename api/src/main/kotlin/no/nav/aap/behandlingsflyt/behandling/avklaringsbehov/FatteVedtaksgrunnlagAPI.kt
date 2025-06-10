@@ -23,6 +23,7 @@ import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.verdityper.Interval
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -87,10 +88,14 @@ private fun utledHarTilgangTilÅSaksbehandle(
         token
     )
 
-    val harIkkeGjortNoenVurderinger =
-        avklaringsbehovene.alle().filter { it.erTotrinn() }.any { !it.brukere().contains(bruker.ident) }
+    if (Miljø.erProd()) {
+        val harIkkeGjortNoenVurderinger =
+            avklaringsbehovene.alle().filter { it.erTotrinn() }.any { !it.brukere().contains(bruker.ident) }
 
-    return harTilgang && harIkkeGjortNoenVurderinger
+        return harTilgang && harIkkeGjortNoenVurderinger
+    } else {
+        return harTilgang
+    }
 }
 
 

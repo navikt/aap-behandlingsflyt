@@ -60,7 +60,12 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(dataSource: DataSource, repositoryReg
                     val vurderinger = kvalitetssikringsVurdering(avklaringsbehovene)
 
                     KvalitetssikringGrunnlagDto(
-                        harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(req.referanse, token(), avklaringsbehovene, bruker()),
+                        harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(
+                            req.referanse,
+                            token(),
+                            avklaringsbehovene,
+                            bruker()
+                        ),
                         vurderinger = vurderinger,
                         historikk = utledKvalitetssikringHistorikk(avklaringsbehovene)
                     )
@@ -83,10 +88,17 @@ private fun utledHarTilgangTilÅSaksbehandle(
         token
     )
 
-    val harIkkeGjortNoenVurderinger =
-        avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }.any { !it.brukere().contains(bruker.ident) }
 
-    return harTilgang && harIkkeGjortNoenVurderinger
+    if (Miljø.erProd()) {
+        val harIkkeGjortNoenVurderinger =
+            avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }
+                .any { !it.brukere().contains(bruker.ident) }
+
+        return harTilgang && harIkkeGjortNoenVurderinger
+    } else {
+        return harTilgang
+    }
+
 }
 
 private fun utledKvalitetssikringHistorikk(avklaringsbehovene: Avklaringsbehovene): List<Historikk> {
