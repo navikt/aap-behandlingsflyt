@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarSykepengerErstatningLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_SYKEPENGEERSTATNING_KODE
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -17,7 +17,7 @@ class AvklarSykepengerErstatningLøsning(
     @JsonProperty(
         "sykepengeerstatningVurdering",
         required = true
-    ) val sykepengeerstatningVurdering: SykepengerVurdering,
+    ) val sykepengeerstatningVurdering: SykepengerVurderingDto,
     @JsonProperty(
         "behovstype",
         required = true,

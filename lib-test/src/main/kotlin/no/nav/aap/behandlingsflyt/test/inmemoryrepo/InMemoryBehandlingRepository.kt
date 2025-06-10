@@ -150,6 +150,27 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
+    override fun flyttForrigeBehandlingId(
+        behandlingId: BehandlingId,
+        nyForrigeBehandlingId: BehandlingId
+    ) {
+        synchronized(lock) {
+            val behandling = memory[behandlingId]!!
+            memory[behandlingId] = Behandling(
+                id = behandlingId,
+                forrigeBehandlingId = nyForrigeBehandlingId,
+                referanse = behandling.referanse,
+                sakId = behandling.sakId,
+                typeBehandling = behandling.typeBehandling(),
+                status = behandling.status(),
+                årsaker = behandling.årsaker(),
+                stegTilstand = behandling.aktivtStegTilstand(),
+                opprettetTidspunkt = behandling.opprettetTidspunkt,
+                versjon = behandling.versjon,
+            )
+        }
+    }
+
     override fun markerSavepoint() {
     }
 

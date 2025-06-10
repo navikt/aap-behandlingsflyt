@@ -23,24 +23,32 @@ class KlagebehandlingNayOppsummeringSteg private constructor(
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val resultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
+        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         if (resultat is Avslått) {
+            avklaringsbehov.avbrytForSteg(KlagebehandlingNaySteg.Companion.type())
             return Fullført
         }
 
-        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val behandlendeEnhetVurdering = behandlendeEnhetRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurdering
         requireNotNull(behandlendeEnhetVurdering) {
             "Behandlende enhet skal være satt"
         }
-        return if (behandlendeEnhetVurdering.skalBehandlesAvBådeNavKontorOgNay() && !avklaringsbehov.erVurdertTidligereIBehandlingen(
-                Definisjon.BEKREFT_TOTALVURDERING_KLAGE
-            )
-        ) {
-            FantAvklaringsbehov(Definisjon.BEKREFT_TOTALVURDERING_KLAGE)
+        return if (behandlendeEnhetVurdering.skalBehandlesAvBådeNavKontorOgNay()) {
+            if (!erAlleredeVurdert(avklaringsbehov)) {
+                FantAvklaringsbehov(Definisjon.BEKREFT_TOTALVURDERING_KLAGE)
+            } else {
+                return Fullført
+            }
         } else {
+            avklaringsbehov.avbrytForSteg(type())
             Fullført
         }
     }
+
+    private fun erAlleredeVurdert(avklaringsbehov: Avklaringsbehovene): Boolean =
+        avklaringsbehov.erVurdertTidligereIBehandlingen(
+            Definisjon.BEKREFT_TOTALVURDERING_KLAGE
+        )
 
     companion object : FlytSteg {
         override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {

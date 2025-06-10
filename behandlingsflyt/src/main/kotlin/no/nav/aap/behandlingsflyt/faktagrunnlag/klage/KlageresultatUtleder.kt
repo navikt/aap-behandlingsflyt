@@ -65,17 +65,19 @@ class KlageresultatUtleder(
                         && (klagebehandlingKontorVurdering == null || klagebehandlingKontorVurdering.innstilling == KlageInnstilling.OMGJØR)
             val skalOpprettholdes =
                 (klagebehandlingNayVurdering == null || klagebehandlingNayVurdering.innstilling == KlageInnstilling.OPPRETTHOLD) && (klagebehandlingKontorVurdering == null || klagebehandlingKontorVurdering.innstilling == KlageInnstilling.OPPRETTHOLD)
-            val erInkonsistent = erInkosnistentFormkravVurdering(
+            val erInkonsistentFormkravVurdering =  erInkonsistentFormkravVurdering(
                 formkravVurdering,
                 effektuerAvvistPåFormkravVurdering
-            ) || erInkonsistentKlageVurdering(
+            ) 
+            val erInkonsistentKlageVurdering = erInkonsistentKlageVurdering(
                 klagebehandlingNayVurdering,
                 klagebehandlingKontorVurdering
             )
 
             return when {
                 manglerVurdering -> Ufullstendig(ÅrsakTilUfullstendigResultat.MANGLER_VURDERING)
-                erInkonsistent -> Ufullstendig(ÅrsakTilUfullstendigResultat.INKONSISTENT_VURDERING)
+                erInkonsistentFormkravVurdering -> Ufullstendig(ÅrsakTilUfullstendigResultat.INKONSISTENT_FORMKRAV_VURDERING)
+                erInkonsistentKlageVurdering -> Ufullstendig(ÅrsakTilUfullstendigResultat.INKONSISTENT_KLAGE_VURDERING)
                 formkravVurdering?.erFristOverholdt() == false -> Avslått(årsak = ÅrsakTilAvslag.IKKE_OVERHOLDT_FRIST)
                 effektuerAvvistPåFormkravVurdering?.skalEndeligAvvises == true -> Avslått(årsak = ÅrsakTilAvslag.IKKE_OVERHOLDT_FORMKRAV)
                 formkravVurdering?.erOppfylt() == false -> Ufullstendig(ÅrsakTilUfullstendigResultat.VENTER_PÅ_SVAR_FRA_BRUKER)
@@ -104,7 +106,7 @@ class KlageresultatUtleder(
             }
         }
 
-        private fun erInkosnistentFormkravVurdering(
+        private fun erInkonsistentFormkravVurdering(
             formkravVurdering: FormkravVurdering?,
             effektuerAvvistPåFormkravVurdering: EffektuerAvvistPåFormkravVurdering?
         ): Boolean {

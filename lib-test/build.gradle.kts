@@ -1,7 +1,7 @@
 val ktorVersion = "3.1.3"
-val komponenterVersjon = "1.0.258"
-val tilgangVersjon = "1.0.72"
-val junitVersjon = "5.13.0"
+val komponenterVersjon = "1.0.261"
+val tilgangVersjon = "1.0.74"
+val junitVersjon = "5.13.1"
 
 plugins {
     id("behandlingsflyt.conventions")
@@ -26,7 +26,7 @@ dependencies {
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     constraints {
-        implementation("io.netty:netty-common:4.2.1.Final")
+        implementation("io.netty:netty-common:4.2.2.Final")
     }
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")

@@ -52,28 +52,33 @@ class HåndterMottattDokumentService(
         val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
         val årsaker = utledÅrsaker(brevkategori, melding, periode)
 
-        val beriketBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(sak.saksnummer, årsaker)
+        val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(sak.saksnummer, årsaker)
 
         // TODO: Evaluer at at behandlingen faktisk kan motta endringene
         // Står hos beslutter - Hvilke endringer kan da håndteres
         // P.d.d. ingen da de feilaktig kobles på behandling men ikke tas hensyn til
 
-        val behandlingSkrivelås = låsRepository.låsBehandling(beriketBehandling.behandling.id)
+        val behandlingSkrivelås = opprettetBehandling.åpenBehandling?.let {
+            låsRepository.låsBehandling(it.id)
+        }
 
         sakOgBehandlingService.oppdaterRettighetsperioden(sakId, brevkategori, mottattTidspunkt.toLocalDate())
 
         // Knytter klage direkte til behandlingen den opprettet, i stedet for via informasjonskrav.
         // Dette fordi vi kan ha flere åpne klagebehandlinger.
         if (melding is Klage) {
-            mottaDokumentService.knyttTilBehandling(sakId, beriketBehandling.behandling.id, referanse)
+            require(opprettetBehandling is SakOgBehandlingService.Ordinær)
+            mottaDokumentService.knyttTilBehandling(sakId, opprettetBehandling.åpenBehandling.id, referanse)
         }
 
         prosesserBehandling.triggProsesserBehandling(
-            sakId,
-            beriketBehandling.behandling.id,
+            opprettetBehandling,
             listOf("trigger" to årsaker.map { it.type.name }.toString())
         )
-        låsRepository.verifiserSkrivelås(behandlingSkrivelås)
+
+        if (behandlingSkrivelås != null) {
+            låsRepository.verifiserSkrivelås(behandlingSkrivelås)
+        }
     }
 
     fun oppdaterÅrsakerTilBehandlingPåEksisterendeÅpenBehandling(sakId: SakId, behandlingsreferanse: BehandlingReferanse, melding: NyÅrsakTilBehandlingV0) {

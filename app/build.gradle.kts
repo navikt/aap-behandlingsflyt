@@ -2,8 +2,8 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 
 val ktorVersion = "3.1.3"
-val komponenterVersjon = "1.0.258"
-val junitVersjon = "5.13.0"
+val komponenterVersjon = "1.0.261"
+val junitVersjon = "5.13.1"
 val opentelemetryVersion = "2.16.0-alpha"
 
 
@@ -94,7 +94,7 @@ dependencies {
     implementation(project(":kontrakt"))
     implementation(project(":repository"))
     implementation("com.zaxxer:HikariCP:6.3.0")
-    implementation("org.flywaydb:flyway-database-postgresql:11.9.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.9.1")
     runtimeOnly("org.postgresql:postgresql:42.7.6")
     implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:${opentelemetryVersion}")

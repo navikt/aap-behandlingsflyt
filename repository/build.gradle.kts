@@ -2,8 +2,8 @@ plugins {
     id("behandlingsflyt.conventions")
 }
 
-val komponenterVersjon = "1.0.258"
-val junitVersjon = "5.13.0"
+val komponenterVersjon = "1.0.261"
+val junitVersjon = "5.13.1"
 
 dependencies {
     implementation(project(":behandlingsflyt"))
@@ -15,7 +15,7 @@ dependencies {
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:tidslinje:$komponenterVersjon")
-    implementation("org.flywaydb:flyway-database-postgresql:11.9.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.9.1")
     implementation("io.getunleash:unleash-client-java:10.2.2")
     runtimeOnly("org.postgresql:postgresql:42.7.6")
 

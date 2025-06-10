@@ -7,8 +7,11 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRefer
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageresultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Ufullstendig
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.effektueravvistpåformkrav.EffektuerAvvistPåFormkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.ÅrsakTilUfullstendigResultat
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
@@ -19,6 +22,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -31,6 +35,7 @@ class EffektuerAvvistPåFormkravSteg private constructor(
     private val behandlingRepository: BehandlingRepository,
     private val effektuerAvvistPåFormkravRepository: EffektuerAvvistPåFormkravRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val klageresultatUtleder: KlageresultatUtleder,
     private val clock: Clock = Clock.systemDefaultZone()
 ) : BehandlingSteg {
     private val typeBrev = TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV
@@ -44,6 +49,7 @@ class EffektuerAvvistPåFormkravSteg private constructor(
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),
+                KlageresultatUtleder(repositoryProvider),
                 clock = Clock.systemDefaultZone(),
             )
         }
@@ -102,7 +108,7 @@ class EffektuerAvvistPåFormkravSteg private constructor(
         val frist = effektuerGrunnlag.varsel.frist ?: throw IllegalStateException(
             "Fant ikke frist"
         )
-        
+
         if (skalVentePåSvar(venteBehov, varslingstidpunkt) && LocalDate.now(clock) <= frist) {
             return FantVentebehov(
                 Ventebehov(
@@ -113,7 +119,9 @@ class EffektuerAvvistPåFormkravSteg private constructor(
             )
         }
 
-        if (!avklaringsbehov.erVurdertTidligereIBehandlingen(Definisjon.EFFEKTUER_AVVIST_PÅ_FORMKRAV)) {
+        if (!avklaringsbehov.erVurdertTidligereIBehandlingen(Definisjon.EFFEKTUER_AVVIST_PÅ_FORMKRAV)
+            || måVurderesPåNytt(kontekst.behandlingId, klageresultatUtleder)
+        ) {
             return FantAvklaringsbehov(Definisjon.EFFEKTUER_AVVIST_PÅ_FORMKRAV)
         }
 
@@ -131,5 +139,12 @@ class EffektuerAvvistPåFormkravSteg private constructor(
         return !sisteVarselTattAvVent
     }
 
+    private fun måVurderesPåNytt(behandlingId: BehandlingId, klageresultatUtleder: KlageresultatUtleder): Boolean {
+        val klageResultat = klageresultatUtleder.utledKlagebehandlingResultat(behandlingId)
+        return when (klageResultat) {
+            is Ufullstendig -> klageResultat.årsak == ÅrsakTilUfullstendigResultat.INKONSISTENT_FORMKRAV_VURDERING
+            else -> false
+        }
+    }
 
 }
