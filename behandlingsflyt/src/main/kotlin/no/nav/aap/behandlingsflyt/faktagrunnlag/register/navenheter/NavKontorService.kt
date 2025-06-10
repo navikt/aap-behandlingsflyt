@@ -9,7 +9,7 @@ class NavKontorService {
 
     private val enhetGateway = GatewayProvider.provide<EnhetGateway>()
 
-    fun hentNavEnheter(): List<Enhet>? {
+    fun hentNavEnheter(): List<Enhet> {
         try {
             val enheter = enhetGateway.hentAlleEnheter()
             return enheter.map { it }
