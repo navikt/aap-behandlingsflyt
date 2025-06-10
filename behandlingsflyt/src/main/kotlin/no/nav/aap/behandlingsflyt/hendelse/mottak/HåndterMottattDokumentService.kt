@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDateTime
@@ -79,7 +80,7 @@ class HåndterMottattDokumentService(
 
         prosesserBehandling.triggProsesserBehandling(
             opprettetBehandling,
-            listOf("trigger" to årsaker.map { it.type.name }.toString())
+            listOf("trigger" to DefaultJsonMapper.toJson(årsaker.map { it.type }))
         )
 
         if (behandlingSkrivelås != null) {
@@ -101,7 +102,7 @@ class HåndterMottattDokumentService(
             prosesserBehandling.triggProsesserBehandling(
                 sakId,
                 behandling.id,
-                listOf("trigger" to årsaker.map { it.type.name }.toString())
+                listOf("trigger" to DefaultJsonMapper.toJson(årsaker.map { it.type }))
             )
         }
     }

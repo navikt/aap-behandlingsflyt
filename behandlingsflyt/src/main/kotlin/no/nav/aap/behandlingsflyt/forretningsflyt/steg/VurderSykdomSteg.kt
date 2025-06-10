@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -25,14 +24,12 @@ import org.slf4j.LoggerFactory
 
 class VurderSykdomSteg private constructor(
     private val studentRepository: StudentRepository,
-    private val sykdomRepository: SykdomRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         studentRepository = repositoryProvider.provide(),
-        sykdomRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
@@ -70,23 +67,23 @@ class VurderSykdomSteg private constructor(
             }
 
             VurderingType.REVURDERING -> {
+                val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
                 if (ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND in kontekst.årsakerTilBehandling) {
-                    val forrigeBehandlingId = requireNotNull(kontekst.forrigeBehandlingId) {
-                        "En revurdering skal alltid ha en en ID for forrige behandling"
-                    }
 
-                    val vurdering = sykdomRepository.hent(kontekst.behandlingId)
-                    val forrigeVurdering = sykdomRepository.hent(forrigeBehandlingId)
-
-                    if (vurdering.id() == forrigeVurdering.id()) {
-                        return FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
+                    return if (avklaringsbehov == null) {
+                        FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
+                    } else {
+                        if (!avklaringsbehov.harAvsluttetStatusIHistorikken()) {
+                            FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
+                        } else {
+                            Fullført
+                        }
                     }
                 }
 
                 if (erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene)) {
                     return FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
                 } else {
-                    val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
                     if (avklaringsbehov != null && avklaringsbehov.erÅpent()) {
                         avklaringsbehovene.avbryt(Definisjon.AVKLAR_SYKDOM)
                     }

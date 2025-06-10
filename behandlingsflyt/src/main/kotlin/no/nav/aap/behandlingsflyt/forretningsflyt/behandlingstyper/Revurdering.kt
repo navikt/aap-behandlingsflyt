@@ -63,7 +63,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 object Revurdering : BehandlingType {
     override fun flyt(): BehandlingFlyt {
         return BehandlingFlytBuilder()
-            .medSteg(steg = StartBehandlingSteg, informasjonskrav = listOf(SøknadService))
+            .medSteg(
+                steg = StartBehandlingSteg,
+                informasjonskrav = listOf(SøknadService),
+                årsakRelevanteForSteg = ÅrsakTilBehandling.alle()
+            )
             .medSteg(
                 steg = SendForvaltningsmeldingSteg,
                 årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
@@ -163,7 +167,9 @@ object Revurdering : BehandlingType {
             )
             .medSteg(steg = VisGrunnlagSteg)
             .medSteg(
-                steg = ManglendeLigningGrunnlagSteg, informasjonskrav = listOf(InntektService), årsakRelevanteForSteg = listOf(
+                steg = ManglendeLigningGrunnlagSteg,
+                informasjonskrav = listOf(InntektService),
+                årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.REVURDER_BEREGNING,
                     ÅrsakTilBehandling.REVURDER_YRKESSKADE,

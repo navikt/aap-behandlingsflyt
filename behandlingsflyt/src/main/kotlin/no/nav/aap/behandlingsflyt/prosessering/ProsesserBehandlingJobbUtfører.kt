@@ -2,8 +2,10 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
@@ -22,10 +24,12 @@ class ProsesserBehandlingJobbUtfører(
         val sakId = SakId(input.sakId())
         val behandlingId = BehandlingId(input.behandlingId())
         val skrivelås = låsRepository.lås(sakId, behandlingId)
-
+        val triggere =
+            input.optionalParameter("trigger")?.let { DefaultJsonMapper.fromJson<List<ÅrsakTilBehandling>>(it) }
+                .orEmpty()
         val kontekst = kontroller.opprettKontekst(sakId, behandlingId)
 
-        kontroller.forberedOgProsesserBehandling(kontekst)
+        kontroller.forberedOgProsesserBehandling(kontekst, triggere)
 
         log.info("Prosesserer behandling for jobb ${input.type()} med behandlingId ${behandlingId}")
 
