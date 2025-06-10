@@ -18,7 +18,7 @@ object ProsesseringsJobber {
             MeldeperiodeTilMeldekortBackendJobbUtfører,
             OpprettJobbForFastsattPeriodeJobbUtfører,
             OpprettJobbForFritakMeldepliktJobbUtfører,
-            OpprettBehandlingFastsattPeriodePassertJobbUtfører
+            OpprettBehandlingFastsattPeriodePassertJobbUtfører,
         )
     }
 }
