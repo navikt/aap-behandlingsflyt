@@ -14,11 +14,13 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProviderJobbSpesifikasjon
 
 class HentSamIdJobbUtfører(
-    private val samGateway: SamGateway,
-    private val samIdRepository: SamIdRepository,
-    private val behandlingRepository: BehandlingRepository,
-    private val sakRepository: SakRepository,
-    private val vedtakRepository: VedtakRepository
+    private val repositoryProvider: RepositoryProvider,
+    private val gatewayProvider: GatewayProvider,
+    private val samGateway: SamGateway = gatewayProvider.provide(),
+    private val samIdRepository: SamIdRepository = repositoryProvider.provide(),
+    private val behandlingRepository: BehandlingRepository = repositoryProvider.provide(),
+    private val sakRepository: SakRepository = repositoryProvider.provide(),
+    private val vedtakRepository: VedtakRepository = repositoryProvider.provide(),
 
     ): JobbUtfører {
     override fun utfør(input: JobbInput) {
@@ -37,11 +39,8 @@ class HentSamIdJobbUtfører(
 companion object : ProviderJobbSpesifikasjon {
     override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
         return HentSamIdJobbUtfører(
-            GatewayProvider.provide(),
-            repositoryProvider.provide(),
-            repositoryProvider.provide(),
-            repositoryProvider.provide(),
-            repositoryProvider.provide()
+            repositoryProvider,
+            GatewayProvider
         )
     }
 
@@ -49,5 +48,5 @@ companion object : ProviderJobbSpesifikasjon {
     override val navn: String = "HentSamId"
     override val beskrivelse: String = "Henter SamId fra SAM og lagrer ned for datadeling"
 
-}
+    }
 }

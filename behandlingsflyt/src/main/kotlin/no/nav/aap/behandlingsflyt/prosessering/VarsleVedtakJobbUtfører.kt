@@ -14,11 +14,13 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProviderJobbSpesifikasjon
 
 class VarsleVedtakJobbUtfører(
-    private val sakRepository: SakRepository,
-    private val behandlingRepository: BehandlingRepository,
-    private val vedtakRepository: VedtakRepository,
-    private val flytJobbRepository: FlytJobbRepository,
-    private val samGateway: SamGateway
+    private val repositoryProvider: RepositoryProvider,
+    private val gatewayProvider: GatewayProvider,
+    private val sakRepository: SakRepository = repositoryProvider.provide(),
+    private val behandlingRepository: BehandlingRepository = repositoryProvider.provide(),
+    private val vedtakRepository: VedtakRepository = repositoryProvider.provide(),
+    private val flytJobbRepository: FlytJobbRepository = repositoryProvider.provide(),
+    private val samGateway: SamGateway = gatewayProvider.provide(),
 ) : JobbUtfører {
     override fun utfør(input: JobbInput) {
         val behandlingId = input.payload<BehandlingId>()
@@ -28,7 +30,7 @@ class VarsleVedtakJobbUtfører(
         val vedtakId = requireNotNull(vedtakRepository.hentId(behandling.id))
 
         val request = SamordneVedtakRequest(
-            pid = sak.person.aktivIdent().identifikator.toString(),
+            pid = sak.person.aktivIdent().identifikator,
             vedtakId = vedtakId.toString(),
             sakId = sak.id.id,
             virkFom = vedtak!!.vedtakstidspunkt.toLocalDate(),
@@ -36,7 +38,7 @@ class VarsleVedtakJobbUtfører(
             fagomrade = "AAP",
             ytelseType = "AAP",
             etterbetaling = sak.rettighetsperiode.fom < vedtak.virkningstidspunkt,
-            utvidetFrist = null, //SPK kan få utvidet frist dersom etterbetaling er over 2G
+            utvidetFrist = null,
         )
 
         samGateway.varsleVedtak(request)
@@ -47,11 +49,8 @@ class VarsleVedtakJobbUtfører(
     companion object : ProviderJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
             return VarsleVedtakJobbUtfører(
-                repositoryProvider.provide(),
-                repositoryProvider.provide(),
-                repositoryProvider.provide(),
-                repositoryProvider.provide(),
-                GatewayProvider.provide(),
+                repositoryProvider,
+                GatewayProvider,
             )
         }
 

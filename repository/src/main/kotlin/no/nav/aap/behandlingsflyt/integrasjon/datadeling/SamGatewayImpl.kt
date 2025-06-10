@@ -52,36 +52,19 @@ class SamGatewayImpl : SamGateway {
                 additionalHeaders = listOf(Header("pid", ident.identifikator))
             ),
             mapper = { body, _ ->
-                DefaultJsonMapper.fromJson<List<SamordningsvedtakApi>>(body).first().samordningsmeldinger.first().samId //todo: kast feil dersom vi får flere
+                val respons = DefaultJsonMapper.fromJson<List<SamordningsvedtakApi>>(body).first()
+                require(respons.samordningsmeldinger.size<2)
+                return@get respons.samordningsmeldinger.first().samId
             }
         ))
     }
 
-
+    // https://github.com/navikt/sam/blob/656cc706c16bcdba7ce626525f8777bc2a2e35d3/provider/nav-provider-stotte-sam-app/src/main/java/no/nav/provider/stotte/sam/app/SamordneVedtakController.kt
     private data class SamordningsvedtakApi(
-        val samordningVedtakId: Long,
-        val fagsystem: String,
-        val saksId: Long,
-        val saksKode: String,
-        val vedtakId: Long,
-        val vedtakstatusKode: String?,
-        val etterbetaling: Boolean,
-        val utvidetSamordningsfrist: Boolean,
-        val virkningFom: LocalDate,
-        val virkningTom: LocalDate?,
-        val versjon: Long,
         val samordningsmeldinger: List<SamordningsmeldingApi> = emptyList()
     )
 
     private data class SamordningsmeldingApi(
         val samId: Long,
-        val meldingstatusKode: String,
-        val tpNr: String,
-        val tpNavn: String,
-        val sendtDato: LocalDate,
-        val svartDato: LocalDate?,
-        val purretDato: LocalDate?,
-        val refusjonskrav: Boolean,
-        val versjon: Long
     )
 }

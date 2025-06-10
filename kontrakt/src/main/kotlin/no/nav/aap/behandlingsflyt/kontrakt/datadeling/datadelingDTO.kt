@@ -18,7 +18,7 @@ public data class DatadelingDTO(
     val rettighetsTypeTidsLinje: List<RettighetsTypePeriode>,
     val behandlingsReferanse: String,
     val samId: String? = null,
-    val vedtakId: Long? = null
+    val vedtakId: Long
 )
 
 public data class RettighetsTypePeriode(
