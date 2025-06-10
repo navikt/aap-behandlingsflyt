@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningVurderingRepositoryImpl
@@ -131,7 +130,7 @@ class SamordningYtelseVurderingServiceTest {
         ).id
         return FlytKontekstMedPerioder(
             sakId, behandlingId, null, TypeBehandling.Førstegangsbehandling,
-            VurderingTilBehandling(VurderingType.FØRSTEGANGSBEHANDLING, rettighetsperiode, setOf())
+            VurderingType.FØRSTEGANGSBEHANDLING, rettighetsperiode, setOf()
         )
     }
 }

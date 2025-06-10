@@ -35,11 +35,7 @@ class AvklarSykdomLøser(
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val yrkesskadeGrunnlag = yrkersskadeRepository.hentHvisEksisterer(behandling.id)
 
-        /* midlertidig, inntil frontend er over på sykdomsvurdering */
-        val nyeSykdomsvurderinger = when {
-            løsning.sykdomsvurderinger != null -> løsning.sykdomsvurderinger
-            else -> listOf(løsning.sykdomsvurdering!!)
-        }
+        val nyeSykdomsvurderinger = løsning.sykdomsvurderinger
             .map { it.toSykdomsvurdering(kontekst.bruker) }
             .let {
                 SykdomGrunnlag(

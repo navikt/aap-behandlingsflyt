@@ -28,6 +28,7 @@ data class InntektINorgeGrunnlag(
     val opptjeningsLand: String?,
     val inntektType: String?,
     val periode: Periode,
+    val organisasjonsNavn: String?
 )
 
 data class ArbeidINorgeGrunnlag(
@@ -35,6 +36,11 @@ data class ArbeidINorgeGrunnlag(
     val arbeidsforholdKode: String,
     val startdato: LocalDate,
     val sluttdato: LocalDate?
+)
+
+data class EnhetGrunnlag(
+    val orgnummer: String,
+    val orgNavn: String
 )
 
 enum class InntektTyper {

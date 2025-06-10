@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.KanIkkeVurdereEgneVurderingerException
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
-import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.httpklient.auth.Bruker
@@ -36,7 +35,7 @@ class FatteVedtakLøser(
         validerAvklaringsbehovOppMotBruker(avklaringsbehovene.alle().filter { it.erTotrinn() }, kontekst.bruker)
 
         if (skalSendesTilbake(løsning.vurderinger)) {
-            val flyt = utledType(behandling.typeBehandling()).flyt()
+            val flyt = behandling.flyt()
             val vurderingerSomErSendtTilbake = løsning.vurderinger
                 .filter { it.godkjent == false }
 
@@ -54,7 +53,7 @@ class FatteVedtakLøser(
                     )
                 }
 
-            val vurderingerSomMåReåpnes = avklaringsbehovene.alle()
+            val vurderingerSomMåReåpnes = avklaringsbehovene.alleEkskludertVentebehov()
                 .filterNot { behov ->
                     behov.definisjon in setOf(
                         Definisjon.FORESLÅ_VEDTAK,

@@ -271,12 +271,11 @@ class SamordningPeriodeSammenlignerTest {
         return PersonOgSakService(
             FakePdlGateway,
             InMemoryPersonRepository,
-            InMemorySakRepository,
+            InMemorySakRepository
         ).finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
     }
     private fun opprettBehandling(sak: Sak): Behandling {
         return InMemorySakOgBehandlingService
             .finnEllerOpprettBehandling(sak.saksnummer, listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD)))
-            .behandling
     }
 }

@@ -35,7 +35,7 @@ fun NormalOpenAPIRoute.driftAPI(dataSource: DataSource, repositoryRegistry: Repo
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
 
-                    Driftfunksjoner(repositoryRegistry).flyttBehandlingTilStart(behandling.id, connection)
+                    Driftfunksjoner(repositoryProvider).flyttBehandlingTilStart(behandling.id, connection)
                 }
                 respondWithStatus(HttpStatusCode.Accepted)
             }

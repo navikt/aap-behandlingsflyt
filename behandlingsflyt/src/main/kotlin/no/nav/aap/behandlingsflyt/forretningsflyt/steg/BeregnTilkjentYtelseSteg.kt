@@ -48,7 +48,7 @@ class BeregnTilkjentYtelseSteg private constructor(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (kontekst.vurdering.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
             return Fullført
         }
 

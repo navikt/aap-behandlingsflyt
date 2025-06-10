@@ -2,8 +2,8 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 
 val ktorVersion = "3.1.3"
-val komponenterVersjon = "1.0.247"
-val junitVersjon = "5.12.2"
+val komponenterVersjon = "1.0.261"
+val junitVersjon = "5.13.1"
 val opentelemetryVersion = "2.16.0-alpha"
 
 
@@ -94,8 +94,8 @@ dependencies {
     implementation(project(":kontrakt"))
     implementation(project(":repository"))
     implementation("com.zaxxer:HikariCP:6.3.0")
-    implementation("org.flywaydb:flyway-database-postgresql:11.8.2")
-    runtimeOnly("org.postgresql:postgresql:42.7.5")
+    implementation("org.flywaydb:flyway-database-postgresql:11.9.1")
+    runtimeOnly("org.postgresql:postgresql:42.7.6")
     implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:${opentelemetryVersion}")
     implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:${opentelemetryVersion}")
@@ -106,7 +106,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersjon")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersjon")
     testImplementation("org.assertj:assertj-core:3.27.3")
-    testImplementation("org.testcontainers:postgresql:1.21.0")
+    testImplementation("org.testcontainers:postgresql:1.21.1")
     constraints {
         implementation("org.apache.commons:commons-compress:1.27.1") {
             because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")

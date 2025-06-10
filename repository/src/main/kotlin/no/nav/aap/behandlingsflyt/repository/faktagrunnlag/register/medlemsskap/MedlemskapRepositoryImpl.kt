@@ -148,7 +148,7 @@ class MedlemskapRepositoryImpl(private val connection: DBConnection) : Medlemska
                 setLongArray(4, medlemskapUnntakPersonIds)
             }
         }
-        log.info("Slettet $deletedRows raderfra MEDLEMSKAP_UNNTAK_GRUNNLAG")
+        log.info("Slettet $deletedRows rader fra MEDLEMSKAP_UNNTAK_GRUNNLAG")
     }
 
     private fun getMedlemskapUnntakPersonIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

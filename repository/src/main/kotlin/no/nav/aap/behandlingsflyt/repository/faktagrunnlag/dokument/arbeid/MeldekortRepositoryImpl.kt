@@ -197,7 +197,7 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
                 setLongArray(4, meldekorteneIds)
             }
         }
-        log.info("Slettet $deletedRows raderfra meldekort_grunnlag")
+        log.info("Slettet $deletedRows rader fra meldekort_grunnlag")
     }
 
     private fun getMeldekorteneIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
-import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -167,12 +166,16 @@ class Avklaringsbehovene(
         } else {
             null
         }
-        avklaringsbehov.reåpne(frist = frist, grunn = avklaringsbehov.grunn())
+        avklaringsbehov.reåpne(frist = frist, venteårsak = avklaringsbehov.venteårsak())
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
     override fun alle(): List<Avklaringsbehov> {
         return avklaringsbehovene
+    }
+
+    override fun alleEkskludertVentebehov(): List<Avklaringsbehov> {
+        return avklaringsbehovene.filterNot { it.definisjon.erVentebehov() }
     }
 
     fun åpne(): List<Avklaringsbehov> {
@@ -240,7 +243,7 @@ class Avklaringsbehovene(
 
     fun validerPlassering(behandling: Behandling) {
         val nesteSteg = behandling.aktivtSteg()
-        val behandlingFlyt = utledType(behandling.typeBehandling()).flyt()
+        val behandlingFlyt = behandling.flyt()
         behandlingFlyt.forberedFlyt(nesteSteg)
         val uhåndterteBehov = alle().filter { it.erÅpent() }
             .filter { definisjon ->

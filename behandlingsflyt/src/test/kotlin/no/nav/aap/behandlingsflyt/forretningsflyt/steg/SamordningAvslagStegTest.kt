@@ -53,7 +53,7 @@ class SamordningAvslagStegTest {
 
     @BeforeEach
     fun setUp() {
-        every { kontekst.vurdering.rettighetsperiode } returns rettighetsperiode
+        every { kontekst.rettighetsperiode } returns rettighetsperiode
         every { vilkårsresultatRepository.hent(any()) } returns Vilkårsresultat(id = 1L, vilkår = emptyList())
         every { samordningService.hentYtelser(any()) } returns null
         every { samordningService.hentVurderinger(any()) } returns null

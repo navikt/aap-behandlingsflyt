@@ -69,7 +69,7 @@ public class Innsending(
             }
             
             InnsendingType.KLAGE -> {
-                require(referanse.type == InnsendingReferanse.Type.JOURNALPOST)
+                require(referanse.type == InnsendingReferanse.Type.JOURNALPOST || referanse.type == InnsendingReferanse.Type.MANUELL_OPPRETTELSE)
                 require(melding is Klage)
             }
 

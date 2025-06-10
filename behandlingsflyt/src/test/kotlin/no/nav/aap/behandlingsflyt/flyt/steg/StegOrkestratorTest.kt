@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.InformasjonskravRepos
 import no.nav.aap.behandlingsflyt.flyt.steg.internal.StegKonstruktørImpl
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
+import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -35,7 +35,6 @@ internal class StegOrkestratorTest {
         dataSource.transaction { connection ->
             val ident = Ident("123123123126")
             val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-
             val sak = PersonOgSakService(
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
@@ -48,21 +47,20 @@ internal class StegOrkestratorTest {
             val kontekst = behandling.flytKontekst()
 
             val resultat = StegOrkestrator(
-                aktivtSteg = TestFlytSteg,
                 informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                     InformasjonskravRepositoryImpl(connection),
                     postgresRepositoryRegistry.provider(connection),
                 ),
                 behandlingRepository = BehandlingRepositoryImpl(connection),
                 avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection),
-                perioderTilVurderingService = PerioderTilVurderingService(
-                    SakService(SakRepositoryImpl(connection)),
-                    BehandlingRepositoryImpl(connection),
-                    FakeUnleash(mapOf()),
-                ),
                 stegKonstruktør = StegKonstruktørImpl(postgresRepositoryRegistry.provider(connection))
             ).utfør(
-                kontekst,
+                TestFlytSteg,
+                FlytKontekstMedPeriodeService(
+                    SakService(SakRepositoryImpl(connection)),
+                    BehandlingRepositoryImpl(connection),
+                    FakeUnleash,
+               ).utled(kontekst, TestFlytSteg.type()),
                 behandling,
                 listOf()
             )

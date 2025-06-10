@@ -54,7 +54,7 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
                 setLongArray(7, beregningIds)
             }
         }
-        log.info("Slettet $deletedRows raderfra beregning_hoved")
+        log.info("Slettet $deletedRows rader fra beregning_hoved")
     }
 
     private fun getBeregningUforeIds(beregningIds: List<Long>): List<Long> = connection.queryList(

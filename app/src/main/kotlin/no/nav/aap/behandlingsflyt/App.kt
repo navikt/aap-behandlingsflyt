@@ -27,11 +27,11 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.sy
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepengergrunnlag.sykepengerGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt.manglendeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt.beregningVurderingAPI
-import no.nav.aap.behandlingsflyt.behandling.brev.brevApi
 import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.aktivitetspliktApi
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.institusjonAPI
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.klage.effektueravvistpåformkrav.effektuerAvvistPåFormkravGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.resultat.klageresultatApi
 import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringApi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.forutgåendeMedlemskapAPI
@@ -50,12 +50,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.fla
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.flate.klagebehandlingNayGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.flate.påklagetBehandlingGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.arbeidsevneGrunnlagApi
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.bistandsgrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.bistand.bistandsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.flate.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
-import no.nav.aap.behandlingsflyt.integrasjon.aaregisteret.AARegisterGateway
+import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.integrasjon.brev.BrevGateway
 import no.nav.aap.behandlingsflyt.integrasjon.datadeling.ApiInternGatewayImpl
@@ -69,6 +69,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.integrasjon.meldekort.MeldekortGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
 import no.nav.aap.behandlingsflyt.behandling.klage.trekk.trekkKlageGrunnlagAPI
+import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
 import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
@@ -78,7 +79,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.samordning.TjenestePensjonGatewayI
 import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.tilgang.TilgangGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreGateway
-import no.nav.aap.behandlingsflyt.integrasjon.unleash.UnleashService
+import no.nav.aap.behandlingsflyt.integrasjon.unleash.UnleashGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.utbetaling.UtbetalingGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
@@ -195,9 +196,11 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
                 klagebehandlingNayGrunnlagApi(dataSource, repositoryRegistry)
                 klageresultatApi(dataSource, repositoryRegistry)
                 trekkKlageGrunnlagAPI(dataSource, repositoryRegistry)
+                effektuerAvvistPåFormkravGrunnlagApi(dataSource, repositoryRegistry)
                 // Flytt
                 brevApi(dataSource, repositoryRegistry)
                 dokumentinnhentingAPI(dataSource, repositoryRegistry)
+                dokumentAPI()
                 mottattHendelseApi(dataSource, repositoryRegistry)
                 underveisVurderingerAPI(dataSource, repositoryRegistry)
                 lovvalgMedlemskapAPI(dataSource, repositoryRegistry)
@@ -225,6 +228,7 @@ private fun registerGateways() {
         .register<ApiInternGatewayImpl>()
         .register<UtbetalingGatewayImpl>()
         .register<AARegisterGateway>()
+        .register<EREGGateway>()
         .register<StatistikkGatewayImpl>()
         .register<InntektGatewayImpl>()
         .register<BrevGateway>()
@@ -234,7 +238,7 @@ private fun registerGateways() {
         .register<MeldekortGatewayImpl>()
         .register<TilgangGatewayImpl>()
         .register<TjenestePensjonGatewayImpl>()
-        .register<UnleashService>()
+        .register<UnleashGatewayImpl>()
         .register<SamGatewayImpl>()
         .register<NomInfoGateway>()
         .register<NorgGateway>()

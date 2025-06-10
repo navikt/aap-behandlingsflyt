@@ -14,9 +14,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_SYKDOM_KODE)
 class AvklarSykdomLøsning(
-    @Deprecated("skal over på sykdomsvurderinger")
-    @JsonProperty("sykdomsvurdering", required = false) val sykdomsvurdering: SykdomsvurderingLøsningDto? = null,
-    @JsonProperty("sykdomsvurderinger", required = false) val sykdomsvurderinger: List<SykdomsvurderingLøsningDto>? = null,
+    @JsonProperty("sykdomsvurderinger", required = true) val sykdomsvurderinger: List<SykdomsvurderingLøsningDto>,
     @JsonProperty(
         "behovstype",
         required = true,

@@ -17,6 +17,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 class SamordningYtelseRepositoryImplTest {
@@ -262,6 +263,56 @@ class SamordningYtelseRepositoryImplTest {
             val nyBehandling = finnEllerOpprettBehandling(it, sak(it))
 
             SamordningYtelseRepositoryImpl(it).kopier(behandling1.id, nyBehandling.id)
+        }
+    }
+
+    @Test
+    fun `test sletting`() {
+        InitTestDatabase.freshDatabase().transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val samordningYtelseRepository = SamordningYtelseRepositoryImpl(connection)
+            samordningYtelseRepository.lagre(
+                behandling.id, listOf(
+                    SamordningYtelse(
+                        ytelseType = Ytelse.SYKEPENGER,
+                        ytelsePerioder = listOf(
+                            SamordningYtelsePeriode(
+                                periode = Periode(
+                                    fom = LocalDate.of(2023, 1, 1),
+                                    tom = LocalDate.of(2023, 12, 31)
+                                ),
+                                gradering = null,
+                                kronesum = 1000
+                            )
+                        ),
+                        kilde = "TEST1",
+                        saksRef = "REF1"
+                    )
+                )
+            )
+            samordningYtelseRepository.lagre(
+                behandling.id, listOf(
+                    SamordningYtelse(
+                        ytelseType = Ytelse.SYKEPENGER,
+                        ytelsePerioder = listOf(
+                            SamordningYtelsePeriode(
+                                periode = Periode(
+                                    fom = LocalDate.of(2024, 1, 1),
+                                    tom = LocalDate.of(2024, 12, 31)
+                                ),
+                                gradering = null,
+                                kronesum = 1000
+                            )
+                        ),
+                        kilde = "TEST1",
+                        saksRef = "REF1"
+                    )
+                )
+            )
+            assertDoesNotThrow {
+                samordningYtelseRepository.slett(behandling.id)
+            }
         }
     }
 

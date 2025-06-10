@@ -62,7 +62,7 @@ class VurderBistandsbehovSteg private constructor(
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        when (kontekst.vurdering.vurderingType) {
+        when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     log.info("Ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.BISTANDSVILKÅRET} for behandlingId ${kontekst.behandlingId}. Avbryter steg.")
@@ -70,7 +70,7 @@ class VurderBistandsbehovSteg private constructor(
                     vilkårService.ingenNyeVurderinger(
                         kontekst.behandlingId,
                         Vilkårtype.BISTANDSVILKÅRET,
-                        kontekst.vurdering.rettighetsperiode,
+                        kontekst.rettighetsperiode,
                         "mangler behandlingsgrunnlag",
                     )
                     return Fullført
@@ -78,7 +78,7 @@ class VurderBistandsbehovSteg private constructor(
 
                 // sjekk behovet for avklaring for periode
                 if (erBehovForAvklarForPerioden(
-                        kontekst.vurdering.rettighetsperiode,
+                        kontekst.rettighetsperiode,
                         studentGrunnlag,
                         sykdomsvurderinger,
                         bistandsGrunnlag,
@@ -91,7 +91,7 @@ class VurderBistandsbehovSteg private constructor(
 
                 // Vurder vilkår
                 vurderVilkårForPeriode(
-                    kontekst.vurdering.rettighetsperiode,
+                    kontekst.rettighetsperiode,
                     bistandsGrunnlag,
                     studentGrunnlag,
                     vilkårsresultat
@@ -101,7 +101,7 @@ class VurderBistandsbehovSteg private constructor(
             VurderingType.REVURDERING -> {
                 // sjekk behovet for avklaring for periode
                 if (erBehovForAvklarForPerioden(
-                        kontekst.vurdering.rettighetsperiode,
+                        kontekst.rettighetsperiode,
                         studentGrunnlag,
                         sykdomsvurderinger,
                         bistandsGrunnlag,
@@ -114,7 +114,7 @@ class VurderBistandsbehovSteg private constructor(
 
                 // Vurder vilkår for periode
                 vurderVilkårForPeriode(
-                    kontekst.vurdering.rettighetsperiode,
+                    kontekst.rettighetsperiode,
                     bistandsGrunnlag,
                     studentGrunnlag,
                     vilkårsresultat
@@ -126,7 +126,7 @@ class VurderBistandsbehovSteg private constructor(
                 // Skal ikke gjøre noe
             }
         }
-        if (kontekst.vurdering.skalVurdereNoe()) {
+        if (kontekst.harNoeTilBehandling()) {
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         }
 

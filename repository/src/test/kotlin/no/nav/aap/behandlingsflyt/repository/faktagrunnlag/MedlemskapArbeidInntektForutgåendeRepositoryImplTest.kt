@@ -1,7 +1,12 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag
 
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektInformasjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Inntekt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Virksomhet
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -25,21 +30,57 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.YearMonth
 
 internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     private val dataSource = InitTestDatabase.freshDatabase()
 
     @Test
+    fun mapperOrgnavnKorrektTilForutgåendeInntekt() {
+        dataSource.transaction { connection ->
+            val personOgSakService = PersonOgSakService(
+                FakePdlGateway,
+                PersonRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
+            )
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
+            val repo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
+
+            val sak = personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            val behandling = behandlingRepo.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+            lagNyFullVurdering(behandling.id, repo, "Første begrunnelse", connection)
+
+            val lagretInntekt = repo.hentHvisEksisterer(behandling.id)!!
+
+            val inntekt1 = lagretInntekt.inntekterINorgeGrunnlag.first{it.identifikator == "1234"}
+            val inntekt2 = lagretInntekt.inntekterINorgeGrunnlag.first{it.identifikator == "4321"}
+
+            assertEquals(inntekt1.organisasjonsNavn, "Bepis AS")
+            assertEquals(inntekt1.identifikator, "1234")
+            assertEquals(inntekt2.organisasjonsNavn, "Rotte AS")
+            assertEquals(inntekt2.identifikator, "4321")
+        }
+    }
+
+    @Test
     fun `kan hente siste relevante utenlandsopplysning`() {
         val sak = dataSource.transaction { connection ->
             val personOgSakService =
-                PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
+                PersonOgSakService(
+                    FakePdlGateway,
+                    PersonRepositoryImpl(connection),
+                    SakRepositoryImpl(connection)
+                )
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
 
         val sak2 = dataSource.transaction { connection ->
             val personOgSakService =
-                PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
+                PersonOgSakService(
+                    FakePdlGateway,
+                    PersonRepositoryImpl(connection),
+                    SakRepositoryImpl(connection)
+                )
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
 
@@ -77,13 +118,21 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     fun `henter relaterte historiske vurderinger`() {
         val sak = dataSource.transaction { connection ->
             val personOgSakService =
-                PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
+                PersonOgSakService(
+                    FakePdlGateway,
+                    PersonRepositoryImpl(connection),
+                    SakRepositoryImpl(connection)
+                )
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
 
         val sak2 = dataSource.transaction { connection ->
             val personOgSakService =
-                PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
+                PersonOgSakService(
+                    FakePdlGateway,
+                    PersonRepositoryImpl(connection),
+                    SakRepositoryImpl(connection)
+                )
             personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
         }
 
@@ -139,8 +188,44 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             JournalpostId("1"),
             utenlandsOppholdData
         )
-
-        forutgåendeRepository.lagreArbeidsforholdOgInntektINorge(behandlingId, listOf(), listOf(), null)
+        forutgåendeRepository.lagreArbeidsforholdOgInntektINorge(behandlingId, listOf(),
+            listOf(
+                ArbeidsInntektMaaned(
+                    aarMaaned = YearMonth.now(),
+                    arbeidsInntektInformasjon = ArbeidsInntektInformasjon(
+                        listOf(
+                            Inntekt(
+                                beloep = 1.0,
+                                opptjeningsland = null,
+                                skattemessigBosattLand = null,
+                                opptjeningsperiodeFom = null,
+                                opptjeningsperiodeTom = null,
+                                virksomhet = Virksomhet(
+                                    identifikator = "1234"
+                                ),
+                                beskrivelse = null
+                            ),
+                            Inntekt(
+                                beloep = 1.0,
+                                opptjeningsland = null,
+                                skattemessigBosattLand = null,
+                                opptjeningsperiodeFom = null,
+                                opptjeningsperiodeTom = null,
+                                virksomhet = Virksomhet(
+                                    identifikator = "4321"
+                                ),
+                                beskrivelse = null
+                            ),
+                        )
+                    )
+                ),
+            ),
+            null,
+            enhetGrunnlag = listOf(
+                EnhetGrunnlag("1234", "Bepis AS"),
+                EnhetGrunnlag("4321", "Rotte AS")
+            )
+        )
         forutgåendeRepository.lagreManuellVurdering(
             behandlingId,
             ManuellVurderingForForutgåendeMedlemskap(

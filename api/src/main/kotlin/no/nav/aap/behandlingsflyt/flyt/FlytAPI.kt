@@ -98,7 +98,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource, repositoryRegistry: Repos
                             })
                     // Henter denne ut etter status er utledet for å være sikker på at dataene er i rett tilstand
                     behandling = behandling(behandlingRepository, req)
-                    val flyt = utledType(behandling.typeBehandling()).flyt()
+                    val flyt = behandling.flyt()
 
                     val stegGrupper: Map<StegGruppe, List<StegType>> =
                         flyt.stegene().groupBy { steg -> steg.gruppe }
@@ -265,7 +265,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource, repositoryRegistry: Repos
                             avklaringsbehov.definisjon,
                             avklaringsbehov.frist(),
                             avklaringsbehov.begrunnelse(),
-                            requireNotNull(avklaringsbehov.grunn())
+                            requireNotNull(avklaringsbehov.venteårsak())
                         )
                     } else {
                         null
@@ -354,9 +354,11 @@ private fun utledVisning(
     val visKvalitetssikringKort = utledVisningAvKvalitetsikrerKort(alleAvklaringsbehovInkludertFrivillige)
     val kvalitetssikringReadOnly = visKvalitetssikringKort && flyt.erStegFør(aktivtSteg, StegType.KVALITETSSIKRING)
     val visBrevkort =
-        alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_BREV)?.erÅpent() == true ||
-                alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
-                    ?.erÅpent() == true
+        alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_BREV)?.erÅpent() == true
+                || alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
+            ?.erÅpent() == true
+                || alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
+            ?.erÅpent() == true
 
     if (jobberEllerFeilet) {
         return Visning(

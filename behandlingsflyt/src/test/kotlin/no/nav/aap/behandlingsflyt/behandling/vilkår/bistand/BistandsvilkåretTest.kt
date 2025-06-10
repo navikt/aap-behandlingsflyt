@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurd
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -222,11 +221,9 @@ class BistandsvilkåretTest {
                     behandlingId = førstegangsbehandling.id,
                     forrigeBehandlingId = førstegangsbehandling.forrigeBehandlingId,
                     behandlingType = TypeBehandling.Førstegangsbehandling,
-                    vurdering = VurderingTilBehandling(
-                        vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                        årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
-                        rettighetsperiode = sak.rettighetsperiode
-                    ),
+                    vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+                    årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                    rettighetsperiode = sak.rettighetsperiode,
                 )
             )
 
@@ -277,11 +274,9 @@ class BistandsvilkåretTest {
                     behandlingId = revurdering.id,
                     forrigeBehandlingId = revurdering.forrigeBehandlingId,
                     behandlingType = TypeBehandling.Revurdering,
-                    vurdering = VurderingTilBehandling(
-                        vurderingType = VurderingType.REVURDERING,
-                        årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING),
-                        rettighetsperiode = sak.rettighetsperiode
-                    ),
+                    vurderingType = VurderingType.REVURDERING,
+                    årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING),
+                    rettighetsperiode = sak.rettighetsperiode,
                 )
             )
         }

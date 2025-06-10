@@ -81,7 +81,7 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
                 setLongArray(3, rettighetsPeriodeVurderingerIds)
             }
         }
-        log.info("Slettet $deletedRows raderfra rettighetsperiode_grunnlag")
+        log.info("Slettet $deletedRows rader fra rettighetsperiode_grunnlag")
     }
 
     private fun getRettighetsPeriodeVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

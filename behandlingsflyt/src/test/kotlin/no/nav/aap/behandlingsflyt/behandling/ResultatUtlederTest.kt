@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.BeriketBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.desember
@@ -49,7 +49,7 @@ class ResultatUtlederTest {
         val behandling = opprettBehandling(sak)
 
         InMemoryUnderveisRepository.lagre(
-            behandlingId = behandling.behandling.id,
+            behandlingId = behandling.id,
             underveisperioder = listOf(
                 underveisperiode(Utfall.OPPFYLT, Periode(1 januar 2023, 31 desember 2023)),
                 underveisperiode(Utfall.IKKE_OPPFYLT, Periode(1 januar 2024, 31 desember 2024)),
@@ -57,7 +57,7 @@ class ResultatUtlederTest {
             input = object : Faktagrunnlag {}
         )
 
-        val resultat = resultatUtleder.utledResultat(behandling.behandling.id)
+        val resultat = resultatUtleder.utledResultat(behandling.id)
 
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
     }
@@ -68,7 +68,7 @@ class ResultatUtlederTest {
         val behandling = opprettBehandling(sak)
 
         InMemoryUnderveisRepository.lagre(
-            behandlingId = behandling.behandling.id,
+            behandlingId = behandling.id,
             underveisperioder = listOf(
                 underveisperiode(Utfall.IKKE_OPPFYLT, Periode(1 januar 2023, 31 desember 2023)),
                 underveisperiode(Utfall.IKKE_OPPFYLT, Periode(1 januar 2024, 31 desember 2024)),
@@ -76,7 +76,7 @@ class ResultatUtlederTest {
             input = object : Faktagrunnlag {}
         )
 
-        val resultat = resultatUtleder.utledResultat(behandling.behandling.id)
+        val resultat = resultatUtleder.utledResultat(behandling.id)
 
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
     }
@@ -85,13 +85,13 @@ class ResultatUtlederTest {
     fun `per nå, støtter kun å utlede resultat for førstegangsbehandling`() {
         val sak = nySak(Periode(1 januar 2023, 31 desember 2023))
         val behandling = opprettBehandling(sak)
-        InMemoryBehandlingRepository.oppdaterBehandlingStatus(behandling.behandling.id, Status.AVSLUTTET)
+        InMemoryBehandlingRepository.oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
         val behandling2 = opprettBehandling(sak)
 
-        assertThat(behandling2.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+        assertThat(behandling2.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
 
         InMemoryUnderveisRepository.lagre(
-            behandlingId = behandling.behandling.id,
+            behandlingId = behandling.id,
             underveisperioder = listOf(
                 underveisperiode(Utfall.IKKE_OPPFYLT, Periode(1 januar 2023, 31 desember 2023)),
                 underveisperiode(Utfall.IKKE_OPPFYLT, Periode(1 januar 2024, 31 desember 2024)),
@@ -100,7 +100,7 @@ class ResultatUtlederTest {
         )
 
         assertThrows<IllegalArgumentException> {
-            resultatUtleder.utledResultat(behandling2.behandling.id)
+            resultatUtleder.utledResultat(behandling2.id)
         }
     }
 
@@ -133,11 +133,11 @@ class ResultatUtlederTest {
         return PersonOgSakService(
             FakePdlGateway,
             InMemoryPersonRepository,
-            InMemorySakRepository,
+            InMemorySakRepository
         ).finnEllerOpprett(ident(), periode)
     }
 
-    private fun opprettBehandling(sak: Sak): BeriketBehandling {
+    private fun opprettBehandling(sak: Sak): Behandling {
         return InMemorySakOgBehandlingService.finnEllerOpprettBehandling(sak.saksnummer, listOf())
     }
 }

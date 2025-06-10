@@ -1,9 +1,10 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -38,16 +39,48 @@ internal class BarnRepositoryImplTest {
 
     @Test
     fun `Lagrer og henter barn`() {
-        dataSource.transaction { connection ->
+        val vurderteBarn = listOf(
+            VurdertBarn(
+                ident = Ident("12345"),
+                vurderinger = listOf(
+                    VurderingAvForeldreAnsvar(
+                        fraDato = LocalDate.now(),
+                        harForeldreAnsvar = true,
+                        begrunnelse = "fsdf"
+                    )
+                )
+            )
+        )
+        val barnListe = setOf(Ident("12345678910"), Ident("12345"))
+
+        val behandling = dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val barnRepository = BarnRepositoryImpl(connection)
-            val barnListe = setOf(Ident("12345678910"), Ident("12345"))
+
 
             barnRepository.lagreRegisterBarn(behandling.id, barnListe)
+            barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = setOf(Ident("1"))))
+            barnRepository.lagreVurderinger(behandling.id, vurderteBarn)
+            behandling
+        }
+
+        dataSource.transaction { connection ->
+            val barnRepository = BarnRepositoryImpl(connection)
             val barn = barnRepository.hent(behandling.id)
             assertThat(barn.registerbarn?.identer).containsExactlyInAnyOrderElementsOf(barnListe)
+            assertThat(barn.oppgitteBarn?.identer).containsExactly(Ident("1"))
+            assertThat(barn.vurderteBarn?.barn).isEqualTo(vurderteBarn)
+        }
+
+        dataSource.transaction { connection ->
+            {
+                val barnRepository = BarnRepositoryImpl(connection)
+                // Slette
+                barnRepository.slett(behandling.id)
+                assertThat(barnRepository.hentHvisEksisterer(behandling.id)).isNull()
+            }
         }
     }
 

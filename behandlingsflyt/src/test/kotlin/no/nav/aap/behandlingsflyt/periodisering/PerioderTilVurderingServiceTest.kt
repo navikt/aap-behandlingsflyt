@@ -37,15 +37,15 @@ class PerioderTilVurderingServiceTest {
             TypeBehandling.Førstegangsbehandling, null
         )
 
-        val perioderTilVurderingService = PerioderTilVurderingService(
+        val flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(
             sakService = SakService(
                 sakRepository = InMemorySakRepository
             ),
             behandlingRepository = InMemoryBehandlingRepository,
-            unleashGateway = FakeUnleash(mapOf())
+            unleashGateway = FakeUnleash
         )
 
-        val res = perioderTilVurderingService.utled(
+        val res = flytKontekstMedPeriodeService.utled(
             FlytKontekst(
                 sakId = sak.id,
                 behandlingId = behandling.id,

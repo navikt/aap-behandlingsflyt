@@ -27,7 +27,7 @@ class OpprettRevurderingSteg(
 ) : BehandlingSteg {
     private val logger = LoggerFactory.getLogger(javaClass)
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        return when (kontekst.vurdering.vurderingType) {
+        return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (trukketSøknadService.søknadErTrukket(kontekst.behandlingId)) {
                     return Fullført
@@ -40,7 +40,7 @@ class OpprettRevurderingSteg(
                 if (!erUsikkerhetTilknyttetMaksSykepengerDato(samordningVurdering)) return Fullført
 
                 logger.info("Oppretter revurdering. SakID: ${kontekst.sakId}")
-                val beriketBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
+                val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
                     sakId = kontekst.sakId,
                     årsaker = listOf(
                         Årsak(
@@ -50,12 +50,9 @@ class OpprettRevurderingSteg(
                 )
 
                 val behandlingSkrivelås =
-                    låsRepository.låsBehandling(beriketBehandling.behandling.id)
+                    låsRepository.låsBehandling(behandling.id)
 
-                prosesserBehandling.triggProsesserBehandling(
-                    beriketBehandling.behandling.sakId,
-                    beriketBehandling.behandling.id,
-                )
+                prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
                 låsRepository.verifiserSkrivelås(behandlingSkrivelås)
 
                 return Fullført

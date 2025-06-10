@@ -16,6 +16,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 internal class SamordningUføreRepositoryImplTest {
@@ -52,6 +53,50 @@ internal class SamordningUføreRepositoryImplTest {
 
         assertThat(uthentet).isNotNull
         assertThat(uthentet?.vurdering).isEqualTo(vurdering)
+    }
+
+    @Test
+    fun `test sletting`() {
+        InitTestDatabase.freshDatabase().transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val samordningUføreRepository = SamordningUføreRepositoryImpl(connection)
+            samordningUføreRepository.lagre(
+                behandling.id,
+                SamordningUføreVurdering(
+                    begrunnelse = "En fin begrunnelse", vurderingPerioder = listOf(
+                        SamordningUføreVurderingPeriode(
+                            virkningstidspunkt = periode.fom,
+                            uføregradTilSamordning = Prosent.`50_PROSENT`
+                        ),
+                        SamordningUføreVurderingPeriode(
+                            virkningstidspunkt = periode.fom.plusMonths(4),
+                            uføregradTilSamordning = Prosent.`70_PROSENT`
+                        )
+                    )
+                )
+            )
+            samordningUføreRepository.lagre(
+                behandling.id,
+                SamordningUføreVurdering(
+                    begrunnelse = "En fin begrunnelse", vurderingPerioder = listOf(
+                        SamordningUføreVurderingPeriode(
+                            virkningstidspunkt = periode.fom,
+                            uføregradTilSamordning = Prosent.`50_PROSENT`
+                        ),
+                        SamordningUføreVurderingPeriode(
+                            virkningstidspunkt = periode.fom.plusMonths(2),
+                            uføregradTilSamordning = Prosent.`70_PROSENT`
+                        )
+                    )
+                )
+            )
+            assertDoesNotThrow {
+                samordningUføreRepository.slett(behandling.id)
+            }
+
+
+        }
     }
 
     private fun sak(connection: DBConnection): Sak {

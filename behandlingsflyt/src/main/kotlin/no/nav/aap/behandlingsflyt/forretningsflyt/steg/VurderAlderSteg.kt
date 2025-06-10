@@ -32,13 +32,13 @@ class VurderAlderSteg private constructor(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        when (kontekst.vurdering.vurderingType) {
+        when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     vilkårService.ingenNyeVurderinger(
                         kontekst.behandlingId,
                         Vilkårtype.ALDERSVILKÅRET,
-                        kontekst.vurdering.rettighetsperiode,
+                        kontekst.rettighetsperiode,
                         begrunnelse = "mangler behandlingsgrunnlag"
                     )
                 } else {
@@ -66,7 +66,7 @@ class VurderAlderSteg private constructor(
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val aldersgrunnlag =
             Aldersgrunnlag(
-                kontekst.vurdering.rettighetsperiode,
+                kontekst.rettighetsperiode,
                 personopplysningGrunnlag.brukerPersonopplysning.fødselsdato
             )
         Aldersvilkåret(vilkårsresultat).vurder(aldersgrunnlag)

@@ -34,7 +34,7 @@ class MeldingOmVedtakBrevSteg private constructor(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if(trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
+        if (trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
             return Fullført
         }
 

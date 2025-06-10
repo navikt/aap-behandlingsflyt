@@ -3,14 +3,12 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType.BISTANDSBEHOV
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.mars
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -71,65 +69,6 @@ class MeldepliktRegelTest {
                 fom = 12 mai 2025,
                 tom = 25 mai 2025,
                 vurdering = MeldepliktVurdering.FørsteMeldeperiodeMedRett,
-            ),
-            Forventer(
-                fom = 26 mai 2025,
-                tom = 8 juni 2025,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
-            ),
-            Forventer(
-                fom = 9 juni 2025,
-                tom = 30 mars 2026,
-                vurdering = MeldepliktVurdering.FremtidigOppfylt,
-            ),
-        )
-    }
-
-    /*   2020
-     *           January                   February                   March
-     *   Mo  Tu We Th Fr Sa Su      Mo  Tu We Th Fr Sa  Su      Mo  Tu We Th Fr  Sa  Su
-     *                                               1   2                           [1]
-     *   [6]  7  8  9 10 11 12      [3]  4  5  6  7  8   9
-     *   13  14 15 16 17 18 19      10  11 12 13 14 15 [16]
-     *  [20] 21 22 23 24 25 26     [17] 18 19 20 21 22  23
-     *   27  28 29 30 31            24  25 26 27 28 29
-     *
-     */
-    @Test
-    fun `Sent virkningstidspunkt gammel adferd`() {
-        val rettighetsperiode = Periode(
-            31 mars 2025,
-            30 mars 2026
-        )
-
-        val input = tomUnderveisInput(
-            rettighetsperiode = rettighetsperiode,
-            innsendingsTidspunkt = mapOf(
-                26 mai 2025 to JournalpostId("1"),
-            ),
-        )
-
-        val vurdertTidslinje = vurder(
-            input,
-            nå = 26 mai 2025,
-            vurderinger = tidslinjeOf(
-                Periode(31 mars 2025, 11 mai 2025) to Vurdering(fårAapEtter = null),
-                Periode(12 mai 2025, 30 mars 2026) to Vurdering(fårAapEtter = BISTANDSBEHOV),
-            ),
-            ikkeMeldepliktFørVirkningstidspunkt = false,
-        )
-
-        assertVurdering(
-            vurdertTidslinje, rettighetsperiode,
-            Forventer(
-                fom = 31 mars 2025,
-                tom = 13 april 2025,
-                vurdering = MeldepliktVurdering.FørVedtak,
-            ),
-            Forventer(
-                fom = 14 april 2025,
-                tom = 25 mai 2025,
-                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
             Forventer(
                 fom = 26 mai 2025,
@@ -1111,14 +1050,10 @@ class MeldepliktRegelTest {
             input.rettighetsperiode,
             Vurdering(fårAapEtter = BISTANDSBEHOV)
         ),
-        ikkeMeldepliktFørVirkningstidspunkt: Boolean = true,
     ): Tidslinje<Vurdering> {
         val zone = ZoneId.systemDefault()
         val now = nå.atStartOfDay(zone).toInstant()
-        return MeldepliktRegel(
-            clock = Clock.fixed(now, zone),
-            unleashGateway = FakeUnleash(mapOf(BehandlingsflytFeature.IkkeMeldepliktForVirkningstidspunkt to ikkeMeldepliktFørVirkningstidspunkt))
-        )
+        return MeldepliktRegel(clock = Clock.fixed(now, zone))
             .vurder(input, UtledMeldeperiodeRegel().vurder(input, vurderinger))
     }
 

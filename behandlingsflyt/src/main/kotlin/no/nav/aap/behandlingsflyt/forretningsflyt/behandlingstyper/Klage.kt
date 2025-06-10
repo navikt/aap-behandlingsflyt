@@ -9,8 +9,10 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.BehandlendeEnhetSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.EffektuerAvvistPåFormkravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.FormkravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.KlagebehandlingKontorSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.KlagebehandlingNayOppsummeringSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.KlagebehandlingNaySteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.OmgjøringSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.OpprettholdelseSteg
@@ -31,10 +33,12 @@ object Klage : BehandlingType {
             )
             .medSteg(steg = PåklagetBehandlingSteg)
             .medSteg(steg = FormkravSteg)
+            .medSteg(steg = EffektuerAvvistPåFormkravSteg)
             .medSteg(steg = BehandlendeEnhetSteg)
             .medSteg(steg = KlagebehandlingKontorSteg)
             .medSteg(steg = KvalitetssikringsSteg)
             .medSteg(steg = KlagebehandlingNaySteg)
+            .medSteg(steg = KlagebehandlingNayOppsummeringSteg)
             .sluttÅOppdatereFaktagrunnlag()
             .medSteg(steg = FatteVedtakSteg)
             .medSteg(steg = OmgjøringSteg)

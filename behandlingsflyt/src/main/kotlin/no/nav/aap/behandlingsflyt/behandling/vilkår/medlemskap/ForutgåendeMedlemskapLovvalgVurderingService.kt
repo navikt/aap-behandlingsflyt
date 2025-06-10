@@ -11,9 +11,8 @@ import no.nav.aap.komponenter.type.Periode
 
 class ForutgåendeMedlemskapLovvalgVurderingService {
     fun vurderTilhørighet(grunnlag: ForutgåendeMedlemskapGrunnlag, rettighetsPeriode: Periode): KanBehandlesAutomatiskVurdering{
-        val førsteDelVurderinger = vurderFørsteDelKriteier(grunnlag)
-
         val forutgåendePeriode = Periode(rettighetsPeriode.fom.minusYears(5), rettighetsPeriode.tom)
+        val førsteDelVurderinger = vurderFørsteDelKriteier(grunnlag, forutgåendePeriode)
         val andreDelVurdering = vurderAndreDelKriterier(grunnlag, forutgåendePeriode)
 
         val oppfyltMinstEttKrav = førsteDelVurderinger.any{it.resultat}
@@ -26,9 +25,9 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
     }
 
     // Minst én må oppfylles
-    private fun vurderFørsteDelKriteier(grunnlag: ForutgåendeMedlemskapGrunnlag): List<TilhørighetVurdering> {
-        val arbeidInntektINorgeVurdering = harArbeidInntektINorge(grunnlag.medlemskapArbeidInntektGrunnlag)
-        val vedtakIMedl = harVedtakIMEDL(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag)
+    private fun vurderFørsteDelKriteier(grunnlag: ForutgåendeMedlemskapGrunnlag, forutgåendePeriode: Periode): List<TilhørighetVurdering> {
+        val arbeidInntektINorgeVurdering = harArbeidInntektINorge(grunnlag.medlemskapArbeidInntektGrunnlag, forutgåendePeriode)
+        val vedtakIMedl = harVedtakIMEDL(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag, forutgåendePeriode)
 
         return listOf(arbeidInntektINorgeVurdering, vedtakIMedl)
     }
@@ -36,20 +35,20 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
     // Ingen kan inntreffe
     private fun vurderAndreDelKriterier(grunnlag: ForutgåendeMedlemskapGrunnlag, forutgåendePeriode: Periode): List<TilhørighetVurdering> {
         val harJobbetIUtland = oppgittJobbetIUtland(grunnlag.nyeSoknadGrunnlag, forutgåendePeriode )
-        val harHattUtenlandsOpphold = oppgittUtenlandsOpphold(grunnlag.nyeSoknadGrunnlag)
-        val harUtenlandsAdresse = utenlandskAdresse(grunnlag.personopplysningGrunnlag)
-        val annetLovvalgsland = lovvalgslandIkkeErNorge(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag)
-        val utenforEØS = manglerStatsborgerskapIEØSiPerioden(grunnlag.personopplysningGrunnlag)
+        val harHattUtenlandsOpphold = oppgittUtenlandsOpphold(grunnlag.nyeSoknadGrunnlag, forutgåendePeriode)
+        val harUtenlandsAdresse = utenlandskAdresse(grunnlag.personopplysningGrunnlag, forutgåendePeriode)
+        val annetLovvalgsland = lovvalgslandIkkeErNorge(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag, forutgåendePeriode)
+        val utenforEØS = manglerStatsborgerskapIEØSiPerioden(grunnlag.personopplysningGrunnlag, forutgåendePeriode)
 
         return listOf(harJobbetIUtland, harHattUtenlandsOpphold, harUtenlandsAdresse, annetLovvalgsland, utenforEØS)
     }
 
-    private fun oppgittJobbetIUtland(grunnlag: UtenlandsOppholdData?, rettighetsPeriode: Periode): TilhørighetVurdering {
+    private fun oppgittJobbetIUtland(grunnlag: UtenlandsOppholdData?, forutgåendePeriode: Periode): TilhørighetVurdering {
         if (grunnlag == null) {
-            return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Mangler utenlandsdata fra søknad", true, "Mangler utenlandsdata fra søknad")
+            return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Mangler utenlandsdata fra søknad", true, forutgåendePeriode)
         }
         val relevantePerioder = grunnlag.utenlandsOpphold?.filter {
-            (it.tilDato != null && rettighetsPeriode.inneholder(it.tilDato)) || (it.fraDato != null && rettighetsPeriode.inneholder(it.fraDato))
+            (it.tilDato != null && forutgåendePeriode.inneholder(it.tilDato)) || (it.fraDato != null && forutgåendePeriode.inneholder(it.fraDato))
         }
         val arbeidUtlandPerioder: MutableList<OppgittJobbetIUtlandGrunnlag> = mutableListOf()
 
@@ -78,36 +77,45 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             else -> false
         }
 
-        val jsonGrunnlag = DefaultJsonMapper.toJson(grunnlag) // Todo: fjern meg når FE er klar
-
         return TilhørighetVurdering(
             kilde = listOf(Kilde.SØKNAD),
             indikasjon = Indikasjon.UTENFOR_NORGE,
             opplysning = "Arbeidet i utlandet siste 5 år",
             resultat = jobbUtenforNorge,
             oppgittJobbetIUtlandGrunnlag = arbeidUtlandPerioder,
-            fordypelse = jsonGrunnlag
+            vurdertPeriode = forutgåendePeriode
         )
     }
 
-    private fun oppgittUtenlandsOpphold(grunnlag: UtenlandsOppholdData?): TilhørighetVurdering {
+    private fun oppgittUtenlandsOpphold(grunnlag: UtenlandsOppholdData?, forutgåendePeriode: Periode): TilhørighetVurdering {
         if (grunnlag == null) {
-            return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Mangler utenlandsdata fra søknad", true, "Mangler utenlandsdata fra søknad")
+            return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Mangler utenlandsdata fra søknad", true, forutgåendePeriode)
         }
-        val jsonGrunnlag = DefaultJsonMapper.toJson(grunnlag) // Todo: fjern meg når FE er klar
+
+        val relevantePerioder = grunnlag.utenlandsOpphold?.filter {
+            (it.tilDato != null && forutgåendePeriode.inneholder(it.tilDato)) || (it.fraDato != null && forutgåendePeriode.inneholder(it.fraDato)) && !it.iArbeid
+        }
+
+        val oppholdUtlandPerioder = relevantePerioder?.map {
+            OppgittUtenlandsOppholdGrunnlag(
+                land = it.land,
+                tilDato = it.tilDato,
+                fraDato = it.fraDato,
+            )
+        }
+
         return TilhørighetVurdering(
             kilde = listOf(Kilde.SØKNAD),
             indikasjon = Indikasjon.UTENFOR_NORGE,
             opplysning = "Opphold i utlandet siste 5 år",
             resultat = !grunnlag.harBoddINorgeSiste5År,
-            oppgittUtenlandsOppholdGrunnlag = grunnlag.harBoddINorgeSiste5År,
-            fordypelse = jsonGrunnlag
+            oppgittUtenlandsOppholdGrunnlag = oppholdUtlandPerioder,
+            vurdertPeriode = forutgåendePeriode
         )
     }
 
-    private fun utenlandskAdresse(grunnlag: PersonopplysningMedHistorikkGrunnlag): TilhørighetVurdering {
+    private fun utenlandskAdresse(grunnlag: PersonopplysningMedHistorikkGrunnlag, forutgåendePeriode: Periode): TilhørighetVurdering {
         val bosattUtenforNorge = grunnlag.brukerPersonopplysning.folkeregisterStatuser.any{it.status != PersonStatus.bosatt}
-        val jsonGrunnlag = DefaultJsonMapper.toJson(grunnlag)  // Todo: fjern meg når FE er klar
 
         val utenlandsAddresserGrunnlag = grunnlag.brukerPersonopplysning.utenlandsAddresser?.map {
             UtenlandsAdresseGrunnlag(
@@ -119,6 +127,10 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
                 landkode = it.landkode,
                 adresseType = it.adresseType
             )
+        }?.filter {
+            (it.gyldigTilOgMed == null)
+                || forutgåendePeriode.inneholder(it.gyldigTilOgMed.toLocalDate())
+                || (it.gyldigFraOgMed != null && forutgåendePeriode.inneholder(it.gyldigFraOgMed.toLocalDate()))
         }
 
         return TilhørighetVurdering(
@@ -127,11 +139,11 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             opplysning = "Har hatt utenlandsk adresse i perioden",
             resultat = bosattUtenforNorge || !utenlandsAddresserGrunnlag.isNullOrEmpty(),
             utenlandsAddresserGrunnlag = utenlandsAddresserGrunnlag,
-            fordypelse = jsonGrunnlag,
+            vurdertPeriode = forutgåendePeriode
         )
     }
 
-    private fun lovvalgslandIkkeErNorge(grunnlag: MedlemskapUnntakGrunnlag?): TilhørighetVurdering {
+    private fun lovvalgslandIkkeErNorge(grunnlag: MedlemskapUnntakGrunnlag?, forutgåendePeriode: Periode): TilhørighetVurdering {
         val lovvalgslandErIkkeNorge = grunnlag?.unntak?.firstOrNull{it.verdi.lovvalgsland != "NOR"}
 
         val medlGrunnlag = grunnlag?.unntak?.map {
@@ -142,7 +154,6 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
                 kilde = it.verdi.kilde
             )
         }
-        val jsonGrunnlag = grunnlag?.let { DefaultJsonMapper.toJson(it) }
 
         return TilhørighetVurdering(
             kilde = listOf(Kilde.MEDL),
@@ -150,11 +161,11 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             opplysning = "Vedtak om annet lovvalgsland finnes",
             resultat = lovvalgslandErIkkeNorge != null,
             vedtakImedlGrunnlag = medlGrunnlag,
-            fordypelse = jsonGrunnlag
+            vurdertPeriode = Periode(forutgåendePeriode.fom, forutgåendePeriode.fom.plusYears(5))
         )
     }
 
-    private fun manglerStatsborgerskapIEØSiPerioden(grunnlag: PersonopplysningMedHistorikkGrunnlag): TilhørighetVurdering {
+    private fun manglerStatsborgerskapIEØSiPerioden(grunnlag: PersonopplysningMedHistorikkGrunnlag, forutgåendePeriode: Periode): TilhørighetVurdering {
         val fantStatsborgerskapUtenforEØSiPerioden = grunnlag.brukerPersonopplysning.statsborgerskap.any{it.land !in enumValues<EØSLand>().map { eøsLand -> eøsLand.name }}
 
         val manglerStatsborgerskapGrunnlag = grunnlag.brukerPersonopplysning.statsborgerskap.map {
@@ -163,8 +174,11 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
                 gyldigFraOgMed = it.gyldigFraOgMed,
                 gyldigTilOgMed = it.gyldigTilOgMed
             )
+        }.filter {
+            (it.gyldigTilOgMed == null)
+                || forutgåendePeriode.inneholder(it.gyldigTilOgMed)
+                || (it.gyldigFraOgMed != null && forutgåendePeriode.inneholder(it.gyldigFraOgMed))
         }
-        val jsonGrunnlag = grunnlag.let { DefaultJsonMapper.toJson(it) } // Todo: fjern meg når FE er klar
 
         return TilhørighetVurdering(
             kilde = listOf(Kilde.PDL),
@@ -172,11 +186,11 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             opplysning = "Har statsborgerskap utenfor EØS i perioden",
             resultat = fantStatsborgerskapUtenforEØSiPerioden,
             manglerStatsborgerskapGrunnlag = manglerStatsborgerskapGrunnlag,
-            fordypelse = jsonGrunnlag
+            vurdertPeriode = forutgåendePeriode
         )
     }
 
-    private fun harArbeidInntektINorge(grunnlag: ForutgåendeMedlemskapArbeidInntektGrunnlag?): TilhørighetVurdering {
+    private fun harArbeidInntektINorge(grunnlag: ForutgåendeMedlemskapArbeidInntektGrunnlag?, forutgåendePeriode: Periode): TilhørighetVurdering {
         val eksistererArbeidsforhold = grunnlag?.arbeiderINorgeGrunnlag?.any() ?: false
         val opptjeningsLandErNorge = grunnlag?.inntekterINorgeGrunnlag?.any{it.opptjeningsLand == EØSLand.NOR.toString()} ?: false
         val skattemessigBosattLandErNorge = grunnlag?.inntekterINorgeGrunnlag?.any{it.skattemessigBosattLand == EØSLand.NOR.toString()} ?: false
@@ -184,12 +198,12 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
         val harArbeidInntektINorge = skattemessigBosattLandErNorge
             || opptjeningsLandErNorge
             || eksistererArbeidsforhold
-        val jsonGrunnlag = grunnlag?.let { DefaultJsonMapper.toJson(it) } // Todo: fjern meg når FE er klar
 
         val arbeidInntektINorgeGrunnlag = if (harArbeidInntektINorge) {
             grunnlag?.inntekterINorgeGrunnlag?.map {
                 ArbeidInntektINorgeGrunnlag(
                     virksomhetId = it.identifikator,
+                    virksomhetNavn = it.organisasjonsNavn,
                     beloep = it.beloep,
                     periode = Periode(it.periode.fom, it.periode.tom),
                 )
@@ -202,13 +216,12 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             opplysning = "Arbeid og inntekt i Norge siste 5 år",
             resultat = harArbeidInntektINorge,
             arbeidInntektINorgeGrunnlag = arbeidInntektINorgeGrunnlag,
-            fordypelse = jsonGrunnlag
+            vurdertPeriode = Periode(forutgåendePeriode.fom, forutgåendePeriode.fom.plusYears(5))
         )
     }
 
-    private fun harVedtakIMEDL(grunnlag: MedlemskapUnntakGrunnlag?): TilhørighetVurdering {
+    private fun harVedtakIMEDL(grunnlag: MedlemskapUnntakGrunnlag?, forutgåendePeriode: Periode): TilhørighetVurdering {
         val erMedlem = grunnlag?.unntak?.firstOrNull{it.verdi.medlem}
-        val medlemskapINorgeGrunnlag = grunnlag?.let { DefaultJsonMapper.toJson(it) } // Todo: fjern meg når FE er klar
 
         val medlGrunnlag = grunnlag?.unntak?.map {
             VedtakIMEDLGrunnlag(
@@ -225,7 +238,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             opplysning = "Vedtak om pliktig eller frivillig medlemskap finnes i MEDL for perioden",
             resultat = erMedlem != null,
             vedtakImedlGrunnlag = medlGrunnlag,
-            fordypelse = medlemskapINorgeGrunnlag
+            vurdertPeriode = Periode(forutgåendePeriode.fom, forutgåendePeriode.fom.plusYears(5))
         )
     }
 }

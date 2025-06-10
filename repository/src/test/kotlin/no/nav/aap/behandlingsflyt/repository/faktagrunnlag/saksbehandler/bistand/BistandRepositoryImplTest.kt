@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistan
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -12,6 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -77,6 +79,48 @@ internal class BistandRepositoryImplTest {
                     )
                 )
             )
+        }
+    }
+
+    @Test
+    fun `test sletting`() {
+        InitTestDatabase.freshDatabase().transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val bistandRepository = BistandRepositoryImpl(connection)
+            bistandRepository.lagre(
+                behandling.id,
+                listOf(
+                    BistandVurdering(
+                        begrunnelse = "begrunnelse",
+                        erBehovForAktivBehandling = false,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = false,
+                        vurderingenGjelderFra = null,
+                        vurdertAv = "Z00000",
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                    )
+                )
+            )
+            bistandRepository.lagre(
+                behandling.id,
+                listOf(
+                    BistandVurdering(
+                        begrunnelse = "begrunnelse",
+                        erBehovForAktivBehandling = true,
+                        erBehovForArbeidsrettetTiltak =true,
+                        erBehovForAnnenOppfølging = true,
+                        vurderingenGjelderFra = null,
+                        vurdertAv = "Z022222",
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                    )
+                )
+            )
+            assertDoesNotThrow { bistandRepository.slett(behandling.id) }
         }
     }
 
@@ -568,13 +612,13 @@ internal class BistandRepositoryImplTest {
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {
         return SakOgBehandlingService(
-            postgresRepositoryRegistry.provider(connection)
-
+            postgresRepositoryRegistry.provider(connection),
+            unleashGateway = FakeUnleash,
         )
             .finnEllerOpprettBehandling(
                 sak.saksnummer,
                 listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
-            ).behandling
+            )
     }
 
     private fun revurdering(connection: DBConnection, behandling: Behandling, sak: Sak): Behandling {
