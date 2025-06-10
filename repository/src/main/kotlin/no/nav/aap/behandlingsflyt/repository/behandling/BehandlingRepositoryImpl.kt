@@ -106,6 +106,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             opprettetTidspunkt = row.getLocalDateTime("opprettet_tid"),
             vedtakstidspunkt = row.getLocalDateTime("vedtakstidspunkt"),
             virkningstidspunkt = row.getLocalDateOrNull("virkningstidspunkt"),
+            årsaker = hentÅrsaker(behandlingId).map {it.type}.toSet()
         )
     }
 

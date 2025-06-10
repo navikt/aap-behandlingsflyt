@@ -227,6 +227,7 @@ internal class BehandlingRepositoryImplTest {
             assertThat(alleFørstegang[0].referanse).isEqualTo(førstegang.referanse)
             assertThat(alleFørstegang[0].vedtakstidspunkt).isEqualToIgnoringNanos(vedtakstidspunkt)
             assertThat(alleFørstegang[0].virkningstidspunkt).isEqualTo(virkningstidspunkt)
+            assertThat(alleFørstegang[0].årsaker).isEqualTo(setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD))
         }
     }
 }
