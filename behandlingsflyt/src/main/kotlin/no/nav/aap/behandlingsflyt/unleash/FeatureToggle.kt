@@ -12,8 +12,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     OverstyrStarttidspunkt,
     AvventUtbetaling,
     FjernAutomatiskOppdateringAvBarnetillegg,
-    FritakMeldeplikt,
-    InnhentEnhetsregisterData
+    FritakMeldeplikt
     ;
 
     override fun key(): String = name
