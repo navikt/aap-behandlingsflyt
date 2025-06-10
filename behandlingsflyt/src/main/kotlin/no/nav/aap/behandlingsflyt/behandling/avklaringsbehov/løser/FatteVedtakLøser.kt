@@ -53,7 +53,7 @@ class FatteVedtakLøser(
                     )
                 }
 
-            val vurderingerSomMåReåpnes = avklaringsbehovene.alle()
+            val vurderingerSomMåReåpnes = avklaringsbehovene.alleEkskludertVentebehov()
                 .filterNot { behov ->
                     behov.definisjon in setOf(
                         Definisjon.FORESLÅ_VEDTAK,
