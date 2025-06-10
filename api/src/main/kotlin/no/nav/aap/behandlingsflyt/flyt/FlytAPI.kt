@@ -265,7 +265,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource, repositoryRegistry: Repos
                             avklaringsbehov.definisjon,
                             avklaringsbehov.frist(),
                             avklaringsbehov.begrunnelse(),
-                            requireNotNull(avklaringsbehov.grunn())
+                            requireNotNull(avklaringsbehov.venteårsak())
                         )
                     } else {
                         null
