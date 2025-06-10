@@ -34,6 +34,7 @@ class RefusjonkravRepositoryImplTest {
             harKrav = true,
             fom = periode.fom,
             tom = periode.tom,
+            navKontor = "",
             vurdertAv = "saksbehandler",
         )
         dataSource.transaction {
@@ -48,6 +49,7 @@ class RefusjonkravRepositoryImplTest {
         assertThat(uthentet?.harKrav).isEqualTo(vurdering.harKrav)
         assertThat(uthentet?.fom).isEqualTo(vurdering.fom)
         assertThat(uthentet?.tom).isEqualTo(vurdering.tom)
+        assertThat(uthentet?.navKontor).isEqualTo(vurdering.navKontor)
         assertThat(uthentet?.vurdertAv).isEqualTo(vurdering.vurdertAv)
 
         // Lagre ny vurdering

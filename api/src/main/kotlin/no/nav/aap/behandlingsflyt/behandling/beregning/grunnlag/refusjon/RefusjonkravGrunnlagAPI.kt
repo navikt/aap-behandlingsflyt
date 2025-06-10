@@ -90,6 +90,7 @@ private fun RefusjonkravVurdering.tilResponse(): RefusjonkravVurderingResponse {
     val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv)
     return RefusjonkravVurderingResponse(
         harKrav = harKrav,
+        navKontor = navKontor,
         fom = fom,
         tom = tom,
         vurdertAv =

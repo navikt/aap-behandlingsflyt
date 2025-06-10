@@ -47,6 +47,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
                     harKrav = it.getBoolean("har_krav"),
                     fom = it.getLocalDateOrNull("fom"),
                     tom = it.getLocalDateOrNull("tom"),
+                    navKontor = it.getString("navkontor"),
                     vurdertAv = it.getString("vurdert_av"),
                     opprettetTid = it.getLocalDateTime("opprettet_tid")
                 )

@@ -22,6 +22,7 @@ class RefusjonkravLøser(
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: RefusjonkravLøsning): LøsningsResultat {
         val vurdering = validerRefusjonDato(kontekst, løsning).let { RefusjonkravVurdering(
             harKrav = it.harKrav,
+            navKontor = it.navKontor,
             fom = it.fom,
             tom = it.tom,
             vurdertAv = kontekst.bruker.ident
@@ -41,7 +42,7 @@ class RefusjonkravLøser(
         if (løsning.refusjonkravVurdering.harKrav) {
             val sak = sakRepository.hent(kontekst.kontekst.sakId)
             val kravDato = sak.rettighetsperiode.fom
-
+            val navKontor = løsning.refusjonkravVurdering.navKontor
             val refusjonFomDato = løsning.refusjonkravVurdering.fom ?: kravDato
             val refusjonTomDato = løsning.refusjonkravVurdering.tom
 
@@ -52,7 +53,7 @@ class RefusjonkravLøser(
             if (refusjonTomDato != null && refusjonFomDato.isAfter(refusjonTomDato)) {
                 throw IllegalArgumentException("Tom (${refusjonTomDato}) er før fom(${refusjonFomDato})")
             }
-            return RefusjonkravVurderingDto(løsning.refusjonkravVurdering.harKrav, refusjonFomDato, refusjonTomDato)
+            return RefusjonkravVurderingDto(løsning.refusjonkravVurdering.harKrav, navKontor, refusjonFomDato, refusjonTomDato)
         }
         return løsning.refusjonkravVurdering
     }

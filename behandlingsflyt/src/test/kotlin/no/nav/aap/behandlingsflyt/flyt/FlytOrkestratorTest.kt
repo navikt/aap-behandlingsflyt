@@ -366,6 +366,7 @@ class FlytOrkestratorTest {
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null,
+                    navKontor = "Nav Løten"
                 )
             )
         )
@@ -479,7 +480,8 @@ class FlytOrkestratorTest {
                 RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
-                    tom = null
+                    tom = null,
+                    navKontor = "Nav Løten"
                 )
             )
         )
@@ -731,7 +733,8 @@ class FlytOrkestratorTest {
                 RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
-                    tom = null
+                    tom = null,
+                    navKontor = "Nav Løten"
                 )
             )
         )
@@ -879,7 +882,8 @@ class FlytOrkestratorTest {
                 RefusjonkravVurderingDto(
                     harKrav = false,
                     fom = LocalDate.now(),
-                    tom = null
+                    tom = null,
+                    navKontor = "Nav Løten"
                 )
             )
         )
@@ -1140,7 +1144,8 @@ class FlytOrkestratorTest {
                 RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
-                    tom = null
+                    tom = null,
+                    navKontor = "Nav Løten"
                 )
             )
         )
@@ -1496,7 +1501,10 @@ class FlytOrkestratorTest {
         ).løsAvklaringsBehov(
             RefusjonkravLøsning(
                 RefusjonkravVurderingDto(
-                    harKrav = true, fom = LocalDate.now(), tom = null
+                    harKrav = true,
+                    fom = LocalDate.now(),
+                    tom = null,
+                    navKontor = "Nav Løten"
                 )
             )
         ).løsAvklaringsBehov(
@@ -1745,7 +1753,8 @@ class FlytOrkestratorTest {
                 RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
-                    tom = null
+                    tom = null,
+                    navKontor = "Nav Løten"
                 )
             )
         )
@@ -3689,7 +3698,8 @@ class FlytOrkestratorTest {
                 RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
-                    tom = null
+                    tom = null,
+                    navKontor = "Nav Løten"
                 )
             )
         )
@@ -3889,7 +3899,8 @@ class FlytOrkestratorTest {
                 RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
-                    tom = null
+                    tom = null,
+                    navKontor = "Nav Løten"
                 )
             )
         )
