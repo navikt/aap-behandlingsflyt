@@ -13,7 +13,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     AvventUtbetaling,
     FjernAutomatiskOppdateringAvBarnetillegg,
     FritakMeldeplikt,
-    InnhentEnhetsregisterData
+    InnhentEnhetsregisterData,
     Samvarsling
     ;
 
