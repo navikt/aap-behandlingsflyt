@@ -7,8 +7,8 @@ import java.time.LocalDate
 
 data class SamordneVedtakRequest(
     val pid: String,
-    val vedtakId: String,
-    val sakId: String,
+    val vedtakId: Long,
+    val sakId: Long,
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Europe/Oslo")
     val virkFom: LocalDate,
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Europe/Oslo")

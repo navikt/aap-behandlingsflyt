@@ -11,6 +11,7 @@ import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
+import java.util.UUID
 
 class FakeApiInternGateway : ApiInternGateway {
     companion object : Factory<ApiInternGateway> {
@@ -29,6 +30,8 @@ class FakeApiInternGateway : ApiInternGateway {
     override fun sendBehandling(
         sak: Sak,
         behandling: Behandling,
+        vedtakId: Long?,
+        samId: String?,
         tilkjent: List<TilkjentYtelsePeriode>?,
         underveis: List<Underveisperiode>,
         vedtaksDato: LocalDate,

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.HentSamId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdRepository
@@ -17,13 +18,16 @@ class HentSamIdJobbUtfører(
     private val samIdRepository: SamIdRepository,
     private val behandlingRepository: BehandlingRepository,
     private val sakRepository: SakRepository,
+    private val vedtakRepository: VedtakRepository
 
     ): JobbUtfører {
     override fun utfør(input: JobbInput) {
         val behandlingId = input.payload<BehandlingId>()
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
-        val samId = samGateway.hentSamId(sak.person.aktivIdent(),sak.id.id,behandling.id.id)
+        val vedtakId = requireNotNull(vedtakRepository.hentId(behandling.id))
+
+        val samId = samGateway.hentSamId(sak.person.aktivIdent(),sak.id.id,vedtakId)
 
         samIdRepository.lagre(behandlingId, samId.toString())
     }
@@ -34,6 +38,7 @@ companion object : ProviderJobbSpesifikasjon {
     override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
         return HentSamIdJobbUtfører(
             GatewayProvider.provide(),
+            repositoryProvider.provide(),
             repositoryProvider.provide(),
             repositoryProvider.provide(),
             repositoryProvider.provide()

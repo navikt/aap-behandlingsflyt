@@ -27,11 +27,12 @@ class VarsleVedtakJobbUtfører(
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
         val vedtak = vedtakRepository.hent(behandling.id)
+        val vedtakId = requireNotNull(vedtakRepository.hentId(behandling.id))
 
         val request = SamordneVedtakRequest(
             pid = sak.person.aktivIdent().identifikator.toString(),
-            vedtakId = behandling.referanse.toString(),
-            sakId = sak.saksnummer.toString(),
+            vedtakId = vedtakId,
+            sakId = sak.id.id,
             virkFom = vedtak!!.vedtakstidspunkt.toLocalDate(),
             virkTom = sak.rettighetsperiode.tom,
             fagomrade = "AAP",

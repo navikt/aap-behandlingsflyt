@@ -16,7 +16,9 @@ public data class DatadelingDTO(
     val sak: SakDTO, // -\\-
     val tilkjent: List<TilkjentDTO>,
     val rettighetsTypeTidsLinje: List<RettighetsTypePeriode>,
-    val behandlingsReferanse: String
+    val behandlingsReferanse: String,
+    val samId: String? = null,
+    val vedtakId: Long? = null
 )
 
 public data class RettighetsTypePeriode(
