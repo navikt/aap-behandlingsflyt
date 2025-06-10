@@ -27,7 +27,7 @@ class HentSamIdJobbUtfører(
         val sak = sakRepository.hent(behandling.sakId)
         val vedtakId = requireNotNull(vedtakRepository.hentId(behandling.id))
 
-        val samId = samGateway.hentSamId(sak.person.aktivIdent(),sak.id.id,vedtakId)
+        val samId = samGateway.hentSamId(sak.person.aktivIdent(), sak.id.id, vedtakId)
 
         samIdRepository.lagre(behandlingId, samId.toString())
     }
