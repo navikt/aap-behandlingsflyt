@@ -19,6 +19,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.Bruker
@@ -82,14 +84,14 @@ private fun utledHarTilgangTilÅSaksbehandle(
     avklaringsbehovene: Avklaringsbehovene,
     bruker: Bruker
 ): Boolean {
+    val unleashGateway = GatewayProvider.provide<UnleashGateway>()
     val harTilgang = GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
         behandlingReferanse,
         Definisjon.KVALITETSSIKRING,
         token
     )
 
-
-    if (Miljø.erProd()) {
+    if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
         val harIkkeGjortNoenVurderinger =
             avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }
                 .any { !it.brukere().contains(bruker.ident) }
