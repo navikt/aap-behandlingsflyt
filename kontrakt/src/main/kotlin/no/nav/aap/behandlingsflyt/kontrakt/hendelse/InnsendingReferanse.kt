@@ -15,7 +15,8 @@ public data class InnsendingReferanse(
         BRUDD_AKTIVITETSPLIKT_INNSENDING_ID,
         AVVIST_LEGEERKLÆRING_ID,
         REVURDERING_ID,
-        BEHANDLING_REFERANSE
+        BEHANDLING_REFERANSE,
+        MANUELL_OPPRETTELSE
     }
 
     @get:JsonIgnore

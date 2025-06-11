@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtakForPerson
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
@@ -133,6 +134,13 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         TODO("Not yet implemented")
     }
 
+    override fun hentAlleMedVedtakFor(
+        person: Person,
+        behandlingstypeFilter: List<TypeBehandling>
+    ): List<BehandlingMedVedtakForPerson> {
+        TODO("Not yet implemented")
+    }
+
     override fun leggTilNyttAktivtSteg(
         behandlingId: BehandlingId,
         tilstand: StegTilstand
@@ -147,6 +155,27 @@ object InMemoryBehandlingRepository : BehandlingRepository {
                 )
             } ?: emptyList()
             memoryStegHistorikk[behandlingId] = stegHistorikk.plus(tilstand).sorted()
+        }
+    }
+
+    override fun flyttForrigeBehandlingId(
+        behandlingId: BehandlingId,
+        nyForrigeBehandlingId: BehandlingId
+    ) {
+        synchronized(lock) {
+            val behandling = memory[behandlingId]!!
+            memory[behandlingId] = Behandling(
+                id = behandlingId,
+                forrigeBehandlingId = nyForrigeBehandlingId,
+                referanse = behandling.referanse,
+                sakId = behandling.sakId,
+                typeBehandling = behandling.typeBehandling(),
+                status = behandling.status(),
+                årsaker = behandling.årsaker(),
+                stegTilstand = behandling.aktivtStegTilstand(),
+                opprettetTidspunkt = behandling.opprettetTidspunkt,
+                versjon = behandling.versjon,
+            )
         }
     }
 

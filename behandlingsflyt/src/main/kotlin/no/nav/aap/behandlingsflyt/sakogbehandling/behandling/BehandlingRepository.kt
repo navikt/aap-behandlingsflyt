@@ -26,6 +26,11 @@ interface BehandlingRepository : Repository {
     ): List<Behandling>
 
     fun hentAlleMedVedtakFor(
+        person: Person,
+        behandlingstypeFilter: List<TypeBehandling> = TypeBehandling.entries
+    ): List<BehandlingMedVedtakForPerson>
+
+    fun hentAlleMedVedtakFor(
         sakId: SakId,
         behandlingstypeFilter: List<TypeBehandling> = TypeBehandling.entries
     ): List<BehandlingMedVedtak>
@@ -43,6 +48,8 @@ interface BehandlingRepository : Repository {
     fun oppdaterBehandlingStatus(behandlingId: BehandlingId, status: Status)
 
     fun leggTilNyttAktivtSteg(behandlingId: BehandlingId, tilstand: StegTilstand)
+
+    fun flyttForrigeBehandlingId(behandlingId: BehandlingId, nyForrigeBehandlingId: BehandlingId)
 
     fun markerSavepoint()
 }

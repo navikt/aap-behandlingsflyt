@@ -231,4 +231,4 @@ spec:
     - name: INTEGRASJON_EREG_URL
       value: https://ereg-services-q2.dev-fss-pub.nais.io
     - name: INTEGRASJON_EREG_SCOPE
-      value: api://dev-fss.arbeidsforhold.ereg-services-q2/.default
+      value: api://dev-fss.arbeidsforhold.ereg-services/.default

@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRe
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -46,9 +47,10 @@ class LovvalgService private constructor(
     private val unleashGateway = GatewayProvider.provide<UnleashGateway>()
 
     override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
-        return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
-            oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
-            tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
+        return kontekst.erFørstegangsbehandlingEllerRevurdering()
+            && (oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
+                || kontekst.årsakerTilBehandling.contains(ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE))
+            && tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
@@ -58,12 +60,10 @@ class LovvalgService private constructor(
             medlemskapGateway.innhent(sak.person, Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom))
         val arbeidGrunnlag = innhentAARegisterGrunnlag(sak)
         val inntektGrunnlag = innhentAInntektGrunnlag(sak)
-        val innhentEnhetGrunnlag = if (unleashGateway.isEnabled(BehandlingsflytFeature.InnhentEnhetsregisterData)) {
-            innhentEREGGrunnlag(inntektGrunnlag)
-        } else listOf()
+        val enhetGrunnlag = innhentEREGGrunnlag(inntektGrunnlag)
 
         val eksisterendeData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
-        lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, innhentEnhetGrunnlag)
+        lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag)
         val nyeData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         return if (nyeData == eksisterendeData) IKKE_ENDRET else ENDRET
@@ -84,9 +84,10 @@ class LovvalgService private constructor(
             it.arbeidsInntektInformasjon.inntektListe.map {
                 inntekt -> inntekt.virksomhet.identifikator
             }
-        }
+        }.toSet()
         val gateway = GatewayProvider.provide<EnhetsregisteretGateway>()
 
+        // EREG har ikke batch-oppslag
         val enhetsGrunnlag = orgnumre.mapNotNull {
             val response = gateway.hentEREGData(EnhetsregisterOrganisasjonRequest(it)) ?: return@mapNotNull null
             EnhetGrunnlag(

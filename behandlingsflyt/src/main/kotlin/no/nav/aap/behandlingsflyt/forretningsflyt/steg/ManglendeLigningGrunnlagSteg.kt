@@ -46,14 +46,6 @@ class ManglendeLigningGrunnlagSteg private constructor(
             return Fullført
         }
 
-        if (GatewayProvider.provide<UnleashGateway>().isDisabled(BehandlingsflytFeature.Manuellinntekt)) {
-            val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FASTSETT_MANUELL_INNTEKT)
-            if (avklaringsbehov?.erÅpent() == true) {
-                avklaringsbehovene.avbryt(Definisjon.FASTSETT_MANUELL_INNTEKT)
-            }
-            return Fullført
-        }
-
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, BeregningAvklarFaktaSteg.type())) {

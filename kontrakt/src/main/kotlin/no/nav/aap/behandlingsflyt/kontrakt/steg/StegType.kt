@@ -192,7 +192,7 @@ public enum class StegType(
         status = Status.IVERKSETTES
     ),
     EFFEKTUER_AVVIST_PÅ_FORMKRAV(
-        gruppe = StegGruppe.FORMKRAV,
+        gruppe = StegGruppe.KLAGE_AVVIST_PÅ_FORMKRAV,
         status = Status.IVERKSETTES
     ),
     UDEFINERT(

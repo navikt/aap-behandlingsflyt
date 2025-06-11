@@ -6,13 +6,13 @@ plugins {
     `java-library`
 }
 
-val tilgangVersjon = "1.0.70"
+val tilgangVersjon = "1.0.74"
 val junitVersion = "5.12.0"
-val komponenterVersjon = "1.0.257"
+val komponenterVersjon = "1.0.261"
 
 dependencies {
     api("com.fasterxml.jackson.core:jackson-annotations:2.19.0")
-    api("no.nav:ktor-openapi-generator:1.0.110")
+    api("no.nav:ktor-openapi-generator:1.0.112")
     compileOnly("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")

@@ -4,15 +4,19 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.motor.FlytJobbRepositoryImpl
+import no.nav.aap.komponenter.repository.RepositoryProvider
 
 /**
  * Klasse for alle driftsfunksjoner. Skal kún brukes av DriftApi.
  * */
 class Driftfunksjoner(
-    private val repositoryRegistry: RepositoryRegistry,
+    private val prosesserBehandlingService: ProsesserBehandlingService,
+    private val sakOgBehandlingService: SakOgBehandlingService,
 ) {
+    constructor(repositoryProvider: RepositoryProvider): this(
+        prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider),
+        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
+    )
 
     fun flyttBehandlingTilStart(behandlingId: BehandlingId, connection: DBConnection) {
         val query = """
@@ -33,12 +37,9 @@ class Driftfunksjoner(
               AND status IN ('UTREDES', 'IVERKSETTES');
         """.trimIndent()
 
-        val repositoryProvider = repositoryRegistry.provider(connection)
-        val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider)
-
         val sak = sakOgBehandlingService.hentSakFor(behandlingId)
 
-        ProsesserBehandlingService(FlytJobbRepositoryImpl(connection)).triggProsesserBehandling(
+        prosesserBehandlingService.triggProsesserBehandling(
             sakId = sak.id,
             behandlingId = behandlingId,
         )

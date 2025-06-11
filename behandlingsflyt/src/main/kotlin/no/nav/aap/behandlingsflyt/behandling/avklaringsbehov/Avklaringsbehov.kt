@@ -89,16 +89,16 @@ class Avklaringsbehov(
     internal fun reåpne(
         frist: LocalDate? = null,
         begrunnelse: String = "",
-        grunn: ÅrsakTilSettPåVent? = null,
+        venteårsak: ÅrsakTilSettPåVent? = null,
         bruker: Bruker = SYSTEMBRUKER
     ) {
         require(historikk.last().status.erAvsluttet())
         if (definisjon.erVentebehov()) {
             requireNotNull(frist)
-            requireNotNull(grunn)
+            requireNotNull(venteårsak)
         }
         historikk += Endring(
-            status = Status.OPPRETTET, begrunnelse = begrunnelse, grunn = grunn, frist = frist, endretAv = bruker.ident
+            status = Status.OPPRETTET, begrunnelse = begrunnelse, grunn = venteårsak, frist = frist, endretAv = bruker.ident
         )
     }
 
@@ -148,7 +148,7 @@ class Avklaringsbehov(
     }
 
     fun begrunnelse(): String = historikk.maxOf { it }.begrunnelse
-    fun grunn(): ÅrsakTilSettPåVent? = historikk.maxOf { it }.grunn
+    fun venteårsak(): ÅrsakTilSettPåVent? = historikk.filter { it.status == Status.OPPRETTET }.maxOf { it }.grunn
     fun endretAv(): String = historikk.maxOf { it }.endretAv
     fun årsakTilRetur(): List<ÅrsakTilRetur> = historikk.maxOf { it }.årsakTilRetur
 

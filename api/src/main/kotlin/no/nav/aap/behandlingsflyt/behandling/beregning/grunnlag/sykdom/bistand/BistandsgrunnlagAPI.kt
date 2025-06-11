@@ -58,7 +58,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource, repositoryReg
                         .singleOrNull()
 
                     val gjeldendeSykdomsvurderinger =
-                        sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger!!
+                        sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger.orEmpty()
 
                     val sisteSykdomsvurdering = gjeldendeSykdomsvurderinger.maxBy { it.opprettet }
 
@@ -101,7 +101,8 @@ private fun BistandVurdering.tilResponse(): BistandVurderingResponse {
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
         vurdertAv = VurdertAvResponse(
             ident = vurdertAv,
-            dato = opprettet?.atZone(ZoneId.of("Europe/Oslo"))?.toLocalDate() ?: error("Mangler opprettet dato for bistandvurdering"),
+            dato = opprettet?.atZone(ZoneId.of("Europe/Oslo"))?.toLocalDate()
+                ?: error("Mangler opprettet dato for bistandvurdering"),
             ansattnavn = navnOgEnhet?.navn,
             enhetsnavn = navnOgEnhet?.enhet,
         )

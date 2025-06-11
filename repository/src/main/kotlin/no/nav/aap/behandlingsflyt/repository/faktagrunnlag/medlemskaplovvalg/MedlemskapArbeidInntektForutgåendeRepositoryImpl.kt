@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.HistoriskManuellVurderingForForutgåendeMedlemskap
@@ -133,7 +134,8 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         behandlingId: BehandlingId,
         arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
         inntektGrunnlag: List<ArbeidsInntektMaaned>,
-        medlId: Long?
+        medlId: Long?,
+        enhetGrunnlag: List<EnhetGrunnlag>
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val grunnlagOppslag = hentGrunnlag(behandlingId)
@@ -142,7 +144,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         }
 
         val arbeiderId = lagreArbeidGrunnlag(arbeidGrunnlag)
-        val inntekterINorgeId = lagreArbeidsInntektGrunnlag(inntektGrunnlag)
+        val inntekterINorgeId = lagreArbeidsInntektGrunnlag(inntektGrunnlag, enhetGrunnlag)
 
         val grunnlagQuery = """
             INSERT INTO FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, manuell_vurdering_id) VALUES (?, ?, ?, ?, ?)
@@ -252,7 +254,10 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         return arbeiderId
     }
 
-    private fun lagreArbeidsInntektGrunnlag(arbeidsInntektGrunnlag: List<ArbeidsInntektMaaned>): Long? {
+    private fun lagreArbeidsInntektGrunnlag(
+        arbeidsInntektGrunnlag: List<ArbeidsInntektMaaned>,
+        enhetGrunnlag: List<EnhetGrunnlag>
+    ): Long? {
         if (arbeidsInntektGrunnlag.isEmpty()) return null
 
         val inntekterINorgeQuery = """
@@ -260,31 +265,40 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         """.trimIndent()
         val inntekterINorgeId = connection.executeReturnKey(inntekterINorgeQuery)
 
-        for (entry in arbeidsInntektGrunnlag) {
-            for (inntekt in entry.arbeidsInntektInformasjon.inntektListe) {
-                val inntektQuery = """
-                    INSERT INTO INNTEKT_I_NORGE_FORUTGAAENDE (identifikator, beloep, skattemessig_bosatt_land, opptjenings_land, inntekt_type, inntekter_i_norge_id, periode) VALUES (?, ?, ?, ?, ?, ?, ?::daterange)
+        val inntektQuery = """
+                    INSERT INTO INNTEKT_I_NORGE_FORUTGAAENDE (identifikator, beloep, skattemessig_bosatt_land, opptjenings_land, inntekt_type, inntekter_i_norge_id, periode, organisasjonsnavn) VALUES (?, ?, ?, ?, ?, ?, ?::daterange, ?)
                 """.trimIndent()
 
-                val tomFallback = inntekt.opptjeningsperiodeFom ?: entry.aarMaaned.atDay(1)
-
-                connection.execute(inntektQuery) {
-                    setParams {
-                        setString(1, inntekt.virksomhet.identifikator)
-                        setDouble(2, inntekt.beloep)
-                        setString(3, inntekt.skattemessigBosattLand)
-                        setString(4, inntekt.opptjeningsland)
-                        setString(5, inntekt.beskrivelse)
-                        setLong(6, inntekterINorgeId)
-                        setPeriode(
-                            7,
-                            Periode(
-                                inntekt.opptjeningsperiodeFom ?: entry.aarMaaned.atDay(1),
-                                inntekt.opptjeningsperiodeTom ?: tomFallback
-                            )
-                        )
-                    }
+        connection.executeBatch(
+            inntektQuery,
+            arbeidsInntektGrunnlag.flatMap {
+                it.arbeidsInntektInformasjon.inntektListe.map { inntekt ->
+                    Pair(
+                        it.aarMaaned,
+                        inntekt
+                    )
                 }
+            }
+        ) {
+            setParams { (årMåned, inntekt) ->
+                val orgNavn =
+                    enhetGrunnlag.firstOrNull { it.orgnummer == inntekt.virksomhet.identifikator }?.orgNavn
+                val tomFallback = inntekt.opptjeningsperiodeFom ?: årMåned.atDay(1)
+
+                setString(1, inntekt.virksomhet.identifikator)
+                setDouble(2, inntekt.beloep)
+                setString(3, inntekt.skattemessigBosattLand)
+                setString(4, inntekt.opptjeningsland)
+                setString(5, inntekt.beskrivelse)
+                setLong(6, inntekterINorgeId)
+                setPeriode(
+                    7,
+                    Periode(
+                        inntekt.opptjeningsperiodeFom ?: årMåned.atDay(1),
+                        inntekt.opptjeningsperiodeTom ?: tomFallback
+                    )
+                )
+                setString(8, orgNavn)
             }
         }
         return inntekterINorgeId
@@ -390,7 +404,8 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                     skattemessigBosattLand = it.getStringOrNull("skattemessig_bosatt_land"),
                     opptjeningsLand = it.getStringOrNull("opptjenings_land"),
                     inntektType = it.getStringOrNull("inntekt_type"),
-                    periode = it.getPeriode("periode")
+                    periode = it.getPeriode("periode"),
+                    organisasjonsNavn = it.getStringOrNull("organisasjonsnavn")
                 )
             }
         }

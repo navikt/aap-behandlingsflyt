@@ -147,7 +147,10 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
     }
 
-    override fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<HistoriskManuellVurderingForLovvalgMedlemskap> {
+    override fun hentHistoriskeVurderinger(
+        sakId: SakId,
+        behandlingId: BehandlingId
+    ): List<HistoriskManuellVurderingForLovvalgMedlemskap> {
         val query = """
             SELECT vurdering.*
             FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG grunnlag
@@ -219,7 +222,10 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         return arbeiderId
     }
 
-    private fun lagreArbeidsInntektGrunnlag(arbeidsInntektGrunnlag: List<ArbeidsInntektMaaned>, enhetGrunnlag: List<EnhetGrunnlag>): Long? {
+    private fun lagreArbeidsInntektGrunnlag(
+        arbeidsInntektGrunnlag: List<ArbeidsInntektMaaned>,
+        enhetGrunnlag: List<EnhetGrunnlag>
+    ): Long? {
         if (arbeidsInntektGrunnlag.isEmpty()) return null
 
         val inntekterINorgeQuery = """
@@ -227,33 +233,42 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         """.trimIndent()
         val inntekterINorgeId = connection.executeReturnKey(inntekterINorgeQuery)
 
-        for (entry in arbeidsInntektGrunnlag) {
-            for (inntekt in entry.arbeidsInntektInformasjon.inntektListe) {
-                val inntektQuery = """
-                    INSERT INTO INNTEKT_I_NORGE (identifikator, beloep, skattemessig_bosatt_land, opptjenings_land, inntekt_type, inntekter_i_norge_id, periode) VALUES (?, ?, ?, ?, ?, ?, ?::daterange)
-                """.trimIndent()
+        val inntektQuery = """
+            INSERT INTO INNTEKT_I_NORGE (identifikator, beloep, skattemessig_bosatt_land, opptjenings_land, inntekt_type, inntekter_i_norge_id, periode, organisasjonsnavn) VALUES (?, ?, ?, ?, ?, ?, ?::daterange, ?)
+        """.trimIndent()
 
-                val tomFallback = inntekt.opptjeningsperiodeFom ?: entry.aarMaaned.atDay(1)
-
-                connection.execute(inntektQuery) {
-                    setParams {
-                        setString(1, inntekt.virksomhet.identifikator)
-                        setDouble(2, inntekt.beloep)
-                        setString(3, inntekt.skattemessigBosattLand)
-                        setString(4, inntekt.opptjeningsland)
-                        setString(5, inntekt.beskrivelse)
-                        setLong(6, inntekterINorgeId)
-                        setPeriode(
-                            7,
-                            Periode(
-                                inntekt.opptjeningsperiodeFom ?: entry.aarMaaned.atDay(1),
-                                inntekt.opptjeningsperiodeTom ?: tomFallback
-                            )
-                        )
-                    }
+        connection.executeBatch(
+            inntektQuery,
+            arbeidsInntektGrunnlag.flatMap {
+                it.arbeidsInntektInformasjon.inntektListe.map { inntekt ->
+                    Pair(
+                        it.aarMaaned,
+                        inntekt
+                    )
                 }
             }
+        ) {
+            setParams { (årMåned, inntekt) ->
+                val orgNavn = enhetGrunnlag.firstOrNull { it.orgnummer == inntekt.virksomhet.identifikator }?.orgNavn
+                val tomFallback = inntekt.opptjeningsperiodeFom ?: årMåned.atDay(1)
+
+                setString(1, inntekt.virksomhet.identifikator)
+                setDouble(2, inntekt.beloep)
+                setString(3, inntekt.skattemessigBosattLand)
+                setString(4, inntekt.opptjeningsland)
+                setString(5, inntekt.beskrivelse)
+                setLong(6, inntekterINorgeId)
+                setPeriode(
+                    7,
+                    Periode(
+                        inntekt.opptjeningsperiodeFom ?: årMåned.atDay(1),
+                        inntekt.opptjeningsperiodeTom ?: tomFallback
+                    )
+                )
+                setString(8, orgNavn)
+            }
         }
+
         return inntekterINorgeId
     }
 
@@ -472,7 +487,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                     skattemessigBosattLand = it.getStringOrNull("skattemessig_bosatt_land"),
                     opptjeningsLand = it.getStringOrNull("opptjenings_land"),
                     inntektType = it.getStringOrNull("inntekt_type"),
-                    periode = it.getPeriode("periode")
+                    periode = it.getPeriode("periode"),
+                    organisasjonsNavn = it.getStringOrNull("organisasjonsnavn"),
                 )
             }
         }
@@ -544,7 +560,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         val inntektINorgeIds = getInntektINorgeIds(inntekterINorgeIds)
 
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ?; 
             delete from INNTEKT_I_NORGE where inntekter_i_norge_id = ANY(?::bigint[]);     
             delete from ARBEID where arbeider_id = ANY(?::bigint[]);
@@ -554,7 +571,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             delete from OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG where behandling_id = ?; 
             delete from OPPGITT_UTENLANDSOPPHOLD where id = ANY(?::bigint[]); 
             delete from INNTEKTER_I_NORGE where id = ANY(?::bigint[]);
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, inntektINorgeIds)
@@ -641,7 +659,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
     }
 
-    private fun getUtenlandsOppholdIds(behandlingId : BehandlingId): List<Long> = connection.queryList(
+    private fun getUtenlandsOppholdIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
         """
                     SELECT id
                     FROM OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG

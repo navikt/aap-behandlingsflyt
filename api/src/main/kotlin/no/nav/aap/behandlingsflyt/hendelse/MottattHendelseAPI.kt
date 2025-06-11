@@ -9,12 +9,14 @@ import no.nav.aap.behandlingsflyt.Azp
 import no.nav.aap.behandlingsflyt.EMPTY_JSON_RESPONSE
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.SaksnummerParameter
+import no.nav.aap.behandlingsflyt.dokumentHendelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -85,6 +87,7 @@ private fun registrerMottattHendelse(
             if (kjennerTilDokumentFraFør(dto, sak, mottattDokumentRepository)) {
                 log.warn("Allerede håndtert dokument med referanse {}", dto.referanse)
             } else {
+                prometheus.dokumentHendelse(dto.type).increment()
                 flytJobbRepository.leggTil(
                     HendelseMottattHåndteringJobbUtfører.nyJobb(
                         sakId = sak.id,

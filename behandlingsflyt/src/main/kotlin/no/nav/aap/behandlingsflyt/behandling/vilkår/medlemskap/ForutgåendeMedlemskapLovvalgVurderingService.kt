@@ -203,6 +203,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             grunnlag?.inntekterINorgeGrunnlag?.map {
                 ArbeidInntektINorgeGrunnlag(
                     virksomhetId = it.identifikator,
+                    virksomhetNavn = it.organisasjonsNavn,
                     beloep = it.beloep,
                     periode = Periode(it.periode.fom, it.periode.tom),
                 )

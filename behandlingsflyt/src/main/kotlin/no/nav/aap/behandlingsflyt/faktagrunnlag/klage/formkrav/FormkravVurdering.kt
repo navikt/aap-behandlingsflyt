@@ -10,7 +10,9 @@ data class FormkravVurdering(
     val vurdertAv: String
 ) {
     fun erOppfylt() = erBrukerPart
-            && (erFristOverholdt || likevelBehandles == true)
+            && erFristOverholdt()
             && erKonkret
             && erSignert
+    
+    fun erFristOverholdt() = erFristOverholdt || likevelBehandles == true
 }

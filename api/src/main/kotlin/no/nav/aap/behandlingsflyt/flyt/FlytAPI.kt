@@ -270,7 +270,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource, repositoryRegistry: Repos
                             avklaringsbehov.definisjon,
                             avklaringsbehov.frist(),
                             avklaringsbehov.begrunnelse(),
-                            requireNotNull(avklaringsbehov.grunn())
+                            requireNotNull(avklaringsbehov.venteårsak())
                         )
                     } else {
                         null
@@ -366,9 +366,11 @@ private fun utledVisning(
     val visKvalitetssikringKort = utledVisningAvKvalitetsikrerKort(alleAvklaringsbehovInkludertFrivillige)
     val kvalitetssikringReadOnly = visKvalitetssikringKort && flyt.erStegFør(aktivtSteg, StegType.KVALITETSSIKRING)
     val visBrevkort =
-        alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_BREV)?.erÅpent() == true ||
-                alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
-                    ?.erÅpent() == true
+        alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_BREV)?.erÅpent() == true
+                || alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
+            ?.erÅpent() == true
+                || alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
+            ?.erÅpent() == true
 
     if (jobberEllerFeilet) {
         return Visning(

@@ -19,13 +19,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.BehandlingTilstand
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.BeriketBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -34,7 +31,6 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
-import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -53,7 +49,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
         utfører.utfør(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id))
 
-        verify {sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any())}
+        verify {sakOgBehandlingServiceMock.finnEllerOpprettBehandlingFasttrack(any<SakId>(), any())}
     }
 
     @Test
@@ -63,7 +59,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
         utfører.utfør(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id))
 
-        verify(exactly = 0) {sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any())}
+        verify(exactly = 0) {sakOgBehandlingServiceMock.finnEllerOpprettBehandlingFasttrack(any<SakId>(), any())}
     }
 
     @Test
@@ -83,9 +79,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
         årsakerPåTidligereBehandling: List<Årsak> = emptyList(),
     ): OpprettBehandlingFritakMeldepliktJobbUtfører {
         val sakServiceMock = mockk<SakService>()
-        val behandlingRepoMock = mockk<BehandlingRepository>()
         val underveisRepositoryMock = mockk<UnderveisRepository>()
-        val flytJobbRepository = mockk<FlytJobbRepository>(relaxed = true)
 
         every {sakServiceMock.hent(any<SakId>())} returns Sak(
             id = sakId,
@@ -113,7 +107,8 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             versjon = 0L
         )
 
-        every {behandlingRepoMock.finnSisteBehandlingFor(sakId, any())} returns fakeBehandling
+        every {sakOgBehandlingServiceMock.finnSisteYtelsesbehandlingFor(sakId)} returns fakeBehandling
+        every {sakOgBehandlingServiceMock.finnEllerOpprettBehandlingFasttrack(sakId, any())} returns SakOgBehandlingService.Ordinær(fakeBehandling)
 
         every {underveisRepositoryMock.hentHvisEksisterer(any())} returns UnderveisGrunnlag(
             id = 1L,
@@ -134,21 +129,13 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             ))
         )
 
-        every {sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any())} returns BeriketBehandling(
-            behandling = fakeBehandling,
-            tilstand = BehandlingTilstand.NY,
-            sisteAvsluttedeBehandling = BehandlingId(9L)
-        )
-
-
+        every {sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any())} returns fakeBehandling
 
         return OpprettBehandlingFritakMeldepliktJobbUtfører(
             sakService = sakServiceMock,
-            behandlingRepository = behandlingRepoMock,
             underveisRepository = underveisRepositoryMock,
             sakOgBehandlingService = sakOgBehandlingServiceMock,
-            flytJobbRepository = flytJobbRepository,
+            prosesserBehandlingService = mockk<ProsesserBehandlingService>(relaxed = true)
         )
     }
-
 }

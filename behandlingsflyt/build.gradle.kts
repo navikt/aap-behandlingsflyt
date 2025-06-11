@@ -2,22 +2,22 @@ plugins {
     id("behandlingsflyt.conventions")
 }
 
-val komponenterVersjon = "1.0.257"
+val komponenterVersjon = "1.0.261"
 val ktorVersion = "3.1.3"
-val tilgangVersjon = "1.0.70"
+val tilgangVersjon = "1.0.74"
 val utbetalVersjon = "0.0.45"
-val junitVersjon = "5.13.0"
+val junitVersjon = "5.13.1"
 
 dependencies {
     api(project(":kontrakt"))
-    implementation("io.micrometer:micrometer-registry-prometheus:1.15.0")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.15.1")
     implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
 
     api("no.nav.aap.tilgang:plugin:$tilgangVersjon")
     api("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
-    api("no.nav.aap.brev:kontrakt:0.0.120")
-    api("no.nav.aap.meldekort:kontrakt:0.0.47")
+    api("no.nav.aap.brev:kontrakt:0.0.122")
+    api("no.nav.aap.meldekort:kontrakt:0.0.51")
     api("no.nav.aap.kelvin:motor:$komponenterVersjon")
     api("no.nav.aap.kelvin:gateway:$komponenterVersjon")
     api("no.nav.aap.utbetal:api-kontrakt:$utbetalVersjon")
@@ -31,7 +31,7 @@ dependencies {
     implementation(kotlin("reflect"))
     // TODO: fjern når alle api er flyttet til api-modul
     compileOnly("io.ktor:ktor-http-jvm:$ktorVersion")
-    implementation("org.flywaydb:flyway-database-postgresql:11.9.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.9.1")
     runtimeOnly("org.postgresql:postgresql:42.7.6")
 
 

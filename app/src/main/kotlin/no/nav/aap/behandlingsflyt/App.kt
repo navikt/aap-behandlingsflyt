@@ -31,6 +31,7 @@ import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.aktivitetsplik
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.institusjonAPI
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.klage.effektueravvistpåformkrav.effektuerAvvistPåFormkravGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.resultat.klageresultatApi
 import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringApi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.forutgåendeMedlemskapAPI
@@ -77,7 +78,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.samordning.TjenestePensjonGatewayI
 import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.tilgang.TilgangGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreGateway
-import no.nav.aap.behandlingsflyt.integrasjon.unleash.UnleashService
+import no.nav.aap.behandlingsflyt.integrasjon.unleash.UnleashGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.utbetaling.UtbetalingGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
@@ -194,9 +195,11 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
                 klagebehandlingNayGrunnlagApi(dataSource, repositoryRegistry)
                 klageresultatApi(dataSource, repositoryRegistry)
                 trekkKlageGrunnlagAPI(dataSource, repositoryRegistry)
+                effektuerAvvistPåFormkravGrunnlagApi(dataSource, repositoryRegistry)
                 // Flytt
                 brevApi(dataSource, repositoryRegistry)
                 dokumentinnhentingAPI(dataSource, repositoryRegistry)
+                dokumentAPI()
                 mottattHendelseApi(dataSource, repositoryRegistry)
                 underveisVurderingerAPI(dataSource, repositoryRegistry)
                 lovvalgMedlemskapAPI(dataSource, repositoryRegistry)
@@ -234,7 +237,7 @@ private fun registerGateways() {
         .register<MeldekortGatewayImpl>()
         .register<TilgangGatewayImpl>()
         .register<TjenestePensjonGatewayImpl>()
-        .register<UnleashService>()
+        .register<UnleashGatewayImpl>()
         .register<NomInfoGateway>()
         .register<NorgGateway>()
         .register<KabalGateway>()

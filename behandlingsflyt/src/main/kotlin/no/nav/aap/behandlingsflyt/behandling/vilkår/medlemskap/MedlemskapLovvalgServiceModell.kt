@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Virksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.AdresseType
 import no.nav.aap.komponenter.type.Periode
@@ -35,6 +36,7 @@ data class VedtakIMEDLGrunnlag(
 
 data class ArbeidInntektINorgeGrunnlag(
     val virksomhetId: String,
+    val virksomhetNavn: String?,
     val beloep: Double,
     val periode: Periode,
 )

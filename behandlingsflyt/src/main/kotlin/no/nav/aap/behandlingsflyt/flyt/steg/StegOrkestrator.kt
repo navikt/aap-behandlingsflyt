@@ -39,11 +39,11 @@ class StegOrkestrator(
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val stegKonstruktør: StegKonstruktør,
-    private val markSavepointAt: Set<StegStatus> = setOf(StegStatus.START, StegStatus.OPPDATER_FAKTAGRUNNLAG),
+    markSavepointAt: Set<StegStatus>? = null,
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
-        markSavepointAt: Set<StegStatus> = setOf(StegStatus.START, StegStatus.OPPDATER_FAKTAGRUNNLAG)
+        markSavepointAt: Set<StegStatus>? = null,
     ) : this(
         informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
@@ -51,6 +51,8 @@ class StegOrkestrator(
         stegKonstruktør = StegKonstruktørImpl(repositoryProvider),
         markSavepointAt = markSavepointAt,
     )
+
+    private val markSavepointAt = markSavepointAt ?: setOf(StegStatus.START, StegStatus.OPPDATER_FAKTAGRUNNLAG)
 
     private val log = LoggerFactory.getLogger(javaClass)
     private val tracer = GlobalOpenTelemetry.getTracer("stegorkestrator")
