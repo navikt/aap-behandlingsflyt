@@ -58,6 +58,8 @@ class ApiInternGatewayImpl() : ApiInternGateway {
     override fun sendBehandling(
         sak: Sak,
         behandling: Behandling,
+        vedtakId: Long,
+        samId: String?,
         tilkjent: List<TilkjentYtelsePeriode>?,
         underveis: List<Underveisperiode>,
         vedtaksDato: LocalDate,
@@ -111,8 +113,11 @@ class ApiInternGatewayImpl() : ApiInternGateway {
                                 segment.periode.tom,
                                 segment.verdi.toString()
                             )
-                        }
-                    )),
+                        },
+                        vedtakId = vedtakId,
+                        samId = samId,
+                    ),
+                ),
                 mapper = { _, _ ->
                     Unit
                 })

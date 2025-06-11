@@ -10,6 +10,7 @@ object FakeUnleash : UnleashGateway {
         BehandlingsflytFeature.AvventUtbetaling to true,
         BehandlingsflytFeature.FjernAutomatiskOppdateringAvBarnetillegg to true,
         BehandlingsflytFeature.FasttrackMeldekort to false,
+        BehandlingsflytFeature.Samvarsling to true,
         BehandlingsflytFeature.IngenValidering to false,
     )
 
@@ -25,5 +26,4 @@ object FakeUnleash : UnleashGateway {
             "feature toggle $featureToggle ikke definert for fake"
         }
     }
-
 }
