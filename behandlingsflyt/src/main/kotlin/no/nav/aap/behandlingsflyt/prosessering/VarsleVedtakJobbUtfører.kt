@@ -37,7 +37,7 @@ class VarsleVedtakJobbUtfører(
             virkTom = sak.rettighetsperiode.tom,
             fagomrade = "AAP",
             ytelseType = "AAP",
-            etterbetaling = sak.rettighetsperiode.fom < vedtak.virkningstidspunkt,
+            etterbetaling = vedtak.vedtakstidspunkt.toLocalDate() > vedtak.virkningstidspunkt,
             utvidetFrist = null,
         )
 
