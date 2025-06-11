@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
@@ -33,8 +34,14 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.bruker
+import no.nav.aap.komponenter.httpklient.auth.token
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -99,7 +106,6 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource, repositoryRegistry: Repos
                     // Henter denne ut etter status er utledet for å være sikker på at dataene er i rett tilstand
                     behandling = behandling(behandlingRepository, req)
                     val flyt = behandling.flyt()
-
                     val stegGrupper: Map<StegGruppe, List<StegType>> =
                         flyt.stegene().groupBy { steg -> steg.gruppe }
                     val aktivtSteg = behandling.aktivtSteg()
@@ -167,7 +173,9 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource, repositoryRegistry: Repos
                             flyt = flyt,
                             alleAvklaringsbehovInkludertFrivillige = alleAvklaringsbehovInkludertFrivillige,
                             status = prosessering.status,
-                            typeBehandling = behandling.typeBehandling()
+                            typeBehandling = behandling.typeBehandling(),
+                            avklaringsbehov = alleAvklaringsbehov,
+                            bruker = bruker()
                         )
                     )
                 }
@@ -341,14 +349,36 @@ private fun utledVisning(
     flyt: BehandlingFlyt,
     alleAvklaringsbehovInkludertFrivillige: FrivilligeAvklaringsbehov,
     status: ProsesseringStatus,
-    typeBehandling: TypeBehandling
+    typeBehandling: TypeBehandling,
+    avklaringsbehov: List<Avklaringsbehov>,
+    bruker: Bruker
 ): Visning {
+    val unleashGateway = GatewayProvider.provide<UnleashGateway>()
+    val brukerHarIngenValidering = unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)
+
+    val brukerHarKvalitetssikret = avklaringsbehov.filter { it.definisjon === Definisjon.KVALITETSSIKRING }
+        .any { it.brukere().contains(bruker.ident) }
+    val brukerHarBesluttet =
+        avklaringsbehov.filter { it.definisjon === Definisjon.FATTE_VEDTAK }.any { it.brukere().contains(bruker.ident) }
+
     val jobberEllerFeilet = status in listOf(ProsesseringStatus.JOBBER, ProsesseringStatus.FEILET)
     val påVent = alleAvklaringsbehovInkludertFrivillige.erSattPåVent()
     val beslutterReadOnly = aktivtSteg != StegType.FATTE_VEDTAK
     val erTilKvalitetssikring =
         harÅpentKvalitetssikringsAvklaringsbehov(alleAvklaringsbehovInkludertFrivillige) && aktivtSteg == StegType.KVALITETSSIKRING
-    val saksbehandlerReadOnly = erTilKvalitetssikring || !flyt.erStegFør(aktivtSteg, StegType.FATTE_VEDTAK)
+
+    val saksbehandlerReadOnly = if (brukerHarIngenValidering) {
+        erTilKvalitetssikring || !flyt.erStegFør(
+            aktivtSteg,
+            StegType.FATTE_VEDTAK
+        )
+    } else {
+        erTilKvalitetssikring || !flyt.erStegFør(
+            aktivtSteg,
+            StegType.FATTE_VEDTAK
+        ) || brukerHarKvalitetssikret || brukerHarBesluttet
+    }
+
     val visBeslutterKort =
         !beslutterReadOnly || (!saksbehandlerReadOnly && alleAvklaringsbehovInkludertFrivillige.harVærtSendtTilbakeFraBeslutterTidligere())
     val visKvalitetssikringKort = utledVisningAvKvalitetsikrerKort(alleAvklaringsbehovInkludertFrivillige)
@@ -369,7 +399,9 @@ private fun utledVisning(
             visKvalitetssikringKort = visKvalitetssikringKort,
             visVentekort = påVent,
             visBrevkort = false,
-            typeBehandling = typeBehandling
+            typeBehandling = typeBehandling,
+            brukerHarBesluttet = brukerHarBesluttet,
+            brukerHarKvlaitetsikret = brukerHarKvalitetssikret
         )
     } else {
         return Visning(
@@ -380,7 +412,17 @@ private fun utledVisning(
             visKvalitetssikringKort = visKvalitetssikringKort,
             visVentekort = påVent,
             visBrevkort = visBrevkort,
-            typeBehandling = typeBehandling
+            typeBehandling = typeBehandling,
+            brukerHarBesluttet = if (brukerHarIngenValidering) {
+                false
+            } else {
+                brukerHarBesluttet
+            },
+            brukerHarKvlaitetsikret = if (brukerHarIngenValidering) {
+                false
+            } else {
+                brukerHarKvalitetssikret
+            }
         )
     }
 }
