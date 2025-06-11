@@ -3,8 +3,10 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklarYrkesskadeLøser(
@@ -22,7 +24,13 @@ class AvklarYrkesskadeLøser(
 
         sykdomRepository.lagre(
             behandlingId = behandling.id,
-            yrkesskadevurdering = løsning.yrkesskadesvurdering.toYrkesskadevurdering(),
+            yrkesskadevurdering = Yrkesskadevurdering(
+                begrunnelse = løsning.yrkesskadesvurdering.begrunnelse,
+                relevanteSaker = løsning.yrkesskadesvurdering.relevanteSaker,
+                erÅrsakssammenheng = løsning.yrkesskadesvurdering.erÅrsakssammenheng,
+                andelAvNedsettelsen = løsning.yrkesskadesvurdering.andelAvNedsettelsen?.let { Prosent(it) },
+                vurdertAv = kontekst.bruker.ident,
+            ),
         )
 
         return LøsningsResultat(
