@@ -43,6 +43,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningAndreStatligeYt
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningAvslagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningUføreSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SendForvaltningsmeldingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SimulerUtbetalingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SøknadSteg
@@ -63,6 +64,11 @@ object Revurdering : BehandlingType {
     override fun flyt(): BehandlingFlyt {
         return BehandlingFlytBuilder()
             .medSteg(steg = StartBehandlingSteg, informasjonskrav = listOf(SøknadService))
+            .medSteg(
+                steg = SendForvaltningsmeldingSteg,
+                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                informasjonskrav = emptyList()
+            )
             .medSteg(
                 steg = SøknadSteg,
                 årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.SØKNAD_TRUKKET),

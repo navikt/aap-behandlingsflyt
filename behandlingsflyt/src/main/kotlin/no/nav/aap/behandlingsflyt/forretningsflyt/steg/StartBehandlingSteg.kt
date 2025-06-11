@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.ForvaltningsmeldingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -21,7 +20,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
 class StartBehandlingSteg private constructor(
-    private val forvaltningsmeldingService: ForvaltningsmeldingService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val samordningVurderingRepository: SamordningVurderingRepository,
 ) : BehandlingSteg {
@@ -29,7 +27,6 @@ class StartBehandlingSteg private constructor(
     private val logger = LoggerFactory.getLogger(StartBehandlingSteg::class.java)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        forvaltningsmeldingService.sendForvaltningsmeldingForNySøknad(kontekst.behandlingId)
         if (kontekst.behandlingType == TypeBehandling.Førstegangsbehandling) {
             val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
             val rettighetsperiode = kontekst.rettighetsperiode
@@ -81,7 +78,6 @@ class StartBehandlingSteg private constructor(
             val vilkårsresultatRepository =
                 repositoryProvider.provide<VilkårsresultatRepository>()
             return StartBehandlingSteg(
-                ForvaltningsmeldingService(repositoryProvider),
                 vilkårsresultatRepository,
                 repositoryProvider.provide()
             )
@@ -94,6 +90,5 @@ class StartBehandlingSteg private constructor(
         override fun toString(): String {
             return "FlytSteg(type:${type()})"
         }
-
     }
 }
