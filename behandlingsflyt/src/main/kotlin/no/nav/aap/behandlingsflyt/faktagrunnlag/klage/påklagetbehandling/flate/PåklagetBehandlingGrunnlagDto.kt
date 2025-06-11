@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.Påkla
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtakForPerson
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -32,20 +31,7 @@ data class BehandlingMedVedtakDto(
     val årsaker: Set<ÅrsakTilBehandling>
 )
 
-@Deprecated("Bruk ehandlingMedVedtakForPerson.tilBehandlingMedVedtakDto() istedet")
-internal fun BehandlingMedVedtak.tilBehandlingMedVedtakDto(saksnummer: String) =
-    BehandlingMedVedtakDto(
-        saksnummer = saksnummer,
-        referanse = referanse.referanse,
-        typeBehandling = typeBehandling,
-        status = status,
-        opprettetTidspunkt = opprettetTidspunkt,
-        vedtakstidspunkt = vedtakstidspunkt,
-        virkningstidspunkt = virkningstidspunkt,
-        årsaker = setOf()
-    )
-
-internal fun BehandlingMedVedtakForPerson.tilBehandlingMedVedtakDto() =
+internal fun BehandlingMedVedtak.tilBehandlingMedVedtakDto() =
     BehandlingMedVedtakDto(
         saksnummer = saksnummer.toString(),
         referanse = referanse.referanse,

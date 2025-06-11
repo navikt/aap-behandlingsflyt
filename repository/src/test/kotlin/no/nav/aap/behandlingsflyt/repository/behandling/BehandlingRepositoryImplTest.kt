@@ -124,7 +124,7 @@ internal class BehandlingRepositoryImplTest {
             // Hent ut igjen
             val hententMedReferanse = repo.hent(skapt.referanse)
 
-            assertThat(hententMedReferanse.opprettetTidspunkt).isEqualTo(skapt.opprettetTidspunkt);
+            assertThat(hententMedReferanse.opprettetTidspunkt).isEqualTo(skapt.opprettetTidspunkt)
         }
     }
 
@@ -174,61 +174,6 @@ internal class BehandlingRepositoryImplTest {
             assertThat(alleKlage[0].referanse).isEqualTo(klage.referanse)
         }
     }
-    @Test
-    fun `kan hente ut behandlinger med vedtak`() {
-        val vedtakstidspunkt = LocalDateTime.now()
-        val virkningstidspunkt = LocalDate.now().plusMonths(1)
-
-
-        val (sak, førstegang, klage) = dataSource.transaction { connection ->
-            val sak = PersonOgSakService(
-                FakePdlGateway,
-                PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
-            ).finnEllerOpprett(
-                ident(),
-                Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-            )
-            val repo = BehandlingRepositoryImpl(connection)
-            val vedtakRepo = VedtakRepositoryImpl(connection)
-
-            // Opprett
-            val førstegang = repo.opprettBehandling(
-                sakId = sak.id,
-                årsaker = listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
-                typeBehandling = TypeBehandling.Førstegangsbehandling,
-                forrigeBehandlingId = null
-            )
-
-            vedtakRepo.lagre(
-                behandlingId = førstegang.id,
-                vedtakstidspunkt = vedtakstidspunkt,
-                virkningstidspunkt = virkningstidspunkt,
-            )
-
-            val klage = repo.opprettBehandling(
-                sakId = sak.id,
-                årsaker = listOf(Årsak(type = ÅrsakTilBehandling.MOTATT_KLAGE)),
-                typeBehandling = TypeBehandling.Klage,
-                forrigeBehandlingId = null
-            )
-            Triple(sak, førstegang, klage)
-        }
-
-        dataSource.transaction { connection ->
-            val repo = BehandlingRepositoryImpl(connection)
-
-            // Hent ut igjen
-            val alleDefault = repo.hentAlleMedVedtakFor(sak.id)
-            assertThat(alleDefault).hasSize(1)
-
-            val alleFørstegang = repo.hentAlleMedVedtakFor(sak.id, listOf(TypeBehandling.Førstegangsbehandling))
-            assertThat(alleFørstegang).hasSize(1)
-            assertThat(alleFørstegang[0].referanse).isEqualTo(førstegang.referanse)
-            assertThat(alleFørstegang[0].vedtakstidspunkt).isEqualToIgnoringNanos(vedtakstidspunkt)
-            assertThat(alleFørstegang[0].virkningstidspunkt).isEqualTo(virkningstidspunkt)
-        }
-    }
 
     @Test
     fun `kan hente ut behandlinger med vedtak for person`() {
@@ -275,7 +220,7 @@ internal class BehandlingRepositoryImplTest {
             val repo = BehandlingRepositoryImpl(connection)
 
             // Hent ut igjen
-            val alleDefault = repo.hentAlleMedVedtakFor(sak.id)
+            val alleDefault = repo.hentAlleMedVedtakFor(sak.person)
             assertThat(alleDefault).hasSize(1)
 
             val alleFørstegang = repo.hentAlleMedVedtakFor(sak.person, listOf(TypeBehandling.Førstegangsbehandling))
