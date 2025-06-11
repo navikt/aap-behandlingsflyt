@@ -56,7 +56,7 @@ class SendForvaltningsmeldingSteg(
     }
 
     private fun erBehandlingForMottattSøknad(årsakerTilBehandling: Set<ÅrsakTilBehandling>): Boolean {
-        return årsakerTilBehandling.any { it == ÅrsakTilBehandling.MOTTATT_SØKNAD }
+        return ÅrsakTilBehandling.MOTTATT_SØKNAD in årsakerTilBehandling
     }
 
     companion object : FlytSteg {

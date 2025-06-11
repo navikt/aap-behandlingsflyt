@@ -7,12 +7,12 @@ public enum class StegType(
     public val status: Status,
     public val tekniskSteg: Boolean = false
 ) {
-    SEND_FORVALTNINGSMELDING(
-        gruppe = StegGruppe.SEND_FORVALTNINGSMELDING,
-        status = Status.OPPRETTET
-    ),
     START_BEHANDLING(
         gruppe = StegGruppe.START_BEHANDLING,
+        status = Status.OPPRETTET
+    ),
+    SEND_FORVALTNINGSMELDING(
+        gruppe = StegGruppe.SEND_FORVALTNINGSMELDING,
         status = Status.OPPRETTET
     ),
     VURDER_RETTIGHETSPERIODE(
