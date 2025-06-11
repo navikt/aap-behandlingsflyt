@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRefer
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Ufullstendig
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.effektueravvistpåformkrav.EffektuerAvvistPåFormkravRepository
@@ -32,6 +33,7 @@ import java.time.LocalDate
 class EffektuerAvvistPåFormkravSteg private constructor(
     private val formkravRepository: FormkravRepository,
     private val brevbestillingService: BrevbestillingService,
+    private val trekkKlageService: TrekkKlageService,
     private val behandlingRepository: BehandlingRepository,
     private val effektuerAvvistPåFormkravRepository: EffektuerAvvistPåFormkravRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
@@ -46,6 +48,7 @@ class EffektuerAvvistPåFormkravSteg private constructor(
             return EffektuerAvvistPåFormkravSteg(
                 repositoryProvider.provide(),
                 BrevbestillingService(repositoryProvider),
+                TrekkKlageService(repositoryProvider),
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),
@@ -60,6 +63,11 @@ class EffektuerAvvistPåFormkravSteg private constructor(
     }
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if(trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
+            val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+            avklaringsbehov.avbrytForSteg(FormkravSteg.Companion.type())
+            return Fullført
+        }
 
         val formkravVurdering = formkravRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurdering
         requireNotNull(formkravVurdering)
