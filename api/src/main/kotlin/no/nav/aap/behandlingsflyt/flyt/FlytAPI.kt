@@ -34,7 +34,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
@@ -350,17 +353,32 @@ private fun utledVisning(
     avklaringsbehov: List<Avklaringsbehov>,
     bruker: Bruker
 ): Visning {
+    val unleashGateway = GatewayProvider.provide<UnleashGateway>()
+    val brukerHarIngenValidering = unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)
 
-
-    val brukerHarKvalitetssikret =  avklaringsbehov.filter { it.definisjon === Definisjon.KVALITETSSIKRING }.any { it.brukere().contains(bruker.ident) }
-    val brukerHarBesluttet = avklaringsbehov.filter { it.definisjon === Definisjon.FATTE_VEDTAK }.any { it.brukere().contains(bruker.ident) }
+    val brukerHarKvalitetssikret = avklaringsbehov.filter { it.definisjon === Definisjon.KVALITETSSIKRING }
+        .any { it.brukere().contains(bruker.ident) }
+    val brukerHarBesluttet =
+        avklaringsbehov.filter { it.definisjon === Definisjon.FATTE_VEDTAK }.any { it.brukere().contains(bruker.ident) }
 
     val jobberEllerFeilet = status in listOf(ProsesseringStatus.JOBBER, ProsesseringStatus.FEILET)
     val påVent = alleAvklaringsbehovInkludertFrivillige.erSattPåVent()
     val beslutterReadOnly = aktivtSteg != StegType.FATTE_VEDTAK
     val erTilKvalitetssikring =
         harÅpentKvalitetssikringsAvklaringsbehov(alleAvklaringsbehovInkludertFrivillige) && aktivtSteg == StegType.KVALITETSSIKRING
-    val saksbehandlerReadOnly = erTilKvalitetssikring || !flyt.erStegFør(aktivtSteg, StegType.FATTE_VEDTAK) || brukerHarKvalitetssikret || brukerHarBesluttet
+
+    val saksbehandlerReadOnly = if (brukerHarIngenValidering) {
+        erTilKvalitetssikring || !flyt.erStegFør(
+            aktivtSteg,
+            StegType.FATTE_VEDTAK
+        )
+    } else {
+        erTilKvalitetssikring || !flyt.erStegFør(
+            aktivtSteg,
+            StegType.FATTE_VEDTAK
+        ) || brukerHarKvalitetssikret || brukerHarBesluttet
+    }
+
     val visBeslutterKort =
         !beslutterReadOnly || (!saksbehandlerReadOnly && alleAvklaringsbehovInkludertFrivillige.harVærtSendtTilbakeFraBeslutterTidligere())
     val visKvalitetssikringKort = utledVisningAvKvalitetsikrerKort(alleAvklaringsbehovInkludertFrivillige)
@@ -395,8 +413,16 @@ private fun utledVisning(
             visVentekort = påVent,
             visBrevkort = visBrevkort,
             typeBehandling = typeBehandling,
-            brukerHarBesluttet = brukerHarBesluttet,
-            brukerHarKvlaitetsikret = brukerHarKvalitetssikret
+            brukerHarBesluttet = if (brukerHarIngenValidering) {
+                false
+            } else {
+                brukerHarBesluttet
+            },
+            brukerHarKvlaitetsikret = if (brukerHarIngenValidering) {
+                false
+            } else {
+                brukerHarKvalitetssikret
+            }
         )
     }
 }
