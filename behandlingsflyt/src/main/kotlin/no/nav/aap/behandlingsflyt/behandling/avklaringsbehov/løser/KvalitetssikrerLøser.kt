@@ -10,21 +10,18 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.Bruker
-import no.nav.aap.komponenter.miljo.Miljø
-import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class KvalitetssikrerLøser(
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val unleashGateway: UnleashGateway
 ) : AvklaringsbehovsLøser<KvalitetssikringLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
-        unleashGateway = repositoryProvider.provide()
     )
 
     override fun løs(
@@ -116,6 +113,7 @@ class KvalitetssikrerLøser(
     }
 
     private fun validerAvklaringsbehovOppMotBruker(avklaringsbehovene: List<Avklaringsbehov>, bruker: Bruker) {
+        val unleashGateway = GatewayProvider.provide<UnleashGateway>()
         if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident) && avklaringsbehovene.any { it.brukere().contains(bruker.ident) }) {
             throw KanIkkeVurdereEgneVurderingerException()
         }
