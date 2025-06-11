@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtakForPerson
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
@@ -130,6 +131,13 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         sakId: SakId,
         behandlingstypeFilter: List<TypeBehandling>
     ): List<BehandlingMedVedtak> {
+        TODO("Not yet implemented")
+    }
+
+    override fun hentAlleMedVedtakFor(
+        person: Person,
+        behandlingstypeFilter: List<TypeBehandling>
+    ): List<BehandlingMedVedtakForPerson> {
         TODO("Not yet implemented")
     }
 
