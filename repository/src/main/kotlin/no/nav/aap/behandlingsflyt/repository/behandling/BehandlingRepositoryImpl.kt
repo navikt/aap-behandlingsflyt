@@ -261,7 +261,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
     override fun hentAlleMedVedtakFor(person: Person, behandlingstypeFilter: List<TypeBehandling>): List<BehandlingMedVedtakForPerson> {
         val query = """
             SELECT
-                S.ID,
                 S.SAKSNUMMER,
                 B.ID,
                 B.REFERANSE,
