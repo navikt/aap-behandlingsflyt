@@ -40,8 +40,6 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.bruker
-import no.nav.aap.komponenter.httpklient.auth.token
-import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -401,7 +399,7 @@ private fun utledVisning(
             visBrevkort = false,
             typeBehandling = typeBehandling,
             brukerHarBesluttet = brukerHarBesluttet,
-            brukerHarKvlaitetsikret = brukerHarKvalitetssikret
+            brukerHarKvalitetssikret = brukerHarKvalitetssikret
         )
     } else {
         return Visning(
@@ -418,7 +416,7 @@ private fun utledVisning(
             } else {
                 brukerHarBesluttet
             },
-            brukerHarKvlaitetsikret = if (brukerHarIngenValidering) {
+            brukerHarKvalitetssikret = if (brukerHarIngenValidering) {
                 false
             } else {
                 brukerHarKvalitetssikret

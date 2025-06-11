@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 data class Visning(
     val saksbehandlerReadOnly: Boolean,
     val beslutterReadOnly: Boolean,
-    val brukerHarKvlaitetsikret: Boolean,
+    val brukerHarKvalitetssikret: Boolean,
     val brukerHarBesluttet: Boolean,
     val kvalitetssikringReadOnly: Boolean,
     val visBeslutterKort: Boolean,
