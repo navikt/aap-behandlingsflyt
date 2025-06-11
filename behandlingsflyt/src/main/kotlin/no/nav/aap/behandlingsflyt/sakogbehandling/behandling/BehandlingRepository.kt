@@ -26,6 +26,11 @@ interface BehandlingRepository : Repository {
     ): List<Behandling>
 
     fun hentAlleMedVedtakFor(
+        person: Person,
+        behandlingstypeFilter: List<TypeBehandling> = TypeBehandling.entries
+    ): List<BehandlingMedVedtakForPerson>
+
+    fun hentAlleMedVedtakFor(
         sakId: SakId,
         behandlingstypeFilter: List<TypeBehandling> = TypeBehandling.entries
     ): List<BehandlingMedVedtak>
