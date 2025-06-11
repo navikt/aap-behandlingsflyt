@@ -8,8 +8,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class KlagebehandlingNayRepositoryImpl(private val connection: DBConnection) : KlagebehandlingNayRepository {
+    private val log = LoggerFactory.getLogger(this::class.java)
+
     companion object : Factory<KlagebehandlingNayRepositoryImpl> {
         override fun konstruer(connection: DBConnection): KlagebehandlingNayRepositoryImpl {
             return KlagebehandlingNayRepositoryImpl(connection)
@@ -86,8 +89,33 @@ class KlagebehandlingNayRepositoryImpl(private val connection: DBConnection) : K
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        // Gjør ingenting
+        val vurderingIds = getIdForVurderingerForGrunnlaget(behandlingId)
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from klage_nay_grunnlag where behandling_id = ?; 
+            delete from klage_nay_vurdering where id = ANY(?::bigint[]);
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, vurderingIds)
+            }
+        }
+        log.info("Slettet $deletedRows rader fra klage_nay_grunnlag og klage_nay_vurdering")
     }
+
+    private fun getIdForVurderingerForGrunnlaget(behandlingId: BehandlingId): List<Long> =
+        connection.queryList(
+            """
+                SELECT vurdering_id
+                FROM klage_nay_grunnlag
+                WHERE behandling_id = ? AND vurdering_id is not null
+                """.trimIndent()
+        ) {
+            setParams { setLong(1, behandlingId.id) }
+            setRowMapper { row ->
+                row.getLong("vurdering_id")
+            }
+        }
 
     private fun mapGrunnlag(row: Row): KlagebehandlingNayGrunnlag {
         return KlagebehandlingNayGrunnlag(

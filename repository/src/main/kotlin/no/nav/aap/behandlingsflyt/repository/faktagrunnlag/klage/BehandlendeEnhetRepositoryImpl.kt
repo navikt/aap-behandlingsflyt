@@ -7,8 +7,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class BehandlendeEnhetRepositoryImpl(private val connection: DBConnection) : BehandlendeEnhetRepository {
+    private val log = LoggerFactory.getLogger(this::class.java)
 
     companion object : Factory<BehandlendeEnhetRepositoryImpl> {
         override fun konstruer(connection: DBConnection): BehandlendeEnhetRepositoryImpl {
@@ -48,8 +50,33 @@ class BehandlendeEnhetRepositoryImpl(private val connection: DBConnection) : Beh
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        // TODO: Not yet implemented
+        val vurderingIds = getIdForVurderingerForGrunnlaget(behandlingId)
+
+        val deletedRows = connection.executeReturnUpdated("""
+            delete from behandlende_enhet_grunnlag where behandling_id = ?; 
+            delete from behandlende_enhet_vurdering where id = ANY(?::bigint[]);
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, vurderingIds)
+            }
+        }
+        log.info("Slettet $deletedRows rader fra BEHANDLENDE_ENHET_VURDERING og BEHANDLENDE_ENHET_GRUNNLAG")
     }
+
+    private fun getIdForVurderingerForGrunnlaget(behandlingId: BehandlingId): List<Long> =
+        connection.queryList(
+            """
+                SELECT vurdering_id
+                FROM behandlende_enhet_grunnlag
+                WHERE behandling_id = ? AND vurdering_id is not null
+                """.trimIndent()
+        ) {
+            setParams { setLong(1, behandlingId.id) }
+            setRowMapper { row ->
+                row.getLong("vurdering_id")
+            }
+        }
 
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: BehandlendeEnhetGrunnlag) {
         val vurderingId = lagreVurdering(nyttGrunnlag.vurdering)
