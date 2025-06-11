@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtakForPerson
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
@@ -98,22 +97,9 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         )
     }
 
-    private fun mapBehandlingMedVedtak(row: Row): BehandlingMedVedtak {
+    private fun mapBehandlingMedVedtakForPerson(row: Row): BehandlingMedVedtak {
         val behandlingId = BehandlingId(row.getLong("id"))
         return BehandlingMedVedtak(
-            id = behandlingId,
-            referanse = BehandlingReferanse(row.getUUID("referanse")),
-            typeBehandling = TypeBehandling.Companion.from(row.getString("type")),
-            status = row.getEnum("status"),
-            opprettetTidspunkt = row.getLocalDateTime("opprettet_tid"),
-            vedtakstidspunkt = row.getLocalDateTime("vedtakstidspunkt"),
-            virkningstidspunkt = row.getLocalDateOrNull("virkningstidspunkt")
-        )
-    }
-
-    private fun mapBehandlingMedVedtakForPerson(row: Row): BehandlingMedVedtakForPerson {
-        val behandlingId = BehandlingId(row.getLong("id"))
-        return BehandlingMedVedtakForPerson(
             saksnummer = Saksnummer(row.getString("saksnummer")),
             id = behandlingId,
             referanse = BehandlingReferanse(row.getUUID("referanse")),
@@ -258,7 +244,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
-    override fun hentAlleMedVedtakFor(person: Person, behandlingstypeFilter: List<TypeBehandling>): List<BehandlingMedVedtakForPerson> {
+    override fun hentAlleMedVedtakFor(person: Person, behandlingstypeFilter: List<TypeBehandling>): List<BehandlingMedVedtak> {
         val query = """
             SELECT
                 S.ID,
@@ -289,27 +275,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             }
             setRowMapper {
                 mapBehandlingMedVedtakForPerson(it)
-            }
-        }
-    }
-
-    @Deprecated("Bruk hentAlleMedVedtakFor(person, behandlingstypeFilter) istedet")
-    override fun hentAlleMedVedtakFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): List<BehandlingMedVedtak> {
-        val query = """
-            SELECT * FROM BEHANDLING 
-            INNER JOIN VEDTAK ON BEHANDLING.ID = VEDTAK.BEHANDLING_ID
-            WHERE sak_id = ?
-             AND type = ANY(?::text[])
-             ORDER BY opprettet_tid DESC
-            """.trimIndent()
-
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, sakId.toLong())
-                setArray(2, behandlingstypeFilter.map { it.identifikator() })
-            }
-            setRowMapper {
-                mapBehandlingMedVedtak(it)
             }
         }
     }

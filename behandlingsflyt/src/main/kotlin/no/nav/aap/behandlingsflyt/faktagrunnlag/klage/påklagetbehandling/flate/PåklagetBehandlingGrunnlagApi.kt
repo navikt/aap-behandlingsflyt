@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.Påkla
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurderingMedReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurderingService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtakForPerson
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -55,7 +55,7 @@ fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(dataSource: DataSource, re
 
 fun mapTilPåklagetBehandlingGrunnlagDto(
     påklagetBehandlingVurderingMedReferanse: PåklagetBehandlingVurderingMedReferanse?,
-    behandlingerMedVedtak: List<BehandlingMedVedtakForPerson>,
+    behandlingerMedVedtak: List<BehandlingMedVedtak>,
     kravMottattDato: LocalDate?
 ): PåklagetBehandlingGrunnlagDto {
     return PåklagetBehandlingGrunnlagDto(
