@@ -146,7 +146,7 @@ private fun Yrkesskadevurdering.toResponse(): YrkesskadevurderingResponse {
         erÅrsakssammenheng = erÅrsakssammenheng,
         vurdertAv = VurdertAvResponse(
             ident = vurdertAv,
-            dato = vurdertTidspunkt?.toLocalDate() ?: error("Fant ikke vurderingstidspunkt for yrkesskadevurdering"),
+            dato = requireNotNull(vurdertTidspunkt?.toLocalDate()) { "Fant ikke vurderingstidspunkt for yrkesskadevurdering" },
             ansattnavn = navnOgEnhet?.navn,
             enhetsnavn = navnOgEnhet?.enhet,
         )
