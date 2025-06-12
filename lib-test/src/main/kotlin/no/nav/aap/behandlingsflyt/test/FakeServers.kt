@@ -769,7 +769,7 @@ object FakeServers : AutoCloseable {
                 if (fakePerson?.sykepenger != null) {
                     call.respond(
                         SykepengerResponse(
-                            utbetaltePerioder = fakePerson.sykepenger.map {
+                            utbetaltePerioder = fakePerson.sykepenger().map {
                                 UtbetaltePerioder(
                                     fom = it.periode.fom,
                                     tom = it.periode.tom,
