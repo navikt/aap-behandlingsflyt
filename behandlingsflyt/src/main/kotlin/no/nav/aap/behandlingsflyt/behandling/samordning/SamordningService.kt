@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.samordning
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
@@ -12,6 +13,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere.slåSammenTilListe
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
 import kotlin.math.min
@@ -20,7 +22,7 @@ class SamordningService(
     private val samordningVurderingRepository: SamordningVurderingRepository,
     private val samordningYtelseRepository: SamordningYtelseRepository,
 ) {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         samordningVurderingRepository = repositoryProvider.provide(),
         samordningYtelseRepository = repositoryProvider.provide(),
     )
@@ -33,24 +35,54 @@ class SamordningService(
         return samordningYtelseRepository.hentHvisEksisterer(behandlingId)
     }
 
-    fun tidligereVurderinger(grunnlag: SamordningVurderingGrunnlag?): Tidslinje<List<Pair<Ytelse, SamordningVurderingPeriode>>> {
+    fun vurderingTidslinje(grunnlag: SamordningVurderingGrunnlag?): Tidslinje<List<Pair<Ytelse, SamordningVurderingPeriode>>> {
         val vurderinger =
             grunnlag?.vurderinger.orEmpty().filter { it.ytelseType.type == AvklaringsType.MANUELL }
                 .map { ytelse ->
-                    Tidslinje(ytelse.vurderingPerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) })
+                    var segmenterForYtelse =
+                        ytelse.vurderingPerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) }
+                    if (harUkjentSluttdatoForSamordning(grunnlag, ytelse)) {
+                        segmenterForYtelse = segmenterForYtelse.plus(segmentForSamordningUtenSluttdato(ytelse))
+                    }
+
+                    Tidslinje(segmenterForYtelse)
                 }.fold(Tidslinje.empty<List<Pair<Ytelse, SamordningVurderingPeriode>>>()) { acc, curr ->
                     acc.kombiner(curr, slåSammenTilListe())
                 }
 
-
         return vurderinger
     }
 
-    fun tidslinje(behandlingId: BehandlingId): Tidslinje<SamordningGradering>{
+    private fun harUkjentSluttdatoForSamordning(
+        grunnlag: SamordningVurderingGrunnlag?,
+        ytelse: SamordningVurdering
+    ): Boolean =
+        grunnlag?.maksDato != null && grunnlag.maksDatoEndelig == false && ytelse.vurderingPerioder.isNotEmpty()
+
+    private fun segmentForSamordningUtenSluttdato(
+        ytelse: SamordningVurdering,
+    ): Segment<Pair<Ytelse, SamordningVurderingPeriode>> {
+        val sisteDagMedSamordning = ytelse.vurderingPerioder
+            .maxOfOrNull { it.periode.tom }
+            ?: error("Mangler perioder for ${ytelse.ytelseType} - klarer ikke utlede neste startdato")
+        // For å unngå potensiell utbetaling hvis revurderingen ikke håndteres innen rimelig tid settes
+        // sluttdatoen for den fiktive samordningen 3 år frem i tid (LocalDate.MAX krasjer databasen)
+        val periode = Periode(sisteDagMedSamordning.plusDays(1), sisteDagMedSamordning.plusDays(1).plusYears(3))
+        val samordningVurderingPeriode = SamordningVurderingPeriode(
+            periode = periode,
+            gradering = Prosent.`100_PROSENT`,
+            manuell = false
+        )
+        return Segment(
+            periode, Pair(Ytelse.UKJENT_SLUTTDATO_PÅ_YTELSE, samordningVurderingPeriode)
+        )
+    }
+
+    fun tidslinje(behandlingId: BehandlingId): Tidslinje<SamordningGradering> {
         val vurderinger = hentVurderinger(behandlingId)
         val ytelser = hentYtelser(behandlingId)
-        val tidligereVurderinger = tidligereVurderinger(vurderinger)
-        return vurder(ytelser, tidligereVurderinger)
+        val vurderingTidslinje = vurderingTidslinje(vurderinger)
+        return vurder(ytelser, vurderingTidslinje)
     }
 
     fun perioderSomIkkeHarBlittVurdert(

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
+import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
@@ -77,7 +78,9 @@ class SamordningAvslagSteg(
         val samordningsVurderinger =
             samordningTidslinje.outerJoinNotNull(samordningUføreTidslinje) { andreYtelserSamordning, samordningUføreGradering ->
                 val samordningerYtelser =
-                    andreYtelserSamordning?.ytelsesGraderinger.orEmpty().map { it.ytelse.toString() to it.gradering }
+                    andreYtelserSamordning?.ytelsesGraderinger.orEmpty()
+                        .filter { it.ytelse != Ytelse.UKJENT_SLUTTDATO_PÅ_YTELSE }
+                        .map { it.ytelse.toString() to it.gradering }
                 val samordningUføre = listOfNotNull(samordningUføreGradering?.let { "UFØRE" to it })
                 val samordninger = (samordningerYtelser + samordningUføre)
                     .filter { (_, prosent) -> prosent == `100_PROSENT` }
@@ -101,7 +104,7 @@ class SamordningAvslagSteg(
             }
 
 
-        val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SAMORDNING)
+        val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SAMORDNING).nullstillTidslinje()
         vilkår.leggTilVurderinger(samordningsVurderinger.begrensetTil(rettighetsperiode))
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         return Fullført

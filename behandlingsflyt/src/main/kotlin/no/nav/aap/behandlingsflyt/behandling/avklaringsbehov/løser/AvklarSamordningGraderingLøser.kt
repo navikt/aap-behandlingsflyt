@@ -47,7 +47,7 @@ class AvklarSamordningGraderingLøser(
             })
 
         val perioderSomIkkeHarBlittVurdert = samordningService.perioderSomIkkeHarBlittVurdert(
-            samordningYtelseGrunnlag, samordningService.tidligereVurderinger(samordningsvurderinger)
+            samordningYtelseGrunnlag, samordningService.vurderingTidslinje(samordningsvurderinger)
         )
 
         if (perioderSomIkkeHarBlittVurdert.isNotEmpty()) {

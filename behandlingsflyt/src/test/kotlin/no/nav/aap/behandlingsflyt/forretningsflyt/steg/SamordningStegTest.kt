@@ -141,72 +141,8 @@ class SamordningStegTest {
         InMemorySamordningVurderingRepository.lagreVurderinger(
             behandling.id, SamordningVurderingGrunnlag(
                 begrunnelse = "En god begrunnelse",
-                maksDatoEndelig = false,
-                maksDato = LocalDate.now().plusYears(1),
-                vurderinger = listOf(
-                    SamordningVurdering(
-                        ytelseType = Ytelse.PLEIEPENGER,
-                        vurderingPerioder = listOf(
-                            SamordningVurderingPeriode(
-                                periode = pleiepengerPeriode,
-                                gradering = Prosent(50),
-                                manuell = false
-                            )
-                        )
-                    ),
-                    SamordningVurdering(
-                        ytelseType = Ytelse.SYKEPENGER,
-                        vurderingPerioder = listOf(
-                            SamordningVurderingPeriode(
-                                periode = periodeMedSykepenger,
-                                gradering = Prosent(90),
-                                manuell = false
-                            )
-                        )
-                    )
-                )
-            )
-        )
-
-
-        val steg = settOppRessurser(
-            Ytelse.SYKEPENGER,
-            behandling.id,
-            periode = periodeMedSykepenger
-        )
-
-        steg.utfør(
-            FlytKontekstMedPerioder(
-                sakId = behandling.sakId,
-                behandlingId = behandling.id,
-                forrigeBehandlingId = behandling.forrigeBehandlingId,
-                behandlingType = behandling.typeBehandling(),
-                vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
-                rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
-            )
-        )
-
-        val perioderMedSamordning = InMemorySamordningRepository.hentHvisEksisterer(behandling.id)!!
-
-        assertThat(perioderMedSamordning.samordningPerioder).hasSize(2)
-        assertThat(perioderMedSamordning.samordningPerioder.first().periode).isEqualTo(periodeMedSykepenger)
-        assertThat(perioderMedSamordning.samordningPerioder.first().gradering).isEqualTo(Prosent(90))
-        assertThat(perioderMedSamordning.samordningPerioder.last().periode).isEqualTo(pleiepengerPeriode)
-        assertThat(perioderMedSamordning.samordningPerioder.last().gradering).isEqualTo(Prosent(50))
-    }
-
-    @Test
-    fun `en fra register og en manuell, ikke overlappende pdddderioder`() {
-        val behandling = opprettBehandling(nySak())
-        val periodeMedSykepenger = Periode(LocalDate.now().minusYears(1), LocalDate.now())
-
-        val pleiepengerPeriode = Periode(LocalDate.now().plusDays(1), LocalDate.now().plusWeeks(2))
-        InMemorySamordningVurderingRepository.lagreVurderinger(
-            behandling.id, SamordningVurderingGrunnlag(
-                begrunnelse = "En god begrunnelse",
-                maksDatoEndelig = false,
-                maksDato = LocalDate.now().plusYears(1),
+                maksDatoEndelig = true,
+                maksDato = null,
                 vurderinger = listOf(
                     SamordningVurdering(
                         ytelseType = Ytelse.PLEIEPENGER,
@@ -267,9 +203,9 @@ class SamordningStegTest {
 
         InMemorySamordningVurderingRepository.lagreVurderinger(
             behandling.id, SamordningVurderingGrunnlag(
-                begrunnelse = "En god begrunnelse",
-                maksDatoEndelig = false,
-                maksDato = LocalDate.now().plusYears(1),
+                begrunnelse = "",
+                maksDatoEndelig = true,
+                maksDato = null,
                 vurderinger = listOf(
                     SamordningVurdering(
                         ytelseType = Ytelse.SYKEPENGER,
@@ -330,9 +266,9 @@ class SamordningStegTest {
 
         InMemorySamordningVurderingRepository.lagreVurderinger(
             behandling.id, SamordningVurderingGrunnlag(
-                begrunnelse = "En god begrunnelse",
-                maksDatoEndelig = false,
-                maksDato = LocalDate.now().plusYears(1),
+                begrunnelse = "",
+                maksDatoEndelig = true,
+                maksDato = null,
                 vurderinger = listOf(
                     SamordningVurdering(
                         ytelseType = Ytelse.SYKEPENGER,
@@ -376,9 +312,9 @@ class SamordningStegTest {
         InMemorySamordningVurderingRepository.lagreVurderinger(
             behandlingId = behandling.id,
             samordningVurderinger = SamordningVurderingGrunnlag(
-                begrunnelse = "bla bla",
-                maksDatoEndelig = false,
-                maksDato = LocalDate.now().plusWeeks(1),
+                begrunnelse = "",
+                maksDatoEndelig = true,
+                maksDato = null,
                 vurderinger = listOf(
                     SamordningVurdering(
                         Ytelse.SYKEPENGER, listOf(
@@ -411,6 +347,64 @@ class SamordningStegTest {
 
         assertThat(uthentet!!.samordningPerioder).hasSize(1)
         assertThat(uthentet.samordningPerioder.first().gradering).isEqualTo(Prosent.`100_PROSENT`)
+    }
+
+
+    @Test
+    fun `skal kunne sette gradering til 100 prosent hvis maksdato ikke er bekreftet`() {
+        val behandling = opprettBehandling(nySak())
+        val steg = SamordningSteg(
+            samordningService = SamordningService(
+                samordningVurderingRepository = InMemorySamordningVurderingRepository,
+                samordningYtelseRepository = InMemorySamordningYtelseRepository,
+            ),
+            samordningRepository = InMemorySamordningRepository,
+            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            tidligereVurderinger = FakeTidligereVurderinger(),
+        )
+
+        val sykepengePeriode = Periode(LocalDate.now().minusWeeks(2), LocalDate.now().plusWeeks(2))
+        InMemorySamordningVurderingRepository.lagreVurderinger(
+            behandlingId = behandling.id,
+            samordningVurderinger = SamordningVurderingGrunnlag(
+                begrunnelse = "bla bla",
+                maksDatoEndelig = false,
+                maksDato = LocalDate.now().plusWeeks(1),
+                vurderinger = listOf(
+                    SamordningVurdering(
+                        Ytelse.SYKEPENGER, listOf(
+                            SamordningVurderingPeriode(
+                                periode = sykepengePeriode,
+                                gradering = Prosent.`100_PROSENT`,
+                                manuell = false,
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+        val kontekst = FlytKontekstMedPerioder(
+            sakId = behandling.sakId,
+            behandlingId = behandling.id,
+            forrigeBehandlingId = behandling.forrigeBehandlingId,
+            behandlingType = behandling.typeBehandling(),
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+            årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+        )
+
+        val res = steg.utfør(kontekst)
+
+        assertThat(res).isEqualTo(Fullført)
+
+        val uthentet = InMemorySamordningRepository.hentHvisEksisterer(behandling.id)
+
+        val samordninger = uthentet?.samordningPerioder ?: emptyList()
+        assertThat(samordninger).hasSize(2)
+        assertThat(samordninger.first().gradering).isEqualTo(Prosent.`100_PROSENT`)
+        assertThat(samordninger.last().gradering).isEqualTo(Prosent.`100_PROSENT`)
+        assertThat(samordninger.last().periode.tom).isEqualTo(sykepengePeriode.tom.plusDays(1).plusYears(3))
     }
 
     private fun settOppRessurser(
