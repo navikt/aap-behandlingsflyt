@@ -30,43 +30,51 @@ class RefusjonkravRepositoryImplTest {
 
 
         val periode = Periode(1 januar 2022, 31.desember(2023))
-        val vurdering = RefusjonkravVurdering(
-            harKrav = true,
-            fom = periode.fom,
-            tom = periode.tom,
-            navKontor = "",
-            vurdertAv = "saksbehandler",
+        val vurderinger = listOf(
+            RefusjonkravVurdering(
+                harKrav = true,
+                fom = periode.fom,
+                tom = periode.tom,
+                navKontor = "",
+                vurdertAv = "saksbehandler",
+            )
         )
         dataSource.transaction {
             RefusjonkravRepositoryImpl(it).lagre(
-                sak.id, behandling.id, vurdering
+                sak.id, behandling.id, vurderinger
             )
         }
 
         val uthentet = dataSource.transaction {
             RefusjonkravRepositoryImpl(it).hentHvisEksisterer(behandling.id)
         }
-        assertThat(uthentet?.harKrav).isEqualTo(vurdering.harKrav)
-        assertThat(uthentet?.fom).isEqualTo(vurdering.fom)
-        assertThat(uthentet?.tom).isEqualTo(vurdering.tom)
-        assertThat(uthentet?.navKontor).isEqualTo(vurdering.navKontor)
-        assertThat(uthentet?.vurdertAv).isEqualTo(vurdering.vurdertAv)
 
+        assertThat(uthentet).hasSameSizeAs(vurderinger)
+        uthentet!!.zip(vurderinger).forEach { (actual, expected) ->
+            assertThat(actual.harKrav).isEqualTo(expected.harKrav)
+            assertThat(actual.fom).isEqualTo(expected.fom)
+            assertThat(actual.tom).isEqualTo(expected.tom)
+            assertThat(actual.navKontor).isEqualTo(expected.navKontor)
+            assertThat(actual.vurdertAv).isEqualTo(expected.vurdertAv)
+        }
         // Lagre ny vurdering
-        val vurdering2 = vurdering.copy(harKrav = false)
+        val vurderinger2 = listOf(vurderinger.first().copy(harKrav = false))
         dataSource.transaction {
             RefusjonkravRepositoryImpl(it).lagre(
-                sak.id, behandling.id, vurdering2
+                sak.id, behandling.id, vurderinger2
             )
         }
         val uthentet2 = dataSource.transaction {
             RefusjonkravRepositoryImpl(it).hentHvisEksisterer(behandling.id)
         }
-        assertThat(uthentet2?.harKrav).isEqualTo(vurdering2.harKrav)
-        assertThat(uthentet2?.fom).isEqualTo(vurdering2.fom)
-        assertThat(uthentet2?.tom).isEqualTo(vurdering2.tom)
-        assertThat(uthentet2?.vurdertAv).isEqualTo(vurdering2.vurdertAv)
 
+        uthentet2!!.zip(vurderinger2).forEach { (actual, expected) ->
+            assertThat(actual.harKrav).isEqualTo(expected.harKrav)
+            assertThat(actual.fom).isEqualTo(expected.fom)
+            assertThat(actual.tom).isEqualTo(expected.tom)
+            assertThat(actual.navKontor).isEqualTo(expected.navKontor)
+            assertThat(actual.vurdertAv).isEqualTo(expected.vurdertAv)
+        }
         // SLETT
         dataSource.transaction {
             RefusjonkravRepositoryImpl(it).slett(behandling.id)

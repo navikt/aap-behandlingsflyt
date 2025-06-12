@@ -18,15 +18,30 @@ class AvventUtbetalingService(
         val sosialRefusjonskrav = refusjonskravRepository.hentHvisEksisterer(behandlingId)
         val tpRefusjonskrav = tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(behandlingId)
 
-        val overlapperMedSosialRefusjon = sosialRefusjonskrav != null && sosialRefusjonskrav.harKrav
-                && tilkjentYtelseHelePerioden.overlapper(tilPeriode(sosialRefusjonskrav.fom, sosialRefusjonskrav.tom))
+        val overlapperMedSosialRefusjon = sosialRefusjonskrav != null && sosialRefusjonskrav.any { refusjonsKrav ->
+            refusjonsKrav.harKrav && tilkjentYtelseHelePerioden.overlapper(tilPeriode(refusjonsKrav.fom, refusjonsKrav.tom))
+        } == true
 
         val overlapperMedTjenestepensjonRefusjon = tpRefusjonskrav != null && tpRefusjonskrav.harKrav
                 && tilkjentYtelseHelePerioden.overlapper(tilPeriode(tpRefusjonskrav.fom, tpRefusjonskrav.tom))
 
+         val tripleList = sosialRefusjonskrav
+             ?.filter { it.harKrav && it.fom != null }
+             ?.map { vurdering ->
+                 val fom = vurdering.fom!!
+                 val tom = vurdering.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(fom)
+                 fom to tom
+             }
+             .takeIf { it?.isNotEmpty() == true }
+             ?.let { perioder ->
+                 val minFom = perioder.minOf { it.first }
+                 val maxTom = perioder.maxOf { it.second }
+                 Triple(21L, minFom, maxTom)
+             }
+
         val (frist, fom, tom) = when {
             overlapperMedTjenestepensjonRefusjon -> Triple(42L, tpRefusjonskrav.fom!!, tpRefusjonskrav.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(tpRefusjonskrav.fom))
-            overlapperMedSosialRefusjon -> Triple(21L, sosialRefusjonskrav.fom!!, sosialRefusjonskrav.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(sosialRefusjonskrav.fom))
+            overlapperMedSosialRefusjon && tripleList != null -> tripleList
             else -> Triple(null, null, null)
         }
 

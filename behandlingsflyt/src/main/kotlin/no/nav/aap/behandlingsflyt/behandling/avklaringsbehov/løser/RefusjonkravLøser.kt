@@ -27,7 +27,7 @@ class RefusjonkravLøser(
             tom = it.tom,
             vurdertAv = kontekst.bruker.ident
         ) }
-        refusjonkravRepository.lagre(kontekst.kontekst.sakId, kontekst.behandlingId(), vurdering)
+        refusjonkravRepository.lagre(kontekst.kontekst.sakId, kontekst.behandlingId(), listOf(vurdering))
         return LøsningsResultat("Vurdert refusjonskrav")
     }
 
