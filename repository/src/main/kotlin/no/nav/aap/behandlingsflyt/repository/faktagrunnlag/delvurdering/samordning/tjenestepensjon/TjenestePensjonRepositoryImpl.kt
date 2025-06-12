@@ -182,16 +182,16 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
         val tjenestePensjonOrdningIds = getTjenestepensjonOrdningIds(tjenestePensjonOrdningerIds)
 
         val deletedRows = dbConnection.executeReturnUpdated("""
-            delete from tjenestepensjon_ytelse where tjenestepensjon_ordning_id = ANY(?::bigint[]);
-            delete from tjenestepensjon_ordning where tjenestepensjon_ordninger_id = ANY(?::bigint[]);
-            delete from tjenestepensjon_ordninger where id = ANY(?::bigint[]);
             delete from tjenestepensjon_forhold_grunnlag where behandling_id = ?; 
+            delete from tjenestepensjon_ytelse where tjenestepensjon_ordning_id = ANY(?::bigint[]);
+            delete from tjenestepensjon_ordning where tjenestepensjon_ordninger_id = ANY(?::bigint[]); 
+            delete from tjenestepensjon_ordninger where id = ANY(?::bigint[]);       
         """.trimIndent()) {
             setParams {
-                setLongArray(1, tjenestePensjonOrdningIds)
+                setLong(1, behandlingId.id)
                 setLongArray(2, tjenestePensjonOrdningerIds)
                 setLongArray(3, tjenestePensjonOrdningerIds)
-                setLong(4, behandlingId.id)
+                setLongArray(4, tjenestePensjonOrdningIds)
             }
         }
         log.info("Slettet $deletedRows rader fra tjenestepensjon_forhold_grunnlag")
