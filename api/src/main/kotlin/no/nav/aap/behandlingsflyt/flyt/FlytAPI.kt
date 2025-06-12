@@ -329,16 +329,19 @@ private fun hentFeilmeldingHvisBehov(
     return null
 }
 
-private fun utledStatus(oppgaver: List<JobbInput>, avklaringsbehovene: Avklaringsbehovene): ProsesseringStatus {
-    if (oppgaver.isEmpty()) {
+private fun utledStatus(jobber: List<JobbInput>, avklaringsbehovene: Avklaringsbehovene): ProsesseringStatus {
+    if (jobber.isEmpty()) {
         if (avklaringsbehovene.harÅpentBrevVentebehov()) {
+            log.info("Har åpent brevventebehov i behandling")
             return ProsesseringStatus.JOBBER
         }
         return ProsesseringStatus.FERDIG
     }
-    if (oppgaver.any { it.status() == JobbStatus.FEILET }) {
+    if (jobber.any { it.status() == JobbStatus.FEILET }) {
         return ProsesseringStatus.FEILET
     }
+
+    log.info("Har følgende jobber som ikke er utført: ${jobber.joinToString(", ") { it.navn() }}")
     return ProsesseringStatus.JOBBER
 }
 
