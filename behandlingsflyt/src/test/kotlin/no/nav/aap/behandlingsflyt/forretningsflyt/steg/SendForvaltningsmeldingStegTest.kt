@@ -3,8 +3,13 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.testutil.FakeBrevbestillingGateway
+import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
+import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Revurdering
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
@@ -18,6 +23,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.EnumSource.Mode
@@ -37,6 +43,39 @@ class SendForvaltningsmeldingStegTest {
         InMemoryBehandlingRepository,
         FakeUnleash
     )
+
+    @Test
+    fun `steg før SendForvaltningsmeldingSteg skal ikke føre til avklaringsbehov som vil forsinker utsending i førstegangsbehandling`() {
+        // Dersom det er definisjoner som ikke vil hindre i tilfeler det skal sendes forvaltningsmelding, så kan disse legges i unntak
+        val unntak = listOf(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT, Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON)
+
+        assertThat(
+            definisjonerSomLøsesFørSteg(
+                Førstegangsbehandling.flyt(),
+                StegType.SEND_FORVALTNINGSMELDING,
+                unntak,
+            )
+        ).isEmpty()
+
+        assertThat(
+            definisjonerSomLøsesFørSteg(
+                Revurdering.flyt(),
+                StegType.SEND_FORVALTNINGSMELDING,
+                unntak,
+            ).isEmpty()
+        )
+    }
+
+    private fun definisjonerSomLøsesFørSteg(
+        flyt: BehandlingFlyt,
+        steg: StegType,
+        unntak: List<Definisjon>,
+    ): List<Definisjon> {
+        return Definisjon.entries.filter {
+            flyt.stegene().takeWhile { it != steg }
+                .contains(it.løsesISteg) && !unntak.contains(it)
+        }
+    }
 
     @ParameterizedTest
     @EnumSource(TypeBehandling::class, mode = Mode.INCLUDE, names = ["Førstegangsbehandling", "Revurdering"])
@@ -66,7 +105,9 @@ class SendForvaltningsmeldingStegTest {
 
     @ParameterizedTest
     @EnumSource(TypeBehandling::class, mode = Mode.EXCLUDE, names = ["Førstegangsbehandling", "Revurdering"])
-    fun `sender ikke forvaltningsmelding for en behandling som ikke er førstegangsbehandling eller revurdering`(typeBehandling: TypeBehandling) {
+    fun `sender ikke forvaltningsmelding for en behandling som ikke er førstegangsbehandling eller revurdering`(
+        typeBehandling: TypeBehandling
+    ) {
         val behandling = opprettSakOgbehandling(typeBehandling)
         val flytkontekst = flytkontekstForBehandling(behandling, ÅrsakTilBehandling.MOTTATT_SØKNAD)
 
@@ -89,7 +130,10 @@ class SendForvaltningsmeldingStegTest {
         )
     }
 
-    private fun flytkontekstForBehandling(behandling: Behandling, årsakTilBehandling: ÅrsakTilBehandling): FlytKontekstMedPerioder {
+    private fun flytkontekstForBehandling(
+        behandling: Behandling,
+        årsakTilBehandling: ÅrsakTilBehandling
+    ): FlytKontekstMedPerioder {
         return FlytKontekstMedPerioder(
             sakId = behandling.sakId,
             behandlingId = behandling.id,
