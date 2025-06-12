@@ -42,9 +42,10 @@ object FakePersoner {
         listOf(PERSON_MED_BARN_65ÅR, BARNLØS_PERSON_10ÅR).forEach { leggTil(it) }
     }
 
-    fun leggTil(person: TestPerson) {
+    fun leggTil(person: TestPerson): TestPerson {
         person.identer.forEach { fakePersoner[it.identifikator] = person }
         person.barn.forEach { leggTil(it) }
+        return person
     }
 
     fun hentPerson(ident: String): TestPerson? {

@@ -70,10 +70,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.flate.BehandlendeEnhetLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate.FormkravVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.flate.BehandlendeEnhetLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.effektueravvistpåformkrav.flate.EffektuerAvvistPåFormkravLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate.FormkravVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.flate.KlagevurderingKontorLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.flate.KlagevurderingNayLøsningDto
@@ -110,6 +110,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.integrasjon.brev.BrevGateway
+import no.nav.aap.behandlingsflyt.integrasjon.datadeling.SamGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.dokumentinnhenting.DokumentinnhentingGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoBulkGateway
@@ -131,7 +132,6 @@ import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatew
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -212,6 +212,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
 import java.util.*
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
 @Fakes
 class FlytOrkestratorTest {
@@ -250,6 +251,7 @@ class FlytOrkestratorTest {
                 .register<MeldekortGatewayImpl>()
                 .register<TjenestePensjonGatewayImpl>()
                 .register<FakeUnleash>()
+                .register<SamGatewayImpl>()
                 .register<NomInfoGateway>()
                 .register<KabalGateway>()
                 .register<NorgGateway>()
@@ -265,40 +267,51 @@ class FlytOrkestratorTest {
         }
     }
 
+    object TestPersoner {
+        val STANDARD_PERSON = {
+            FakePersoner.leggTil(
+                TestPerson(
+                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
+                    yrkesskade = listOf(),
+                    sykepenger = listOf()
+                )
+            )
+        }
+
+        val PERSON_MED_YRKESSKADE = {
+            FakePersoner.leggTil(
+                TestPerson(
+                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
+                    yrkesskade = listOf(TestYrkesskade()),
+                )
+            )
+        }
+
+        val PERSON_FOR_UNG = {
+            FakePersoner.leggTil(
+                TestPerson(
+                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(17))
+                )
+            )
+        }
+    }
+
     @Test
     fun `skal avklare yrkesskade hvis det finnes spor av yrkesskade`() {
         val fom = LocalDate.now().minusMonths(3)
         val periode = Periode(fom, fom.plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
-        val person = TestPerson(
-            fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
-            yrkesskade = listOf(TestYrkesskade()),
-            uføre = Prosent(50),
-            barn = listOf(
+        val person = TestPersoner.PERSON_MED_YRKESSKADE().medBarn(
+            listOf(
                 TestPerson(
                     identer = setOf(Ident("1234123")),
                     fødselsdato = Fødselsdato(LocalDate.now().minusYears(3)),
                     yrkesskade = listOf(),
                     barn = listOf()
                 )
-            ),
-            inntekter = mutableListOf(
-                InntektPerÅr(
-                    Year.now().minusYears(1),
-                    Beløp(1000000)
-                ),
-                InntektPerÅr(
-                    Year.now().minusYears(2),
-                    Beløp(1000000)
-                ),
-                InntektPerÅr(
-                    Year.now().minusYears(3),
-                    Beløp(1000000)
-                )
             )
-        )
-        FakePersoner.leggTil(person)
+        ).medUføre(Prosent(50))
 
         val ident = person.aktivIdent()
 
@@ -622,10 +635,7 @@ class FlytOrkestratorTest {
     fun `trukket søknad blokkerer nye ytelsesbehandlinger`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        val person = TestPerson(
-            fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
-        )
-        FakePersoner.leggTil(person)
+        val person = TestPersoner.STANDARD_PERSON()
 
         val ident = person.aktivIdent()
 
@@ -681,11 +691,7 @@ class FlytOrkestratorTest {
     fun `skal avklare yrkesskade hvis det finnes spor av yrkesskade - yrkesskade har årsakssammenheng`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        val person = TestPerson(
-            fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
-            yrkesskade = listOf(TestYrkesskade()),
-        )
-        FakePersoner.leggTil(person)
+        val person = TestPersoner.PERSON_MED_YRKESSKADE()
 
         val ident = person.aktivIdent()
 
@@ -838,10 +844,8 @@ class FlytOrkestratorTest {
     @Test
     fun `ikke sykdom viss varighet, men skal få innvilget 11-13 sykepengererstatning`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        val person = TestPerson(
-            fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
-        )
-        FakePersoner.leggTil(person)
+        val person = TestPersoner.STANDARD_PERSON()
+
         val ident = person.aktivIdent()
 
         // Sender inn en søknad
@@ -973,10 +977,8 @@ class FlytOrkestratorTest {
     @Test
     fun `avslag på 11-6 er også inngang til 11-13`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        val person = TestPerson(
-            fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
-        )
-        FakePersoner.leggTil(person)
+        val person = TestPersoner.STANDARD_PERSON()
+
         val ident = person.aktivIdent()
 
         // Sender inn en søknad
@@ -1115,11 +1117,7 @@ class FlytOrkestratorTest {
         val periode = Periode(fom, fom.plusYears(3))
         val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
-        val person = TestPerson(
-            fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
-            sykepenger = emptyList()
-        )
-        FakePersoner.leggTil(person)
+        val person = TestPersoner.STANDARD_PERSON()
 
         val ident = person.aktivIdent()
 
@@ -1301,8 +1299,7 @@ class FlytOrkestratorTest {
         val periode = Periode(fom, fom.plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
-        val person = TestPerson(fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)))
-        FakePersoner.leggTil(person)
+        val person = TestPersoner.STANDARD_PERSON()
 
         val ident = person.aktivIdent()
 
@@ -1400,16 +1397,14 @@ class FlytOrkestratorTest {
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
         val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
-        val person = TestPerson(
-            fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
-            sykepenger = listOf(
+        val person = TestPersoner.STANDARD_PERSON().medSykepenger(
+            listOf(
                 TestPerson.Sykepenger(
                     grad = 50,
                     periode = sykePengerPeriode
                 )
             )
         )
-        FakePersoner.leggTil(person)
 
         val ident = person.aktivIdent()
 
@@ -1551,21 +1546,11 @@ class FlytOrkestratorTest {
 
     @Test
     fun `to-trinn og ingen endring i gruppe etter sendt tilbake fra beslutter`() {
-        val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        FakePersoner.leggTil(
-            TestPerson(
-                identer = setOf(ident),
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
-                yrkesskade = listOf(TestYrkesskade()),
-                inntekter = mutableListOf(
-                    InntektPerÅr(Year.now().minusYears(1), Beløp("1000000.0")),
-                    InntektPerÅr(Year.now().minusYears(2), Beløp("1000000.0")),
-                    InntektPerÅr(Year.now().minusYears(3), Beløp("1000000.0")),
-                )
-            )
-        )
+        val person = TestPersoner.PERSON_MED_YRKESSKADE()
+
+        val ident = person.aktivIdent()
 
         // Sender inn en søknad
         var behandling = sendInnDokument(
@@ -1771,16 +1756,11 @@ class FlytOrkestratorTest {
 
     @Test
     fun `Ikke oppfylt på grunn av alder på søknadstidspunkt`(hendelser: List<StoppetBehandling>) {
-        val ident = ident()
-        hentPerson(ident)
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        FakePersoner.leggTil(
-            TestPerson(
-                identer = setOf(ident),
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(17))
-            )
-        )
+        val person = TestPersoner.PERSON_FOR_UNG()
+
+        val ident = person.aktivIdent()
 
         hendelsesMottak.håndtere(
             ident,
@@ -2943,11 +2923,7 @@ class FlytOrkestratorTest {
 
     @Test
     fun `Teste Klageflyt`() {
-        val person = TestPerson(
-            fødselsdato = Fødselsdato(LocalDate.now().minusYears(14)),
-            yrkesskade = listOf(TestYrkesskade()),
-        )
-        FakePersoner.leggTil(person)
+        val person = TestPersoner.PERSON_FOR_UNG()
 
         val ident = person.aktivIdent()
 
@@ -3162,11 +3138,7 @@ class FlytOrkestratorTest {
 
     @Test
     fun `Klage - Skal gå rett til beslutter ved avslag på frist`() {
-        val person = TestPerson(
-            fødselsdato = Fødselsdato(LocalDate.now().minusYears(14)),
-            yrkesskade = listOf(TestYrkesskade()),
-        )
-        FakePersoner.leggTil(person)
+        val person = TestPersoner.PERSON_FOR_UNG()
 
         val ident = person.aktivIdent()
 
@@ -3254,11 +3226,7 @@ class FlytOrkestratorTest {
 
     @Test
     fun `Klage - skal sende forhåndsvarsel ved avvist på formkrav, og kunne manuelt ta av vent og fortsette ved nye opplysninger`() {
-        val person = TestPerson(
-            fødselsdato = Fødselsdato(LocalDate.now().minusYears(14)),
-            yrkesskade = listOf(TestYrkesskade()),
-        )
-        FakePersoner.leggTil(person)
+        val person = TestPersoner.PERSON_FOR_UNG()
 
         val ident = person.aktivIdent()
 

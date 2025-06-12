@@ -31,11 +31,11 @@ class TestPerson(
     val fødselsdato: Fødselsdato = Fødselsdato(LocalDate.now().minusYears(19)),
     val identer: Set<Ident> = setOf(genererIdent(fødselsdato.toLocalDate())),
     val dødsdato: Dødsdato? = null,
-    val barn: List<TestPerson> = emptyList(),
+    var barn: List<TestPerson> = emptyList(),
     val navn: PersonNavn = FiktivtNavnGenerator.genererNavn(),
     val yrkesskade: List<TestYrkesskade> = emptyList(),
     val institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
-    val uføre: Prosent? = null,
+    var uføre: Prosent? = null,
     inntekter: List<InntektPerÅr> = defaultInntekt(),
     val personStatus: List<PdlFolkeregisterPersonStatus> = listOf(
         PdlFolkeregisterPersonStatus(
@@ -51,7 +51,7 @@ class TestPerson(
         )
     ),
     val medlStatus: List<MedlemskapDataIntern> = listOf(),
-    val sykepenger: List<Sykepenger>? = null,
+    var sykepenger: List<Sykepenger>? = null,
     val foreldrepenger: List<ForeldrePenger>? = null,
     val tjenestePensjon: TjenestePensjonRespons? = null
 ) {
@@ -65,17 +65,30 @@ class TestPerson(
         return inntekter.toList()
     }
 
-    fun leggTilInntektHvisÅrMangler(år: Year, beløp: Beløp) {
-        if (inntekter.none { it.år == år }) {
-            inntekter.add(InntektPerÅr(år, beløp))
-        }
-    }
-
     fun aktivIdent(): Ident {
         return identer.single { it.aktivIdent }
     }
 
     override fun toString(): String {
         return "TestPerson(barn=$barn, fødselsdato=$fødselsdato, identer=$identer, dødsdato=$dødsdato, navn=$navn, yrkesskade=$yrkesskade, institusjonsopphold=$institusjonsopphold, uføre=$uføre, personStatus=$personStatus, statsborgerskap=$statsborgerskap, sykepenger=$sykepenger, foreldrepenger=$foreldrepenger, inntekter=$inntekter)"
+    }
+
+    fun sykepenger(): List<Sykepenger> {
+        return sykepenger ?: emptyList()
+    }
+
+    fun medBarn(barn: List<TestPerson>): TestPerson {
+        this.barn = barn
+        return this
+    }
+
+    fun medUføre(uføre: Prosent?): TestPerson {
+        this.uføre = uføre
+        return this
+    }
+
+    fun medSykepenger(sykepenger: List<Sykepenger>): TestPerson {
+        this.sykepenger = sykepenger
+        return this
     }
 }
