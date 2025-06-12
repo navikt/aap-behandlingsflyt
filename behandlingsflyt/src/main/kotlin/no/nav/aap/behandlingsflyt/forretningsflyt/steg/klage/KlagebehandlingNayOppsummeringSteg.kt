@@ -32,7 +32,7 @@ class KlagebehandlingNayOppsummeringSteg private constructor(
         }
 
         if(trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
-            avklaringsbehov.avbrytForSteg(KlagebehandlingKontorSteg.Companion.type())
+            avklaringsbehov.avbrytForSteg(type())
             return Fullført
         }
 

@@ -65,7 +65,7 @@ class EffektuerAvvistPåFormkravSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if(trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
             val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-            avklaringsbehov.avbrytForSteg(FormkravSteg.Companion.type())
+            avklaringsbehov.avbrytForSteg(type())
             return Fullført
         }
 
