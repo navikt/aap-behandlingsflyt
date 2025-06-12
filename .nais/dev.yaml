@@ -235,4 +235,4 @@ spec:
     - name: INTEGRASJON_SAM_SCOPE
       value: api://dev-fss.pensjonsamhandling.sam/.default
     - name: INTEGRASJON_SAM_URL
-      value: https://sam-q2.dev.intern.nav.no
+      value: https://sam-q2.dev-fss-pub.nais.io
