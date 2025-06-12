@@ -11,6 +11,10 @@ public enum class StegType(
         gruppe = StegGruppe.START_BEHANDLING,
         status = Status.OPPRETTET
     ),
+    SEND_FORVALTNINGSMELDING(
+        gruppe = StegGruppe.SEND_FORVALTNINGSMELDING,
+        status = Status.OPPRETTET
+    ),
     VURDER_RETTIGHETSPERIODE(
         gruppe = StegGruppe.RETTIGHETSPERIODE,
         status = Status.UTREDES,

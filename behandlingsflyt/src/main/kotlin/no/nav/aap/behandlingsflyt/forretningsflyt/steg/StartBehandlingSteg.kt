@@ -90,6 +90,5 @@ class StartBehandlingSteg private constructor(
         override fun toString(): String {
             return "FlytSteg(type:${type()})"
         }
-
     }
 }

@@ -227,5 +227,6 @@ class BrevGateway : BrevbestillingGateway {
         TypeBrev.KLAGE_OPPRETTHOLDELSE -> Brevtype.KLAGE_OPPRETTHOLDELSE
         TypeBrev.KLAGE_TRUKKET -> Brevtype.KLAGE_TRUKKET
         TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV -> Brevtype.FORHÅNDSVARSEL_KLAGE_FORMKRAV
+        TypeBrev.FORVALTNINGSMELDING -> Brevtype.FORVALTNINGSMELDING
     }
 }

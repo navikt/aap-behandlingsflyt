@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.steg
 
 public enum class StegGruppe(public val skalVises: Boolean, public val obligatoriskVisning: Boolean) {
     START_BEHANDLING(false, true),
+    SEND_FORVALTNINGSMELDING(false, true),
     RETTIGHETSPERIODE(true, false),
     SØKNAD(true, false),
     ALDER(true, true),

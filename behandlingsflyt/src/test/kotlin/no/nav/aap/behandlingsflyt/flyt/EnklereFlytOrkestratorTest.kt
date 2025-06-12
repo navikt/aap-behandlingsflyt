@@ -145,6 +145,7 @@ class EnklereFlytOrkestratorTest {
             .distinct()).containsExactlyElementsOf(
             listOf(
                 StegType.START_BEHANDLING,
+                StegType.SEND_FORVALTNINGSMELDING,
                 StegType.SØKNAD,
                 StegType.VURDER_RETTIGHETSPERIODE,
                 StegType.VURDER_LOVVALG,
@@ -166,6 +167,7 @@ class EnklereFlytOrkestratorTest {
             .distinct()).containsExactlyElementsOf(
             listOf(
                 StegType.START_BEHANDLING,
+                StegType.SEND_FORVALTNINGSMELDING,
                 StegType.SØKNAD,
                 StegType.VURDER_RETTIGHETSPERIODE,
                 StegType.VURDER_LOVVALG,
@@ -235,6 +237,11 @@ class EnklereFlytOrkestratorTest {
                     aktiv = false
                 ),
                 StegTilstand(stegType = StegType.START_BEHANDLING, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
+                StegTilstand(stegType = StegType.SEND_FORVALTNINGSMELDING, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(stegType = StegType.SEND_FORVALTNINGSMELDING, stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG, aktiv = false),
+                StegTilstand(stegType = StegType.SEND_FORVALTNINGSMELDING, stegStatus = StegStatus.UTFØRER, aktiv = false),
+                StegTilstand(stegType = StegType.SEND_FORVALTNINGSMELDING, stegStatus = StegStatus.AVKLARINGSPUNKT, aktiv = false),
+                StegTilstand(stegType = StegType.SEND_FORVALTNINGSMELDING, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
                 StegTilstand(stegType = StegType.SØKNAD, stegStatus = StegStatus.START, aktiv = false),
                 StegTilstand(stegType = StegType.SØKNAD, stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG, aktiv = false),
                 StegTilstand(stegType = StegType.SØKNAD, stegStatus = StegStatus.UTFØRER, aktiv = false),
@@ -347,6 +354,11 @@ class EnklereFlytOrkestratorTest {
                     aktiv = false
                 ),
                 StegTilstand(stegType = StegType.START_BEHANDLING, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
+                StegTilstand(stegType = StegType.SEND_FORVALTNINGSMELDING, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(stegType = StegType.SEND_FORVALTNINGSMELDING, stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG, aktiv = false),
+                StegTilstand(stegType = StegType.SEND_FORVALTNINGSMELDING, stegStatus = StegStatus.UTFØRER, aktiv = false),
+                StegTilstand(stegType = StegType.SEND_FORVALTNINGSMELDING, stegStatus = StegStatus.AVKLARINGSPUNKT, aktiv = false),
+                StegTilstand(stegType = StegType.SEND_FORVALTNINGSMELDING, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
                 StegTilstand(stegType = StegType.SØKNAD, stegStatus = StegStatus.START, aktiv = false),
                 StegTilstand(stegType = StegType.SØKNAD, stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG, aktiv = false),
                 StegTilstand(stegType = StegType.SØKNAD, stegStatus = StegStatus.UTFØRER, aktiv = false),
