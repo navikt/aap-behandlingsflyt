@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrke
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.innsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
@@ -52,22 +53,19 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
 
     private fun håndtere(key: Saksnummer, hendelse: SakHendelse) {
         dataSource.transaction { connection ->
-            if (hendelse is DokumentMottattSakHendelse) {
+            if (hendelse is DokumentMottattSakHendelse || hendelse is NyÅrsakTilBehandlingSakHendelse) {
                 val sakService = SakService(SakRepositoryImpl(connection))
                 val sak = sakService.hent(key)
 
                 val flytJobbRepository = FlytJobbRepository(connection)
 
-                val referanse = InnsendingReferanse(hendelse.journalpost)
-
                 flytJobbRepository.leggTil(
                     HendelseMottattHåndteringJobbUtfører.nyJobb(
                         sakId = sak.id,
-                        dokumentReferanse = referanse,
-                        brevkategori = hendelse.innsendingType
-                            ?: hendelse.strukturertDokument?.data?.innsendingType()!!,
+                        dokumentReferanse = hendelse.getInnsendingReferanse(),
+                        brevkategori = hendelse.getInnsendingType(),
                         kanal = Kanal.DIGITAL,
-                        melding = hendelse.strukturertDokument?.data,
+                        melding = hendelse.getMelding()?.data,
                         mottattTidspunkt = LocalDateTime.now()
                     )
                 )

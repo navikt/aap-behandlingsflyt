@@ -6,6 +6,7 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class Sykdomsvurdering(
     val id: Long? = null,
@@ -63,33 +64,17 @@ class Yrkesskadevurdering(
     val begrunnelse: String,
     val relevanteSaker: List<String>,
     val erÅrsakssammenheng: Boolean,
-    val andelAvNedsettelsen: Prosent?
-) {
-    fun toDto(): YrkesskadevurderingDto {
-        return YrkesskadevurderingDto(
-            begrunnelse = begrunnelse,
-            relevanteSaker = relevanteSaker,
-            andelAvNedsettelsen = andelAvNedsettelsen?.prosentverdi(),
-            erÅrsakssammenheng = erÅrsakssammenheng
-        )
-    }
-}
+    val andelAvNedsettelsen: Prosent?,
+    val vurdertAv: String,
+    val vurdertTidspunkt: LocalDateTime? = null,
+)
 
 data class YrkesskadevurderingDto(
     val begrunnelse: String,
     val relevanteSaker: List<String>,
     val andelAvNedsettelsen: Int?,
     val erÅrsakssammenheng: Boolean
-) {
-    fun toYrkesskadevurdering(): Yrkesskadevurdering {
-        return Yrkesskadevurdering(
-            begrunnelse = begrunnelse,
-            relevanteSaker = relevanteSaker,
-            erÅrsakssammenheng = erÅrsakssammenheng,
-            andelAvNedsettelsen = this@YrkesskadevurderingDto.andelAvNedsettelsen?.let { Prosent(it) }
-        )
-    }
-}
+)
 
 
 

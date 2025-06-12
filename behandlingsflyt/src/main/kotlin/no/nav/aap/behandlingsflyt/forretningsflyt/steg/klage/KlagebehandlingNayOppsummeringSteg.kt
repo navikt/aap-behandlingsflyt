@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Avslått
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetRepository
@@ -19,6 +20,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class KlagebehandlingNayOppsummeringSteg private constructor(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val behandlendeEnhetRepository: BehandlendeEnhetRepository,
+    private val trekkKlageService: TrekkKlageService,
     private val klageresultatUtleder: KlageresultatUtleder
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -26,6 +28,11 @@ class KlagebehandlingNayOppsummeringSteg private constructor(
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         if (resultat is Avslått) {
             avklaringsbehov.avbrytForSteg(KlagebehandlingNaySteg.Companion.type())
+            return Fullført
+        }
+
+        if(trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
+            avklaringsbehov.avbrytForSteg(type())
             return Fullført
         }
 
@@ -55,6 +62,7 @@ class KlagebehandlingNayOppsummeringSteg private constructor(
             return KlagebehandlingNayOppsummeringSteg(
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),
+                TrekkKlageService(repositoryProvider),
                 KlageresultatUtleder(repositoryProvider)
             )
         }

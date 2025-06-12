@@ -9,10 +9,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
 class EffektuerAvvistPåFormkravRepositoryImpl(private val connection: DBConnection) :
     EffektuerAvvistPåFormkravRepository {
+    private val log = LoggerFactory.getLogger(this::class.java)
 
     companion object : Factory<EffektuerAvvistPåFormkravRepositoryImpl> {
         override fun konstruer(connection: DBConnection): EffektuerAvvistPåFormkravRepositoryImpl {
@@ -155,8 +157,40 @@ class EffektuerAvvistPåFormkravRepositoryImpl(private val connection: DBConnect
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        // TODO: Slett
+        val vurderingIds = getIdForVurderingerForGrunnlaget(behandlingId)
+
+        val deletedRowsGrunnlag = connection.executeReturnUpdated("""
+            delete from effektuer_avvist_formkrav_grunnlag where behandling_id = ?; 
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+            }
+        }
+
+        val deletedRowsVurdering = connection.executeReturnUpdated("""
+            delete from effektuer_avvist_formkrav_vurdering where id = ANY(?::bigint[]);
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, vurderingIds)
+            }
+        }
+
+        log.info("Slettet $deletedRowsGrunnlag rader fra effektuer_avvist_formkrav_grunnlag og $deletedRowsVurdering rader fra effektuer_avvist_formkrav_vurdering")
     }
+
+    private fun getIdForVurderingerForGrunnlaget(behandlingId: BehandlingId): List<Long> =
+        connection.queryList(
+            """
+                SELECT vurdering_id
+                FROM effektuer_avvist_formkrav_grunnlag
+                WHERE behandling_id = ? AND vurdering_id is not null
+                """.trimIndent()
+        ) {
+            setParams { setLong(1, behandlingId.id) }
+            setRowMapper { row ->
+                row.getLong("vurdering_id")
+            }
+        }
 
     private fun deaktiverGjeldendeGrunnlag(behandlingId: BehandlingId): Long? {
         return connection.queryFirstOrNull(

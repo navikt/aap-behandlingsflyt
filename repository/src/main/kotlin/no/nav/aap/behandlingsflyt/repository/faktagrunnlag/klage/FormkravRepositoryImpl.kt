@@ -8,8 +8,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRepository {
+    private val log = LoggerFactory.getLogger(this::class.java)
 
     companion object : Factory<FormkravRepositoryImpl> {
         override fun konstruer(connection: DBConnection): FormkravRepositoryImpl {
@@ -92,8 +94,40 @@ class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRep
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        // Gjør ingenting
+        val vurderingIds = getIdForVurderingerForGrunnlaget(behandlingId)
+
+        val deletedRowsGrunnlag = connection.executeReturnUpdated("""
+            delete from formkrav_grunnlag where behandling_id = ?; 
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.id)
+            }
+        }
+
+        val deletedRowsVurdering = connection.executeReturnUpdated("""
+            delete from formkrav_vurdering where id = ANY(?::bigint[]);
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, vurderingIds)
+            }
+        }
+
+        log.info("Slettet $deletedRowsGrunnlag rader fra formkrav_grunnlag og $deletedRowsVurdering rader fra formkrav_vurdering")
     }
+
+    private fun getIdForVurderingerForGrunnlaget(behandlingId: BehandlingId): List<Long> =
+        connection.queryList(
+            """
+                SELECT vurdering_id
+                FROM formkrav_grunnlag
+                WHERE behandling_id = ? AND vurdering_id is not null
+                """.trimIndent()
+        ) {
+            setParams { setLong(1, behandlingId.id) }
+            setRowMapper { row ->
+                row.getLong("vurdering_id")
+            }
+        }
 
     private fun mapGrunnlag(row: Row): FormkravGrunnlag {
         return FormkravGrunnlag(

@@ -91,6 +91,7 @@ class BeregningTest {
                     andelAvNedsettelsen = Prosent(40),
                     erÅrsakssammenheng = true,
                     relevanteSaker = listOf("yrkesskadesaken"),
+                    vurdertAv = "saksbehandler"
                 ),
                 beregningGrunnlag = BeregningGrunnlag(
                     tidspunktVurdering = BeregningstidspunktVurdering(
@@ -143,6 +144,7 @@ class BeregningTest {
                     andelAvNedsettelsen = Prosent(30),
                     erÅrsakssammenheng = true,
                     relevanteSaker = listOf("yrkesskadesaken"),
+                    vurdertAv = "saksbehandler"
                 ),
                 beregningGrunnlag = BeregningGrunnlag(
                     tidspunktVurdering = BeregningstidspunktVurdering(
