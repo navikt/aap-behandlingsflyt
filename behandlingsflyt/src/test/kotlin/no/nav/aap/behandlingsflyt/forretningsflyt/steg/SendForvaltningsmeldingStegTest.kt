@@ -66,17 +66,6 @@ class SendForvaltningsmeldingStegTest {
         )
     }
 
-    private fun definisjonerSomLøsesFørSteg(
-        flyt: BehandlingFlyt,
-        steg: StegType,
-        unntak: List<Definisjon>,
-    ): List<Definisjon> {
-        return Definisjon.entries.filter {
-            flyt.stegene().takeWhile { it != steg }
-                .contains(it.løsesISteg) && !unntak.contains(it)
-        }
-    }
-
     @ParameterizedTest
     @EnumSource(TypeBehandling::class, mode = Mode.INCLUDE, names = ["Førstegangsbehandling", "Revurdering"])
     fun `sender en og kun en forvaltningsmelding for en behandling som har årsak MOTTATT_SØKNAD`(typeBehandling: TypeBehandling) {
@@ -93,7 +82,7 @@ class SendForvaltningsmeldingStegTest {
 
     @ParameterizedTest
     @EnumSource(ÅrsakTilBehandling::class, mode = Mode.EXCLUDE, names = ["MOTTATT_SØKNAD"])
-    fun `sender ikke forvaltningsmelding for en behandling som har årsak MOTTATT_SØKNAD`(årsakTilBehandling: ÅrsakTilBehandling) {
+    fun `sender ikke forvaltningsmelding for en behandling som ikke har årsak MOTTATT_SØKNAD`(årsakTilBehandling: ÅrsakTilBehandling) {
         val behandling = opprettSakOgbehandling(TypeBehandling.Førstegangsbehandling)
         val flytkontekst = flytkontekstForBehandling(behandling, årsakTilBehandling)
 
@@ -115,6 +104,17 @@ class SendForvaltningsmeldingStegTest {
 
         val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
         assertThat(brevbestillinger).isEmpty()
+    }
+
+    private fun definisjonerSomLøsesFørSteg(
+        flyt: BehandlingFlyt,
+        steg: StegType,
+        unntak: List<Definisjon>,
+    ): List<Definisjon> {
+        return Definisjon.entries.filter {
+            flyt.stegene().takeWhile { it != steg }
+                .contains(it.løsesISteg) && !unntak.contains(it)
+        }
     }
 
     private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
