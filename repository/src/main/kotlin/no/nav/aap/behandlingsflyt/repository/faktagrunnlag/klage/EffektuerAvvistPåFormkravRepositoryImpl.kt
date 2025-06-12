@@ -159,16 +159,23 @@ class EffektuerAvvistPåFormkravRepositoryImpl(private val connection: DBConnect
     override fun slett(behandlingId: BehandlingId) {
         val vurderingIds = getIdForVurderingerForGrunnlaget(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRowsGrunnlag = connection.executeReturnUpdated("""
             delete from effektuer_avvist_formkrav_grunnlag where behandling_id = ?; 
-            delete from effektuer_avvist_formkrav_vurdering where id = ANY(?::bigint[]);
         """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId.id)
-                setLongArray(2, vurderingIds)
             }
         }
-        log.info("Slettet $deletedRows rader fra effektuer_avvist_formkrav_grunnlag og effektuer_avvist_formkrav_vurdering")
+
+        val deletedRowsVurdering = connection.executeReturnUpdated("""
+            delete from effektuer_avvist_formkrav_vurdering where id = ANY(?::bigint[]);
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, vurderingIds)
+            }
+        }
+
+        log.info("Slettet $deletedRowsGrunnlag rader fra effektuer_avvist_formkrav_grunnlag og $deletedRowsVurdering rader fra effektuer_avvist_formkrav_vurdering")
     }
 
     private fun getIdForVurderingerForGrunnlaget(behandlingId: BehandlingId): List<Long> =

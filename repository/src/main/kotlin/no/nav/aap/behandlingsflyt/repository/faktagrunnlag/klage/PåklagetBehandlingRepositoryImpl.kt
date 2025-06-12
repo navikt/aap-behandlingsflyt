@@ -114,18 +114,23 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
 
         val påklagetBehandlingVurderingIds = getpåklagetBehandlingVurderingIds(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRowsGrunnlag = connection.executeReturnUpdated("""
             delete from PAAKLAGET_BEHANDLING_GRUNNLAG where behandling_id = ?; 
-            delete from PAAKLAGET_BEHANDLING_VURDERING where id = ANY(?::bigint[]);
-    
-           
         """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId.id)
-                setLongArray(2, påklagetBehandlingVurderingIds)
             }
         }
-        log.info("Slettet $deletedRows rader fra PAAKLAGET_BEHANDLING_GRUNNLAG og PAAKLAGET_BEHANDLING_VURDERING")
+
+        val deletedRowsVurdering = connection.executeReturnUpdated("""
+            delete from PAAKLAGET_BEHANDLING_VURDERING where id = ANY(?::bigint[]);
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, påklagetBehandlingVurderingIds)
+            }
+        }
+
+        log.info("Slettet $deletedRowsGrunnlag rader fra PAAKLAGET_BEHANDLING_GRUNNLAG og $deletedRowsVurdering rader fra PAAKLAGET_BEHANDLING_VURDERING")
     }
 
     private fun getpåklagetBehandlingVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

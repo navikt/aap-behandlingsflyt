@@ -52,16 +52,23 @@ class BehandlendeEnhetRepositoryImpl(private val connection: DBConnection) : Beh
     override fun slett(behandlingId: BehandlingId) {
         val vurderingIds = getIdForVurderingerForGrunnlaget(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRowsGrunnlag = connection.executeReturnUpdated("""
             delete from behandlende_enhet_grunnlag where behandling_id = ?; 
-            delete from behandlende_enhet_vurdering where id = ANY(?::bigint[]);
         """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId.id)
-                setLongArray(2, vurderingIds)
             }
         }
-        log.info("Slettet $deletedRows rader fra BEHANDLENDE_ENHET_VURDERING og BEHANDLENDE_ENHET_GRUNNLAG")
+
+        val deletedRowsVurdering = connection.executeReturnUpdated("""
+            delete from behandlende_enhet_vurdering where id = ANY(?::bigint[]);
+        """.trimIndent()) {
+            setParams {
+                setLongArray(1, vurderingIds)
+            }
+        }
+
+        log.info("Slettet $deletedRowsVurdering rader fra BEHANDLENDE_ENHET_VURDERING og $deletedRowsGrunnlag rader fra BEHANDLENDE_ENHET_GRUNNLAG")
     }
 
     private fun getIdForVurderingerForGrunnlaget(behandlingId: BehandlingId): List<Long> =
