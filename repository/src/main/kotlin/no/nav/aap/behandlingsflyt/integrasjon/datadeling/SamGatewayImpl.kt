@@ -27,7 +27,7 @@ class SamGatewayImpl : SamGateway {
     }
 
     private val restClient = RestClient.withDefaultResponseHandler(
-        config = ClientConfig(scope = requiredConfigForKey("sam.scope")),
+        config = ClientConfig(scope = requiredConfigForKey("integrasjon.sam.scope")),
         tokenProvider = ClientCredentialsTokenProvider,
         prometheus = prometheus
     )
