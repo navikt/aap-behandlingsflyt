@@ -1304,13 +1304,51 @@ class FlytOrkestratorTest {
         // Verifiser at den er satt på vent
         var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(behandling.id)
         util.ventPåSvar(behandlingId = behandling.id.id, sakId = behandling.sakId.id)
-        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
+        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
 
         // Ta av vent
         behandling = løsAvklaringsBehov(behandling, SamordningVentPaVirkningstidspunktLøsning())
 
         åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(behandling.id)
+        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_SAMORDNING_GRADERING)
+
+        // Avklar samordning i revurdering
+        behandling = løsAvklaringsBehov(
+            behandling,
+            AvklarSamordningGraderingLøsning(
+                vurderingerForSamordning = VurderingerForSamordning(
+                    vurderteSamordningerData = listOf(
+                        SamordningVurderingData(
+                            ytelseType = Ytelse.SYKEPENGER,
+                            periode = sykePengerPeriode,
+                            gradering = 100,
+                            kronesum = null,
+                        )
+                    ),
+                    begrunnelse = "En god begrunnelse",
+                    maksDatoEndelig = true,
+                    maksDato = null,
+                ),
+            ),
+        )
+
+        val tilkjentYtelse =
+            requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) }) { "Tilkjent ytelse skal være beregnet her." }
+
+        assertThat(tilkjentYtelse).hasSizeGreaterThan(2)
+        tilkjentYtelse.forEach {
+            if (it.periode.overlapper(sykePengerPeriode)) {
+                assertThat(it.tilkjent.gradering.samordningGradering).isEqualTo(Prosent.`100_PROSENT`)
+                assertThat(it.tilkjent.redusertDagsats()).isEqualTo(Beløp(0))
+            } else {
+                assertThat(it.tilkjent.gradering.samordningGradering).isEqualTo(Prosent.`0_PROSENT`)
+                assertThat(it.tilkjent.redusertDagsats()).isNotEqualTo(Beløp(0))
+            }
+        }
+
+        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(behandling.id)
         assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
+
     }
 
     @Test
