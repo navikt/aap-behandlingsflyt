@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.Påkla
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -30,16 +31,18 @@ fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(dataSource: DataSource, re
         ) { behandlingReferanse ->
             val respons = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
+                val sakRepository = repositoryProvider.provide<SakRepository>()
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val påklagetBehandlingRepository = repositoryProvider.provide<PåklagetBehandlingRepository>()
                 val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
                 val datoFraDokumentUtleder = DatoFraDokumentUtleder(mottattDokumentRepository)
                 val behandling = behandlingRepository.hent(behandlingReferanse)
+                val sak = sakRepository.hent(behandling.sakId)
 
                 val påklagetBehandlingService = PåklagetBehandlingVurderingService(behandlingRepository, påklagetBehandlingRepository)
 
                 val gjeldendeVurdering = påklagetBehandlingService.hentGjeldendeVurderingMedReferanse(behandlingReferanse)
-                val behandlingerMedVedtak = påklagetBehandlingService.hentAlleBehandlingerMedVedtakForSak(behandlingReferanse)
+                val behandlingerMedVedtak = påklagetBehandlingService.hentAlleBehandlingerMedVedtakForPerson(sak.person)
                 val kravMottattDato = datoFraDokumentUtleder.utledKravMottattDatoForKlageBehandling(behandlingId = behandling.id)
 
                 mapTilPåklagetBehandlingGrunnlagDto(gjeldendeVurdering, behandlingerMedVedtak, kravMottattDato)

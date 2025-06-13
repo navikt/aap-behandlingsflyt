@@ -24,8 +24,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -39,7 +37,6 @@ class ForutgåendeMedlemskapService private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav {
     private val medlemskapGateway = GatewayProvider.provide<MedlemskapGateway>()
-    private val unleashGateway = GatewayProvider.provide<UnleashGateway>()
 
     override val navn = Companion.navn
 
@@ -57,10 +54,7 @@ class ForutgåendeMedlemskapService private constructor(
         val medlemskapPerioder = medlemskapGateway.innhent(sak.person, Periode(sak.rettighetsperiode.fom.minusYears(5), sak.rettighetsperiode.fom))
         val arbeidGrunnlag = innhentAARegisterGrunnlag5år(sak)
         val inntektGrunnlag = innhentAInntektGrunnlag5år(sak)
-        val enhetGrunnlag = if (unleashGateway.isEnabled(BehandlingsflytFeature.InnhentEnhetsregisterData)) {
-            innhentEREGGrunnlag(inntektGrunnlag)
-        } else listOf()
-
+        val enhetGrunnlag = innhentEREGGrunnlag(inntektGrunnlag)
         val eksisterendeData = grunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
         lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag)
 

@@ -127,7 +127,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
     }
 
     override fun hentAlleMedVedtakFor(
-        sakId: SakId,
+        person: Person,
         behandlingstypeFilter: List<TypeBehandling>
     ): List<BehandlingMedVedtak> {
         TODO("Not yet implemented")

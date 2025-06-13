@@ -59,6 +59,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.integrasjon.brev.BrevGateway
 import no.nav.aap.behandlingsflyt.integrasjon.datadeling.ApiInternGatewayImpl
+import no.nav.aap.behandlingsflyt.integrasjon.datadeling.SamGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.dokumentinnhenting.DokumentinnhentingGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoBulkGateway
@@ -238,6 +239,7 @@ private fun registerGateways() {
         .register<TilgangGatewayImpl>()
         .register<TjenestePensjonGatewayImpl>()
         .register<UnleashGatewayImpl>()
+        .register<SamGatewayImpl>()
         .register<NomInfoGateway>()
         .register<NorgGateway>()
         .register<KabalGateway>()

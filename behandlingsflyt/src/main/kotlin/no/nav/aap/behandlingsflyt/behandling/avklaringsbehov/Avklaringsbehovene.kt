@@ -166,12 +166,16 @@ class Avklaringsbehovene(
         } else {
             null
         }
-        avklaringsbehov.reåpne(frist = frist, grunn = avklaringsbehov.grunn())
+        avklaringsbehov.reåpne(frist = frist, venteårsak = avklaringsbehov.venteårsak())
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
     override fun alle(): List<Avklaringsbehov> {
         return avklaringsbehovene
+    }
+
+    override fun alleEkskludertVentebehov(): List<Avklaringsbehov> {
+        return avklaringsbehovene.filterNot { it.definisjon.erVentebehov() }
     }
 
     fun åpne(): List<Avklaringsbehov> {

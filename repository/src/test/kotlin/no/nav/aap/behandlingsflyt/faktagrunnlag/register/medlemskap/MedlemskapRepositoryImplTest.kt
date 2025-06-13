@@ -128,9 +128,25 @@ internal class MedlemskapRepositoryTest {
             ))
             medlemsskapRepository.lagreUnntakMedlemskap(behandling.id, listOf(
                 MedlemskapDataIntern(
-                    unntakId = 123,
-                    fraOgMed = "2017-02-13",
-                    tilOgMed = "2018-02-13",
+                    unntakId = 124,
+                    fraOgMed = "2019-02-13",
+                    tilOgMed = "2020-02-13",
+                    grunnlag = "grunnlag",
+                    helsedel = true,
+                    ident = "02429118789",
+                    lovvalg = "lovvalg",
+                    medlem = true,
+                    status = "GYLD",
+                    statusaarsak = null,
+                    lovvalgsland = "NORGE",
+                    kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
+                )
+            ))
+            medlemsskapRepository.lagreUnntakMedlemskap(behandling.id, listOf(
+                MedlemskapDataIntern(
+                    unntakId = 125,
+                    fraOgMed = "2020-02-13",
+                    tilOgMed = "2021-02-13",
                     grunnlag = "grunnlag",
                     helsedel = true,
                     ident = "02429118789",

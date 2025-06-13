@@ -13,7 +13,6 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
 
 class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomRepository {
 
@@ -85,8 +84,8 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             delete from sykdom_vurdering_dokumenter where vurdering_id = ANY(?::bigint[]);
             delete from sykdom_vurdering where sykdom_vurderinger_id = ANY(?::bigint[]);
             delete from sykdom_vurderinger where id = ANY(?::bigint[]);
-            delete from yrkesskade_vurdering where id = ANY(?::bigint[]);
             delete from yrkesskade_relaterte_saker where vurdering_id = ANY(?::bigint[]);
+            delete from yrkesskade_vurdering where id = ANY(?::bigint[]);
         """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId.id)
@@ -171,9 +170,9 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
 
         val query = """
             INSERT INTO YRKESSKADE_VURDERING 
-            (BEGRUNNELSE, ARSAKSSAMMENHENG, ANDEL_AV_NEDSETTELSE)
+            (BEGRUNNELSE, ARSAKSSAMMENHENG, ANDEL_AV_NEDSETTELSE, VURDERT_AV)
             VALUES
-            (?, ?, ?)
+            (?, ?, ?, ?)
         """.trimIndent()
 
         val id = connection.executeReturnKey(query) {
@@ -181,6 +180,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 setString(1, vurdering.begrunnelse)
                 setBoolean(2, vurdering.erÅrsakssammenheng)
                 setInt(3, vurdering.andelAvNedsettelsen?.prosentverdi())
+                setString(4, vurdering.vurdertAv)
             }
         }
 
@@ -378,7 +378,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             return null
         }
         val query = """
-            SELECT id, BEGRUNNELSE, ARSAKSSAMMENHENG, ANDEL_AV_NEDSETTELSE
+            SELECT id, BEGRUNNELSE, ARSAKSSAMMENHENG, ANDEL_AV_NEDSETTELSE, VURDERT_AV, OPPRETTET_TID
             FROM YRKESSKADE_VURDERING
             WHERE ID = ?
         """.trimIndent()
@@ -393,7 +393,9 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                     begrunnelse = row.getString("BEGRUNNELSE"),
                     erÅrsakssammenheng = row.getBoolean("ARSAKSSAMMENHENG"),
                     andelAvNedsettelsen = row.getIntOrNull("ANDEL_AV_NEDSETTELSE")?.let(::Prosent),
-                    relevanteSaker = hentRelevanteSaker(id)
+                    relevanteSaker = hentRelevanteSaker(id),
+                    vurdertAv = row.getString("VURDERT_AV"),
+                    vurdertTidspunkt = row.getLocalDateTime("OPPRETTET_TID"),
                 )
             }
         }

@@ -9,17 +9,11 @@ import no.nav.aap.behandlingsflyt.Azp
 import no.nav.aap.behandlingsflyt.EMPTY_JSON_RESPONSE
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.SaksnummerParameter
-import no.nav.aap.behandlingsflyt.dokumentHendelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling
-import no.nav.aap.behandlingsflyt.prometheus
-import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -28,7 +22,6 @@ import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.SakPathParam
@@ -48,7 +41,10 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource, repositoryRegi
                     authorizedAzps = listOf(Azp.Postmottak.uuid, Azp.Dokumentinnhenting.uuid)
                 )
             ) { _, dto ->
-                registrerMottattHendelse(dto, dataSource, repositoryRegistry)
+                dataSource.transaction { connection ->
+                    val repositoryRegistry = repositoryRegistry.provider(connection)
+                    MottattHendelseService(repositoryRegistry).registrerMottattHendelse(dto)
+                }
                 respond(EMPTY_JSON_RESPONSE, HttpStatusCode.Accepted)
             }
         }
@@ -62,42 +58,13 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource, repositoryRegi
                 )
             ) { _, dto ->
                 validerHendelse(dto, bruker())
-                registrerMottattHendelse(dto, dataSource, repositoryRegistry)
+                MDC.putCloseable("saksnummer", dto.saksnummer.toString()).use {
+                    dataSource.transaction { connection ->
+                        val repositoryRegistry = repositoryRegistry.provider(connection)
+                        MottattHendelseService(repositoryRegistry).registrerMottattHendelse(dto)
+                    }
+                }
                 respond(EMPTY_JSON_RESPONSE, HttpStatusCode.Accepted)
-            }
-        }
-    }
-}
-
-private fun registrerMottattHendelse(
-    dto: Innsending,
-    dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry,
-) {
-    MDC.putCloseable("saksnummer", dto.saksnummer.toString()).use {
-        dataSource.transaction { connection ->
-            val repositoryProvider = repositoryRegistry.provider(connection)
-
-            val sak = repositoryProvider.provide<SakRepository>().hent(dto.saksnummer)
-            val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
-            val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
-
-            log.info("Mottok dokumenthendelse. Brevkategori: ${dto.type} Mottattdato: ${dto.mottattTidspunkt}")
-
-            if (kjennerTilDokumentFraFør(dto, sak, mottattDokumentRepository)) {
-                log.warn("Allerede håndtert dokument med referanse {}", dto.referanse)
-            } else {
-                prometheus.dokumentHendelse(dto.type).increment()
-                flytJobbRepository.leggTil(
-                    HendelseMottattHåndteringJobbUtfører.nyJobb(
-                        sakId = sak.id,
-                        dokumentReferanse = dto.referanse,
-                        brevkategori = dto.type,
-                        kanal = dto.kanal,
-                        melding = dto.melding,
-                        mottattTidspunkt = dto.mottattTidspunkt
-                    ),
-                )
             }
         }
     }
@@ -117,14 +84,4 @@ fun validerHendelse(innsending: Innsending, bruker: Bruker) {
             throw UgyldigForespørselException("Funksjonsbryter for overstyr starttidspunkt er skrudd av")
         }
     }
-}
-
-private fun kjennerTilDokumentFraFør(
-    innsending: Innsending,
-    sak: Sak,
-    mottattDokumentRepository: MottattDokumentRepository
-): Boolean {
-    val innsendinger = mottattDokumentRepository.hentDokumenterAvType(sak.id, innsending.type)
-
-    return innsendinger.any { dokument -> dokument.referanse == innsending.referanse }
 }

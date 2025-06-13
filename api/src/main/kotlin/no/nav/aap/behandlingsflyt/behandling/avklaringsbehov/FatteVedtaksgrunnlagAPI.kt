@@ -17,15 +17,21 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.verdityper.Interval
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import java.time.LocalDateTime
+import java.util.UUID
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
@@ -54,15 +60,13 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource, repository
 
                     val vurderinger = beslutterVurdering(avklaringsbehovene, flyt)
 
-                    val harTilgangTilÅSaksbehandle =
-                        GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                            req.referanse,
-                            Definisjon.FATTE_VEDTAK,
-                            token()
-                        )
-
                     FatteVedtakGrunnlagDto(
-                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+                        harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(
+                            req.referanse,
+                            token(),
+                            avklaringsbehovene,
+                            bruker()
+                        ),
                         vurderinger = vurderinger,
                         historikk = utledHistorikk(avklaringsbehovene)
                     )
@@ -72,6 +76,30 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource, repository
         }
     }
 }
+
+private fun utledHarTilgangTilÅSaksbehandle(
+    behandlingReferanse: UUID,
+    token: OidcToken,
+    avklaringsbehovene: Avklaringsbehovene,
+    bruker: Bruker
+): Boolean {
+    val unleashGateway = GatewayProvider.provide<UnleashGateway>()
+    val harTilgang = GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
+        behandlingReferanse,
+        Definisjon.FATTE_VEDTAK,
+        token
+    )
+
+    if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
+        val harIkkeGjortNoenVurderinger =
+            avklaringsbehovene.alle().filter { it.erTotrinn() }.any { !it.brukere().contains(bruker.ident) }
+
+        return harTilgang && harIkkeGjortNoenVurderinger
+    } else {
+        return harTilgang
+    }
+}
+
 
 fun utledHistorikk(avklaringsbehovene: Avklaringsbehovene): List<Historikk> {
     val relevanteBehov =

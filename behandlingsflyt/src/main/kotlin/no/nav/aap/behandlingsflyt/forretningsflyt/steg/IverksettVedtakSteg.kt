@@ -15,13 +15,18 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.prosessering.VarsleVedtakJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.JobbInput
 import org.slf4j.LoggerFactory
 
 class IverksettVedtakSteg private constructor(
@@ -31,7 +36,8 @@ class IverksettVedtakSteg private constructor(
     private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
     private val utbetalingGateway: UtbetalingGateway,
     private val trukketSøknadService: TrukketSøknadService,
-) : BehandlingSteg {
+    private val flytJobbRepository: FlytJobbRepository
+    ) : BehandlingSteg {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -52,8 +58,14 @@ class IverksettVedtakSteg private constructor(
         val tilkjentYtelseDto = utbetalingService.lagTilkjentYtelseForUtbetaling(kontekst.sakId, kontekst.behandlingId)
         if (tilkjentYtelseDto != null) {
             utbetalingGateway.utbetal(tilkjentYtelseDto)
+
         } else {
             log.error("Fant ikke tilkjent ytelse for behandingsref ${kontekst.behandlingId}")
+        }
+        if (GatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.Samvarsling)) {
+            flytJobbRepository.leggTil(
+                jobbInput = JobbInput(jobb = VarsleVedtakJobbUtfører).medPayload(kontekst.behandlingId)
+            )
         }
 
         return Fullført
@@ -68,10 +80,12 @@ class IverksettVedtakSteg private constructor(
             val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
             val vedtakRepository = repositoryProvider.provide<VedtakRepository>()
             val utbetalingGateway = GatewayProvider.provide<UtbetalingGateway>()
+            val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
             val virkningstidspunktUtlederService = VirkningstidspunktUtleder(
                 vilkårsresultatRepository = repositoryProvider.provide(),
             )
-            val tjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>()
+            val tjenestepensjonRefusjonsKravVurderingRepository =
+                repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>()
             return IverksettVedtakSteg(
                 behandlingRepository = behandlingRepository,
                 utbetalingService = UtbetalingService(
@@ -87,6 +101,7 @@ class IverksettVedtakSteg private constructor(
                 utbetalingGateway = utbetalingGateway,
                 virkningstidspunktUtleder = virkningstidspunktUtlederService,
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
+                flytJobbRepository = flytJobbRepository,
             )
         }
 

@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.InnhentetSykdomsOpplysninger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.RegistrertYrkesskade
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -89,7 +90,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource, repositoryRegi
             }
         }
         route("/{referanse}/grunnlag/sykdom/yrkesskade") {
-            authorizedGet<BehandlingReferanse, YrkesskadeVurderingGrunnlagDto>(
+            authorizedGet<BehandlingReferanse, YrkesskadeVurderingGrunnlagResponse>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
@@ -120,13 +121,13 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource, repositoryRegi
                         )
 
 
-                    YrkesskadeVurderingGrunnlagDto(
+                    YrkesskadeVurderingGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         opplysninger = InnhentetSykdomsOpplysninger(
                             oppgittYrkesskadeISøknad = false,
                             innhentedeYrkesskader = innhentedeYrkesskader,
                         ),
-                        yrkesskadeVurdering = sykdomGrunnlag?.yrkesskadevurdering?.toDto(),
+                        yrkesskadeVurdering = sykdomGrunnlag?.yrkesskadevurdering?.toResponse(),
                     )
                 }
 
@@ -134,6 +135,22 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource, repositoryRegi
             }
         }
     }
+}
+
+private fun Yrkesskadevurdering.toResponse(): YrkesskadevurderingResponse {
+    val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv)
+    return YrkesskadevurderingResponse(
+        begrunnelse = begrunnelse,
+        relevanteSaker = relevanteSaker,
+        andelAvNedsettelsen = andelAvNedsettelsen?.prosentverdi(),
+        erÅrsakssammenheng = erÅrsakssammenheng,
+        vurdertAv = VurdertAvResponse(
+            ident = vurdertAv,
+            dato = requireNotNull(vurdertTidspunkt?.toLocalDate()) { "Fant ikke vurderingstidspunkt for yrkesskadevurdering" },
+            ansattnavn = navnOgEnhet?.navn,
+            enhetsnavn = navnOgEnhet?.enhet,
+        )
+    )
 }
 
 private fun Sykdomsvurdering.toDto(): SykdomsvurderingResponse {

@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
@@ -21,7 +23,9 @@ class DatadelingBehandlingJobbUtfører(
     private val behandlingRepository: BehandlingRepository,
     private val tilkjentRepository: TilkjentYtelseRepository,
     private val underveisRepository: UnderveisRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val vedtakRepository: VedtakRepository,
+    private val samIdRepository: SamIdRepository
 ) : JobbUtfører {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -43,10 +47,14 @@ class DatadelingBehandlingJobbUtfører(
         val tilkjentYtelse = tilkjentRepository.hentHvisEksisterer(behandling.id)
         val underveis = underveisRepository.hentHvisEksisterer(behandling.id)
         val vilkårsresultatTidslinje = vilkårsresultatRepository.hent(behandling.id).rettighetstypeTidslinje()
+        val vedtakId = vedtakRepository.hentId(behandling.id)
+        val samId = samIdRepository.hentHvisEksisterer(behandling.id)
 
         apiInternGateway.sendBehandling(
             sak,
             behandling,
+            vedtakId,
+            samId,
             tilkjentYtelse,
             underveis?.perioder.orEmpty(),
             hendelse.hendelsesTidspunkt.toLocalDate(),
@@ -66,7 +74,9 @@ class DatadelingBehandlingJobbUtfører(
                 behandlingRepository = repositoryProvider.provide(),
                 tilkjentRepository = repositoryProvider.provide(),
                 underveisRepository = repositoryProvider.provide(),
-                vilkårsresultatRepository = repositoryProvider.provide()
+                vilkårsresultatRepository = repositoryProvider.provide(),
+                vedtakRepository = repositoryProvider.provide(),
+                samIdRepository = repositoryProvider.provide(),
             )
         }
     }

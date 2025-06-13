@@ -124,7 +124,7 @@ internal class BehandlingRepositoryImplTest {
             // Hent ut igjen
             val hententMedReferanse = repo.hent(skapt.referanse)
 
-            assertThat(hententMedReferanse.opprettetTidspunkt).isEqualTo(skapt.opprettetTidspunkt);
+            assertThat(hententMedReferanse.opprettetTidspunkt).isEqualTo(skapt.opprettetTidspunkt)
         }
     }
 
@@ -174,8 +174,9 @@ internal class BehandlingRepositoryImplTest {
             assertThat(alleKlage[0].referanse).isEqualTo(klage.referanse)
         }
     }
+
     @Test
-    fun `kan hente ut behandlinger med vedtak`() {
+    fun `kan hente ut behandlinger med vedtak for person`() {
         val vedtakstidspunkt = LocalDateTime.now()
         val virkningstidspunkt = LocalDate.now().plusMonths(1)
 
@@ -219,16 +220,19 @@ internal class BehandlingRepositoryImplTest {
             val repo = BehandlingRepositoryImpl(connection)
 
             // Hent ut igjen
-            val alleDefault = repo.hentAlleMedVedtakFor(sak.id)
+            val alleDefault = repo.hentAlleMedVedtakFor(sak.person)
             assertThat(alleDefault).hasSize(1)
 
-            val alleFørstegang = repo.hentAlleMedVedtakFor(sak.id, listOf(TypeBehandling.Førstegangsbehandling))
+            val alleFørstegang = repo.hentAlleMedVedtakFor(sak.person, listOf(TypeBehandling.Førstegangsbehandling))
             assertThat(alleFørstegang).hasSize(1)
+            assertThat(alleFørstegang[0].saksnummer).isEqualTo(sak.saksnummer)
             assertThat(alleFørstegang[0].referanse).isEqualTo(førstegang.referanse)
             assertThat(alleFørstegang[0].vedtakstidspunkt).isEqualToIgnoringNanos(vedtakstidspunkt)
             assertThat(alleFørstegang[0].virkningstidspunkt).isEqualTo(virkningstidspunkt)
+            assertThat(alleFørstegang[0].årsaker).isEqualTo(setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD))
         }
     }
+
 }
 
 // Midlertidig test
