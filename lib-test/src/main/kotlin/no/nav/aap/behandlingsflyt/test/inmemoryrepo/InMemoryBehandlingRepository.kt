@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
@@ -169,6 +170,10 @@ object InMemoryBehandlingRepository : BehandlingRepository {
                 versjon = behandling.versjon,
             )
         }
+    }
+
+    override fun finnSaksnummer(referanse: BehandlingReferanse): Saksnummer {
+        TODO("Not yet implemented")
     }
 
     override fun markerSavepoint() {
