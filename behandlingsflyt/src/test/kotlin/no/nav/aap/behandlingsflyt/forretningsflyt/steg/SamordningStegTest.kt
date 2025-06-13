@@ -32,6 +32,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepo
 import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -404,7 +405,7 @@ class SamordningStegTest {
         assertThat(samordninger).hasSize(2)
         assertThat(samordninger.first().gradering).isEqualTo(Prosent.`100_PROSENT`)
         assertThat(samordninger.last().gradering).isEqualTo(Prosent.`100_PROSENT`)
-        assertThat(samordninger.last().periode.tom).isEqualTo(sykepengePeriode.tom.plusDays(1).plusYears(3))
+        assertThat(samordninger.last().periode.tom).isEqualTo(Tid.MAKS)
     }
 
     private fun settOppRessurser(

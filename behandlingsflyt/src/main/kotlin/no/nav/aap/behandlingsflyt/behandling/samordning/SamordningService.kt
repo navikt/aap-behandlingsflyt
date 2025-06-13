@@ -15,6 +15,7 @@ import no.nav.aap.komponenter.tidslinje.StandardSammenslåere.slåSammenTilListe
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import kotlin.math.min
 
@@ -62,12 +63,10 @@ class SamordningService(
     private fun segmentForSamordningUtenSluttdato(
         ytelse: SamordningVurdering,
     ): Segment<Pair<Ytelse, SamordningVurderingPeriode>> {
-        val sisteDagMedSamordning = ytelse.vurderingPerioder
-            .maxOfOrNull { it.periode.tom }
+        val sisteDagMedSamordning = ytelse.vurderingPerioder.maxOfOrNull { it.periode.tom }
             ?: error("Mangler perioder for ${ytelse.ytelseType} - klarer ikke utlede neste startdato")
-        // For å unngå potensiell utbetaling hvis revurderingen ikke håndteres innen rimelig tid settes
-        // sluttdatoen for den fiktive samordningen 3 år frem i tid (LocalDate.MAX krasjer databasen)
-        val periode = Periode(sisteDagMedSamordning.plusDays(1), sisteDagMedSamordning.plusDays(1).plusYears(3))
+
+        val periode = Periode(sisteDagMedSamordning.plusDays(1), Tid.MAKS)
         val samordningVurderingPeriode = SamordningVurderingPeriode(
             periode = periode,
             gradering = Prosent.`100_PROSENT`,
