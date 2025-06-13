@@ -14,7 +14,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = REFUSJON_KRAV)
 class RefusjonkravLøsning(
-    @JsonProperty("refusjonkravVurdering", required = true) val refusjonkravVurdering: RefusjonkravVurderingDto,
+    @JsonProperty("refusjonkravVurdering", required = true) val refusjonkravVurderinger: List<RefusjonkravVurderingDto>,
     @JsonProperty(
         "behovstype",
         required = true,

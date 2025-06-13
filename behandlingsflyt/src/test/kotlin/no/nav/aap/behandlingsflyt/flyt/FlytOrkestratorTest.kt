@@ -362,12 +362,12 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurderingDto(
+                listOf(RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null,
                     navKontor = "Nav Løten"
-                )
+                ))
             )
         )
 
@@ -477,12 +477,12 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurderingDto(
+                listOf(RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null,
                     navKontor = "Nav Løten"
-                )
+                ))
             )
         )
 
@@ -730,12 +730,12 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurderingDto(
+                listOf(RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null,
                     navKontor = "Nav Løten"
-                )
+                ))
             )
         )
 
@@ -879,12 +879,12 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurderingDto(
-                    harKrav = false,
+                listOf(RefusjonkravVurderingDto(
+                    harKrav = true,
                     fom = LocalDate.now(),
                     tom = null,
                     navKontor = "Nav Løten"
-                )
+                ))
             )
         )
 
@@ -1141,12 +1141,12 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurderingDto(
+                listOf(RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null,
                     navKontor = "Nav Løten"
-                )
+                ))
             )
         )
 
@@ -1500,12 +1500,12 @@ class FlytOrkestratorTest {
             ),
         ).løsAvklaringsBehov(
             RefusjonkravLøsning(
-                RefusjonkravVurderingDto(
+                listOf(RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null,
                     navKontor = "Nav Løten"
-                )
+                ))
             )
         ).løsAvklaringsBehov(
             avklaringsBehovLøsning = FritakMeldepliktLøsning(
@@ -1750,12 +1750,12 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurderingDto(
+                listOf(RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null,
                     navKontor = "Nav Løten"
-                )
+                ))
             )
         )
 
@@ -3695,12 +3695,12 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurderingDto(
+                listOf(RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null,
                     navKontor = "Nav Løten"
-                )
+                ))
             )
         )
         kvalitetssikreOk(behandling)
@@ -3896,12 +3896,12 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurderingDto(
+                listOf(RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null,
                     navKontor = "Nav Løten"
-                )
+                ))
             )
         )
 
