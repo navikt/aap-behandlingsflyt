@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.ÅrsakTilReturKode
@@ -169,7 +168,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFolkeregisterPersonStatus
@@ -184,7 +182,6 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.gateway.GatewayRegistry
@@ -1852,16 +1849,8 @@ class FlytOrkestratorTest {
                 grunn = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER
             )
         )
-        val frist = dataSource.transaction(readOnly = true) { connection ->
-            val avklaringsbehovene = hentAvklaringsbehov(behandling.id, connection)
+        val frist = hentÅpneAvklaringsbehov(behandling.id).first { it.erVentepunkt() }.frist()
 
-            if (avklaringsbehovene.erSattPåVent()) {
-                val avklaringsbehov = avklaringsbehovene.hentÅpneVentebehov().first()
-                avklaringsbehov.frist()
-            } else {
-                null
-            }
-        }
         assertThat(frist).isNotNull
         behandling = hentBehandling(sak.id)
 
@@ -3757,12 +3746,6 @@ class FlytOrkestratorTest {
         )
     }
 
-    private fun hentPerson(ident: Ident): Person {
-        return dataSource.transaction {
-            PersonRepositoryImpl(it).finnEllerOpprett(listOf(ident))
-        }
-    }
-
     private fun hentSak(ident: Ident, periode: Periode): Sak {
         return dataSource.transaction { connection ->
             SakRepositoryImpl(connection).finnEllerOpprett(
@@ -3830,10 +3813,6 @@ class FlytOrkestratorTest {
                 behandlingId
             ).åpne()
         }
-    }
-
-    private fun hentAvklaringsbehov(behandlingId: BehandlingId, connection: DBConnection): Avklaringsbehovene {
-        return AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandlingId)
     }
 
     private fun hentAlleAvklaringsbehov(behandling: Behandling): List<Avklaringsbehov> {
