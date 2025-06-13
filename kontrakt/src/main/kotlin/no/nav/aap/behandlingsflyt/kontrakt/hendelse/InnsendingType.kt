@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.hendelse
 
 public enum class InnsendingType {
     SØKNAD,
+
     /**
      * Dette er egentlig en dokument-type, ikke en egen innsending, da denne
      * typen opprettes i Kelvin.
@@ -14,6 +15,10 @@ public enum class InnsendingType {
     KLAGE,
     ANNET_RELEVANT_DOKUMENT,
     MANUELL_REVURDERING,
+
+    /**
+     * Legger til ny årsak på en behandling, men oppretter ikke ny behandling.
+     */
     NY_ÅRSAK_TIL_BEHANDLING,
     KABAL_HENDELSE
 }

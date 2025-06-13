@@ -41,6 +41,9 @@ class SakOgBehandlingService(
         return behandlingRepository.hent(behandlingReferanse)
     }
 
+    /**
+     * Ytelsesbehandling betyr førstegangsbehandling eller revurdering.
+     */
     fun finnSisteYtelsesbehandlingFor(sakId: SakId): Behandling? {
         return behandlingRepository.finnSisteBehandlingFor(
             sakId,

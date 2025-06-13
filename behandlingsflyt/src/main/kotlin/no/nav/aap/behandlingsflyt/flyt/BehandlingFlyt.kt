@@ -19,6 +19,9 @@ class BehandlingFlyt private constructor(
 ) {
     private var aktivtSteg: Behandlingsflytsteg? = flyt.firstOrNull()
 
+    /**
+     * @param oppdaterFaktagrunnlag Om faktagrunnlaget skal oppdateres for dette steget.
+     */
     class Behandlingsflytsteg(
         val steg: FlytSteg,
         val kravliste: List<Informasjonskravkonstruktør>,
@@ -95,6 +98,7 @@ class BehandlingFlyt private constructor(
     internal fun validerPlassering(skulleVærtIStegType: StegType) {
         val aktivtStegType = requireNotNull(aktivtSteg).steg.type()
         require(skulleVærtIStegType == aktivtStegType)
+        { "Aktivt steg $aktivtStegType er ikke lik det forventede steget $skulleVærtIStegType" }
     }
 
     private fun steg(nåværendeSteg: StegType): Behandlingsflytsteg {
