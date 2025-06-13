@@ -42,7 +42,8 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                         val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
 
-                        val gjeldendeVurderinger = refusjonkravRepository.hentHvisEksisterer(behandling.id)?.map { it.tilResponse() }
+                        val gjeldendeVurderinger =
+                            refusjonkravRepository.hentHvisEksisterer(behandling.id)?.map { it.tilResponse() }
                         val historiskeVurderinger =
                             refusjonkravRepository
                                 .hentAlleVurderingerPåSak(
