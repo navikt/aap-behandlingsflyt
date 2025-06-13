@@ -199,13 +199,13 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = SamordningSteg,
                 informasjonskrav = listOf(SamordningYtelseVurderingService),
-                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING)
+                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING, ÅrsakTilBehandling.REVURDER_SAMORDNING),
             )
             .medSteg(steg = SamordningUføreSteg, informasjonskrav = listOf(UføreService))
             .medSteg(steg = TjenestepensjonRefusjonskravSteg, informasjonskrav = listOf(TjenestePensjonService))
             .medSteg(
                 steg = SamordningAndreStatligeYtelserSteg,
-                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING)
+                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING, ÅrsakTilBehandling.REVURDER_SAMORDNING)
             )
             .medSteg(steg = SamordningAvslagSteg)
             .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(MeldekortService, AktivitetspliktInformasjonskrav))
