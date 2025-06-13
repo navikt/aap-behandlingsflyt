@@ -84,8 +84,8 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             delete from sykdom_vurdering_dokumenter where vurdering_id = ANY(?::bigint[]);
             delete from sykdom_vurdering where sykdom_vurderinger_id = ANY(?::bigint[]);
             delete from sykdom_vurderinger where id = ANY(?::bigint[]);
-            delete from yrkesskade_vurdering where id = ANY(?::bigint[]);
             delete from yrkesskade_relaterte_saker where vurdering_id = ANY(?::bigint[]);
+            delete from yrkesskade_vurdering where id = ANY(?::bigint[]);
         """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId.id)
