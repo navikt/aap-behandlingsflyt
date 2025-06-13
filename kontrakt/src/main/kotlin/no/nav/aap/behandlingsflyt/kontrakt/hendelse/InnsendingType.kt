@@ -15,4 +15,5 @@ public enum class InnsendingType {
     ANNET_RELEVANT_DOKUMENT,
     MANUELL_REVURDERING,
     NY_ÅRSAK_TIL_BEHANDLING,
+    KABAL_HENDELSE
 }

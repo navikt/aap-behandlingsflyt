@@ -22,7 +22,7 @@ class FlytKontekstMedPeriodeService(
     private val behandlingRepository: BehandlingRepository,
     private val unleashGateway: UnleashGateway,
 ) {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         sakService = SakService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
         unleashGateway = GatewayProvider.provide(),
@@ -105,6 +105,7 @@ class FlytKontekstMedPeriodeService(
                     MELDEKORT
                 else
                     REVURDERING
+
             ÅrsakTilBehandling.FRITAK_MELDEPLIKT ->
                 if (unleashGateway.isEnabled(BehandlingsflytFeature.FasttrackMeldekort))
                     MELDEKORT
@@ -112,7 +113,7 @@ class FlytKontekstMedPeriodeService(
                     REVURDERING
 
             ÅrsakTilBehandling.MOTATT_KLAGE,
-            ÅrsakTilBehandling.KLAGE_TRUKKET ->
+            ÅrsakTilBehandling.KLAGE_TRUKKET, ÅrsakTilBehandling.MOTTATT_KABAL_HENDELSE ->
                 IKKE_RELEVANT // TODO: Verifiser at dette er korrekt.
         }
     }

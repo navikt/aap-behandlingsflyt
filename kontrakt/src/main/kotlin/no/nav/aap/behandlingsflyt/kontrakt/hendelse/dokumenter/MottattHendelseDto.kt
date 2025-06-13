@@ -77,6 +77,12 @@ public class Innsending(
                 require(referanse.type == InnsendingReferanse.Type.BEHANDLING_REFERANSE)
                 require(melding is NyÅrsakTilBehandling)
             }
+            
+            InnsendingType.KABAL_HENDELSE -> {
+                require(referanse.type == InnsendingReferanse.Type.KABAL_HENDELSE_ID)
+                requireNotNull(melding)
+                require(melding is KabalHendelse)
+            }
         }
     }
 }
@@ -99,6 +105,7 @@ public fun Melding.innsendingType(): InnsendingType = when (this) {
     is ManuellRevurdering -> InnsendingType.MANUELL_REVURDERING
     is KlageV0 -> InnsendingType.KLAGE
     is NyÅrsakTilBehandling -> InnsendingType.NY_ÅRSAK_TIL_BEHANDLING
+    is KabalHendelse -> InnsendingType.KABAL_HENDELSE
 }
 
 /**
@@ -126,6 +133,8 @@ private fun example(innsending: Innsending) {
         is KlageV0 -> TODO()
 
         is NyÅrsakTilBehandlingV0 -> TODO()
+        
+        is KabalHendelse -> TODO()
 
         null -> TODO()
 
