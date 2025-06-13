@@ -63,7 +63,7 @@ class HendelseMottattHåndteringJobbUtfører(
             strukturertDokument = if (payloadAsString != null) UnparsedStrukturertDokument(payloadAsString) else null
         )
 
-        when(innsendingType) {
+        when (innsendingType) {
             InnsendingType.NY_ÅRSAK_TIL_BEHANDLING -> {
                 require(parsedMelding is NyÅrsakTilBehandlingV0) { "Melding må være av typen NyÅrsakTilBehandlingV0" }
                 håndterMottattDokumentService.oppdaterÅrsakerTilBehandlingPåEksisterendeÅpenBehandling(
@@ -72,6 +72,7 @@ class HendelseMottattHåndteringJobbUtfører(
                     melding = parsedMelding
                 )
             }
+
             else -> {
                 håndterMottattDokumentService.håndterMottatteDokumenter(
                     sakId,
@@ -126,6 +127,7 @@ class HendelseMottattHåndteringJobbUtfører(
 
         override val type = "hendelse.håndterer"
         override val navn = "Hendelses håndterer"
-        override val beskrivelse = "Håndterer hendelser på en gitt sak. Knytter de nye opplysningene til rett behandling og oppretter behandling hvis det er behov for det."
+        override val beskrivelse =
+            "Håndterer hendelser på en gitt sak. Knytter de nye opplysningene til rett behandling og oppretter behandling hvis det er behov for det."
     }
 }

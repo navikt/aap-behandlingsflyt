@@ -227,6 +227,7 @@ public enum class Definisjon(
         løsesISteg = StegType.SAMORDNING_ANDRE_STATLIGE_YTELSER,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
+
     @Deprecated("Ikke i bruk")
     FORHÅNDSVARSEL_AKTIVITETSPLIKT(
         kode = AvklaringsbehovKode.`5016`,
@@ -494,7 +495,12 @@ public enum class Definisjon(
     }
 
     private fun validerVentepunkt() {
-        if (this in setOf(MANUELT_SATT_PÅ_VENT, BESTILL_LEGEERKLÆRING, OPPRETT_HENDELSE_PÅ_SAK)) {
+        if (this in setOf(
+                MANUELT_SATT_PÅ_VENT,
+                BESTILL_LEGEERKLÆRING,
+                OPPRETT_HENDELSE_PÅ_SAK
+            )
+        ) {
             if (this.løsesISteg != StegType.UDEFINERT) {
                 throw IllegalArgumentException("Ventepunkt er lagt til feil steg")
             }

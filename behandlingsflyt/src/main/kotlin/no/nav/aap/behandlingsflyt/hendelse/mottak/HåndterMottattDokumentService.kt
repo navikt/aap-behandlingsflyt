@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Aktivitetskort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDokumentV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
@@ -51,6 +52,11 @@ class HåndterMottattDokumentService(
         val sak = sakService.hent(sakId)
         val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
         val årsaker = utledÅrsaker(brevkategori, melding, periode)
+        
+        if (melding is KabalHendelse) {
+            // TODO: Håndter hendelser fra kabal
+            return
+        }
 
         val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(sak.saksnummer, årsaker)
 
@@ -81,7 +87,11 @@ class HåndterMottattDokumentService(
         }
     }
 
-    fun oppdaterÅrsakerTilBehandlingPåEksisterendeÅpenBehandling(sakId: SakId, behandlingsreferanse: BehandlingReferanse, melding: NyÅrsakTilBehandlingV0) {
+    fun oppdaterÅrsakerTilBehandlingPåEksisterendeÅpenBehandling(
+        sakId: SakId,
+        behandlingsreferanse: BehandlingReferanse,
+        melding: NyÅrsakTilBehandlingV0
+    ) {
         val behandling = sakOgBehandlingService.finnBehandling(behandlingsreferanse)
 
         låsRepository.withLåstBehandling(behandling.id) {
@@ -130,6 +140,7 @@ class HåndterMottattDokumentService(
                     else -> error("Melding må være NyÅrsakTilBehandlingV0")
                 }
 
+            InnsendingType.KABAL_HENDELSE -> listOf(Årsak(ÅrsakTilBehandling.MOTTATT_KABAL_HENDELSE))
         }
     }
 

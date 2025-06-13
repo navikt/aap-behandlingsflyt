@@ -16,32 +16,44 @@ public data class InnsendingReferanse(
         AVVIST_LEGEERKLÆRING_ID,
         REVURDERING_ID,
         BEHANDLING_REFERANSE,
-        MANUELL_OPPRETTELSE
+        MANUELL_OPPRETTELSE,
+        KABAL_HENDELSE_ID
     }
 
     @get:JsonIgnore
-    val asJournalpostId: JournalpostId get() = JournalpostId(verdi).also {
-        require(type == Type.JOURNALPOST)
-    }
+    val asJournalpostId: JournalpostId
+        get() = JournalpostId(verdi).also {
+            require(type == Type.JOURNALPOST)
+        }
 
     @get:JsonIgnore
-    val asInnsendingId: InnsendingId get() = InnsendingId(verdi).also {
-        require(type == Type.BRUDD_AKTIVITETSPLIKT_INNSENDING_ID)
-    }
+    val asInnsendingId: InnsendingId
+        get() = InnsendingId(verdi).also {
+            require(type == Type.BRUDD_AKTIVITETSPLIKT_INNSENDING_ID)
+        }
 
     @get:JsonIgnore
-    val asBehandlingReferanse: BehandlingReferanse get() = BehandlingReferanse(UUID.fromString(verdi)).also {
-        require(type == Type.BEHANDLING_REFERANSE)
-    }
+    val asBehandlingReferanse: BehandlingReferanse
+        get() = BehandlingReferanse(UUID.fromString(verdi)).also {
+            require(type == Type.BEHANDLING_REFERANSE)
+        }
 
     @get:JsonIgnore
-    val asAvvistLegeerklæringId: AvvistLegeerklæringId get() = AvvistLegeerklæringId(verdi).also {
-        require(type == Type.AVVIST_LEGEERKLÆRING_ID)
-    }
+    val asAvvistLegeerklæringId: AvvistLegeerklæringId
+        get() = AvvistLegeerklæringId(verdi).also {
+            require(type == Type.AVVIST_LEGEERKLÆRING_ID)
+        }
 
-    public constructor(id: InnsendingId): this(Type.BRUDD_AKTIVITETSPLIKT_INNSENDING_ID, id.asString)
-    public constructor(id: JournalpostId): this(Type.JOURNALPOST, id.identifikator)
-    public constructor(id: AvvistLegeerklæringId): this(Type.AVVIST_LEGEERKLÆRING_ID, id.asString)
+    @get:JsonIgnore
+    val asKabalHendelseId: KabalHendelseId
+        get() = KabalHendelseId(verdi).also {
+            require(type == Type.KABAL_HENDELSE_ID)
+        }
+
+    public constructor(id: InnsendingId) : this(Type.BRUDD_AKTIVITETSPLIKT_INNSENDING_ID, id.asString)
+    public constructor(id: JournalpostId) : this(Type.JOURNALPOST, id.identifikator)
+    public constructor(id: AvvistLegeerklæringId) : this(Type.AVVIST_LEGEERKLÆRING_ID, id.asString)
+    public constructor(id: KabalHendelseId) : this(Type.KABAL_HENDELSE_ID, id.asString)
 }
 
 public data class InnsendingId(@JsonValue val value: UUID) {
@@ -61,5 +73,15 @@ public data class AvvistLegeerklæringId(@JsonValue val value: UUID) {
 
     public companion object {
         public fun ny(): AvvistLegeerklæringId = AvvistLegeerklæringId(UUID.randomUUID())
+    }
+}
+
+public data class KabalHendelseId(@JsonValue val value: UUID) {
+    val asString: String get() = value.toString()
+
+    public constructor(value: String) : this(UUID.fromString(value))
+
+    public companion object {
+        public fun ny(): KabalHendelseId = KabalHendelseId(UUID.randomUUID())
     }
 }

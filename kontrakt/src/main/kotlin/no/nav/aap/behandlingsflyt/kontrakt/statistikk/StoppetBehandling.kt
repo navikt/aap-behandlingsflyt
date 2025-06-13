@@ -75,6 +75,7 @@ public enum class ÅrsakTilBehandling {
     FRITAK_MELDEPLIKT,
     KLAGE_TRUKKET,
     REVURDER_MANUELL_INNTEKT,   // Manuell inntekt
+    MOTTATT_KABAL_HENDELSE // Hendelser fra klage andreinstans
 }
 
 /**
