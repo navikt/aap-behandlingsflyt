@@ -368,7 +368,7 @@ class FlytOrkestratorTest {
         // Sender inn en søknad
         behandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId("22"),
+                journalpost = JournalpostId("220"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     MeldekortV0(
