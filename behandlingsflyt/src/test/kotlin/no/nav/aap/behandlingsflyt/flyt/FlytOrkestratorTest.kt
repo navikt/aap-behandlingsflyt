@@ -2904,7 +2904,6 @@ class FlytOrkestratorTest {
             ),
             Bruker("X123456")
         )
-        util.ventPåSvar()
 
         // OmgjøringSteg
         dataSource.transaction { connection ->
@@ -2923,12 +2922,13 @@ class FlytOrkestratorTest {
             ).isEqualTo("Revurdering etter klage som tas til følge. Følgende vilkår omgjøres: § 11-5")
         }
 
-        val revurdering = hentBehandling(klagebehandling.sakId)
+        val revurdering = hentBehandling(klagebehandling.sakId, listOf(TypeBehandling.Revurdering))
         assertThat(revurdering.årsaker()).containsExactly(Årsak(ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
 
         // OpprettholdelseSteg
         val steghistorikk = hentStegHistorikk(klagebehandling.id)
-        assertTrue(steghistorikk.any { it.steg() == StegType.OPPRETTHOLDELSE && it.status() == StegStatus.AVSLUTTER })
+        assertThat(steghistorikk)
+            .anySatisfy { it -> assertThat(it.steg() == StegType.OPPRETTHOLDELSE && it.status() == StegStatus.AVSLUTTER).isTrue }
 
         // MeldingOmVedtakBrevSteg
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
@@ -3462,7 +3462,7 @@ class FlytOrkestratorTest {
             )
         }
         util.ventPåSvar(behandling.sakId.id, behandling.id.id)
-        return hentBehandling(behandling.sakId)
+        return hentBehandling(behandling.referanse)
     }
 
     @JvmName("løsAvklaringsBehovExt")
@@ -3569,11 +3569,18 @@ class FlytOrkestratorTest {
         }
     }
 
-    private fun hentBehandling(sakId: SakId): Behandling {
+    private fun hentBehandling(
+        sakId: SakId,
+        typeBehandling: List<TypeBehandling> = listOf(
+            TypeBehandling.Førstegangsbehandling,
+            TypeBehandling.Revurdering,
+            TypeBehandling.Klage
+        )
+    ): Behandling {
         return dataSource.transaction(readOnly = true) { connection ->
             val finnSisteBehandlingFor = BehandlingRepositoryImpl(connection).finnSisteBehandlingFor(
                 sakId,
-                listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering, TypeBehandling.Klage)
+                typeBehandling
             )
             requireNotNull(finnSisteBehandlingFor)
         }
