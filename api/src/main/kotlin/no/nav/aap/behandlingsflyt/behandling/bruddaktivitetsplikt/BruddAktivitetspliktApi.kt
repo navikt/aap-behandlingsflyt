@@ -92,12 +92,10 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource, repositoryRegi
                     token()
                 )
 
-
                 Effektuer11_7Dto(
                     harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                     begrunnelse = effektuer11_7Grunnlag?.vurdering?.begrunnelse,
                     forhåndsvarselDato = forhåndsvarselDato,
-                    forhåndsvarselSvar = null,
                     gjeldendeBrudd = brudd,
                 )
             }

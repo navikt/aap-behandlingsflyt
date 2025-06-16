@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Feilregistrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.RegistreringInput
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.DokumentInfoId
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
@@ -92,14 +91,7 @@ data class Effektuer11_7Dto(
     val harTilgangTilÅSaksbehandle: Boolean,
     val begrunnelse: String?,
     val forhåndsvarselDato: LocalDate?,
-    val forhåndsvarselSvar: ForhåndsvarselSvar?,
     val gjeldendeBrudd: List<BruddAktivitetspliktHendelseDto>,
-)
-
-data class ForhåndsvarselSvar(
-    val journalpostId: JournalpostId,
-    val dokumentInfoId: DokumentInfoId,
-    val mottattDato: LocalDate,
 )
 
 data class SaksnummerParameter(@PathParam("saksnummer") val saksnummer: String)
