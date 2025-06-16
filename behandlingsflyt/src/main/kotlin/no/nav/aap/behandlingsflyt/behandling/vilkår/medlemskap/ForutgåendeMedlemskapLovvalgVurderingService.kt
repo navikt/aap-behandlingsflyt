@@ -27,7 +27,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
     // Minst én må oppfylles
     private fun vurderFørsteDelKriteier(grunnlag: ForutgåendeMedlemskapGrunnlag, forutgåendePeriode: Periode): List<TilhørighetVurdering> {
         val arbeidInntektINorgeVurdering = harArbeidInntektINorge(grunnlag.medlemskapArbeidInntektGrunnlag, forutgåendePeriode)
-        val vedtakIMedl = harVedtakIMEDL(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag, forutgåendePeriode)
+        val vedtakIMedl = harVedtakIMEDL(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag)
 
         return listOf(arbeidInntektINorgeVurdering, vedtakIMedl)
     }
@@ -37,7 +37,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
         val harJobbetIUtland = oppgittJobbetIUtland(grunnlag.nyeSoknadGrunnlag, forutgåendePeriode )
         val harHattUtenlandsOpphold = oppgittUtenlandsOpphold(grunnlag.nyeSoknadGrunnlag, forutgåendePeriode)
         val harUtenlandsAdresse = utenlandskAdresse(grunnlag.personopplysningGrunnlag, forutgåendePeriode)
-        val annetLovvalgsland = lovvalgslandIkkeErNorge(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag, forutgåendePeriode)
+        val annetLovvalgsland = lovvalgslandIkkeErNorge(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag)
         val utenforEØS = manglerStatsborgerskapIEØSiPerioden(grunnlag.personopplysningGrunnlag, forutgåendePeriode)
 
         return listOf(harJobbetIUtland, harHattUtenlandsOpphold, harUtenlandsAdresse, annetLovvalgsland, utenforEØS)
@@ -45,7 +45,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
 
     private fun oppgittJobbetIUtland(grunnlag: UtenlandsOppholdData?, forutgåendePeriode: Periode): TilhørighetVurdering {
         if (grunnlag == null) {
-            return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Mangler utenlandsdata fra søknad", true, forutgåendePeriode)
+            return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Mangler utenlandsdata fra søknad", true, VurdertPeriode.SISTE_5_ÅR)
         }
         val relevantePerioder = grunnlag.utenlandsOpphold?.filter {
             (it.tilDato != null && forutgåendePeriode.inneholder(it.tilDato)) || (it.fraDato != null && forutgåendePeriode.inneholder(it.fraDato))
@@ -83,13 +83,13 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             opplysning = "Arbeidet i utlandet siste 5 år",
             resultat = jobbUtenforNorge,
             oppgittJobbetIUtlandGrunnlag = arbeidUtlandPerioder,
-            vurdertPeriode = forutgåendePeriode
+            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR
         )
     }
 
     private fun oppgittUtenlandsOpphold(grunnlag: UtenlandsOppholdData?, forutgåendePeriode: Periode): TilhørighetVurdering {
         if (grunnlag == null) {
-            return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Mangler utenlandsdata fra søknad", true, forutgåendePeriode)
+            return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Mangler utenlandsdata fra søknad", true, VurdertPeriode.SISTE_5_ÅR)
         }
 
         val relevantePerioder = grunnlag.utenlandsOpphold?.filter {
@@ -110,7 +110,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             opplysning = "Opphold i utlandet siste 5 år",
             resultat = !grunnlag.harBoddINorgeSiste5År,
             oppgittUtenlandsOppholdGrunnlag = oppholdUtlandPerioder,
-            vurdertPeriode = forutgåendePeriode
+            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR
         )
     }
 
@@ -139,11 +139,11 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             opplysning = "Har hatt utenlandsk adresse i perioden",
             resultat = bosattUtenforNorge || !utenlandsAddresserGrunnlag.isNullOrEmpty(),
             utenlandsAddresserGrunnlag = utenlandsAddresserGrunnlag,
-            vurdertPeriode = forutgåendePeriode
+            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR
         )
     }
 
-    private fun lovvalgslandIkkeErNorge(grunnlag: MedlemskapUnntakGrunnlag?, forutgåendePeriode: Periode): TilhørighetVurdering {
+    private fun lovvalgslandIkkeErNorge(grunnlag: MedlemskapUnntakGrunnlag?): TilhørighetVurdering {
         val lovvalgslandErIkkeNorge = grunnlag?.unntak?.firstOrNull{it.verdi.lovvalgsland != "NOR"}
 
         val medlGrunnlag = grunnlag?.unntak?.map {
@@ -161,7 +161,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             opplysning = "Vedtak om annet lovvalgsland finnes",
             resultat = lovvalgslandErIkkeNorge != null,
             vedtakImedlGrunnlag = medlGrunnlag,
-            vurdertPeriode = Periode(forutgåendePeriode.fom, forutgåendePeriode.fom.plusYears(5))
+            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR
         )
     }
 
@@ -186,7 +186,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             opplysning = "Har statsborgerskap utenfor EØS i perioden",
             resultat = fantStatsborgerskapUtenforEØSiPerioden,
             manglerStatsborgerskapGrunnlag = manglerStatsborgerskapGrunnlag,
-            vurdertPeriode = forutgåendePeriode
+            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR
         )
     }
 
@@ -214,7 +214,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             opplysning = "Sammenhengende arbeid og inntekt i Norge siste 5 år",
             resultat = sammenhengendeInntektSiste5År,
             arbeidInntektINorgeGrunnlag = arbeidInntektINorgeGrunnlag,
-            vurdertPeriode = Periode(forutgåendePeriode.fom, forutgåendePeriode.fom.plusYears(5))
+            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR
         )
     }
 
@@ -239,7 +239,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
         return true
     }
 
-    private fun harVedtakIMEDL(grunnlag: MedlemskapUnntakGrunnlag?, forutgåendePeriode: Periode): TilhørighetVurdering {
+    private fun harVedtakIMEDL(grunnlag: MedlemskapUnntakGrunnlag?): TilhørighetVurdering {
         val erMedlem = grunnlag?.unntak?.firstOrNull{it.verdi.medlem}
 
         val medlGrunnlag = grunnlag?.unntak?.map {
@@ -257,7 +257,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             opplysning = "Vedtak om pliktig eller frivillig medlemskap finnes i MEDL for perioden",
             resultat = erMedlem != null,
             vedtakImedlGrunnlag = medlGrunnlag,
-            vurdertPeriode = Periode(forutgåendePeriode.fom, forutgåendePeriode.fom.plusYears(5))
+            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR
         )
     }
 }

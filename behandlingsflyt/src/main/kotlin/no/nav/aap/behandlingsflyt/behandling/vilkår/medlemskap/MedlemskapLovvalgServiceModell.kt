@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Virksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.AdresseType
 import no.nav.aap.komponenter.type.Periode
@@ -17,7 +16,7 @@ data class TilhørighetVurdering(
     val indikasjon: Indikasjon,
     val opplysning: String,
     val resultat: Boolean,
-    val vurdertPeriode: Periode,
+    val vurdertPeriode: VurdertPeriode,
     val vedtakImedlGrunnlag: List<VedtakIMEDLGrunnlag>? = null,
     val mottarSykepengerGrunnlag: List<MottarSykepengerGrunnlag>? = null,
     val arbeidInntektINorgeGrunnlag: List<ArbeidInntektINorgeGrunnlag>? = null,
@@ -81,6 +80,12 @@ enum class Kilde {
 
 enum class Indikasjon {
     I_NORGE, UTENFOR_NORGE
+}
+
+enum class VurdertPeriode {
+    INNEVÆRENDE_OG_FORRIGE_MND,
+    SØKNADSTIDSPUNKT,
+    SISTE_5_ÅR
 }
 
 enum class EØSLand(val alpha2: String) {
