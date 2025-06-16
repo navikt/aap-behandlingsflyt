@@ -12,13 +12,16 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 
 class ForeslåVedtakSteg internal constructor(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
 
-    constructor(repositoryProvider: RepositoryProvider): this(
+    private val log = LoggerFactory.getLogger(javaClass)
+
+    constructor(repositoryProvider: RepositoryProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
     )
@@ -27,6 +30,7 @@ class ForeslåVedtakSteg internal constructor(
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+            log.info("Gir ingen behandlingsgrunnlag, avbryter steg. BehandlingId: ${kontekst.behandlingId}. ")
             avklaringsbehov.avbrytForSteg(type())
             return Fullført
         }

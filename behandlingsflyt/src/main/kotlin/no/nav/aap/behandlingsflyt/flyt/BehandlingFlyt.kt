@@ -266,7 +266,7 @@ class BehandlingFlytBuilder {
 
     fun medSteg(
         steg: FlytSteg,
-        årsakRelevanteForSteg: List<ÅrsakTilBehandling> = emptyList(),
+        årsakRelevanteForSteg: List<ÅrsakTilBehandling> = ÅrsakTilBehandling.alle(),
         informasjonskrav: List<Informasjonskravkonstruktør> = emptyList()
     ): BehandlingFlytBuilder {
         if (buildt) {
