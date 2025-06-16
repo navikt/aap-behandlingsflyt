@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.FastsettBeregningstidspunktLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FASTSETT_BEREGNINGSTIDSPUNKT_KODE
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -14,7 +14,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = FASTSETT_BEREGNINGSTIDSPUNKT_KODE)
 class FastsettBeregningstidspunktLøsning(
-    @JsonProperty("beregningVurdering", required = true) val beregningVurdering: BeregningstidspunktVurdering,
+    @JsonProperty("beregningVurdering", required = true) val beregningVurdering: BeregningstidspunktVurderingDto,
     @JsonProperty(
         "behovstype",
         required = true,

@@ -82,7 +82,8 @@ class InntektsbehovTest {
                         begrunnelse = "asdf",
                         ytterligereNedsattArbeidsevneDato = ytterligereNedsattDato,
                         nedsattArbeidsevneDato = nedsettelsesDato,
-                        ytterligereNedsattBegrunnelse = "asdf"
+                        ytterligereNedsattBegrunnelse = "asdf",
+                        vurdertAv = "saksbehandler"
                     ), yrkesskadeBeløpVurdering = null
                 ),
             )
@@ -117,7 +118,8 @@ class InntektsbehovTest {
                         begrunnelse = "begrunnelse",
                         nedsattArbeidsevneDato = nedsettelsesDato,
                         ytterligereNedsattArbeidsevneDato = LocalDate.now().minusYears(10),
-                        ytterligereNedsattBegrunnelse = "begrunnelse"
+                        ytterligereNedsattBegrunnelse = "begrunnelse",
+                        vurdertAv = "saksbehandler"
                     ), yrkesskadeBeløpVurdering = null
                 )
             )

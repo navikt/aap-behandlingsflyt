@@ -26,7 +26,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
             return null
         }
         val query = """
-            SELECT NEDSATT_BEGRUNNELSE, NEDSATT_ARBEIDSEVNE_DATO, YTTERLIGERE_NEDSATT_ARBEIDSEVNE_DATO, YTTERLIGERE_NEDSATT_BEGRUNNELSE
+            SELECT NEDSATT_BEGRUNNELSE, NEDSATT_ARBEIDSEVNE_DATO, YTTERLIGERE_NEDSATT_ARBEIDSEVNE_DATO, YTTERLIGERE_NEDSATT_BEGRUNNELSE, VURDERT_AV, OPPRETTET_TID
             FROM BEREGNINGSTIDSPUNKT_VURDERING
             WHERE id = ?
         """.trimIndent()
@@ -41,7 +41,9 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
                     row.getString("NEDSATT_BEGRUNNELSE"),
                     row.getLocalDate("NEDSATT_ARBEIDSEVNE_DATO"),
                     row.getStringOrNull("YTTERLIGERE_NEDSATT_BEGRUNNELSE"),
-                    row.getLocalDateOrNull("YTTERLIGERE_NEDSATT_ARBEIDSEVNE_DATO")
+                    row.getLocalDateOrNull("YTTERLIGERE_NEDSATT_ARBEIDSEVNE_DATO"),
+                    row.getString("VURDERT_AV"),
+                    row.getLocalDateTime("OPPRETTET_TID"),
                 )
             }
         }
@@ -242,9 +244,9 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
 
         val query = """
             INSERT INTO BEREGNINGSTIDSPUNKT_VURDERING 
-            (NEDSATT_BEGRUNNELSE, NEDSATT_ARBEIDSEVNE_DATO,YTTERLIGERE_NEDSATT_ARBEIDSEVNE_DATO, YTTERLIGERE_NEDSATT_BEGRUNNELSE)
+            (NEDSATT_BEGRUNNELSE, NEDSATT_ARBEIDSEVNE_DATO,YTTERLIGERE_NEDSATT_ARBEIDSEVNE_DATO, YTTERLIGERE_NEDSATT_BEGRUNNELSE, VURDERT_AV)
             VALUES
-            (?, ?, ?, ?)
+            (?, ?, ?, ?, ?)
         """.trimIndent()
 
         val id = connection.executeReturnKey(query) {
@@ -253,6 +255,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
                 setLocalDate(2, vurdering.nedsattArbeidsevneDato)
                 setLocalDate(3, vurdering.ytterligereNedsattArbeidsevneDato)
                 setString(4, vurdering.ytterligereNedsattBegrunnelse)
+                setString(5, vurdering.vurdertAv)
             }
         }
 
