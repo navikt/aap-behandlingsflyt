@@ -1268,25 +1268,27 @@ class FlytOrkestratorTest {
         behandling =
             løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
 
+        var revurdering = hentNyesteBehandlingForSak(behandling.sakId)
+
         // Siden samordning overlappet, skal en revurdering opprettes med en gang
-        assertThat(behandling.referanse).isNotEqualTo(behandlingReferanse)
-        assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+        assertThat(revurdering.referanse).isNotEqualTo(behandlingReferanse)
+        assertThat(revurdering.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
         util.ventPåSvar(sakId = behandling.sakId.id)
 
         // Verifiser at den er satt på vent
-        var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(behandling.id)
-        util.ventPåSvar(behandlingId = behandling.id.id, sakId = behandling.sakId.id)
+        var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
+
         assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
 
         // Ta av vent
-        behandling = løsAvklaringsBehov(behandling, SamordningVentPaVirkningstidspunktLøsning())
+        revurdering = løsAvklaringsBehov(revurdering, SamordningVentPaVirkningstidspunktLøsning())
 
-        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(behandling.id)
+        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
         assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_SAMORDNING_GRADERING)
 
         // Avklar samordning i revurdering
-        behandling = løsAvklaringsBehov(
-            behandling,
+        revurdering = løsAvklaringsBehov(
+            revurdering,
             AvklarSamordningGraderingLøsning(
                 vurderingerForSamordning = VurderingerForSamordning(
                     vurderteSamordningerData = listOf(
@@ -1305,7 +1307,7 @@ class FlytOrkestratorTest {
         )
 
         val tilkjentYtelse =
-            requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) }) { "Tilkjent ytelse skal være beregnet her." }
+            requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(revurdering.id) }) { "Tilkjent ytelse skal være beregnet her." }
 
         assertThat(tilkjentYtelse).hasSizeGreaterThan(2)
         tilkjentYtelse.forEach {
@@ -1318,7 +1320,7 @@ class FlytOrkestratorTest {
             }
         }
 
-        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(behandling.id)
+        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
         assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
 
     }
@@ -1810,7 +1812,7 @@ class FlytOrkestratorTest {
         )
 
         val sak = hentSak(ident, periode)
-        var behandling = hentBehandling(sak.id)
+        var behandling = hentNyesteBehandlingForSak(sak.id)
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
 
         val stegHistorikk = hentStegHistorikk(behandling.id)
@@ -1855,7 +1857,7 @@ class FlytOrkestratorTest {
         )
 
         val sak = hentSak(ident, periode)
-        var behandling = hentBehandling(sak.id)
+        var behandling = hentNyesteBehandlingForSak(sak.id)
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
@@ -1875,7 +1877,7 @@ class FlytOrkestratorTest {
         val frist = hentÅpneAvklaringsbehov(behandling.id).first { it.erVentepunkt() }.frist()
 
         assertThat(frist).isNotNull
-        behandling = hentBehandling(sak.id)
+        behandling = hentNyesteBehandlingForSak(sak.id)
 
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
         assertThat(åpneAvklaringsbehov.map { it.definisjon })
@@ -1890,7 +1892,7 @@ class FlytOrkestratorTest {
             ),
         )
 
-        behandling = hentBehandling(sak.id)
+        behandling = hentNyesteBehandlingForSak(sak.id)
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
@@ -1912,7 +1914,7 @@ class FlytOrkestratorTest {
         )
 
         val sak = hentSak(ident, periode)
-        val behandling = hentBehandling(sak.id)
+        val behandling = hentNyesteBehandlingForSak(sak.id)
 
         // Validér avklaring
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
@@ -1972,7 +1974,7 @@ class FlytOrkestratorTest {
         )
 
         val sak = hentSak(ident, periode)
-        val behandling = hentBehandling(sak.id)
+        val behandling = hentNyesteBehandlingForSak(sak.id)
 
         // Validér avklaring
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
@@ -2031,7 +2033,7 @@ class FlytOrkestratorTest {
         )
 
         val sak = hentSak(ident, periode)
-        val behandling = hentBehandling(sak.id)
+        val behandling = hentNyesteBehandlingForSak(sak.id)
 
         // Validér avklaring
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
@@ -2688,7 +2690,7 @@ class FlytOrkestratorTest {
         }
 
         util.ventPåSvar()
-        val b = hentBehandling(behandling.sakId)
+        val b = hentNyesteBehandlingForSak(behandling.sakId)
         assertThat(b.aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
     }
 
@@ -2922,7 +2924,7 @@ class FlytOrkestratorTest {
             ).isEqualTo("Revurdering etter klage som tas til følge. Følgende vilkår omgjøres: § 11-5")
         }
 
-        val revurdering = hentBehandling(klagebehandling.sakId, listOf(TypeBehandling.Revurdering))
+        val revurdering = hentNyesteBehandlingForSak(klagebehandling.sakId, listOf(TypeBehandling.Revurdering))
         assertThat(revurdering.årsaker()).containsExactly(Årsak(ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
 
         // OpprettholdelseSteg
@@ -3569,7 +3571,7 @@ class FlytOrkestratorTest {
         }
     }
 
-    private fun hentBehandling(
+    private fun hentNyesteBehandlingForSak(
         sakId: SakId,
         typeBehandling: List<TypeBehandling> = listOf(
             TypeBehandling.Førstegangsbehandling,
@@ -3644,7 +3646,7 @@ class FlytOrkestratorTest {
         hendelsesMottak.håndtere(ident, dokumentMottattPersonHendelse)
         util.ventPåSvar()
         val sak = hentSak(ident, dokumentMottattPersonHendelse.periode)
-        val behandling = hentBehandling(sak.id)
+        val behandling = hentNyesteBehandlingForSak(sak.id)
         return behandling
     }
 
