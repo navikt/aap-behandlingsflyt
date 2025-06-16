@@ -11,8 +11,9 @@ public enum class TypeBehandling(
     Førstegangsbehandling("ae0034"),
     Revurdering("ae0028"),
     Tilbakekreving(""),
-    Klage("ae0058");
-
+    Klage("ae0058"),
+    SvarFraAndreinstans("svar-fra-andreinstans"); // TODO: Undersøk om vi bør opprette kode i kodeverk
+    
     public fun identifikator(): String = identifikator
 
     public fun toLogString(): String = "${this.name}($identifikator)"

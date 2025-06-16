@@ -312,7 +312,8 @@ class Effektuer11_7StegTest {
             TypeBehandling.Førstegangsbehandling -> VurderingType.FØRSTEGANGSBEHANDLING
             TypeBehandling.Revurdering -> VurderingType.REVURDERING
             TypeBehandling.Tilbakekreving -> VurderingType.REVURDERING //Skal nok være noe annet
-            TypeBehandling.Klage -> VurderingType.REVURDERING
+            TypeBehandling.Klage -> VurderingType.IKKE_RELEVANT
+            TypeBehandling.SvarFraAndreinstans -> VurderingType.IKKE_RELEVANT
         }
         return FlytKontekstMedPerioder(
             sakId = sak.id,

@@ -29,7 +29,10 @@ class SakOgBehandlingService(
     private val trukketSøknadService: TrukketSøknadService,
     private val unleashGateway: UnleashGateway,
 ) {
-    constructor(repositoryProvider: RepositoryProvider, unleashGateway: UnleashGateway = GatewayProvider.provide()) : this(
+    constructor(
+        repositoryProvider: RepositoryProvider,
+        unleashGateway: UnleashGateway = GatewayProvider.provide()
+    ) : this(
         grunnlagKopierer = GrunnlagKopiererImpl(repositoryProvider),
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
@@ -52,7 +55,7 @@ class SakOgBehandlingService(
     }
 
     sealed interface OpprettetBehandling {
-       val åpenBehandling: Behandling?
+        val åpenBehandling: Behandling?
     }
 
     /* Dette er en vanlig, åpen behandling og behandlignen kan være åpen over tid, på tvers av
@@ -90,10 +93,12 @@ class SakOgBehandlingService(
         val fasttrackkandidat = årsaker.isNotEmpty()
                 && årsaker.all { it.type in fasttrackKandidater }
                 && unleashGateway.isEnabled(BehandlingsflytFeature.FasttrackMeldekort)
+        val mottokKabalHendelse = årsaker.any { it.type == ÅrsakTilBehandling.MOTTATT_KABAL_HENDELSE }
+        val mottokKlage = årsaker.any { it.type == ÅrsakTilBehandling.MOTATT_KLAGE }
 
         return when {
-            årsaker.any { it.type == ÅrsakTilBehandling.MOTATT_KLAGE } ->
-                Ordinær(opprettKlagebehandling(sisteYtelsesbehandling, sakId, årsaker))
+            mottokKlage -> Ordinær(opprettKlagebehandling(sisteYtelsesbehandling, sakId, årsaker))
+            mottokKabalHendelse -> Ordinær(opprettSvarFraKlageenhetBehandling(sisteYtelsesbehandling, sakId, årsaker))
 
             /* Tilbakekreving kommer kanskje som et case her ... */
 
@@ -109,7 +114,10 @@ class SakOgBehandlingService(
 
             sisteYtelsesbehandling.status().erÅpen() ->
                 if (fasttrackkandidat && sisteYtelsesbehandling.typeBehandling() != TypeBehandling.Førstegangsbehandling)
-                    MåBehandlesAtomært(opprettRevurderingForranÅpenBehandling(sisteYtelsesbehandling, årsaker), sisteYtelsesbehandling)
+                    MåBehandlesAtomært(
+                        opprettRevurderingForranÅpenBehandling(sisteYtelsesbehandling, årsaker),
+                        sisteYtelsesbehandling
+                    )
                 else
                     Ordinær(oppdaterÅrsaker(sisteYtelsesbehandling, årsaker))
 
@@ -137,6 +145,23 @@ class SakOgBehandlingService(
             sakId = sakId,
             årsaker = årsaker,
             typeBehandling = TypeBehandling.Klage,
+            forrigeBehandlingId = null,
+        )
+    }
+
+    private fun opprettSvarFraKlageenhetBehandling(
+        sisteYtelsesbehandling: Behandling?,
+        sakId: SakId,
+        årsaker: List<Årsak>
+    ): Behandling {
+        // Kan vurdere en bedre sjekk her, men vi validerer allerede ved mottak at en tilhørende klagebehandling eksisterer
+        requireNotNull(sisteYtelsesbehandling) {
+            "Mottok kabalehndelse, men det finnes ingen eksisterende behandling"
+        }
+        return behandlingRepository.opprettBehandling(
+            sakId = sakId,
+            årsaker = årsaker,
+            typeBehandling = TypeBehandling.SvarFraAndreinstans,
             forrigeBehandlingId = null,
         )
     }

@@ -53,11 +53,6 @@ class HåndterMottattDokumentService(
         val sak = sakService.hent(sakId)
         val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
         val årsaker = utledÅrsaker(brevkategori, melding, periode)
-        
-        if (melding is KabalHendelse) {
-            // TODO: Håndter hendelser fra kabal
-            return
-        }
 
         val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(sak.saksnummer, årsaker)
 
@@ -73,7 +68,7 @@ class HåndterMottattDokumentService(
 
         // Knytter klage direkte til behandlingen den opprettet, i stedet for via informasjonskrav.
         // Dette fordi vi kan ha flere åpne klagebehandlinger.
-        if (melding is Klage) {
+        if (melding is Klage || melding is KabalHendelse) {
             require(opprettetBehandling is SakOgBehandlingService.Ordinær)
             mottaDokumentService.knyttTilBehandling(sakId, opprettetBehandling.åpenBehandling.id, referanse)
         }

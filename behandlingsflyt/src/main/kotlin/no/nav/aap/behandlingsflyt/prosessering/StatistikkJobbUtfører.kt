@@ -304,6 +304,7 @@ class StatistikkJobbUtfører(
 
             TypeBehandling.Tilbakekreving -> null
             TypeBehandling.Klage -> null
+            TypeBehandling.SvarFraAndreinstans -> null
         }
     }
 

@@ -398,6 +398,12 @@ public enum class Definisjon(
         løsesISteg = StegType.EFFEKTUER_AVVIST_PÅ_FORMKRAV,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         defaultFrist = Period.ofWeeks(3),
+    ),
+    HÅNDTER_SVAR_FRA_ANDREINSTANS(
+        kode = AvklaringsbehovKode.`6008`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.SVAR_FRA_ANDREINSTANS,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     );
 
     public companion object {

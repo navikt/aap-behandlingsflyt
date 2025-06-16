@@ -199,6 +199,10 @@ public enum class StegType(
         gruppe = StegGruppe.KLAGE_AVVIST_PÅ_FORMKRAV,
         status = Status.IVERKSETTES
     ),
+    SVAR_FRA_ANDREINSTANS(
+        gruppe = StegGruppe.START_BEHANDLING,
+        status = Status.OPPRETTET,
+    ),
     UDEFINERT(
         gruppe = StegGruppe.UDEFINERT,
         status = Status.UTREDES,

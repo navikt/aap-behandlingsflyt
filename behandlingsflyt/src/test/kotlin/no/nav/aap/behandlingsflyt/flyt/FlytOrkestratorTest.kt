@@ -116,6 +116,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.inntekt.InntektGatewayImpl
+import no.nav.aap.behandlingsflyt.integrasjon.kabal.Fagsystem
 import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.integrasjon.meldekort.MeldekortGatewayImpl
@@ -137,7 +138,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.BehandlingDetaljer
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.BehandlingEventType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageUtfall
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlagebehandlingAvsluttetDetaljer
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
@@ -1445,14 +1451,14 @@ class FlytOrkestratorTest {
 
         val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
         val behandlingReferanse = behandling.referanse
-        
+
         løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
         val nyesteBehandling = hentNyesteBehandlingForSak(behandling.sakId)
-        
+
         // Siden samordning overlappet, skal en revurdering opprettes med en gang
         assertThat(nyesteBehandling).isNotEqualTo(behandlingReferanse)
         assertThat(nyesteBehandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-        
+
         var revurdering = nyesteBehandling
 
         util.ventPåSvar(sakId = behandling.sakId.id)
@@ -2909,7 +2915,7 @@ class FlytOrkestratorTest {
             ),
             Bruker("X123456")
         )
-        
+
         util.ventPåSvar(klagebehandling.sakId.id)
 
         // OmgjøringSteg
@@ -3402,6 +3408,86 @@ class FlytOrkestratorTest {
     }
 
     @Test
+    fun `Håndtere svar fra kabal`() {
+        val person = TestPersoner.PERSON_FOR_UNG()
+        val ident = person.aktivIdent()
+
+        val periode = Periode(LocalDate.now().minusMonths(3), LocalDate.now().plusYears(3))
+
+        // Avslås pga. alder
+        val avslåttFørstegang = sendInnSøknad(
+            ident, periode, SøknadV0(
+                student = SøknadStudentDto("NEI"),
+                yrkesskade = "NEI",
+                oppgitteBarn = null,
+                medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
+            )
+        )
+        assertThat(avslåttFørstegang)
+            .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
+            .extracting { b -> b.status().erAvsluttet() }.isEqualTo(true)
+        val kravMottatt = LocalDate.now().minusMonths(1)
+        val klagebehandling = sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("21"),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+                InnsendingType.KLAGE,
+                strukturertDokument = StrukturertDokument(KlageV0(kravMottatt = kravMottatt)),
+                periode
+            )
+        )
+
+        assertThat(klagebehandling.referanse).isNotEqualTo(avslåttFørstegang.referanse)
+        assertThat(klagebehandling.typeBehandling()).isEqualTo(TypeBehandling.Klage)
+
+        val svarFraAnderinstansBehandling = sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("22"),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+                InnsendingType.KABAL_HENDELSE,
+                strukturertDokument = StrukturertDokument(
+                    KabalHendelseV0(
+                        eventId = UUID.randomUUID(),
+                        kildeReferanse = klagebehandling.referanse.toString(),
+                        kilde = Fagsystem.KELVIN.name,
+                        kabalReferanse = UUID.randomUUID().toString(),
+                        type = BehandlingEventType.KLAGEBEHANDLING_AVSLUTTET,
+                        detaljer = BehandlingDetaljer(
+                            KlagebehandlingAvsluttetDetaljer(
+                                avsluttet = LocalDateTime.now().minusMinutes(2),
+                                utfall = KlageUtfall.MEDHOLD,
+                                journalpostReferanser = emptyList()
+                            ),
+                        )
+                    )
+                ),
+                periode
+            )
+        )
+
+        assertThat(svarFraAnderinstansBehandling.referanse).isNotEqualTo(klagebehandling.referanse)
+        assertThat(svarFraAnderinstansBehandling.typeBehandling()).isEqualTo(TypeBehandling.SvarFraAndreinstans)
+
+
+        dataSource.transaction { connection ->
+            val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
+            val kabalHendelseDokumenter =
+                mottattDokumentRepository.hentDokumenterAvType(
+                    svarFraAnderinstansBehandling.sakId,
+                    InnsendingType.KABAL_HENDELSE
+                )
+            assertThat(kabalHendelseDokumenter).hasSize(1)
+            assertThat(kabalHendelseDokumenter.first().strukturertDokument).isNotNull
+            assertThat(kabalHendelseDokumenter.first().strukturerteData<KabalHendelseV0>()?.data).isNotNull
+        }
+
+        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(svarFraAnderinstansBehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            .isEqualTo(Definisjon.HÅNDTER_SVAR_FRA_ANDREINSTANS)
+
+    }
+
+    @Test
     fun `Skal kunne overstyre rettighetsperioden`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
@@ -3578,11 +3664,8 @@ class FlytOrkestratorTest {
 
     private fun hentNyesteBehandlingForSak(
         sakId: SakId,
-        typeBehandling: List<TypeBehandling> = listOf(
-            TypeBehandling.Førstegangsbehandling,
-            TypeBehandling.Revurdering,
-            TypeBehandling.Klage
-        )
+        typeBehandling: List<TypeBehandling> = TypeBehandling.entries
+        
     ): Behandling {
         return dataSource.transaction(readOnly = true) { connection ->
             val finnSisteBehandlingFor = BehandlingRepositoryImpl(connection).finnSisteBehandlingFor(

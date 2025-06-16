@@ -70,6 +70,8 @@ class StartBehandlingSteg private constructor(
             )
         }
 
+        if (kontekst.behandlingType == TypeBehandling.SvarFraAndreinstans) return Fullført
+
         return Fullført
     }
 
