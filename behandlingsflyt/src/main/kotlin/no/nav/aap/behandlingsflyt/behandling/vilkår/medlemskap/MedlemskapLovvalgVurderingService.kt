@@ -220,8 +220,8 @@ class MedlemskapLovvalgVurderingService {
 
     private fun harArbeidInntektINorge(grunnlag: MedlemskapArbeidInntektGrunnlag?, rettighetsPeriode: Periode): TilhørighetVurdering {
         val eksistererArbeidsforhold = grunnlag?.arbeiderINorgeGrunnlag?.any() ?: false
-        val opptjeningsLandErNorge = grunnlag?.inntekterINorgeGrunnlag?.any{it.opptjeningsLand == EØSLand.NOR.toString()} ?: false
-        val skattemessigBosattLandErNorge = grunnlag?.inntekterINorgeGrunnlag?.any{it.skattemessigBosattLand == EØSLand.NOR.toString()} ?: false
+        val opptjeningsLandErNorge = grunnlag?.inntekterINorgeGrunnlag?.any{EØSLand.erNorge(it.opptjeningsLand)} ?: false
+        val skattemessigBosattLandErNorge = grunnlag?.inntekterINorgeGrunnlag?.any{EØSLand.erNorge(it.skattemessigBosattLand)} ?: false
 
         val harArbeidInntektINorge = skattemessigBosattLandErNorge
             || opptjeningsLandErNorge

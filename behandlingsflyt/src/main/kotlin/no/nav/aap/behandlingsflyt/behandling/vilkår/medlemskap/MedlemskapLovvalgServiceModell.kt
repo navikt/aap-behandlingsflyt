@@ -12,7 +12,7 @@ data class KanBehandlesAutomatiskVurdering(
     val tilhørighetVurdering: List<TilhørighetVurdering>
 )
 
-data class TilhørighetVurdering (
+data class TilhørighetVurdering(
     val kilde: List<Kilde>,
     val indikasjon: Indikasjon,
     val opplysning: String,
@@ -83,36 +83,18 @@ enum class Indikasjon {
     I_NORGE, UTENFOR_NORGE
 }
 
-enum class EØSLand{
-    BEL,
-    BGR,
-    DNK,
-    EST,
-    FIN,
-    FRA,
-    GRC,
-    IRL,
-    ISL,
-    ITA,
-    HRV,
-    CYP,
-    LVA,
-    LIE,
-    LTU,
-    LUX,
-    MLT,
-    NLD,
-    NOR,
-    POL,
-    PRT,
-    ROU,
-    SVK,
-    SVN,
-    ESP,
-    CHE,
-    SWE,
-    CZE,
-    DEU,
-    HUN,
-    AUT,
+enum class EØSLand(val alpha2: String) {
+    BEL("BE"), BGR("BG"), DNK("DK"), EST("EE"), FIN("FI"),
+    FRA("FR"), GRC("GR"), IRL("IE"), ISL("IS"), ITA("IT"),
+    HRV("HR"), CYP("CY"), LVA("LV"), LIE("LI"), LTU("LT"),
+    LUX("LU"), MLT("MT"), NLD("NL"), NOR("NO"), POL("PL"),
+    PRT("PT"), ROU("RO"), SVK("SK"), SVN("SI"), ESP("ES"),
+    CHE("CH"), SWE("SE"), CZE("CZ"), DEU("DE"), HUN("HU"), AUT("AT");
+
+    companion object {
+        fun erNorge(code: String?): Boolean {
+            if (code == null) return false
+            return NOR.name == code.uppercase() || NOR.alpha2 == code.uppercase()
+        }
+    }
 }

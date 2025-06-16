@@ -194,7 +194,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
 
     private fun harArbeidInntektINorge(grunnlag: ForutgåendeMedlemskapArbeidInntektGrunnlag?, forutgåendePeriode: Periode): TilhørighetVurdering {
         val inntekterINorgePerioder = grunnlag?.inntekterINorgeGrunnlag?.filter {
-            it.opptjeningsLand == EØSLand.NOR.toString() || it.skattemessigBosattLand == EØSLand.NOR.toString()
+            EØSLand.erNorge(it.opptjeningsLand) || EØSLand.erNorge(it.skattemessigBosattLand)
         }?.map { it.periode }
 
         val sammenhengendeInntektSiste5År = harInntektAlleMndSiste5år(inntekterINorgePerioder, forutgåendePeriode)
