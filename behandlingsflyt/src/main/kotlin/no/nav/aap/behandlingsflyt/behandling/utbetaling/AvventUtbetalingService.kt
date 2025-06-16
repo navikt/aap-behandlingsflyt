@@ -25,25 +25,34 @@ class AvventUtbetalingService(
         val overlapperMedTjenestepensjonRefusjon = tpRefusjonskrav != null && tpRefusjonskrav.harKrav
                 && tilkjentYtelseHelePerioden.overlapper(tilPeriode(tpRefusjonskrav.fom, tpRefusjonskrav.tom))
 
-         val tripleList = sosialRefusjonskrav
+         val perioder = sosialRefusjonskrav
              ?.filter { it.harKrav && it.fom != null }
-             ?.map { vurdering ->
-                 val fom = vurdering.fom!!
-                 val tom = vurdering.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(fom)
-                 fom to tom
-             }
-             .takeIf { it?.isNotEmpty() == true }
-             ?.let { perioder ->
-                 val minFom = perioder.minOf { it.first }
-                 val maxTom = perioder.maxOf { it.second }
-                 Triple(21L, minFom, maxTom)
+             ?.mapNotNull { vurdering ->
+                 vurdering.fom?.let { fom ->
+                     val tom = vurdering.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(fom)
+                     fom to tom
+                 }
              }
 
-        val (frist, fom, tom) = when {
-            overlapperMedTjenestepensjonRefusjon -> Triple(42L, tpRefusjonskrav.fom!!, tpRefusjonskrav.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(tpRefusjonskrav.fom))
-            overlapperMedSosialRefusjon && tripleList != null -> tripleList
-            else -> Triple(null, null, null)
-        }
+         val tripleList = perioder?.takeIf { it.isNotEmpty() }?.let {
+             val minFom = it.minOf { p -> p.first }
+             val maxTom = it.maxOf { p -> p.second }
+             Triple(21L, minFom, maxTom)
+         }
+
+         val triple = when {
+             overlapperMedTjenestepensjonRefusjon -> Triple(
+                 42L,
+                 tpRefusjonskrav.fom!!,
+                 tpRefusjonskrav.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(tpRefusjonskrav.fom)
+             )
+             overlapperMedSosialRefusjon && tripleList != null -> tripleList
+             else -> null
+         }
+
+         val frist = triple?.first
+         val fom = triple?.second
+         val tom = triple?.third
 
         return if (frist != null) {
             TilkjentYtelseAvventDto(
