@@ -86,7 +86,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedS
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
@@ -403,7 +403,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             FastsettBeregningstidspunktLøsning(
-                beregningVurdering = BeregningstidspunktVurdering(
+                beregningVurdering = BeregningstidspunktVurderingDto(
                     begrunnelse = "Trenger hjelp fra Nav",
                     nedsattArbeidsevneDato = LocalDate.now(),
                     ytterligereNedsattArbeidsevneDato = null,
@@ -493,7 +493,7 @@ class FlytOrkestratorTest {
 
         behandling = løsAvklaringsBehov(
             behandling, FastsettBeregningstidspunktLøsning(
-                beregningVurdering = BeregningstidspunktVurdering(
+                beregningVurdering = BeregningstidspunktVurderingDto(
                     begrunnelse = "Trenger hjelp fra Nav",
                     nedsattArbeidsevneDato = LocalDate.now(),
                     ytterligereNedsattArbeidsevneDato = null,
@@ -748,7 +748,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             FastsettBeregningstidspunktLøsning(
-                beregningVurdering = BeregningstidspunktVurdering(
+                beregningVurdering = BeregningstidspunktVurderingDto(
                     begrunnelse = "Trenger hjelp fra Nav",
                     nedsattArbeidsevneDato = LocalDate.now(),
                     ytterligereNedsattArbeidsevneDato = null,
@@ -898,7 +898,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             FastsettBeregningstidspunktLøsning(
-                beregningVurdering = BeregningstidspunktVurdering(
+                beregningVurdering = BeregningstidspunktVurderingDto(
                     begrunnelse = "Trenger hjelp fra Nav",
                     nedsattArbeidsevneDato = LocalDate.now(),
                     ytterligereNedsattArbeidsevneDato = null,
@@ -1029,7 +1029,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             FastsettBeregningstidspunktLøsning(
-                beregningVurdering = BeregningstidspunktVurdering(
+                beregningVurdering = BeregningstidspunktVurderingDto(
                     begrunnelse = "Trenger hjelp fra Nav",
                     nedsattArbeidsevneDato = LocalDate.now(),
                     ytterligereNedsattArbeidsevneDato = null,
@@ -1158,7 +1158,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             FastsettBeregningstidspunktLøsning(
-                beregningVurdering = BeregningstidspunktVurdering(
+                beregningVurdering = BeregningstidspunktVurderingDto(
                     begrunnelse = "Trenger hjelp fra Nav",
                     nedsattArbeidsevneDato = LocalDate.now(),
                     ytterligereNedsattArbeidsevneDato = null,
@@ -1401,7 +1401,7 @@ class FlytOrkestratorTest {
         ).kvalitetssikreOk()
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
-                    beregningVurdering = BeregningstidspunktVurdering(
+                    beregningVurdering = BeregningstidspunktVurderingDto(
                         begrunnelse = "Trenger hjelp fra Nav",
                         nedsattArbeidsevneDato = LocalDate.now(),
                         ytterligereNedsattArbeidsevneDato = null,
@@ -1704,7 +1704,7 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             FastsettBeregningstidspunktLøsning(
-                beregningVurdering = BeregningstidspunktVurdering(
+                beregningVurdering = BeregningstidspunktVurderingDto(
                     begrunnelse = "Trenger hjelp fra Nav",
                     nedsattArbeidsevneDato = LocalDate.now(),
                     ytterligereNedsattArbeidsevneDato = null,
@@ -1762,7 +1762,7 @@ class FlytOrkestratorTest {
 
         behandling = løsAvklaringsBehov(
             behandling, FastsettBeregningstidspunktLøsning(
-                beregningVurdering = BeregningstidspunktVurdering(
+                beregningVurdering = BeregningstidspunktVurderingDto(
                     begrunnelse = "Trenger hjelp fra Nav",
                     nedsattArbeidsevneDato = LocalDate.now(),
                     ytterligereNedsattArbeidsevneDato = null,
@@ -2526,7 +2526,7 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling,
             FastsettBeregningstidspunktLøsning(
-                beregningVurdering = BeregningstidspunktVurdering(
+                beregningVurdering = BeregningstidspunktVurderingDto(
                     begrunnelse = "Trenger hjelp fra Nav",
                     nedsattArbeidsevneDato = nedsattDato,
                     ytterligereNedsattArbeidsevneDato = null,
@@ -2580,7 +2580,7 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling,
             FastsettBeregningstidspunktLøsning(
-                beregningVurdering = BeregningstidspunktVurdering(
+                beregningVurdering = BeregningstidspunktVurderingDto(
                     begrunnelse = "Trenger hjelp fra Nav",
                     nedsattArbeidsevneDato = LocalDate.now(),
                     ytterligereNedsattArbeidsevneDato = null,
@@ -2611,7 +2611,7 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling,
             FastsettBeregningstidspunktLøsning(
-                beregningVurdering = BeregningstidspunktVurdering(
+                beregningVurdering = BeregningstidspunktVurderingDto(
                     begrunnelse = "Trenger hjelp fra Nav",
                     nedsattArbeidsevneDato = nedsattDato,
                     ytterligereNedsattArbeidsevneDato = null,
@@ -3820,7 +3820,7 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling,
             FastsettBeregningstidspunktLøsning(
-                beregningVurdering = BeregningstidspunktVurdering(
+                beregningVurdering = BeregningstidspunktVurderingDto(
                     begrunnelse = "Trenger hjelp fra Nav",
                     nedsattArbeidsevneDato = LocalDate.now(),
                     ytterligereNedsattArbeidsevneDato = null,
