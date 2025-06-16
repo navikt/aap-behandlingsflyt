@@ -61,11 +61,11 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                     val behandling = behandling(behandlingRepository, req)
                     val virkningstidspunkt =
                         runCatching {
-                            if (behandling.typeBehandling() == TypeBehandling.Klage) null else VirkningstidspunktUtleder(
+                            if (behandling.erYtelsesbehandling()) VirkningstidspunktUtleder(
                                 vilkårsresultatRepository = vilkårsresultatRepository
                             ).utledVirkningsTidspunkt(
                                 behandling.id
-                            )
+                            ) else null
                         }.getOrElse {
                             log.warn("Feil ved utleding av virkningstidspunkt for behandling ${behandling.id}", it)
                             null
@@ -76,7 +76,8 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                         type = behandling.typeBehandling().name,
                         status = behandling.status(),
                         opprettet = behandling.opprettetTidspunkt,
-                        skalForberede = behandling.harIkkeVærtAktivitetIDetSiste() && !behandling.status().erAvsluttet(),
+                        skalForberede = behandling.harIkkeVærtAktivitetIDetSiste() && !behandling.status()
+                            .erAvsluttet(),
                         avklaringsbehov = FrivilligeAvklaringsbehov(
                             avklaringsbehov(
                                 avklaringsbehovRepository,

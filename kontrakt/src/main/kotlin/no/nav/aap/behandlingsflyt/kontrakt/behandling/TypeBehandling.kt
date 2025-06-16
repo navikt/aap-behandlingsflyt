@@ -22,5 +22,9 @@ public enum class TypeBehandling(
             return entries.first { it.identifikator == identifikator }
         }
     }
+    
+    public fun erYtelsesbehandling(): Boolean {
+        return this == Førstegangsbehandling || this == Revurdering
+    }
 }
 

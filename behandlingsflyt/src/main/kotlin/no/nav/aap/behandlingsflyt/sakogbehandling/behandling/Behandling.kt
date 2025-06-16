@@ -70,6 +70,10 @@ class Behandling(
             aktiv = true
         )
     }
+    
+    fun erYtelsesbehandling(): Boolean {
+        return typeBehandling.erYtelsesbehandling()
+    }
 
     override fun compareTo(other: Behandling): Int {
         return this.opprettetTidspunkt.compareTo(other.opprettetTidspunkt)
