@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDate
+import java.time.YearMonth
 
 class ForutgåendeMedlemskapLovvalgVurderingService {
     fun vurderTilhørighet(grunnlag: ForutgåendeMedlemskapGrunnlag, rettighetsPeriode: Periode): KanBehandlesAutomatiskVurdering{
@@ -191,15 +193,13 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
     }
 
     private fun harArbeidInntektINorge(grunnlag: ForutgåendeMedlemskapArbeidInntektGrunnlag?, forutgåendePeriode: Periode): TilhørighetVurdering {
-        val eksistererArbeidsforhold = grunnlag?.arbeiderINorgeGrunnlag?.any() ?: false
-        val opptjeningsLandErNorge = grunnlag?.inntekterINorgeGrunnlag?.any{it.opptjeningsLand == EØSLand.NOR.toString()} ?: false
-        val skattemessigBosattLandErNorge = grunnlag?.inntekterINorgeGrunnlag?.any{it.skattemessigBosattLand == EØSLand.NOR.toString()} ?: false
+        val inntekterINorgePerioder = grunnlag?.inntekterINorgeGrunnlag?.filter {
+            it.opptjeningsLand == EØSLand.NOR.toString() || it.skattemessigBosattLand == EØSLand.NOR.toString()
+        }?.map { it.periode }
 
-        val harArbeidInntektINorge = skattemessigBosattLandErNorge
-            || opptjeningsLandErNorge
-            || eksistererArbeidsforhold
+        val sammenhengendeInntektSiste5År = harInntektAlleMndSiste5år(inntekterINorgePerioder, forutgåendePeriode)
 
-        val arbeidInntektINorgeGrunnlag = if (harArbeidInntektINorge) {
+        val arbeidInntektINorgeGrunnlag = if (sammenhengendeInntektSiste5År) {
             grunnlag?.inntekterINorgeGrunnlag?.map {
                 ArbeidInntektINorgeGrunnlag(
                     virksomhetId = it.identifikator,
@@ -214,10 +214,31 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             kilde = listOf(Kilde.A_INNTEKT, Kilde.AA_REGISTERET),
             indikasjon = Indikasjon.I_NORGE,
             opplysning = "Arbeid og inntekt i Norge siste 5 år",
-            resultat = harArbeidInntektINorge,
+            resultat = sammenhengendeInntektSiste5År,
             arbeidInntektINorgeGrunnlag = arbeidInntektINorgeGrunnlag,
             vurdertPeriode = Periode(forutgåendePeriode.fom, forutgåendePeriode.fom.plusYears(5))
         )
+    }
+
+    private fun harInntektAlleMndSiste5år(perioder: List<Periode>?, forutgåendePeriode: Periode): Boolean {
+        if (perioder.isNullOrEmpty()) return false
+
+        val startMnd = YearMonth.from(forutgåendePeriode.fom)
+        val sluttMnd = YearMonth.from(forutgåendePeriode.fom.plusYears(5))
+
+        var nåMnd = startMnd
+        while (!nåMnd.isAfter(sluttMnd)) {
+            val førsteDagIMnd = nåMnd.atDay(1)
+            val sisteDagIMnd = nåMnd.atEndOfMonth()
+
+            val mndPeriode = Periode(førsteDagIMnd, sisteDagIMnd)
+
+            if (!perioder.any { it.overlapper(mndPeriode) }) {
+                return false
+            }
+            nåMnd = nåMnd.plusMonths(1)
+        }
+        return true
     }
 
     private fun harVedtakIMEDL(grunnlag: MedlemskapUnntakGrunnlag?, forutgåendePeriode: Periode): TilhørighetVurdering {

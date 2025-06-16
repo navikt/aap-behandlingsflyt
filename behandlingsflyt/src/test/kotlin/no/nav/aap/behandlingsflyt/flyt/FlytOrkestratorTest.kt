@@ -408,6 +408,7 @@ class FlytOrkestratorTest {
                 ),
             ),
         )
+        løsForutgåendeMedlemskap(behandling)
 
         behandling = løsAvklaringsBehov(
             behandling, AvklarSamordningUføreLøsning(
@@ -497,6 +498,7 @@ class FlytOrkestratorTest {
                 ),
             )
         )
+        løsForutgåendeMedlemskap(behandling)
 
         behandling = løsAvklaringsBehov(
             behandling, AvklarSamordningUføreLøsning(
@@ -925,6 +927,7 @@ class FlytOrkestratorTest {
             ),
         )
 
+        løsForutgåendeMedlemskap(behandling)
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
         var alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         assertThat(alleAvklaringsbehov).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erÅpent() && avklaringsbehov.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
@@ -1061,6 +1064,7 @@ class FlytOrkestratorTest {
             ),
         )
 
+        løsForutgåendeMedlemskap(behandling)
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
         var alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         assertThat(alleAvklaringsbehov).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erÅpent() && avklaringsbehov.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
@@ -1195,6 +1199,7 @@ class FlytOrkestratorTest {
             ),
         )
 
+        løsForutgåendeMedlemskap(behandling)
         assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
 
         behandling = løsAvklaringsBehov(
@@ -1549,6 +1554,7 @@ class FlytOrkestratorTest {
             ),
         )
 
+        løsForutgåendeMedlemskap(behandling)
         assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).containsExactly(Definisjon.AVKLAR_SAMORDNING_GRADERING)
 
         behandling = løsAvklaringsBehov(
@@ -1685,6 +1691,7 @@ class FlytOrkestratorTest {
             )
         )
 
+
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         assertThat(alleAvklaringsbehov).isNotEmpty()
@@ -1717,6 +1724,7 @@ class FlytOrkestratorTest {
             ),
         )
 
+        løsForutgåendeMedlemskap(behandling)
         behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
 
         // Saken står til To-trinnskontroll hos beslutter
@@ -1775,6 +1783,7 @@ class FlytOrkestratorTest {
             Bruker("SAKSBEHANDLER")
         )
 
+        løsForutgåendeMedlemskap(behandling)
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         assertThat(alleAvklaringsbehov).anySatisfy { behov -> assertThat(behov.erÅpent() && behov.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
@@ -2579,6 +2588,7 @@ class FlytOrkestratorTest {
         assertThat(åpneAvklaringsbehov).noneMatch { it.definisjon == Definisjon.MANUELL_OVERSTYRING_MEDLEMSKAP }
 
         // Validér riktig resultat
+        løsForutgåendeMedlemskap(behandling)
         var vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
         assertThat(vilkårsResultat).allMatch { it.erOppfylt() }
 
@@ -3902,6 +3912,22 @@ class FlytOrkestratorTest {
             BrevbestillingRepositoryImpl(it).hent(behandling.id)
                 .first { it.typeBrev == typeBrev }
         }
+
+    private fun løsForutgåendeMedlemskap(
+        behandling: Behandling
+    ) {
+        løsAvklaringsBehov(
+            behandling,
+            AvklarForutgåendeMedlemskapLøsning(
+                ManuellVurderingForForutgåendeMedlemskapDto(
+                    begrunnelse = "",
+                    harForutgåendeMedlemskap = true,
+                    varMedlemMedNedsattArbeidsevne = true,
+                    medlemMedUnntakAvMaksFemAar = null
+                )
+            )
+        )
+    }
 
     private fun løsFramTilForutgåendeMedlemskap(
         behandling: Behandling,
