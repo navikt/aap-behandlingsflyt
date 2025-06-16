@@ -199,7 +199,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
 
         val sammenhengendeInntektSiste5År = harInntektAlleMndSiste5år(inntekterINorgePerioder, forutgåendePeriode)
 
-        val arbeidInntektINorgeGrunnlag = if (sammenhengendeInntektSiste5År) {
+        val arbeidInntektINorgeGrunnlag =
             grunnlag?.inntekterINorgeGrunnlag?.map {
                 ArbeidInntektINorgeGrunnlag(
                     virksomhetId = it.identifikator,
@@ -208,7 +208,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
                     periode = Periode(it.periode.fom, it.periode.tom),
                 )
             }
-        } else null
+
 
         return TilhørighetVurdering(
             kilde = listOf(Kilde.A_INNTEKT, Kilde.AA_REGISTERET),
