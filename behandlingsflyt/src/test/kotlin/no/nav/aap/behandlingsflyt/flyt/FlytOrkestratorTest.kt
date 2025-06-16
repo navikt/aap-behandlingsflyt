@@ -1109,7 +1109,7 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `ingen sykepenger i register, men skal vurdere sykepenger for samordning`() {
+    fun `ingen sykepenger i register, vurderer sykepenger for samordning med ukjent maksdato som fører til revurdering og ingen utbetaling etter kjent sykepengedato`() {
         val fom = LocalDate.now()
         val periode = Periode(fom, fom.plusYears(3))
         val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
@@ -1209,9 +1209,9 @@ class FlytOrkestratorTest {
                             kronesum = null,
                         )
                     ),
-                    begrunnelse = "En god begrunnelse",
-                    maksDatoEndelig = false,
-                    maksDato = LocalDate.now().plusMonths(1),
+                    begrunnelse = "",
+                    maksDatoEndelig = true,
+                    maksDato = null,
                 ),
             ),
         )
@@ -1241,6 +1241,31 @@ class FlytOrkestratorTest {
                             kronesum = null,
                         )
                     ),
+                    begrunnelse = "",
+                    maksDatoEndelig = true,
+                    maksDato = null,
+                ),
+            ),
+        )
+
+        // Vilkår skal være ikke vurdert når samordningen har mindre enn 100% gradering
+        var vilkårOppdatert = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
+        assertThat(vilkårOppdatert.vilkårsperioder()).hasSize(1)
+        assertThat(vilkårOppdatert.vilkårsperioder().first().utfall).isEqualTo(Utfall.IKKE_VURDERT)
+
+        // Setter samordningen til 100 sykepenger og ikke oppfylt for å verifisere opprettelse av revurdering
+        behandling = løsAvklaringsBehov(
+            behandling,
+            AvklarSamordningGraderingLøsning(
+                vurderingerForSamordning = VurderingerForSamordning(
+                    vurderteSamordningerData = listOf(
+                        SamordningVurderingData(
+                            ytelseType = Ytelse.SYKEPENGER,
+                            periode = sykePengerPeriode,
+                            gradering = 100,
+                            kronesum = null,
+                        )
+                    ),
                     begrunnelse = "En god begrunnelse",
                     maksDatoEndelig = false,
                     maksDato = LocalDate.now().plusMonths(1),
@@ -1248,10 +1273,11 @@ class FlytOrkestratorTest {
             ),
         )
 
-        // Vilkår skal være ikke vurdert når samordningen har mindre enn 100% gradering
-        val vilkårOppdatert = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
-        assertThat(vilkårOppdatert.vilkårsperioder()).hasSize(1)
-        assertThat(vilkårOppdatert.vilkårsperioder().first().utfall).isEqualTo(Utfall.IKKE_VURDERT)
+        vilkårOppdatert = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
+        assertThat(vilkårOppdatert.vilkårsperioder()).hasSize(2)
+        assertThat(vilkårOppdatert.vilkårsperioder().first().utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+        assertThat(vilkårOppdatert.vilkårsperioder().last().utfall).isEqualTo(Utfall.IKKE_VURDERT)
+
 
         behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
         behandling = fattVedtak(behandling)
@@ -1260,13 +1286,15 @@ class FlytOrkestratorTest {
             requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) })
             { "Tilkjent ytelse skal være beregnet her." }
 
-        val periodeMedPositivSamordning =
+        val periodeMedFullSamordning =
             uthentetTilkjentYtelse.map { Segment(it.periode, it.tilkjent.gradering.samordningGradering) }
                 .let(::Tidslinje)
-                .filter { (it.verdi?.prosentverdi() ?: 0) > 0 }.helePerioden()
+                .filter { it.verdi == Prosent.`100_PROSENT` }.helePerioden()
 
         // Verifiser at samordningen ble fanget opp
-        assertThat(periodeMedPositivSamordning.tom).isEqualTo(sykePengerPeriode.tom)
+        assertThat(periodeMedFullSamordning.inneholder(sykePengerPeriode.tom)).isTrue
+        // Verifiser at samordning med 100% strekker seg ut rettighetsperioden for å unngå feilaktig utbetaling fordi perioden har passert
+        assertThat(periodeMedFullSamordning.tom).isEqualTo(periode.tom)
 
         val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
         val behandlingReferanse = behandling.referanse
@@ -1281,13 +1309,51 @@ class FlytOrkestratorTest {
         // Verifiser at den er satt på vent
         var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(behandling.id)
         util.ventPåSvar(behandlingId = behandling.id.id, sakId = behandling.sakId.id)
-        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
+        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
 
         // Ta av vent
         behandling = løsAvklaringsBehov(behandling, SamordningVentPaVirkningstidspunktLøsning())
 
         åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(behandling.id)
+        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_SAMORDNING_GRADERING)
+
+        // Avklar samordning i revurdering
+        behandling = løsAvklaringsBehov(
+            behandling,
+            AvklarSamordningGraderingLøsning(
+                vurderingerForSamordning = VurderingerForSamordning(
+                    vurderteSamordningerData = listOf(
+                        SamordningVurderingData(
+                            ytelseType = Ytelse.SYKEPENGER,
+                            periode = sykePengerPeriode,
+                            gradering = 100,
+                            kronesum = null,
+                        )
+                    ),
+                    begrunnelse = "En god begrunnelse",
+                    maksDatoEndelig = true,
+                    maksDato = null,
+                ),
+            ),
+        )
+
+        val tilkjentYtelse =
+            requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) }) { "Tilkjent ytelse skal være beregnet her." }
+
+        assertThat(tilkjentYtelse).hasSizeGreaterThan(2)
+        tilkjentYtelse.forEach {
+            if (it.periode.overlapper(sykePengerPeriode)) {
+                assertThat(it.tilkjent.gradering.samordningGradering).isEqualTo(Prosent.`100_PROSENT`)
+                assertThat(it.tilkjent.redusertDagsats()).isEqualTo(Beløp(0))
+            } else {
+                assertThat(it.tilkjent.gradering.samordningGradering).isEqualTo(Prosent.`0_PROSENT`)
+                assertThat(it.tilkjent.redusertDagsats()).isNotEqualTo(Beløp(0))
+            }
+        }
+
+        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(behandling.id)
         assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
+
     }
 
     @Test
@@ -1498,8 +1564,8 @@ class FlytOrkestratorTest {
                         )
                     ),
                     begrunnelse = "En god begrunnelse",
-                    maksDatoEndelig = false,
-                    maksDato = LocalDate.now().plusMonths(1),
+                    maksDatoEndelig = true,
+                    maksDato = null,
                 ),
             ),
         )
@@ -1524,21 +1590,9 @@ class FlytOrkestratorTest {
         behandling =
             løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
 
-        // Siden samordning overlappet, skal en revurdering opprettes med en gang
-        assertThat(behandling.referanse).isNotEqualTo(behandlingReferanse)
-        assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-        util.ventPåSvar(sakId = behandling.sakId.id)
-
-        // Verifiser at den er satt på vent
-        var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(behandling.id)
-        util.ventPåSvar(behandlingId = behandling.id.id, sakId = behandling.sakId.id)
-        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
-
-        // Ta av vent
-        behandling = løsAvklaringsBehov(behandling, SamordningVentPaVirkningstidspunktLøsning())
-
-        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(behandling.id)
-        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
+        // Skal ikke opprette en revurdering siden det ikke er 100% samordning
+        assertThat(behandling.referanse).isEqualTo(behandlingReferanse)
+        assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
     }
 
     @Test

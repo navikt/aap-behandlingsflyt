@@ -9,7 +9,8 @@ enum class Ytelse(val type: AvklaringsType) {
     PLEIEPENGER(AvklaringsType.MANUELL),
     SVANGERSKAPSPENGER(AvklaringsType.MANUELL),
     OMSORGSPENGER(AvklaringsType.MANUELL),
-    OPPLÆRINGSPENGER(AvklaringsType.MANUELL)
+    OPPLÆRINGSPENGER(AvklaringsType.MANUELL),
+    UKJENT_SLUTTDATO_PÅ_YTELSE(AvklaringsType.MANUELL),
 }
 
 enum class AvklaringsType {

@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -25,6 +26,7 @@ class AvklarSamordningGraderingLøser(
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarSamordningGraderingLøsning): LøsningsResultat {
+        validerManglerSluttdato(løsning.vurderingerForSamordning)
         val samordningService = SamordningService(samordningYtelseVurderingRepository, samordningYtelseRepository)
         val vurderingerForSamordning = løsning.vurderingerForSamordning
         val samordningYtelseGrunnlag = samordningYtelseRepository.hentHvisEksisterer(kontekst.behandlingId())
@@ -47,7 +49,7 @@ class AvklarSamordningGraderingLøser(
             })
 
         val perioderSomIkkeHarBlittVurdert = samordningService.perioderSomIkkeHarBlittVurdert(
-            samordningYtelseGrunnlag, samordningService.tidligereVurderinger(samordningsvurderinger)
+            samordningYtelseGrunnlag, samordningService.vurderingTidslinje(samordningsvurderinger)
         )
 
         if (perioderSomIkkeHarBlittVurdert.isNotEmpty()) {
@@ -63,6 +65,17 @@ class AvklarSamordningGraderingLøser(
         }
 
         return LøsningsResultat("Vurdert samordning")
+    }
+
+    private fun validerManglerSluttdato(vurderingerForSamordning: VurderingerForSamordning) {
+        if (vurderingerForSamordning.maksDatoEndelig == false) {
+            if (vurderingerForSamordning.maksDato == null) {
+                throw UgyldigForespørselException("Mangler dato for ny revurdering - må settes når sluttdato for samordningen er ukjent")
+            }
+            if (vurderingerForSamordning.vurderteSamordningerData.none { it.gradering == Prosent.`100_PROSENT`.prosentverdi() }) {
+                throw UgyldigForespørselException("Kan ikke sette ukjent sluttdato for samordning ettersom ingen samordninger er gradert til 100%")
+            }
+        }
     }
 
     override fun forBehov(): Definisjon {

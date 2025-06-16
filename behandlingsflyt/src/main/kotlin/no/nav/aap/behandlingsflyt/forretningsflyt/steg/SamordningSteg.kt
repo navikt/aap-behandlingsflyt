@@ -75,7 +75,7 @@ class SamordningSteg(
     private fun vurdervilkår(kontekst: FlytKontekstMedPerioder): StegResultat {
         val vurderinger = samordningService.hentVurderinger(behandlingId = kontekst.behandlingId)
         val ytelser = samordningService.hentYtelser(behandlingId = kontekst.behandlingId)
-        val tidligereVurderinger = samordningService.tidligereVurderinger(vurderinger)
+        val tidligereVurderinger = samordningService.vurderingTidslinje(vurderinger)
 
         val perioderSomIkkeHarBlittVurdert = samordningService.perioderSomIkkeHarBlittVurdert(
             ytelser, tidligereVurderinger

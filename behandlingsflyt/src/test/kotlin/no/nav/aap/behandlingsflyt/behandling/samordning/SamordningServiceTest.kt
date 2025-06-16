@@ -45,7 +45,7 @@ internal class SamordningServiceTest {
 
             val hentedeVurderinger = service.hentVurderinger(behandlingId)
             val hentedeYtelser = service.hentYtelser(behandlingId)
-            val tidligereVurderinger = service.tidligereVurderinger(hentedeVurderinger)
+            val tidligereVurderinger = service.vurderingTidslinje(hentedeVurderinger)
             assertThat(service.vurder(hentedeYtelser, tidligereVurderinger)).isNotEmpty
         }
     }
@@ -109,7 +109,7 @@ internal class SamordningServiceTest {
                 SamordningYtelseRepositoryImpl(connection)
             )
 
-            val tidligereVurderinger = service.tidligereVurderinger(vurderinger)
+            val tidligereVurderinger = service.vurderingTidslinje(vurderinger)
             service.perioderSomIkkeHarBlittVurdert(ytelser, tidligereVurderinger)
         }
 
@@ -133,7 +133,7 @@ internal class SamordningServiceTest {
             val vurderinger = service.hentVurderinger(behandlingId)
             val ytelser = service.hentYtelser(behandlingId)
 
-            val tidligereVurderinger = service.tidligereVurderinger(vurderinger)
+            val tidligereVurderinger = service.vurderingTidslinje(vurderinger)
 
 
             assertThrows<IllegalArgumentException> { service.vurder(ytelser, tidligereVurderinger) }

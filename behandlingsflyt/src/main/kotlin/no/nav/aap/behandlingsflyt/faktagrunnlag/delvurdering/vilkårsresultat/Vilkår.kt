@@ -102,6 +102,11 @@ class Vilkår(
         return this
     }
 
+    fun nullstillTidslinje(): Vilkår {
+        vilkårTidslinje = Tidslinje(emptyList())
+        return this
+    }
+
     fun harPerioderSomIkkeErVurdert(periodeTilVurdering: Set<Periode>): Boolean {
         return vilkårTidslinje.kryss(Tidslinje(periodeTilVurdering.map { Segment(it, Unit) }))
             .segmenter()
