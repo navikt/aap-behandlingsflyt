@@ -1756,7 +1756,10 @@ object FakeServers : AutoCloseable {
 
         val brevStore = mutableListOf<BrevbestillingResponse>()
         val mutex = Any()
-        fun brev(brevbestillingReferanse: UUID, status: Status) = BrevbestillingResponse(
+        fun brev(brevbestillingReferanse: UUID,
+                 status: Status,
+                 brevtype: Brevtype,
+                 ) = BrevbestillingResponse(
             referanse = brevbestillingReferanse,
             brev = Brev(
                 kanSendesAutomatisk = false,
@@ -1782,7 +1785,7 @@ object FakeServers : AutoCloseable {
             opprettet = LocalDateTime.now(),
             oppdatert = LocalDateTime.now(),
             behandlingReferanse = UUID.randomUUID(),
-            brevtype = Brevtype.INNVILGELSE,
+            brevtype = brevtype,
             språk = Språk.NB,
             status = status,
         )
@@ -1790,46 +1793,18 @@ object FakeServers : AutoCloseable {
 
         routing {
             route("/api") {
-                post("/bestill") {
-                    val request = call.receive<BestillBrevRequest>()
-                    val brevbestillingReferanse = UUID.randomUUID()
-
-                    synchronized(mutex) {
-                        brevStore += brev(brevbestillingReferanse, Status.REGISTRERT)
-                    }
-
-                    call.respond(status = HttpStatusCode.Created, BestillBrevResponse(brevbestillingReferanse))
-
-                    launch {
-                        delay(100)
-                        synchronized(mutex) {
-                            val i = brevStore.indexOfFirst { it.referanse == brevbestillingReferanse }
-                            brevStore[i] = brevStore[i].copy(status = Status.UNDER_ARBEID)
-                        }
-
-                        val responseRequest = LøsBrevbestillingDto(
-                            behandlingReferanse = request.behandlingReferanse,
-                            bestillingReferanse = brevbestillingReferanse,
-                            status = BrevbestillingLøsningStatus.KLAR_FOR_EDITERING,
-                        )
-                        val uri = URI.create("http://localhost:8080/api/brev/los-bestilling")
-                        val httpRequest = PostRequest(
-                            body = responseRequest,
-                            additionalHeaders = listOf(
-                                Header("Accept", "application/json")
-                            )
-                        )
-                        client.post<_, Unit>(uri = uri, request = httpRequest)
-                    }
-                }
-
                 route("/v2") {
                     post("/bestill") {
                         val request = call.receive<BestillBrevV2Request>()
                         val brevbestillingReferanse = UUID.randomUUID()
 
+                        val status = if (request.ferdigstillAutomatisk) {
+                            Status.FERDIGSTILT
+                        } else {
+                            Status.UNDER_ARBEID
+                        }
                         synchronized(mutex) {
-                            brevStore += brev(brevbestillingReferanse, Status.UNDER_ARBEID)
+                            brevStore += brev(brevbestillingReferanse, status, request.brevtype)
                         }
                         call.respond(status = HttpStatusCode.Created, BestillBrevResponse(brevbestillingReferanse))
                     }
