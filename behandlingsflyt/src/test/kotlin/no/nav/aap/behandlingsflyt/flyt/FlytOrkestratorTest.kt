@@ -1445,23 +1445,26 @@ class FlytOrkestratorTest {
 
         val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
         val behandlingReferanse = behandling.referanse
-        behandling =
-            løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
-
+        
+        løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
+        val nyesteBehandling = hentNyesteBehandlingForSak(behandling.sakId)
+        
         // Siden samordning overlappet, skal en revurdering opprettes med en gang
-        assertThat(behandling.referanse).isNotEqualTo(behandlingReferanse)
-        assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+        assertThat(nyesteBehandling).isNotEqualTo(behandlingReferanse)
+        assertThat(nyesteBehandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+        
+        var revurdering = nyesteBehandling
 
         util.ventPåSvar(sakId = behandling.sakId.id)
 
         // Verifiser at den er satt på vent
-        var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(behandling.id)
+        var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
 
         assertThat(
             åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
 
         // Opprett manuell revurdering før ta av vent
-        behandling = sendInnDokument(
+        revurdering = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
@@ -1475,24 +1478,24 @@ class FlytOrkestratorTest {
                 periode = periode,
             )
         )
-        assertThat(behandling.årsaker().map { it.type }).describedAs("Ny årsak skal være lagt til")
+        assertThat(revurdering.årsaker().map { it.type }).describedAs("Ny årsak skal være lagt til")
             .contains(ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
 
         // Ta av vent
-        behandling = løsAvklaringsBehov(behandling, SamordningVentPaVirkningstidspunktLøsning())
+        revurdering = løsAvklaringsBehov(revurdering, SamordningVentPaVirkningstidspunktLøsning())
 
-        assertThat(behandling.aktivtSteg()).describedAs("Forventer at behandlingen ligger på sykdom nå.")
+        assertThat(revurdering.aktivtSteg()).describedAs("Forventer at behandlingen ligger på sykdom nå.")
             .isEqualTo(StegType.AVKLAR_SYKDOM)
 
-        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(behandling.id)
+        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
         assertThat(åpneAvklaringsbehovPåNyBehandling.filter { it.erVentepunkt() }).isEmpty()
 
         assertThat(åpneAvklaringsbehovPåNyBehandling).describedAs("Kun sykdom skal være åpent avklaringsbehov.")
             .extracting(Avklaringsbehov::definisjon).containsExactly(tuple(Definisjon.AVKLAR_SYKDOM))
 
         // Prøve å løse sykdomsvilkåret på nytt
-        behandling = behandling.løsSykdom()
-        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(behandling.id)
+        revurdering = revurdering.løsSykdom()
+        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
         assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_SYKDOM)
     }
 
@@ -2880,7 +2883,7 @@ class FlytOrkestratorTest {
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FATTE_VEDTAK)
 
-        klagebehandling = løsAvklaringsBehov(
+        løsAvklaringsBehov(
             klagebehandling,
             avklaringsBehovLøsning = FatteVedtakLøsning(
                 vurderinger = listOf(
@@ -2906,6 +2909,8 @@ class FlytOrkestratorTest {
             ),
             Bruker("X123456")
         )
+        
+        util.ventPåSvar(klagebehandling.sakId.id)
 
         // OmgjøringSteg
         dataSource.transaction { connection ->
