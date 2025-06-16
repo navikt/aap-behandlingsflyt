@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import java.util.*
@@ -164,13 +165,25 @@ class BehandlingFlyt private constructor(
         return skalTilStegForBehov(listOf(avklaringsbehov))
     }
 
-    fun tilbakeflytEtterEndringer(oppdaterteGrunnlagstype: List<Informasjonskravkonstruktør>): BehandlingFlyt {
+    fun tilbakeflytEtterEndringer(
+        oppdaterteGrunnlagstype: List<Informasjonskravkonstruktør>,
+        nyeÅrsakerTilBehandling: List<ÅrsakTilBehandling>? = null
+    ): BehandlingFlyt {
+        val tidligsteStegForÅrsak =
+            nyeÅrsakerTilBehandling?.flatMap { årsaker[it] ?: emptyList() }
+                // Skal ikke kunne flyttes tilbake til steg med status OPPRETTET
+                ?.minus(StegType.entries.filter { it.status == Status.OPPRETTET })
+                ?.minWithOrNull(compareable())
+
         val skalTilSteg =
             flyt.filter { it.kravliste.any { at -> oppdaterteGrunnlagstype.contains(at) } }
                 .map { it.steg.type() }
+                .minus(StegType.entries.filter { it.status == Status.OPPRETTET })
                 .minWithOrNull(compareable())
 
-        return utledTilbakeflytTilSteg(skalTilSteg)
+        val tidligsteSteg = listOfNotNull(tidligsteStegForÅrsak, skalTilSteg).minWithOrNull(compareable())
+
+        return utledTilbakeflytTilSteg(tidligsteSteg)
     }
 
     private fun utledTilbakeflytTilSteg(skalTilSteg: StegType?): BehandlingFlyt {
@@ -253,7 +266,7 @@ class BehandlingFlytBuilder {
 
     fun medSteg(
         steg: FlytSteg,
-        årsakRelevanteForSteg: List<ÅrsakTilBehandling> = ÅrsakTilBehandling.alle(),
+        årsakRelevanteForSteg: List<ÅrsakTilBehandling> = emptyList(),
         informasjonskrav: List<Informasjonskravkonstruktør> = emptyList()
     ): BehandlingFlytBuilder {
         if (buildt) {

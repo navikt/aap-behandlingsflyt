@@ -25,9 +25,11 @@ internal object ValiderBehandlingTilstand {
                 throw UgyldigForespørselException("Forsøker å løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen, har $eksisterendeAvklaringsbehov")
             }
             val flyt = behandling.flyt()
-            if (!flyt.erStegFørEllerLik(avklaringsbehov.løsesISteg, behandling.aktivtSteg())) {
+            if (!flyt.erStegFørEllerLik(avklaringsbehov.løsesISteg, behandling.aktivtSteg()) && !avklaringsbehov.erVentebehov()) {
                 val errorMsg = "Forsøker å løse avklaringsbehov $avklaringsbehov som er definert i et steg etter " +
-                        "nåværende steg[${behandling.aktivtSteg()}] ${behandling.typeBehandling().toLogString()}"
+                        "nåværende steg[${behandling.aktivtSteg()}] ${
+                            behandling.typeBehandling().toLogString()
+                        }. Skal løses i steg[${avklaringsbehov.løsesISteg}]"
 
                 log.warn(errorMsg)
                 throw UgyldigForespørselException(errorMsg)
@@ -48,15 +50,17 @@ internal object ValiderBehandlingTilstand {
         avklaringsbehov: Definisjon,
         behandling: Behandling
     ): Boolean {
-        val forsøkerÅLøseAvklaringsbehovFørGjeldendeSteg = flyt.erStegFør(avklaringsbehov.løsesISteg, behandling.aktivtSteg())
-        val erGjeldendeStegLåstForOppdateringAvOpplysninger = !flyt.skalOppdatereFaktagrunnlagForSteg(behandling.aktivtSteg())
-        val erAvklaringsbehovUnntattForSjekk =  avklaringsbehov.kode in listOf(
+        val forsøkerÅLøseAvklaringsbehovFørGjeldendeSteg =
+            flyt.erStegFør(avklaringsbehov.løsesISteg, behandling.aktivtSteg())
+        val erGjeldendeStegLåstForOppdateringAvOpplysninger =
+            !flyt.skalOppdatereFaktagrunnlagForSteg(behandling.aktivtSteg())
+        val erAvklaringsbehovUnntattForSjekk = avklaringsbehov.kode in listOf(
             AvklaringsbehovKode.`9001`,
             AvklaringsbehovKode.`9002`,
             AvklaringsbehovKode.`9003`,
             AvklaringsbehovKode.`5050`,
             AvklaringsbehovKode.`5051`,
-            )
+        )
         return forsøkerÅLøseAvklaringsbehovFørGjeldendeSteg && erGjeldendeStegLåstForOppdateringAvOpplysninger && !erAvklaringsbehovUnntattForSjekk
     }
 

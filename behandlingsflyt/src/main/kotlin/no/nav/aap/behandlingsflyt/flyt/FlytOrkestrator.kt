@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.httpklient.auth.Bruker
@@ -85,12 +86,15 @@ class FlytOrkestrator(
         )
     }
 
-    fun forberedOgProsesserBehandling(kontekst: FlytKontekst) {
-        this.forberedBehandling(kontekst)
+    fun forberedOgProsesserBehandling(
+        kontekst: FlytKontekst,
+        triggere: List<ÅrsakTilBehandling> = emptyList()
+    ) {
+        this.forberedBehandling(kontekst, triggere)
         this.prosesserBehandling(kontekst)
     }
 
-    private fun forberedBehandling(kontekst: FlytKontekst) {
+    private fun forberedBehandling(kontekst: FlytKontekst, triggere: List<ÅrsakTilBehandling>?) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
@@ -109,9 +113,7 @@ class FlytOrkestrator(
             val behovSomBleLøst = ventebehovEvaluererService.løsVentebehov(kontekst, avklaringsbehovene)
 
             // Hvis fortsatt på vent
-            if (avklaringsbehovene.erSattPåVent()) {
-                return // Bail out
-            } else {
+            if (!avklaringsbehovene.erSattPåVent()) {
                 // Behandlingen er tatt av vent og flyten flyttes tilbake til steget hvor den sto på vent
                 val tilbakeflyt = behandlingFlyt.tilbakeflyt(behovSomBleLøst)
                 if (!tilbakeflyt.erTom()) {
@@ -131,7 +133,7 @@ class FlytOrkestrator(
                 kontekst = flytKontekstMedPeriodeService.utled(kontekst, behandling.aktivtSteg()),
             )
 
-        val tilbakeføringsflyt = behandlingFlyt.tilbakeflytEtterEndringer(oppdaterFaktagrunnlagForKravliste)
+        val tilbakeføringsflyt = behandlingFlyt.tilbakeflytEtterEndringer(oppdaterFaktagrunnlagForKravliste, triggere)
 
         if (!tilbakeføringsflyt.erTom()) {
             log.info(
@@ -259,7 +261,8 @@ class FlytOrkestrator(
         ) // Setter til false for å ikke trigge unødvendig event
 
         val skulleVærtISteg = flyt.skalTilStegForBehov(behovForLøsninger)
-        if (skulleVærtISteg != null) {
+        // Skal få lov å løse ventebehov overalt i flyten
+        if (skulleVærtISteg != null && !behovDefinisjon.erVentebehov()) {
             flyt.validerPlassering(skulleVærtISteg)
         }
     }
