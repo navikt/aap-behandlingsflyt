@@ -213,7 +213,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
         return TilhørighetVurdering(
             kilde = listOf(Kilde.A_INNTEKT, Kilde.AA_REGISTERET),
             indikasjon = Indikasjon.I_NORGE,
-            opplysning = "Arbeid og inntekt i Norge siste 5 år",
+            opplysning = "Sammenhengende arbeid og inntekt i Norge siste 5 år",
             resultat = sammenhengendeInntektSiste5År,
             arbeidInntektINorgeGrunnlag = arbeidInntektINorgeGrunnlag,
             vurdertPeriode = Periode(forutgåendePeriode.fom, forutgåendePeriode.fom.plusYears(5))
