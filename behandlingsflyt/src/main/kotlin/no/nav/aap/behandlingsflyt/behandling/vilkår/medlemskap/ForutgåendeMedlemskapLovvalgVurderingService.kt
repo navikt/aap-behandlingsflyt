@@ -6,9 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
-import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
-import java.time.LocalDate
 import java.time.YearMonth
 
 class ForutgåendeMedlemskapLovvalgVurderingService {
