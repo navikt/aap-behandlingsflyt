@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import org.junit.jupiter.api.Test
 import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.KabalHendelseId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.BehandlingDetaljer
@@ -15,6 +16,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageUtfall
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlagebehandlingAvsluttetDetaljer
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -119,20 +121,29 @@ class KabalKafkaKonsumentTest {
         konsument.lukk()
 
         util.ventPåSvar(klagebehandling.id.id)
-        val ubehandledeHendelser = dataSource.transaction { connection ->
-            MottattDokumentRepositoryImpl(connection).hentUbehandledeDokumenterAvType(
+        val svarFraAnderinstansBehandling = dataSource.transaction { connection ->
+            val behandlinger = BehandlingRepositoryImpl(connection).hentAlleFor(
+                klagebehandling.sakId,
+                listOf(TypeBehandling.SvarFraAndreinstans)
+            )
+            assertThat(behandlinger).hasSize(1)
+            behandlinger.first()
+        }
+
+        val hendelser = dataSource.transaction { connection ->
+            MottattDokumentRepositoryImpl(connection).hentDokumenterAvType(
                 sakId = klagebehandling.sakId,
                 InnsendingType.KABAL_HENDELSE
             )
         }
-        assertThat(ubehandledeHendelser).hasSize(1)
-        assertThat(ubehandledeHendelser.first().referanse.asKabalHendelseId).isEqualTo(KabalHendelseId(hendelse.eventId))
-        assertThat(ubehandledeHendelser.first().type).isEqualTo(InnsendingType.KABAL_HENDELSE)
-        assertThat(ubehandledeHendelser.first().sakId).isEqualTo(klagebehandling.sakId)
-        assertThat(ubehandledeHendelser.first().behandlingId).isNull()
-        assertThat(ubehandledeHendelser.first().kanal).isEqualTo(Kanal.DIGITAL)
-        assertThat(ubehandledeHendelser.first().status).isEqualTo(no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status.MOTTATT)
-        assertThat(ubehandledeHendelser.first().strukturertDokument).isNotNull
+        assertThat(hendelser).hasSize(1)
+        assertThat(hendelser.first().referanse.asKabalHendelseId).isEqualTo(KabalHendelseId(hendelse.eventId))
+        assertThat(hendelser.first().type).isEqualTo(InnsendingType.KABAL_HENDELSE)
+        assertThat(hendelser.first().sakId).isEqualTo(klagebehandling.sakId)
+        assertThat(hendelser.first().behandlingId).isEqualTo(svarFraAnderinstansBehandling.id)
+        assertThat(hendelser.first().kanal).isEqualTo(Kanal.DIGITAL)
+        assertThat(hendelser.first().status).isEqualTo(no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status.BEHANDLET)
+        assertThat(hendelser.first().strukturertDokument).isNotNull
     }
 
     private fun lagBehandlingEvent(kilde: String, kildereferanse: String): KabalHendelseV0 {
