@@ -92,7 +92,7 @@ private fun utledHarTilgangTilÅSaksbehandle(
 
     if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
         val harIkkeGjortNoenVurderinger =
-            avklaringsbehovene.alle().filter { it.erTotrinn() }.any { !it.brukere().contains(bruker.ident) }
+            avklaringsbehovene.alle().filter { it.erTotrinn() }.none { it.brukere().contains(bruker.ident) }
 
         return harTilgang && harIkkeGjortNoenVurderinger
     } else {
