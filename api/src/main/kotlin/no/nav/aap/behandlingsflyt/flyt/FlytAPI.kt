@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
 import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
+import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -80,6 +81,8 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource, repositoryRegistry: Repos
                     val gruppeVisningService = DynamiskStegGruppeVisningService(repositoryProvider)
 
                     val jobber = flytJobbRepository.hentJobberForBehandling(behandling.id.toLong())
+                        .filter { it.type() == ProsesserBehandlingJobbUtfører.type }
+
                     val prosessering =
                         Prosessering(
                             utledStatus(jobber, avklaringsbehovene),
