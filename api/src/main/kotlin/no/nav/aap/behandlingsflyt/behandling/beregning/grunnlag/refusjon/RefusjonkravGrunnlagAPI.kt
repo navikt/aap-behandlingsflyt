@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.navenheter.NavKontorService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -64,7 +65,24 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
             }
         }
     }
+
+    route("/api/behandling") {
+        route("/{referanse}/navenheter") {
+            authorizedGet<BehandlingReferanse, List<NavEnheterResponse>>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse")
+                )
+            ) { req ->
+                val response =
+                    NavKontorService().hentNavEnheter()?.map { enhet ->
+                        NavEnheterResponse(navn = enhet.navn, enhetsnummer = enhet.enhetsNummer)
+                    } ?: emptyList()
+                respond(response)
+            }
+        }
+    }
 }
+
 
 private fun RefusjonkravVurdering.tilResponse(): RefusjonkravVurderingResponse {
     val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv)

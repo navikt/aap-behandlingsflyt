@@ -48,6 +48,26 @@ class NorgGateway : EnhetGateway {
         return response.tilEnhet()
     }
 
+    override fun hentAlleEnheter(): List<Enhet> {
+        val uriWithParams = URI.create("$baseUri/norg2/api/v1/enhet")
+
+        val httpRequest =
+            GetRequest(
+                additionalHeaders =
+                    listOf(
+                        Header("Accept", "application/json")
+                    )
+            )
+
+        val response: List<NorgEnhet> =
+            checkNotNull(
+                client.get(uri = uriWithParams, request = httpRequest, mapper = { body, _ ->
+                    DefaultJsonMapper.fromJson<List<NorgEnhet>>(body)
+                })
+            )
+        return response.tilEnhetListe()
+    }
+
     private fun NorgEnhet.tilEnhet(): Enhet =
         Enhet(
             enhetsNummer = enhetNr,
@@ -60,4 +80,8 @@ class NorgGateway : EnhetGateway {
                     else -> EnhetsType.ANNET
                 }
         )
+
+
+    private fun List<NorgEnhet>.tilEnhetListe(): List<Enhet> =
+        this.map { it.tilEnhet() }
 }
