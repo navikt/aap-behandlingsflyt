@@ -37,7 +37,7 @@ class SamGatewayImpl : SamGateway {
 
     override fun varsleVedtak(request: SamordneVedtakRequest) {
         restClient.post<SamordneVedtakRequest, SamordneVedtakRespons>(
-            uri = uri.resolve("/api/vedtak"),
+            uri = uri.resolve("/api/vedtak/samordne"),
             request = PostRequest(body = request),
             mapper = { body, _ ->
                 DefaultJsonMapper.fromJson(body)
