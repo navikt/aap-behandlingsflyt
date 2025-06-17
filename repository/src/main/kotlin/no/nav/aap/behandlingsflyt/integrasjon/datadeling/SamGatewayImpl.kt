@@ -4,8 +4,6 @@ import no.nav.aap.behandlingsflyt.datadeling.sam.HentSamIdResponse
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamGateway
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRespons
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamId
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -27,7 +25,7 @@ class SamGatewayImpl : SamGateway {
         }
     }
 
-    private val logger = LoggerFactory.getLogger(StartBehandlingSteg::class.java)
+    private val logger = LoggerFactory.getLogger(SamGatewayImpl::class.java)
 
     private val restClient = RestClient.withDefaultResponseHandler(
         config = ClientConfig(scope = requiredConfigForKey("integrasjon.sam.scope")),
