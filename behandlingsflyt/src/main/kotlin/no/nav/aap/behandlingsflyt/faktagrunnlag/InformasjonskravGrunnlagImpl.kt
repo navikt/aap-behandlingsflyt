@@ -11,7 +11,7 @@ class InformasjonskravGrunnlagImpl(
     private val informasjonskravRepository: InformasjonkskravRepository,
     private val repositoryProvider: RepositoryProvider,
 ) : InformasjonskravGrunnlag {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         informasjonskravRepository = repositoryProvider.provide(),
         repositoryProvider = repositoryProvider,
     )
@@ -41,19 +41,24 @@ class InformasjonskravGrunnlagImpl(
             }
 
         val endredeInformasjonskrav = relevanteInformasjonskrav
-            .filter { (_, krav, _) ->
+            .parallelStream()
+            .map { triple ->
+                val krav = triple.second
                 val span = tracer.spanBuilder("informasjonskrav ${krav.navn}")
                     .setSpanKind(SpanKind.INTERNAL)
                     .setAttribute("informasjonskrav", krav.navn.toString())
                     .startSpan()
                 try {
                     span.makeCurrent().use {
-                        krav.oppdater(kontekst) == Informasjonskrav.Endret.ENDRET
+                        Pair(triple, krav.oppdater(kontekst))
                     }
                 } finally {
                     span.end()
                 }
             }
+            .filter { (_, endret) -> endret == Informasjonskrav.Endret.ENDRET }
+            .map { it.first }
+            .toList()
 
         informasjonskravRepository.registrerOppdateringer(
             kontekst.sakId,
@@ -63,5 +68,4 @@ class InformasjonskravGrunnlagImpl(
         )
         return endredeInformasjonskrav.map { (konstruktør, _, _) -> konstruktør }
     }
-
 }
