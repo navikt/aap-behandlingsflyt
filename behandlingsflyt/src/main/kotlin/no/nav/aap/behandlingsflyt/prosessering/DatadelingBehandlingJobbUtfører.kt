@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -16,6 +17,7 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProviderJobbSpesifikasjon
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 class DatadelingBehandlingJobbUtfører(
     private val apiInternGateway: ApiInternGateway,
@@ -30,8 +32,8 @@ class DatadelingBehandlingJobbUtfører(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        val hendelse = input.payload<BehandlingFlytStoppetHendelse>()
-        val behandling = behandlingRepository.hent(hendelse.referanse)
+        val (behandlingId, vedtaksTidspunkt) = input.payload< Pair<BehandlingId, LocalDateTime>>()
+        val behandling = behandlingRepository.hent(behandlingId)
         
         if (behandling.typeBehandling() !in listOf(
                 TypeBehandling.Førstegangsbehandling,
@@ -57,7 +59,7 @@ class DatadelingBehandlingJobbUtfører(
             samId,
             tilkjentYtelse,
             underveis?.perioder.orEmpty(),
-            hendelse.hendelsesTidspunkt.toLocalDate(),
+            vedtaksTidspunkt.toLocalDate(),
             vilkårsresultatTidslinje
         )
     }

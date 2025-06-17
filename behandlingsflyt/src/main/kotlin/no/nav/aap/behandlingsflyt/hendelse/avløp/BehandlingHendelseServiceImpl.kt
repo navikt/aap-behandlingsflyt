@@ -134,13 +134,6 @@ class BehandlingHendelseServiceImpl(
         if (behandling.typeBehandling() in listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)) {
             flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, behandling.id))
         }
-
-        if (behandling.status().erAvsluttet()) {
-            flytJobbRepository.leggTil(
-                JobbInput(jobb = DatadelingBehandlingJobbUtfører).medPayload(hendelse)
-                    .forBehandling(sak.id.id, behandling.id.id)
-            )
-        }
     }
 
     private fun DomeneÅrsakTilRetur.oversettTilKontrakt(): ÅrsakTilReturKodeKontrakt {

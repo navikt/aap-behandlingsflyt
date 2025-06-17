@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.prosessering.DatadelingBehandlingJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.VarsleVedtakJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -37,12 +38,15 @@ class IverksettVedtakSteg private constructor(
     private val utbetalingGateway: UtbetalingGateway,
     private val trukketSøknadService: TrukketSøknadService,
     private val flytJobbRepository: FlytJobbRepository
-    ) : BehandlingSteg {
+) : BehandlingSteg {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && trukketSøknadService.søknadErTrukket(kontekst.behandlingId)) {
+        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && trukketSøknadService.søknadErTrukket(
+                kontekst.behandlingId
+            )
+        ) {
             return Fullført
         }
 
@@ -67,6 +71,11 @@ class IverksettVedtakSteg private constructor(
                 jobbInput = JobbInput(jobb = VarsleVedtakJobbUtfører).medPayload(kontekst.behandlingId)
             )
         }
+
+        flytJobbRepository.leggTil(
+            JobbInput(jobb = DatadelingBehandlingJobbUtfører).medPayload(Pair(kontekst.behandlingId, vedtakstidspunkt))
+                .forBehandling(kontekst.sakId.id, kontekst.behandlingId.id)
+        )
 
         return Fullført
     }
