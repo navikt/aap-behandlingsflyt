@@ -219,4 +219,4 @@ spec:
     - name: INTEGRASJON_EREG_URL
       value: https://ereg-services.prod-fss-pub.nais.io
     - name: INTEGRASJON_EREG_SCOPE
-      value: prod-fss.arbeidsforhold.ereg-services/.default
+      value: api://prod-fss.arbeidsforhold.ereg-services/.default
