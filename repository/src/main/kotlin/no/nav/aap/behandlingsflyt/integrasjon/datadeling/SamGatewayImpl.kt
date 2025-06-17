@@ -53,7 +53,7 @@ class SamGatewayImpl : SamGateway {
             ),
             mapper = { body, _ ->
                 val respons = DefaultJsonMapper.fromJson<List<SamordningsvedtakApi>>(body).first()
-                require(respons.samordningsmeldinger.size<2)
+                require(respons.samordningsmeldinger.size<2 && respons.samordningsmeldinger.isNotEmpty()) {"for mangen eller for få samordningsmeldinger i responsen fra SAM ved henting av samId. Antall samordningsmeldinger: ${respons.samordningsmeldinger.size}"}
                 val res = respons.samordningsmeldinger.first().samId
                 return@get res
             }
