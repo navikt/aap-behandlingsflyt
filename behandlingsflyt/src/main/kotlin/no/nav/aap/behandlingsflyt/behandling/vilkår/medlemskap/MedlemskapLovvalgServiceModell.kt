@@ -75,7 +75,7 @@ data class UtenlandsAdresseGrunnlag(
 )
 
 enum class Kilde {
-    SØKNAD, PDL, MEDL, AA_REGISTERET, A_INNTEKT
+    SØKNAD, PDL, MEDL, AA_REGISTERET, A_INNTEKT, EREG
 }
 
 enum class Indikasjon {

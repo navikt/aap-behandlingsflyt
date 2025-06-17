@@ -239,7 +239,7 @@ class MedlemskapLovvalgVurderingService {
         } else null
 
         return TilhørighetVurdering(
-            kilde = listOf(Kilde.A_INNTEKT, Kilde.AA_REGISTERET),
+            kilde = listOf(Kilde.A_INNTEKT, Kilde.AA_REGISTERET, Kilde.EREG),
             indikasjon = Indikasjon.I_NORGE,
             opplysning = "Arbeid og inntekt i Norge",
             resultat = harArbeidInntektINorge,
