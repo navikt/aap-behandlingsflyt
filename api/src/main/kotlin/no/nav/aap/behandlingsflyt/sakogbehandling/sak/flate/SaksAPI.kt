@@ -22,10 +22,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.DokumentInfoId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafHentDokumentGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokument
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokumentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -39,12 +35,10 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
-import no.nav.aap.tilgang.JournalpostPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
-import no.nav.aap.verdityper.dokument.JournalpostId
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
@@ -299,45 +293,6 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
                         søknadErTrukket = søknadErTrukket
                     )
                 )
-            }
-        }
-
-        // TODO: Fjerne når DokumentAPI er testet OK
-        route("/{saksnummer}/dokumenter") {
-            authorizedGet<HentSakDTO, List<SafListDokument>>(
-                AuthorizationParamPathConfig(
-                    sakPathParam = SakPathParam("saksnummer")
-                ), null, TagModule(listOf(Tags.Sak))
-            ) { req ->
-                val token = token()
-                val safRespons = SafListDokumentGateway.hentDokumenterForSak(Saksnummer(req.saksnummer), token)
-                respond(
-                    safRespons
-                )
-            }
-        }
-        // TODO: Fjerne når DokumentAPI er testet OK
-        route("/dokument/{journalpostId}/{dokumentinfoId}") {
-            authorizedGet<HentDokumentDTO, DokumentResponsDTO>(
-                AuthorizationParamPathConfig(
-                    journalpostPathParam = JournalpostPathParam(
-                        "journalpostId"
-                    )
-                )
-            ) { req ->
-                val journalpostId = req.journalpostId
-                val dokumentInfoId = req.dokumentinfoId
-
-                val token = token()
-                val gateway = SafHentDokumentGateway.withDefaultRestClient()
-
-                val dokumentRespons =
-                    gateway.hentDokument(JournalpostId(journalpostId), DokumentInfoId(dokumentInfoId), token)
-
-                pipeline.call.response.headers.append(
-                    name = "Content-Disposition", value = "inline; filename=${dokumentRespons.filnavn}"
-                )
-                respond(DokumentResponsDTO(stream = dokumentRespons.dokument))
             }
         }
 
