@@ -13,6 +13,7 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProviderJobbSpesifikasjon
+import kotlin.text.compareTo
 
 class VarsleVedtakJobbUtfører(
     private val repositoryProvider: RepositoryProvider,
@@ -39,7 +40,7 @@ class VarsleVedtakJobbUtfører(
             virkTom = sak.rettighetsperiode.tom,
             fagomrade = "AAP",
             ytelseType = "AAP",
-            etterbetaling = vedtak.vedtakstidspunkt.toLocalDate() > vedtak.virkningstidspunkt,
+            etterbetaling = vedtak.virkningstidspunkt?.let { vedtak.vedtakstidspunkt.toLocalDate() > it } ?: false,
             utvidetFrist = null,
         )
 
