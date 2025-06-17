@@ -69,6 +69,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.integrasjon.meldekort.MeldekortGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
 import no.nav.aap.behandlingsflyt.behandling.klage.trekk.trekkKlageGrunnlagAPI
+import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAnderinstansGrunnlagApi
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
 import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
@@ -197,6 +198,8 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
                 klageresultatApi(dataSource, repositoryRegistry)
                 trekkKlageGrunnlagAPI(dataSource, repositoryRegistry)
                 effektuerAvvistPåFormkravGrunnlagApi(dataSource, repositoryRegistry)
+                // Svar fra kabal
+                svarFraAnderinstansGrunnlagApi(dataSource, repositoryRegistry)
                 // Flytt
                 brevApi(dataSource, repositoryRegistry)
                 dokumentinnhentingAPI(dataSource, repositoryRegistry)

@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.forretningsflyt.steg.svarfraklageenhet
+package no.nav.aap.behandlingsflyt.forretningsflyt.steg.svarfraandreinstans
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene

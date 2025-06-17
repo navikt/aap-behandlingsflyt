@@ -92,10 +92,10 @@ public enum class TrygderettUtfall {
     TRUKKET, OPPHEVET, MEDHOLD, DELVIS_MEDHOLD, INNSTILLING_STADFESTELSE, INNSTILLING_AVVIST
 }
 
-enum class FeilregistrertType {
+public enum class FeilregistrertType {
     KLAGE, ANKE, ANKE_I_TRYGDERETTEN, BEHANDLING_ETTER_TRYGDERETTEN_OPPHEVET
 }
 
-enum class OmgjoeringsUtfall {
+public enum class OmgjoeringsUtfall {
     MEDHOLD_ETTER_FVL_35
 }
