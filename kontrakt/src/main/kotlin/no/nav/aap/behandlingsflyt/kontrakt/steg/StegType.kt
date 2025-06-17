@@ -200,7 +200,7 @@ public enum class StegType(
         status = Status.IVERKSETTES
     ),
     SVAR_FRA_ANDREINSTANS(
-        gruppe = StegGruppe.START_BEHANDLING,
+        gruppe = StegGruppe.SVAR_FRA_ANDREINSTANS,
         status = Status.OPPRETTET,
     ),
     UDEFINERT(
