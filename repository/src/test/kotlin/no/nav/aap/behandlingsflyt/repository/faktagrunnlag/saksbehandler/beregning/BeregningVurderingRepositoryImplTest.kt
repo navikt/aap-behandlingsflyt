@@ -36,12 +36,14 @@ class BeregningVurderingRepositoryImplTest {
             YrkesskadeBeløpVurdering(
                 antattÅrligInntekt = Beløp(BigDecimal("450000")),
                 referanse = "Referanse 1",
-                begrunnelse = "Begrunnelse for yrkesskade 1"
+                begrunnelse = "Begrunnelse for yrkesskade 1",
+                vurdertAv = "saksbehandler"
             ),
             YrkesskadeBeløpVurdering(
                 antattÅrligInntekt = Beløp(BigDecimal("500000")),
                 referanse = "Referanse 2",
-                begrunnelse = "Begrunnelse for yrkesskade 2"
+                begrunnelse = "Begrunnelse for yrkesskade 2",
+                vurdertAv = "saksbehandler"
             )
         )
 

@@ -55,7 +55,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
         }
 
         val query = """
-            SELECT BEGRUNNELSE, REFERANSE, ANTATT_ARLIG_INNTEKT
+            SELECT BEGRUNNELSE, REFERANSE, ANTATT_ARLIG_INNTEKT, VURDERT_AV, OPPRETTET_TID
             FROM YRKESSKADE_INNTEKT
             WHERE INNTEKTER_ID = ?
         """.trimIndent()
@@ -68,10 +68,13 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
                 YrkesskadeBeløpVurdering(
                     antattÅrligInntekt = Beløp(row.getBigDecimal("ANTATT_ARLIG_INNTEKT")),
                     referanse = row.getString("REFERANSE"),
-                    begrunnelse = row.getString("BEGRUNNELSE")
+                    begrunnelse = row.getString("BEGRUNNELSE"),
+                    vurdertAv = row.getString("VURDERT_AV"),
+                    vurdertTidspunkt = row.getLocalDateTime("OPPRETTET_TID")
                 )
             }
-        })
+        }
+        )
     }
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): BeregningGrunnlag? {
@@ -271,9 +274,9 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
 
         val query = """
             INSERT INTO YRKESSKADE_INNTEKT
-            (INNTEKTER_ID, BEGRUNNELSE, REFERANSE, ANTATT_ARLIG_INNTEKT)
+            (INNTEKTER_ID, BEGRUNNELSE, REFERANSE, ANTATT_ARLIG_INNTEKT, VURDERT_AV)
             VALUES
-            (?, ?, ?, ?)
+            (?, ?, ?, ?, ?)
         """.trimIndent()
 
         connection.executeBatch(query, vurderinger) {
@@ -282,6 +285,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
                 setString(2, vurdering.begrunnelse)
                 setString(3, vurdering.referanse)
                 setBigDecimal(4, vurdering.antattÅrligInntekt.verdi)
+                setString(5, vurdering.vurdertAv)
             }
         }
 

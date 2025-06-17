@@ -51,7 +51,8 @@ class BeregningsGrunnlagApiTest {
                             YrkesskadeBeløpVurdering(
                                 antattÅrligInntekt = Beløp(50000),
                                 referanse = "yrkesskadesaken",
-                                begrunnelse = "asdf"
+                                begrunnelse = "asdf",
+                                vurdertAv = "saksbehandler"
                             )
                         )
                     )
@@ -117,7 +118,8 @@ class BeregningsGrunnlagApiTest {
                             YrkesskadeBeløpVurdering(
                                 antattÅrligInntekt = Beløp(9999999999),
                                 referanse = "yrkesskadesaken",
-                                begrunnelse = "asdf"
+                                begrunnelse = "asdf",
+                                vurdertAv = "saksbehandler"
                             )
                         )
                     )

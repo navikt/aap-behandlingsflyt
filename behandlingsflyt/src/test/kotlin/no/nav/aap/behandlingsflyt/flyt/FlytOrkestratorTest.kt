@@ -87,10 +87,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
@@ -763,12 +763,12 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             FastsettYrkesskadeInntektLøsning(
-                yrkesskadeInntektVurdering = BeregningYrkeskaderBeløpVurdering(
+                yrkesskadeInntektVurdering = BeregningYrkeskaderBeløpVurderingDTO(
                     vurderinger = person.yrkesskade.map {
-                        YrkesskadeBeløpVurdering(
+                        YrkesskadeBeløpVurderingDTO(
                             antattÅrligInntekt = Beløp(5000000),
                             referanse = it.saksreferanse,
-                            begrunnelse = "Trenger hjelp fra Nav"
+                            begrunnelse = "Trenger hjelp fra Nav",
                         )
                     },
                 )

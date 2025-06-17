@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.FastsettYrkesskadeInntektLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FASTSETT_YRKESSKADE_BELØP_KODE
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -17,7 +17,7 @@ class FastsettYrkesskadeInntektLøsning(
     @JsonProperty(
         "yrkesskadeInntektVurdering",
         required = true
-    ) val yrkesskadeInntektVurdering: BeregningYrkeskaderBeløpVurdering,
+    ) val yrkesskadeInntektVurdering: BeregningYrkeskaderBeløpVurderingDTO,
     @JsonProperty(
         "behovstype",
         required = true,

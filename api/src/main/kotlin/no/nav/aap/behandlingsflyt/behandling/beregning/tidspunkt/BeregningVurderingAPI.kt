@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -66,7 +67,7 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource, repositoryR
             }
         }
         route("/{referanse}/grunnlag/beregning/yrkesskade") {
-            authorizedGet<BehandlingReferanse, BeregningYrkesskadeAvklaringDto>(
+            authorizedGet<BehandlingReferanse, BeregningYrkesskadeAvklaringResponse>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
@@ -100,16 +101,19 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource, repositoryR
                             token()
                         )
 
-
-                    BeregningYrkesskadeAvklaringDto(
+                    BeregningYrkesskadeAvklaringResponse(
                         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
-                        skalVurderes = sakerMedDato.filterNotNull().map {
-                            YrkesskadeTilVurdering(
-                                it.ref, it.skadedato,
-                                Grunnbeløp.finnGUnit(it.skadedato, Beløp(1)).beløp
-                            )
-                        },
-                        vurderinger = beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger ?: emptyList()
+                        skalVurderes =
+                            sakerMedDato.filterNotNull().map {
+                                YrkesskadeTilVurderingResponse(
+                                    it.ref,
+                                    it.skadedato,
+                                    Grunnbeløp.finnGUnit(it.skadedato, Beløp(1)).beløp
+                                )
+                            },
+                        vurderinger =
+                            beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger?.map { it.toResponse() }
+                                ?: emptyList()
                     )
                 }
 
@@ -132,5 +136,25 @@ private fun BeregningstidspunktVurdering.tilResponse(): BeregningstidspunktVurde
             ansattnavn = navnOgEnhet?.navn,
             enhetsnavn = navnOgEnhet?.enhet
         )
+    )
+}
+
+
+private fun YrkesskadeBeløpVurdering.toResponse(): YrkesskadeBeløpVurderingResponse {
+    val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv)
+    return YrkesskadeBeløpVurderingResponse(
+        antattÅrligInntekt = antattÅrligInntekt,
+        referanse = referanse,
+        begrunnelse = begrunnelse,
+        vurdertAvResponse =
+            VurdertAvResponse(
+                ident = vurdertAv,
+                dato =
+                    requireNotNull(
+                        vurdertTidspunkt?.toLocalDate()
+                    ) { "Fant ikke vurdert tidspunkt for yrkesskadebeløpvurdering" },
+                ansattnavn = navnOgEnhet?.navn,
+                enhetsnavn = navnOgEnhet?.enhet
+            )
     )
 }
