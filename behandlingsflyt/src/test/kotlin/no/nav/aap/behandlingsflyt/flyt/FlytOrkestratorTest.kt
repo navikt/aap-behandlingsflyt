@@ -3440,7 +3440,7 @@ class FlytOrkestratorTest {
         assertThat(klagebehandling.referanse).isNotEqualTo(avslåttFørstegang.referanse)
         assertThat(klagebehandling.typeBehandling()).isEqualTo(TypeBehandling.Klage)
 
-        val svarFraAnderinstansBehandling = sendInnDokument(
+        val svarFraAndreinstansBehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("22"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
@@ -3465,15 +3465,15 @@ class FlytOrkestratorTest {
             )
         )
 
-        assertThat(svarFraAnderinstansBehandling.referanse).isNotEqualTo(klagebehandling.referanse)
-        assertThat(svarFraAnderinstansBehandling.typeBehandling()).isEqualTo(TypeBehandling.SvarFraAndreinstans)
+        assertThat(svarFraAndreinstansBehandling.referanse).isNotEqualTo(klagebehandling.referanse)
+        assertThat(svarFraAndreinstansBehandling.typeBehandling()).isEqualTo(TypeBehandling.SvarFraAndreinstans)
 
 
         dataSource.transaction { connection ->
             val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
             val kabalHendelseDokumenter =
                 mottattDokumentRepository.hentDokumenterAvType(
-                    svarFraAnderinstansBehandling.sakId,
+                    svarFraAndreinstansBehandling.sakId,
                     InnsendingType.KABAL_HENDELSE
                 )
             assertThat(kabalHendelseDokumenter).hasSize(1)
@@ -3481,7 +3481,7 @@ class FlytOrkestratorTest {
             assertThat(kabalHendelseDokumenter.first().strukturerteData<KabalHendelseV0>()?.data).isNotNull
         }
 
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(svarFraAnderinstansBehandling.id)
+        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(svarFraAndreinstansBehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
             .isEqualTo(Definisjon.HÅNDTER_SVAR_FRA_ANDREINSTANS)
 

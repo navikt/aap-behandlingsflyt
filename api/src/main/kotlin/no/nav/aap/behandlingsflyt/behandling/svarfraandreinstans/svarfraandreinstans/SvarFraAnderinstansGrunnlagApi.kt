@@ -15,12 +15,12 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.svarFraAnderinstansGrunnlagApi(
+fun NormalOpenAPIRoute.svarFraAndreinstansGrunnlagApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry
 ) {
     route("api/svar-fra-andreinstans/{referanse}/grunnlag/svar-fra-andreinstans") {
-        authorizedGet<BehandlingReferanse, SvarFraAnderinstansGrunnlagDto>(
+        authorizedGet<BehandlingReferanse, SvarFraAndreinstansGrunnlagDto>(
             AuthorizationParamPathConfig(
                 behandlingPathParam = BehandlingPathParam(
                     "referanse"
@@ -39,7 +39,7 @@ fun NormalOpenAPIRoute.svarFraAnderinstansGrunnlagApi(
                 requireNotNull(hendelse) { "Fant ikke tilhørende kabalhendelse" }
 
 
-                SvarFraAnderinstansGrunnlagDto(
+                SvarFraAndreinstansGrunnlagDto(
                     svarFraAndreinstans = hendelse.tilDto()
                 )
             }

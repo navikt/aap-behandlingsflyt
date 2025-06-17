@@ -228,7 +228,7 @@ public enum class AvklaringsbehovKode {
     `6007`,
 
     /**
-     * [HÅNDTER_SVAR_FRA_ANDERINSTANS_KODE]
+     * [HÅNDTER_SVAR_FRA_ANDREINSTANS_KODE]
      */
     `6008`,
 

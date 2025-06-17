@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageUtfall
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjoeringsUtfall
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TrygderettUtfall
 
-data class SvarFraAnderinstansGrunnlagDto(
+data class SvarFraAndreinstansGrunnlagDto(
     val svarFraAndreinstans: SvarFraAndreinstansDto
 )
 
