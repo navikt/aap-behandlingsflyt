@@ -31,4 +31,5 @@ public enum class StegGruppe(public val skalVises: Boolean, public val obligator
     OPPRETTHOLDELSE(true, false),
     KLAGE_AVVIST_PÅ_FORMKRAV(true, false),
     SVAR_FRA_ANDREINSTANS(true, true),
+    IVERKSETT_KONSEKVENS(true, true),
 }

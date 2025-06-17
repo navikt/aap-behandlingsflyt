@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
 import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.svarfraandreinstans.IverksettKonsekvensSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.svarfraandreinstans.SvarFraAndreinstansSteg
 
 object SvarFraAndreinstans : BehandlingType {
@@ -11,6 +12,7 @@ object SvarFraAndreinstans : BehandlingType {
         return BehandlingFlytBuilder()
             .medSteg(steg = StartBehandlingSteg)
             .medSteg(steg = SvarFraAndreinstansSteg)
+            .medSteg(steg = IverksettKonsekvensSteg)
             .build()
     }
 }

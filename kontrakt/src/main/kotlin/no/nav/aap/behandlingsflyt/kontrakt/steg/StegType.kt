@@ -203,6 +203,10 @@ public enum class StegType(
         gruppe = StegGruppe.SVAR_FRA_ANDREINSTANS,
         status = Status.OPPRETTET,
     ),
+    IVERKSETT_KONSEKVENS(
+        gruppe = StegGruppe.IVERKSETT_KONSEKVENS,
+        status = Status.IVERKSETTES,
+    ),
     UDEFINERT(
         gruppe = StegGruppe.UDEFINERT,
         status = Status.UTREDES,
