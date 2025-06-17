@@ -3,10 +3,13 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -26,7 +29,7 @@ import javax.sql.DataSource
 fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/beregning/tidspunkt") {
-            authorizedGet<BehandlingReferanse, BeregningTidspunktAvklaringDto>(
+            authorizedGet<BehandlingReferanse, BeregningTidspunktAvklaringResponse>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
@@ -52,9 +55,9 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource, repositoryR
                         )
 
 
-                    BeregningTidspunktAvklaringDto(
+                    BeregningTidspunktAvklaringResponse(
                         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
-                        vurdering = beregningGrunnlag?.tidspunktVurdering,
+                        vurdering = beregningGrunnlag?.tidspunktVurdering?.tilResponse(),
                         skalVurdereYtterligere = skalVurdereUføre
                     )
                 }
@@ -114,4 +117,20 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource, repositoryR
             }
         }
     }
+}
+
+private fun BeregningstidspunktVurdering.tilResponse(): BeregningstidspunktVurderingResponse {
+    val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv)
+    return BeregningstidspunktVurderingResponse(
+        begrunnelse = begrunnelse,
+        nedsattArbeidsevneDato = nedsattArbeidsevneDato,
+        ytterligereNedsattBegrunnelse = ytterligereNedsattBegrunnelse,
+        ytterligereNedsattArbeidsevneDato = ytterligereNedsattArbeidsevneDato,
+        vurdertAv = VurdertAvResponse(
+            ident = vurdertAv,
+            dato = requireNotNull(vurdertTidspunkt?.toLocalDate()) { "Fant ikke vurdert tidspunkt for beregningstidspunktvurdering" },
+            ansattnavn = navnOgEnhet?.navn,
+            enhetsnavn = navnOgEnhet?.enhet
+        )
+    )
 }

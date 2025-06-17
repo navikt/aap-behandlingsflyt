@@ -63,6 +63,7 @@ class BeregningTest {
                         nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                         ytterligereNedsattBegrunnelse = "test2",
                         ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                        vurdertAv = "saksbehandler"
                     ), yrkesskadeBeløpVurdering = null
                 ),
                 registrerteYrkesskader = null
@@ -98,7 +99,8 @@ class BeregningTest {
                         begrunnelse = "test",
                         nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                         ytterligereNedsattArbeidsevneDato = null,
-                        ytterligereNedsattBegrunnelse = null
+                        ytterligereNedsattBegrunnelse = null,
+                        vurdertAv = "saksbehandler"
                     ),
                     yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
                         vurderinger = listOf(
@@ -151,7 +153,8 @@ class BeregningTest {
                         begrunnelse = "test",
                         nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                         ytterligereNedsattBegrunnelse = "test2",
-                        ytterligereNedsattArbeidsevneDato = LocalDate.of(2020, 1, 1)
+                        ytterligereNedsattArbeidsevneDato = LocalDate.of(2020, 1, 1),
+                        vurdertAv = "saksbehandler"
                     ),
                     yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
                         vurderinger = listOf(
@@ -198,7 +201,8 @@ class BeregningTest {
                         begrunnelse = "test",
                         ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                         nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                        ytterligereNedsattBegrunnelse = "test2"
+                        ytterligereNedsattBegrunnelse = "test2",
+                        vurdertAv = "saksbehandler"
                     ),
                     yrkesskadeBeløpVurdering = null
                 ),
@@ -221,7 +225,8 @@ class BeregningTest {
                         begrunnelse = "test",
                         ytterligereNedsattArbeidsevneDato = null,
                         nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                        ytterligereNedsattBegrunnelse = "asdf"
+                        ytterligereNedsattBegrunnelse = "asdf",
+                        vurdertAv = "saksbehandler"
                     ), yrkesskadeBeløpVurdering = null
                 ),
                 registrerteYrkesskader = null

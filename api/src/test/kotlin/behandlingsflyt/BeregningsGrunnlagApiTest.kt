@@ -44,6 +44,7 @@ class BeregningsGrunnlagApiTest {
                         ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                         ytterligereNedsattBegrunnelse = "test",
                         nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                        vurdertAv = "saksbehandler"
                     ),
                     yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
                         vurderinger = listOf(
@@ -109,6 +110,7 @@ class BeregningsGrunnlagApiTest {
                         ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                         ytterligereNedsattBegrunnelse = "test",
                         nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                        vurdertAv = "saksbehandler"
                     ),
                     yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
                         vurderinger = listOf(

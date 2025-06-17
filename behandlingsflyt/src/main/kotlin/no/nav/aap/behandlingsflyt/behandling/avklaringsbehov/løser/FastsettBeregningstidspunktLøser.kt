@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -35,7 +36,15 @@ class FastsettBeregningstidspunktLøser(
 
         beregningVurderingRepository.lagre(
             behandlingId = behandling.id,
-            vurdering = løsning.beregningVurdering
+            vurdering = løsning.beregningVurdering.let {
+                BeregningstidspunktVurdering(
+                    begrunnelse = it.begrunnelse,
+                    nedsattArbeidsevneDato = it.nedsattArbeidsevneDato,
+                    ytterligereNedsattBegrunnelse = it.ytterligereNedsattBegrunnelse,
+                    ytterligereNedsattArbeidsevneDato = it.ytterligereNedsattArbeidsevneDato,
+                    vurdertAv = kontekst.bruker.ident
+                )
+            }
         )
 
         return LøsningsResultat(

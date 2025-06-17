@@ -28,7 +28,8 @@ class BeregningVurderingRepositoryImplTest {
             begrunnelse = "Dette er en begrunnelse",
             nedsattArbeidsevneDato = LocalDate.now(),
             ytterligereNedsattBegrunnelse = "Dette er en ytterligere begrunnelse",
-            ytterligereNedsattArbeidsevneDato = LocalDate.now().plusDays(30)
+            ytterligereNedsattArbeidsevneDato = LocalDate.now().plusDays(30),
+            vurdertAv = "saksbehandler"
         )
 
         val yrkesskadeVurderinger = listOf(
