@@ -151,11 +151,6 @@ class FlytOrkestrator(
 
         avklaringsbehovene.validateTilstand(behandling = behandling)
 
-        // Hvis fortsatt på vent
-        if (avklaringsbehovene.erSattPåVent()) {
-            return // Bail out
-        }
-
         val behandlingFlyt = behandling.flyt()
 
         var gjeldendeSteg = behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
