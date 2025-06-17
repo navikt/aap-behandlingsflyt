@@ -26,11 +26,8 @@ import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedPost
-import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import javax.sql.DataSource
-
-private val log = LoggerFactory.getLogger("hendelse.MottattHendelseAPI")
 
 fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/hendelse") {
@@ -41,9 +38,11 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource, repositoryRegi
                     authorizedAzps = listOf(Azp.Postmottak.uuid, Azp.Dokumentinnhenting.uuid)
                 )
             ) { _, dto ->
-                dataSource.transaction { connection ->
-                    val repositoryRegistry = repositoryRegistry.provider(connection)
-                    MottattHendelseService(repositoryRegistry).registrerMottattHendelse(dto)
+                MDC.putCloseable("saksnummer", dto.saksnummer.toString()).use {
+                    dataSource.transaction { connection ->
+                        val repositoryRegistry = repositoryRegistry.provider(connection)
+                        MottattHendelseService(repositoryRegistry).registrerMottattHendelse(dto)
+                    }
                 }
                 respond(EMPTY_JSON_RESPONSE, HttpStatusCode.Accepted)
             }
