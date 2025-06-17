@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.datadeling.sam.SamGateway
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamId
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -16,8 +17,8 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import org.slf4j.LoggerFactory
 import java.net.URI
-import java.time.LocalDate
 
 class SamGatewayImpl : SamGateway {
     companion object : Factory<SamGateway> {
@@ -25,6 +26,8 @@ class SamGatewayImpl : SamGateway {
             return SamGatewayImpl()
         }
     }
+
+    private val logger = LoggerFactory.getLogger(StartBehandlingSteg::class.java)
 
     private val restClient = RestClient.withDefaultResponseHandler(
         config = ClientConfig(scope = requiredConfigForKey("integrasjon.sam.scope")),
@@ -52,6 +55,7 @@ class SamGatewayImpl : SamGateway {
                 additionalHeaders = listOf(Header("pid", ident.identifikator))
             ),
             mapper = { body, _ ->
+                logger.info("respons fra SAM ved henting av samId: $body")
                 val respons = DefaultJsonMapper.fromJson<List<SamordningsvedtakApi>>(body).first()
                 require(respons.samordningsmeldinger.size<2 && respons.samordningsmeldinger.isNotEmpty()) {"for mangen eller for få samordningsmeldinger i responsen fra SAM ved henting av samId. Antall samordningsmeldinger: ${respons.samordningsmeldinger.size}"}
                 val res = respons.samordningsmeldinger.first().samId
