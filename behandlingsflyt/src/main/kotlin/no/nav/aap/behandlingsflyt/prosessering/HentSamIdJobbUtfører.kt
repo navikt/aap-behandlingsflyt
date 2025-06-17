@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.HentSamId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -21,6 +22,7 @@ class HentSamIdJobbUtfører(
     private val behandlingRepository: BehandlingRepository = repositoryProvider.provide(),
     private val sakRepository: SakRepository = repositoryProvider.provide(),
     private val vedtakRepository: VedtakRepository = repositoryProvider.provide(),
+    private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide(),
 
     ): JobbUtfører {
     override fun utfør(input: JobbInput) {
@@ -28,10 +30,13 @@ class HentSamIdJobbUtfører(
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
         val vedtakId = requireNotNull(vedtakRepository.hentId(behandling.id))
+        val tpRefusjonskravVurdering = tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(behandlingId)
 
-        val samId = samGateway.hentSamId(sak.person.aktivIdent(), sak.id.id, vedtakId)
+        if(tpRefusjonskravVurdering != null && tpRefusjonskravVurdering.harKrav) {
+            val samId = samGateway.hentSamId(sak.person.aktivIdent(), sak.id.id, vedtakId)
 
-        samIdRepository.lagre(behandlingId, samId.toString())
+            samIdRepository.lagre(behandlingId, samId.toString())
+        }
     }
 
 

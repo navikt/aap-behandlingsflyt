@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamGateway
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -20,6 +21,7 @@ class VarsleVedtakJobbUtfører(
     private val behandlingRepository: BehandlingRepository = repositoryProvider.provide(),
     private val vedtakRepository: VedtakRepository = repositoryProvider.provide(),
     private val flytJobbRepository: FlytJobbRepository = repositoryProvider.provide(),
+    private val tjenestepensjonRefusjonskravVurdering: TjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide(),
     private val samGateway: SamGateway = gatewayProvider.provide(),
 ) : JobbUtfører {
     override fun utfør(input: JobbInput) {
@@ -43,7 +45,11 @@ class VarsleVedtakJobbUtfører(
 
         samGateway.varsleVedtak(request)
 
-        flytJobbRepository.leggTil(JobbInput(HentSamIdJobbUtfører).medPayload(behandling.id))
+        val tpRefusjonskravVurdering = tjenestepensjonRefusjonskravVurdering.hentHvisEksisterer(behandlingId)
+
+        if(tpRefusjonskravVurdering != null && tpRefusjonskravVurdering.harKrav) {
+            flytJobbRepository.leggTil(JobbInput(HentSamIdJobbUtfører).medPayload(behandling.id))
+        }
     }
 
     companion object : ProviderJobbSpesifikasjon {
