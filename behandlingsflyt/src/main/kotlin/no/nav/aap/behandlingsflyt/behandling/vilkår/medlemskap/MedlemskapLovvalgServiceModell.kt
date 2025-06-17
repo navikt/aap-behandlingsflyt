@@ -16,7 +16,7 @@ data class TilhørighetVurdering(
     val indikasjon: Indikasjon,
     val opplysning: String,
     val resultat: Boolean,
-    val vurdertPeriode: VurdertPeriode,
+    val vurdertPeriode: String,
     val vedtakImedlGrunnlag: List<VedtakIMEDLGrunnlag>? = null,
     val mottarSykepengerGrunnlag: List<MottarSykepengerGrunnlag>? = null,
     val arbeidInntektINorgeGrunnlag: List<ArbeidInntektINorgeGrunnlag>? = null,
@@ -82,10 +82,10 @@ enum class Indikasjon {
     I_NORGE, UTENFOR_NORGE
 }
 
-enum class VurdertPeriode {
-    INNEVÆRENDE_OG_FORRIGE_MND,
-    SØKNADSTIDSPUNKT,
-    SISTE_5_ÅR
+enum class VurdertPeriode(val beskrivelse: String) {
+    INNEVÆRENDE_OG_FORRIGE_MND("Inneværende og forrige måned"),
+    SØKNADSTIDSPUNKT("Søknadstidspunkt"),
+    SISTE_5_ÅR("Siste 5 år")
 }
 
 enum class EØSLand(val alpha2: String) {

@@ -45,7 +45,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
 
     private fun oppgittJobbetIUtland(grunnlag: UtenlandsOppholdData?, forutgåendePeriode: Periode): TilhørighetVurdering {
         if (grunnlag == null) {
-            return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Mangler utenlandsdata fra søknad", true, VurdertPeriode.SISTE_5_ÅR)
+            return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Mangler utenlandsdata fra søknad", true, VurdertPeriode.SISTE_5_ÅR.beskrivelse)
         }
         val relevantePerioder = grunnlag.utenlandsOpphold?.filter {
             (it.tilDato != null && forutgåendePeriode.inneholder(it.tilDato)) || (it.fraDato != null && forutgåendePeriode.inneholder(it.fraDato))
@@ -83,13 +83,13 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             opplysning = "Arbeidet i utlandet siste 5 år",
             resultat = jobbUtenforNorge,
             oppgittJobbetIUtlandGrunnlag = arbeidUtlandPerioder,
-            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR
+            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse
         )
     }
 
     private fun oppgittUtenlandsOpphold(grunnlag: UtenlandsOppholdData?, forutgåendePeriode: Periode): TilhørighetVurdering {
         if (grunnlag == null) {
-            return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Mangler utenlandsdata fra søknad", true, VurdertPeriode.SISTE_5_ÅR)
+            return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Mangler utenlandsdata fra søknad", true, VurdertPeriode.SISTE_5_ÅR.beskrivelse)
         }
 
         val relevantePerioder = grunnlag.utenlandsOpphold?.filter {
@@ -110,7 +110,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             opplysning = "Opphold i utlandet siste 5 år",
             resultat = !grunnlag.harBoddINorgeSiste5År,
             oppgittUtenlandsOppholdGrunnlag = oppholdUtlandPerioder,
-            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR
+            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse
         )
     }
 
@@ -139,7 +139,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             opplysning = "Har hatt utenlandsk adresse i perioden",
             resultat = bosattUtenforNorge || !utenlandsAddresserGrunnlag.isNullOrEmpty(),
             utenlandsAddresserGrunnlag = utenlandsAddresserGrunnlag,
-            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR
+            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse
         )
     }
 
@@ -161,7 +161,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             opplysning = "Vedtak om annet lovvalgsland finnes",
             resultat = lovvalgslandErIkkeNorge != null,
             vedtakImedlGrunnlag = medlGrunnlag,
-            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR
+            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse
         )
     }
 
@@ -186,7 +186,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             opplysning = "Har statsborgerskap utenfor EØS i perioden",
             resultat = fantStatsborgerskapUtenforEØSiPerioden,
             manglerStatsborgerskapGrunnlag = manglerStatsborgerskapGrunnlag,
-            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR
+            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse
         )
     }
 
@@ -214,7 +214,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             opplysning = "Sammenhengende arbeid og inntekt i Norge siste 5 år",
             resultat = sammenhengendeInntektSiste5År,
             arbeidInntektINorgeGrunnlag = arbeidInntektINorgeGrunnlag,
-            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR
+            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse
         )
     }
 
@@ -257,7 +257,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             opplysning = "Vedtak om pliktig eller frivillig medlemskap finnes i MEDL for perioden",
             resultat = erMedlem != null,
             vedtakImedlGrunnlag = medlGrunnlag,
-            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR
+            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse
         )
     }
 }

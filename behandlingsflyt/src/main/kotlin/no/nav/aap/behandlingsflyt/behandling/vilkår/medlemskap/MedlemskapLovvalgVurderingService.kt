@@ -11,7 +11,7 @@ import no.nav.aap.komponenter.type.Periode
 
 class MedlemskapLovvalgVurderingService {
     fun vurderTilhørighet(grunnlag: MedlemskapLovvalgGrunnlag, rettighetsPeriode: Periode): KanBehandlesAutomatiskVurdering{
-        val førsteDelVurderinger = vurderFørsteDelKriteier(grunnlag, rettighetsPeriode)
+        val førsteDelVurderinger = vurderFørsteDelKriteier(grunnlag)
         val andreDelVurdering = vurderAndreDelKriterier(grunnlag, rettighetsPeriode)
 
         val oppfyltMinstEttKrav = førsteDelVurderinger.any{it.resultat}
@@ -24,8 +24,8 @@ class MedlemskapLovvalgVurderingService {
     }
 
     // Minst én må oppfylles
-    private fun vurderFørsteDelKriteier(grunnlag: MedlemskapLovvalgGrunnlag, rettighetsPeriode: Periode): List<TilhørighetVurdering> {
-        val mottarSykepengerVurdering = mottarSykepenger(grunnlag.medlemskapArbeidInntektGrunnlag, rettighetsPeriode)
+    private fun vurderFørsteDelKriteier(grunnlag: MedlemskapLovvalgGrunnlag): List<TilhørighetVurdering> {
+        val mottarSykepengerVurdering = mottarSykepenger(grunnlag.medlemskapArbeidInntektGrunnlag)
         val arbeidInntektINorgeVurdering = harArbeidInntektINorge(grunnlag.medlemskapArbeidInntektGrunnlag)
         val vedtakIMedl = harVedtakIMEDL(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag)
 
@@ -50,7 +50,7 @@ class MedlemskapLovvalgVurderingService {
                 indikasjon = Indikasjon.UTENFOR_NORGE,
                 opplysning = "Mangler utenlandsdata fra søknad",
                 resultat = true,
-                vurdertPeriode = VurdertPeriode.SØKNADSTIDSPUNKT
+                vurdertPeriode = VurdertPeriode.SØKNADSTIDSPUNKT.beskrivelse
             )
         }
         val relevantePerioder = grunnlag.utenlandsOpphold?.filter {
@@ -90,13 +90,13 @@ class MedlemskapLovvalgVurderingService {
             opplysning = "Arbeid i utland",
             resultat = jobbUtenforNorge,
             oppgittJobbetIUtlandGrunnlag = arbeidUtlandPerioder,
-            vurdertPeriode = VurdertPeriode.SØKNADSTIDSPUNKT
+            vurdertPeriode = VurdertPeriode.SØKNADSTIDSPUNKT.beskrivelse
         )
     }
 
     private fun oppgittUtenlandsOpphold(grunnlag: UtenlandsOppholdData?, rettighetsPeriode: Periode): TilhørighetVurdering {
         if (grunnlag == null) {
-            return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Mangler utenlandsdata fra søknad", true, VurdertPeriode.SØKNADSTIDSPUNKT)
+            return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Mangler utenlandsdata fra søknad", true, VurdertPeriode.SØKNADSTIDSPUNKT.beskrivelse)
         }
 
         val relevantePerioder = grunnlag.utenlandsOpphold?.filter {
@@ -117,7 +117,7 @@ class MedlemskapLovvalgVurderingService {
             opplysning = "Opphold i utland",
             resultat = !grunnlag.harBoddINorgeSiste5År,
             oppgittUtenlandsOppholdGrunnlag = oppholdUtlandPerioder,
-            vurdertPeriode = VurdertPeriode.SØKNADSTIDSPUNKT
+            vurdertPeriode = VurdertPeriode.SØKNADSTIDSPUNKT.beskrivelse
         )
     }
 
@@ -146,7 +146,7 @@ class MedlemskapLovvalgVurderingService {
             opplysning = "Utenlandsk adresse",
             resultat = bosattUtenforNorge || !utenlandsAddresserGrunnlag.isNullOrEmpty(),
             utenlandsAddresserGrunnlag = utenlandsAddresserGrunnlag,
-            vurdertPeriode = VurdertPeriode.SØKNADSTIDSPUNKT
+            vurdertPeriode = VurdertPeriode.SØKNADSTIDSPUNKT.beskrivelse
         )
     }
 
@@ -167,7 +167,7 @@ class MedlemskapLovvalgVurderingService {
             opplysning = "Vedtak om annet lovvalgsland finnes",
             resultat = lovvalgslandErIkkeNorge != null,
             vedtakImedlGrunnlag = medlGrunnlag,
-            vurdertPeriode = VurdertPeriode.SØKNADSTIDSPUNKT
+            vurdertPeriode = VurdertPeriode.SØKNADSTIDSPUNKT.beskrivelse
         )
     }
 
@@ -191,11 +191,11 @@ class MedlemskapLovvalgVurderingService {
             opplysning = "Mangler statsborgerskap i EØS",
             resultat = manglerEØS,
             manglerStatsborgerskapGrunnlag = manglerStatsborgerskapGrunnlag,
-            vurdertPeriode = VurdertPeriode.SØKNADSTIDSPUNKT
+            vurdertPeriode = VurdertPeriode.SØKNADSTIDSPUNKT.beskrivelse
         )
     }
 
-    private fun mottarSykepenger(grunnlag: MedlemskapArbeidInntektGrunnlag?, rettighetsPeriode: Periode): TilhørighetVurdering{
+    private fun mottarSykepenger(grunnlag: MedlemskapArbeidInntektGrunnlag?): TilhørighetVurdering{
         val sykepengerInntektGrunnlag = grunnlag?.inntekterINorgeGrunnlag?.filter { inntekt ->
             inntekt.inntektType?.uppercase() in enumValues<InntektTyper>().map { it.name }
         }
@@ -214,7 +214,7 @@ class MedlemskapLovvalgVurderingService {
             opplysning = "Mottar sykepenger",
             resultat = !sykepengerInntektGrunnlag.isNullOrEmpty(),
             mottarSykepengerGrunnlag = mottarSykepengerGrunnlag,
-            vurdertPeriode = VurdertPeriode.INNEVÆRENDE_OG_FORRIGE_MND
+            vurdertPeriode = VurdertPeriode.INNEVÆRENDE_OG_FORRIGE_MND.beskrivelse
         )
     }
 
@@ -244,7 +244,7 @@ class MedlemskapLovvalgVurderingService {
             opplysning = "Arbeid og inntekt i Norge",
             resultat = harArbeidInntektINorge,
             arbeidInntektINorgeGrunnlag = arbeidInntektINorgeGrunnlag,
-            vurdertPeriode = VurdertPeriode.INNEVÆRENDE_OG_FORRIGE_MND
+            vurdertPeriode = VurdertPeriode.INNEVÆRENDE_OG_FORRIGE_MND.beskrivelse
         )
     }
 
@@ -265,7 +265,7 @@ class MedlemskapLovvalgVurderingService {
             opplysning = "Vedtak om pliktig eller frivillig medlemskap finnes i MEDL",
             resultat = erMedlem != null,
             vedtakImedlGrunnlag = medlGrunnlag,
-            vurdertPeriode = VurdertPeriode.SØKNADSTIDSPUNKT
+            vurdertPeriode = VurdertPeriode.SØKNADSTIDSPUNKT.beskrivelse
         )
     }
 }
