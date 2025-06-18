@@ -12,6 +12,6 @@ class BehandlingUnderProsesseringException : FlytOperasjonException,
     }
 
     override fun body(): ErrorRespons {
-        return GenerellErrorRespons(cause?.message)
+        return GenerellErrorRespons(message)
     }
 }
