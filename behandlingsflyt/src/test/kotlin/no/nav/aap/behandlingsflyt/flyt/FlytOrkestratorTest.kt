@@ -1426,7 +1426,20 @@ class FlytOrkestratorTest {
             kategori = "S",
         ))
 
-        // Sletter tidligere informasjonskrav-oppdateringer for å slippe unna at den ikke skal sjekke på nytt før en time har gått
+
+        // prosesser på nytt
+        nullstillInformasjonskravOppdatert(InformasjonskravNavn.INSTITUSJONSOPPHOLD, revurdering.sakId)
+        revurdering = prosesserBehandling(revurdering)
+        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
+
+        // Behandlingen tilbakeføres til EtAnnetStedSteg
+        assertThat(revurdering.aktivtSteg()).isEqualTo(StegType.DU_ER_ET_ANNET_STED)
+        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.AVKLAR_SONINGSFORRHOLD)
+    }
+
+
+    // Sletter tidligere informasjonskrav-oppdateringer for å slippe unna at den ikke skal sjekke på nytt før en time har gått
+    private fun nullstillInformasjonskravOppdatert(informasjonskravnavn: InformasjonskravNavn, sakId: SakId) {
         dataSource.transaction { connection ->
             connection.execute(
                 """
@@ -1434,18 +1447,11 @@ class FlytOrkestratorTest {
                 """
             ) {
                 setParams {
-                    setEnumName(1, InformasjonskravNavn.INSTITUSJONSOPPHOLD)
-                    setLong(2, revurdering.sakId.id)
+                    setEnumName(1, informasjonskravnavn)
+                    setLong(2, sakId.id)
                 }
             }
         }
-
-        revurdering = prosesserBehandling(revurdering)
-        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
-
-        // Behandlingen tilbakeføres til EtAnnetStedSteg
-        assertThat(revurdering.aktivtSteg()).isEqualTo(StegType.DU_ER_ET_ANNET_STED)
-        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.AVKLAR_SONINGSFORRHOLD)
     }
 
     private fun revurderingEtterVentPåSamordning(ident: Ident, periode: Periode, sykePengerPeriode: Periode): Behandling {
