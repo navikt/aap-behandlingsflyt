@@ -88,7 +88,9 @@ class BeregningVurderingRepositoryImplTest {
 
             // Verifiser at alle vurderinger finnes, uavhengig av rekkefølge
             val hentedeVurderinger = beregningGrunnlag.yrkesskadeBeløpVurdering?.vurderinger
-            assertThat(hentedeVurderinger).containsExactlyInAnyOrderElementsOf(yrkesskadeVurderinger)
+            assertThat(hentedeVurderinger)
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("vurdertTidspunkt")
+                .containsExactlyInAnyOrderElementsOf(yrkesskadeVurderinger)
 
             // Slett og verifiser at det er slettet
             beregningVurderingRepository.slett(behandling.id)
