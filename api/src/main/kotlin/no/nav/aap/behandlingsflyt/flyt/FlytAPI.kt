@@ -372,15 +372,9 @@ private fun utledVisning(
         harÅpentKvalitetssikringsAvklaringsbehov(alleAvklaringsbehovInkludertFrivillige) && aktivtSteg == StegType.KVALITETSSIKRING
 
     val saksbehandlerReadOnly = if (brukerHarIngenValidering) {
-        erTilKvalitetssikring || !flyt.erStegFør(
-            aktivtSteg,
-            StegType.FATTE_VEDTAK
-        )
+        erTilKvalitetssikring || erEtterBeslutterstegetHvisEksisterer(flyt, aktivtSteg)
     } else {
-        erTilKvalitetssikring || !flyt.erStegFør(
-            aktivtSteg,
-            StegType.FATTE_VEDTAK
-        ) || brukerHarKvalitetssikret || brukerHarBesluttet
+        erTilKvalitetssikring || erEtterBeslutterstegetHvisEksisterer(flyt, aktivtSteg) || brukerHarKvalitetssikret || brukerHarBesluttet
     }
 
     val visBeslutterKort =
@@ -479,6 +473,13 @@ private fun vilkårResultat(
     behandlingId: BehandlingId
 ): Vilkårsresultat {
     return vilkårsresultatRepository.hent(behandlingId)
+}
+
+private fun erEtterBeslutterstegetHvisEksisterer(flyt: BehandlingFlyt, aktivtSteg: StegType): Boolean {
+    return flyt.stegene().contains(StegType.FATTE_VEDTAK) && !flyt.erStegFør(
+        aktivtSteg,
+        StegType.FATTE_VEDTAK
+    )
 }
 
 private fun hentUtRelevantVilkårForSteg(vilkårsresultat: Vilkårsresultat, stegType: StegType): VilkårDTO? {
