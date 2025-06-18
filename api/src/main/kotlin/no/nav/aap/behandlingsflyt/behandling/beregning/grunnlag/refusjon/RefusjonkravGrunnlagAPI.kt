@@ -67,8 +67,8 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
         }
     }
 
-    route("/api/behandling") {
-        route("/{referanse}/navenheter") {
+    route("/api/navenhet") {
+        route("/{referanse}/finn") {
             authorizedPost<BehandlingReferanse, List<NavEnheterResponse>, NavEnheterRequest>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("referanse")
