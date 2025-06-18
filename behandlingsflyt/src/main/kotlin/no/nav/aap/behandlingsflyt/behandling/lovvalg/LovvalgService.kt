@@ -32,6 +32,8 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
 import java.time.YearMonth
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
 
 class LovvalgService private constructor(
     private val sakService: SakService,
@@ -85,14 +87,19 @@ class LovvalgService private constructor(
         val gateway = GatewayProvider.provide<EnhetsregisteretGateway>()
 
         // EREG har ikke batch-oppslag
-        val enhetsGrunnlag = orgnumre.mapNotNull {
-            val response = gateway.hentEREGData(EnhetsregisterOrganisasjonRequest(it)) ?: return@mapNotNull null
-            EnhetGrunnlag(
-                orgnummer = response.organisasjonsnummer,
-                orgNavn = response.navn.sammensattnavn
-            )
+        val executor = Executors.newVirtualThreadPerTaskExecutor()
+        val futures = orgnumre.map { orgnummer ->
+            CompletableFuture.supplyAsync({
+                val response = gateway.hentEREGData(EnhetsregisterOrganisasjonRequest(orgnummer))
+                response?.let {
+                    EnhetGrunnlag(
+                        orgnummer = it.organisasjonsnummer,
+                        orgNavn = it.navn.sammensattnavn
+                    )
+                }
+            }, executor)
         }
-        return enhetsGrunnlag
+        return futures.mapNotNull { it.get() }
     }
 
     private fun innhentAInntektGrunnlag(sak: Sak): List<ArbeidsInntektMaaned> {
