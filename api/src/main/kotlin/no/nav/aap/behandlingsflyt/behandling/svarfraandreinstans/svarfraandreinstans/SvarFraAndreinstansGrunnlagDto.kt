@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
+import no.nav.aap.behandlingsflyt.faktagrunnlag.svarfraandreinstans.SvarFraAndreinstansKonsekvens
+import no.nav.aap.behandlingsflyt.faktagrunnlag.svarfraandreinstans.SvarFraAndreinstansVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnkeUtfall
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.BehandlingEventType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseV0
@@ -8,13 +11,21 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjoeringsUtfall
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TrygderettUtfall
 
 data class SvarFraAndreinstansGrunnlagDto(
-    val svarFraAndreinstans: SvarFraAndreinstansDto
+    val svarFraAndreinstans: SvarFraAndreinstansDto,
+    val gjeldendeVurdering: SvarFraAndreinstansVurderingDto?
 )
 
 data class SvarFraAndreinstansDto(
     val type: BehandlingEventType,
     val utfall: Utfall?,
     val feilregistrertBegrunnelse: String?
+)
+
+data class SvarFraAndreinstansVurderingDto(
+    val begrunnelse: String,
+    val konsekvens: SvarFraAndreinstansKonsekvens,
+    val vilkårSomOmgjøres: List<Hjemmel>,
+    val vurdertAv: String
 )
 
 enum class Utfall {
@@ -105,5 +116,14 @@ internal fun KabalHendelseV0.tilDto(): SvarFraAndreinstansDto {
         type = this.type,
         utfall = Utfall.fraHendelse(this),
         feilregistrertBegrunnelse = this.detaljer.behandlingFeilregistrert?.reason
+    )
+}
+
+internal fun SvarFraAndreinstansVurdering.tilDto(): SvarFraAndreinstansVurderingDto {
+    return SvarFraAndreinstansVurderingDto(
+        begrunnelse = this.begrunnelse,
+        konsekvens = this.konsekvens,
+        vilkårSomOmgjøres = this.vilkårSomOmgjøres,
+        vurdertAv = this.vurdertAv
     )
 }

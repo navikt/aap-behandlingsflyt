@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.svarfraandreinstans.SvarFraAndreinstansRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseV0
@@ -37,10 +38,13 @@ fun NormalOpenAPIRoute.svarFraAndreinstansGrunnlagApi(
                     .first()
                     .strukturerteData<KabalHendelseV0>()?.data
                 requireNotNull(hendelse) { "Fant ikke tilhørende kabalhendelse" }
-
+                
+                val grunnlag = repositoryProvider.provide<SvarFraAndreinstansRepository>()
+                    .hentHvisEksisterer(behandling.id)
 
                 SvarFraAndreinstansGrunnlagDto(
-                    svarFraAndreinstans = hendelse.tilDto()
+                    svarFraAndreinstans = hendelse.tilDto(),
+                    gjeldendeVurdering = grunnlag?.vurdering?.tilDto(),
                 )
             }
 
