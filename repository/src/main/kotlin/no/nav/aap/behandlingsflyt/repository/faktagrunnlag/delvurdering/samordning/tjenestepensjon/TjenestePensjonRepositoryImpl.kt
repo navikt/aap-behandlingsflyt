@@ -212,17 +212,17 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
         }
     }
 
-    private fun getTjenestepensjonOrdningIds(ordningIds: List<Long>): List<Long> = dbConnection.queryList(
+    private fun getTjenestepensjonOrdningIds(ordningerIds: List<Long>): List<Long> = dbConnection.queryList(
         """
-                    SELECT tjenestepensjon_ordninger_id
+                    SELECT id
                     FROM tjenestepensjon_ordning
                     WHERE tjenestepensjon_ordninger_id = ANY(?::bigint[]);
                  
                 """.trimIndent()
     ) {
-        setParams { setLongArray(1, ordningIds) }
+        setParams { setLongArray(1, ordningerIds) }
         setRowMapper { row ->
-            row.getLong("tjenestepensjon_ordninger_id")
+            row.getLong("id")
         }
     }
 
