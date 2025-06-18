@@ -51,6 +51,7 @@ public const val EFFEKTUER_AVVIST_PÅ_FORMKRAV_KODE: String = "6004"
 public const val SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV_KODE: String = "6005"
 public const val BEKREFT_TOTALVURDERING_KLAGE: String = "6006"
 public const val VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV_KODE: String = "6007"
+public const val HÅNDTER_SVAR_FRA_ANDREINSTANS_KODE: String = "6008"
 public const val VURDER_TREKK_AV_KLAGE_KODE: String = "6010"
 
 @Suppress("EnumEntryName")

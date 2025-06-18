@@ -32,6 +32,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettYr
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FritakMeldepliktLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.HåndterSvarFraAndreinstansLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.HåndterSvarFraAndreinstansLøsningDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SamordningVentPaVirkningstidspunktLøsning
@@ -100,6 +102,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykepengerVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.svarfraandreinstans.SvarFraAndreinstansKonsekvens
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestratorTest.Companion.util
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.NyÅrsakTilBehandlingHendelse
@@ -3408,7 +3411,7 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `Håndtere svar fra kabal`() {
+    fun `Håndtere svar fra kabal - valg omgjøring skal opprette en revurdering`() {
         val person = TestPersoner.PERSON_FOR_UNG()
         val ident = person.aktivIdent()
 
@@ -3440,7 +3443,7 @@ class FlytOrkestratorTest {
         assertThat(klagebehandling.referanse).isNotEqualTo(avslåttFørstegang.referanse)
         assertThat(klagebehandling.typeBehandling()).isEqualTo(TypeBehandling.Klage)
 
-        val svarFraAndreinstansBehandling = sendInnDokument(
+        var svarFraAndreinstansBehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("22"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
@@ -3468,7 +3471,6 @@ class FlytOrkestratorTest {
         assertThat(svarFraAndreinstansBehandling.referanse).isNotEqualTo(klagebehandling.referanse)
         assertThat(svarFraAndreinstansBehandling.typeBehandling()).isEqualTo(TypeBehandling.SvarFraAndreinstans)
 
-
         dataSource.transaction { connection ->
             val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
             val kabalHendelseDokumenter =
@@ -3485,6 +3487,30 @@ class FlytOrkestratorTest {
         assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
             .isEqualTo(Definisjon.HÅNDTER_SVAR_FRA_ANDREINSTANS)
 
+        svarFraAndreinstansBehandling = løsAvklaringsBehov(
+            svarFraAndreinstansBehandling,
+            avklaringsBehovLøsning = HåndterSvarFraAndreinstansLøsning(
+                svarFraAndreinstansVurdering = HåndterSvarFraAndreinstansLøsningDto(
+                    begrunnelse = "Begrunnelse for håndtering",
+                    konsekvens = SvarFraAndreinstansKonsekvens.OMGJØRING,
+                    vilkårSomOmgjøres = listOf(
+                        Hjemmel.FOLKETRYGDLOVEN_11_5,
+                        Hjemmel.FOLKETRYGDLOVEN_11_6
+                    )
+                )
+            )
+        )
+        
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(svarFraAndreinstansBehandling.id)
+        assertThat(åpneAvklaringsbehov).isEmpty()
+        assertThat(svarFraAndreinstansBehandling.status()).isEqualTo(Status.AVSLUTTET)
+        
+        util.ventPåSvar(sakId = svarFraAndreinstansBehandling.sakId.id)
+        
+        val revurdering = hentNyesteBehandlingForSak(svarFraAndreinstansBehandling.sakId)
+        assertThat(revurdering).isNotNull
+        assertThat(revurdering.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+        assertThat(revurdering.årsaker().map { it.type }).contains(ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
     }
 
     @Test
@@ -3665,7 +3691,7 @@ class FlytOrkestratorTest {
     private fun hentNyesteBehandlingForSak(
         sakId: SakId,
         typeBehandling: List<TypeBehandling> = TypeBehandling.entries
-        
+
     ): Behandling {
         return dataSource.transaction(readOnly = true) { connection ->
             val finnSisteBehandlingFor = BehandlingRepositoryImpl(connection).finnSisteBehandlingFor(

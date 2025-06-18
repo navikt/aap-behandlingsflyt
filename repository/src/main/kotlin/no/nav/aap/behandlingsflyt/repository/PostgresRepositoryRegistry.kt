@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapForutgåendeRepositoryImpl
@@ -54,6 +53,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.svarfraanadreinstans.SvarFraAndreinstansRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.log.ContextRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
@@ -122,4 +122,5 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<ManuellInntektGrunnlagRepositoryImpl>()
     .register<SamIdRepositoryImpl>()
     .register<EffektuerAvvistPåFormkravRepositoryImpl>()
+    .register<SvarFraAndreinstansRepositoryImpl>()
 
