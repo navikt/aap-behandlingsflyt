@@ -6,6 +6,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Instant
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
 
 class InformasjonskravGrunnlagImpl(
     private val informasjonskravRepository: InformasjonkskravRepository,
@@ -40,25 +42,29 @@ class InformasjonskravGrunnlagImpl(
                 krav.erRelevant(kontekst, steg, sisteOppdatering)
             }
 
-        val endredeInformasjonskrav = relevanteInformasjonskrav
-            .parallelStream()
+        val executor = Executors.newVirtualThreadPerTaskExecutor()
+
+        val informasjonskravFutures = relevanteInformasjonskrav
             .map { triple ->
-                val krav = triple.second
-                val span = tracer.spanBuilder("informasjonskrav ${krav.navn}")
-                    .setSpanKind(SpanKind.INTERNAL)
-                    .setAttribute("informasjonskrav", krav.navn.toString())
-                    .startSpan()
-                try {
-                    span.makeCurrent().use {
-                        Pair(triple, krav.oppdater(kontekst))
+                CompletableFuture.supplyAsync({
+                    val krav = triple.second
+                    val span = tracer.spanBuilder("informasjonskrav ${krav.navn}")
+                        .setSpanKind(SpanKind.INTERNAL)
+                        .setAttribute("informasjonskrav", krav.navn.toString())
+                        .startSpan()
+                    try {
+                        span.makeCurrent().use {
+                            Pair(triple, krav.oppdater(kontekst))
+                        }
+                    } finally {
+                        span.end()
                     }
-                } finally {
-                    span.end()
-                }
+                }, executor)
             }
+
+        val endredeInformasjonskrav = informasjonskravFutures.map { it.join() }
             .filter { (_, endret) -> endret == Informasjonskrav.Endret.ENDRET }
             .map { it.first }
-            .toList()
 
         informasjonskravRepository.registrerOppdateringer(
             kontekst.sakId,
