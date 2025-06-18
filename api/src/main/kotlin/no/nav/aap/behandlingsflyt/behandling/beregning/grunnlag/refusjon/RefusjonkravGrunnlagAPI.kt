@@ -20,6 +20,7 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.authorizedPost
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
@@ -68,11 +69,11 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
 
     route("/api/behandling") {
         route("/{referanse}/navenheter") {
-            authorizedGet<BehandlingReferanse, List<NavEnheterResponse>>(
+            authorizedPost<BehandlingReferanse, List<NavEnheterResponse>, NavEnheterRequest>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
-            ) { req ->
+            ) { req, body ->
                 val response =
                     NavKontorService().hentNavEnheter()?.map { enhet ->
                         NavEnheterResponse(navn = enhet.navn, enhetsnummer = enhet.enhetsNummer)
