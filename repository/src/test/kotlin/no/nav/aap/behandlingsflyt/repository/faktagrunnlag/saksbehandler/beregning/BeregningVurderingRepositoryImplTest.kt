@@ -36,12 +36,14 @@ class BeregningVurderingRepositoryImplTest {
             YrkesskadeBeløpVurdering(
                 antattÅrligInntekt = Beløp(BigDecimal("450000")),
                 referanse = "Referanse 1",
-                begrunnelse = "Begrunnelse for yrkesskade 1"
+                begrunnelse = "Begrunnelse for yrkesskade 1",
+                vurdertAv = "saksbehandler"
             ),
             YrkesskadeBeløpVurdering(
                 antattÅrligInntekt = Beløp(BigDecimal("500000")),
                 referanse = "Referanse 2",
-                begrunnelse = "Begrunnelse for yrkesskade 2"
+                begrunnelse = "Begrunnelse for yrkesskade 2",
+                vurdertAv = "saksbehandler"
             )
         )
 
@@ -86,7 +88,9 @@ class BeregningVurderingRepositoryImplTest {
 
             // Verifiser at alle vurderinger finnes, uavhengig av rekkefølge
             val hentedeVurderinger = beregningGrunnlag.yrkesskadeBeløpVurdering?.vurderinger
-            assertThat(hentedeVurderinger).containsExactlyInAnyOrderElementsOf(yrkesskadeVurderinger)
+            assertThat(hentedeVurderinger)
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("vurdertTidspunkt")
+                .containsExactlyInAnyOrderElementsOf(yrkesskadeVurderinger)
 
             // Slett og verifiser at det er slettet
             beregningVurderingRepository.slett(behandling.id)

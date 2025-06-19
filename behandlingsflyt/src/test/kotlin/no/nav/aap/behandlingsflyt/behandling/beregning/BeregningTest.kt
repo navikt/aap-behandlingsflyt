@@ -107,7 +107,8 @@ class BeregningTest {
                             YrkesskadeBeløpVurdering(
                                 antattÅrligInntekt = Beløp(500000),
                                 referanse = "yrkesskadesaken",
-                                begrunnelse = "asdf"
+                                begrunnelse = "asdf",
+                                vurdertAv = "saksbehandler"
                             )
                         )
                     )
@@ -161,7 +162,8 @@ class BeregningTest {
                             YrkesskadeBeløpVurdering(
                                 antattÅrligInntekt = Beløp(500000),
                                 referanse = "yrkesskadesaken",
-                                begrunnelse = "asdf"
+                                begrunnelse = "asdf",
+                                vurdertAv = "saksbehandler"
                             )
                         )
                     )

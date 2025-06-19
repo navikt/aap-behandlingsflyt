@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettYrkesskadeInntektLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -22,7 +23,15 @@ class FastsettYrkesskadeInntektLøser(
 
         beregningVurderingRepository.lagre(
             behandlingId = behandling.id,
-            vurdering = løsning.yrkesskadeInntektVurdering.vurderinger
+            vurdering =
+                løsning.yrkesskadeInntektVurdering.vurderinger.map {
+                    YrkesskadeBeløpVurdering(
+                        antattÅrligInntekt = it.antattÅrligInntekt,
+                        referanse = it.referanse,
+                        begrunnelse = it.begrunnelse,
+                        vurdertAv = kontekst.bruker.ident
+                    )
+                }
         )
 
         return LøsningsResultat(
