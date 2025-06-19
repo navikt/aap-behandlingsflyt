@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt
 
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.komponenter.verdityper.Beløp
 import java.time.LocalDate
 
@@ -17,5 +16,5 @@ data class YrkesskadeBeløpVurderingResponse(
     val antattÅrligInntekt: Beløp,
     val referanse: String,
     val begrunnelse: String,
-    val vurdertAvResponse: VurdertAvResponse
+    val vurdertAv: VurdertAvResponse
 )

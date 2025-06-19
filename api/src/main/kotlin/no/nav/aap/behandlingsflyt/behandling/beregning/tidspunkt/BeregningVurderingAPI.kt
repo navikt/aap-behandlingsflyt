@@ -112,7 +112,11 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource, repositoryR
                                 )
                             },
                         vurderinger =
-                            beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger?.map { it.toResponse() }
+                            beregningGrunnlag
+                                ?.yrkesskadeBeløpVurdering
+                                ?.vurderinger
+                                ?.sortedByDescending { vurdering -> vurdering.vurdertTidspunkt }
+                                ?.map { vurdering -> vurdering.toResponse() }
                                 ?: emptyList()
                     )
                 }
@@ -146,7 +150,7 @@ private fun YrkesskadeBeløpVurdering.toResponse(): YrkesskadeBeløpVurderingRes
         antattÅrligInntekt = antattÅrligInntekt,
         referanse = referanse,
         begrunnelse = begrunnelse,
-        vurdertAvResponse =
+        vurdertAv =
             VurdertAvResponse(
                 ident = vurdertAv,
                 dato =
