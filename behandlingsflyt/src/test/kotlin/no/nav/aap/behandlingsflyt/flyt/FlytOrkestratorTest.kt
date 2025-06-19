@@ -55,6 +55,7 @@ import no.nav.aap.behandlingsflyt.behandling.trekkklage.flate.TrekkKlageÅrsakDt
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
 import no.nav.aap.behandlingsflyt.drift.Driftfunksjoner
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
@@ -86,6 +87,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
@@ -1340,6 +1342,7 @@ class FlytOrkestratorTest {
         val periode = Periode(fom, fom.plusYears(3))
 
         val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
+
         val person = TestPersoner.STANDARD_PERSON().medSykepenger(
             listOf(
                 TestPerson.Sykepenger(
@@ -1347,9 +1350,114 @@ class FlytOrkestratorTest {
                 )
             )
         )
-
         val ident = person.aktivIdent()
+        var revurdering = revurderingEtterVentPåSamordning(ident, periode, sykePengerPeriode)
 
+        // Verifiser at den er satt på vent
+        var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
+
+        assertThat(
+            åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
+
+        // Opprett manuell revurdering før ta av vent
+        revurdering = sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    ManuellRevurderingV0(
+                        årsakerTilBehandling = listOf(SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+                        beskrivelse = "en begrunnelse",
+                    ),
+                ),
+                journalpost = JournalpostId("121321"),
+                innsendingType = InnsendingType.MANUELL_REVURDERING,
+                periode = periode,
+            )
+        )
+        assertThat(revurdering.årsaker().map { it.type }).describedAs("Ny årsak skal være lagt til")
+            .contains(ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+
+        // Ta av vent
+        revurdering = løsAvklaringsBehov(revurdering, SamordningVentPaVirkningstidspunktLøsning())
+
+        assertThat(revurdering.aktivtSteg()).describedAs("Forventer at behandlingen ligger på sykdom nå.")
+            .isEqualTo(StegType.AVKLAR_SYKDOM)
+
+        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
+        assertThat(åpneAvklaringsbehovPåNyBehandling.filter { it.erVentepunkt() }).isEmpty()
+
+        assertThat(åpneAvklaringsbehovPåNyBehandling).describedAs("Kun sykdom skal være åpent avklaringsbehov.")
+            .extracting(Avklaringsbehov::definisjon).containsExactly(tuple(Definisjon.AVKLAR_SYKDOM))
+
+        // Prøve å løse sykdomsvilkåret på nytt
+        revurdering = revurdering.løsSykdom()
+        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
+        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_SYKDOM)
+        assertThat(
+            åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.AVKLAR_BISTANDSBEHOV)
+    }
+
+    @Test
+    fun `ny informasjon i tidligere steg skal tilbakeføre behandling som er på vent pga samordning`() {
+        val fom = LocalDate.now().minusYears(1)
+        val periode = Periode(fom, fom.plusYears(3))
+
+        val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
+
+        var person = TestPersoner.STANDARD_PERSON().medSykepenger(
+            listOf(
+                TestPerson.Sykepenger(
+                    grad = 50, periode = sykePengerPeriode
+                )
+            )
+        )
+        val ident = person.aktivIdent()
+        var revurdering = revurderingEtterVentPåSamordning(ident, periode, sykePengerPeriode)
+
+        // Verifiser at den er satt på vent
+        var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
+        assertThat(
+            åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
+
+        // Nytt institusjonsopphold
+        person.institusjonsopphold = listOf(InstitusjonsoppholdJSON(
+            startdato = LocalDate.now().minusMonths(5),
+            forventetSluttdato = LocalDate.now().plusMonths(4),
+            institusjonstype = "FO",
+            institusjonsnavn = "institusjon",
+            organisasjonsnummer = "2334",
+            kategori = "S",
+        ))
+
+
+        // prosesser på nytt
+        nullstillInformasjonskravOppdatert(InformasjonskravNavn.INSTITUSJONSOPPHOLD, revurdering.sakId)
+        revurdering = prosesserBehandling(revurdering)
+        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
+
+        // Behandlingen tilbakeføres til EtAnnetStedSteg
+        assertThat(revurdering.aktivtSteg()).isEqualTo(StegType.DU_ER_ET_ANNET_STED)
+        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.AVKLAR_SONINGSFORRHOLD)
+    }
+
+
+    // Sletter tidligere informasjonskrav-oppdateringer for å slippe unna at den ikke skal sjekke på nytt før en time har gått
+    private fun nullstillInformasjonskravOppdatert(informasjonskravnavn: InformasjonskravNavn, sakId: SakId) {
+        dataSource.transaction { connection ->
+            connection.execute(
+                """
+                    delete from informasjonskrav_oppdatert where informasjonskrav = ? and sak_id = ?
+                """
+            ) {
+                setParams {
+                    setEnumName(1, informasjonskravnavn)
+                    setLong(2, sakId.id)
+                }
+            }
+        }
+    }
+
+    private fun revurderingEtterVentPåSamordning(ident: Ident, periode: Periode, sykePengerPeriode: Periode): Behandling {
         // Sender inn en søknad
         var behandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
@@ -1453,59 +1561,18 @@ class FlytOrkestratorTest {
         assertThat(periodeMedFullSamordning.tom).isEqualTo(periode.tom)
 
         val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
-        val behandlingReferanse = behandling.referanse
 
         løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
+
         val nyesteBehandling = hentNyesteBehandlingForSak(behandling.sakId)
+        val behandlingReferanse = behandling.referanse
 
         // Siden samordning overlappet, skal en revurdering opprettes med en gang
-        assertThat(nyesteBehandling).isNotEqualTo(behandlingReferanse)
+        assertThat(nyesteBehandling.referanse).isNotEqualTo(behandlingReferanse)
         assertThat(nyesteBehandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
 
-        var revurdering = nyesteBehandling
-
         util.ventPåSvar(sakId = behandling.sakId.id)
-
-        // Verifiser at den er satt på vent
-        var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
-
-        assertThat(
-            åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
-
-        // Opprett manuell revurdering før ta av vent
-        revurdering = sendInnDokument(
-            ident, DokumentMottattPersonHendelse(
-                mottattTidspunkt = LocalDateTime.now(),
-                strukturertDokument = StrukturertDokument(
-                    ManuellRevurderingV0(
-                        årsakerTilBehandling = listOf(SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
-                        beskrivelse = "en begrunnelse",
-                    ),
-                ),
-                journalpost = JournalpostId("121321"),
-                innsendingType = InnsendingType.MANUELL_REVURDERING,
-                periode = periode,
-            )
-        )
-        assertThat(revurdering.årsaker().map { it.type }).describedAs("Ny årsak skal være lagt til")
-            .contains(ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
-
-        // Ta av vent
-        revurdering = løsAvklaringsBehov(revurdering, SamordningVentPaVirkningstidspunktLøsning())
-
-        assertThat(revurdering.aktivtSteg()).describedAs("Forventer at behandlingen ligger på sykdom nå.")
-            .isEqualTo(StegType.AVKLAR_SYKDOM)
-
-        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
-        assertThat(åpneAvklaringsbehovPåNyBehandling.filter { it.erVentepunkt() }).isEmpty()
-
-        assertThat(åpneAvklaringsbehovPåNyBehandling).describedAs("Kun sykdom skal være åpent avklaringsbehov.")
-            .extracting(Avklaringsbehov::definisjon).containsExactly(tuple(Definisjon.AVKLAR_SYKDOM))
-
-        // Prøve å løse sykdomsvilkåret på nytt
-        revurdering = revurdering.løsSykdom()
-        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
-        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_SYKDOM)
+        return nyesteBehandling
     }
 
     @Test
@@ -3950,7 +4017,7 @@ class FlytOrkestratorTest {
         prosesserBehandling(behandling)
     }
 
-    private fun prosesserBehandling(behandling: Behandling) {
+    private fun prosesserBehandling(behandling: Behandling): Behandling {
         dataSource.transaction { connection ->
             FlytOrkestrator(postgresRepositoryRegistry.provider(connection)).forberedOgProsesserBehandling(
                 FlytKontekst(
@@ -3962,5 +4029,6 @@ class FlytOrkestratorTest {
             )
         }
         util.ventPåSvar(behandling.sakId.id, behandling.id.id)
+        return hentBehandling(behandling.referanse)
     }
 }

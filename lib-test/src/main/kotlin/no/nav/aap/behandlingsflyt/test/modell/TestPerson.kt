@@ -34,7 +34,7 @@ class TestPerson(
     var barn: List<TestPerson> = emptyList(),
     val navn: PersonNavn = FiktivtNavnGenerator.genererNavn(),
     val yrkesskade: List<TestYrkesskade> = emptyList(),
-    val institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
+    var institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
     var uføre: Prosent? = null,
     inntekter: List<InntektPerÅr> = defaultInntekt(),
     val personStatus: List<PdlFolkeregisterPersonStatus> = listOf(
