@@ -48,7 +48,7 @@ class NorgGateway : EnhetGateway {
         return response.tilEnhet()
     }
 
-    override fun hentAlleEnheter(navn: String): List<Enhet> {
+    override fun hentAlleEnheter(): List<Enhet> {
         val uriWithParams = URI.create("$baseUri/norg2/api/v1/enhet?enhetStatusListe=AKTIV")
 
         val httpRequest =
