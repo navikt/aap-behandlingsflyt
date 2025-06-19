@@ -198,19 +198,6 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                             )
                         }
 
-                        val harTilgang =
-                            GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                                behandlingReferanse.referanse,
-                                Definisjon.SKRIV_BREV,
-                                token()
-                            )
-
-                        val harIkkeGjortNoenVurderinger =
-                            avklaringsbehovene.alle().filter { it.erTotrinn() }
-                                .none { it.brukere().contains(bruker().ident) }
-
-                        val harTilgangTilÅSaksbehandle = harTilgang && harIkkeGjortNoenVurderinger
-
                         BrevGrunnlag(
                             grunnlag
                         )
