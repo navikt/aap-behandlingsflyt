@@ -78,7 +78,7 @@ class EffektuerAvvistPåFormkravRepositoryImplTest {
             )
             repository.lagreVarsel(
                 klageBehandling.id,
-                brevbestillingsreferanse = bestillingsreferanse
+                varsel = bestillingsreferanse
             )
 
             // Hent grunnlag

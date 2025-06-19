@@ -24,7 +24,7 @@ class EffektuerAvvistPåFormkravRepositoryImpl(private val connection: DBConnect
     
     override fun lagreVarsel(
         behandlingId: BehandlingId,
-        brevbestillingsreferanse: BrevbestillingReferanse
+        varsel: BrevbestillingReferanse
     ) {
         
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
@@ -38,7 +38,7 @@ class EffektuerAvvistPåFormkravRepositoryImpl(private val connection: DBConnect
             "insert into avvist_formkrav_varsel(brev_referanse) values(?)"
         ) {
             setParams {
-                setUUID(1, brevbestillingsreferanse.brevbestillingReferanse)
+                setUUID(1, varsel.brevbestillingReferanse)
             }
         }
 
