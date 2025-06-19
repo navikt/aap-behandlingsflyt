@@ -619,15 +619,15 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
     private fun getArbeiderIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
         """
-                    SELECT id
+                    SELECT arbeider_id
                     FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
-                    WHERE arbeider_id = ? 
+                    WHERE behandling_id = ? 
                  
                 """.trimIndent()
     ) {
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
-            row.getLong("id")
+            row.getLong("arbeider_id")
         }
     }
 
