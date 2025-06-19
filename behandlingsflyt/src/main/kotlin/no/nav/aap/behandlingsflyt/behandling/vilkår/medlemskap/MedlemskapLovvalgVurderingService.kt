@@ -219,13 +219,11 @@ class MedlemskapLovvalgVurderingService {
     }
 
     private fun harArbeidInntektINorge(grunnlag: MedlemskapArbeidInntektGrunnlag?): TilhørighetVurdering {
-        val eksistererArbeidsforhold = grunnlag?.arbeiderINorgeGrunnlag?.any() ?: false
+        //val eksistererArbeidsforhold = grunnlag?.arbeiderINorgeGrunnlag?.any() ?: false
         val opptjeningsLandErNorge = grunnlag?.inntekterINorgeGrunnlag?.any{EØSLand.erNorge(it.opptjeningsLand)} ?: false
         val skattemessigBosattLandErNorge = grunnlag?.inntekterINorgeGrunnlag?.any{EØSLand.erNorge(it.skattemessigBosattLand)} ?: false
 
-        val harArbeidInntektINorge = skattemessigBosattLandErNorge
-            || opptjeningsLandErNorge
-            || eksistererArbeidsforhold
+        val harArbeidInntektINorge = skattemessigBosattLandErNorge || opptjeningsLandErNorge
 
         val arbeidInntektINorgeGrunnlag = if (harArbeidInntektINorge) {
             grunnlag?.inntekterINorgeGrunnlag?.map {
