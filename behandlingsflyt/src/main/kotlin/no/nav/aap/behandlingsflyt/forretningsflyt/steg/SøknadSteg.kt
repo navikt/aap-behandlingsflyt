@@ -38,9 +38,9 @@ class SøknadSteg(
         }
 
         if (trukketSøknadRepository.hentTrukketSøknadVurderinger(kontekst.behandlingId).isNotEmpty()) {
-            val sak = sakRepository.hent(kontekst.sakId)
+            val rettighetsperiode = kontekst.rettighetsperiode
             // setter ny rettighetsperiode til en dag lang
-            val nyRettighetsPeriode = Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom)
+            val nyRettighetsPeriode = Periode(rettighetsperiode.fom, rettighetsperiode.fom)
             sakRepository.oppdaterRettighetsperiode(kontekst.sakId, nyRettighetsPeriode)
             slettVurderingerOgRegisterdata(kontekst.behandlingId)
             return Fullført
