@@ -51,7 +51,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.flate.
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.flate.påklagetBehandlingGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.arbeidsevneGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.bistand.bistandsgrunnlagApi
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.flate.studentgrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi

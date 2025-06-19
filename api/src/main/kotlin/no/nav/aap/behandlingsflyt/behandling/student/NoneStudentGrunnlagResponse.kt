@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.flate
+package no.nav.aap.behandlingsflyt.behandling.student
 
 import com.papsign.ktor.openapigen.annotations.Response
 
