@@ -10,9 +10,9 @@ class NavKontorService {
 
     private val enhetGateway = GatewayProvider.provide<EnhetGateway>()
 
-    fun hentNavEnheter(): List<Enhet>? {
+    fun hentNavEnheter(navn: String): List<Enhet>? {
         try {
-            val enheter = enhetGateway.hentAlleEnheter()
+            val enheter = enhetGateway.hentAlleEnheter(navn)
             return enheter.map { it }
         } catch (e: Exception) {
             logger.error("Kunne ikke hente enheter.", e)

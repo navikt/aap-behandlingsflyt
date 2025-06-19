@@ -75,7 +75,7 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
                 )
             ) { req, body ->
                 val response =
-                    NavKontorService().hentNavEnheter()?.map { enhet ->
+                    NavKontorService().hentNavEnheter(body.navn)?.map { enhet ->
                         NavEnheterResponse(navn = enhet.navn, enhetsnummer = enhet.enhetsNummer)
                     } ?: emptyList()
                 respond(response)
