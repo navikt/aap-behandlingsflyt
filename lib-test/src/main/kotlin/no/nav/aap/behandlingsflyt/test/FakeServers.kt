@@ -157,8 +157,7 @@ object FakeServers : AutoCloseable {
     private val nom = embeddedServer(Netty, port = 0, module = { nomFake() })
     private val kabal = embeddedServer(Netty, port = 0, module = { kabalFake() })
     private val ereg = embeddedServer(Netty, port = 0, module = { eregFake() })
-
-
+    private val sam = embeddedServer(Netty, port = 0, module = { sam() })
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
@@ -256,7 +255,7 @@ object FakeServers : AutoCloseable {
         }
     }
 
-    private fun Application.sam(){
+    private fun Application.sam() {
         install(ContentNegotiation) {
             jackson()
         }
@@ -271,23 +270,29 @@ object FakeServers : AutoCloseable {
         }
 
         routing {
-            route("/api/vedtak"){
-                post{
+            route("/api/vedtak") {
+                post {
                     val req = call.receive<SamordneVedtakRequest>()
 
-                    call.respond(SamordneVedtakRespons(
-                        ventPaaSvar = false
-                    ))
+                    call.respond(
+                        SamordneVedtakRespons(
+                            ventPaaSvar = false
+                        )
+                    )
                 }
-                get{
+                get {
                     val params = call.queryParameters
-                    call.respond(HttpStatusCode.OK, listOf(HentSamIdResponse(
-                        samordningsmeldinger = listOf(
-                            SamordningsmeldingApi(
-                                samId = 123L
+                    call.respond(
+                        HttpStatusCode.OK, listOf(
+                            HentSamIdResponse(
+                                samordningsmeldinger = listOf(
+                                    SamordningsmeldingApi(
+                                        samId = 123L
+                                    )
+                                )
                             )
                         )
-                    )))
+                    )
                 }
             }
         }
@@ -1756,10 +1761,11 @@ object FakeServers : AutoCloseable {
 
         val brevStore = mutableListOf<BrevbestillingResponse>()
         val mutex = Any()
-        fun brev(brevbestillingReferanse: UUID,
-                 status: Status,
-                 brevtype: Brevtype,
-                 ) = BrevbestillingResponse(
+        fun brev(
+            brevbestillingReferanse: UUID,
+            status: Status,
+            brevtype: Brevtype,
+        ) = BrevbestillingResponse(
             referanse = brevbestillingReferanse,
             brev = Brev(
                 kanSendesAutomatisk = false,
@@ -1883,6 +1889,7 @@ object FakeServers : AutoCloseable {
         oppgavestyring.start()
         saf.start()
         inst2.start()
+        sam.start()
         medl.start()
         tilgang.start()
         foreldrepenger.start()
@@ -2020,7 +2027,7 @@ object FakeServers : AutoCloseable {
         // NOM
         System.setProperty("integrasjon.nom.url", "http://localhost:${nom.port()}/graphql")
         System.setProperty("integrasjon.nom.scope", "scope")
-        
+
         // Kabal
         System.setProperty("integrasjon.kabal.url", "http://localhost:${kabal.port()}")
         System.setProperty("integrasjon.kabal.scope", "scope")
