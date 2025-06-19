@@ -1,10 +1,13 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.flate
+package no.nav.aap.behandlingsflyt.behandling.student
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -65,4 +68,26 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(
             }
         }
     }
+}
+
+private fun StudentVurdering.tilResponse(): StudentVurderingResponse {
+    val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(this.vurdertAv)
+    return StudentVurderingResponse(
+        id = this.id,
+        begrunnelse = this.begrunnelse,
+        harAvbruttStudie = this.harAvbruttStudie,
+        godkjentStudieAvLånekassen = this.godkjentStudieAvLånekassen,
+        avbruttPgaSykdomEllerSkade = this.avbruttPgaSykdomEllerSkade,
+        harBehovForBehandling = this.harBehovForBehandling,
+        avbruttStudieDato = this.avbruttStudieDato,
+        avbruddMerEnn6Måneder = this.avbruddMerEnn6Måneder,
+        vurdertAv = VurdertAvResponse(
+            ident = this.vurdertAv,
+            dato = requireNotNull(this.vurdertTidspunkt?.toLocalDate()) {
+                "Fant ikke vurdert tidspunkt for studentvurdering"
+            },
+            ansattnavn = navnOgEnhet?.navn,
+            enhetsnavn = navnOgEnhet?.enhet,
+        )
+    )
 }
