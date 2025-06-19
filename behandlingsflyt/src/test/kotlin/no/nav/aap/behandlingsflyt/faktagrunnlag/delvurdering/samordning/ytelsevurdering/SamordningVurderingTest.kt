@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsev
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
-import org.junit.jupiter.api.assertThrows
 
 class SamordningVurderingTest {
 
@@ -12,7 +11,7 @@ class SamordningVurderingTest {
             SamordningVurderingGrunnlag(
                 begrunnelse = "....",
                 maksDatoEndelig = null,
-                maksDato = null,
+                fristNyRevurdering = null,
                 vurderinger = listOf()
             )
         }

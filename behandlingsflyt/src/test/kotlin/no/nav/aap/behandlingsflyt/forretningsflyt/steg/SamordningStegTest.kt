@@ -80,7 +80,7 @@ class SamordningStegTest {
             behandling.id, SamordningVurderingGrunnlag(
                 begrunnelse = "En god begrunnelse",
                 maksDatoEndelig = false,
-                maksDato = LocalDate.now().plusYears(1),
+                fristNyRevurdering = LocalDate.now().plusYears(1),
                 vurderinger = listOf(
                     SamordningVurdering(
                         ytelseType = ytelse,
@@ -143,7 +143,7 @@ class SamordningStegTest {
             behandling.id, SamordningVurderingGrunnlag(
                 begrunnelse = "En god begrunnelse",
                 maksDatoEndelig = true,
-                maksDato = null,
+                fristNyRevurdering = null,
                 vurderinger = listOf(
                     SamordningVurdering(
                         ytelseType = Ytelse.PLEIEPENGER,
@@ -206,7 +206,7 @@ class SamordningStegTest {
             behandling.id, SamordningVurderingGrunnlag(
                 begrunnelse = "",
                 maksDatoEndelig = true,
-                maksDato = null,
+                fristNyRevurdering = null,
                 vurderinger = listOf(
                     SamordningVurdering(
                         ytelseType = Ytelse.SYKEPENGER,
@@ -269,7 +269,7 @@ class SamordningStegTest {
             behandling.id, SamordningVurderingGrunnlag(
                 begrunnelse = "",
                 maksDatoEndelig = true,
-                maksDato = null,
+                fristNyRevurdering = null,
                 vurderinger = listOf(
                     SamordningVurdering(
                         ytelseType = Ytelse.SYKEPENGER,
@@ -315,7 +315,7 @@ class SamordningStegTest {
             samordningVurderinger = SamordningVurderingGrunnlag(
                 begrunnelse = "",
                 maksDatoEndelig = true,
-                maksDato = null,
+                fristNyRevurdering = null,
                 vurderinger = listOf(
                     SamordningVurdering(
                         Ytelse.SYKEPENGER, listOf(
@@ -370,7 +370,7 @@ class SamordningStegTest {
             samordningVurderinger = SamordningVurderingGrunnlag(
                 begrunnelse = "bla bla",
                 maksDatoEndelig = false,
-                maksDato = LocalDate.now().plusWeeks(1),
+                fristNyRevurdering = LocalDate.now().plusWeeks(1),
                 vurderinger = listOf(
                     SamordningVurdering(
                         Ytelse.SYKEPENGER, listOf(

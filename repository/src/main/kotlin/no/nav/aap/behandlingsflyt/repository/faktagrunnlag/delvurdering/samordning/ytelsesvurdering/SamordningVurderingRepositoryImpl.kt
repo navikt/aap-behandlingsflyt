@@ -43,7 +43,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
         }
 
         val fellesFelterSpørring = """
-            SELECT begrunnelse, maksdato_endelig, maksdato
+            SELECT begrunnelse, maksdato_endelig, frist_ny_revurdering
             FROM SAMORDNING_VURDERINGER
             WHERE id = ?
         """.trimIndent()
@@ -56,7 +56,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
                 Triple(
                     it.getString("begrunnelse"),
                     it.getBoolean("maksdato_endelig"),
-                    it.getLocalDateOrNull("maksdato")
+                    it.getLocalDateOrNull("frist_ny_revurdering"),
                 )
             }
         }
@@ -79,12 +79,12 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
             }
         }
 
-        val (begrunnelse, maksDatoEndelig, maksDato) = fellesFelter
+        val (begrunnelse, maksDatoEndelig, fristNyRevurdering) = fellesFelter
         return SamordningVurderingGrunnlag(
             vurderingerId = vurderingerId,
             begrunnelse = begrunnelse,
             maksDatoEndelig = maksDatoEndelig,
-            maksDato = maksDato,
+            fristNyRevurdering = fristNyRevurdering,
             vurderinger = vurderinger
         )
     }
@@ -119,14 +119,14 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
         }
 
         val samordningVurderingerQuery = """
-            INSERT INTO SAMORDNING_VURDERINGER (begrunnelse, maksdato_endelig, maksdato)
+            INSERT INTO SAMORDNING_VURDERINGER (begrunnelse, maksdato_endelig, frist_ny_revurdering)
             VALUES (?, ?, ?)
             """.trimIndent()
         val vurderingerId = connection.executeReturnKey(samordningVurderingerQuery) {
             setParams {
                 setString(1, samordningVurderinger.begrunnelse)
                 setBoolean(2, samordningVurderinger.maksDatoEndelig)
-                setLocalDate(3, samordningVurderinger.maksDato)
+                setLocalDate(3, samordningVurderinger.fristNyRevurdering)
             }
         }
 
