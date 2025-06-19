@@ -63,7 +63,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
             MedlemskapUnntakGrunnlag(
                 unntak = listOf(
                     Segment(
-                        periode = Periode(LocalDate.now().minusMonths(1), LocalDate.now()),
+                        periode = Periode(LocalDate.now().minusYears(5), LocalDate.now()),
                         verdi = Unntak(
                             "unntak",
                             "statusaarsak",

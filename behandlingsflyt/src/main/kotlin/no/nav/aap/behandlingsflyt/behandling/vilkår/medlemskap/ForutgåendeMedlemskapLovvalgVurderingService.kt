@@ -27,7 +27,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
     // Minst én må oppfylles
     private fun vurderFørsteDelKriteier(grunnlag: ForutgåendeMedlemskapGrunnlag, forutgåendePeriode: Periode): List<TilhørighetVurdering> {
         val arbeidInntektINorgeVurdering = harArbeidInntektINorge(grunnlag.medlemskapArbeidInntektGrunnlag, forutgåendePeriode)
-        val vedtakIMedl = harVedtakIMEDL(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag)
+        val vedtakIMedl = harVedtakIMEDL(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag, forutgåendePeriode)
 
         return listOf(arbeidInntektINorgeVurdering, vedtakIMedl)
     }
@@ -195,7 +195,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             EØSLand.erNorge(it.opptjeningsLand) || EØSLand.erNorge(it.skattemessigBosattLand)
         }?.map { it.periode }
 
-        val sammenhengendeInntektSiste5År = harInntektAlleMndSiste5år(inntekterINorgePerioder, forutgåendePeriode)
+        val sammenhengendeInntektSiste5År = sammenhengendePerioderAlleMndSiste5år(inntekterINorgePerioder, forutgåendePeriode)
 
         val arbeidInntektINorgeGrunnlag =
             grunnlag?.inntekterINorgeGrunnlag?.map {
@@ -218,7 +218,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
         )
     }
 
-    private fun harInntektAlleMndSiste5år(perioder: List<Periode>?, forutgåendePeriode: Periode): Boolean {
+    private fun sammenhengendePerioderAlleMndSiste5år(perioder: List<Periode>?, forutgåendePeriode: Periode): Boolean {
         if (perioder.isNullOrEmpty()) return false
 
         val startMnd = YearMonth.from(forutgåendePeriode.fom)
@@ -239,8 +239,9 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
         return true
     }
 
-    private fun harVedtakIMEDL(grunnlag: MedlemskapUnntakGrunnlag?): TilhørighetVurdering {
-        val erMedlem = grunnlag?.unntak?.firstOrNull{it.verdi.medlem}
+    private fun harVedtakIMEDL(grunnlag: MedlemskapUnntakGrunnlag?, forutgåendePeriode: Periode): TilhørighetVurdering {
+        val erMedlemPerioder = grunnlag?.unntak?.filter{it.verdi.medlem}?.map { it.periode }
+        val sammenhengendePeriodeIMEDL = sammenhengendePerioderAlleMndSiste5år(erMedlemPerioder, forutgåendePeriode)
 
         val medlGrunnlag = grunnlag?.unntak?.map {
             VedtakIMEDLGrunnlag(
@@ -255,7 +256,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
             kilde = listOf(Kilde.MEDL),
             indikasjon = Indikasjon.I_NORGE,
             opplysning = "Vedtak om pliktig eller frivillig medlemskap finnes i MEDL for perioden",
-            resultat = erMedlem != null,
+            resultat = sammenhengendePeriodeIMEDL,
             vedtakImedlGrunnlag = medlGrunnlag,
             vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse
         )
