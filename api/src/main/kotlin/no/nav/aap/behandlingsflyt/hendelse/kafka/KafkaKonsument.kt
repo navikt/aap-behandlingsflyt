@@ -16,9 +16,6 @@ abstract class KafkaKonsument(
     private val lukket: AtomicBoolean = AtomicBoolean(false)
     private val konsument = KafkaConsumer<String, String>(config.consumerProperties())
 
-    private var kjører = false
-    fun erKlar() = kjører
-    
     var antallMeldinger = 0
         private set
 
@@ -32,7 +29,6 @@ abstract class KafkaKonsument(
         try {
             log.info("Starter konsumering av $topic")
             konsument.subscribe(listOf(topic))
-            kjører = true
             while (!lukket.get()) {
                 val meldinger: ConsumerRecords<String, String> = konsument.poll(pollTimeout)
                 håndter(meldinger)

@@ -160,7 +160,9 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
     val motor = startMotor(dataSource, repositoryRegistry)
     registerGateways()
 
-    val kabalKonsument = startKabalKonsument(dataSource, repositoryRegistry)
+    if (Miljø.erDev()) {
+        startKabalKonsument(dataSource, repositoryRegistry)
+    }
 
     routing {
         authenticate(AZURE) {
@@ -286,10 +288,6 @@ fun Application.startKabalKonsument(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry
 ): KafkaKonsument? {
-    if (Miljø.erLokal()) {
-        return null
-    }
-    
     val konsument = KabalKafkaKonsument(
         config = KafkaConsumerConfig(),
         dataSource = dataSource,
