@@ -9,7 +9,6 @@ import java.time.LocalDateTime
 import java.util.*
 
 data class BrevGrunnlag(
-    val harTilgangTilÅSaksbehandle: Boolean,
     val brevGrunnlag: List<Brev>) {
     data class Brev(
         val avklaringsbehovKode: AvklaringsbehovKode,
@@ -21,7 +20,8 @@ data class BrevGrunnlag(
         val språk: Språk,
         val status: Status,
         val mottaker: Mottaker,
-        val signaturer: List<Signatur>
+        val signaturer: List<Signatur>,
+        val harTilgangTilÅSendeBrev: Boolean,
     ) {
         data class Mottaker(val navn: String, val ident: String)
     }
