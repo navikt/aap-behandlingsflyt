@@ -18,7 +18,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
         }
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): RefusjonkravVurdering? {
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): List<RefusjonkravVurdering>? {
         val query = """
             SELECT * FROM REFUSJONKRAV_GRUNNLAG WHERE behandling_id = ? and aktiv = true
         """.trimIndent()
@@ -33,7 +33,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
         }
     }
 
-    private fun hentRefusjonskrav(vurderingId: Long): RefusjonkravVurdering {
+    private fun hentRefusjonskrav(vurderingId: Long): List<RefusjonkravVurdering> {
         val query = """
             SELECT * FROM REFUSJONKRAV_VURDERING WHERE ID = ?
         """.trimIndent()
@@ -43,13 +43,13 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
                 setLong(1, vurderingId)
             }
             setRowMapper {
-                RefusjonkravVurdering(
+                listOf(RefusjonkravVurdering(
                     harKrav = it.getBoolean("har_krav"),
                     fom = it.getLocalDateOrNull("fom"),
                     tom = it.getLocalDateOrNull("tom"),
                     vurdertAv = it.getString("vurdert_av"),
                     opprettetTid = it.getLocalDateTime("opprettet_tid")
-                )
+                ))
             }
         }
     }
@@ -67,25 +67,27 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
             setRowMapper {
                 hentRefusjonskrav(it.getLong("REFUSJONKRAV_VURDERING_ID"))
             }
-        }
+        }.flatten()
     }
 
-    override fun lagre(sakId: SakId, behandlingId: BehandlingId, refusjonkravVurderinger: RefusjonkravVurdering) {
+    override fun lagre(sakId: SakId, behandlingId: BehandlingId, refusjonkravVurderinger: List<RefusjonkravVurdering>) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         if (eksisterendeGrunnlag != null) {
             deaktiverEksisterende(behandlingId)
         }
 
-        val vurderingId = lagreVurdering(refusjonkravVurderinger)
+        refusjonkravVurderinger.forEach { vurdering ->
+            val vurderingId = lagreVurdering(vurdering)
 
-        val grunnlagQuery = """
+            val grunnlagQuery = """
             INSERT INTO REFUSJONKRAV_GRUNNLAG (BEHANDLING_ID, SAK_ID, REFUSJONKRAV_VURDERING_ID) VALUES (?, ?, ?)
         """.trimIndent()
-        connection.execute(grunnlagQuery) {
-            setParams {
-                setLong(1, behandlingId.toLong())
-                setLong(2, sakId.id)
-                setLong(3, vurderingId)
+            connection.execute(grunnlagQuery) {
+                setParams {
+                    setLong(1, behandlingId.toLong())
+                    setLong(2, sakId.id)
+                    setLong(3, vurderingId)
+                }
             }
         }
     }

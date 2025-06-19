@@ -362,11 +362,11 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurderingDto(
+                listOf(RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null,
-                )
+                ))
             )
         )
 
@@ -476,11 +476,11 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurderingDto(
+                listOf(RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
-                    tom = null
-                )
+                    tom = null,
+                ))
             )
         )
 
@@ -728,11 +728,11 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurderingDto(
+                listOf(RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
-                    tom = null
-                )
+                    tom = null,
+                ))
             )
         )
 
@@ -876,11 +876,11 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurderingDto(
-                    harKrav = false,
+                listOf(RefusjonkravVurderingDto(
+                    harKrav = true,
                     fom = LocalDate.now(),
-                    tom = null
-                )
+                    tom = null,
+                ))
             )
         )
 
@@ -1137,11 +1137,11 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurderingDto(
+                listOf(RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
-                    tom = null
-                )
+                    tom = null,
+                ))
             )
         )
 
@@ -1495,9 +1495,9 @@ class FlytOrkestratorTest {
             ),
         ).løsAvklaringsBehov(
             RefusjonkravLøsning(
-                RefusjonkravVurderingDto(
+                listOf(RefusjonkravVurderingDto(
                     harKrav = true, fom = LocalDate.now(), tom = null
-                )
+                ))
             )
         ).løsAvklaringsBehov(
             avklaringsBehovLøsning = FritakMeldepliktLøsning(
@@ -1742,11 +1742,11 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurderingDto(
+                listOf(RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
-                    tom = null
-                )
+                    tom = null,
+                ))
             )
         )
 
@@ -3686,11 +3686,11 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurderingDto(
+                listOf(RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
-                    tom = null
-                )
+                    tom = null,
+                ))
             )
         )
         kvalitetssikreOk(behandling)
@@ -3886,11 +3886,11 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                RefusjonkravVurderingDto(
+                listOf(RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = LocalDate.now(),
-                    tom = null
-                )
+                    tom = null,
+                ))
             )
         )
 
