@@ -220,27 +220,21 @@ class MedlemskapLovvalgVurderingService {
 
     private fun harArbeidInntektINorge(grunnlag: MedlemskapArbeidInntektGrunnlag?): TilhørighetVurdering {
         //val eksistererArbeidsforhold = grunnlag?.arbeiderINorgeGrunnlag?.any() ?: false
-        val opptjeningsLandErNorge = grunnlag?.inntekterINorgeGrunnlag?.any{EØSLand.erNorge(it.opptjeningsLand)} ?: false
-        val skattemessigBosattLandErNorge = grunnlag?.inntekterINorgeGrunnlag?.any{EØSLand.erNorge(it.skattemessigBosattLand)} ?: false
-
-        val harArbeidInntektINorge = skattemessigBosattLandErNorge || opptjeningsLandErNorge
-
-        val arbeidInntektINorgeGrunnlag = if (harArbeidInntektINorge) {
+        val arbeidInntektINorgeGrunnlag =
             grunnlag?.inntekterINorgeGrunnlag?.map {
                 ArbeidInntektINorgeGrunnlag(
                     virksomhetId = it.identifikator,
                     virksomhetNavn = it.organisasjonsNavn,
                     beloep = it.beloep,
                     periode = Periode(it.periode.fom, it.periode.tom),
-                )
-            }
-        } else null
+            )
+        }
 
         return TilhørighetVurdering(
             kilde = listOf(Kilde.A_INNTEKT, Kilde.AA_REGISTERET, Kilde.EREG),
             indikasjon = Indikasjon.I_NORGE,
             opplysning = "Arbeid og inntekt i Norge",
-            resultat = harArbeidInntektINorge,
+            resultat = !arbeidInntektINorgeGrunnlag.isNullOrEmpty(),
             arbeidInntektINorgeGrunnlag = arbeidInntektINorgeGrunnlag,
             vurdertPeriode = VurdertPeriode.INNEVÆRENDE_OG_FORRIGE_MND.beskrivelse
         )
