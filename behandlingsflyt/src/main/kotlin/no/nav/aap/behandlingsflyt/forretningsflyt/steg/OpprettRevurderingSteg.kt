@@ -65,7 +65,7 @@ class OpprettRevurderingSteg(
     }
 
     private fun erUsikkerhetTilknyttetMaksSykepengerDato(samordningVurdering: SamordningVurderingGrunnlag): Boolean {
-        return samordningVurdering.maksDatoEndelig != true && samordningVurdering.maksDato != null
+        return samordningVurdering.maksDatoEndelig != true && samordningVurdering.fristNyRevurdering != null
     }
 
     companion object : FlytSteg {

@@ -79,7 +79,7 @@ internal class SamordningServiceTest {
                 ytelseVurderingRepo, behandlingId, vurderinger = SamordningVurderingGrunnlag(
                     begrunnelse = "En god begrunnelse",
                     maksDatoEndelig = false,
-                    maksDato = LocalDate.now().plusYears(1),
+                    fristNyRevurdering = LocalDate.now().plusYears(1),
                     vurderinger = listOf(
                         SamordningVurdering(
                             ytelseType = Ytelse.SYKEPENGER,
@@ -146,7 +146,7 @@ internal class SamordningServiceTest {
         vurderinger: SamordningVurderingGrunnlag = SamordningVurderingGrunnlag(
             begrunnelse = "En god begrunnelse",
             maksDatoEndelig = false,
-            maksDato = LocalDate.now().plusYears(1),
+            fristNyRevurdering = LocalDate.now().plusYears(1),
             vurderinger = listOf(
                 SamordningVurdering(
                     Ytelse.SYKEPENGER,

@@ -52,7 +52,7 @@ class StartBehandlingSteg private constructor(
                     Ventebehov(
                         definisjon = Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT,
                         grunn = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER,
-                        frist = ventTil.maksDato!!
+                        frist = ventTil.fristNyRevurdering!!
                     )
                 )
             }

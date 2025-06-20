@@ -39,6 +39,6 @@ data class SamordningVurderingGrunnlag(
     val vurderingerId: Long? = null,
     val begrunnelse: String,
     val maksDatoEndelig: Boolean?,
-    val maksDato: LocalDate?,
+    val fristNyRevurdering: LocalDate?,
     val vurderinger: List<SamordningVurdering>,
 )

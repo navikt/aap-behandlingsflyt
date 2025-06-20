@@ -1246,7 +1246,7 @@ class FlytOrkestratorTest {
                     ),
                     begrunnelse = "En god begrunnelse",
                     maksDatoEndelig = false,
-                    maksDato = LocalDate.now().plusMonths(1),
+                    fristNyRevurdering = LocalDate.now().plusMonths(1),
                 ),
             ),
         )
@@ -1538,7 +1538,7 @@ class FlytOrkestratorTest {
                     ),
                     begrunnelse = "En god begrunnelse",
                     maksDatoEndelig = false,
-                    maksDato = LocalDate.now().plusMonths(1),
+                    fristNyRevurdering = LocalDate.now().plusMonths(1),
                 ),
             ),
         )

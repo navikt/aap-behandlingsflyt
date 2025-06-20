@@ -1,15 +1,11 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningAndreStatligeYtelserRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -78,7 +74,7 @@ internal class SamordningVurderingRepositoryImplTest {
                 samordningVurderinger = SamordningVurderingGrunnlag(
                     begrunnelse = "En god begrunnelse",
                     maksDatoEndelig = false,
-                    maksDato = LocalDate.now().plusYears(1),
+                    fristNyRevurdering = LocalDate.now().plusYears(1),
                     vurderinger = listOf(vurdering, vurdering2)
                 )
             )
@@ -99,7 +95,7 @@ internal class SamordningVurderingRepositoryImplTest {
             SamordningVurderingRepositoryImpl(it).lagreVurderinger(behandling.id, SamordningVurderingGrunnlag(
                 begrunnelse = "xxxx",
                 maksDatoEndelig = true,
-                maksDato = LocalDate.now().plusYears(1),
+                fristNyRevurdering = LocalDate.now().plusYears(1),
                 vurderinger = listOf()
             )
             )
@@ -111,7 +107,7 @@ internal class SamordningVurderingRepositoryImplTest {
 
         assertThat(uthentet?.begrunnelse).isEqualTo("xxxx")
         assertThat(uthentet?.maksDatoEndelig).isTrue()
-        assertThat(uthentet?.maksDato).isEqualTo(LocalDate.now().plusYears(1))
+        assertThat(uthentet?.fristNyRevurdering).isEqualTo(LocalDate.now().plusYears(1))
     }
 
     @Test
@@ -140,7 +136,7 @@ internal class SamordningVurderingRepositoryImplTest {
                     samordningVurderinger = SamordningVurderingGrunnlag(
                         begrunnelse = "En god begrunnelse",
                         maksDatoEndelig = false,
-                        maksDato = LocalDate.now().plusYears(1),
+                        fristNyRevurdering = LocalDate.now().plusYears(1),
                         vurderinger = listOf(vurdering)
                     )
                 )
@@ -178,7 +174,7 @@ internal class SamordningVurderingRepositoryImplTest {
                 samordningVurderinger = SamordningVurderingGrunnlag(
                     begrunnelse = "Første begrunnelse",
                     maksDatoEndelig = false,
-                    maksDato = LocalDate.of(2025, 1, 1),
+                    fristNyRevurdering = LocalDate.of(2025, 1, 1),
                     vurderinger = listOf(førsteVurdering)
                 )
             )
@@ -221,7 +217,7 @@ internal class SamordningVurderingRepositoryImplTest {
                 samordningVurderinger = SamordningVurderingGrunnlag(
                     begrunnelse = andreBegrunnelse,
                     maksDatoEndelig = true,
-                    maksDato = andreMaksDato,
+                    fristNyRevurdering = andreMaksDato,
                     vurderinger = listOf(andreVurdering1, andreVurdering2)
                 )
             )
@@ -235,7 +231,7 @@ internal class SamordningVurderingRepositoryImplTest {
         // Verify that the retrieved vurdering has the expected properties
         assertThat(uthentet.begrunnelse).isEqualTo(andreBegrunnelse)
         assertThat(uthentet.maksDatoEndelig).isTrue()
-        assertThat(uthentet.maksDato).isEqualTo(andreMaksDato)
+        assertThat(uthentet.fristNyRevurdering).isEqualTo(andreMaksDato)
 
         // Verify that the retrieved vurdering has the expected number of vurderinger
         assertThat(uthentet.vurderinger).hasSize(2)
@@ -294,7 +290,7 @@ internal class SamordningVurderingRepositoryImplTest {
                 behandling.id,  SamordningVurderingGrunnlag(
                     begrunnelse = "begrunnelse1",
                     maksDatoEndelig = false,
-                    maksDato = null,
+                    fristNyRevurdering = null,
                     vurderinger = listOf(SamordningVurdering(
                         ytelseType = Ytelse.SYKEPENGER,
                         vurderingPerioder = listOf(
@@ -311,7 +307,7 @@ internal class SamordningVurderingRepositoryImplTest {
                 behandling.id,  SamordningVurderingGrunnlag(
                     begrunnelse = "begrunnelse2",
                     maksDatoEndelig = false,
-                    maksDato = null,
+                    fristNyRevurdering = null,
                     vurderinger = listOf(SamordningVurdering(
                         ytelseType = Ytelse.SYKEPENGER,
                         vurderingPerioder = listOf(

@@ -45,7 +45,9 @@ import javax.sql.DataSource
 data class SamordningYtelseVurderingGrunnlagDTO(
     val harTilgangTilÅSaksbehandle: Boolean,
     val begrunnelse: String?,
+    @Deprecated("Erstattet av fristNyRevurdering")
     val maksDato: LocalDate?,
+    val fristNyRevurdering: LocalDate?,
     val maksDatoEndelig: Boolean?,
     val ytelser: List<SamordningYtelseDTO>,
     val vurderinger: List<SamordningVurderingDTO>,
@@ -268,7 +270,8 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource, repositoryRegi
                             }
                         },
                         begrunnelse = samordning?.begrunnelse,
-                        maksDato = samordning?.maksDato,
+                        maksDato = samordning?.fristNyRevurdering,
+                        fristNyRevurdering = samordning?.fristNyRevurdering,
                         maksDatoEndelig = samordning?.maksDatoEndelig,
                         tpYtelser = tp
                     )

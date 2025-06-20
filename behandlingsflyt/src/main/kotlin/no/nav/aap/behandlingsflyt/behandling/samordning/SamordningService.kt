@@ -58,7 +58,7 @@ class SamordningService(
         grunnlag: SamordningVurderingGrunnlag?,
         ytelse: SamordningVurdering
     ): Boolean =
-        grunnlag?.maksDato != null && grunnlag.maksDatoEndelig == false && ytelse.vurderingPerioder.isNotEmpty()
+        grunnlag?.fristNyRevurdering != null && grunnlag.maksDatoEndelig == false && ytelse.vurderingPerioder.isNotEmpty()
 
     private fun segmentForSamordningUtenSluttdato(
         ytelse: SamordningVurdering,
