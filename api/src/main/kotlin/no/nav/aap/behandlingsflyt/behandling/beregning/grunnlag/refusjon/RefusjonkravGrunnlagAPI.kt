@@ -44,6 +44,8 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
 
                         val gjeldendeVurderinger =
                             refusjonkravRepository.hentHvisEksisterer(behandling.id)?.map { it.tilResponse() }
+                        val gjeldendeVurdering =
+                            gjeldendeVurderinger?.firstOrNull()
                         val historiskeVurderinger =
                             refusjonkravRepository
                                 .hentAlleVurderingerPåSak(
@@ -59,6 +61,7 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
 
                         RefusjonkravGrunnlagResponse(
                             harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+                            gjeldendeVurdering = gjeldendeVurdering,
                             gjeldendeVurderinger = gjeldendeVurderinger,
                             historiskeVurderinger = historiskeVurderinger
                         )

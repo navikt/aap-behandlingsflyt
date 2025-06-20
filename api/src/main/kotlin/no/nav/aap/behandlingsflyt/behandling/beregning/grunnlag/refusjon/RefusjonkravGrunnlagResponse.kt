@@ -6,6 +6,7 @@ import java.time.LocalDate
 
 data class RefusjonkravGrunnlagResponse(
     val harTilgangTilÅSaksbehandle: Boolean,
+    val gjeldendeVurdering: RefusjonkravVurderingResponse?,
     val gjeldendeVurderinger: List<RefusjonkravVurderingResponse>?,
     val historiskeVurderinger: List<RefusjonkravVurderingResponse>?
 )
