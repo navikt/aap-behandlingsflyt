@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.integrasjon.organisasjon
 
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.Enhet
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.navenheter.Enhet
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.EnhetGateway
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.EnhetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.navenheter.EnhetsType
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory

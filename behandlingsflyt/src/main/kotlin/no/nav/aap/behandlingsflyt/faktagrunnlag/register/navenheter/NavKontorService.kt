@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.navenheter
 
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.Enhet
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.EnhetGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import org.slf4j.LoggerFactory

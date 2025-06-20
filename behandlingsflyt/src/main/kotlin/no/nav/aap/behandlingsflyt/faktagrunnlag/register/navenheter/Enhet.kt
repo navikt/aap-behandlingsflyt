@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.ansattinfo
+package no.nav.aap.behandlingsflyt.faktagrunnlag.register.navenheter
 
 data class Enhet(val enhetsNummer: String, val navn: String, val type: EnhetsType) {
     val enhetstypeNavn: String =
