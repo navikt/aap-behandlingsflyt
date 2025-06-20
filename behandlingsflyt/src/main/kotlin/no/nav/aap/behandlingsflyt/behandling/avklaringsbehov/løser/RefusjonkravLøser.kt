@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class RefusjonkravLøser(
@@ -54,11 +55,11 @@ class RefusjonkravLøser(
                 val navKontor = vurdering.navKontor
 
                 if (refusjonFomDato.isBefore(kravDato)) {
-                    throw IllegalArgumentException("Refusjonsdato kan ikke være før kravdato. Refusjonsdato: $refusjonFomDato, kravdato: $kravDato")
+                    throw UgyldigForespørselException("Refusjonsdato kan ikke være før kravdato. Refusjonsdato: $refusjonFomDato, kravdato: $kravDato")
                 }
 
                 if (refusjonTomDato != null && refusjonFomDato.isAfter(refusjonTomDato)) {
-                    throw IllegalArgumentException("Tom ($refusjonTomDato) er før fom ($refusjonFomDato)")
+                    throw UgyldigForespørselException("Tom ($refusjonTomDato) er før fom ($refusjonFomDato)")
                 }
 
                 RefusjonkravVurderingDto(
