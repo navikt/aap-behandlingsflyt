@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.KabalHendelseId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseKafkaMelding
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -52,7 +52,7 @@ class KabalKafkaKonsument(
     }
 
     fun håndter(meldingVerdi: String) {
-        val klageHendelse = DefaultJsonMapper.fromJson<KabalHendelseV0>(meldingVerdi)
+        val klageHendelse = DefaultJsonMapper.fromJson<KabalHendelseKafkaMelding>(meldingVerdi)
         if (klageHendelse.kilde == Fagsystem.KELVIN.name) {
             log.info(
                 "Håndterer klagehendelse ${klageHendelse.eventId}",
@@ -75,12 +75,12 @@ enum class Fagsystem {
     AO01 // Arena
 }
 
-private fun KabalHendelseV0.tilInnsending(saksnummer: Saksnummer) =
+private fun KabalHendelseKafkaMelding.tilInnsending(saksnummer: Saksnummer) =
     Innsending(
         saksnummer = saksnummer,
         referanse = InnsendingReferanse(KabalHendelseId(value = this.eventId)),
         type = InnsendingType.KABAL_HENDELSE,
         kanal = Kanal.DIGITAL,
         mottattTidspunkt = LocalDateTime.now(),
-        melding = this
+        melding = this.tilKabalHendelseV0()
     )

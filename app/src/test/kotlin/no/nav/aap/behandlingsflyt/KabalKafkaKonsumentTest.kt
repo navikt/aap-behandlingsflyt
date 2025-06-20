@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.KabalHendelseId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.BehandlingDetaljer
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.BehandlingEventType
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseKafkaMelding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageUtfall
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlagebehandlingAvsluttetDetaljer
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
@@ -146,8 +146,8 @@ class KabalKafkaKonsumentTest {
         assertThat(hendelser.first().strukturertDokument).isNotNull
     }
 
-    private fun lagBehandlingEvent(kilde: String, kildereferanse: String): KabalHendelseV0 {
-        return KabalHendelseV0(
+    private fun lagBehandlingEvent(kilde: String, kildereferanse: String): KabalHendelseKafkaMelding {
+        return KabalHendelseKafkaMelding(
             UUID.randomUUID(),
             kildeReferanse = kildereferanse,
             kilde = kilde,
@@ -163,7 +163,7 @@ class KabalKafkaKonsumentTest {
         )
     }
 
-    private fun produserHendelse(hendelser: List<KabalHendelseV0>, topic: String) {
+    private fun produserHendelse(hendelser: List<KabalHendelseKafkaMelding>, topic: String) {
         val producerProps = Properties().apply {
             put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.bootstrapServers)
             put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java.name)

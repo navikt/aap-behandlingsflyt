@@ -4,9 +4,30 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.time.LocalDateTime
 import java.util.UUID
 
-public sealed interface KabalHendelse: Melding
+public sealed interface KabalHendelse : Melding
 
 // https://github.com/navikt/kabal-api/blob/main/docs/schema/behandling-events.json
+@JsonIgnoreProperties(ignoreUnknown = true)
+public data class KabalHendelseKafkaMelding(
+    val eventId: UUID,
+    val kildeReferanse: String,
+    val kilde: String,
+    val kabalReferanse: String,
+    val type: BehandlingEventType,
+    val detaljer: BehandlingDetaljer
+) {
+
+    public fun tilKabalHendelseV0() =
+        KabalHendelseV0(
+            eventId = eventId,
+            kildeReferanse = kildeReferanse,
+            kilde = kilde,
+            kabalReferanse = kabalReferanse,
+            type = type,
+            detaljer = detaljer
+        )
+}
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public data class KabalHendelseV0(
     val eventId: UUID,
@@ -15,7 +36,7 @@ public data class KabalHendelseV0(
     val kabalReferanse: String,
     val type: BehandlingEventType,
     val detaljer: BehandlingDetaljer
-): KabalHendelse
+) : KabalHendelse
 
 public enum class BehandlingEventType {
     KLAGEBEHANDLING_AVSLUTTET,
