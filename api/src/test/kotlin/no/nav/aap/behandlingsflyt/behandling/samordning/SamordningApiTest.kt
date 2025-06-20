@@ -119,7 +119,6 @@ class SamordningApiKtTest {
                     ),
                     vurderinger = listOf(),
                     begrunnelse = null,
-                    maksDato = null,
                     fristNyRevurdering = null,
                     maksDatoEndelig = null,
                     tpYtelser = null,

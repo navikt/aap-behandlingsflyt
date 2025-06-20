@@ -33,7 +33,7 @@ class AvklarSamordningGraderingLøser(
         val samordningsvurderinger = SamordningVurderingGrunnlag(
             begrunnelse = vurderingerForSamordning.begrunnelse,
             maksDatoEndelig = vurderingerForSamordning.maksDatoEndelig,
-            fristNyRevurdering = vurderingerForSamordning.fristForNyRevurdering(),
+            fristNyRevurdering = vurderingerForSamordning.fristNyRevurdering,
             vurderinger = vurderingerForSamordning.vurderteSamordningerData.groupBy { it.ytelseType }.map { it ->
                 SamordningVurdering(
                     ytelseType = it.key,
@@ -60,7 +60,7 @@ class AvklarSamordningGraderingLøser(
             kontekst.kontekst.behandlingId, samordningsvurderinger
         )
 
-        if (kontekst.kontekst.behandlingType == TypeBehandling.Revurdering && vurderingerForSamordning.maksDatoEndelig != true && vurderingerForSamordning.fristForNyRevurdering() != null) {
+        if (kontekst.kontekst.behandlingType == TypeBehandling.Revurdering && vurderingerForSamordning.maksDatoEndelig != true && vurderingerForSamordning.fristNyRevurdering != null) {
             throw UgyldigForespørselException(message = "Virkningstidspunkt må være bekreftet for å gå videre i behandlingen.")
         }
 
@@ -69,7 +69,7 @@ class AvklarSamordningGraderingLøser(
 
     private fun validerManglerSluttdato(vurderingerForSamordning: VurderingerForSamordning) {
         if (vurderingerForSamordning.maksDatoEndelig == false) {
-            if (vurderingerForSamordning.fristForNyRevurdering() == null) {
+            if (vurderingerForSamordning.fristNyRevurdering == null) {
                 throw UgyldigForespørselException("Mangler dato for ny revurdering - må settes når sluttdato for samordningen er ukjent")
             }
             if (vurderingerForSamordning.vurderteSamordningerData.none { it.gradering == Prosent.`100_PROSENT`.prosentverdi() }) {

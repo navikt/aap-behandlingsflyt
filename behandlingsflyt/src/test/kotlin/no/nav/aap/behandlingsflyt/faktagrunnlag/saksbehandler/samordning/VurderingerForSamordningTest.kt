@@ -13,7 +13,7 @@ class VurderingerForSamordningTest {
             VurderingerForSamordning(
                 begrunnelse = "...",
                 maksDatoEndelig = false,
-                maksDato = LocalDate.now(),
+                fristNyRevurdering = LocalDate.now(),
                 vurderteSamordningerData = listOf(
                     SamordningVurderingData(
                         ytelseType = Ytelse.OMSORGSPENGER,
@@ -37,7 +37,7 @@ class VurderingerForSamordningTest {
             VurderingerForSamordning(
                 begrunnelse = "...",
                 maksDatoEndelig = false,
-                maksDato = LocalDate.now(),
+                fristNyRevurdering = LocalDate.now(),
                 vurderteSamordningerData = listOf(
                     SamordningVurderingData(
                         ytelseType = Ytelse.OMSORGSPENGER,
@@ -61,7 +61,7 @@ class VurderingerForSamordningTest {
             VurderingerForSamordning(
                 begrunnelse = "...",
                 maksDatoEndelig = false,
-                maksDato = LocalDate.now(),
+                fristNyRevurdering = LocalDate.now(),
                 vurderteSamordningerData = listOf(
                     SamordningVurderingData(
                         ytelseType = Ytelse.OMSORGSPENGER,

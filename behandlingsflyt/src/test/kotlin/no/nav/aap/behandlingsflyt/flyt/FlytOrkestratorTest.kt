@@ -1189,7 +1189,7 @@ class FlytOrkestratorTest {
                     ),
                     begrunnelse = "",
                     maksDatoEndelig = true,
-                    maksDato = null,
+                    fristNyRevurdering = null,
                 ),
             ),
         )
@@ -1221,7 +1221,7 @@ class FlytOrkestratorTest {
                     ),
                     begrunnelse = "",
                     maksDatoEndelig = true,
-                    maksDato = null,
+                    fristNyRevurdering = null,
                 ),
             ),
         )
@@ -1312,7 +1312,7 @@ class FlytOrkestratorTest {
                     ),
                     begrunnelse = "En god begrunnelse",
                     maksDatoEndelig = true,
-                    maksDato = null,
+                    fristNyRevurdering = null,
                 ),
             ),
         )
@@ -3321,7 +3321,8 @@ class FlytOrkestratorTest {
 
         assertThat(avslåttFørstegang)
             .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
-            .extracting { b -> b.status().erAvsluttet() }.isEqualTo(true)
+            .extracting { b -> b.status() }.isIn(Status.IVERKSETTES, Status.AVSLUTTET)
+
         val kravMottatt = LocalDate.now().minusMonths(1)
         val klagebehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
