@@ -125,6 +125,7 @@ fun main() {
         connectionGroupSize = 8
         workerGroupSize = 8
         callGroupSize = 16
+        shutdownGracePeriod = 20 * 1000
         connector {
             port = 8080
         }
