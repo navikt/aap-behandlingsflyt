@@ -49,6 +49,7 @@ import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
 // Kjøres opp for å få logback i console uten json
@@ -59,7 +60,12 @@ fun main() {
     FakeServers.start() // azurePort = 8081)
 
     // Starter server
-    embeddedServer(Netty, port = 8080, watchPaths = listOf("classes")) {
+    embeddedServer(Netty, configure = {
+        shutdownTimeout = TimeUnit.SECONDS.toMillis(20)
+        connector {
+            port = 8080
+        }
+    }) {
         val dbConfig = DbConfig(
             url = postgres.jdbcUrl,
             username = postgres.username,
@@ -72,7 +78,6 @@ fun main() {
         System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
 
         val datasource = initDatasource(dbConfig)
-
         opprettTestKlage(datasource, alderIkkeOppfyltTestCase)
 
         apiRouting {

@@ -106,6 +106,7 @@ import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
 import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
 fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
@@ -125,6 +126,7 @@ fun main() {
         connectionGroupSize = 8
         workerGroupSize = 8
         callGroupSize = 16
+        shutdownTimeout = TimeUnit.SECONDS.toMillis(20)
         connector {
             port = 8080
         }
@@ -272,12 +274,18 @@ fun Application.startMotor(dataSource: DataSource, repositoryRegistry: Repositor
     monitor.subscribe(ApplicationStarted) {
         motor.start()
     }
-    monitor.subscribe(ApplicationStopped) { application ->
-        application.environment.log.info("Server har stoppet")
-        motor.stop()
+    monitor.subscribe(ApplicationStopping) { application ->
+        application.environment.log.info("Server stopper...")
         // Release resources and unsubscribe from events
         application.monitor.unsubscribe(ApplicationStarted) {}
         application.monitor.unsubscribe(ApplicationStopped) {}
+    }
+    monitor.subscribe(ApplicationStopped) { application ->
+        application.environment.log.info("Server har stoppet.")
+    }
+    monitor.subscribe(ApplicationStopPreparing) { environment ->
+        environment.log.info("Forbereder stopp av applikasjon, stopper motor.")
+        motor.stop()
     }
 
     return motor
