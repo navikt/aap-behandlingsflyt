@@ -22,6 +22,8 @@ spec:
       destinations:
         - id: elastic
         - id: loki
+  kafka:
+    pool: nav-prod
   gcp:
     sqlInstances:
       - type: POSTGRES_16

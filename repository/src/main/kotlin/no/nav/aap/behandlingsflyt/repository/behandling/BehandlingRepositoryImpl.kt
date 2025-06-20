@@ -81,6 +81,21 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
+    override fun finnSaksnummer(behandlingsreferanse: BehandlingReferanse): Saksnummer {
+        return connection.queryFirst(
+            """
+            SELECT saksnummer FROM sak 
+            INNER JOIN behandling ON behandling.sak_id = sak.id
+            WHERE behandling.referanse = (?)
+            """.trimIndent()
+        ) {
+            setParams {
+                setUUID(1, behandlingsreferanse.referanse)
+            }
+            setRowMapper { Saksnummer(it.getString("saksnummer")) }
+        }
+    }
+
     private fun mapBehandling(row: Row): Behandling {
         val behandlingId = BehandlingId(row.getLong("id"))
         return Behandling(

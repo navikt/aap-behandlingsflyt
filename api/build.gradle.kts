@@ -7,6 +7,7 @@ val ktorVersion = "3.2.0"
 val tilgangVersjon = "1.0.80"
 val junitVersjon = "5.13.1"
 val mockOAuth2ServerVersion = "2.2.1"
+val kafkaVersion = "4.0.0"
 
 dependencies {
     api(project(":behandlingsflyt"))
@@ -17,6 +18,7 @@ dependencies {
     implementation("no.nav.aap.kelvin:motor-api:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:tidslinje:$komponenterVersjon")
+    implementation("org.apache.kafka:kafka-clients:${kafkaVersion}")
     api("no.nav.aap.tilgang:plugin:$tilgangVersjon")
     api("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
     compileOnly("io.ktor:ktor-http-jvm:$ktorVersion")

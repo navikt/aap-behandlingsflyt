@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.lookup.repository.Repository
@@ -47,5 +48,7 @@ interface BehandlingRepository : Repository {
     fun flyttForrigeBehandlingId(behandlingId: BehandlingId, nyForrigeBehandlingId: BehandlingId)
 
     fun markerSavepoint()
+    
+    fun finnSaksnummer(referanse: BehandlingReferanse): Saksnummer
 }
 

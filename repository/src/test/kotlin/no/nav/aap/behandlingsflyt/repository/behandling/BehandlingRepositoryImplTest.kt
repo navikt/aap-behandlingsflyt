@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.behandling
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
@@ -48,7 +49,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
@@ -231,6 +234,31 @@ internal class BehandlingRepositoryImplTest {
             assertThat(alleFørstegang[0].virkningstidspunkt).isEqualTo(virkningstidspunkt)
             assertThat(alleFørstegang[0].årsaker).isEqualTo(setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD))
         }
+    }
+
+    @Test
+    fun `Kan hente saksnummer for behandling`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val  behandlingRepository = BehandlingRepositoryImpl(connection)
+
+            val saksnummer = behandlingRepository.finnSaksnummer(behandling.referanse)
+            
+            assertThat(saksnummer).isEqualTo(sak.saksnummer)
+        }
+    }
+
+    private fun sak(connection: DBConnection): Sak {
+        return PersonOgSakService(
+            FakePdlGateway,
+            PersonRepositoryImpl(connection),
+            SakRepositoryImpl(connection)
+        ).finnEllerOpprett(ident(), periode)
+    }
+
+    private companion object {
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
 }

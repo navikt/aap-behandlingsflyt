@@ -70,6 +70,9 @@ import no.nav.aap.behandlingsflyt.integrasjon.meldekort.MeldekortGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
 import no.nav.aap.behandlingsflyt.behandling.klage.trekk.trekkKlageGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi
+import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
+import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
 import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
@@ -94,6 +97,8 @@ import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.komponenter.miljo.Miljø
+import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.AZURE
 import no.nav.aap.komponenter.server.commonKtorModule
@@ -153,8 +158,11 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
     val dataSource = initDatasource(dbConfig)
     Migrering.migrate(dataSource)
     val motor = startMotor(dataSource, repositoryRegistry)
-
     registerGateways()
+
+    if (Miljø.erDev()) {
+        startKabalKonsument(dataSource, repositoryRegistry)
+    }
 
     routing {
         authenticate(AZURE) {
@@ -274,6 +282,27 @@ fun Application.startMotor(dataSource: DataSource, repositoryRegistry: Repositor
     }
 
     return motor
+}
+
+fun Application.startKabalKonsument(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry
+): KafkaKonsument? {
+    val konsument = KabalKafkaKonsument(
+        config = KafkaConsumerConfig(),
+        dataSource = dataSource,
+        repositoryRegistry = repositoryRegistry
+    )
+    monitor.subscribe(ApplicationStarted) {
+        Thread {
+            konsument.konsumer()
+        }.start()
+    }
+    monitor.subscribe(ApplicationStopped) {
+        konsument.lukk()
+    }
+
+    return konsument
 }
 
 class DbConfig(
