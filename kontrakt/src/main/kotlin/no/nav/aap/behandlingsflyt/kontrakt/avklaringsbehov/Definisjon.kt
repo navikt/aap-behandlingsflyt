@@ -218,7 +218,7 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5025`,
         type = BehovType.VENTEPUNKT,
         løsesISteg = StegType.SAMORDNING_GRADERING,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL, Rolle.SAKSBEHANDLER_OPPFOLGING),
         defaultFrist = Period.ofWeeks(4),
     ),
     SAMORDNING_ANDRE_STATLIGE_YTELSER(
