@@ -8,7 +8,7 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import java.util.Properties
 
 data class KafkaConsumerConfig(
-    val applicationId: String = requiredConfigForKey("KAFKA_STREAMS_APPLICATION_ID"),
+    val applicationId: String = requiredConfigForKey("NAIS_APP_NAME"),
     val maxPollRecords: Int = 1,
     val autoOffsetReset: String = "earliest",
     val enableAutoConfig: Boolean = false,
