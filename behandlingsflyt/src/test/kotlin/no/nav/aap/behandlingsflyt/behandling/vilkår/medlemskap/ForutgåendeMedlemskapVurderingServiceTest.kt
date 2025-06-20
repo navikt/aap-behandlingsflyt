@@ -12,14 +12,28 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
+@Fakes
 class ForutgåendeMedlemskapVurderingServiceTest {
     private val service = ForutgåendeMedlemskapLovvalgVurderingService()
+
+    companion object {
+        @BeforeAll
+        @JvmStatic
+        fun beforeAll() {
+            GatewayRegistry
+                .register<FakeUnleash>()
+        }
+    }
 
     @Test
     fun automatiskOmInntektErOppfylt() {
