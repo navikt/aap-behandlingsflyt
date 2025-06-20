@@ -9,6 +9,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 data class BrevGrunnlag(
+    val harTilgangTilÅSaksbehandle:  Boolean,
     val brevGrunnlag: List<Brev>) {
     data class Brev(
         val avklaringsbehovKode: AvklaringsbehovKode,
