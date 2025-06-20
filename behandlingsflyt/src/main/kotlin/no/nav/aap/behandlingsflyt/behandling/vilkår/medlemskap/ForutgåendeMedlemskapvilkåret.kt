@@ -9,19 +9,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
-import org.slf4j.LoggerFactory
 
 class ForutgåendeMedlemskapvilkåret(
     vilkårsresultat: Vilkårsresultat,
     private val rettighetsPeriode: Periode
 ) : Vilkårsvurderer<ForutgåendeMedlemskapGrunnlag> {
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.MEDLEMSKAP)
-    private val log = LoggerFactory.getLogger(javaClass)
-    private val unleashGateway = GatewayProvider.provide<UnleashGateway>()
 
     override fun vurder(grunnlag: ForutgåendeMedlemskapGrunnlag) {
         val forutgåendePeriode = Periode(rettighetsPeriode.fom.minusYears(5), rettighetsPeriode.tom)
@@ -42,9 +36,6 @@ class ForutgåendeMedlemskapvilkåret(
         } else {
             val kanBehandlesAutomatisk = ForutgåendeMedlemskapLovvalgVurderingService().vurderTilhørighet(grunnlag, forutgåendePeriode).kanBehandlesAutomatisk
 
-            if (unleashGateway.isEnabled(BehandlingsflytFeature.MedlemskapExtraTempLogger)) {
-                log.info("kanBehandlesAutomatisk: $kanBehandlesAutomatisk")
-            }
             val utfall = if (kanBehandlesAutomatisk) Utfall.OPPFYLT else Utfall.IKKE_VURDERT
             VurderingsResultat(utfall, null, null)
         }

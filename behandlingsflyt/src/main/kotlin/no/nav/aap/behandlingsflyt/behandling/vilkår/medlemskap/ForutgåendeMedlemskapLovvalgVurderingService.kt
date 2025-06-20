@@ -25,9 +25,8 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
         val oppfyltMinstEttKrav = førsteDelVurderinger.any{it.resultat}
         val ingenInntruffet = andreDelVurdering.all{!it.resultat}
 
-
         if (unleashGateway.isEnabled(BehandlingsflytFeature.MedlemskapExtraTempLogger)) {
-            log.info("førsteDelVurderinger: $førsteDelVurderinger, andreDelVurdering: $andreDelVurdering, oppfyltMinstEttKrav: $oppfyltMinstEttKrav, ingenInntruffet: $ingenInntruffet")
+            log.info("oppfyltMinstEttKrav: $oppfyltMinstEttKrav, ingenInntruffet: $ingenInntruffet")
         }
 
         return KanBehandlesAutomatiskVurdering(
