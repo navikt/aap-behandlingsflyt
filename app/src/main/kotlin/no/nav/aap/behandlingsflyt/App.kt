@@ -126,7 +126,8 @@ fun main() {
         connectionGroupSize = 8
         workerGroupSize = 8
         callGroupSize = 16
-        shutdownTimeout = TimeUnit.SECONDS.toMillis(20)
+        shutdownGracePeriod = TimeUnit.SECONDS.toMillis(5)
+        shutdownTimeout = TimeUnit.SECONDS.toMillis(10)
         connector {
             port = 8080
         }
@@ -274,6 +275,10 @@ fun Application.startMotor(dataSource: DataSource, repositoryRegistry: Repositor
     monitor.subscribe(ApplicationStarted) {
         motor.start()
     }
+    monitor.subscribe(ApplicationStopPreparing) { environment ->
+        environment.log.info("Forbereder stopp av applikasjon, stopper motor.")
+        motor.stop()
+    }
     monitor.subscribe(ApplicationStopping) { application ->
         application.environment.log.info("Server stopper...")
         // Release resources and unsubscribe from events
@@ -282,10 +287,6 @@ fun Application.startMotor(dataSource: DataSource, repositoryRegistry: Repositor
     }
     monitor.subscribe(ApplicationStopped) { application ->
         application.environment.log.info("Server har stoppet.")
-    }
-    monitor.subscribe(ApplicationStopPreparing) { environment ->
-        environment.log.info("Forbereder stopp av applikasjon, stopper motor.")
-        motor.stop()
     }
 
     return motor
