@@ -23,6 +23,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -38,6 +41,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
 ) : BehandlingSteg {
 
     private val log = LoggerFactory.getLogger(javaClass)
+    private val unleashGateway = GatewayProvider.provide<UnleashGateway>()
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
@@ -133,6 +137,11 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         if ((!alleVilkårOppfylt && manuellVurdering == null)
             || spesifiktTriggetRevurderMedlemskapUtenManuellVurdering(kontekst, manuellVurdering)
         ) {
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.MedlemskapExtraTempLogger)) {
+                val revurdering = spesifiktTriggetRevurderMedlemskapUtenManuellVurdering(kontekst, manuellVurdering)
+                log.info("manuellVurdering: $manuellVurdering, alleVilkårOppfylt: $alleVilkårOppfylt, revurdertTrigger: $revurdering")
+            }
+
             return FantAvklaringsbehov(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
         }
         return Fullført

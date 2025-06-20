@@ -13,6 +13,7 @@ object FakeUnleash : UnleashGateway {
         BehandlingsflytFeature.Samvarsling to true,
         BehandlingsflytFeature.IngenValidering to false,
         BehandlingsflytFeature.SendForvaltningsmelding to true,
+        BehandlingsflytFeature.MedlemskapExtraTempLogger to true,
     )
 
     override fun isEnabled(featureToggle: FeatureToggle) = requireNotNull(flags[featureToggle]) {
