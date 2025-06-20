@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.BREV_SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BrevbestillingLøsning
@@ -35,11 +36,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.DokumentResponsDTO
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -89,7 +94,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                         )
                     )
                 ) { behandlingReferanse ->
-                    val grunnlag = dataSource.transaction(readOnly = true) { connection ->
+                    val brevGrunnlag = dataSource.transaction(readOnly = true) { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                         val sakRepository = repositoryProvider.provide<SakRepository>()
@@ -106,14 +111,14 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                         val brevbestillinger = brevbestillingService.hentBrevbestillinger(behandlingReferanse)
 
                         val behandling = behandlingRepository.hent(behandlingReferanse)
+                        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                         val sak = SakService(sakRepository).hent(behandling.sakId)
                         val personIdent = sak.person.aktivIdent()
                         val personinfo =
                             GatewayProvider.provide(PersoninfoGateway::class)
                                 .hentPersoninfoForIdent(personIdent, token())
 
-                        val skrivBrevAvklaringsbehov = avklaringsbehovRepository
-                            .hentAvklaringsbehovene(behandling.id)
+                        val skrivBrevAvklaringsbehov = avklaringsbehovene
                             .hentBehovForDefinisjon(
                                 listOf(
                                     Definisjon.SKRIV_BREV,
@@ -130,7 +135,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                                         + skrivBrevAvklaringsbehov.joinToString { it.toString() })
                         }
 
-                        brevbestillinger.map { brevbestilling ->
+                        val grunnlag = brevbestillinger.map { brevbestilling ->
                             val brevbestillingResponse =
                                 brevbestillingService.hentBrevbestilling(brevbestilling.referanse)
 
@@ -182,24 +187,31 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                                     navn = personinfo.fulltNavn(),
                                     ident = personinfo.ident.identifikator
                                 ),
-                                signaturer = signaturer
+                                signaturer = signaturer,
+                                harTilgangTilÅSendeBrev = utledHarTilgangTilÅSendeBrev(
+                                    behandlingReferanse.referanse,
+                                    token(),
+                                    avklaringsbehovene,
+                                    bruker(),
+                                    definisjon
+                                )
                             )
                         }
-                    }
 
-                    val harTilgangTilÅSaksbehandle =
-                        GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                            behandlingReferanse.referanse,
-                            Definisjon.SKRIV_BREV,
-                            token()
-                        )
+                        val harTilgangTilÅSaksbehandle =
+                            GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
+                                behandlingReferanse.referanse,
+                                Definisjon.SKRIV_BREV,
+                                token()
+                            )
 
-                    respond(
                         BrevGrunnlag(
                             harTilgangTilÅSaksbehandle,
                             grunnlag
                         )
-                    )
+                    }
+
+                    respond(brevGrunnlag)
                 }
             }
         }
@@ -324,5 +336,39 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                 }
             }
         }
+    }
+}
+
+private fun utledHarTilgangTilÅSendeBrev(
+    behandlingReferanse: UUID,
+    token: OidcToken,
+    avklaringsbehovene: Avklaringsbehovene,
+    bruker: Bruker,
+    definisjon: Definisjon
+): Boolean {
+    val tilgangGateway = GatewayProvider.provide<TilgangGateway>()
+    val unleashGateway = GatewayProvider.provide<UnleashGateway>()
+
+    fun harTilgang(tilDefinisjon: Definisjon): Boolean =
+        tilgangGateway.sjekkTilgangTilBehandling(behandlingReferanse, tilDefinisjon, token)
+
+    return when (definisjon) {
+        Definisjon.SKRIV_VEDTAKSBREV -> {
+            val harTilgang = harTilgang(definisjon)
+            if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
+                val harIkkeGjortNoenVurderinger = avklaringsbehovene
+                    .alle()
+                    .filter { it.erTotrinn() }
+                    .none { it.brukere().contains(bruker.ident) }
+                harTilgang && harIkkeGjortNoenVurderinger
+            } else {
+                harTilgang
+            }
+        }
+
+        Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV,
+        Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV -> harTilgang(definisjon)
+
+        else -> harTilgang(Definisjon.SKRIV_BREV)
     }
 }
