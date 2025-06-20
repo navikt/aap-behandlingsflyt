@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.MANUELT_SATT_PÅ_VENT_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -176,7 +177,8 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource, repositoryRegistry: Repos
                             status = prosessering.status,
                             typeBehandling = behandling.typeBehandling(),
                             avklaringsbehov = alleAvklaringsbehov,
-                            bruker = bruker()
+                            bruker = bruker(),
+                            behandlingStatus = behandling.status()
                         )
                     )
                 }
@@ -355,7 +357,8 @@ private fun utledVisning(
     status: ProsesseringStatus,
     typeBehandling: TypeBehandling,
     avklaringsbehov: List<Avklaringsbehov>,
-    bruker: Bruker
+    bruker: Bruker,
+    behandlingStatus: Status
 ): Visning {
     val unleashGateway = GatewayProvider.provide<UnleashGateway>()
     val brukerHarIngenValidering = unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)
@@ -372,9 +375,15 @@ private fun utledVisning(
         harÅpentKvalitetssikringsAvklaringsbehov(alleAvklaringsbehovInkludertFrivillige) && aktivtSteg == StegType.KVALITETSSIKRING
 
     val saksbehandlerReadOnly = if (brukerHarIngenValidering) {
-        erTilKvalitetssikring || erEtterBeslutterstegetHvisEksisterer(flyt, aktivtSteg)
+        erTilKvalitetssikring || erEtterBeslutterstegetHvisEksisterer(
+            flyt,
+            aktivtSteg
+        ) || behandlingStatus == Status.AVSLUTTET
     } else {
-        erTilKvalitetssikring || erEtterBeslutterstegetHvisEksisterer(flyt, aktivtSteg) || brukerHarKvalitetssikret || brukerHarBesluttet
+        erTilKvalitetssikring || erEtterBeslutterstegetHvisEksisterer(
+            flyt,
+            aktivtSteg
+        ) || brukerHarKvalitetssikret || brukerHarBesluttet || behandlingStatus == Status.AVSLUTTET
     }
 
     val visBeslutterKort =
