@@ -63,8 +63,9 @@ class EffektuerAvvistPåFormkravSteg private constructor(
     }
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if(trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
-            val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+
+        if (trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
             avklaringsbehov.avbrytForSteg(type())
             return Fullført
         }
@@ -105,7 +106,6 @@ class EffektuerAvvistPåFormkravSteg private constructor(
             "Brevet er ikke fullført, men brev-service har ikke opprettet SKRIV_BREV-behov"
         }
 
-        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val venteBehov = avklaringsbehov.hentBehovForDefinisjon(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV)
 
         val effektuerGrunnlag = effektuerAvvistPåFormkravRepository.hentHvisEksisterer(kontekst.behandlingId)
@@ -131,6 +131,10 @@ class EffektuerAvvistPåFormkravSteg private constructor(
             || måVurderesPåNytt(kontekst.behandlingId, klageresultatUtleder)
         ) {
             return FantAvklaringsbehov(Definisjon.EFFEKTUER_AVVIST_PÅ_FORMKRAV)
+        } else {
+            // Lukker eventuelt gjenåpnet skriv-brev-behov. 
+            // TODO: Bør vi hindre flytorkestratoren i å gjenåpne slike behov ved tilbakesendt fra beslutter?
+            avklaringsbehov.avbryt(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
         }
 
         return Fullført
