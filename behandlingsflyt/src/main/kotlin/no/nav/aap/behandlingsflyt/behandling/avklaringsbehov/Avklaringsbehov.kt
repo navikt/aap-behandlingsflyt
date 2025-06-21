@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import java.time.LocalDate
@@ -98,7 +99,11 @@ class Avklaringsbehov(
             requireNotNull(venteårsak)
         }
         historikk += Endring(
-            status = Status.OPPRETTET, begrunnelse = begrunnelse, grunn = venteårsak, frist = frist, endretAv = bruker.ident
+            status = Status.OPPRETTET,
+            begrunnelse = begrunnelse,
+            grunn = venteårsak,
+            frist = frist,
+            endretAv = bruker.ident
         )
     }
 
@@ -154,6 +159,11 @@ class Avklaringsbehov(
 
     fun skalLøsesISteg(type: StegType): Boolean {
         return definisjon.skalLøsesISteg(type, funnetISteg)
+    }
+
+    fun skalLøsesIStegGruppe(gruppe: StegGruppe): Boolean {
+        val steg = StegType.entries.filter { it.gruppe == gruppe }
+        return steg.any { skalLøsesISteg(it) }
     }
 
     fun erForeslåttVedtak(): Boolean {

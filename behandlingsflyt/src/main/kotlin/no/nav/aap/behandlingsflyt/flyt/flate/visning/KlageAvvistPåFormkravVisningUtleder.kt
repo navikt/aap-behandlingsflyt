@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Omgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.ÅrsakTilAvslag
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -21,7 +22,7 @@ class KlageAvvistPåFormkravVisningUtleder(
 
     override fun skalVises(behandlingId: BehandlingId): Boolean {
         val avklagingsbehovene = avklaringsbehov.hentAvklaringsbehovene(behandlingId)
-        return avklagingsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV) != null
+        return avklagingsbehovene.alle().any { it.skalLøsesIStegGruppe(gruppe()) }
     }
 
     override fun gruppe(): StegGruppe {
