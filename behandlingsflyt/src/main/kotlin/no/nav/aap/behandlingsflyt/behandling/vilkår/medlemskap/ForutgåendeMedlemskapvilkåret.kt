@@ -33,7 +33,7 @@ class ForutgåendeMedlemskapvilkåret(
         } else if (grunnlag.nyeSoknadGrunnlag == null)  {
             VurderingsResultat(Utfall.IKKE_RELEVANT, null, null)
         } else {
-            val kanBehandlesAutomatisk = ForutgåendeMedlemskapVurderingService().vurderTilhørighet(grunnlag, Periode(rettighetsPeriode.fom.minusYears(5), rettighetsPeriode.tom)).kanBehandlesAutomatisk
+            val kanBehandlesAutomatisk = ForutgåendeMedlemskapVurderingService().vurderTilhørighet(grunnlag, rettighetsPeriode).kanBehandlesAutomatisk
 
             val utfall = if (kanBehandlesAutomatisk) Utfall.OPPFYLT else Utfall.IKKE_VURDERT
             VurderingsResultat(utfall, null, null)
