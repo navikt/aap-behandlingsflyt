@@ -6,17 +6,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
-import org.slf4j.LoggerFactory
 import java.time.YearMonth
 
 class ForutgåendeMedlemskapVurderingService {
-    private val unleashGateway = GatewayProvider.provide<UnleashGateway>()
-    private val log = LoggerFactory.getLogger(javaClass)
-
     fun vurderTilhørighet(grunnlag: ForutgåendeMedlemskapGrunnlag, rettighetsPeriode: Periode): KanBehandlesAutomatiskVurdering{
         val forutgåendePeriode = Periode(rettighetsPeriode.fom.minusYears(5), rettighetsPeriode.tom)
         val førsteDelVurderinger = vurderFørsteDelKriteier(grunnlag, forutgåendePeriode)
@@ -24,10 +17,6 @@ class ForutgåendeMedlemskapVurderingService {
 
         val oppfyltMinstEttKrav = førsteDelVurderinger.any{it.resultat}
         val ingenInntruffet = andreDelVurdering.all{!it.resultat}
-
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.MedlemskapExtraTempLogger)) {
-            log.info("oppfyltMinstEttKrav: $oppfyltMinstEttKrav, ingenInntruffet: $ingenInntruffet")
-        }
 
         return KanBehandlesAutomatiskVurdering(
             oppfyltMinstEttKrav && ingenInntruffet,
