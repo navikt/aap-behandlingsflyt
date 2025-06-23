@@ -13,7 +13,7 @@ import no.nav.aap.komponenter.type.Periode
 import org.slf4j.LoggerFactory
 import java.time.YearMonth
 
-class ForutgåendeMedlemskapLovvalgVurderingService {
+class ForutgåendeMedlemskapVurderingService {
     private val unleashGateway = GatewayProvider.provide<UnleashGateway>()
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -239,7 +239,7 @@ class ForutgåendeMedlemskapLovvalgVurderingService {
 
             val mndPeriode = Periode(førsteDagIMnd, sisteDagIMnd)
 
-            if (!perioder.any { it.overlapper(mndPeriode) }) {
+            if (perioder.none { it.overlapper(mndPeriode) }) {
                 return false
             }
             nåMnd = nåMnd.plusMonths(1)

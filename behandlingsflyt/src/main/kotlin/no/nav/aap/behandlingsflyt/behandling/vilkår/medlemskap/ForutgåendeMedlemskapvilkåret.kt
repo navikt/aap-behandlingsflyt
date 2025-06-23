@@ -18,7 +18,6 @@ class ForutgåendeMedlemskapvilkåret(
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.MEDLEMSKAP)
 
     override fun vurder(grunnlag: ForutgåendeMedlemskapGrunnlag) {
-        val forutgåendePeriode = Periode(rettighetsPeriode.fom.minusYears(5), rettighetsPeriode.tom)
         val manuellVurdering = grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering
 
         var vurdertManuelt = false
@@ -34,7 +33,7 @@ class ForutgåendeMedlemskapvilkåret(
         } else if (grunnlag.nyeSoknadGrunnlag == null)  {
             VurderingsResultat(Utfall.IKKE_RELEVANT, null, null)
         } else {
-            val kanBehandlesAutomatisk = ForutgåendeMedlemskapLovvalgVurderingService().vurderTilhørighet(grunnlag, forutgåendePeriode).kanBehandlesAutomatisk
+            val kanBehandlesAutomatisk = ForutgåendeMedlemskapVurderingService().vurderTilhørighet(grunnlag, Periode(rettighetsPeriode.fom.minusYears(5), rettighetsPeriode.tom)).kanBehandlesAutomatisk
 
             val utfall = if (kanBehandlesAutomatisk) Utfall.OPPFYLT else Utfall.IKKE_VURDERT
             VurderingsResultat(utfall, null, null)
@@ -86,6 +85,4 @@ class ForutgåendeMedlemskapvilkåret(
             )
         )
     }
-
-
 }

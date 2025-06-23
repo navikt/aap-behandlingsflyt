@@ -24,7 +24,7 @@ import java.time.LocalDate
 
 @Fakes
 class ForutgåendeMedlemskapVurderingServiceTest {
-    private val service = ForutgåendeMedlemskapLovvalgVurderingService()
+    private val service = ForutgåendeMedlemskapVurderingService()
 
     companion object {
         @BeforeAll
