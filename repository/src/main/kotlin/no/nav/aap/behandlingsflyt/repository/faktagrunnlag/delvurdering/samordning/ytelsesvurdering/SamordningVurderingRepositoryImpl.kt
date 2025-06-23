@@ -42,25 +42,6 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
             return null
         }
 
-        val fellesFelterSpørring = """
-            SELECT begrunnelse, maksdato_endelig, frist_ny_revurdering
-            FROM SAMORDNING_VURDERINGER
-            WHERE id = ?
-        """.trimIndent()
-
-        val fellesFelter = connection.queryFirst(fellesFelterSpørring) {
-            setParams {
-                setLong(1, vurderingerId)
-            }
-            setRowMapper {
-                Triple(
-                    it.getString("begrunnelse"),
-                    it.getBoolean("maksdato_endelig"),
-                    it.getLocalDateOrNull("frist_ny_revurdering"),
-                )
-            }
-        }
-
         val vurderingerQuery = """
             SELECT sv.id as sv_id, sv.ytelse_type as sv_ytelse_type
             FROM SAMORDNING_VURDERING sv
@@ -79,14 +60,31 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
             }
         }
 
-        val (begrunnelse, maksDatoEndelig, fristNyRevurdering) = fellesFelter
-        return SamordningVurderingGrunnlag(
-            vurderingerId = vurderingerId,
-            begrunnelse = begrunnelse,
-            maksDatoEndelig = maksDatoEndelig,
-            fristNyRevurdering = fristNyRevurdering,
-            vurderinger = vurderinger
-        )
+        val fellesFelterSpørring = """
+            SELECT begrunnelse, maksdato_endelig, frist_ny_revurdering, vurdert_av, opprettet_tid
+            FROM SAMORDNING_VURDERINGER
+            WHERE id = ?
+        """.trimIndent()
+
+        val vurderingGrunnlag =
+            connection.queryFirst(fellesFelterSpørring) {
+                setParams {
+                    setLong(1, vurderingerId)
+                }
+                setRowMapper {
+                    SamordningVurderingGrunnlag(
+                        begrunnelse = it.getString("begrunnelse"),
+                        maksDatoEndelig = it.getBoolean("maksdato_endelig"),
+                        fristNyRevurdering = it.getLocalDateOrNull("frist_ny_revurdering"),
+                        vurderingerId = vurderingerId,
+                        vurdertAv = it.getString("vurdert_av"),
+                        vurdertTidspunkt = it.getLocalDateTime("opprettet_tid"),
+                        vurderinger = vurderinger
+                    )
+                }
+            }
+
+        return vurderingGrunnlag
     }
 
     private fun hentSamordningVurderingPerioder(vurderingId: Long): List<SamordningVurderingPeriode> {
@@ -119,14 +117,15 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
         }
 
         val samordningVurderingerQuery = """
-            INSERT INTO SAMORDNING_VURDERINGER (begrunnelse, maksdato_endelig, frist_ny_revurdering)
-            VALUES (?, ?, ?)
+            INSERT INTO SAMORDNING_VURDERINGER (begrunnelse, maksdato_endelig, frist_ny_revurdering, vurdert_av)
+            VALUES (?, ?, ?, ?)
             """.trimIndent()
         val vurderingerId = connection.executeReturnKey(samordningVurderingerQuery) {
             setParams {
                 setString(1, samordningVurderinger.begrunnelse)
                 setBoolean(2, samordningVurderinger.maksDatoEndelig)
                 setLocalDate(3, samordningVurderinger.fristNyRevurdering)
+                setString(4, samordningVurderinger.vurdertAv)
             }
         }
 

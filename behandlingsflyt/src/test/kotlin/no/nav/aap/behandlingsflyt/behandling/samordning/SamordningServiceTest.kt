@@ -80,6 +80,7 @@ internal class SamordningServiceTest {
                     begrunnelse = "En god begrunnelse",
                     maksDatoEndelig = false,
                     fristNyRevurdering = LocalDate.now().plusYears(1),
+                    vurdertAv = "ident",
                     vurderinger = listOf(
                         SamordningVurdering(
                             ytelseType = Ytelse.SYKEPENGER,
@@ -147,6 +148,7 @@ internal class SamordningServiceTest {
             begrunnelse = "En god begrunnelse",
             maksDatoEndelig = false,
             fristNyRevurdering = LocalDate.now().plusYears(1),
+            vurdertAv = "ident",
             vurderinger = listOf(
                 SamordningVurdering(
                     Ytelse.SYKEPENGER,
