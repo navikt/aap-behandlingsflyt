@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.Melde
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.BehandlendeEnhetRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.EffektuerAvvistPåFormkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FormkravRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FullmektigRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.KlagebehandlingKontorRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.KlagebehandlingNayRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.PåklagetBehandlingRepositoryImpl
@@ -123,4 +124,5 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<SamIdRepositoryImpl>()
     .register<EffektuerAvvistPåFormkravRepositoryImpl>()
     .register<SvarFraAndreinstansRepositoryImpl>()
+    .register<FullmektigRepositoryImpl>()
 
