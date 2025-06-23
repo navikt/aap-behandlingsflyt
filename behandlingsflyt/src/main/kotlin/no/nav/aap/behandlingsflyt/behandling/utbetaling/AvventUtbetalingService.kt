@@ -14,21 +14,45 @@ class AvventUtbetalingService(
     private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository,
 ) {
 
-     fun finnEventuellAvventUtbetaling(behandlingId: BehandlingId, vedtakstidspunkt: LocalDateTime, tilkjentYtelseHelePerioden: Periode): TilkjentYtelseAvventDto? {
+    fun finnEventuellAvventUtbetaling(behandlingId: BehandlingId, vedtakstidspunkt: LocalDateTime, tilkjentYtelseHelePerioden: Periode): TilkjentYtelseAvventDto? {
         val sosialRefusjonskrav = refusjonskravRepository.hentHvisEksisterer(behandlingId)
         val tpRefusjonskrav = tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(behandlingId)
 
-        val overlapperMedSosialRefusjon = sosialRefusjonskrav != null && sosialRefusjonskrav.harKrav
-                && tilkjentYtelseHelePerioden.overlapper(tilPeriode(sosialRefusjonskrav.fom, sosialRefusjonskrav.tom))
+        val overlapperMedSosialRefusjon = sosialRefusjonskrav != null && sosialRefusjonskrav.any { refusjonsKrav ->
+            refusjonsKrav.harKrav && tilkjentYtelseHelePerioden.overlapper(tilPeriode(refusjonsKrav.fom, refusjonsKrav.tom))
+        } == true
 
         val overlapperMedTjenestepensjonRefusjon = tpRefusjonskrav != null && tpRefusjonskrav.harKrav
                 && tilkjentYtelseHelePerioden.overlapper(tilPeriode(tpRefusjonskrav.fom, tpRefusjonskrav.tom))
 
-        val (frist, fom, tom) = when {
-            overlapperMedTjenestepensjonRefusjon -> Triple(42L, tpRefusjonskrav.fom!!, tpRefusjonskrav.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(tpRefusjonskrav.fom))
-            overlapperMedSosialRefusjon -> Triple(21L, sosialRefusjonskrav.fom!!, sosialRefusjonskrav.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(sosialRefusjonskrav.fom))
-            else -> Triple(null, null, null)
+        val perioder = sosialRefusjonskrav
+            ?.filter { it.harKrav && it.fom != null }
+            ?.mapNotNull { vurdering ->
+                vurdering.fom?.let { fom ->
+                    val tom = vurdering.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(fom)
+                    fom to tom
+                }
+            }
+
+        val tripleList = perioder?.takeIf { it.isNotEmpty() }?.let {
+            val minFom = it.minOf { p -> p.first }
+            val maxTom = it.maxOf { p -> p.second }
+            Triple(21L, minFom, maxTom)
         }
+
+        val triple = when {
+            overlapperMedTjenestepensjonRefusjon -> Triple(
+                42L,
+                tpRefusjonskrav.fom!!,
+                tpRefusjonskrav.tom ?: vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(tpRefusjonskrav.fom)
+            )
+            overlapperMedSosialRefusjon && tripleList != null -> tripleList
+            else -> null
+        }
+
+        val frist = triple?.first
+        val fom = triple?.second
+        val tom = triple?.third
 
         return if (frist != null) {
             TilkjentYtelseAvventDto(
