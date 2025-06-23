@@ -26,4 +26,3 @@ data class TilkjentYtelsePeriodeDTO(
     val samordningGradering: Int?,
     val samordningUføreGradering: Int?
 )
-

@@ -11,6 +11,8 @@ import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
+import java.math.BigDecimal
+import java.time.LocalDate
 import javax.sql.DataSource
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode as TilkjentYtelsePeriodeD
 
@@ -60,5 +62,51 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                 respond(TilkjentYtelseDto(perioder = tilkjentYtelser))
             }
         }
+
+        route("/tilkjentV2/{referanse}") {
+            authorizedGet<BehandlingReferanse, TilkjentYtelse2Dto>(
+                AuthorizationParamPathConfig(
+                    operasjon = Operasjon.SE,
+                    behandlingPathParam = BehandlingPathParam("referanse")
+                )
+            ) { req ->
+                val tilkjentYtelser = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryFactory = repositoryRegistry.provider(connection)
+                    val behandlingRepository = repositoryFactory.provide<BehandlingRepository>()
+                    val tilkjentYtelseRepository: TilkjentYtelseRepository =
+                        repositoryFactory.provide<TilkjentYtelseRepository>()
+
+                    val tilkjentYtelse = TilkjentYtelseService(
+                        behandlingRepository,
+                        tilkjentYtelseRepository
+                    ).hentTilkjentYtelse(req);
+
+                        tilkjentYtelse.groupBy { it.tilkjent.meldeperiode }.map { (periode, objekter) ->
+                            TilkjentYtelsePeriode2Dto(
+                                meldeperiode = periode,
+                                levertMeldekortDato = LocalDate.now(),
+                                meldekortStatus = MeldekortStaus.IKKE_LEVERT,
+                                vurdertePerioder = objekter.map { it ->
+                                    VurdertPeriode(
+                                        fraOgMed = it.periode.fom,
+                                        tilOgMed = it.periode.tom,
+                                        dagsats = it.tilkjent.dagsats.verdi,
+                                        barneTilleggsats = it.tilkjent.barnetilleggsats.verdi,
+                                        arbeidGradering = it.tilkjent.gradering.arbeidGradering?.prosentverdi(),
+                                        samordningGradering = it.tilkjent.gradering.samordningGradering?.prosentverdi(),
+                                        institusjonGradering = it.tilkjent.gradering.institusjonGradering?.prosentverdi(),
+                                        totalReduksjon = 27,
+                                        effektivDagsats = 150
+                                    )
+                                }
+                            )
+                        }
+
+
+                }
+                respond(TilkjentYtelse2Dto(perioder = tilkjentYtelser))
+            }
+        }
+
     }
 }
