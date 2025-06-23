@@ -368,6 +368,7 @@ class FlytOrkestratorTest {
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null,
+                    navKontor = "",
                 ))
             )
         )
@@ -482,6 +483,7 @@ class FlytOrkestratorTest {
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null,
+                    navKontor = "",
                 ))
             )
         )
@@ -734,6 +736,7 @@ class FlytOrkestratorTest {
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null,
+                    navKontor = "",
                 ))
             )
         )
@@ -882,6 +885,7 @@ class FlytOrkestratorTest {
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null,
+                    navKontor = "",
                 ))
             )
         )
@@ -1143,6 +1147,7 @@ class FlytOrkestratorTest {
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null,
+                    navKontor = "",
                 ))
             )
         )
@@ -1498,7 +1503,7 @@ class FlytOrkestratorTest {
         ).løsAvklaringsBehov(
             RefusjonkravLøsning(
                 listOf(RefusjonkravVurderingDto(
-                    harKrav = true, fom = LocalDate.now(), tom = null
+                    harKrav = true, fom = LocalDate.now(), tom = null, navKontor = "",
                 ))
             )
         ).løsAvklaringsBehov(
@@ -1748,6 +1753,7 @@ class FlytOrkestratorTest {
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null,
+                    navKontor = "",
                 ))
             )
         )
@@ -3889,6 +3895,7 @@ class FlytOrkestratorTest {
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null,
+                    navKontor = "",
                 ))
             )
         )
@@ -4089,6 +4096,7 @@ class FlytOrkestratorTest {
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null,
+                    navKontor = "",
                 ))
             )
         )
