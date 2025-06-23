@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -11,6 +12,7 @@ import java.time.LocalDate
  * @param grunnlag Beregningsgrunnlag som er lagt til grunn før beregning av dagsats og før gradering er beregnet.
  */
 class Tilkjent(
+    val meldeperiode: Periode,
     val dagsats: Beløp,
     val gradering: TilkjentGradering,
     val grunnlag: Beløp,

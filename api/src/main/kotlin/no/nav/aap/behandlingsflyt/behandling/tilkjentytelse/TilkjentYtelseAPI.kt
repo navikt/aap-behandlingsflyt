@@ -51,7 +51,8 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                                     arbeidGradering = it.gradering.arbeidGradering?.prosentverdi(),
                                     institusjonGradering = it.gradering.institusjonGradering?.prosentverdi(),
                                     samordningGradering = it.gradering.samordningGradering?.prosentverdi(),
-                                    samordningUføreGradering = it.gradering.samordningUføregradering?.prosentverdi()
+                                    samordningUføreGradering = it.gradering.samordningUføregradering?.prosentverdi(),
+                                    meldeperiode = it.meldeperiode
                                 )
                             }
                         }

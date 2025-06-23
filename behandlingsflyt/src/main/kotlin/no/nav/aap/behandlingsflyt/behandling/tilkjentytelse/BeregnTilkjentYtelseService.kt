@@ -204,7 +204,8 @@ class BeregnTilkjentYtelseService(
                         grunnbeløp = venstre.verdi.grunnbeløp,
                         antallBarn = høyre?.verdi?.antallBarn ?: 0,
                         barnetilleggsats = høyre?.verdi?.barnetilleggsats ?: Beløp(0),
-                        utbetalingsdato = venstre.verdi.utbetalingsdato
+                        utbetalingsdato = venstre.verdi.utbetalingsdato,
+                        meldeperiode = Periode(LocalDate.now(), LocalDate.now())
                     )
                 )
             })

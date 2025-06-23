@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
+import no.nav.aap.komponenter.type.Periode
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -7,6 +8,7 @@ import java.time.LocalDate
  * @param gradering Gradering i prosent. (0-100)
  */
 data class TilkjentYtelsePeriodeDTO(
+    val meldeperiode: Periode,
     val fraOgMed: LocalDate,
     val tilOgMed: LocalDate,
     val dagsats: BigDecimal,
@@ -24,3 +26,4 @@ data class TilkjentYtelsePeriodeDTO(
     val samordningGradering: Int?,
     val samordningUføreGradering: Int?
 )
+

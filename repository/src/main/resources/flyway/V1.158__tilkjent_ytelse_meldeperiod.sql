@@ -1,0 +1,2 @@
+ALTER TABLE TILKJENT_PERIODE
+    ADD COLUMN meldeperiode daterange;
