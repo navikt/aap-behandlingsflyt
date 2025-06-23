@@ -15,6 +15,7 @@ import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.SamordningYtelseDTO
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.SamordningYtelseVurderingGrunnlagDTO
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -122,10 +123,9 @@ class SamordningApiKtTest {
                     fristNyRevurdering = null,
                     maksDatoEndelig = null,
                     tpYtelser = null,
+                    vurdertAv = null
                 )
             )
-
-
         }
     }
 

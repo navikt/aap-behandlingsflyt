@@ -42,11 +42,12 @@ class AvklarSamordningGraderingLøser(
                             periode = vurdering.periode,
                             gradering = vurdering.gradering?.let(::Prosent),
                             kronesum = vurdering.kronesum,
-                            manuell = vurdering.manuell,
+                            manuell = vurdering.manuell
                         )
-                    },
+                    }
                 )
-            })
+            },
+            vurdertAv = kontekst.bruker.ident)
 
         val perioderSomIkkeHarBlittVurdert = samordningService.perioderSomIkkeHarBlittVurdert(
             samordningYtelseGrunnlag, samordningService.vurderingTidslinje(samordningsvurderinger)
