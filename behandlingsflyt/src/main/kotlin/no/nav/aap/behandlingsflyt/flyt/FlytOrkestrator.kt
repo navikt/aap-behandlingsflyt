@@ -86,6 +86,22 @@ class FlytOrkestrator(
         )
     }
 
+    fun tilbakeførEtterAtomærBehandling(kontekst: FlytKontekst) {
+        val behandling = behandlingRepository.hent(kontekst.behandlingId)
+        val behandlingFlyt = behandling.flyt()
+
+        val endredeInformasjonskrav = informasjonskravGrunnlag
+            .flettOpplysningerFraAtomærBehandling(kontekst, behandlingFlyt.alleInformasjonskravForÅpneSteg())
+
+        tilbakefør(
+            kontekst = kontekst,
+            behandling = behandling,
+            behandlingFlyt = behandlingFlyt.tilbakeflytEtterEndringer(endredeInformasjonskrav),
+            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id),
+        )
+    }
+
+
     fun forberedOgProsesserBehandling(
         kontekst: FlytKontekst,
         triggere: List<ÅrsakTilBehandling> = emptyList()

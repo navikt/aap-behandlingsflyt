@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 
 /**
@@ -23,4 +24,6 @@ interface Informasjonskrav {
      * Om det ikke er noen endringer, returneres [Endret.IKKE_ENDRET].
      */
     fun oppdater(kontekst: FlytKontekstMedPerioder): Endret
+
+    fun flettOpplysningerFraAtomærBehandling(kontekst: FlytKontekst) = Endret.IKKE_ENDRET
 }

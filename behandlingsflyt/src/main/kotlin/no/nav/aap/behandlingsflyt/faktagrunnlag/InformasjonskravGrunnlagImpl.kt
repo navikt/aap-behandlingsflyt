@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.SpanKind
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Instant
@@ -73,5 +74,15 @@ class InformasjonskravGrunnlagImpl(
             Instant.now()
         )
         return endredeInformasjonskrav.map { (konstruktør, _, _) -> konstruktør }
+    }
+
+    override fun flettOpplysningerFraAtomærBehandling(
+        kontekst: FlytKontekst,
+        informasjonskravkonstruktørere: List<Informasjonskravkonstruktør>
+    ): List<Informasjonskravkonstruktør> {
+        return informasjonskravkonstruktørere.filter {
+            it.konstruer(repositoryProvider)
+                .flettOpplysningerFraAtomærBehandling(kontekst) == Informasjonskrav.Endret.ENDRET
+        }
     }
 }

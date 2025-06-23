@@ -247,6 +247,15 @@ class BehandlingFlyt private constructor(
     override fun toString(): String {
         return "BehandlingFlyt(aktivtSteg=$aktivtSteg, flyt=$flyt, årsaker=$årsaker, parent=$parent)"
     }
+
+    fun alleInformasjonskravForÅpneSteg(): List<Informasjonskravkonstruktør> {
+        return flyt.flatMap {
+            if (it.steg.type().status.erÅpen())
+                it.kravliste
+            else
+                emptyList()
+        }
+    }
 }
 
 class StegComparator(private var flyt: List<BehandlingFlyt.Behandlingsflytsteg>) : Comparator<StegType> {

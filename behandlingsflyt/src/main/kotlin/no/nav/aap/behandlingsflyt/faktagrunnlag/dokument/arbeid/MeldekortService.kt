@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -65,5 +66,30 @@ class MeldekortService private constructor(
         meldekortRepository.lagre(behandlingId = kontekst.behandlingId, meldekortene = allePlussNye)
 
         return ENDRET // Antar her at alle nye kort gir en endring vi må ta hensyn til
+    }
+
+    override fun flettOpplysningerFraAtomærBehandling(kontekst: FlytKontekst): Informasjonskrav.Endret {
+        val forrigeBehandlingId = kontekst.forrigeBehandlingId ?: return IKKE_ENDRET
+        val forrigeBehandlingGrunnlag = meldekortRepository.hentHvisEksisterer(forrigeBehandlingId) ?: return IKKE_ENDRET
+
+        val meldekortIBehandling = meldekortRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?.meldekortene
+            ?: emptySet()
+
+        val journalpostIderIBehandling = meldekortIBehandling.map { it.journalpostId }
+
+        val nyeMeldekort = mutableListOf<Meldekort>()
+        for (meldekort in forrigeBehandlingGrunnlag.meldekortene) {
+            if (meldekort.journalpostId !in journalpostIderIBehandling) {
+                nyeMeldekort.add(meldekort)
+            }
+        }
+
+        if (nyeMeldekort.isEmpty()) {
+            return IKKE_ENDRET
+        } else {
+            meldekortRepository.lagre(kontekst.behandlingId, meldekortIBehandling + nyeMeldekort)
+            return ENDRET
+        }
     }
 }

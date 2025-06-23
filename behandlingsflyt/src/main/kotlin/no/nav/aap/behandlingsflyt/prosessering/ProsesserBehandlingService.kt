@@ -85,6 +85,10 @@ class ProsesserBehandlingService(
         triggProsesserBehandling(behandling.sakId, behandling.id)
         log.info("Prosessererte behandling ${behandling.referanse} atomært")
 
-        /* TODO: pass på at åpen behandling får med seg endringene. */
+        val åpenBehandling = opprettetBehandling.åpenBehandling
+        if (åpenBehandling != null) {
+            val kontekst = atomærFlytOrkestrator.opprettKontekst(åpenBehandling.sakId, åpenBehandling.id)
+            atomærFlytOrkestrator.tilbakeførEtterAtomærBehandling(kontekst)
+        }
     }
 }
