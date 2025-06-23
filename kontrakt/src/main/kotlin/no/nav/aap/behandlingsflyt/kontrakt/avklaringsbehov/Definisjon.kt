@@ -375,6 +375,12 @@ public enum class Definisjon(
         løsesISteg = StegType.EFFEKTUER_AVVIST_PÅ_FORMKRAV,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
+    FASTSETT_FULLMEKTIG(
+        kode = AvklaringsbehovKode.`6009`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.FULLMEKTIG,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+    ),
     VURDER_TREKK_AV_KLAGE(
         kode = AvklaringsbehovKode.`6010`,
         løsesISteg = StegType.TREKK_KLAGE,

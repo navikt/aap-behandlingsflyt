@@ -163,6 +163,10 @@ public enum class StegType(
         gruppe = StegGruppe.FORMKRAV,
         status = Status.UTREDES,
     ),
+    FULLMEKTIG(
+        gruppe = StegGruppe.FORMKRAV,
+        status = Status.UTREDES
+    ),
     FORMKRAV(
         gruppe = StegGruppe.FORMKRAV,
         status = Status.UTREDES,
