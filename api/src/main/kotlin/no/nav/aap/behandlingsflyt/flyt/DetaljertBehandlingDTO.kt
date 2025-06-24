@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -9,7 +10,7 @@ import java.util.*
 
 data class DetaljertBehandlingDTO(
     val referanse: UUID,
-    val type: String,
+    val type: TypeBehandling,
     val status: Status,
     val opprettet: LocalDateTime,
     val avklaringsbehov: List<AvklaringsbehovDTO>,
@@ -17,5 +18,6 @@ data class DetaljertBehandlingDTO(
     val aktivtSteg: StegType,
     val skalForberede: Boolean,
     val versjon: Long,
-    val virkningstidspunkt: LocalDate?
+    val virkningstidspunkt: LocalDate?,
+    val vedtaksdato: LocalDate?,
 )

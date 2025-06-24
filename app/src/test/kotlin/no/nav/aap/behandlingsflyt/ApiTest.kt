@@ -375,7 +375,9 @@ class ApiTest {
             val avklaringsbehov: List<AvklaringsbehovDTO>,
             val vilkår: List<VilkårDTO>,
             val aktivtSteg: StegType,
-            val versjon: Long
+            val versjon: Long,
+            val vedtaksdato: LocalDate?,
+            val virkningstidspunkt: LocalDate?
         )
 
         val behandling = kallInntilKlar {
@@ -383,11 +385,17 @@ class ApiTest {
                 URI.create("http://localhost:$port/")
                     .resolve("api/behandling/")
                     .resolve(utvidetSak.behandlinger.first().referanse.toString()),
-                GetRequest()
+                GetRequest(currentToken = getToken())
             )
         }
 
-        log.info("Behandling: $behandling")
+        log.info("Behandling $behandling")
+        assertThat(behandling?.type).isEqualTo("Førstegangsbehandling")
+        assertThat(behandling?.status).isEqualTo(no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES)
+        assertThat(behandling?.virkningstidspunkt).isNull()
+        assertThat(behandling?.vedtaksdato).isNull()
+        assertThat(behandling?.aktivtSteg).isEqualTo(StegType.AVKLAR_SYKDOM)
+
     }
 
     @Test

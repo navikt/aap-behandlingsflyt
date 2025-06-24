@@ -48,10 +48,10 @@ class AndreinstansService(
             InnsendingType.KLAGE
         )
         val avklarinsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(klageBehandlingId)
-        val beslutter = utledBeslutter(avklarinsbehovene)
-        val besluttersEnhet = if (Miljø.erDev()) {
+        val besluttersEnhet = if (Miljø.erDev() || Miljø.erLokal()) {
             "0300" // Det finnes ikke testdata i NOM - bruker hardkodet enhet i dev
         } else {
+            val beslutter = utledBeslutter(avklarinsbehovene)
             ansattInfoService.hentAnsattEnhet(beslutter)
         }
         requireNotNull(besluttersEnhet) {
