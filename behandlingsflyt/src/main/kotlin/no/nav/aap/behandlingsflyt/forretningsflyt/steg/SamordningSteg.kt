@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
@@ -108,7 +109,7 @@ class SamordningSteg(
     override fun vedTilbakeføring(kontekst: FlytKontekstMedPerioder) {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_GRADERING)
-        if (avklaringsbehov != null && avklaringsbehov.erÅpent()) {
+        if (avklaringsbehov != null && avklaringsbehov.erÅpent() && avklaringsbehov.status() != Status.SENDT_TILBAKE_FRA_BESLUTTER) {
             avklaringsbehovene.avbryt(Definisjon.AVKLAR_SAMORDNING_GRADERING)
         }
     }
