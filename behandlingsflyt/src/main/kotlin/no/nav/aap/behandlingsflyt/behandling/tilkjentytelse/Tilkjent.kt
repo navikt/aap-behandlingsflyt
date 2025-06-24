@@ -12,7 +12,6 @@ import java.time.LocalDate
  * @param grunnlag Beregningsgrunnlag som er lagt til grunn før beregning av dagsats og før gradering er beregnet.
  */
 class Tilkjent(
-    val meldeperiode: Periode,
     val dagsats: Beløp,
     val gradering: TilkjentGradering,
     val grunnlag: Beløp,

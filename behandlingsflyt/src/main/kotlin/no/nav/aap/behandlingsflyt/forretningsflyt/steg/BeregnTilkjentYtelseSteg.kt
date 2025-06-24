@@ -7,11 +7,14 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -19,6 +22,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -31,6 +35,8 @@ class BeregnTilkjentYtelseSteg private constructor(
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val samordningRepository: SamordningRepository,
     private val samordningUføreRepository: SamordningUføreRepository,
+
+    private val meldeperiodeRepository: MeldeperiodeRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
 
@@ -41,6 +47,7 @@ class BeregnTilkjentYtelseSteg private constructor(
         barnetilleggRepository = repositoryProvider.provide(),
         tilkjentYtelseRepository = repositoryProvider.provide(),
         samordningRepository = repositoryProvider.provide(),
+        meldeperiodeRepository = repositoryProvider.provide(),
         samordningUføreRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
     )
@@ -63,6 +70,8 @@ class BeregnTilkjentYtelseSteg private constructor(
         )
         val samordningUføre = samordningUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
 
+        val meldeperioder = meldeperiodeRepository.hent(kontekst.behandlingId)
+
         val beregnetTilkjentYtelse = BeregnTilkjentYtelseService(
             fødselsdato,
             beregningsgrunnlag,
@@ -73,10 +82,15 @@ class BeregnTilkjentYtelseSteg private constructor(
         ).beregnTilkjentYtelse()
         tilkjentYtelseRepository.lagre(
             behandlingId = kontekst.behandlingId,
-            tilkjent = beregnetTilkjentYtelse.map { TilkjentYtelsePeriode(it.periode, it.verdi) })
+            tilkjent = beregnetTilkjentYtelse.map { TilkjentYtelsePeriode(it.periode, utledAktuellMeldeperiode(meldeperioder, it.periode), it.verdi) })
         log.info("Beregnet tilkjent ytelse: $beregnetTilkjentYtelse")
 
         return Fullført
+    }
+
+    fun utledAktuellMeldeperiode(meldeperioder: List<Periode>, periode: Periode): Periode {
+        return meldeperioder.find { it.inneholder(periode) }
+            ?: throw IllegalArgumentException("Fant ingen matchende meldeperiode for perioden $periode")
     }
 
     companion object : FlytSteg {

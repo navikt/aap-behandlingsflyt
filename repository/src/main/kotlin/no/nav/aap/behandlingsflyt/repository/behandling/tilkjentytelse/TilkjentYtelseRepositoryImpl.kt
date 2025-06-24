@@ -35,6 +35,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
             setRowMapper {
                 TilkjentYtelsePeriode(
                     periode = it.getPeriode("PERIODE"),
+                    aktuellMeldeperiode = it.getPeriode("meldeperiode"),
                     Tilkjent(
                         dagsats = Beløp(it.getInt("DAGSATS")),
                         gradering = TilkjentGradering(
@@ -51,7 +52,6 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                         barnetilleggsats = Beløp(it.getInt("BARNETILLEGGSATS")),
                         grunnbeløp = Beløp(it.getInt("GRUNNBELOP")),
                         utbetalingsdato = it.getLocalDate("UTBETALINGSDATO"),
-                        meldeperiode = it.getPeriode("meldeperiode")
                     )
                 )
             }
@@ -82,7 +82,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
             }
         }
         tilkjent.forEach { segment ->
-            lagrePeriode(tilkjentYtelseKey, segment.periode, segment.tilkjent)
+            lagrePeriode(tilkjentYtelseKey, segment.periode, segment.aktuellMeldeperiode,segment.tilkjent)
         }
 
     }
@@ -100,7 +100,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
         log.info("Slettet $deletedRows rader fra tilkjent_periode")
     }
 
-    private fun lagrePeriode(tilkjentYtelseId: Long, periode: Periode, tilkjent: Tilkjent) {
+    private fun lagrePeriode(tilkjentYtelseId: Long, periode: Periode, aktuellMeldeperiode: Periode, tilkjent: Tilkjent) {
         connection.execute(
             """
             INSERT INTO TILKJENT_PERIODE (TILKJENT_YTELSE_ID, PERIODE, DAGSATS, GRADERING, BARNETILLEGG,
@@ -125,7 +125,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                 setInt(13, tilkjent.gradering.institusjonGradering?.prosentverdi())
                 setInt(14, tilkjent.gradering.arbeidGradering?.prosentverdi())
                 setInt(15, tilkjent.gradering.samordningUføregradering?.prosentverdi())
-                setPeriode(16, tilkjent.meldeperiode)
+                setPeriode(16, aktuellMeldeperiode)
             }
         }
     }

@@ -11,7 +11,6 @@ import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
-import java.math.BigDecimal
 import java.time.LocalDate
 import javax.sql.DataSource
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode as TilkjentYtelsePeriodeD
@@ -53,8 +52,7 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                                     arbeidGradering = it.gradering.arbeidGradering?.prosentverdi(),
                                     institusjonGradering = it.gradering.institusjonGradering?.prosentverdi(),
                                     samordningGradering = it.gradering.samordningGradering?.prosentverdi(),
-                                    samordningUføreGradering = it.gradering.samordningUføregradering?.prosentverdi(),
-                                    meldeperiode = it.meldeperiode
+                                    samordningUføreGradering = it.gradering.samordningUføregradering?.prosentverdi()
                                 )
                             }
                         }
@@ -70,7 +68,7 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
             ) { req ->
-                val tilkjentYtelser = dataSource.transaction(readOnly = true) { connection ->
+                val tilkjentYtelsePerioder = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryFactory = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryFactory.provide<BehandlingRepository>()
                     val tilkjentYtelseRepository: TilkjentYtelseRepository =
@@ -81,12 +79,12 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                         tilkjentYtelseRepository
                     ).hentTilkjentYtelse(req);
 
-                        tilkjentYtelse.groupBy { it.tilkjent.meldeperiode }.map { (periode, objekter) ->
+                        tilkjentYtelse.groupBy { it.aktuellMeldeperiode }.map { (meldeperiode, vurdertePerioder) ->
                             TilkjentYtelsePeriode2Dto(
-                                meldeperiode = periode,
+                                meldeperiode = meldeperiode,
                                 levertMeldekortDato = LocalDate.now(),
                                 meldekortStatus = MeldekortStaus.IKKE_LEVERT,
-                                vurdertePerioder = objekter.map { it ->
+                                vurdertePerioder = vurdertePerioder.map { it ->
                                     VurdertPeriode(
                                         fraOgMed = it.periode.fom,
                                         tilOgMed = it.periode.tom,
@@ -104,7 +102,7 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
 
 
                 }
-                respond(TilkjentYtelse2Dto(perioder = tilkjentYtelser))
+                respond(TilkjentYtelse2Dto(perioder = tilkjentYtelsePerioder))
             }
         }
 
