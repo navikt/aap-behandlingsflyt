@@ -8,11 +8,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurderingMedReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurderingService
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -39,13 +43,27 @@ fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(dataSource: DataSource, re
                 val behandling = behandlingRepository.hent(behandlingReferanse)
                 val sak = sakRepository.hent(behandling.sakId)
 
-                val påklagetBehandlingService = PåklagetBehandlingVurderingService(behandlingRepository, påklagetBehandlingRepository)
+                val påklagetBehandlingService =
+                    PåklagetBehandlingVurderingService(behandlingRepository, påklagetBehandlingRepository)
 
-                val gjeldendeVurdering = påklagetBehandlingService.hentGjeldendeVurderingMedReferanse(behandlingReferanse)
+                val gjeldendeVurdering =
+                    påklagetBehandlingService.hentGjeldendeVurderingMedReferanse(behandlingReferanse)
                 val behandlingerMedVedtak = påklagetBehandlingService.hentAlleBehandlingerMedVedtakForPerson(sak.person)
-                val kravMottattDato = datoFraDokumentUtleder.utledKravMottattDatoForKlageBehandling(behandlingId = behandling.id)
+                val kravMottattDato =
+                    datoFraDokumentUtleder.utledKravMottattDatoForKlageBehandling(behandlingId = behandling.id)
 
-                mapTilPåklagetBehandlingGrunnlagDto(gjeldendeVurdering, behandlingerMedVedtak, kravMottattDato)
+                val harTilgangTilÅSaksbehandle =
+                    GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
+                        behandling.referanse.referanse,
+                        Definisjon.FASTSETT_PÅKLAGET_BEHANDLING,
+                        token()
+                    )
+                mapTilPåklagetBehandlingGrunnlagDto(
+                    gjeldendeVurdering,
+                    behandlingerMedVedtak,
+                    kravMottattDato,
+                    harTilgangTilÅSaksbehandle
+                )
             }
 
             respond(respons)
@@ -56,7 +74,8 @@ fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(dataSource: DataSource, re
 fun mapTilPåklagetBehandlingGrunnlagDto(
     påklagetBehandlingVurderingMedReferanse: PåklagetBehandlingVurderingMedReferanse?,
     behandlingerMedVedtak: List<BehandlingMedVedtak>,
-    kravMottattDato: LocalDate?
+    kravMottattDato: LocalDate?,
+    harTilgangTilÅSaksbehandle: Boolean
 ): PåklagetBehandlingGrunnlagDto {
     return PåklagetBehandlingGrunnlagDto(
         kravMottatt = kravMottattDato,
@@ -68,7 +87,8 @@ fun mapTilPåklagetBehandlingGrunnlagDto(
                 påklagetBehandling = påklagetBehandlingVurderingMedReferanse.referanse?.referanse,
                 påklagetVedtakType = påklagetBehandlingVurderingMedReferanse.påklagetVedtakType
             )
-        }
+        },
+        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle
     )
 }
         

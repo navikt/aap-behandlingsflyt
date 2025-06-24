@@ -5,13 +5,16 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.effektueravvistpåformkrav.EffektuerAvvistPåFormkravRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.brev.kontrakt.Status
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -41,8 +44,14 @@ fun NormalOpenAPIRoute.effektuerAvvistPåFormkravGrunnlagApi(
 
                 val grunnlag = effektuerAvvistPåFormkravRepository.hentHvisEksisterer(behandling.id)
 
+                val harTilgangTilÅSaksbehandle =
+                    GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
+                        behandling.referanse.referanse,
+                        Definisjon.EFFEKTUER_AVVIST_PÅ_FORMKRAV,
+                        token()
+                    )
                 if (grunnlag == null) {
-                    EffektuerAvvistPåFormkravGrunnlagDto()
+                    EffektuerAvvistPåFormkravGrunnlagDto(harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle)
                 } else {
                     val brevGateway = GatewayProvider.provide<BrevbestillingGateway>()
 
@@ -52,7 +61,7 @@ fun NormalOpenAPIRoute.effektuerAvvistPåFormkravGrunnlagApi(
                             ?.oppdatert?.toLocalDate()
 
 
-                    grunnlag.tilDto(brevFerdigstilt)
+                    grunnlag.tilDto(brevFerdigstilt, harTilgangTilÅSaksbehandle)
 
                 }
             }
