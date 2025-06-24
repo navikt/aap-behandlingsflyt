@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import com.papsign.ktor.openapigen.annotations.properties.description.Description
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
@@ -16,6 +17,7 @@ data class UnderveisperiodeDto(
     val meldePeriode: Periode,
     val utfall: Utfall,
     val rettighetsType: RettighetsType?,
+    val meldepliktStatus: MeldepliktStatus?,
     val avslagsårsak: UnderveisÅrsak?,
     val gradering: GraderingDto,
     val trekk: Dagsatser,
@@ -26,6 +28,7 @@ data class UnderveisperiodeDto(
         meldePeriode = underveisperiode.meldePeriode,
         utfall = underveisperiode.utfall,
         rettighetsType = underveisperiode.rettighetsType,
+        meldepliktStatus = underveisperiode.meldepliktStatus,
         avslagsårsak = underveisperiode.avslagsårsak,
         gradering = GraderingDto(underveisperiode.arbeidsgradering, underveisperiode.grenseverdi),
         trekk = Dagsatser(underveisperiode.trekk.antall * underveisperiode.periode.antallDager()),
