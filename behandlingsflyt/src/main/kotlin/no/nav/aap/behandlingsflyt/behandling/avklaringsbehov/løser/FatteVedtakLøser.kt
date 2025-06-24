@@ -56,7 +56,15 @@ class FatteVedtakLøser(
                     )
                 }
 
-            val vurderingerSomMåReåpnes = avklaringsbehovene.alleEkskludertVentebehov()
+            val unntaksVurderinger = listOf(
+                Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP.kode,
+                Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP.kode
+            )
+
+            val vurderingerSomMåReåpnes = if (unntaksVurderinger.containsAll(vurderingerSomErSendtTilbake.map { it.definisjon })) {
+                listOf()
+            } else {
+                avklaringsbehovene.alleEkskludertVentebehov()
                 .filterNot { behov ->
                     behov.definisjon in setOf(
                         Definisjon.FORESLÅ_VEDTAK,
@@ -67,8 +75,9 @@ class FatteVedtakLøser(
                 .filterNot { flyt.erStegFør(it.definisjon.løsesISteg, tidligsteStegMedRetur) }
                 .filter { vurdering ->
                     vurderingerSomErSendtTilbake.none { it.definisjon == vurdering.definisjon.kode } &&
-                            vurderingerFørRetur.none { it.definisjon == vurdering.definisjon.kode }
+                    vurderingerFørRetur.none { it.definisjon == vurdering.definisjon.kode }
                 }
+            }
 
             vurderingerFørRetur.forEach { vurdering ->
                 avklaringsbehovene.vurderTotrinn(
