@@ -95,7 +95,7 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
 //                            meldekortene?.firstOrNull { it.timerArbeidPerPeriode.any { it.periode.inneholder(it.periode) } }
 
                         val sisteAktuelleMeldekort =
-                            meldekortene?.lastOrNull { it.timerArbeidPerPeriode.any { it.periode.inneholder(meldeperiode) } }
+                            meldekortene?.lastOrNull { it.timerArbeidPerPeriode.any { it.periode.overlapper(meldeperiode) } }
 
                         TilkjentYtelsePeriode2Dto(
                             meldeperiode = meldeperiode,
