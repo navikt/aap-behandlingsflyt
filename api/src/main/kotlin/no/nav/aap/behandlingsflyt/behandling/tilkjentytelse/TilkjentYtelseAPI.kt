@@ -91,15 +91,12 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
 
 
                     tilkjentYtelse.groupBy { it.aktuellMeldeperiode }.map { (meldeperiode, vurdertePerioder) ->
-//                        val førsteAktuelleMeldekort =
-//                            meldekortene?.firstOrNull { it.timerArbeidPerPeriode.any { it.periode.inneholder(it.periode) } }
-
-                        val sisteAktuelleMeldekort =
-                            meldekortene?.lastOrNull { it.timerArbeidPerPeriode.any { it.periode.overlapper(meldeperiode) } }
+                        val førsteAktuelleMeldekort =
+                            meldekortene?.firstOrNull { it.timerArbeidPerPeriode.any { it.periode.overlapper(it.periode) } }
 
                         TilkjentYtelsePeriode2Dto(
                             meldeperiode = meldeperiode,
-                            levertMeldekortDato = sisteAktuelleMeldekort?.mottattTidspunkt, // TODO Bruke siste?
+                            levertMeldekortDato = førsteAktuelleMeldekort?.mottattTidspunkt, // TODO Bruke siste?
                             meldekortStatus = null, // TODO Finn ut hva vi gjør her.
                             vurdertePerioder = vurdertePerioder.map { it ->
                                 VurdertPeriode(
