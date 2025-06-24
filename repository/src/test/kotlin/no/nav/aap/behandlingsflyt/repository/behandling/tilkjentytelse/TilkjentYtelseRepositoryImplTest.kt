@@ -41,6 +41,10 @@ class TilkjentYtelseRepositoryImplTest {
                             LocalDate.now(),
                             LocalDate.now().plusDays(1)
                         ),
+                        aktuellMeldeperiode = Periode(
+                            LocalDate.now(),
+                            LocalDate.now().plusDays(14)
+                        ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(999),
                             gradering = TilkjentGradering(
@@ -63,6 +67,10 @@ class TilkjentYtelseRepositoryImplTest {
                         periode = Periode(
                             LocalDate.now().plusDays(2),
                             LocalDate.now().plusDays(3)
+                        ),
+                        aktuellMeldeperiode = Periode(
+                            LocalDate.now(),
+                            LocalDate.now().plusDays(14)
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(1000),
@@ -119,6 +127,10 @@ class TilkjentYtelseRepositoryImplTest {
                             LocalDate.now(),
                             LocalDate.now().plusDays(1)
                         ),
+                        aktuellMeldeperiode = Periode(
+                            LocalDate.now(),
+                            LocalDate.now().plusDays(14)
+                        ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(999),
                             gradering = TilkjentGradering(
@@ -141,6 +153,10 @@ class TilkjentYtelseRepositoryImplTest {
                         periode = Periode(
                             LocalDate.now().plusDays(2),
                             LocalDate.now().plusDays(3)
+                        ),
+                        aktuellMeldeperiode = Periode(
+                            LocalDate.now(),
+                            LocalDate.now().plusDays(14)
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(1000),
@@ -170,6 +186,10 @@ class TilkjentYtelseRepositoryImplTest {
                             LocalDate.now(),
                             LocalDate.now().plusDays(1)
                         ),
+                        aktuellMeldeperiode = Periode(
+                            LocalDate.now(),
+                            LocalDate.now().plusDays(14)
+                        ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(999),
                             gradering = TilkjentGradering(
@@ -192,6 +212,10 @@ class TilkjentYtelseRepositoryImplTest {
                         periode = Periode(
                             LocalDate.now().plusDays(4),
                             LocalDate.now().plusDays(5)
+                        ),
+                        aktuellMeldeperiode = Periode(
+                            LocalDate.now(),
+                            LocalDate.now().plusDays(14)
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(1000),
