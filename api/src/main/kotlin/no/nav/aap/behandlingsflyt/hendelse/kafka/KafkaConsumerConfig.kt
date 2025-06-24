@@ -11,7 +11,7 @@ data class KafkaConsumerConfig(
     val applicationId: String = requiredConfigForKey("NAIS_APP_NAME"),
     val maxPollRecords: Int = 1,
     val autoOffsetReset: String = "earliest",
-    val enableAutoConfig: Boolean = false,
+    val enableAutoCommit: Boolean = false,
     val brokers: String = requiredConfigForKey("KAFKA_BROKERS"),
     val ssl: SslConfig? = SslConfig(),
     val schemaRegistry: SchemaRegistryConfig? = SchemaRegistryConfig(),
@@ -29,7 +29,7 @@ data class KafkaConsumerConfig(
         this[ConsumerConfig.GROUP_ID_CONFIG] = applicationId
         this[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = maxPollRecords
         this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = autoOffsetReset
-        this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = enableAutoConfig
+        this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = enableAutoCommit
         this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
         this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
 

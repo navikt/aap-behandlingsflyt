@@ -75,7 +75,8 @@ internal class SamordningVurderingRepositoryImplTest {
                     begrunnelse = "En god begrunnelse",
                     maksDatoEndelig = false,
                     fristNyRevurdering = LocalDate.now().plusYears(1),
-                    vurderinger = listOf(vurdering, vurdering2)
+                    vurderinger = listOf(vurdering, vurdering2),
+                    vurdertAv = "ident"
                 )
             )
         }
@@ -96,7 +97,8 @@ internal class SamordningVurderingRepositoryImplTest {
                 begrunnelse = "xxxx",
                 maksDatoEndelig = true,
                 fristNyRevurdering = LocalDate.now().plusYears(1),
-                vurderinger = listOf()
+                vurderinger = listOf(),
+                vurdertAv = "ident"
             )
             )
         }
@@ -137,7 +139,8 @@ internal class SamordningVurderingRepositoryImplTest {
                         begrunnelse = "En god begrunnelse",
                         maksDatoEndelig = false,
                         fristNyRevurdering = LocalDate.now().plusYears(1),
-                        vurderinger = listOf(vurdering)
+                        vurderinger = listOf(vurdering),
+                        vurdertAv = "ident"
                     )
                 )
             }
@@ -175,7 +178,8 @@ internal class SamordningVurderingRepositoryImplTest {
                     begrunnelse = "Første begrunnelse",
                     maksDatoEndelig = false,
                     fristNyRevurdering = LocalDate.of(2025, 1, 1),
-                    vurderinger = listOf(førsteVurdering)
+                    vurderinger = listOf(førsteVurdering),
+                    vurdertAv = "ident"
                 )
             )
         }
@@ -218,7 +222,8 @@ internal class SamordningVurderingRepositoryImplTest {
                     begrunnelse = andreBegrunnelse,
                     maksDatoEndelig = true,
                     fristNyRevurdering = andreMaksDato,
-                    vurderinger = listOf(andreVurdering1, andreVurdering2)
+                    vurderinger = listOf(andreVurdering1, andreVurdering2),
+                    vurdertAv = "ident"
                 )
             )
         }
@@ -291,6 +296,7 @@ internal class SamordningVurderingRepositoryImplTest {
                     begrunnelse = "begrunnelse1",
                     maksDatoEndelig = false,
                     fristNyRevurdering = null,
+                    vurdertAv = "ident",
                     vurderinger = listOf(SamordningVurdering(
                         ytelseType = Ytelse.SYKEPENGER,
                         vurderingPerioder = listOf(
@@ -308,6 +314,7 @@ internal class SamordningVurderingRepositoryImplTest {
                     begrunnelse = "begrunnelse2",
                     maksDatoEndelig = false,
                     fristNyRevurdering = null,
+                    vurdertAv = "ident",
                     vurderinger = listOf(SamordningVurdering(
                         ytelseType = Ytelse.SYKEPENGER,
                         vurderingPerioder = listOf(

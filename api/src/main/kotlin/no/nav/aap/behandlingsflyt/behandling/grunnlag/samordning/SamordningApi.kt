@@ -3,9 +3,11 @@ package no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.samordning.EndringStatus
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningPeriodeSammenligner
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriode
@@ -50,6 +52,7 @@ data class SamordningYtelseVurderingGrunnlagDTO(
     val ytelser: List<SamordningYtelseDTO>,
     val vurderinger: List<SamordningVurderingDTO>,
     val tpYtelser: List<TjenestePensjonForhold>?,
+    val vurdertAv: VurdertAvResponse?
 )
 
 data class SamordningYtelseDTO(
@@ -80,12 +83,12 @@ data class SamordningUføreGrunnlagDTO(
     val virkningstidspunkt: LocalDate,
     val uføregrad: Int,
     val kilde: String,
-    val endringStatus: EndringStatus,
+    val endringStatus: EndringStatus
 )
 
 data class SamordningUføreVurderingDTO(
     val begrunnelse: String,
-    val vurderingPerioder: List<SamordningUføreVurderingPeriodeDTO>,
+    val vurderingPerioder: List<SamordningUføreVurderingPeriodeDTO>
 )
 
 data class SamordningUføreVurderingPeriodeDTO(
@@ -95,12 +98,12 @@ data class SamordningUføreVurderingPeriodeDTO(
 
 data class SamordningAndreStatligeYtelserGrunnlagDTO(
     val harTilgangTilÅSaksbehandle: Boolean,
-    val vurdering: SamordningAndreStatligeYtelserVurderingDTO?,
+    val vurdering: SamordningAndreStatligeYtelserVurderingDTO?
 )
 
 data class SamordningAndreStatligeYtelserVurderingDTO(
     val begrunnelse: String,
-    val vurderingPerioder: List<SamordningAndreStatligeYtelserVurderingPeriodeDTO>,
+    val vurderingPerioder: List<SamordningAndreStatligeYtelserVurderingPeriodeDTO>
 )
 
 data class SamordningAndreStatligeYtelserVurderingPeriodeDTO(
@@ -122,45 +125,48 @@ data class TjenestepensjonYtelseDTO(
     val ordning: TjenestePensjonOrdning
 )
 
-fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.samordningGrunnlag(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry
+) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/samordning-ufore") {
             authorizedGet<BehandlingReferanse, SamordningUføreVurderingGrunnlagDTO>(
                 AuthorizationParamPathConfig(
-                    behandlingPathParam = BehandlingPathParam(
-                        "referanse"
+                    behandlingPathParam =
+                        BehandlingPathParam(
+                            "referanse"
+                        )
+                )
+            ) { behandlingReferanse ->
+                val (registerGrunnlag, vurdering) =
+                    dataSource.transaction { connection ->
+                        val repositoryProvider = repositoryRegistry.provider(connection)
+                        val samordningUføreRepository = repositoryProvider.provide<SamordningUføreRepository>()
+                        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                        val uføreRepository = repositoryProvider.provide<UføreRepository>()
+
+                        val behandling = behandlingRepository.hent(behandlingReferanse)
+                        val samordningUføreVurdering =
+                            samordningUføreRepository.hentHvisEksisterer(behandling.id)?.vurdering
+                        val uføregrunnlagMedEndretStatus =
+                            UførePeriodeSammenligner(uføreRepository).hentUføreGrunnlagMedEndretStatus(behandling.id)
+
+                        Pair(uføregrunnlagMedEndretStatus, samordningUføreVurdering)
+                    }
+
+                val harTilgangTilÅSaksbehandle =
+                    GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
+                        behandlingReferanse.referanse,
+                        Definisjon.AVKLAR_SAMORDNING_UFØRE,
+                        token()
                     )
-                )
-            )
-            { behandlingReferanse ->
-                val (registerGrunnlag, vurdering) = dataSource.transaction { connection ->
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val samordningUføreRepository = repositoryProvider.provide<SamordningUføreRepository>()
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val uføreRepository = repositoryProvider.provide<UføreRepository>()
-
-                    val behandling = behandlingRepository.hent(behandlingReferanse)
-                    val samordningUføreVurdering =
-                        samordningUføreRepository.hentHvisEksisterer(behandling.id)?.vurdering
-                    val uføregrunnlagMedEndretStatus =
-                        UførePeriodeSammenligner(uføreRepository).hentUføreGrunnlagMedEndretStatus(behandling.id)
-
-                    Pair(uføregrunnlagMedEndretStatus, samordningUføreVurdering)
-                }
-
-                val harTilgangTilÅSaksbehandle = GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                    behandlingReferanse.referanse,
-                    Definisjon.AVKLAR_SAMORDNING_UFØRE,
-                    token()
-                )
-
 
                 respond(
                     SamordningUføreVurderingGrunnlagDTO(
                         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         vurdering = mapSamordningUføreVurdering(vurdering),
                         grunnlag = mapSamordningUføreGrunnlag(registerGrunnlag)
-
                     )
                 )
             }
@@ -168,158 +174,194 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource, repositoryRegi
         route("/{referanse}/grunnlag/samordning/tjenestepensjon") {
             authorizedGet<BehandlingReferanse, TjenestepensjonGrunnlagDTO>(
                 AuthorizationParamPathConfig(
-                    behandlingPathParam = BehandlingPathParam(
-                        "referanse"
-                    )
+                    behandlingPathParam =
+                        BehandlingPathParam(
+                            "referanse"
+                        )
                 )
             ) { req ->
-                val (tp, vurdering) = dataSource.transaction { connection ->
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
-                    val tjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>()
-                    val behandling =
-                        BehandlingReferanseService(repositoryProvider.provide<BehandlingRepository>()).behandling(req)
-                    val tp = tjenestePensjonRepository.hent(behandling.id)
-                    val vurdering = tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(behandling.id)
-                    Pair(tp, vurdering)
-                }
-
-                val harTilgangTilÅSaksbehandle = GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                    req.referanse,
-                    Definisjon.SAMORDNING_REFUSJONS_KRAV,
-                    token()
-                )
-
-                respond(TjenestepensjonGrunnlagDTO(harTilgangTilÅSaksbehandle,
-                    tp.flatMap { ordning ->
-                    ordning.ytelser.map { ytelse ->
-                        TjenestepensjonYtelseDTO(
-                            ytelseIverksattFom = ytelse.ytelseIverksattFom,
-                            ytelseIverksattTom = ytelse.ytelseIverksattTom,
-                            ytelse = ytelse.ytelseType,
-                            ordning = ordning.ordning
-                        )
+                val (tp, vurdering) =
+                    dataSource.transaction { connection ->
+                        val repositoryProvider = repositoryRegistry.provider(connection)
+                        val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
+                        val tjenestepensjonRefusjonsKravVurderingRepository =
+                            repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>()
+                        val behandling =
+                            BehandlingReferanseService(
+                                repositoryProvider.provide<BehandlingRepository>()
+                            ).behandling(req)
+                        val tp = tjenestePensjonRepository.hent(behandling.id)
+                        val vurdering =
+                            tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(
+                                behandling.id
+                            )
+                        Pair(tp, vurdering)
                     }
-                    },
-                    vurdering
-                ))
+
+                val harTilgangTilÅSaksbehandle =
+                    GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
+                        req.referanse,
+                        Definisjon.SAMORDNING_REFUSJONS_KRAV,
+                        token()
+                    )
+
+                respond(
+                    TjenestepensjonGrunnlagDTO(
+                        harTilgangTilÅSaksbehandle,
+                        tp.flatMap { ordning ->
+                            ordning.ytelser.map { ytelse ->
+                                TjenestepensjonYtelseDTO(
+                                    ytelseIverksattFom = ytelse.ytelseIverksattFom,
+                                    ytelseIverksattTom = ytelse.ytelseIverksattTom,
+                                    ytelse = ytelse.ytelseType,
+                                    ordning = ordning.ordning
+                                )
+                            }
+                        },
+                        vurdering
+                    )
+                )
             }
         }
 
         route("/{referanse}/grunnlag/samordning") {
             authorizedGet<BehandlingReferanse, SamordningYtelseVurderingGrunnlagDTO>(
                 AuthorizationParamPathConfig(
-                    behandlingPathParam = BehandlingPathParam(
-                        "referanse"
-                    )
-                )
-            )
-            { req ->
-                val (registerYtelser, samordning, tp) = dataSource.transaction { connection ->
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val samordningRepository = repositoryProvider.provide<SamordningVurderingRepository>()
-                    val samordningYtelseRepository = repositoryProvider.provide<SamordningYtelseRepository>()
-                    val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
-
-                    val behandling =
-                        BehandlingReferanseService(repositoryProvider.provide<BehandlingRepository>()).behandling(req)
-
-                    val samordning = samordningRepository.hentHvisEksisterer(behandling.id)
-
-                    val perioderMedEndringer =
-                        SamordningPeriodeSammenligner(samordningYtelseRepository).hentPerioderMarkertMedEndringer(
-                            behandling.id
+                    behandlingPathParam =
+                        BehandlingPathParam(
+                            "referanse"
                         )
-
-                    val tp = tjenestePensjonRepository.hentHvisEksisterer(behandling.id)
-
-                    Triple(perioderMedEndringer, samordning, tp)
-                }
-
-                val harTilgangTilÅSaksbehandle = GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                    req.referanse,
-                    Definisjon.AVKLAR_SAMORDNING_GRADERING,
-                    token()
                 )
+            ) { req ->
+                val (registerYtelser, samordning, tp) =
+                    dataSource.transaction { connection ->
+                        val repositoryProvider = repositoryRegistry.provider(connection)
+                        val samordningRepository = repositoryProvider.provide<SamordningVurderingRepository>()
+                        val samordningYtelseRepository = repositoryProvider.provide<SamordningYtelseRepository>()
+                        val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
+
+                        val behandling =
+                            BehandlingReferanseService(
+                                repositoryProvider.provide<BehandlingRepository>()
+                            ).behandling(req)
+
+                        val samordning = samordningRepository.hentHvisEksisterer(behandling.id)
+
+                        val perioderMedEndringer =
+                            SamordningPeriodeSammenligner(samordningYtelseRepository).hentPerioderMarkertMedEndringer(
+                                behandling.id
+                            )
+
+                        val tp = tjenestePensjonRepository.hentHvisEksisterer(behandling.id)
+
+                        Triple(perioderMedEndringer, samordning, tp)
+                    }
+
+                val harTilgangTilÅSaksbehandle =
+                    GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
+                        req.referanse,
+                        Definisjon.AVKLAR_SAMORDNING_GRADERING,
+                        token()
+                    )
+
+                val ansattNavnOgEnhet =
+                    samordning?.let { AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv) }
 
                 respond(
                     SamordningYtelseVurderingGrunnlagDTO(
                         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
-                        ytelser = registerYtelser.map { ytelse ->
-                            SamordningYtelseDTO(
-                                ytelseType = ytelse.ytelseType,
-                                periode = Periode(fom = ytelse.periode.fom, tom = ytelse.periode.tom),
-                                gradering = ytelse.gradering?.prosentverdi(),
-                                kronesum = ytelse.kronesum?.toInt(),
-                                kilde = ytelse.kilde,
-                                saksRef = ytelse.saksRef,
-                                endringStatus = ytelse.endringStatus
-                            )
-                        },
-                        vurderinger = samordning?.vurderinger.orEmpty().flatMap { vurdering ->
-                            vurdering.vurderingPerioder.map {
-                                SamordningVurderingDTO(
-                                    ytelseType = vurdering.ytelseType,
-                                    gradering = it.gradering?.prosentverdi(),
-                                    periode = Periode(fom = it.periode.fom, tom = it.periode.tom),
-                                    kronesum = it.kronesum?.toInt(),
-                                    manuell = it.manuell,
+                        ytelser =
+                            registerYtelser.map { ytelse ->
+                                SamordningYtelseDTO(
+                                    ytelseType = ytelse.ytelseType,
+                                    periode = Periode(fom = ytelse.periode.fom, tom = ytelse.periode.tom),
+                                    gradering = ytelse.gradering?.prosentverdi(),
+                                    kronesum = ytelse.kronesum?.toInt(),
+                                    kilde = ytelse.kilde,
+                                    saksRef = ytelse.saksRef,
+                                    endringStatus = ytelse.endringStatus
                                 )
-                            }
-                        },
+                            },
+                        vurderinger =
+                            samordning?.vurderinger.orEmpty().flatMap { vurdering ->
+                                vurdering.vurderingPerioder.map {
+                                    SamordningVurderingDTO(
+                                        ytelseType = vurdering.ytelseType,
+                                        gradering = it.gradering?.prosentverdi(),
+                                        periode = Periode(fom = it.periode.fom, tom = it.periode.tom),
+                                        kronesum = it.kronesum?.toInt(),
+                                        manuell = it.manuell
+                                    )
+                                }
+                            },
                         begrunnelse = samordning?.begrunnelse,
                         fristNyRevurdering = samordning?.fristNyRevurdering,
                         maksDatoEndelig = samordning?.maksDatoEndelig,
-                        tpYtelser = tp
+                        tpYtelser = tp,
+                        vurdertAv =
+                            samordning?.let {
+                                VurdertAvResponse(
+                                    ident = it.vurdertAv,
+                                    dato =
+                                        requireNotNull(
+                                            it.vurdertTidspunkt?.toLocalDate()
+                                        ) { "Fant ikke vurderingstidspunkt for yrkesskadevurdering" },
+                                    ansattnavn = ansattNavnOgEnhet?.navn,
+                                    enhetsnavn = ansattNavnOgEnhet?.enhet
+                                )
+                            }
                     )
                 )
-
             }
         }
-
 
         route("/{referanse}/grunnlag/samordning-andre-statlige-ytelser") {
             authorizedGet<BehandlingReferanse, SamordningAndreStatligeYtelserGrunnlagDTO>(
                 AuthorizationParamPathConfig(
-                    behandlingPathParam = BehandlingPathParam(
-                        "referanse"
-                    )
+                    behandlingPathParam =
+                        BehandlingPathParam(
+                            "referanse"
+                        )
                 )
-            )
-            { behandlingReferanse ->
-                val samordningAndreStatligeYtelserVurdering = dataSource.transaction { connection ->
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val samordningAndreStatligeYtelserRepository =
-                        repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>()
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            ) { behandlingReferanse ->
+                val samordningAndreStatligeYtelserVurdering =
+                    dataSource.transaction { connection ->
+                        val repositoryProvider = repositoryRegistry.provider(connection)
+                        val samordningAndreStatligeYtelserRepository =
+                            repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>()
+                        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
 
-                    val behandling = behandlingRepository.hent(behandlingReferanse)
+                        val behandling = behandlingRepository.hent(behandlingReferanse)
 
-                    samordningAndreStatligeYtelserRepository.hentHvisEksisterer(behandling.id)?.vurdering
-                }
+                        samordningAndreStatligeYtelserRepository.hentHvisEksisterer(behandling.id)?.vurdering
+                    }
 
                 val tilgangGateway = GatewayProvider.provide(TilgangGateway::class)
-                val harTilgangTilÅSaksbehandle = tilgangGateway.sjekkTilgangTilBehandling(
-                    behandlingReferanse.referanse,
-                    Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER,
-                    token()
-                )
-
+                val harTilgangTilÅSaksbehandle =
+                    tilgangGateway.sjekkTilgangTilBehandling(
+                        behandlingReferanse.referanse,
+                        Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER,
+                        token()
+                    )
 
                 respond(
                     SamordningAndreStatligeYtelserGrunnlagDTO(
                         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
-                        vurdering = SamordningAndreStatligeYtelserVurderingDTO(
-                            begrunnelse = samordningAndreStatligeYtelserVurdering?.begrunnelse ?: "",
-                            vurderingPerioder = (samordningAndreStatligeYtelserVurdering?.vurderingPerioder
-                                ?: listOf<SamordningAndreStatligeYtelserVurderingPeriode>()).map {
-                                SamordningAndreStatligeYtelserVurderingPeriodeDTO(
-                                    periode = it.periode,
-                                    ytelse = it.ytelse,
-                                    beløp = it.beløp
-                                )
-                            }
-                        )
+                        vurdering =
+                            SamordningAndreStatligeYtelserVurderingDTO(
+                                begrunnelse = samordningAndreStatligeYtelserVurdering?.begrunnelse ?: "",
+                                vurderingPerioder =
+                                    (
+                                        samordningAndreStatligeYtelserVurdering?.vurderingPerioder
+                                            ?: listOf<SamordningAndreStatligeYtelserVurderingPeriode>()
+                                    ).map {
+                                        SamordningAndreStatligeYtelserVurderingPeriodeDTO(
+                                            periode = it.periode,
+                                            ytelse = it.ytelse,
+                                            beløp = it.beløp
+                                        )
+                                    }
+                            )
                     )
                 )
             }
@@ -327,21 +369,24 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource, repositoryRegi
     }
 }
 
-private fun mapSamordningUføreVurdering(vurdering: SamordningUføreVurdering?): SamordningUføreVurderingDTO? {
-    return vurdering?.let {
+private fun mapSamordningUføreVurdering(vurdering: SamordningUføreVurdering?): SamordningUføreVurderingDTO? =
+    vurdering?.let {
         SamordningUføreVurderingDTO(
             begrunnelse = it.begrunnelse,
-            vurderingPerioder = it.vurderingPerioder.map { periode ->
-                SamordningUføreVurderingPeriodeDTO(
-                    periode.virkningstidspunkt,
-                    periode.uføregradTilSamordning.prosentverdi()
-                )
-            })
+            vurderingPerioder =
+                it.vurderingPerioder.map { periode ->
+                    SamordningUføreVurderingPeriodeDTO(
+                        periode.virkningstidspunkt,
+                        periode.uføregradTilSamordning.prosentverdi()
+                    )
+                }
+        )
     }
-}
 
-private fun mapSamordningUføreGrunnlag(registerGrunnlagVurderinger: List<UførePeriodeMedEndringStatus>): List<SamordningUføreGrunnlagDTO> {
-    return registerGrunnlagVurderinger.map {
+private fun mapSamordningUføreGrunnlag(
+    registerGrunnlagVurderinger: List<UførePeriodeMedEndringStatus>
+): List<SamordningUføreGrunnlagDTO> =
+    registerGrunnlagVurderinger.map {
         SamordningUføreGrunnlagDTO(
             virkningstidspunkt = it.virkningstidspunkt,
             uføregrad = it.uføregrad.prosentverdi(),
@@ -349,4 +394,3 @@ private fun mapSamordningUføreGrunnlag(registerGrunnlagVurderinger: List<Uføre
             endringStatus = it.endringStatus
         )
     }
-}

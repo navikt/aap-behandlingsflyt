@@ -12,7 +12,8 @@ class SamordningVurderingTest {
                 begrunnelse = "....",
                 maksDatoEndelig = null,
                 fristNyRevurdering = null,
-                vurderinger = listOf()
+                vurderinger = listOf(),
+                vurdertAv = "ident"
             )
         }
     }

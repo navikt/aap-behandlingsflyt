@@ -92,7 +92,8 @@ class SamordningStegTest {
                             )
                         )
                     )
-                )
+                ),
+                vurdertAv = "ident"
             )
         )
 
@@ -165,7 +166,8 @@ class SamordningStegTest {
                             )
                         )
                     )
-                )
+                ),
+                vurdertAv = "ident"
             )
         )
 
@@ -218,7 +220,8 @@ class SamordningStegTest {
                             )
                         )
                     )
-                )
+                ),
+                vurdertAv = "ident"
             )
         )
 
@@ -282,7 +285,8 @@ class SamordningStegTest {
                             )
                         )
                     )
-                )
+                ),
+                vurdertAv = "ident"
             )
         )
 
@@ -326,7 +330,8 @@ class SamordningStegTest {
                             )
                         )
                     )
-                )
+                ),
+                vurdertAv = "ident"
             )
         )
 
@@ -381,7 +386,8 @@ class SamordningStegTest {
                             )
                         )
                     )
-                )
+                ),
+                vurdertAv = "ident"
             )
         )
 

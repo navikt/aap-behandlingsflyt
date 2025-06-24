@@ -90,7 +90,8 @@ class SamordningYtelseVurderingServiceTest {
                             )
                         )
                     )
-                )
+                ),
+                vurdertAv = "ident"
             )
         )
     }
