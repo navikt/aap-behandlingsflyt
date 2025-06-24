@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKlageNayLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.behandlingsflyt.utils.Validation
 
 class VurderKlageNayLøser(
     private val klagebehandlingNayRepository: KlagebehandlingNayRepository,
@@ -19,12 +20,33 @@ class VurderKlageNayLøser(
             kontekst.kontekst.behandlingId,
             klagevurderingNay = løsning.klagevurderingNay.tilVurdering(kontekst.bruker)
         )
-        return LøsningsResultat(
-            begrunnelse = løsning.klagevurderingNay.begrunnelse
-        )
+
+        return when(val validatedLøsning = valider(løsning)) {
+            is Validation.Invalid -> throw IllegalArgumentException(validatedLøsning.errorMessage)
+            is Validation.Valid -> LøsningsResultat(
+                begrunnelse = løsning.klagevurderingNay.begrunnelse
+            )
+        }
     }
 
     override fun forBehov(): Definisjon {
         return Definisjon.VURDER_KLAGE_NAY
+    }
+
+    private fun valider(løsning: VurderKlageNayLøsning): Validation<VurderKlageNayLøsning> {
+        val ugyldigeHjemler = løsning.klagevurderingNay.vilkårSomOmgjøres.filter {
+            try {
+                it.tilÅrsak()
+                false
+            } catch (e: IllegalStateException) {
+                true
+            }
+        }
+
+        if (ugyldigeHjemler.isNotEmpty()) {
+            return Validation.Invalid(løsning, "Løsningen inneholder omgjøring av hjemler som ikke ikke har implementert omgjøring via revurdering: ${ugyldigeHjemler.joinToString { it.name }}")
+        }
+
+        return Validation.Valid(løsning)
     }
 }
