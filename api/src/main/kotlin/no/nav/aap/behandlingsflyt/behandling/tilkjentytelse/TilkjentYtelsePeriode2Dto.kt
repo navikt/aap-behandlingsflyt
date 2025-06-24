@@ -1,12 +1,12 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
 import no.nav.aap.komponenter.type.Periode
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 data class TilkjentYtelsePeriode2Dto(
     val meldeperiode: Periode,
-    val levertMeldekortDato: LocalDate?,
-    val meldekortStatus: MeldekortStaus,
+    val levertMeldekortDato: LocalDateTime?,
+    val meldekortStatus: MeldekortStaus?,
     val vurdertePerioder: List<VurdertPeriode>
 )
 

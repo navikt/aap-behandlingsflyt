@@ -12,7 +12,6 @@ import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
-import java.time.LocalDate
 import javax.sql.DataSource
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode as TilkjentYtelsePeriodeD
 
@@ -92,18 +91,16 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
 
 
                     tilkjentYtelse.groupBy { it.aktuellMeldeperiode }.map { (meldeperiode, vurdertePerioder) ->
-                        val førsteAktuelleMeldekort =
-                            meldekortene?.firstOrNull { it.timerArbeidPerPeriode.any { it.periode.inneholder(it.periode) } }
+//                        val førsteAktuelleMeldekort =
+//                            meldekortene?.firstOrNull { it.timerArbeidPerPeriode.any { it.periode.inneholder(it.periode) } }
 
                         val sisteAktuelleMeldekort =
-                            meldekortene?.lastOrNull { it.timerArbeidPerPeriode.any { it.periode.inneholder(it.periode) } }
-
-
+                            meldekortene?.lastOrNull { it.timerArbeidPerPeriode.any { it.periode.inneholder(meldeperiode) } }
 
                         TilkjentYtelsePeriode2Dto(
                             meldeperiode = meldeperiode,
-                            levertMeldekortDato = null,
-                            meldekortStatus = utledMeldekortStatus(),
+                            levertMeldekortDato = sisteAktuelleMeldekort?.mottattTidspunkt, // TODO Bruke siste?
+                            meldekortStatus = null, // TODO Finn ut hva vi gjør her.
                             vurdertePerioder = vurdertePerioder.map { it ->
                                 VurdertPeriode(
                                     fraOgMed = it.periode.fom,
@@ -132,8 +129,4 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
         }
 
     }
-}
-
-private fun utledMeldekortStatus(): MeldekortStaus {
-    return MeldekortStaus.IKKE_LEVERT
 }
