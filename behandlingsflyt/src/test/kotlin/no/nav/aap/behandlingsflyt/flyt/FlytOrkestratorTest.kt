@@ -27,11 +27,13 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BekreftTot
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.EffektuerAvvistPåFormkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBehandlendeEnhetLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettFullmektigLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettPåklagetBehandlingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettYrkesskadeInntektLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FritakMeldepliktLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FullmektigLøsningDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.HåndterSvarFraAndreinstansLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.HåndterSvarFraAndreinstansLøsningDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
@@ -2866,6 +2868,20 @@ class FlytOrkestratorTest {
             )
         )
 
+        // FullmektigSteg
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FASTSETT_FULLMEKTIG)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = FastsettFullmektigLøsning(
+                fullmektigVurdering = FullmektigLøsningDto(
+                    harFullmektig = false
+                )
+            )
+        )
+
         // FormkravSteg
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1)
@@ -3075,6 +3091,22 @@ class FlytOrkestratorTest {
             )
         )
 
+        // FullmektigSteg
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FASTSETT_FULLMEKTIG)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = FastsettFullmektigLøsning(
+                fullmektigVurdering = FullmektigLøsningDto(
+                    harFullmektig = true,
+                    fullmektigIdent = "21049599999"
+                )
+            )
+        )
+
+        // FormkravSteg
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1).first()
             .extracting(Avklaringsbehov::definisjon)
@@ -3157,6 +3189,21 @@ class FlytOrkestratorTest {
             )
         )
 
+        // FullmektigSteg
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FASTSETT_FULLMEKTIG)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = FastsettFullmektigLøsning(
+                fullmektigVurdering = FullmektigLøsningDto(
+                    harFullmektig = false
+                )
+            )
+        )
+
+        // FormkravSteg
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
@@ -3356,6 +3403,20 @@ class FlytOrkestratorTest {
                 påklagetBehandlingVurdering = PåklagetBehandlingVurderingLøsningDto(
                     påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
                     påklagetBehandling = avslåttFørstegang.referanse.referanse,
+                )
+            )
+        )
+
+        // FullmektigSteg
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FASTSETT_FULLMEKTIG)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = FastsettFullmektigLøsning(
+                fullmektigVurdering = FullmektigLøsningDto(
+                    harFullmektig = false
                 )
             )
         )
