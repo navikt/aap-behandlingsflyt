@@ -12,7 +12,8 @@ import java.util.UUID
 data class PåklagetBehandlingGrunnlagDto(
     val behandlinger: List<BehandlingMedVedtakDto>,
     val gjeldendeVurdering: PåklagetBehandlingVurderingDto?,
-    val kravMottatt: LocalDate?
+    val kravMottatt: LocalDate?,
+    val harTilgangTilÅSaksbehandle: Boolean
 )
 
 data class PåklagetBehandlingVurderingDto(

@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.BehandlendeEnhetSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.EffektuerAvvistPåFormkravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.FormkravSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.FullmektigSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.KlagebehandlingKontorSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.KlagebehandlingNayOppsummeringSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.KlagebehandlingNaySteg
@@ -32,6 +33,7 @@ object Klage : BehandlingType {
                 informasjonskrav = listOf(TrekkKlageInfornmasjonskravService)
             )
             .medSteg(steg = PåklagetBehandlingSteg)
+            .medSteg(steg = FullmektigSteg)
             .medSteg(steg = FormkravSteg)
             .medSteg(steg = EffektuerAvvistPåFormkravSteg)
             .medSteg(steg = BehandlendeEnhetSteg)

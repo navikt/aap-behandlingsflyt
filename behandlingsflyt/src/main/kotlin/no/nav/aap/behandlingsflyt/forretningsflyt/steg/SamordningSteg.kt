@@ -105,14 +105,6 @@ class SamordningSteg(
         return Fullført
     }
 
-    override fun vedTilbakeføring(kontekst: FlytKontekstMedPerioder) {
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_GRADERING)
-        if (avklaringsbehov != null && avklaringsbehov.erÅpent()) {
-            avklaringsbehovene.avbryt(Definisjon.AVKLAR_SAMORDNING_GRADERING)
-        }
-    }
-
     companion object : FlytSteg {
         override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
             return SamordningSteg(repositoryProvider)

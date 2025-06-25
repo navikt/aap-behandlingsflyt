@@ -7,13 +7,15 @@ import java.time.LocalDate
 
 data class EffektuerAvvistPåFormkravGrunnlagDto(
     val varsel: EffektuerAvvistPåFormkravVarselDto? = null,
-    val vurdering: EffektuerAvvistPåFormkravVurderingDto? = null
+    val vurdering: EffektuerAvvistPåFormkravVurderingDto? = null,
+    val harTilgangTilÅSaksbehandle: Boolean
 )
 
-internal fun EffektuerAvvistPåFormkravGrunnlag.tilDto(brevFerdigstilt: LocalDate?): EffektuerAvvistPåFormkravGrunnlagDto {
+internal fun EffektuerAvvistPåFormkravGrunnlag.tilDto(brevFerdigstilt: LocalDate?, harTilgangTilÅSaksbehandle: Boolean): EffektuerAvvistPåFormkravGrunnlagDto {
     return EffektuerAvvistPåFormkravGrunnlagDto(
         varsel = this.varsel.tilDto(brevFerdigstilt),
-        vurdering = this.vurdering?.tilDto()
+        vurdering = this.vurdering?.tilDto(),
+        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle
     )
 }
 

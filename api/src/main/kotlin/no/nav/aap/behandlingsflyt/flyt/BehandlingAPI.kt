@@ -12,12 +12,12 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårsperiodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -30,7 +30,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
@@ -57,8 +56,10 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                         repositoryProvider.provide<AvklaringsbehovRepository>()
                     val vilkårsresultatRepository =
                         repositoryProvider.provide<VilkårsresultatRepository>()
+                    val vedtakRepository = repositoryProvider.provide<VedtakRepository>()
 
                     val behandling = behandling(behandlingRepository, req)
+                    val vedtak = vedtakRepository.hent(behandling.id)
                     val virkningstidspunkt =
                         runCatching {
                             if (behandling.erYtelsesbehandling()) VirkningstidspunktUtleder(
@@ -73,7 +74,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                     val flyt = behandling.flyt()
                     DetaljertBehandlingDTO(
                         referanse = behandling.referanse.referanse,
-                        type = behandling.typeBehandling().name,
+                        type = behandling.typeBehandling(),
                         status = behandling.status(),
                         opprettet = behandling.opprettetTidspunkt,
                         skalForberede = behandling.harIkkeVærtAktivitetIDetSiste() && !behandling.status()
@@ -117,7 +118,8 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                             },
                         aktivtSteg = behandling.aktivtSteg(),
                         versjon = behandling.versjon,
-                        virkningstidspunkt = virkningstidspunkt
+                        virkningstidspunkt = virkningstidspunkt,
+                        vedtaksdato = vedtak?.virkningstidspunkt
                     )
                 }
                 respond(dto)
