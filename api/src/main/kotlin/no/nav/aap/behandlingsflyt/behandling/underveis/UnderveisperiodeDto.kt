@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import com.papsign.ktor.openapigen.annotations.properties.description.Description
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
