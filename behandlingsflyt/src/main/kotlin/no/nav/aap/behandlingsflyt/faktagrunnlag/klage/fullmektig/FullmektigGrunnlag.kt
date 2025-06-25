@@ -29,10 +29,19 @@ data class NavnOgAdresse(
 )
 
 data class Adresse(
-    val postnummer: String,
-    val poststed: String,
-    val adresselinje1: String,
+    val landkode: String,
     val adresselinje2: String? = null,
     val adresselinje3: String? = null,
-    val landkode: String
-)
+    val postnummer: String? = null,
+    val poststed: String? = null,
+    val adresselinje1: String,
+) {
+    init {
+        require(
+            (landkode == "NOR" && postnummer != null && poststed != null) ||
+                    (landkode != "NOR" && postnummer == null && poststed == null)
+        ) {
+            "Postnummer og poststed må være satt for norsk adresse, men skal ikke være satt for utenlandsk adresse"
+        }
+    }
+}
