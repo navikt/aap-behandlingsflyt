@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
-import no.nav.aap.komponenter.type.Periode
 import java.math.BigDecimal
 import java.time.LocalDate
 
