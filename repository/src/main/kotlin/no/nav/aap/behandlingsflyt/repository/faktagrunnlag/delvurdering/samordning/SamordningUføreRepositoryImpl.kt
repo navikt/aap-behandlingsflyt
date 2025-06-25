@@ -21,35 +21,43 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
     }
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningUføreGrunnlag? {
-        val query = """
-            SELECT * FROM SAMORDNING_UFORE_GRUNNLAG WHERE behandling_id = ? and aktiv = true
-        """.trimIndent()
-        return connection.queryFirstOrNull(query) {
-            setParams {
-                setLong(1, behandlingId.toLong())
-            }
-            setRowMapper {
-                SamordningUføreGrunnlag(
-                    vurdering = SamordningUføreVurdering(
-                        begrunnelse = hentSamordningUføreVurderingBegrunnelse(it.getLong("vurdering_id")),
-                        vurderingPerioder = hentSamordningUføreVurderingPerioder(it.getLong("vurdering_id"))
-                    )
-                )
-            }
-        }
-    }
+        val vurderingId = hentVurderingId(behandlingId) ?: return null
 
-    fun hentSamordningUføreVurderingBegrunnelse(vurderingId: Long): String {
-        val query = """
+        val vurderingPerioder = hentSamordningUføreVurderingPerioder(vurderingId)
+
+        val query =
+            """
             SELECT * FROM SAMORDNING_UFORE_VURDERING WHERE id = ?
-        """.trimIndent()
+            """.trimIndent()
         return connection.queryFirst(query) {
             setParams {
                 setLong(1, vurderingId)
             }
             setRowMapper {
-                it.getString("begrunnelse")
+                SamordningUføreGrunnlag(
+                    vurdering =
+                        SamordningUføreVurdering(
+                            begrunnelse = it.getString("begrunnelse"),
+                            vurdertAv = it.getString("vurdert_av"),
+                            vurdertTidspunkt = it.getLocalDateTime("opprettet_tid"),
+                            vurderingPerioder = vurderingPerioder
+                        )
+                )
+            }
+        }
+    }
 
+    private fun hentVurderingId(behandlingId: BehandlingId): Long? {
+        val query =
+            """
+            SELECT * FROM SAMORDNING_UFORE_GRUNNLAG WHERE behandling_id = ? and aktiv = true
+            """.trimIndent()
+        return connection.queryFirstOrNull(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper {
+                it.getLong("vurdering_id")
             }
         }
     }
@@ -81,12 +89,13 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
         }
 
         val samordingUføreVurderingQuery = """
-            INSERT INTO SAMORDNING_UFORE_VURDERING (begrunnelse) VALUES (?)
+            INSERT INTO SAMORDNING_UFORE_VURDERING (begrunnelse, vurdert_av) VALUES (?, ?)
         """.trimIndent()
 
         val vurderingId = connection.executeReturnKey(samordingUføreVurderingQuery) {
             setParams {
                 setString(1, vurdering.begrunnelse)
+                setString(2, vurdering.vurdertAv)
             }
         }
 

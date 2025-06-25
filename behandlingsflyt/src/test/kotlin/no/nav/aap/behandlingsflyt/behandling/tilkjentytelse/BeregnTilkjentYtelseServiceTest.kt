@@ -59,7 +59,7 @@ class BeregnTilkjentYtelseServiceTest {
 
         val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
 
-        val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList()))
+        val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList(), "ident"))
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             fødselsdato,
@@ -134,7 +134,7 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
         val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
-        val samordningUføre = SamordningUføreGrunnlag(SamordningUføreVurdering("", emptyList()))
+        val samordningUføre = SamordningUføreGrunnlag(SamordningUføreVurdering("", emptyList(), "ident"))
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             fødselsdato,
@@ -193,7 +193,7 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
         val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
-        val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList()))
+        val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList(), "ident"))
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             fødselsdato,
@@ -261,7 +261,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
 
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
-        val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList()))
+        val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList(), "ident"))
 
         val beregnetTilkjentYtelse = BeregnTilkjentYtelseService(
             fødeselsdato,
@@ -330,7 +330,7 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
         val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
-        val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList()))
+        val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList(), "ident"))
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             fødselsdato,
@@ -397,7 +397,7 @@ class BeregnTilkjentYtelseServiceTest {
 
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
         val samordningsgrunnlag = SamordningGrunnlag(0L, listOf())
-        val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList()))
+        val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList(), "ident"))
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             fødselsdato,
@@ -459,7 +459,8 @@ class BeregnTilkjentYtelseServiceTest {
                 "", listOf(
                     SamordningUføreVurderingPeriode(virkningstidspunkt = 1 juli 2023, Prosent.`30_PROSENT`),
                     SamordningUføreVurderingPeriode(virkningstidspunkt = 2 august 2023, Prosent.`0_PROSENT`)
-                )
+                ),
+                "ident"
             )
         )
 
@@ -563,7 +564,8 @@ class BeregnTilkjentYtelseServiceTest {
                 "", listOf(
                     SamordningUføreVurderingPeriode(virkningstidspunkt = 1 mars 2023, Prosent.`50_PROSENT`),
                     SamordningUføreVurderingPeriode(virkningstidspunkt = 1 juli 2023, Prosent.`70_PROSENT`)
-                )
+                ),
+                "ident"
             )
         )
 
@@ -638,7 +640,7 @@ class BeregnTilkjentYtelseServiceTest {
         val underveisgrunnlag = underveisgrunnlag(periode, gradering = Prosent.`70_PROSENT`)
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
         val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
-        val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList()))
+        val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList(), "ident"))
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             fødselsdato,
@@ -786,7 +788,8 @@ class BeregnTilkjentYtelseServiceTest {
             vurdering = SamordningUføreVurdering(
                 "", listOf(
                     SamordningUføreVurderingPeriode(virkningstidspunkt = periode.fom, Prosent.`30_PROSENT`)
-                )
+                ),
+                "ident"
             )
         )
 

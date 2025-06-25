@@ -36,7 +36,8 @@ class AvklarSamordningUføreLøser(
                         virkningstidspunkt = it.virkningstidspunkt,
                         uføregradTilSamordning = it.uføregradTilSamordning.let(::Prosent)
                     )
-                }
+                },
+                vurdertAv = kontekst.bruker.ident
             )
         )
         return LøsningsResultat("Vurdert samordning uføre")
