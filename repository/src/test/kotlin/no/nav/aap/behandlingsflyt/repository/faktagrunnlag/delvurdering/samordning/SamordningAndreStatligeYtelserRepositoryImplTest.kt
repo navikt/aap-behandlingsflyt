@@ -57,7 +57,7 @@ internal class SamordningAndreStatligeYtelserRepositoryImplTest {
         }
 
         assertThat(uthentet).isNotNull
-        assertThat(uthentet?.vurdering).isEqualTo(vurdering)
+        assertThat(uthentet?.vurdering).usingRecursiveComparison().ignoringFields("vurdertTidspunkt").isEqualTo(vurdering)
     }
 
     @Test

@@ -103,7 +103,8 @@ data class SamordningAndreStatligeYtelserGrunnlagDTO(
 
 data class SamordningAndreStatligeYtelserVurderingDTO(
     val begrunnelse: String,
-    val vurderingPerioder: List<SamordningAndreStatligeYtelserVurderingPeriodeDTO>
+    val vurderingPerioder: List<SamordningAndreStatligeYtelserVurderingPeriodeDTO>,
+    val vurdertAv: VurdertAvResponse?
 )
 
 data class SamordningAndreStatligeYtelserVurderingPeriodeDTO(
@@ -344,6 +345,10 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                         token()
                     )
 
+                val navnOgEnhet = samordningAndreStatligeYtelserVurdering?.let {
+                    AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv)
+                }
+
                 respond(
                     SamordningAndreStatligeYtelserGrunnlagDTO(
                         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
@@ -359,6 +364,18 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                                             periode = it.periode,
                                             ytelse = it.ytelse,
                                             beløp = it.beløp
+                                        )
+                                    },
+                                vurdertAv =
+                                    samordningAndreStatligeYtelserVurdering?.let {
+                                        VurdertAvResponse(
+                                            ident = it.vurdertAv,
+                                            dato =
+                                                requireNotNull(it.vurdertTidspunkt?.toLocalDate()) {
+                                                    "Fant ikke vurdert tidspunkt for samordningAndreStatligeYtelserVurdering"
+                                                },
+                                            ansattnavn = navnOgEnhet?.navn,
+                                            enhetsnavn = navnOgEnhet?.enhet
                                         )
                                     }
                             )

@@ -36,6 +36,7 @@ class RefusjonkravRepositoryImplTest {
                 fom = periode.fom,
                 tom = periode.tom,
                 vurdertAv = "saksbehandler",
+                navKontor = "",
             )
         )
         dataSource.transaction {

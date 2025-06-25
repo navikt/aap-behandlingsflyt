@@ -10,7 +10,6 @@ import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
 class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBConnection) : SamordningAndreStatligeYtelserRepository {
-
     private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<SamordningAndreStatligeYtelserRepositoryImpl> {
@@ -20,32 +19,10 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
     }
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningAndreStatligeYtelserGrunnlag? {
-        val query = """
-            SELECT * FROM SAMORDNING_ANDRE_STATLIGE_YTELSER_GRUNNLAG WHERE behandling_id = ? and aktiv = true
-        """.trimIndent()
-        return connection.queryFirstOrNull(query) {
-            setParams {
-                setLong(1, behandlingId.toLong())
-            }
-            setRowMapper {
-                val begrunnelseOgVurdertAv = hentSamordningAndreStatligeYtelserVurderingBegrunnelseOgVurdertAv(it.getLong("vurdering_id"))
-                SamordningAndreStatligeYtelserGrunnlag(
-                    vurdering = SamordningAndreStatligeYtelserVurdering(
-                        begrunnelse = begrunnelseOgVurdertAv.begrunnelse,
-                        vurdertAv = begrunnelseOgVurdertAv.vurdertAv,
-                        vurderingPerioder = hentSamordningAndreStatligeYtelserVurderingPerioder(it.getLong("vurdering_id"))
-                    )
-                )
-            }
-        }
-    }
+        val vurderingId = hentVurderingIdForBehandling(behandlingId) ?: return null
 
-    private data class BegrunnelseOgVurdertAv(
-        val begrunnelse: String,
-        val vurdertAv: String,
-    )
+        val vurderingPerioder = hentSamordningAndreStatligeYtelserVurderingPerioder(vurderingId)
 
-    private fun hentSamordningAndreStatligeYtelserVurderingBegrunnelseOgVurdertAv(vurderingId: Long): BegrunnelseOgVurdertAv {
         val query = """
             SELECT * FROM SAMORDNING_ANDRE_STATLIGE_YTELSER_VURDERING WHERE id = ?
         """.trimIndent()
@@ -54,12 +31,27 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
                 setLong(1, vurderingId)
             }
             setRowMapper {
-                BegrunnelseOgVurdertAv(
-                    begrunnelse = it.getString("begrunnelse"),
-                    vurdertAv = it.getString("vurdert_av"),
+                SamordningAndreStatligeYtelserGrunnlag(
+                    vurdering = SamordningAndreStatligeYtelserVurdering(
+                        begrunnelse = it.getString("begrunnelse"),
+                        vurdertAv = it.getString("vurdert_av"),
+                        vurdertTidspunkt = it.getLocalDateTime("opprettet_tid"),
+                        vurderingPerioder = vurderingPerioder
+                    )
                 )
-
             }
+        }
+    }
+
+    private fun hentVurderingIdForBehandling(behandlingId: BehandlingId): Long? {
+        val query = """
+            SELECT vurdering_id FROM SAMORDNING_ANDRE_STATLIGE_YTELSER_GRUNNLAG WHERE behandling_id = ? AND aktiv = true
+        """.trimIndent()
+        return connection.queryFirstOrNull(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper { it.getLong("vurdering_id") }
         }
     }
 
@@ -75,7 +67,7 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
                 SamordningAndreStatligeYtelserVurderingPeriode(
                     periode = it.getPeriode("periode"),
                     ytelse = it.getEnum("ytelse_type"),
-                    beløp = it.getInt("belop"),
+                    beløp = it.getInt("belop")
                 )
             }
         }
