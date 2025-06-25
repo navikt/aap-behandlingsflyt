@@ -15,5 +15,6 @@ data class RefusjonkravVurderingResponse(
     val harKrav: Boolean,
     val fom: LocalDate?,
     val tom: LocalDate?,
+    val navKontor: String?,
     val vurdertAv: VurdertAvResponse
 )

@@ -48,6 +48,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
                     fom = it.getLocalDateOrNull("fom"),
                     tom = it.getLocalDateOrNull("tom"),
                     vurdertAv = it.getString("vurdert_av"),
+                    navKontor = it.getString("navkontor"),
                     opprettetTid = it.getLocalDateTime("opprettet_tid")
                 ))
             }
@@ -127,7 +128,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
 
     private fun lagreVurdering(vurdering: RefusjonkravVurdering): Long {
         val query = """
-            INSERT INTO REFUSJONKRAV_VURDERING (HAR_KRAV, FOM, TOM, VURDERT_AV) VALUES (?, ?, ?, ?)
+            INSERT INTO REFUSJONKRAV_VURDERING (HAR_KRAV, FOM, TOM, VURDERT_AV, NAVKONTOR) VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
 
         return connection.executeReturnKey(query) {
@@ -136,6 +137,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
                 setLocalDate(2, vurdering.fom)
                 setLocalDate(3, vurdering.tom)
                 setString(4, vurdering.vurdertAv)
+                setString(5, vurdering.navKontor ?: "")
             }
         }
     }

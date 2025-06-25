@@ -24,6 +24,7 @@ class RefusjonkravLøser(
             it.map { dto ->
                 RefusjonkravVurdering(
                     harKrav = dto.harKrav,
+                    navKontor = dto.navKontor,
                     fom = dto.fom,
                     tom = dto.tom,
                     vurdertAv = kontekst.bruker.ident
@@ -50,7 +51,7 @@ class RefusjonkravLøser(
             if (vurdering.harKrav) {
                 val refusjonFomDato = vurdering.fom ?: kravDato
                 val refusjonTomDato = vurdering.tom
-
+                val navKontor = vurdering.navKontor
                 if (refusjonFomDato.isBefore(kravDato)) {
                     throw IllegalArgumentException("Refusjonsdato kan ikke være før kravdato. Refusjonsdato: $refusjonFomDato, kravdato: $kravDato")
                 }
@@ -62,7 +63,8 @@ class RefusjonkravLøser(
                 RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = refusjonFomDato,
-                    tom = refusjonTomDato
+                    tom = refusjonTomDato,
+                    navKontor = navKontor
                 )
             } else {
                 vurdering
