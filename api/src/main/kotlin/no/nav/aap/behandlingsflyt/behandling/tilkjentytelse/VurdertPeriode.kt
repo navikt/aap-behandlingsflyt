@@ -4,7 +4,6 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.Objects
 
-
 data class VurdertPeriode(
     val fraOgMed: LocalDate,
     val tilOgMed: LocalDate,
@@ -22,13 +21,13 @@ data class Felter(
 ) {
     override fun equals(other: Any?): Boolean {
         return other is Felter &&
-                this.dagsats == other.dagsats &&
-                this.barneTilleggsats == other.barneTilleggsats &&
-                this.arbeidGradering == other.arbeidGradering &&
-                this.samordningGradering == other.samordningGradering &&
-                this.institusjonGradering == other.institusjonGradering &&
-                this.totalReduksjon == other.totalReduksjon &&
-                this.effektivDagsats == other.effektivDagsats
+                dagsats == other.dagsats &&
+                barneTilleggsats == other.barneTilleggsats &&
+                arbeidGradering == other.arbeidGradering &&
+                samordningGradering == other.samordningGradering &&
+                institusjonGradering == other.institusjonGradering &&
+                totalReduksjon == other.totalReduksjon &&
+                effektivDagsats == other.effektivDagsats
     }
 
     override fun hashCode(): Int {
@@ -42,5 +41,23 @@ data class Felter(
             effektivDagsats
         )
     }
+}
 
+fun List<VurdertPeriode>.komprimerLikeFelter(): List<VurdertPeriode> {
+    return this
+        .sortedBy { it.fraOgMed }
+        .groupBy { it.felter }
+        .flatMap { (_, perioderMedLikeFelter) ->
+            perioderMedLikeFelter
+                .sortedBy { it.fraOgMed }
+                .fold(mutableListOf()) { acc, periode ->
+                    val siste = acc.lastOrNull()
+                    if (siste != null && (siste.tilOgMed.plusDays(1) >= periode.fraOgMed)) {
+                        acc[acc.lastIndex] = siste.copy(tilOgMed = maxOf(siste.tilOgMed, periode.tilOgMed))
+                    } else {
+                        acc.add(periode)
+                    }
+                    acc
+                }
+        }
 }

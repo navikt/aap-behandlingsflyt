@@ -98,25 +98,28 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                             meldeperiode = meldeperiode,
                             levertMeldekortDato = førsteAktuelleMeldekort?.mottattTidspunkt, // TODO Bruke siste?
                             meldekortStatus = null, // TODO Finn ut hva vi gjør her.
-                            vurdertePerioder = vurdertePerioder.map { it ->
-                                VurdertPeriode(
-                                    fraOgMed = it.periode.fom,
-                                    tilOgMed = it.periode.tom,
-                                    felter = Felter(
-                                        dagsats = it.tilkjent.dagsats.verdi,
-                                        barneTilleggsats = it.tilkjent.barnetilleggsats.verdi,
-                                        arbeidGradering = 100.minus(
-                                            it.tilkjent.gradering.arbeidGradering?.prosentverdi() ?: 0
-                                        ),
-                                        samordningGradering = it.tilkjent.gradering.samordningGradering?.prosentverdi()
-                                            ?.plus(it.tilkjent.gradering.samordningUføregradering?.prosentverdi() ?: 0),
-                                        institusjonGradering = it.tilkjent.gradering.institusjonGradering?.prosentverdi(),
-                                        totalReduksjon = 100.minus(it.tilkjent.gradering.endeligGradering.prosentverdi()),
-                                        effektivDagsats = it.tilkjent.redusertDagsats().verdi().toDouble()
+                            vurdertePerioder = vurdertePerioder
+                                .map {
+                                    VurdertPeriode(
+                                        fraOgMed = it.periode.fom,
+                                        tilOgMed = it.periode.tom,
+                                        felter = Felter(
+                                            dagsats = it.tilkjent.dagsats.verdi,
+                                            barneTilleggsats = it.tilkjent.barnetilleggsats.verdi,
+                                            arbeidGradering = 100.minus(
+                                                it.tilkjent.gradering.arbeidGradering?.prosentverdi() ?: 0
+                                            ),
+                                            samordningGradering = it.tilkjent.gradering.samordningGradering?.prosentverdi()
+                                                ?.plus(
+                                                    it.tilkjent.gradering.samordningUføregradering?.prosentverdi() ?: 0
+                                                ),
+                                            institusjonGradering = it.tilkjent.gradering.institusjonGradering?.prosentverdi(),
+                                            totalReduksjon = 100.minus(it.tilkjent.gradering.endeligGradering.prosentverdi()),
+                                            effektivDagsats = it.tilkjent.redusertDagsats().verdi().toDouble()
+                                        )
                                     )
-                                )
-                            }
-                        )
+                                }
+                                .komprimerLikeFelter())
                     }
 
 
