@@ -1943,6 +1943,7 @@ class FlytOrkestratorTest {
                     harKrav = true,
                     fom = LocalDate.now(),
                     tom = null,
+                    navKontor = "",
                 ))
             )
         )
