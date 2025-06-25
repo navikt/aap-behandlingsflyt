@@ -64,10 +64,6 @@ class TilkjentYtelseAPITest {
                         fom = LocalDate.parse("2025-03-07"),
                         tom = LocalDate.parse("2026-03-07"),
                     ),
-                    aktuellMeldeperiode = Periode(
-                        fom = LocalDate.parse("2025-03-07"),
-                        tom = LocalDate.parse("2026-03-07"),
-                    ),
                     tilkjent = Tilkjent(
                         dagsats = Beløp(500),
                         gradering = TilkjentGradering(Prosent(50), Prosent(50), Prosent(50), Prosent(50), Prosent(30)),
