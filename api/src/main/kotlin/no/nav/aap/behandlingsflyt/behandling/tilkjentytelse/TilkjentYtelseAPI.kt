@@ -101,20 +101,11 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                                 }
                             }
 
-                        val sisteAktuelleMeldekort =
-                            meldekortene?.lastOrNull() {
-                                it.timerArbeidPerPeriode.any {
-                                    it.periode.overlapper(
-                                        meldeperiode
-                                    )
-                                }
-                            }
-
                         TilkjentYtelsePeriode2Dto(
                             meldeperiode = meldeperiode,
                             levertMeldekortDato = førsteAktuelleMeldekort?.mottattTidspunkt,
-                            sisteLeverteMeldekort = sisteAktuelleMeldekort,
-                            meldekortStatus = null, // TODO Finn ut hva vi gjør her.
+                            sisteLeverteMeldekort = null,
+                            meldekortStatus = null,
                             vurdertePerioder = vurdertePerioder
                                 .map {
                                     VurdertPeriode(
