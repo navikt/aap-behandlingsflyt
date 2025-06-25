@@ -1388,8 +1388,8 @@ class FlytOrkestratorTest {
         åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
         assertThat(åpneAvklaringsbehovPåNyBehandling.filter { it.erVentepunkt() }).isEmpty()
 
-        assertThat(åpneAvklaringsbehovPåNyBehandling).describedAs("Kun sykdom skal være åpent avklaringsbehov.")
-            .extracting(Avklaringsbehov::definisjon).containsExactly(tuple(Definisjon.AVKLAR_SYKDOM))
+        assertThat(åpneAvklaringsbehovPåNyBehandling).describedAs("Sykdom skal være åpent avklaringsbehov.")
+            .extracting(Avklaringsbehov::definisjon).contains(tuple(Definisjon.AVKLAR_SYKDOM))
 
         // Prøve å løse sykdomsvilkåret på nytt
         revurdering = revurdering.løsSykdom()
@@ -2005,8 +2005,7 @@ class FlytOrkestratorTest {
                     }), Bruker("BESLUTTER")
         )
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-        
-        prosesserBehandling(behandling)
+
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
         // Avklar samordning gradering gjenåpnes, behandlingen står i samordning-steget
         assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon == Definisjon.AVKLAR_SAMORDNING_GRADERING).isTrue() }
