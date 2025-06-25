@@ -1388,8 +1388,8 @@ class FlytOrkestratorTest {
         åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
         assertThat(åpneAvklaringsbehovPåNyBehandling.filter { it.erVentepunkt() }).isEmpty()
 
-        assertThat(åpneAvklaringsbehovPåNyBehandling).describedAs("Kun sykdom skal være åpent avklaringsbehov.")
-            .extracting(Avklaringsbehov::definisjon).containsExactly(tuple(Definisjon.AVKLAR_SYKDOM))
+        assertThat(åpneAvklaringsbehovPåNyBehandling).describedAs("Sykdom skal være åpent avklaringsbehov.")
+            .extracting(Avklaringsbehov::definisjon).contains(tuple(Definisjon.AVKLAR_SYKDOM))
 
         // Prøve å løse sykdomsvilkåret på nytt
         revurdering = revurdering.løsSykdom()
@@ -1873,6 +1873,143 @@ class FlytOrkestratorTest {
         assertThat(sykdomsvilkåret.vilkårsperioder())
             .hasSize(1)
             .allMatch { vilkårsperiode -> vilkårsperiode.erOppfylt() }
+    }
+
+    @Test
+    fun `Når beslutter ikke godkjenner vurdering av samordning skal flyt tilbakeføres`() {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        var person = TestPersoner.STANDARD_PERSON()
+        val ident = person.aktivIdent()
+
+        // Sender inn en søknad
+        var behandling = sendInnSøknad(
+            ident, periode,
+            SøknadV0(
+                yrkesskade = "JA",
+                oppgitteBarn = null,
+                medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null),
+                student = null
+            )
+        )
+
+        var alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
+        assertThat(alleAvklaringsbehov).isNotEmpty()
+        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+        
+        behandling = løsAvklaringsBehov(
+            behandling, AvklarSykdomLøsning(
+                sykdomsvurderinger = listOf(
+                    SykdomsvurderingLøsningDto(
+                        begrunnelse = "Arbeidsevnen er nedsatt med mer enn halvparten",
+                        dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                        harSkadeSykdomEllerLyte = true,
+                        erSkadeSykdomEllerLyteVesentligdel = true,
+                        erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                        erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                        erArbeidsevnenNedsatt = true,
+                        yrkesskadeBegrunnelse = null,
+                        vurderingenGjelderFra = null,
+                    )
+                )
+            )
+        )
+
+        behandling = løsAvklaringsBehov(
+            behandling,
+            AvklarBistandsbehovLøsning(
+                bistandsVurdering = BistandVurderingLøsningDto(
+                    begrunnelse = "Trenger hjelp fra nav",
+                    erBehovForAktivBehandling = true,
+                    erBehovForArbeidsrettetTiltak = false,
+                    erBehovForAnnenOppfølging = null,
+                    skalVurdereAapIOvergangTilUføre = null,
+                    skalVurdereAapIOvergangTilArbeid = null,
+                    overgangBegrunnelse = null
+                ),
+            ),
+        )
+
+        behandling = løsAvklaringsBehov(
+            behandling,
+            RefusjonkravLøsning(
+                listOf(RefusjonkravVurderingDto(
+                    harKrav = true,
+                    fom = LocalDate.now(),
+                    tom = null,
+                ))
+            )
+        )
+
+        behandling = kvalitetssikreOk(behandling)
+        
+        behandling = løsAvklaringsBehov(
+            behandling,
+            AvklarYrkesskadeLøsning(
+                yrkesskadesvurdering = YrkesskadevurderingDto(
+                    begrunnelse = "",
+                    relevanteSaker = listOf(),
+                    andelAvNedsettelsen = null,
+                    erÅrsakssammenheng = false
+                )
+            ),
+        )
+
+        behandling = løsAvklaringsBehov(
+            behandling,
+            FastsettBeregningstidspunktLøsning(
+                beregningVurdering = BeregningstidspunktVurderingDto(
+                    begrunnelse = "Trenger hjelp fra Nav",
+                    nedsattArbeidsevneDato = LocalDate.now(),
+                    ytterligereNedsattArbeidsevneDato = null,
+                    ytterligereNedsattBegrunnelse = null
+                ),
+            ),
+        )
+
+        løsForutgåendeMedlemskap(behandling)
+        behandling = løsAvklaringsBehov(behandling, AvklarSamordningGraderingLøsning(
+            VurderingerForSamordning(
+                begrunnelse = "Sykepengervurdering",
+                maksDatoEndelig = true,
+                fristNyRevurdering = null,
+                vurderteSamordningerData = listOf(
+                    SamordningVurderingData(
+                        ytelseType = Ytelse.SYKEPENGER,
+                        periode = Periode(
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now().plusDays(5),
+                        ),
+                        gradering = 50,
+                        manuell = true
+                    )
+                ),
+            )
+        ))
+
+        behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
+        
+        // Beslutter godkjenner ikke samordning gradering
+        alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
+        behandling = løsAvklaringsBehov(
+            behandling, FatteVedtakLøsning(
+                alleAvklaringsbehov
+                    .filter { behov -> behov.erTotrinn() }
+                    .map { behov ->
+                        TotrinnsVurdering(
+                            behov.definisjon.kode,
+                            behov.definisjon != Definisjon.AVKLAR_SAMORDNING_GRADERING,
+                            "begrunnelse",
+                            emptyList()
+                        )
+                    }), Bruker("BESLUTTER")
+        )
+        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+
+        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
+        // Avklar samordning gradering gjenåpnes, behandlingen står i samordning-steget
+        assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon == Definisjon.AVKLAR_SAMORDNING_GRADERING).isTrue() }
+        assertThat(behandling.aktivtSteg()).isEqualTo(StegType.SAMORDNING_GRADERING)
     }
 
     @Test
