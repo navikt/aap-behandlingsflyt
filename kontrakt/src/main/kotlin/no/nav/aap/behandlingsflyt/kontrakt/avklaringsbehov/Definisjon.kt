@@ -329,6 +329,7 @@ public enum class Definisjon(
         løsesISteg = StegType.SAMORDNING_TJENESTEPENSJON_REFUSJONSKRAV,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true,
+        kvalitetssikres = true
     ),
     VURDER_FORMKRAV(
         kode = AvklaringsbehovKode.`6000`,
