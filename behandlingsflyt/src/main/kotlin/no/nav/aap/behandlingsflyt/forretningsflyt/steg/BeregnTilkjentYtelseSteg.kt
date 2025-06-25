@@ -12,9 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.Samordni
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -22,7 +20,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -70,8 +67,6 @@ class BeregnTilkjentYtelseSteg private constructor(
         )
         val samordningUføre = samordningUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        val meldeperioder = meldeperiodeRepository.hent(kontekst.behandlingId)
-
         val beregnetTilkjentYtelse = BeregnTilkjentYtelseService(
             fødselsdato,
             beregningsgrunnlag,
@@ -82,16 +77,12 @@ class BeregnTilkjentYtelseSteg private constructor(
         ).beregnTilkjentYtelse()
         tilkjentYtelseRepository.lagre(
             behandlingId = kontekst.behandlingId,
-            tilkjent = beregnetTilkjentYtelse.map { TilkjentYtelsePeriode(it.periode, utledAktuellMeldeperiode(meldeperioder, it.periode), it.verdi) })
+            tilkjent = beregnetTilkjentYtelse.map { TilkjentYtelsePeriode(it.periode, it.verdi) })
         log.info("Beregnet tilkjent ytelse: $beregnetTilkjentYtelse")
 
         return Fullført
     }
 
-    fun utledAktuellMeldeperiode(meldeperioder: List<Periode>, periode: Periode): Periode {
-        return meldeperioder.find { it.inneholder(periode) }
-            ?: throw IllegalArgumentException("Fant ingen matchende meldeperiode for perioden $periode")
-    }
 
     companion object : FlytSteg {
         override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
