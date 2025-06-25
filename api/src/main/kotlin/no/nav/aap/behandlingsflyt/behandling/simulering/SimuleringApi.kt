@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseReposi
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -42,7 +43,8 @@ fun NormalOpenAPIRoute.simuleringAPI(dataSource: DataSource, repositoryRegistry:
                         avklaringsbehovRepository = repositoryFactory.provide<AvklaringsbehovRepository>(),
                         vedtakRepository = repositoryFactory.provide<VedtakRepository>(),
                         refusjonskravRepository = repositoryFactory.provide<RefusjonkravRepository>(),
-                        tjenestepensjonRefusjonsKravVurderingRepository = repositoryFactory.provide<TjenestepensjonRefusjonsKravVurderingRepository>()
+                        tjenestepensjonRefusjonsKravVurderingRepository = repositoryFactory.provide<TjenestepensjonRefusjonsKravVurderingRepository>(),
+                        samordningAndreStatligeYtelserRepository = repositoryFactory.provide<SamordningAndreStatligeYtelserRepository>(),
                     )
                     val behandling = behandlingRepo.hent(req)
                     utbetalingService.lagTilkjentYtelseForUtbetaling(behandling.sakId, behandling.id, simulering = true)

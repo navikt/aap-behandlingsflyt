@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -29,6 +30,7 @@ class UtbetalingService(
     private val vedtakRepository: VedtakRepository,
     private val refusjonskravRepository: RefusjonkravRepository,
     private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository,
+    private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
 ) {
 
     fun lagTilkjentYtelseForUtbetaling(sakId: SakId, behandlingId: BehandlingId, simulering: Boolean = false): TilkjentYtelseDto? {
@@ -61,7 +63,7 @@ class UtbetalingService(
             val unleashGateway = GatewayProvider.provide<UnleashGateway>()
             val avventUtbetaling = if (unleashGateway.isEnabled(BehandlingsflytFeature.AvventUtbetaling)) {
                 if (tilkjentYtelse.isNotEmpty()) {
-                    AvventUtbetalingService(refusjonskravRepository, tjenestepensjonRefusjonsKravVurderingRepository).
+                    AvventUtbetalingService(refusjonskravRepository, tjenestepensjonRefusjonsKravVurderingRepository, samordningAndreStatligeYtelserRepository).
                         finnEventuellAvventUtbetaling(behandlingId, vedtakstidspunkt, tilkjentYtelse.finnHelePerioden())
                 } else {
                     null
