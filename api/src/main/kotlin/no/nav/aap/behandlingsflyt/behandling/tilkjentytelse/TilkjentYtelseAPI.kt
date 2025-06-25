@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -92,11 +93,27 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
 
                     tilkjentYtelse.groupBy { it.aktuellMeldeperiode }.map { (meldeperiode, vurdertePerioder) ->
                         val førsteAktuelleMeldekort =
-                            meldekortene?.firstOrNull { it.timerArbeidPerPeriode.any { it.periode.overlapper(it.periode) } }
+                            meldekortene?.firstOrNull {
+                                it.timerArbeidPerPeriode.any {
+                                    it.periode.overlapper(
+                                        meldeperiode
+                                    )
+                                }
+                            }
+
+                        val sisteAktuelleMeldekort =
+                            meldekortene?.lastOrNull() {
+                                it.timerArbeidPerPeriode.any {
+                                    it.periode.overlapper(
+                                        meldeperiode
+                                    )
+                                }
+                            }
 
                         TilkjentYtelsePeriode2Dto(
                             meldeperiode = meldeperiode,
-                            levertMeldekortDato = førsteAktuelleMeldekort?.mottattTidspunkt, // TODO Bruke siste?
+                            levertMeldekortDato = førsteAktuelleMeldekort?.mottattTidspunkt,
+                            sisteLeverteMeldekort = sisteAktuelleMeldekort,
                             meldekortStatus = null, // TODO Finn ut hva vi gjør her.
                             vurdertePerioder = vurdertePerioder
                                 .map {
