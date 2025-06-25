@@ -41,7 +41,8 @@ internal class SamordningUføreRepositoryImplTest {
                     virkningstidspunkt = periode.fom.plusMonths(4),
                     uføregradTilSamordning = Prosent.`70_PROSENT`
                 )
-            )
+            ),
+            "ident"
         )
         dataSource.transaction {
             SamordningUføreRepositoryImpl(it).lagre(behandling.id, vurdering)
@@ -52,7 +53,7 @@ internal class SamordningUføreRepositoryImplTest {
         }
 
         assertThat(uthentet).isNotNull
-        assertThat(uthentet?.vurdering).isEqualTo(vurdering)
+        assertThat(uthentet?.vurdering).usingRecursiveComparison().ignoringFields("vurdertTidspunkt").isEqualTo(vurdering)
     }
 
     @Test
@@ -73,7 +74,8 @@ internal class SamordningUføreRepositoryImplTest {
                             virkningstidspunkt = periode.fom.plusMonths(4),
                             uføregradTilSamordning = Prosent.`70_PROSENT`
                         )
-                    )
+                    ),
+                    vurdertAv = "ident"
                 )
             )
             samordningUføreRepository.lagre(
@@ -88,8 +90,9 @@ internal class SamordningUføreRepositoryImplTest {
                             virkningstidspunkt = periode.fom.plusMonths(2),
                             uføregradTilSamordning = Prosent.`70_PROSENT`
                         )
+                    ),
+                    vurdertAv = "ident"
                     )
-                )
             )
             assertDoesNotThrow {
                 samordningUføreRepository.slett(behandling.id)

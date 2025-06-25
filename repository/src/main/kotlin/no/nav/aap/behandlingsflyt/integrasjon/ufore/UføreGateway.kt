@@ -9,12 +9,9 @@ import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
-import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.post
-import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.slf4j.LoggerFactory
 import java.net.URI
@@ -45,30 +42,6 @@ object UføreGateway : UføreRegisterGateway {
         prometheus = prometheus
     )
 
-    private fun query(uføreRequest: UføreRequest): UføreRespons? {
-        val httpRequest = GetRequest(
-            additionalHeaders = listOf(
-                Header("fnr", uføreRequest.fnr),
-                Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
-                Header("Accept", "application/json")
-            )
-        )
-
-        val uri = url.resolve("pen/api/uforetrygd/uforegrad?dato=${uføreRequest.dato}")
-        try {
-            log.info("Henter uføregrad for dato: ${uføreRequest.dato}")
-            return client.get(
-                uri = uri,
-                request = httpRequest
-            )
-        } catch (e: IkkeFunnetException) {
-            // Om personen ikke ble funnet i PESYS.
-            log.info("Fant ikke person i PESYS. Returnerer null. URL brukt: $uri. Message: ${e.message}")
-            return null
-        }
-    }
-
-
     private fun queryMedHistorikk(uføreRequest: UføreRequest): UføreHistorikkRespons? {
         val httpRequest = PostRequest(
             additionalHeaders = listOf(
@@ -91,26 +64,6 @@ object UføreGateway : UføreRegisterGateway {
             log.info("Fant ikke person i PESYS. Returnerer null. URL brukt: $uri. Message: ${e.message}")
             return null
         }
-    }
-
-    @Deprecated("Henter kun for en gitt dag - bruk heller innhentMedHistorikk som henter for hele perioden fra en gitt dato")
-    override fun innhent(person: Person, forDato: LocalDate): List<Uføre> {
-        val datoString = forDato.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        val request =
-            UføreRequest(person.identer().filter { it.aktivIdent }.map { it.identifikator }.first(), datoString)
-        val uføreRes = query(request)
-        val uføregrad = uføreRes?.uforegrad
-
-        if (uføregrad == null) {
-            return emptyList()
-        }
-
-        return listOf(
-            Uføre(
-                virkningstidspunkt = forDato,
-                uføregrad = Prosent(uføregrad)
-            )
-        )
     }
 
     override fun innhentMedHistorikk(person: Person, fraDato: LocalDate): List<Uføre> {

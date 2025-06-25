@@ -5,6 +5,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 data class SamordningUføreGrunnlag(
     val vurdering: SamordningUføreVurdering,
@@ -13,6 +14,8 @@ data class SamordningUføreGrunnlag(
 data class SamordningUføreVurdering(
     val begrunnelse: String,
     val vurderingPerioder: List<SamordningUføreVurderingPeriode>,
+    val vurdertAv: String,
+    val vurdertTidspunkt: LocalDateTime? = null
 ) {
     fun tilTidslinje(): Tidslinje<Prosent> {
         val sorterteVurderinger = vurderingPerioder.sortedBy { it.virkningstidspunkt };
