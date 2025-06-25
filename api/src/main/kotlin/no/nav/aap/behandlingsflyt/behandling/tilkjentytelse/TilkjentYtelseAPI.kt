@@ -3,12 +3,13 @@ package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
@@ -75,8 +76,10 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                     val tilkjentYtelseRepository: TilkjentYtelseRepository =
                         repositoryFactory.provide<TilkjentYtelseRepository>()
                     val meldekortRepository = repositoryFactory.provide<MeldekortRepository>()
-
+                    val meldeperiodeRepository = repositoryFactory.provide<MeldeperiodeRepository>()
                     val behandling = behandlingRepository.hent(req)
+                    val meldeperioder = meldeperiodeRepository.hent(behandling.id)
+
 
                     val tilkjentYtelse = TilkjentYtelseService(
                         behandlingRepository,
@@ -90,45 +93,45 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                                 .mottattTidspunkt
                         }
 
-
-                    tilkjentYtelse.groupBy { it.aktuellMeldeperiode }.map { (meldeperiode, vurdertePerioder) ->
-                        val førsteAktuelleMeldekort =
-                            meldekortene?.firstOrNull {
-                                it.timerArbeidPerPeriode.any {
-                                    it.periode.overlapper(
-                                        meldeperiode
-                                    )
-                                }
-                            }
-
-                        TilkjentYtelsePeriode2Dto(
-                            meldeperiode = meldeperiode,
-                            levertMeldekortDato = førsteAktuelleMeldekort?.mottattTidspunkt,
-                            sisteLeverteMeldekort = null,
-                            meldekortStatus = null,
-                            vurdertePerioder = vurdertePerioder
-                                .map {
-                                    VurdertPeriode(
-                                        fraOgMed = it.periode.fom,
-                                        tilOgMed = it.periode.tom,
-                                        felter = Felter(
-                                            dagsats = it.tilkjent.dagsats.verdi,
-                                            barneTilleggsats = it.tilkjent.barnetilleggsats.verdi,
-                                            arbeidGradering = 100.minus(
-                                                it.tilkjent.gradering.arbeidGradering?.prosentverdi() ?: 0
-                                            ),
-                                            samordningGradering = it.tilkjent.gradering.samordningGradering?.prosentverdi()
-                                                ?.plus(
-                                                    it.tilkjent.gradering.samordningUføregradering?.prosentverdi() ?: 0
-                                                ),
-                                            institusjonGradering = it.tilkjent.gradering.institusjonGradering?.prosentverdi(),
-                                            totalReduksjon = 100.minus(it.tilkjent.gradering.endeligGradering.prosentverdi()),
-                                            effektivDagsats = it.tilkjent.redusertDagsats().verdi().toDouble()
+                    tilkjentYtelse.groupBy { utledAktuellMeldeperiode(meldeperioder, it.periode) }
+                        .map { (meldeperiode, vurdertePerioder) ->
+                            val førsteAktuelleMeldekort =
+                                meldekortene?.firstOrNull {
+                                    it.timerArbeidPerPeriode.any {
+                                        it.periode.overlapper(
+                                            meldeperiode
                                         )
-                                    )
+                                    }
                                 }
-                                .komprimerLikeFelter())
-                    }
+
+                            TilkjentYtelsePeriode2Dto(
+                                meldeperiode = meldeperiode,
+                                levertMeldekortDato = førsteAktuelleMeldekort?.mottattTidspunkt,
+                                sisteLeverteMeldekort = null,
+                                meldekortStatus = null,
+                                vurdertePerioder = vurdertePerioder
+                                    .map {
+                                        VurdertPeriode(
+                                            periode = it.periode,
+                                            felter = Felter(
+                                                dagsats = it.tilkjent.dagsats.verdi,
+                                                barneTilleggsats = it.tilkjent.barnetilleggsats.verdi,
+                                                arbeidGradering = 100.minus(
+                                                    it.tilkjent.gradering.arbeidGradering?.prosentverdi() ?: 0
+                                                ),
+                                                samordningGradering = it.tilkjent.gradering.samordningGradering?.prosentverdi()
+                                                    ?.plus(
+                                                        it.tilkjent.gradering.samordningUføregradering?.prosentverdi()
+                                                            ?: 0
+                                                    ),
+                                                institusjonGradering = it.tilkjent.gradering.institusjonGradering?.prosentverdi(),
+                                                totalReduksjon = 100.minus(it.tilkjent.gradering.endeligGradering.prosentverdi()),
+                                                effektivDagsats = it.tilkjent.redusertDagsats().verdi().toDouble()
+                                            )
+                                        )
+                                    }
+                                    .komprimerLikeFelter())
+                        }
 
 
                 }
@@ -137,4 +140,10 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
         }
 
     }
+
+}
+
+private fun utledAktuellMeldeperiode(meldeperioder: List<Periode>, periode: Periode): Periode {
+    return meldeperioder.find { it.inneholder(periode) }
+        ?: throw IllegalArgumentException("Fant ingen matchende meldeperiode for perioden $periode")
 }
