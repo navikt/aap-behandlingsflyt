@@ -82,7 +82,7 @@ class EtAnnetStedUtlederServiceTest {
                     begrunnelse = "lagt inn med kost og losji",
                     faarFriKostOgLosji = true,
                     forsoergerEktefelle = false,
-                    harFasteUtgifter = false
+                    harFasteUtgifter = false,
                 )
             ),
             rettighetsperiode = Periode(27 februar 2023, 31 mai 2025)
@@ -291,7 +291,7 @@ class EtAnnetStedUtlederServiceTest {
                     begrunnelse = "lagt inn med kost og losji",
                     faarFriKostOgLosji = true,
                     forsoergerEktefelle = false,
-                    harFasteUtgifter = false
+                    harFasteUtgifter = false,
                 )
             ),
             rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
@@ -330,7 +330,7 @@ class EtAnnetStedUtlederServiceTest {
                     begrunnelse = "vurder",
                     faarFriKostOgLosji = false,
                     forsoergerEktefelle = true,
-                    harFasteUtgifter = true
+                    harFasteUtgifter = true,
                 )
             ),
             rettighetsperiode = rettighetsperiode

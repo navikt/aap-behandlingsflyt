@@ -93,22 +93,22 @@ class InstitusjonRegelTest {
                     begrunnelse = "lagt inn med kost og losji men forsørger",
                     faarFriKostOgLosji = true,
                     forsoergerEktefelle = false,
-                    harFasteUtgifter = false
+                    harFasteUtgifter = false,
                 ),
                 HelseinstitusjonVurdering(
                     periode = Periode(LocalDate.of(2024, 7, 20), (LocalDate.of(2024, 9, 15))),
                     begrunnelse = "lagt inn med kost og losji",
                     faarFriKostOgLosji = true,
                     forsoergerEktefelle = false,
-                    harFasteUtgifter = false
+                    harFasteUtgifter = false,
                 ),
                 HelseinstitusjonVurdering(
                     periode = Periode(LocalDate.of(2024, 12, 14), (LocalDate.of(2025, 1, 15))),
                     begrunnelse = "lagt inn med kost og losji",
                     faarFriKostOgLosji = true,
                     forsoergerEktefelle = true,
-                    harFasteUtgifter = false
-                ),
+                    harFasteUtgifter = false,
+                )
             ),
             rettighetsperiode = Periode(periode.fom, periode.fom.plusYears(3))
         )

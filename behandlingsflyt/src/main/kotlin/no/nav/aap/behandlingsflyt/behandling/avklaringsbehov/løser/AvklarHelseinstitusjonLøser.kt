@@ -39,6 +39,7 @@ class AvklarHelseinstitusjonLøser(
             )
         helseinstitusjonRepository.lagreHelseVurdering(
             kontekst.kontekst.behandlingId,
+            kontekst.bruker.ident,
             oppdaterteVurderinger
         )
 
@@ -48,19 +49,19 @@ class AvklarHelseinstitusjonLøser(
 
     private fun slåSammenMedNyeVurderinger(
         grunnlag: InstitusjonsoppholdGrunnlag?,
-        nyeVurderinger: List<HelseinstitusjonVurderingDto>
+        nyeVurderinger: List<HelseinstitusjonVurderingDto>,
     ): List<HelseinstitusjonVurdering> {
-        val eksisterendeTidslinje = byggTidslinjeForSoningsvurderinger(grunnlag)
+        val eksisterendeTidslinje = byggTidslinjeForHelseoppholdvurderinger(grunnlag)
 
         val nyeVurderingerTidslinje = Tidslinje(nyeVurderinger.sortedBy { it.periode }
             .map {
                 Segment(
                     it.periode,
                     HelseoppholdVurderingData(
-                        it.begrunnelse,
-                        it.faarFriKostOgLosji,
-                        it.forsoergerEktefelle,
-                        it.harFasteUtgifter
+                        begrunnelse = it.begrunnelse,
+                        faarFriKostOgLosji = it.faarFriKostOgLosji,
+                        forsoergerEktefelle = it.forsoergerEktefelle,
+                        harFasteUtgifter = it.harFasteUtgifter,
                     )
                 )
             }).komprimer()
@@ -79,17 +80,17 @@ class AvklarHelseinstitusjonLøser(
         }
     }
 
-    private fun byggTidslinjeForSoningsvurderinger(grunnlag: InstitusjonsoppholdGrunnlag?): Tidslinje<HelseoppholdVurderingData> {
+    private fun byggTidslinjeForHelseoppholdvurderinger(grunnlag: InstitusjonsoppholdGrunnlag?): Tidslinje<HelseoppholdVurderingData> {
         if (grunnlag == null) {
             return Tidslinje()
         }
         return grunnlag.helseoppholdvurderinger?.tilTidslinje()
             ?.mapValue {
                 HelseoppholdVurderingData(
-                    it.begrunnelse,
-                    it.faarFriKostOgLosji,
-                    it.forsoergerEktefelle,
-                    it.harFasteUtgifter
+                    begrunnelse = it.begrunnelse,
+                    faarFriKostOgLosji = it.faarFriKostOgLosji,
+                    forsoergerEktefelle = it.forsoergerEktefelle,
+                    harFasteUtgifter = it.harFasteUtgifter
                 )
             } ?: Tidslinje()
     }
