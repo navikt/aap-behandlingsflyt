@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevA
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
@@ -82,6 +83,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
@@ -101,6 +103,7 @@ import java.time.LocalDateTime
 import java.util.Random
 import java.util.UUID
 
+@Fakes
 abstract class AbstraktFlytOrkestratorTest {
     companion object {
         @JvmStatic
@@ -598,4 +601,21 @@ abstract class AbstraktFlytOrkestratorTest {
         util.ventPåSvar(behandling.sakId.id, behandling.id.id)
         return hentBehandling(behandling.referanse)
     }
+
+    // Sletter tidligere informasjonskrav-oppdateringer for å slippe unna at den ikke skal sjekke på nytt før en time har gått
+    protected fun nullstillInformasjonskravOppdatert(informasjonskravnavn: InformasjonskravNavn, sakId: SakId) {
+        dataSource.transaction { connection ->
+            connection.execute(
+                """
+                    delete from informasjonskrav_oppdatert where informasjonskrav = ? and sak_id = ?
+                """
+            ) {
+                setParams {
+                    setEnumName(1, informasjonskravnavn)
+                    setLong(2, sakId.id)
+                }
+            }
+        }
+    }
+
 }
