@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 public sealed interface KabalHendelse : Melding
 
@@ -119,4 +119,23 @@ public enum class FeilregistrertType {
 
 public enum class OmgjoeringsUtfall {
     MEDHOLD_ETTER_FVL_35
+}
+
+public fun BehandlingDetaljer.avsluttetTidspunkt(): LocalDateTime? {
+    return when {
+        klagebehandlingAvsluttet != null -> klagebehandlingAvsluttet.avsluttet
+        ankebehandlingAvsluttet != null -> ankebehandlingAvsluttet.avsluttet
+        omgjoeringskravbehandlingAvsluttet != null -> omgjoeringskravbehandlingAvsluttet.avsluttet
+        behandlingEtterTrygderettenOpphevetAvsluttet != null -> behandlingEtterTrygderettenOpphevetAvsluttet.avsluttet
+        behandlingFeilregistrert != null -> behandlingFeilregistrert.feilregistrert
+        else -> null
+    }
+}
+
+public fun BehandlingDetaljer.opprettetTidspunkt(): LocalDateTime? {
+    return when {
+        ankebehandlingOpprettet != null -> ankebehandlingOpprettet.mottattKlageinstans
+        ankeITrygderettenbehandlingOpprettet != null -> ankeITrygderettenbehandlingOpprettet.sendtTilTrygderetten
+        else -> null
+    }
 }

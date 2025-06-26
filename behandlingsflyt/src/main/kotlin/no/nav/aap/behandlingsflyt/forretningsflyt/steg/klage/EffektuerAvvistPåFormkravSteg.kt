@@ -8,11 +8,11 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingServi
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageresultatUtleder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Ufullstendig
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Ufullstendig
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.effektueravvistpåformkrav.EffektuerAvvistPåFormkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.ÅrsakTilUfullstendigResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.ÅrsakTilUfullstendigResultat
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov

@@ -3,8 +3,8 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Avslått
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageresultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg

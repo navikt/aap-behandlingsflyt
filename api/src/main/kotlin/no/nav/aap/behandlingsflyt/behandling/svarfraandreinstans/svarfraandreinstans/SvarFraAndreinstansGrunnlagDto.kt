@@ -9,6 +9,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageUtfall
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjoeringsUtfall
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TrygderettUtfall
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.avsluttetTidspunkt
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.opprettetTidspunkt
+import java.time.LocalDateTime
 
 data class SvarFraAndreinstansGrunnlagDto(
     val svarFraAndreinstans: SvarFraAndreinstansDto,
@@ -18,7 +21,9 @@ data class SvarFraAndreinstansGrunnlagDto(
 data class SvarFraAndreinstansDto(
     val type: BehandlingEventType,
     val utfall: Utfall?,
-    val feilregistrertBegrunnelse: String?
+    val feilregistrertBegrunnelse: String?,
+    val avsluttetTidspunkt: LocalDateTime?,
+    val opprettetTidspunkt: LocalDateTime?
 )
 
 data class SvarFraAndreinstansVurderingDto(
@@ -115,7 +120,9 @@ internal fun KabalHendelseV0.tilDto(): SvarFraAndreinstansDto {
     return SvarFraAndreinstansDto(
         type = this.type,
         utfall = Utfall.fraHendelse(this),
-        feilregistrertBegrunnelse = this.detaljer.behandlingFeilregistrert?.reason
+        feilregistrertBegrunnelse = this.detaljer.behandlingFeilregistrert?.reason,
+        avsluttetTidspunkt = this.detaljer.avsluttetTidspunkt(),
+        opprettetTidspunkt = this.detaljer.opprettetTidspunkt()
     )
 }
 

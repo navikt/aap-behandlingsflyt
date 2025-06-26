@@ -3,8 +3,11 @@ package no.nav.aap.behandlingsflyt.behandling.klage.resultat
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageResultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageresultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.tilDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KabalKlageresultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
@@ -32,6 +35,26 @@ fun NormalOpenAPIRoute.klageresultatApi(
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                 KlageresultatUtleder(repositoryProvider).utledKlagebehandlingResultat(behandling.id)
+            }
+            respond(respons)
+        }
+    }
+
+    route("api/klage/{referanse}/kabal-resultat") {
+        authorizedGet<BehandlingReferanse, KabalKlageResultat>(
+            AuthorizationParamPathConfig(
+                behandlingPathParam = BehandlingPathParam(
+                    "referanse"
+                )
+            )
+        ) { req ->
+            val respons = dataSource.transaction(readOnly = true) { connection ->
+                val repositoryProvider = repositoryRegistry.provider(connection)
+                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
+                val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+                val kabalHendelser = KabalKlageresultatUtleder(mottattDokumentRepository).hentKabalHendelserForKlage(behandling)
+                KabalKlageResultat(kabalHendelser.map { it.tilDto() })
             }
             respond(respons)
         }

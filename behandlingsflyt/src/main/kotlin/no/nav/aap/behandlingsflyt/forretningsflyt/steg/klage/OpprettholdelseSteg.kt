@@ -2,9 +2,9 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 
 import no.nav.aap.behandlingsflyt.behandling.klage.andreinstans.AndreinstansService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.DelvisOmgjøres
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageresultatUtleder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Opprettholdes
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført

@@ -3,10 +3,10 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Avslått
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.DelvisOmgjøres
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageresultatUtleder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Opprettholdes
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
