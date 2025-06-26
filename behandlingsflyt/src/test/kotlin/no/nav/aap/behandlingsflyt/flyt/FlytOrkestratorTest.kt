@@ -4,9 +4,6 @@ import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.ÅrsakTilReturKode
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
@@ -22,7 +19,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStud
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BekreftTotalvurderingKlageLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.EffektuerAvvistPåFormkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBehandlendeEnhetLøsning
@@ -32,16 +28,12 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettP�
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettYrkesskadeInntektLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FritakMeldepliktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FullmektigLøsningDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.HåndterSvarFraAndreinstansLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.HåndterSvarFraAndreinstansLøsningDto
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SamordningVentPaVirkningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivForhåndsvarselKlageFormkravBrevLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TrekkKlageLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TrekkSøknadLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentePåFristForhåndsvarselKlageFormkravLøsning
@@ -54,11 +46,8 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.flate.TrekkKlageVurderingDto
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.flate.TrekkKlageÅrsakDto
-import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
 import no.nav.aap.behandlingsflyt.drift.Driftfunksjoner
-import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
@@ -68,9 +57,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
@@ -88,15 +75,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
@@ -107,39 +91,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.svarfraandreinstans.SvarFraAndreinstansKonsekvens
-import no.nav.aap.behandlingsflyt.flyt.FlytOrkestratorTest.Companion.util
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.NyÅrsakTilBehandlingHendelse
-import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
-import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.AARegisterGateway
-import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
-import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
-import no.nav.aap.behandlingsflyt.integrasjon.brev.BrevGateway
-import no.nav.aap.behandlingsflyt.integrasjon.datadeling.SamGatewayImpl
-import no.nav.aap.behandlingsflyt.integrasjon.dokumentinnhenting.DokumentinnhentingGatewayImpl
-import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
-import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoBulkGateway
-import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
-import no.nav.aap.behandlingsflyt.integrasjon.inntekt.InntektGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.kabal.Fagsystem
-import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
-import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
-import no.nav.aap.behandlingsflyt.integrasjon.meldekort.MeldekortGatewayImpl
-import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
-import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
-import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
-import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
-import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
-import no.nav.aap.behandlingsflyt.integrasjon.samordning.TjenestePensjonGatewayImpl
-import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
-import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreGateway
-import no.nav.aap.behandlingsflyt.integrasjon.utbetaling.UtbetalingGatewayImpl
-import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -154,70 +112,36 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlagebehandlingAv
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UtenlandsPeriodeDto
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
-import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
-import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.EffektuerAvvistPåFormkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFolkeregisterPersonStatus
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFolkeregistermetadata
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlStatsborgerskap
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
-import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
-import no.nav.aap.behandlingsflyt.test.FakePersoner
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
-import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
-import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.motor.Motor
-import no.nav.aap.motor.testutil.TestUtil
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.tuple
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertThrows
@@ -228,87 +152,7 @@ import java.time.Year
 import java.util.*
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
-@Fakes
-class FlytOrkestratorTest {
-
-    companion object {
-        private val dataSource = InitTestDatabase.freshDatabase()
-        private val motor =
-            Motor(dataSource, 8, jobber = ProsesseringsJobber.alle(), repositoryRegistry = postgresRepositoryRegistry)
-        private val hendelsesMottak = TestHendelsesMottak(dataSource)
-        private val util =
-            TestUtil(dataSource, ProsesseringsJobber.alle().filter { it.cron != null }.map { it.type })
-
-        @BeforeAll
-        @JvmStatic
-        internal fun beforeAll() {
-            System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
-            GatewayRegistry
-                .register<PdlBarnGateway>()
-                .register<PdlIdentGateway>()
-                .register<PdlPersoninfoBulkGateway>()
-                .register<PdlPersoninfoGateway>()
-                .register<AbakusSykepengerGateway>()
-                .register<AbakusForeldrepengerGateway>()
-                .register<DokumentinnhentingGatewayImpl>()
-                .register<MedlemskapGateway>()
-                .register<FakeApiInternGateway>()
-                .register<UtbetalingGatewayImpl>()
-                .register<AARegisterGateway>()
-                .register<EREGGateway>()
-                .register<StatistikkGatewayImpl>()
-                .register<InntektGatewayImpl>()
-                .register<BrevGateway>()
-                .register<OppgavestyringGatewayImpl>()
-                .register<UføreGateway>()
-                .register<YrkesskadeRegisterGatewayImpl>()
-                .register<MeldekortGatewayImpl>()
-                .register<TjenestePensjonGatewayImpl>()
-                .register<FakeUnleash>()
-                .register<SamGatewayImpl>()
-                .register<NomInfoGateway>()
-                .register<KabalGateway>()
-                .register<NorgGateway>()
-            motor.start()
-
-
-        }
-
-        @AfterAll
-        @JvmStatic
-        internal fun afterAll() {
-            motor.stop()
-        }
-    }
-
-    object TestPersoner {
-        val STANDARD_PERSON = {
-            FakePersoner.leggTil(
-                TestPerson(
-                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
-                    yrkesskade = listOf(),
-                    sykepenger = listOf()
-                )
-            )
-        }
-
-        val PERSON_MED_YRKESSKADE = {
-            FakePersoner.leggTil(
-                TestPerson(
-                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
-                    yrkesskade = listOf(TestYrkesskade()),
-                )
-            )
-        }
-
-        val PERSON_FOR_UNG = {
-            FakePersoner.leggTil(
-                TestPerson(
-                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(17))
-                )
-            )
-        }
-    }
+class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
 
     @Test
     fun `skal avklare yrkesskade hvis det finnes spor av yrkesskade`() {
@@ -364,12 +208,14 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                listOf(RefusjonkravVurderingDto(
-                    harKrav = true,
-                    fom = LocalDate.now(),
-                    tom = null,
-                    navKontor = "",
-                ))
+                listOf(
+                    RefusjonkravVurderingDto(
+                        harKrav = true,
+                        fom = LocalDate.now(),
+                        tom = null,
+                        navKontor = "",
+                    )
+                )
             )
         )
 
@@ -479,12 +325,14 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                listOf(RefusjonkravVurderingDto(
-                    harKrav = true,
-                    fom = LocalDate.now(),
-                    tom = null,
-                    navKontor = "",
-                ))
+                listOf(
+                    RefusjonkravVurderingDto(
+                        harKrav = true,
+                        fom = LocalDate.now(),
+                        tom = null,
+                        navKontor = "",
+                    )
+                )
             )
         )
 
@@ -732,12 +580,14 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                listOf(RefusjonkravVurderingDto(
-                    harKrav = true,
-                    fom = LocalDate.now(),
-                    tom = null,
-                    navKontor = "",
-                ))
+                listOf(
+                    RefusjonkravVurderingDto(
+                        harKrav = true,
+                        fom = LocalDate.now(),
+                        tom = null,
+                        navKontor = "",
+                    )
+                )
             )
         )
 
@@ -881,12 +731,14 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                listOf(RefusjonkravVurderingDto(
-                    harKrav = true,
-                    fom = LocalDate.now(),
-                    tom = null,
-                    navKontor = "",
-                ))
+                listOf(
+                    RefusjonkravVurderingDto(
+                        harKrav = true,
+                        fom = LocalDate.now(),
+                        tom = null,
+                        navKontor = "",
+                    )
+                )
             )
         )
 
@@ -1098,491 +950,6 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `ingen sykepenger i register, vurderer sykepenger for samordning med ukjent maksdato som fører til revurdering og ingen utbetaling etter kjent sykepengedato`() {
-        val fom = LocalDate.now()
-        val periode = Periode(fom, fom.plusYears(3))
-        val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
-        // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
-        val person = TestPersoner.STANDARD_PERSON()
-
-        val ident = person.aktivIdent()
-
-        // Sender inn en søknad
-        var behandling = sendInnSøknad(
-            ident, periode,
-            SøknadV0(
-                student = SøknadStudentDto("NEI"),
-                yrkesskade = "NEI",
-                oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-            ),
-        )
-        assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-
-        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        assertThat(alleAvklaringsbehov).isNotEmpty()
-        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-
-        behandling = løsSykdom(behandling)
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingLøsningDto(
-                    begrunnelse = "Trenger hjelp fra nav",
-                    erBehovForAktivBehandling = true,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null
-                ),
-            ),
-        )
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            RefusjonkravLøsning(
-                listOf(RefusjonkravVurderingDto(
-                    harKrav = true,
-                    fom = LocalDate.now(),
-                    tom = null,
-                    navKontor = "",
-                ))
-            )
-        )
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            avklaringsBehovLøsning = FritakMeldepliktLøsning(
-                fritaksvurderinger = listOf(
-                    FritaksvurderingDto(
-                        harFritak = true,
-                        fraDato = periode.fom,
-                        begrunnelse = "...",
-                    )
-                ),
-            ),
-        )
-
-        behandling = kvalitetssikreOk(behandling)
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            FastsettBeregningstidspunktLøsning(
-                beregningVurdering = BeregningstidspunktVurderingDto(
-                    begrunnelse = "Trenger hjelp fra Nav",
-                    nedsattArbeidsevneDato = LocalDate.now(),
-                    ytterligereNedsattArbeidsevneDato = null,
-                    ytterligereNedsattBegrunnelse = null
-                ),
-            ),
-        )
-
-        løsForutgåendeMedlemskap(behandling)
-        assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            AvklarSamordningGraderingLøsning(
-                vurderingerForSamordning = VurderingerForSamordning(
-                    vurderteSamordningerData = listOf(
-                        SamordningVurderingData(
-                            ytelseType = Ytelse.SYKEPENGER,
-                            periode = sykePengerPeriode,
-                            gradering = 100,
-                            kronesum = null,
-                        )
-                    ),
-                    begrunnelse = "",
-                    maksDatoEndelig = true,
-                    fristNyRevurdering = null,
-                ),
-            ),
-        )
-        assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).isEqualTo(listOf(Definisjon.FORESLÅ_VEDTAK))
-
-        // Vilkår skal ikke være oppfylt med 100% gradert samordning
-        val vilkår = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
-        assertThat(vilkår.vilkårsperioder()).hasSize(1)
-            .first()
-            .extracting(Vilkårsperiode::utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            AvklarSamordningGraderingLøsning(
-                vurderingerForSamordning = VurderingerForSamordning(
-                    vurderteSamordningerData = listOf(
-                        SamordningVurderingData(
-                            ytelseType = Ytelse.SYKEPENGER,
-                            periode = sykePengerPeriode,
-                            gradering = 50,
-                            kronesum = null,
-                        ),
-                        SamordningVurderingData(
-                            ytelseType = Ytelse.PLEIEPENGER,
-                            periode = sykePengerPeriode,
-                            gradering = 50,
-                            kronesum = null,
-                        )
-                    ),
-                    begrunnelse = "",
-                    maksDatoEndelig = true,
-                    fristNyRevurdering = null,
-                ),
-            ),
-        )
-
-        // Vilkår skal være ikke vurdert når samordningen har mindre enn 100% gradering
-        var vilkårOppdatert = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
-        assertThat(vilkårOppdatert.vilkårsperioder()).hasSize(1)
-        assertThat(vilkårOppdatert.vilkårsperioder().first().utfall).isEqualTo(Utfall.IKKE_VURDERT)
-
-        // Setter samordningen til 100 sykepenger og ikke oppfylt for å verifisere opprettelse av revurdering
-        behandling = løsAvklaringsBehov(
-            behandling,
-            AvklarSamordningGraderingLøsning(
-                vurderingerForSamordning = VurderingerForSamordning(
-                    vurderteSamordningerData = listOf(
-                        SamordningVurderingData(
-                            ytelseType = Ytelse.SYKEPENGER,
-                            periode = sykePengerPeriode,
-                            gradering = 100,
-                            kronesum = null,
-                        )
-                    ),
-                    begrunnelse = "En god begrunnelse",
-                    maksDatoEndelig = false,
-                    fristNyRevurdering = LocalDate.now().plusMonths(1),
-                ),
-            ),
-        )
-
-        // Vilkår skal være ikke vurdert når samordningen har mindre enn 100% gradering
-        vilkårOppdatert = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
-        assertThat(vilkårOppdatert.vilkårsperioder()).hasSize(2)
-            .extracting(Vilkårsperiode::utfall)
-            .containsExactly(tuple(Utfall.IKKE_OPPFYLT), tuple(Utfall.IKKE_VURDERT))
-
-        behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
-        behandling = fattVedtak(behandling)
-
-        val uthentetTilkjentYtelse =
-            requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) })
-            { "Tilkjent ytelse skal være beregnet her." }
-
-        val periodeMedFullSamordning =
-            uthentetTilkjentYtelse.map { Segment(it.periode, it.tilkjent.gradering.samordningGradering) }
-                .let(::Tidslinje)
-                .filter { it.verdi == Prosent.`100_PROSENT` }.helePerioden()
-
-        // Verifiser at samordningen ble fanget opp
-        assertThat(periodeMedFullSamordning.inneholder(sykePengerPeriode.tom)).isTrue
-        // Verifiser at samordning med 100% strekker seg ut rettighetsperioden for å unngå feilaktig utbetaling fordi perioden har passert
-        assertThat(periodeMedFullSamordning.tom).isEqualTo(periode.tom)
-
-        val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
-        val behandlingReferanse = behandling.referanse
-        behandling =
-            løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
-
-        var revurdering = hentNyesteBehandlingForSak(behandling.sakId)
-
-        // Siden samordning overlappet, skal en revurdering opprettes med en gang
-        assertThat(revurdering.referanse).isNotEqualTo(behandlingReferanse)
-        assertThat(revurdering.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-        util.ventPåSvar(sakId = behandling.sakId.id)
-
-        // Verifiser at den er satt på vent
-        var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
-
-        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
-
-        // Ta av vent
-        revurdering = løsAvklaringsBehov(revurdering, SamordningVentPaVirkningstidspunktLøsning())
-
-        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
-        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_SAMORDNING_GRADERING)
-
-        // Avklar samordning i revurdering
-        revurdering = løsAvklaringsBehov(
-            revurdering,
-            AvklarSamordningGraderingLøsning(
-                vurderingerForSamordning = VurderingerForSamordning(
-                    vurderteSamordningerData = listOf(
-                        SamordningVurderingData(
-                            ytelseType = Ytelse.SYKEPENGER,
-                            periode = sykePengerPeriode,
-                            gradering = 100,
-                            kronesum = null,
-                        )
-                    ),
-                    begrunnelse = "En god begrunnelse",
-                    maksDatoEndelig = true,
-                    fristNyRevurdering = null,
-                ),
-            ),
-        )
-
-        val tilkjentYtelse =
-            requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(revurdering.id) }) { "Tilkjent ytelse skal være beregnet her." }
-
-        assertThat(tilkjentYtelse).hasSizeGreaterThan(2)
-        tilkjentYtelse.forEach {
-            if (it.periode.overlapper(sykePengerPeriode)) {
-                assertThat(it.tilkjent.gradering.samordningGradering).isEqualTo(Prosent.`100_PROSENT`)
-                assertThat(it.tilkjent.redusertDagsats()).isEqualTo(Beløp(0))
-            } else {
-                assertThat(it.tilkjent.gradering.samordningGradering).isEqualTo(Prosent.`0_PROSENT`)
-                assertThat(it.tilkjent.redusertDagsats()).isNotEqualTo(Beløp(0))
-            }
-        }
-
-        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
-        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
-
-    }
-
-    @Test
-    fun `stopper opp ved samordning ved funn av sykepenger, og løses ved info fra saksbehandler`() {
-        val fom = LocalDate.now().minusMonths(1)
-        val periode = Periode(fom, fom.plusYears(3))
-
-        val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
-
-        val person = TestPersoner.STANDARD_PERSON().medSykepenger(
-            listOf(
-                TestPerson.Sykepenger(
-                    grad = 50, periode = sykePengerPeriode
-                )
-            )
-        )
-        val ident = person.aktivIdent()
-        var revurdering = revurderingEtterVentPåSamordning(ident, periode, sykePengerPeriode)
-
-        // Verifiser at den er satt på vent
-        var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
-
-        assertThat(
-            åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
-
-        // Opprett manuell revurdering før ta av vent
-        revurdering = sendInnDokument(
-            ident, DokumentMottattPersonHendelse(
-                mottattTidspunkt = LocalDateTime.now(),
-                strukturertDokument = StrukturertDokument(
-                    ManuellRevurderingV0(
-                        årsakerTilBehandling = listOf(SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
-                        beskrivelse = "en begrunnelse",
-                    ),
-                ),
-                journalpost = JournalpostId("121321"),
-                innsendingType = InnsendingType.MANUELL_REVURDERING,
-                periode = periode,
-            )
-        )
-        assertThat(revurdering.årsaker().map { it.type }).describedAs("Ny årsak skal være lagt til")
-            .contains(ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
-
-        // Ta av vent
-        revurdering = løsAvklaringsBehov(revurdering, SamordningVentPaVirkningstidspunktLøsning())
-
-        assertThat(revurdering.aktivtSteg()).describedAs("Forventer at behandlingen ligger på sykdom nå.")
-            .isEqualTo(StegType.AVKLAR_SYKDOM)
-
-        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
-        assertThat(åpneAvklaringsbehovPåNyBehandling.filter { it.erVentepunkt() }).isEmpty()
-
-        assertThat(åpneAvklaringsbehovPåNyBehandling).describedAs("Sykdom skal være åpent avklaringsbehov.")
-            .extracting(Avklaringsbehov::definisjon).contains(tuple(Definisjon.AVKLAR_SYKDOM))
-
-        // Prøve å løse sykdomsvilkåret på nytt
-        revurdering = revurdering.løsSykdom()
-        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
-        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_SYKDOM)
-        assertThat(
-            åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.AVKLAR_BISTANDSBEHOV)
-    }
-
-    @Test
-    fun `ny informasjon i tidligere steg skal tilbakeføre behandling som er på vent pga samordning`() {
-        val fom = LocalDate.now().minusYears(1)
-        val periode = Periode(fom, fom.plusYears(3))
-
-        val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
-
-        var person = TestPersoner.STANDARD_PERSON().medSykepenger(
-            listOf(
-                TestPerson.Sykepenger(
-                    grad = 50, periode = sykePengerPeriode
-                )
-            )
-        )
-        val ident = person.aktivIdent()
-        var revurdering = revurderingEtterVentPåSamordning(ident, periode, sykePengerPeriode)
-
-        // Verifiser at den er satt på vent
-        var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
-        assertThat(
-            åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
-
-        // Nytt institusjonsopphold
-        person.institusjonsopphold = listOf(InstitusjonsoppholdJSON(
-            startdato = LocalDate.now().minusMonths(5),
-            forventetSluttdato = LocalDate.now().plusMonths(4),
-            institusjonstype = "FO",
-            institusjonsnavn = "institusjon",
-            organisasjonsnummer = "2334",
-            kategori = "S",
-        ))
-
-
-        // prosesser på nytt
-        nullstillInformasjonskravOppdatert(InformasjonskravNavn.INSTITUSJONSOPPHOLD, revurdering.sakId)
-        revurdering = prosesserBehandling(revurdering)
-        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
-
-        // Behandlingen tilbakeføres til EtAnnetStedSteg
-        assertThat(revurdering.aktivtSteg()).isEqualTo(StegType.DU_ER_ET_ANNET_STED)
-        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.AVKLAR_SONINGSFORRHOLD)
-    }
-
-
-    // Sletter tidligere informasjonskrav-oppdateringer for å slippe unna at den ikke skal sjekke på nytt før en time har gått
-    private fun nullstillInformasjonskravOppdatert(informasjonskravnavn: InformasjonskravNavn, sakId: SakId) {
-        dataSource.transaction { connection ->
-            connection.execute(
-                """
-                    delete from informasjonskrav_oppdatert where informasjonskrav = ? and sak_id = ?
-                """
-            ) {
-                setParams {
-                    setEnumName(1, informasjonskravnavn)
-                    setLong(2, sakId.id)
-                }
-            }
-        }
-    }
-
-    private fun revurderingEtterVentPåSamordning(ident: Ident, periode: Periode, sykePengerPeriode: Periode): Behandling {
-        // Sender inn en søknad
-        var behandling = sendInnDokument(
-            ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId("20"),
-                mottattTidspunkt = LocalDateTime.now().minusMonths(0),
-                strukturertDokument = StrukturertDokument(
-                    SøknadV0(
-                        student = SøknadStudentDto("NEI"),
-                        yrkesskade = "NEI",
-                        oppgitteBarn = null,
-                        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-                    ),
-                ),
-                periode = periode
-            )
-        )
-        assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-
-        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-
-        assertThat(alleAvklaringsbehov).isNotEmpty()
-        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-
-        behandling = behandling.løsSykdom().løsAvklaringsBehov(
-            AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingLøsningDto(
-                    begrunnelse = "Trenger hjelp fra nav",
-                    erBehovForAktivBehandling = true,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null
-                ),
-            ),
-        ).løsAvklaringsBehov(
-            RefusjonkravLøsning(
-                listOf(RefusjonkravVurderingDto(
-                    harKrav = true, fom = LocalDate.now(), tom = null, navKontor = "",
-                ))
-            )
-        ).løsAvklaringsBehov(
-            avklaringsBehovLøsning = FritakMeldepliktLøsning(
-                fritaksvurderinger = listOf(
-                    FritaksvurderingDto(
-                        harFritak = true,
-                        fraDato = periode.fom,
-                        begrunnelse = "...",
-                    )
-                ),
-            ),
-        ).kvalitetssikreOk()
-            .løsAvklaringsBehov(
-                FastsettBeregningstidspunktLøsning(
-                    beregningVurdering = BeregningstidspunktVurderingDto(
-                        begrunnelse = "Trenger hjelp fra Nav",
-                        nedsattArbeidsevneDato = LocalDate.now(),
-                        ytterligereNedsattArbeidsevneDato = null,
-                        ytterligereNedsattBegrunnelse = null
-                    ),
-                ),
-            )
-
-        løsForutgåendeMedlemskap(behandling)
-        assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).containsExactly(Definisjon.AVKLAR_SAMORDNING_GRADERING)
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            AvklarSamordningGraderingLøsning(
-                vurderingerForSamordning = VurderingerForSamordning(
-                    vurderteSamordningerData = listOf(
-                        SamordningVurderingData(
-                            ytelseType = Ytelse.SYKEPENGER,
-                            periode = sykePengerPeriode,
-                            gradering = 100,
-                            kronesum = null,
-                        )
-                    ),
-                    begrunnelse = "En god begrunnelse",
-                    maksDatoEndelig = false,
-                    fristNyRevurdering = LocalDate.now().plusMonths(1),
-                ),
-            ),
-        )
-        assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).isEqualTo(listOf(Definisjon.FORESLÅ_VEDTAK))
-
-        behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
-        behandling = fattVedtak(behandling)
-
-        val uthentetTilkjentYtelse =
-            requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) }) { "Tilkjent ytelse skal være beregnet her." }
-
-        val periodeMedFullSamordning =
-            uthentetTilkjentYtelse.map { Segment(it.periode, it.tilkjent.gradering.samordningGradering) }
-                .let(::Tidslinje)
-                .filter { it.verdi == Prosent.`100_PROSENT` }.helePerioden()
-
-        // Verifiser at samordningen ble fanget opp
-        assertThat(periodeMedFullSamordning.inneholder(sykePengerPeriode.tom)).isTrue
-        // Verifiser at samordning med 100% strekker seg ut rettighetsperioden for å unngå feilaktig utbetaling fordi perioden har passert
-        assertThat(periodeMedFullSamordning.tom).isEqualTo(periode.tom)
-
-        val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
-
-        løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
-
-        val nyesteBehandling = hentNyesteBehandlingForSak(behandling.sakId)
-        val behandlingReferanse = behandling.referanse
-
-        // Siden samordning overlappet, skal en revurdering opprettes med en gang
-        assertThat(nyesteBehandling.referanse).isNotEqualTo(behandlingReferanse)
-        assertThat(nyesteBehandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-
-        util.ventPåSvar(sakId = behandling.sakId.id)
-        return nyesteBehandling
-    }
-
-    @Test
     fun `ved avslag på 11-5 hoppes det rett til beslutter-steget`() {
         val fom = LocalDate.now().minusMonths(3)
         val periode = Periode(fom, fom.plusYears(3))
@@ -1749,12 +1116,14 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                listOf(RefusjonkravVurderingDto(
-                    harKrav = true,
-                    fom = LocalDate.now(),
-                    tom = null,
-                    navKontor = "",
-                ))
+                listOf(
+                    RefusjonkravVurderingDto(
+                        harKrav = true,
+                        fom = LocalDate.now(),
+                        tom = null,
+                        navKontor = "",
+                    )
+                )
             )
         )
 
@@ -1901,7 +1270,7 @@ class FlytOrkestratorTest {
         var alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         assertThat(alleAvklaringsbehov).isNotEmpty()
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-        
+
         behandling = løsAvklaringsBehov(
             behandling, AvklarSykdomLøsning(
                 sykdomsvurderinger = listOf(
@@ -1939,17 +1308,19 @@ class FlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                listOf(RefusjonkravVurderingDto(
-                    harKrav = true,
-                    fom = LocalDate.now(),
-                    tom = null,
-                    navKontor = "",
-                ))
+                listOf(
+                    RefusjonkravVurderingDto(
+                        harKrav = true,
+                        fom = LocalDate.now(),
+                        tom = null,
+                        navKontor = "",
+                    )
+                )
             )
         )
 
         behandling = kvalitetssikreOk(behandling)
-        
+
         behandling = løsAvklaringsBehov(
             behandling,
             AvklarYrkesskadeLøsning(
@@ -1975,27 +1346,29 @@ class FlytOrkestratorTest {
         )
 
         løsForutgåendeMedlemskap(behandling)
-        behandling = løsAvklaringsBehov(behandling, AvklarSamordningGraderingLøsning(
-            VurderingerForSamordning(
-                begrunnelse = "Sykepengervurdering",
-                maksDatoEndelig = true,
-                fristNyRevurdering = null,
-                vurderteSamordningerData = listOf(
-                    SamordningVurderingData(
-                        ytelseType = Ytelse.SYKEPENGER,
-                        periode = Periode(
-                            fom = LocalDate.now(),
-                            tom = LocalDate.now().plusDays(5),
-                        ),
-                        gradering = 50,
-                        manuell = true
-                    )
-                ),
+        behandling = løsAvklaringsBehov(
+            behandling, AvklarSamordningGraderingLøsning(
+                VurderingerForSamordning(
+                    begrunnelse = "Sykepengervurdering",
+                    maksDatoEndelig = true,
+                    fristNyRevurdering = null,
+                    vurderteSamordningerData = listOf(
+                        SamordningVurderingData(
+                            ytelseType = Ytelse.SYKEPENGER,
+                            periode = Periode(
+                                fom = LocalDate.now(),
+                                tom = LocalDate.now().plusDays(5),
+                            ),
+                            gradering = 50,
+                            manuell = true
+                        )
+                    ),
+                )
             )
-        ))
+        )
 
         behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
-        
+
         // Beslutter godkjenner ikke samordning gradering
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         behandling = løsAvklaringsBehov(
@@ -3773,13 +3146,13 @@ class FlytOrkestratorTest {
                 )
             )
         )
-        
+
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(svarFraAndreinstansBehandling.id)
         assertThat(åpneAvklaringsbehov).isEmpty()
         assertThat(svarFraAndreinstansBehandling.status()).isEqualTo(Status.AVSLUTTET)
-        
+
         util.ventPåSvar(sakId = svarFraAndreinstansBehandling.sakId.id)
-        
+
         val revurdering = hentNyesteBehandlingForSak(svarFraAndreinstansBehandling.sakId)
         assertThat(revurdering).isNotNull
         assertThat(revurdering.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
@@ -3828,415 +3201,5 @@ class FlytOrkestratorTest {
                 nyStartDato.plusYears(1).minusDays(1)
             )
         )
-    }
-
-    /**
-     * Løser avklaringsbehov og venter på svar vha [util].
-     */
-    private fun løsAvklaringsBehov(
-        behandling: Behandling,
-        avklaringsBehovLøsning: AvklaringsbehovLøsning,
-        bruker: Bruker = Bruker("SAKSBEHANDLER"),
-        ingenEndringIGruppe: Boolean = false
-    ): Behandling {
-        dataSource.transaction {
-            AvklaringsbehovHendelseHåndterer(
-                AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(it)),
-                AvklaringsbehovRepositoryImpl(it),
-                BehandlingRepositoryImpl(it),
-            ).håndtere(
-                behandling.id, LøsAvklaringsbehovHendelse(
-                    løsning = avklaringsBehovLøsning,
-                    behandlingVersjon = behandling.versjon,
-                    bruker = bruker,
-                    ingenEndringIGruppe = ingenEndringIGruppe
-                )
-            )
-        }
-        util.ventPåSvar(behandling.sakId.id, behandling.id.id)
-        return hentBehandling(behandling.referanse)
-    }
-
-    @JvmName("løsAvklaringsBehovExt")
-    private fun Behandling.løsAvklaringsBehov(
-        avklaringsBehovLøsning: AvklaringsbehovLøsning,
-        bruker: Bruker = Bruker("SAKSBEHANDLER"),
-        ingenEndringIGruppe: Boolean = false
-    ): Behandling {
-        return løsAvklaringsBehov(
-            this,
-            avklaringsBehovLøsning = avklaringsBehovLøsning,
-            bruker = bruker,
-            ingenEndringIGruppe = ingenEndringIGruppe
-        )
-    }
-
-    private fun løsFramTilGrunnlag(behandling: Behandling) {
-        var behandling = behandling
-        behandling = løsSykdom(behandling)
-        behandling = løsAvklaringsBehov(
-            behandling,
-            AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingLøsningDto(
-                    begrunnelse = "Trenger hjelp fra nav",
-                    erBehovForAktivBehandling = true,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null
-                ),
-            ),
-        )
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            RefusjonkravLøsning(
-                listOf(RefusjonkravVurderingDto(
-                    harKrav = true,
-                    fom = LocalDate.now(),
-                    tom = null,
-                    navKontor = "",
-                ))
-            )
-        )
-        kvalitetssikreOk(behandling)
-    }
-
-    private fun løsSykdom(behandling: Behandling): Behandling {
-        return løsAvklaringsBehov(
-            behandling,
-            AvklarSykdomLøsning(
-                sykdomsvurderinger = listOf(
-                    SykdomsvurderingLøsningDto(
-                        begrunnelse = "Er syk nok",
-                        dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
-                        harSkadeSykdomEllerLyte = true,
-                        erSkadeSykdomEllerLyteVesentligdel = true,
-                        erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                        erArbeidsevnenNedsatt = true,
-                        yrkesskadeBegrunnelse = null,
-                        vurderingenGjelderFra = null,
-                    )
-                )
-            ),
-        )
-    }
-
-
-    @JvmName("løsSykdomExt")
-    private fun Behandling.løsSykdom(): Behandling {
-        return løsSykdom(this)
-    }
-
-    private fun hentSak(ident: Ident, periode: Periode): Sak {
-        return dataSource.transaction { connection ->
-            SakRepositoryImpl(connection).finnEllerOpprett(
-                PersonRepositoryImpl(connection).finnEllerOpprett(listOf(ident)),
-                periode
-            )
-        }
-    }
-
-    private fun opprettBehandling(
-        sakId: SakId,
-        årsaker: List<Årsak>,
-        typeBehandling: TypeBehandling,
-        forrigeBehandlingId: BehandlingId?
-    ): Behandling {
-        return dataSource.transaction { connection ->
-            BehandlingRepositoryImpl(connection).opprettBehandling(
-                forrigeBehandlingId = forrigeBehandlingId,
-                sakId = sakId,
-                typeBehandling = typeBehandling,
-                årsaker = årsaker
-            )
-        }
-    }
-
-    private fun hentVilkårsresultat(behandlingId: BehandlingId): Vilkårsresultat {
-        return dataSource.transaction(readOnly = true) { connection ->
-            VilkårsresultatRepositoryImpl(connection).hent(behandlingId)
-        }
-    }
-
-    private fun hentNyesteBehandlingForSak(
-        sakId: SakId,
-        typeBehandling: List<TypeBehandling> = TypeBehandling.entries
-
-    ): Behandling {
-        return dataSource.transaction(readOnly = true) { connection ->
-            val finnSisteBehandlingFor = BehandlingRepositoryImpl(connection).finnSisteBehandlingFor(
-                sakId,
-                typeBehandling
-            )
-            requireNotNull(finnSisteBehandlingFor)
-        }
-    }
-
-    private fun hentBehandling(behandlingReferanse: BehandlingReferanse): Behandling {
-        return dataSource.transaction(readOnly = true) { connection ->
-            val behandling = BehandlingRepositoryImpl(connection).hent(behandlingReferanse)
-            requireNotNull(behandling)
-        }
-    }
-
-    private fun hentVedtak(behandlingId: BehandlingId): Vedtak {
-        return dataSource.transaction(readOnly = true) { connection ->
-            val vedtak = VedtakRepositoryImpl(connection).hent(behandlingId)
-            requireNotNull(vedtak)
-        }
-    }
-
-    private fun hentStegHistorikk(behandlingId: BehandlingId): List<StegTilstand> {
-        return dataSource.transaction(readOnly = true) { connection ->
-            BehandlingRepositoryImpl(connection).hentStegHistorikk(behandlingId)
-        }
-    }
-
-    private fun hentÅpneAvklaringsbehov(behandling: Behandling): List<Avklaringsbehov> {
-        return hentÅpneAvklaringsbehov(behandling.id)
-    }
-
-    private fun hentÅpneAvklaringsbehov(behandlingId: BehandlingId): List<Avklaringsbehov> {
-        return dataSource.transaction(readOnly = true) {
-            AvklaringsbehovRepositoryImpl(it).hentAvklaringsbehovene(
-                behandlingId
-            ).åpne()
-        }
-    }
-
-    private fun hentAlleAvklaringsbehov(behandling: Behandling): List<Avklaringsbehov> {
-        return dataSource.transaction(readOnly = true) {
-            AvklaringsbehovRepositoryImpl(it).hentAvklaringsbehovene(
-                behandling.id
-            ).alle()
-        }
-    }
-
-    private fun sendInnSøknad(ident: Ident, periode: Periode, søknad: Søknad): Behandling {
-        return sendInnDokument(
-            ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId(Random().nextInt(1000000).toString()),
-                mottattTidspunkt = LocalDateTime.now(),
-                strukturertDokument = StrukturertDokument(søknad),
-                periode = periode
-            )
-        )
-    }
-
-    private fun sendInnDokument(
-        ident: Ident,
-        dokumentMottattPersonHendelse: DokumentMottattPersonHendelse
-    ): Behandling {
-        hendelsesMottak.håndtere(ident, dokumentMottattPersonHendelse)
-        util.ventPåSvar()
-        val sak = hentSak(ident, dokumentMottattPersonHendelse.periode)
-        val behandling = hentNyesteBehandlingForSak(sak.id)
-        return behandling
-    }
-
-    private fun sendInnDokument(
-        ident: Ident,
-        hendelse: NyÅrsakTilBehandlingHendelse
-    ): Behandling {
-        hendelsesMottak.håndtere(ident, hendelse)
-        util.ventPåSvar()
-        return hentBehandling(hendelse.referanse.asBehandlingReferanse)
-    }
-
-    private fun hentBrevAvType(behandling: Behandling, typeBrev: TypeBrev) =
-        dataSource.transaction(readOnly = true) {
-            BrevbestillingRepositoryImpl(it).hent(behandling.id)
-                .first { it.typeBrev == typeBrev }
-        }
-
-    private fun løsForutgåendeMedlemskap(
-        behandling: Behandling
-    ) {
-        løsAvklaringsBehov(
-            behandling,
-            AvklarForutgåendeMedlemskapLøsning(
-                ManuellVurderingForForutgåendeMedlemskapDto(
-                    begrunnelse = "",
-                    harForutgåendeMedlemskap = true,
-                    varMedlemMedNedsattArbeidsevne = true,
-                    medlemMedUnntakAvMaksFemAar = null
-                )
-            )
-        )
-    }
-
-    private fun løsFramTilForutgåendeMedlemskap(
-        behandling: Behandling,
-        harYrkesskade: Boolean = false,
-    ) {
-        var behandling = behandling
-        behandling = løsSykdom(behandling)
-        behandling = løsAvklaringsBehov(
-            behandling,
-            AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingLøsningDto(
-                    begrunnelse = "Trenger hjelp fra nav",
-                    erBehovForAktivBehandling = true,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null
-                ),
-            ),
-        )
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            RefusjonkravLøsning(
-                listOf(RefusjonkravVurderingDto(
-                    harKrav = true,
-                    fom = LocalDate.now(),
-                    tom = null,
-                    navKontor = "",
-                ))
-            )
-        )
-
-        behandling = kvalitetssikreOk(behandling)
-
-        if (harYrkesskade) {
-            behandling = løsAvklaringsBehov(
-                behandling,
-                AvklarYrkesskadeLøsning(
-                    yrkesskadesvurdering = YrkesskadevurderingDto(
-                        begrunnelse = "",
-                        relevanteSaker = listOf(),
-                        andelAvNedsettelsen = null,
-                        erÅrsakssammenheng = true
-                    )
-                ),
-            )
-        }
-
-        løsAvklaringsBehov(
-            behandling,
-            FastsettBeregningstidspunktLøsning(
-                beregningVurdering = BeregningstidspunktVurderingDto(
-                    begrunnelse = "Trenger hjelp fra Nav",
-                    nedsattArbeidsevneDato = LocalDate.now(),
-                    ytterligereNedsattArbeidsevneDato = null,
-                    ytterligereNedsattBegrunnelse = null
-                ),
-            ),
-        )
-    }
-
-    private fun kvalitetssikreOk(
-        behandling: Behandling,
-        bruker: Bruker = Bruker("KVALITETSSIKRER")
-    ): Behandling {
-        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        return løsAvklaringsBehov(
-            behandling,
-            KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() }.map { behov ->
-                TotrinnsVurdering(
-                    behov.definisjon.kode, true, "begrunnelse", emptyList()
-                )
-            }),
-            bruker,
-        )
-    }
-
-    @JvmName("kvalitetssikreOkExt")
-    private fun Behandling.kvalitetssikreOk(bruker: Bruker = Bruker("KVALITETSSIKRER")): Behandling {
-        return kvalitetssikreOk(this, bruker)
-    }
-
-    private fun fattVedtak(behandling: Behandling): Behandling = løsAvklaringsBehov(
-        behandling,
-        FatteVedtakLøsning(hentAlleAvklaringsbehov(behandling).filter { behov -> behov.erTotrinn() }.map { behov ->
-            TotrinnsVurdering(
-                behov.definisjon.kode, true, "begrunnelse", null
-            )
-        }),
-        Bruker("BESLUTTER")
-    )
-
-
-    private fun nyPerson(
-        harYrkesskade: Boolean,
-        harUtenlandskOpphold: Boolean,
-        inntekter: MutableList<InntektPerÅr>? = null
-    ): Ident {
-        val ident = ident()
-        val person = TestPerson(
-            identer = setOf(ident),
-            inntekter = inntekter ?: defaultInntekt(),
-            statsborgerskap = if (harUtenlandskOpphold) listOf(
-                PdlStatsborgerskap(
-                    "MAC",
-                    LocalDate.now().minusYears(5),
-                    LocalDate.now()
-                )
-            )
-            else listOf(PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), LocalDate.now())),
-            yrkesskade = if (harYrkesskade) listOf(TestYrkesskade()) else emptyList(),
-            personStatus = if (!harUtenlandskOpphold) listOf(
-                PdlFolkeregisterPersonStatus(
-                    PersonStatus.bosatt,
-                    PdlFolkeregistermetadata(
-                        LocalDateTime.now(),
-                        LocalDateTime.now().plusYears(2)
-                    )
-                )
-            ) else listOf(
-                PdlFolkeregisterPersonStatus(
-                    PersonStatus.bosatt,
-                    PdlFolkeregistermetadata(
-                        LocalDateTime.now(),
-                        LocalDateTime.now().plusYears(2)
-                    )
-                ),
-                PdlFolkeregisterPersonStatus(
-                    PersonStatus.ikkeBosatt,
-                    PdlFolkeregistermetadata(
-                        LocalDateTime.now().minusYears(5),
-                        LocalDateTime.now().minusYears(2)
-                    )
-                )
-            )
-        )
-        FakePersoner.leggTil(person)
-        return ident
-    }
-
-    private fun vedtaksbrevLøsning(brevbestillingReferanse: UUID): AvklaringsbehovLøsning {
-        return SkrivVedtaksbrevLøsning(
-            brevbestillingReferanse = brevbestillingReferanse,
-            handling = SkrivBrevAvklaringsbehovLøsning.Handling.FERDIGSTILL
-        )
-    }
-
-    private fun leggTilÅrsakForBehandling(behandling: Behandling, årsaker: List<Årsak>) {
-        dataSource.transaction { connection ->
-            SakOgBehandlingService(postgresRepositoryRegistry.provider(connection))
-                .finnEllerOpprettBehandling(behandling.sakId, årsaker)
-        }
-        prosesserBehandling(behandling)
-    }
-
-    private fun prosesserBehandling(behandling: Behandling): Behandling {
-        dataSource.transaction { connection ->
-            FlytOrkestrator(postgresRepositoryRegistry.provider(connection)).forberedOgProsesserBehandling(
-                FlytKontekst(
-                    sakId = behandling.sakId,
-                    behandlingId = behandling.id,
-                    forrigeBehandlingId = behandling.forrigeBehandlingId,
-                    behandlingType = behandling.typeBehandling(),
-                ),
-            )
-        }
-        util.ventPåSvar(behandling.sakId.id, behandling.id.id)
-        return hentBehandling(behandling.referanse)
     }
 }
