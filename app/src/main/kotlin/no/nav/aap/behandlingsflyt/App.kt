@@ -75,6 +75,7 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
 import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
+import no.nav.aap.behandlingsflyt.integrasjon.oppgave.GosysGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
@@ -255,6 +256,7 @@ private fun registerGateways() {
         .register<NomInfoGateway>()
         .register<NorgGateway>()
         .register<KabalGateway>()
+        .register<GosysGateway>()
         .status()
 }
 

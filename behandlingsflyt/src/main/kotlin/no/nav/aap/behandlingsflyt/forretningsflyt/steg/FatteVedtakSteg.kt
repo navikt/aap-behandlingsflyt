@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.klage.andreinstans.AndreinstansGateway
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -55,6 +56,7 @@ class FatteVedtakSteg(
             return FantAvklaringsbehov(Definisjon.FATTE_VEDTAK)
         }
 
+        gosysGateway.opprettOppgaveHvisIkkeEksisterer
         return Fullført
     }
 

@@ -176,6 +176,10 @@ spec:
       value: http://brev
     - name: INTEGRASJON_BREV_SCOPE
       value: api://prod-gcp.aap.brev/.default
+    - name: INTEGRASJON_GOSYS_URL
+    - value: https://oppgave.prod-fss-pub.nais.io
+    - name: INTEGRASJON_GOSYS_SCOPE
+    - value: api://prod-fss.oppgavehandtering.oppgave/.default
     - name: INTEGRASJON_MELDEKORT_URL
       value: http://meldekort-backend
     - name: INTEGRASJON_MELDEKORT_SCOPE
