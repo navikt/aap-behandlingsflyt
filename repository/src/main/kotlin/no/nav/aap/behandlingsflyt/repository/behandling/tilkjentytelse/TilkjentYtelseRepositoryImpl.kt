@@ -50,7 +50,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                         antallBarn = it.getInt("ANTALL_BARN"),
                         barnetilleggsats = Beløp(it.getInt("BARNETILLEGGSATS")),
                         grunnbeløp = Beløp(it.getInt("GRUNNBELOP")),
-                        utbetalingsdato = it.getLocalDate("UTBETALINGSDATO")
+                        utbetalingsdato = it.getLocalDate("UTBETALINGSDATO"),
                     )
                 )
             }
@@ -81,7 +81,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
             }
         }
         tilkjent.forEach { segment ->
-            lagrePeriode(tilkjentYtelseKey, segment.periode, segment.tilkjent)
+            lagrePeriode(tilkjentYtelseKey, segment.periode,segment.tilkjent)
         }
 
     }
