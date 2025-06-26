@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
@@ -31,6 +32,8 @@ class BeregnTilkjentYtelseSteg private constructor(
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val samordningRepository: SamordningRepository,
     private val samordningUføreRepository: SamordningUføreRepository,
+
+    private val meldeperiodeRepository: MeldeperiodeRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
 
@@ -41,6 +44,7 @@ class BeregnTilkjentYtelseSteg private constructor(
         barnetilleggRepository = repositoryProvider.provide(),
         tilkjentYtelseRepository = repositoryProvider.provide(),
         samordningRepository = repositoryProvider.provide(),
+        meldeperiodeRepository = repositoryProvider.provide(),
         samordningUføreRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
     )
@@ -78,6 +82,7 @@ class BeregnTilkjentYtelseSteg private constructor(
 
         return Fullført
     }
+
 
     companion object : FlytSteg {
         override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {

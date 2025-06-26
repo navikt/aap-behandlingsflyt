@@ -88,7 +88,8 @@ data class SamordningUføreGrunnlagDTO(
 
 data class SamordningUføreVurderingDTO(
     val begrunnelse: String,
-    val vurderingPerioder: List<SamordningUføreVurderingPeriodeDTO>
+    val vurderingPerioder: List<SamordningUføreVurderingPeriodeDTO>,
+    val vurdertAv: VurdertAvResponse
 )
 
 data class SamordningUføreVurderingPeriodeDTO(
@@ -388,7 +389,9 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
 
 private fun mapSamordningUføreVurdering(vurdering: SamordningUføreVurdering?): SamordningUføreVurderingDTO? =
     vurdering?.let {
-        SamordningUføreVurderingDTO(
+        val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv)
+
+        return SamordningUføreVurderingDTO(
             begrunnelse = it.begrunnelse,
             vurderingPerioder =
                 it.vurderingPerioder.map { periode ->
@@ -396,7 +399,15 @@ private fun mapSamordningUføreVurdering(vurdering: SamordningUføreVurdering?):
                         periode.virkningstidspunkt,
                         periode.uføregradTilSamordning.prosentverdi()
                     )
-                }
+                },
+            vurdertAv = VurdertAvResponse(
+                ident = it.vurdertAv,
+                dato = requireNotNull(it.vurdertTidspunkt?.toLocalDate()) {
+                    "Fant ikke vurderingstidspunkt for samordning uføre"
+                },
+                ansattnavn = navnOgEnhet?.navn,
+                enhetsnavn = navnOgEnhet?.enhet
+            )
         )
     }
 
