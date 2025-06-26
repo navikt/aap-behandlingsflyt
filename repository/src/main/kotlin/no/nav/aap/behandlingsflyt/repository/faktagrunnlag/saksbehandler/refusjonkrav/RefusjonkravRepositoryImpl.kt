@@ -147,9 +147,6 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
             setParams {
                 setLong(1, behandlingId.toLong())
             }
-            setResultValidator { rowsUpdated ->
-                require(rowsUpdated == 1)
-            }
         }
     }
 
