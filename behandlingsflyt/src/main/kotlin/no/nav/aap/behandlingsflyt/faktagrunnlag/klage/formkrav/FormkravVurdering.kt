@@ -13,6 +13,10 @@ data class FormkravVurdering(
             && erFristOverholdt()
             && erKonkret
             && erSignert
+
+    fun erIkkeOppfylt() = !erOppfylt()
     
     fun erFristOverholdt() = erFristOverholdt || likevelBehandles == true
+
+    fun erFristIkkeOverholdt() = !erFristOverholdt()
 }

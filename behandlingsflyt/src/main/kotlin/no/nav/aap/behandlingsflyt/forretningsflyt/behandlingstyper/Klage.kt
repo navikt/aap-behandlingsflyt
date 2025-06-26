@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.BehandlendeEnhetSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.EffektuerAvvistPåFormkravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.FormkravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.FullmektigSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.KlagebehandlingKontorSteg
@@ -35,7 +34,6 @@ object Klage : BehandlingType {
             .medSteg(steg = PåklagetBehandlingSteg)
             .medSteg(steg = FullmektigSteg)
             .medSteg(steg = FormkravSteg)
-            .medSteg(steg = EffektuerAvvistPåFormkravSteg)
             .medSteg(steg = BehandlendeEnhetSteg)
             .medSteg(steg = KlagebehandlingKontorSteg)
             .medSteg(steg = KvalitetssikringsSteg)

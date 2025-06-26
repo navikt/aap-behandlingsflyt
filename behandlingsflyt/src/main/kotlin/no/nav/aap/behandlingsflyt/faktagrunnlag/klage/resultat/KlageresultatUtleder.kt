@@ -3,8 +3,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.effektueravvistpåformkrav.EffektuerAvvistPåFormkravRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.effektueravvistpåformkrav.EffektuerAvvistPåFormkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagebehandlingKontorRepository
@@ -14,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.Klageb
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagevurderingNay
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDate
 
 interface IKlageresultatUtleder {
     fun utledKlagebehandlingResultat(behandlingId: BehandlingId): KlageResultat
@@ -23,7 +22,6 @@ class KlageresultatUtleder(
     private val behandlendeEnhetRepository: BehandlendeEnhetRepository,
     private val klagebehandlingKontorRepository: KlagebehandlingKontorRepository,
     private val klagebehandlingNayRepository: KlagebehandlingNayRepository,
-    private val effektuerAvvistPåFormkravRepository: EffektuerAvvistPåFormkravRepository,
     private val trekkKlageService: TrekkKlageService
 ): IKlageresultatUtleder {
     constructor(repositoryProvider: RepositoryProvider) : this(
@@ -31,7 +29,6 @@ class KlageresultatUtleder(
         behandlendeEnhetRepository = repositoryProvider.provide(),
         klagebehandlingKontorRepository = repositoryProvider.provide(),
         klagebehandlingNayRepository = repositoryProvider.provide(),
-        effektuerAvvistPåFormkravRepository = repositoryProvider.provide(),
         trekkKlageService = TrekkKlageService(repositoryProvider)
     )
 
@@ -41,15 +38,14 @@ class KlageresultatUtleder(
         val behandlendeEnhet = behandlendeEnhetRepository.hentHvisEksisterer(behandlingId)
         val klagebehandlingVurderingKontor = klagebehandlingKontorRepository.hentHvisEksisterer(behandlingId)
         val klagebehandlingVurderingNay = klagebehandlingNayRepository.hentHvisEksisterer(behandlingId)
-        val effektuerAvvistPåFormkravRepository = effektuerAvvistPåFormkravRepository.hentHvisEksisterer(behandlingId)
 
         val innstilling = utledKlagebehandlingResultat(
             erKlageTrukket,
+            formkrav?.varsel?.svarfrist,
             formkrav?.vurdering,
             behandlendeEnhet?.vurdering,
             klagebehandlingVurderingNay?.vurdering,
             klagebehandlingVurderingKontor?.vurdering,
-            effektuerAvvistPåFormkravRepository?.vurdering
         )
         return innstilling
     }
@@ -57,11 +53,11 @@ class KlageresultatUtleder(
     companion object {
         fun utledKlagebehandlingResultat(
             erKlageTrukket: Boolean,
+            svarFrist: LocalDate?,
             formkravVurdering: FormkravVurdering?,
             behandlendeEnhetVurdering: BehandlendeEnhetVurdering?,
             klagebehandlingNayVurdering: KlagevurderingNay?,
             klagebehandlingKontorVurdering: KlagevurderingKontor?,
-            effektuerAvvistPåFormkravVurdering: EffektuerAvvistPåFormkravVurdering?
         ): KlageResultat {
             val manglerVurdering = manglerVurdering(
                 formkravVurdering,
@@ -74,18 +70,17 @@ class KlageresultatUtleder(
                         && (klagebehandlingKontorVurdering == null || klagebehandlingKontorVurdering.innstilling == KlageInnstilling.OMGJØR)
             val skalOpprettholdes =
                 (klagebehandlingNayVurdering == null || klagebehandlingNayVurdering.innstilling == KlageInnstilling.OPPRETTHOLD) && (klagebehandlingKontorVurdering == null || klagebehandlingKontorVurdering.innstilling == KlageInnstilling.OPPRETTHOLD)
-            val erInkonsistentFormkravVurdering =  erInkonsistentFormkravVurdering(
-                formkravVurdering,
-                effektuerAvvistPåFormkravVurdering
-            )
+
+            val formkravIkkeOppfylltFortsattInnenforSvarfrist = formkravVurdering?.erIkkeOppfylt() == true && svarFrist != null && svarFrist > LocalDate.now()
+            val formkravIkkeOppfylltOgEtterSvarfrist = formkravVurdering?.erIkkeOppfylt() == true && svarFrist != null && svarFrist <= LocalDate.now()
 
             return when {
                 erKlageTrukket -> Trukket
                 manglerVurdering -> Ufullstendig(ÅrsakTilUfullstendigResultat.MANGLER_VURDERING)
-                erInkonsistentFormkravVurdering -> Ufullstendig(ÅrsakTilUfullstendigResultat.INKONSISTENT_FORMKRAV_VURDERING)
                 formkravVurdering?.erFristOverholdt() == false -> Avslått(årsak = ÅrsakTilAvslag.IKKE_OVERHOLDT_FRIST)
-                effektuerAvvistPåFormkravVurdering?.skalEndeligAvvises == true -> Avslått(årsak = ÅrsakTilAvslag.IKKE_OVERHOLDT_FORMKRAV)
-                formkravVurdering?.erOppfylt() == false -> Ufullstendig(ÅrsakTilUfullstendigResultat.VENTER_PÅ_SVAR_FRA_BRUKER)
+
+                formkravIkkeOppfylltFortsattInnenforSvarfrist -> Ufullstendig(årsak = ÅrsakTilUfullstendigResultat.VENTER_PÅ_SVAR_FRA_BRUKER)
+                formkravIkkeOppfylltOgEtterSvarfrist -> Avslått(årsak = ÅrsakTilAvslag.IKKE_OVERHOLDT_FORMKRAV)
 
                 skalOmgjøres -> Omgjøres(
                     vilkårSomSkalOmgjøres = ((klagebehandlingNayVurdering?.vilkårSomOmgjøres
@@ -109,16 +104,6 @@ class KlageresultatUtleder(
 
 
             }
-        }
-
-        private fun erInkonsistentFormkravVurdering(
-            formkravVurdering: FormkravVurdering?,
-            effektuerAvvistPåFormkravVurdering: EffektuerAvvistPåFormkravVurdering?
-        ): Boolean {
-            if (formkravVurdering == null || effektuerAvvistPåFormkravVurdering == null) {
-                return false
-            }
-            return formkravVurdering.erOppfylt() == effektuerAvvistPåFormkravVurdering.skalEndeligAvvises
         }
 
         private fun manglerVurdering(

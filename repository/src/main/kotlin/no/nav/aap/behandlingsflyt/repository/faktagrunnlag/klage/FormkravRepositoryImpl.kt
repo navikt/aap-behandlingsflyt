@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage
 
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVarsel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -9,6 +11,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 
 class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRepository {
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -21,11 +24,12 @@ class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRep
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): FormkravGrunnlag? {
         val query = """
-            SELECT * FROM FORMKRAV_VURDERING
-            WHERE id IN (
-                SELECT vurdering_id FROM FORMKRAV_GRUNNLAG
-                WHERE BEHANDLING_ID = ? AND AKTIV = TRUE
-            )
+            SELECT * 
+            FROM formkrav_vurdering fv
+            LEFT JOIN formkrav_grunnlag fg ON fv.id = fg.vurdering_id
+            LEFT JOIN avvist_formkrav_varsel afv ON afv.behandling_id = fg.behandling_id
+            WHERE fg.aktiv = true AND fg.behandling_id = ?
+            
         """.trimIndent()
         return connection.queryFirstOrNull(query) {
             setParams {
@@ -42,11 +46,40 @@ class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRep
     override fun lagre(behandlingId: BehandlingId, formkravVurdering: FormkravVurdering) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val nyttGrunnlag = FormkravGrunnlag(vurdering = formkravVurdering)
+
         if (eksisterendeGrunnlag != nyttGrunnlag) {
             eksisterendeGrunnlag?.let {
                 deaktiverEksisterende(behandlingId)
             }
             lagre(behandlingId, nyttGrunnlag)
+        }
+    }
+
+    override fun lagreVarsel(behandlingId: BehandlingId, varsel: BrevbestillingReferanse) {
+        val query = """
+            INSERT INTO avvist_formkrav_varsel (behandling_id, brev_referanse) 
+            VALUES (?, ?)
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setUUID(2, varsel.brevbestillingReferanse)
+            }
+        }
+    }
+
+    override fun lagreFrist(behandlingId: BehandlingId, datoVarslet: LocalDate, svarfrist: LocalDate) {
+        val query = """
+            UPDATE avvist_formkrav_varsel SET dato_varslet=?, frist=? WHERE behandling_id=?
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setLocalDate(1, datoVarslet)
+                setLocalDate(2, svarfrist)
+                setLong(3, behandlingId.toLong())
+            }
         }
     }
 
@@ -132,7 +165,20 @@ class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRep
     private fun mapGrunnlag(row: Row): FormkravGrunnlag {
         return FormkravGrunnlag(
             vurdering = mapFormkravVurdering(row),
+            varsel = mapFormkravVarsel(row)
         )
+    }
+
+    private fun mapFormkravVarsel(row: Row): FormkravVarsel? {
+        var varselUuid = row.getUUIDOrNull("brev_referanse")
+
+        return varselUuid?.let {
+            FormkravVarsel(
+                varselId = BrevbestillingReferanse(varselUuid),
+                svarfrist = row.getLocalDateOrNull("frist"),
+                sendtDato = row.getLocalDateOrNull("dato_varslet")
+            )
+        }
     }
 
     private fun mapFormkravVurdering(row: Row): FormkravVurdering {

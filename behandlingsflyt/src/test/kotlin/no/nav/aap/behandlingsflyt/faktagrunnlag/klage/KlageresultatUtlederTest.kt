@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.klage
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.effektueravvistpåformkrav.EffektuerAvvistPåFormkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagevurderingKontor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
@@ -17,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.ÅrsakTilAvslag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.ÅrsakTilUfullstendigResultat
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 
 class KlageresultatUtlederTest {
 
@@ -33,7 +33,7 @@ class KlageresultatUtlederTest {
         )
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
-            false, formkravVurdering, null, null, null, null
+            false, LocalDate.now().plusWeeks(1), formkravVurdering, null, null, null
         )
 
         assertThat(klageresultat).isEqualTo(
@@ -52,70 +52,13 @@ class KlageresultatUtlederTest {
             vurdertAv = "Saksbehandler",
             likevelBehandles = null
         )
-        val effektuerAvvistPåFormkravVurdering = EffektuerAvvistPåFormkravVurdering(skalEndeligAvvises = true)
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
-            false, formkravVurdering, null, null, null, effektuerAvvistPåFormkravVurdering
+            false, LocalDate.now().minusWeeks(1), formkravVurdering, null, null, null
         )
 
         assertThat(klageresultat).isEqualTo(
             Avslått(årsak = ÅrsakTilAvslag.IKKE_OVERHOLDT_FORMKRAV)
-        )
-    }
-
-    @Test
-    fun `Skal gi inkonsistent resultat dersom formkrav ikke er oppfylt, men ikke skal effektueres`() {
-        val formkravVurdering = FormkravVurdering(
-            begrunnelse = "Ikke oppfylt",
-            erBrukerPart = false,
-            erFristOverholdt = true,
-            erKonkret = true,
-            erSignert = true,
-            vurdertAv = "Saksbehandler",
-            likevelBehandles = null
-        )
-        val effektuerAvvistPåFormkravVurdering = EffektuerAvvistPåFormkravVurdering(skalEndeligAvvises = false)
-
-        val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
-            false, formkravVurdering, null, null, null, effektuerAvvistPåFormkravVurdering
-        )
-
-        assertThat(klageresultat).isEqualTo(
-            Ufullstendig(årsak = ÅrsakTilUfullstendigResultat.INKONSISTENT_FORMKRAV_VURDERING)
-        )
-    }
-
-    @Test
-    fun `Skal gi inkonsistent resultat dersom formkrav er oppfylt, men avslag på forkrav skal effektueres`() {
-        val formkravVurdering = FormkravVurdering(
-            begrunnelse = "Oppfylt",
-            erBrukerPart = true,
-            erFristOverholdt = true,
-            erKonkret = true,
-            erSignert = true,
-            vurdertAv = "Saksbehandler",
-            likevelBehandles = null
-        )
-        val behandlendeEnhetVurdering = BehandlendeEnhetVurdering(
-            skalBehandlesAvKontor = false, skalBehandlesAvNay = true, vurdertAv = "Saksbehandler",
-        )
-        val nayVurdering = KlagevurderingNay(
-            innstilling = KlageInnstilling.OPPRETTHOLD,
-            vurdertAv = "Saksbehandler",
-            begrunnelse = "Opprettholdes",
-            vilkårSomOmgjøres = emptyList(),
-            vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
-            notat = null
-        )
-        
-        val effektuerAvvistPåFormkravVurdering = EffektuerAvvistPåFormkravVurdering(skalEndeligAvvises = true)
-
-        val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
-            false, formkravVurdering, behandlendeEnhetVurdering, nayVurdering, null, effektuerAvvistPåFormkravVurdering
-        )
-
-        assertThat(klageresultat).isEqualTo(
-            Ufullstendig(årsak = ÅrsakTilUfullstendigResultat.INKONSISTENT_FORMKRAV_VURDERING)
         )
     }
 
@@ -132,7 +75,7 @@ class KlageresultatUtlederTest {
         )
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
-            false, formkravVurdering, null, null, null, null
+            false, null, formkravVurdering, null, null, null
         )
 
         assertThat(klageresultat).isEqualTo(
@@ -158,7 +101,7 @@ class KlageresultatUtlederTest {
         )
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
-            false,oppfylteFormkrav, behandlendeEnhetVurdering, nayVurdering, null, null
+            false, null,oppfylteFormkrav, behandlendeEnhetVurdering, nayVurdering, null
         )
 
         assertThat(klageresultat).isEqualTo(
@@ -184,7 +127,7 @@ class KlageresultatUtlederTest {
         )
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
-            false, oppfylteFormkrav, behandlendeEnhetVurdering, nayVurdering, null, null
+            false, null,oppfylteFormkrav, behandlendeEnhetVurdering, nayVurdering, null
         )
 
         assertThat(klageresultat).isEqualTo(
@@ -213,7 +156,7 @@ class KlageresultatUtlederTest {
         )
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
-            false, oppfylteFormkrav, behandlendeEnhetVurdering, nayVurdering, null, null
+            false, null,oppfylteFormkrav, behandlendeEnhetVurdering, nayVurdering, null
         )
 
         assertThat(klageresultat).isEqualTo(
@@ -250,7 +193,7 @@ class KlageresultatUtlederTest {
         )
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
-            false, oppfylteFormkrav, behandlendeEnhetVurdering, nayVurdering, kontorVurdering, null
+            false, null, oppfylteFormkrav, behandlendeEnhetVurdering, nayVurdering, kontorVurdering
         )
         assertThat(klageresultat).isEqualTo(
             DelvisOmgjøres(
@@ -288,7 +231,7 @@ class KlageresultatUtlederTest {
         )
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
-            false, oppfylteFormkrav, behandlendeEnhetVurdering, nayVurdering, kontorVurdering, null
+            false,  null,oppfylteFormkrav, behandlendeEnhetVurdering, nayVurdering, kontorVurdering
         )
         assertThat(klageresultat).isEqualTo(
             DelvisOmgjøres(
@@ -313,7 +256,7 @@ class KlageresultatUtlederTest {
 
     @Test
     fun `Skal gi Ufullstendig dersom formkrav er oppfylt, men behandlendeEnhetVurdering mangler`() {
-        val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(false, oppfylteFormkrav, null, null, null, null)
+        val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(false, null, oppfylteFormkrav, null, null, null)
         assertThat(klageresultat).isEqualTo(Ufullstendig(ÅrsakTilUfullstendigResultat.MANGLER_VURDERING))
     }
 
@@ -336,7 +279,7 @@ class KlageresultatUtlederTest {
         )
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
-            false, oppfylteFormkrav, behandlendeEnhetVurdering, nayVurdering, null, null
+            false, null, oppfylteFormkrav, behandlendeEnhetVurdering, nayVurdering, null
         )
         assertThat(klageresultat).isEqualTo(Ufullstendig(ÅrsakTilUfullstendigResultat.MANGLER_VURDERING))
     }

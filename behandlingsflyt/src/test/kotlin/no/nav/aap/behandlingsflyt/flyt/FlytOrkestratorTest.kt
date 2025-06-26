@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykd
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BekreftTotalvurderingKlageLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.EffektuerAvvistPåFormkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBehandlendeEnhetLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettFullmektigLøsning
@@ -65,7 +64,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.flate.BehandlendeEnhetLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.effektueravvistpåformkrav.flate.EffektuerAvvistPåFormkravLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate.FormkravVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentMedType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentType
@@ -124,7 +123,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.EffektuerAvvistPåFormkravRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FormkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -3041,17 +3040,17 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
         assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
             .isEqualTo(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
 
-        val brevreferanse = dataSource.transaction {
-            val effektuerAvvistPåFormkravRepository = EffektuerAvvistPåFormkravRepositoryImpl(it)
-            effektuerAvvistPåFormkravRepository.hentHvisEksisterer(klagebehandling.id)?.varsel?.referanse
-
+        val formkravGrunnlag = dataSource.transaction {
+            val formkravRepository = FormkravRepositoryImpl(it)
+            formkravRepository.hentHvisEksisterer(klagebehandling.id)
         }
-        assertNotNull(brevreferanse)
+
+        assertNotNull(formkravGrunnlag?.varsel?.varselId)
 
         løsAvklaringsBehov(
             klagebehandling,
             avklaringsBehovLøsning = SkrivForhåndsvarselKlageFormkravBrevLøsning(
-                brevbestillingReferanse = brevreferanse.brevbestillingReferanse,
+                brevbestillingReferanse = formkravGrunnlag.varsel.varselId.brevbestillingReferanse,
                 handling = SkrivBrevAvklaringsbehovLøsning.Handling.FERDIGSTILL,
                 behovstype = Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV.kode,
             )
@@ -3069,7 +3068,7 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
 
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
-            .isEqualTo(Definisjon.EFFEKTUER_AVVIST_PÅ_FORMKRAV)
+            .isEqualTo(Definisjon.VURDER_FORMKRAV)
 
         // Går manuelt tilbake til formkrav fordi nye opplysninger gir oppfylt
         løsAvklaringsBehov(
@@ -3086,12 +3085,17 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
             )
         )
 
-        // Sier at behandlingen ikke skal avvises på formkrav allikevel
+        // Sier at formkrav nå er oppfyllt
         løsAvklaringsBehov(
             klagebehandling,
-            avklaringsBehovLøsning = EffektuerAvvistPåFormkravLøsning(
-                EffektuerAvvistPåFormkravLøsningDto(
-                    skalEndeligAvvises = false
+            avklaringsBehovLøsning = VurderFormkravLøsning(
+                formkravVurdering = FormkravVurderingLøsningDto(
+                    begrunnelse = "begrunnelse",
+                    erBrukerPart = true,
+                    erFristOverholdt = true,
+                    erSignert = true,
+                    erKonkret = true,
+                    likevelBehandles = null
                 )
             )
         )
@@ -3158,7 +3162,7 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
 
         // Sjekk at avklaringsbehov er blitt gjenåpnet
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(5)
+        assertThat(åpneAvklaringsbehov).hasSize(4)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
         assertThat(åpneAvklaringsbehov.first().status()).isEqualTo(AvklaringsbehovStatus.SENDT_TILBAKE_FRA_BESLUTTER)
     }
