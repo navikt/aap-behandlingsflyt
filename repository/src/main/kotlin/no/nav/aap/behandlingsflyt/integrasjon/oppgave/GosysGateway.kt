@@ -1,7 +1,8 @@
 package no.nav.aap.behandlingsflyt.integrasjon.oppgave
 
-import no.nav.aap.behandlingsflyt.behandling.klage.andreinstans.AndreinstansGateway
-import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
+import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OppgaveGateway
+import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OpprettOppgaveRequest
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.gateway.Gateway
@@ -17,7 +18,7 @@ import org.slf4j.LoggerFactory
 import java.net.URI
 import kotlin.jvm.javaClass
 
-class GosysGateway : Gateway{
+class GosysGateway : OppgaveGateway {
 
     companion object : Factory<Gateway> {
         override fun konstruer(): Gateway {
@@ -35,7 +36,7 @@ class GosysGateway : Gateway{
         tokenProvider = ClientCredentialsTokenProvider,
     )
 
-    fun opprettOppgaveHvisIkkeEksisterer(oppgaveRequest: OpprettOppgaveRequest, bestillingReferanse: String) {
+    override fun opprettOppgaveHvisIkkeEksisterer(oppgaveRequest: OpprettOppgaveRequest, bestillingReferanse: String, behandlingId: BehandlingId) {
         val oppgaver = finnOppgaverForJournalpost(
             JournalpostId(oppgaveRequest.journalpostId),
             listOf(Oppgavetype.JOURNALFØRING, Oppgavetype.FORDELING),

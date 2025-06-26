@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
+import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.GosysService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
@@ -35,6 +36,7 @@ class FatteVedtakStegTest {
     val klageresultatUtleder = mockk<KlageresultatUtleder>()
     val tidligereVurderinger = mockk<TidligereVurderinger>()
     val trekkKlageService = mockk<TrekkKlageService>()
+    val gosysService = mockk<GosysService>()
 
     @BeforeEach
     fun setup() {
@@ -77,7 +79,8 @@ class FatteVedtakStegTest {
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
             tidligereVurderinger = tidligereVurderinger,
             klageresultatUtleder = klageresultatUtleder,
-            trekkKlageService = trekkKlageService
+            trekkKlageService = trekkKlageService,
+            gosysService = gosysService
         )
 
         val resultat = steg.utfør(kontekst)
@@ -121,7 +124,8 @@ class FatteVedtakStegTest {
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
             tidligereVurderinger = tidligereVurderinger,
             klageresultatUtleder = klageresultatUtleder,
-            trekkKlageService = trekkKlageService
+            trekkKlageService = trekkKlageService,
+            gosysService = gosysService
         )
 
         val resultat = steg.utfør(kontekst)
@@ -164,7 +168,8 @@ class FatteVedtakStegTest {
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
             tidligereVurderinger = tidligereVurderinger,
             klageresultatUtleder = klageresultatUtleder,
-            trekkKlageService = trekkKlageService
+            trekkKlageService = trekkKlageService,
+            gosysService = gosysService
         )
 
         val resultat = steg.utfør(kontekst)

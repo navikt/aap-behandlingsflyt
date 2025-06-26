@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.integrasjon.oppgave
+package no.nav.aap.behandlingsflyt.behandling.gosysoppgave
 
 import java.time.LocalDate
 import java.time.LocalDateTime
