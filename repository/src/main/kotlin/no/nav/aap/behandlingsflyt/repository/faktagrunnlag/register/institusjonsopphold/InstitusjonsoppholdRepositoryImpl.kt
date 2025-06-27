@@ -1,8 +1,14 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.*
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Helseoppholdvurderinger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdene
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Soningsvurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -98,7 +104,23 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
             }
         }.toList()
 
-        return Soningsvurderinger(id = soningsvurderingerId, vurderinger = vurderingene)
+        return connection.queryFirst(
+            """
+            SELECT * FROM SONING_VURDERINGER WHERE ID = ?
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, soningsvurderingerId)
+            }
+            setRowMapper { row ->
+                Soningsvurderinger(
+                    id = soningsvurderingerId,
+                    vurderinger = vurderingene,
+                    vurdertAv = row.getString("VURDERT_AV"),
+                    vurdertTidspunkt = row.getLocalDateTime("OPPRETTET_TID")
+                )
+            }
+        }
     }
 
     private fun hentHelseoppholdvurderinger(helseoppholdId: Long?): Helseoppholdvurderinger? {
@@ -120,7 +142,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                     faarFriKostOgLosji = row.getBoolean("KOST_OG_LOSJI"),
                     forsoergerEktefelle = row.getBooleanOrNull("FORSORGER_EKTEFELLE"),
                     harFasteUtgifter = row.getBooleanOrNull("FASTE_UTGIFTER"),
-                    periode = row.getPeriode("PERIODE"),
+                    periode = row.getPeriode("PERIODE")
                 )
             }
         }.toList()
@@ -188,14 +210,14 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
-    override fun lagreSoningsVurdering(behandlingId: BehandlingId, soningsvurderinger: List<Soningsvurdering>) {
+    override fun lagreSoningsVurdering(behandlingId: BehandlingId, vurdertAv: String, soningsvurderinger: List<Soningsvurdering>) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
         if (eksisterendeGrunnlag != null) {
             deaktiverEksisterendeGrunnlag(behandlingId)
         }
 
-        val vurderingerId = lagreSoningsVurderinger(soningsvurderinger)
+        val vurderingerId = lagreSoningsVurderinger(soningsvurderinger, vurdertAv)
         connection.execute(
             """
             INSERT INTO OPPHOLD_GRUNNLAG (BEHANDLING_ID, OPPHOLD_PERSON_ID, soning_vurderinger_id, HELSEOPPHOLD_VURDERINGER_ID) VALUES (?, ?, ?, ?)
@@ -210,16 +232,22 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
-    private fun lagreSoningsVurderinger(soningsvurderings: List<Soningsvurdering>): Long? {
+    private fun lagreSoningsVurderinger(soningsvurderings: List<Soningsvurdering>, vurdertAv: String): Long? {
         if (soningsvurderings.isEmpty()) {
             return null
         }
 
-        val vurderingerId = connection.executeReturnKey(
-            """
-            INSERT INTO SONING_VURDERINGER DEFAULT VALUES
-        """.trimIndent()
-        )
+        val vurderingerId =
+            connection.executeReturnKey(
+                """
+                  INSERT INTO SONING_VURDERINGER (VURDERT_AV)
+                VALUES (?)
+                """.trimIndent()
+            ) {
+                setParams {
+                    setString(1, vurdertAv)
+            }
+        }
 
         val query = """
             INSERT INTO SONING_VURDERING (SONING_VURDERINGER_ID, SKAL_OPPHORE, BEGRUNNELSE, FRA_DATO) VALUES (?, ?, ?, ?)

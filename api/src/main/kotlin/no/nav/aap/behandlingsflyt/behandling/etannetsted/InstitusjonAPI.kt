@@ -86,10 +86,23 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource, repositoryRegistry
                             token()
                         )
 
+                    val ansattNavnOgEnhet =
+                        grunnlag?.soningsVurderinger?.let { AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv) }
+
+
                     SoningsGrunnlagDto(
                         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         soningsforholdInfo.segmenter().map { InstitusjonsoppholdDto.institusjonToDto(it) },
-                        manglendePerioder
+                        manglendePerioder,
+                        vurdertAv =
+                            grunnlag?.soningsVurderinger?.let {
+                                VurdertAvResponse(
+                                    ident = it.vurdertAv,
+                                    dato = it.vurdertTidspunkt.toLocalDate(),
+                                    ansattnavn = ansattNavnOgEnhet?.navn,
+                                    enhetsnavn = ansattNavnOgEnhet?.enhet
+                                )
+                            }
                     )
                 }
                 respond(soningsgrunnlag)
