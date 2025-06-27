@@ -53,6 +53,15 @@
       <env name="INTEGRASJON_INNTEKTSKOMPONENTEN_SCOPE" value="api://dev-fss.team-inntekt.inntektskomponenten/.default" />
       <env name="INTEGRASJON_DATADELING_URL" value="https://aap-api.intern.dev.nav.no" />
       <env name="INTEGRASJON_DATADELING_SCOPE" value="api://dev-gcp.aap.api-intern/.default" />
+      <env name="INTEGRASJON_NOM_URL" value="http://nom-api.nom/graphql" />
+      <env name="INTEGRASJON_NOM_SCOPE" value="api://dev-gcp.nom.nom-api/.default" />
+      <env name="INTEGRASJON_NORG_URL" value="https://norg2.intern.dev.nav.no" />
+      <env name="INTEGRASJON_KABAL_URL" value="https://kabal-api.intern.dev.nav.no" />
+      <env name="INTEGRASJON_KABAL_SCOPE" value="api://dev-gcp.klage.kabal-api/.default" />
+      <env name="INTEGRASJON_EREG_URL" value="https://ereg-services-q2.dev-fss-pub.nais.io" />
+      <env name="INTEGRASJON_EREG_SCOPE" value="api://dev-fss.arbeidsforhold.ereg-services/.default" />
+      <env name="INTEGRASJON_SAM_URL" value="https://sam-q2.dev-fss-pub.nais.io" />
+      <env name="INTEGRASJON_SAM_SCOPE" value="api://dev-fss.pensjonsamhandling.sam-q2/.default" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="no.nav.aap.behandlingsflyt.AppKt" />
     <module name="aap-behandlingsflyt.app.main" />
