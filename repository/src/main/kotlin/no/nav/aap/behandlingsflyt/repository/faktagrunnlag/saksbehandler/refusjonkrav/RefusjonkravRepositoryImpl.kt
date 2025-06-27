@@ -103,18 +103,17 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
 
     override fun slett(behandlingId: BehandlingId) {
         val refusjonskravVurderingerIds = getRefusjonskravVurderingerIds(behandlingId)
-        val refusjonskravVurderingIds = getRefusjonskravVurderingIds(behandlingId)
 
         val deletedRows = connection.executeReturnUpdated("""
             delete from REFUSJONKRAV_GRUNNLAG where behandling_id = ?;
-            delete from REFUSJONKRAV_VURDERING where id = ANY(?::bigint[]);
+            delete from REFUSJONKRAV_VURDERING where refusjonkrav_vurderinger_id = ANY(?::bigint[]);
             delete from REFUSJONKRAV_VURDERINGER where id = ANY(?::bigint[]);
  
             
         """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId.id)
-                setLongArray(2, refusjonskravVurderingIds)
+                setLongArray(2, refusjonskravVurderingerIds)
                 setLongArray(3, refusjonskravVurderingerIds)
             }
         }
