@@ -68,16 +68,11 @@ class KlageresultatUtleder(
             val erInkonsistentFormkravVurdering =  erInkonsistentFormkravVurdering(
                 formkravVurdering,
                 effektuerAvvistPåFormkravVurdering
-            ) 
-            val erInkonsistentKlageVurdering = erInkonsistentKlageVurdering(
-                klagebehandlingNayVurdering,
-                klagebehandlingKontorVurdering
             )
 
             return when {
                 manglerVurdering -> Ufullstendig(ÅrsakTilUfullstendigResultat.MANGLER_VURDERING)
                 erInkonsistentFormkravVurdering -> Ufullstendig(ÅrsakTilUfullstendigResultat.INKONSISTENT_FORMKRAV_VURDERING)
-                erInkonsistentKlageVurdering -> Ufullstendig(ÅrsakTilUfullstendigResultat.INKONSISTENT_KLAGE_VURDERING)
                 formkravVurdering?.erFristOverholdt() == false -> Avslått(årsak = ÅrsakTilAvslag.IKKE_OVERHOLDT_FRIST)
                 effektuerAvvistPåFormkravVurdering?.skalEndeligAvvises == true -> Avslått(årsak = ÅrsakTilAvslag.IKKE_OVERHOLDT_FORMKRAV)
                 formkravVurdering?.erOppfylt() == false -> Ufullstendig(ÅrsakTilUfullstendigResultat.VENTER_PÅ_SVAR_FRA_BRUKER)
@@ -114,22 +109,6 @@ class KlageresultatUtleder(
                 return false
             }
             return formkravVurdering.erOppfylt() == effektuerAvvistPåFormkravVurdering.skalEndeligAvvises
-        }
-
-        private fun erInkonsistentKlageVurdering(
-            klagebehandlingNayVurdering: KlagevurderingNay?,
-            klagebehandlingKontorVurdering: KlagevurderingKontor?
-        ): Boolean {
-            if (klagebehandlingNayVurdering == null || klagebehandlingKontorVurdering == null) {
-                return false
-            }
-            return klagebehandlingKontorVurdering.vilkårSomOpprettholdes.intersect(
-                klagebehandlingNayVurdering.vilkårSomOmgjøres.toSet()
-            ).isNotEmpty()
-                    || klagebehandlingKontorVurdering.vilkårSomOmgjøres.intersect(
-                klagebehandlingNayVurdering.vilkårSomOpprettholdes.toSet()
-            ).isNotEmpty()
-
         }
 
         private fun manglerVurdering(

@@ -333,36 +333,6 @@ class KlageresultatUtlederTest {
             oppfylteFormkrav, behandlendeEnhetVurdering, nayVurdering, null, null
         )
         assertThat(klageresultat).isEqualTo(Ufullstendig(ÅrsakTilUfullstendigResultat.MANGLER_VURDERING))
-
-    }
-
-    @Test
-    fun `Skal gi Ufullstendig dersom vurderingene mellom Nay og Kontor er inkonsistente`() {
-        val behandlendeEnhetVurdering = BehandlendeEnhetVurdering(
-            vurdertAv = "Saksbehandler",
-            skalBehandlesAvNay = true,
-            skalBehandlesAvKontor = true
-        )
-        val nayVurdering = KlagevurderingNay(
-            innstilling = KlageInnstilling.OMGJØR,
-            vurdertAv = "Saksbehandler",
-            begrunnelse = "Omgjøres",
-            vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_6),
-            vilkårSomOpprettholdes = emptyList(),
-            notat = null
-        )
-        val kontorVurdering = KlagevurderingKontor(
-            innstilling = KlageInnstilling.OPPRETTHOLD,
-            vurdertAv = "Saksbehandler",
-            begrunnelse = "Opprettholdes",
-            vilkårSomOmgjøres = emptyList(),
-            vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_6),
-            notat = null,
-        )
-        val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
-            oppfylteFormkrav, behandlendeEnhetVurdering, nayVurdering, kontorVurdering, null
-        )
-        assertThat(klageresultat).isEqualTo(Ufullstendig(ÅrsakTilUfullstendigResultat.INKONSISTENT_KLAGE_VURDERING))
     }
 
     companion object {

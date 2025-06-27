@@ -42,7 +42,6 @@ data class Ufullstendig(
 
 enum class ÅrsakTilUfullstendigResultat {
     MANGLER_VURDERING,
-    INKONSISTENT_KLAGE_VURDERING,
     INKONSISTENT_FORMKRAV_VURDERING,
     VENTER_PÅ_SVAR_FRA_BRUKER
 }
