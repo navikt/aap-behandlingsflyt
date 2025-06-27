@@ -6,6 +6,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagevurderingKontor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagevurderingNay
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Omgjøres
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Ufullstendig
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.ÅrsakTilAvslag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.ÅrsakTilUfullstendigResultat
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 

@@ -5,11 +5,11 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.DelvisOmgjøres
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageresultatUtleder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Omgjøres
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Opprettholdes
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Omgjøres
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon

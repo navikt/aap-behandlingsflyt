@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.kabal
 
 import no.nav.aap.behandlingsflyt.behandling.klage.andreinstans.AndreinstansGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultat
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus

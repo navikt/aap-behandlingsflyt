@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.klage
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Opprettholdes
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer

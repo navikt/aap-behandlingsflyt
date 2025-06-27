@@ -1,4 +1,6 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.klage
+package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat
+
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 
 sealed interface KlageResultat {
     fun hjemlerSomSkalOpprettholdes(): List<Hjemmel> {

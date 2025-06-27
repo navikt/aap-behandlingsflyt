@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.klage.andreinstans
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.KlageResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultat
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
