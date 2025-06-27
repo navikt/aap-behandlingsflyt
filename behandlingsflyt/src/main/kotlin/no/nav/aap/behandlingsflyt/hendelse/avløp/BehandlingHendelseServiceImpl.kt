@@ -25,21 +25,25 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_AVS
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_ENDRING
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_INNVILGELSE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattDokumentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilSettPåVent
-import no.nav.aap.behandlingsflyt.prosessering.DatadelingBehandlingJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldePerioderJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingSakStatusJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
@@ -52,12 +56,14 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilReturKode as Årsak
 class BehandlingHendelseServiceImpl(
     private val flytJobbRepository: FlytJobbRepository,
     private val brevbestillingRepository: BrevbestillingRepository,
-    private val sakService: SakService
+    private val sakService: SakService,
+    private val dokumentRepository: MottattDokumentRepository
 ) : BehandlingHendelseService {
     constructor(repositoryProvider: RepositoryProvider) : this(
         flytJobbRepository = repositoryProvider.provide(),
         brevbestillingRepository = repositoryProvider.provide(),
         sakService = SakService(repositoryProvider),
+        dokumentRepository = repositoryProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -67,10 +73,9 @@ class BehandlingHendelseServiceImpl(
         avklaringsbehovene: Avklaringsbehovene
     ) {
         val sak = sakService.hent(behandling.sakId)
-
         val erPåVent = avklaringsbehovene.hentÅpneVentebehov().isNotEmpty()
-
         val årsaker = behandling.årsaker()
+        val mottattDokumenter = hentMottattDokumenter(årsaker, behandling)
 
         // TODO: Utvide med flere parametere for prioritering
         val hendelse = BehandlingFlytStoppetHendelse(
@@ -107,6 +112,7 @@ class BehandlingHendelseServiceImpl(
                 )
             },
             erPåVent = erPåVent,
+            mottattDokumenter = mottattDokumenter,
             opprettetTidspunkt = behandling.opprettetTidspunkt,
             hendelsesTidspunkt = LocalDateTime.now(),
             versjon = ApplikasjonsVersjon.versjon
@@ -135,6 +141,20 @@ class BehandlingHendelseServiceImpl(
             flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, behandling.id))
         }
     }
+
+    private fun hentMottattDokumenter(
+        årsaker: List<Årsak>,
+        behandling: Behandling
+    ): List<MottattDokumentDto> = if (årsaker.any { it.type === ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING }) {
+        dokumentRepository.hentDokumenterAvType(behandling.sakId, InnsendingType.LEGEERKLÆRING)
+            .map {
+                MottattDokumentDto(
+                    type = it.type,
+                    referanse = it.referanse
+                )
+            }
+            .toList()
+    } else emptyList()
 
     private fun DomeneÅrsakTilRetur.oversettTilKontrakt(): ÅrsakTilReturKodeKontrakt {
         return when (this.årsak) {

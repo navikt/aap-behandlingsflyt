@@ -23,6 +23,8 @@ public data class BehandlingFlytStoppetHendelse(
     val aktivtSteg: StegType? = null,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
     val erPåVent: Boolean,
+    // TODO: må være default emptylist ved utrulling - fjernes senere
+    val mottattDokumenter: List<MottattDokumentDto> = emptyList(),
     val opprettetTidspunkt: LocalDateTime,
     val hendelsesTidspunkt: LocalDateTime,
     val versjon: String
