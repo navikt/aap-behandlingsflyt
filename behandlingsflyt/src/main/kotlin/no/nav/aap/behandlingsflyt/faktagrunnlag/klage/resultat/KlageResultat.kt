@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 
 sealed interface KlageResultat {
+    val type: KlageResultatType
+
     fun hjemlerSomSkalOpprettholdes(): List<Hjemmel> {
         return when (this) {
             is Opprettholdes -> vilkårSomSkalOpprettholdes
@@ -10,6 +12,7 @@ sealed interface KlageResultat {
             else -> emptyList()
         }
     }
+
     fun hjemlerSomSkalOmgjøres(): List<Hjemmel> {
         return when (this) {
             is Omgjøres -> vilkårSomSkalOmgjøres
@@ -21,24 +24,37 @@ sealed interface KlageResultat {
 
 data class Opprettholdes(
     val vilkårSomSkalOpprettholdes: List<Hjemmel>
-) : KlageResultat
+) : KlageResultat {
+    override val type: KlageResultatType = KlageResultatType.OPPRETTHOLDES
+}
 
 data class Omgjøres(
     val vilkårSomSkalOmgjøres: List<Hjemmel>,
-) : KlageResultat
+) : KlageResultat {
+    override val type: KlageResultatType = KlageResultatType.OMGJØRES
+
+}
 
 data class DelvisOmgjøres(
     val vilkårSomSkalOmgjøres: List<Hjemmel>,
     val vilkårSomSkalOpprettholdes: List<Hjemmel>
-) : KlageResultat
+) : KlageResultat {
+    override val type: KlageResultatType = KlageResultatType.DELVIS_OMGJØRES
+
+}
 
 data class Avslått(
     val årsak: ÅrsakTilAvslag
-) : KlageResultat
+) : KlageResultat {
+
+    override val type: KlageResultatType = KlageResultatType.AVSLÅTT
+}
 
 data class Ufullstendig(
     val årsak: ÅrsakTilUfullstendigResultat
-) : KlageResultat
+) : KlageResultat {
+    override val type: KlageResultatType = KlageResultatType.UFULLSTENDIG
+}
 
 enum class ÅrsakTilUfullstendigResultat {
     MANGLER_VURDERING,
@@ -49,4 +65,12 @@ enum class ÅrsakTilUfullstendigResultat {
 enum class ÅrsakTilAvslag {
     IKKE_OVERHOLDT_FORMKRAV,
     IKKE_OVERHOLDT_FRIST
+}
+
+enum class KlageResultatType {
+    OPPRETTHOLDES,
+    OMGJØRES,
+    DELVIS_OMGJØRES,
+    AVSLÅTT,
+    UFULLSTENDIG
 }
