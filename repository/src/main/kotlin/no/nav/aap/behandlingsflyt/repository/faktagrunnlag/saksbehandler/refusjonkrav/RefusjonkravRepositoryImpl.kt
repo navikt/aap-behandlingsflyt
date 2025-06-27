@@ -68,7 +68,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
                 setLong(1, sakId.id)
             }
             setRowMapper {
-                hentRefusjonkrav(it.getLong("REFUSJONKRAV_VURDERING_ID"))
+                hentRefusjonkrav(it.getLong("REFUSJONKRAV_VURDERINGER_ID"))
             }
         }.flatten()
     }
@@ -85,20 +85,19 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
         """.trimIndent()
         )
 
-        refusjonkravVurderinger.forEach { vurdering ->
-            val vurderingId = lagreVurdering(vurdering, vurderingerId)
-
-            val grunnlagQuery = """
-            INSERT INTO REFUSJONKRAV_GRUNNLAG (BEHANDLING_ID, SAK_ID, REFUSJONKRAV_VURDERINGER_ID, REFUSJONKRAV_VURDERING_ID) VALUES (?, ?, ?, ?)
+        val grunnlagQuery = """
+            INSERT INTO REFUSJONKRAV_GRUNNLAG (BEHANDLING_ID, SAK_ID, REFUSJONKRAV_VURDERINGER_ID) VALUES (?, ?, ?)
         """.trimIndent()
-            connection.execute(grunnlagQuery) {
-                setParams {
-                    setLong(1, behandlingId.toLong())
-                    setLong(2, sakId.id)
-                    setLong(3, vurderingerId)
-                    setLong(4, vurderingId)
-                }
+        connection.execute(grunnlagQuery) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLong(2, sakId.id)
+                setLong(3, vurderingerId)
             }
+        }
+
+        refusjonkravVurderinger.forEach { vurdering ->
+            lagreVurdering(vurdering, vurderingerId)
         }
     }
 
