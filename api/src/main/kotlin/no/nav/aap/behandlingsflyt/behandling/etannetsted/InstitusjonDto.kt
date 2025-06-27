@@ -60,7 +60,8 @@ data class HelseinstitusjonVurderingDto(
 data class SoningsGrunnlagDto(
     val harTilgangTilÅSaksbehandle: Boolean,
     val soningsforhold: List<InstitusjonsoppholdDto>,
-    val vurderinger: List<SoningsforholdDto>
+    val vurderinger: List<SoningsforholdDto>,
+    val vurdertAv: VurdertAvResponse?
 )
 
 data class SoningsforholdDto(

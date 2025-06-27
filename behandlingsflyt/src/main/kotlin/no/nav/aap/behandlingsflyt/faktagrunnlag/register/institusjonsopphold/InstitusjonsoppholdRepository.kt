@@ -9,7 +9,7 @@ interface InstitusjonsoppholdRepository: Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): InstitusjonsoppholdGrunnlag?
     fun hent(behandlingId: BehandlingId): InstitusjonsoppholdGrunnlag
     fun lagreOpphold(behandlingId: BehandlingId, institusjonsopphold: List<Institusjonsopphold>)
-    fun lagreSoningsVurdering(behandlingId: BehandlingId, soningsvurderinger: List<Soningsvurdering>)
+    fun lagreSoningsVurdering(behandlingId: BehandlingId, vurdertAv: String, soningsvurderinger: List<Soningsvurdering>)
     fun lagreHelseVurdering(behandlingId: BehandlingId, vurdertAv: String, helseinstitusjonVurderinger: List<HelseinstitusjonVurdering>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }
