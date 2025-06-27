@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat
 
+import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.effektueravvistpåformkrav.EffektuerAvvistPåFormkravRepository
@@ -19,17 +20,20 @@ class KlageresultatUtleder(
     private val behandlendeEnhetRepository: BehandlendeEnhetRepository,
     private val klagebehandlingKontorRepository: KlagebehandlingKontorRepository,
     private val klagebehandlingNayRepository: KlagebehandlingNayRepository,
-    private val effektuerAvvistPåFormkravRepository: EffektuerAvvistPåFormkravRepository
+    private val effektuerAvvistPåFormkravRepository: EffektuerAvvistPåFormkravRepository,
+    private val trekkKlageService: TrekkKlageService
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         formkravRepository = repositoryProvider.provide(),
         behandlendeEnhetRepository = repositoryProvider.provide(),
         klagebehandlingKontorRepository = repositoryProvider.provide(),
         klagebehandlingNayRepository = repositoryProvider.provide(),
-        effektuerAvvistPåFormkravRepository = repositoryProvider.provide()
+        effektuerAvvistPåFormkravRepository = repositoryProvider.provide(),
+        trekkKlageService = TrekkKlageService(repositoryProvider)
     )
 
     fun utledKlagebehandlingResultat(behandlingId: BehandlingId): KlageResultat {
+        val erKlageTrukket = trekkKlageService.klageErTrukket(behandlingId)
         val formkrav = formkravRepository.hentHvisEksisterer(behandlingId)
         val behandlendeEnhet = behandlendeEnhetRepository.hentHvisEksisterer(behandlingId)
         val klagebehandlingVurderingKontor = klagebehandlingKontorRepository.hentHvisEksisterer(behandlingId)
@@ -37,6 +41,7 @@ class KlageresultatUtleder(
         val effektuerAvvistPåFormkravRepository = effektuerAvvistPåFormkravRepository.hentHvisEksisterer(behandlingId)
 
         val innstilling = utledKlagebehandlingResultat(
+            erKlageTrukket,
             formkrav?.vurdering,
             behandlendeEnhet?.vurdering,
             klagebehandlingVurderingNay?.vurdering,
@@ -48,6 +53,7 @@ class KlageresultatUtleder(
 
     companion object {
         fun utledKlagebehandlingResultat(
+            erKlageTrukket: Boolean,
             formkravVurdering: FormkravVurdering?,
             behandlendeEnhetVurdering: BehandlendeEnhetVurdering?,
             klagebehandlingNayVurdering: KlagevurderingNay?,
@@ -71,6 +77,7 @@ class KlageresultatUtleder(
             )
 
             return when {
+                erKlageTrukket -> Trukket
                 manglerVurdering -> Ufullstendig(ÅrsakTilUfullstendigResultat.MANGLER_VURDERING)
                 erInkonsistentFormkravVurdering -> Ufullstendig(ÅrsakTilUfullstendigResultat.INKONSISTENT_FORMKRAV_VURDERING)
                 formkravVurdering?.erFristOverholdt() == false -> Avslått(årsak = ÅrsakTilAvslag.IKKE_OVERHOLDT_FRIST)

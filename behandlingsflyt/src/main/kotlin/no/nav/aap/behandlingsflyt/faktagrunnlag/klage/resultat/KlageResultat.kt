@@ -50,6 +50,10 @@ data class Avslått(
     override val type: KlageResultatType = KlageResultatType.AVSLÅTT
 }
 
+object Trukket : KlageResultat {
+    override val type: KlageResultatType = KlageResultatType.TRUKKET
+}
+
 data class Ufullstendig(
     val årsak: ÅrsakTilUfullstendigResultat
 ) : KlageResultat {
@@ -72,5 +76,6 @@ enum class KlageResultatType {
     OMGJØRES,
     DELVIS_OMGJØRES,
     AVSLÅTT,
-    UFULLSTENDIG
+    UFULLSTENDIG,
+    TRUKKET
 }
