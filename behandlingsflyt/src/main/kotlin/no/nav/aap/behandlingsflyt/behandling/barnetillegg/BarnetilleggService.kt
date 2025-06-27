@@ -53,9 +53,13 @@ class BarnetilleggService(
                 Segment(periode, venstreVerdi)
             })
 
+        val vurderteBarn = barnGrunnlag.vurderteBarn?.barn ?: emptyList()
+        val vurderteBarnIdenter = vurderteBarn.map { it.ident }
         val oppgittBarn =
             barnGrunnlag.oppgitteBarn?.identer?.mapNotNull { ident -> mapTilBarn(ident, personopplysningerGrunnlag) }
+                ?.filterNot { vurderteBarnIdenter.contains(it.ident) }
                 ?: emptyList()
+
         val oppgittBarnTidslinje = tilTidslinje(oppgittBarn)
         resultat =
             resultat.kombiner(oppgittBarnTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
@@ -65,9 +69,6 @@ class BarnetilleggService(
                 }
                 Segment(periode, venstreVerdi)
             })
-
-        //hent saksbehanler else request saksbehandler
-        val vurderteBarn = barnGrunnlag.vurderteBarn?.barn ?: emptyList()
 
         for (barn in vurderteBarn) {
             resultat = resultat.kombiner(
