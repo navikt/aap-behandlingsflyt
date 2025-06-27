@@ -30,7 +30,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.Bist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
-import no.nav.aap.behandlingsflyt.flyt.AbstraktFlytOrkestratorTest.Companion.util
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.NyÅrsakTilBehandlingHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
@@ -101,7 +100,8 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Random
+import java.util.UUID
 
 @Fakes
 abstract class AbstraktFlytOrkestratorTest {
@@ -253,14 +253,12 @@ abstract class AbstraktFlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                listOf(
-                    RefusjonkravVurderingDto(
-                        harKrav = true,
-                        fom = LocalDate.now(),
-                        tom = null,
-                        navKontor = "",
-                    )
-                )
+                listOf(RefusjonkravVurderingDto(
+                    harKrav = true,
+                    fom = LocalDate.now(),
+                    tom = null,
+                    navKontor = "",
+                ))
             )
         )
         kvalitetssikreOk(behandling)
@@ -456,14 +454,12 @@ abstract class AbstraktFlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                listOf(
-                    RefusjonkravVurderingDto(
-                        harKrav = true,
-                        fom = LocalDate.now(),
-                        tom = null,
-                        navKontor = "",
-                    )
-                )
+                listOf(RefusjonkravVurderingDto(
+                    harKrav = true,
+                    fom = LocalDate.now(),
+                    tom = null,
+                    navKontor = "",
+                ))
             )
         )
 
