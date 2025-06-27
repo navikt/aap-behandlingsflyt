@@ -137,7 +137,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest() {
             ),
         )
 
-        løsForutgåendeMedlemskap(behandling)
+        behandling = løsForutgåendeMedlemskap(behandling)
         assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
 
         behandling = løsAvklaringsBehov(
@@ -369,7 +369,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest() {
 
         val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
 
-        var person = TestPersoner.STANDARD_PERSON().medSykepenger(
+        val person = TestPersoner.STANDARD_PERSON().medSykepenger(
             listOf(
                 TestPerson.Sykepenger(
                     grad = 50, periode = sykePengerPeriode
@@ -406,6 +406,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest() {
         assertThat(revurdering.aktivtSteg()).isEqualTo(StegType.DU_ER_ET_ANNET_STED)
         assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.AVKLAR_SONINGSFORRHOLD)
     }
+
     private fun revurderingEtterVentPåSamordning(
         ident: Ident,
         periode: Periode,
@@ -474,9 +475,8 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest() {
                         ytterligereNedsattBegrunnelse = null
                     ),
                 ),
-            )
+            ).løsForutgåendeMedlemskap()
 
-        løsForutgåendeMedlemskap(behandling)
         assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).containsExactly(Definisjon.AVKLAR_SAMORDNING_GRADERING)
 
         behandling = løsAvklaringsBehov(

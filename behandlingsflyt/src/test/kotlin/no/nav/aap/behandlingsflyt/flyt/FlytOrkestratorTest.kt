@@ -265,7 +265,7 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
                 ),
             ),
         )
-        løsForutgåendeMedlemskap(behandling)
+        behandling = løsForutgåendeMedlemskap(behandling)
 
         behandling = løsAvklaringsBehov(
             behandling, AvklarSamordningUføreLøsning(
@@ -358,7 +358,7 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
                 ),
             )
         )
-        løsForutgåendeMedlemskap(behandling)
+        behandling = løsForutgåendeMedlemskap(behandling)
 
         behandling = løsAvklaringsBehov(
             behandling, AvklarSamordningUføreLøsning(
@@ -770,7 +770,7 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
             ),
         )
 
-        løsForutgåendeMedlemskap(behandling)
+        behandling = løsForutgåendeMedlemskap(behandling)
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
         assertThat(åpneAvklaringsbehov).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
@@ -901,7 +901,7 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
             ),
         )
 
-        løsForutgåendeMedlemskap(behandling)
+        behandling = løsForutgåendeMedlemskap(behandling)
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
         assertThat(åpneAvklaringsbehov).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
@@ -1160,7 +1160,7 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
             ),
         )
 
-        løsForutgåendeMedlemskap(behandling)
+        behandling = løsForutgåendeMedlemskap(behandling)
         behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
 
         // Saken står til To-trinnskontroll hos beslutter
@@ -1219,7 +1219,7 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
             Bruker("SAKSBEHANDLER")
         )
 
-        løsForutgåendeMedlemskap(behandling)
+        behandling = løsForutgåendeMedlemskap(behandling)
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
         assertThat(åpneAvklaringsbehov).anySatisfy { behov -> assertThat(behov.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
@@ -1345,7 +1345,7 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
             ),
         )
 
-        løsForutgåendeMedlemskap(behandling)
+        behandling = løsForutgåendeMedlemskap(behandling)
         behandling = løsAvklaringsBehov(
             behandling, AvklarSamordningGraderingLøsning(
                 VurderingerForSamordning(
@@ -2009,7 +2009,7 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
         assertThat(åpneAvklaringsbehov).noneMatch { it.definisjon == Definisjon.MANUELL_OVERSTYRING_MEDLEMSKAP }
 
         // Validér riktig resultat
-        løsForutgåendeMedlemskap(behandling)
+        behandling = løsForutgåendeMedlemskap(behandling)
         var vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
         assertThat(vilkårsResultat).allMatch { it.erOppfylt() }
 

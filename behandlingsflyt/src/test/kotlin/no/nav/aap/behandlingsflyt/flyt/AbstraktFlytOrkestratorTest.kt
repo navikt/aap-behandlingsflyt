@@ -253,12 +253,14 @@ abstract class AbstraktFlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                listOf(RefusjonkravVurderingDto(
-                    harKrav = true,
-                    fom = LocalDate.now(),
-                    tom = null,
-                    navKontor = "",
-                ))
+                listOf(
+                    RefusjonkravVurderingDto(
+                        harKrav = true,
+                        fom = LocalDate.now(),
+                        tom = null,
+                        navKontor = "",
+                    )
+                )
             )
         )
         kvalitetssikreOk(behandling)
@@ -416,8 +418,8 @@ abstract class AbstraktFlytOrkestratorTest {
 
     protected fun løsForutgåendeMedlemskap(
         behandling: Behandling
-    ) {
-        løsAvklaringsBehov(
+    ): Behandling {
+        return løsAvklaringsBehov(
             behandling,
             AvklarForutgåendeMedlemskapLøsning(
                 ManuellVurderingForForutgåendeMedlemskapDto(
@@ -428,6 +430,11 @@ abstract class AbstraktFlytOrkestratorTest {
                 )
             )
         )
+    }
+
+    @JvmName("losForutgaaendeMedlemskapExt")
+    protected fun Behandling.løsForutgåendeMedlemskap(): Behandling {
+        return løsForutgåendeMedlemskap(this)
     }
 
     protected fun løsFramTilForutgåendeMedlemskap(
@@ -454,12 +461,14 @@ abstract class AbstraktFlytOrkestratorTest {
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
-                listOf(RefusjonkravVurderingDto(
-                    harKrav = true,
-                    fom = LocalDate.now(),
-                    tom = null,
-                    navKontor = "",
-                ))
+                listOf(
+                    RefusjonkravVurderingDto(
+                        harKrav = true,
+                        fom = LocalDate.now(),
+                        tom = null,
+                        navKontor = "",
+                    )
+                )
             )
         )
 
