@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.Test
@@ -58,7 +59,7 @@ class VurderKlageNayLøserTest {
             )
         )
 
-        val exception = assertThrows<IllegalArgumentException> {
+        val exception = assertThrows<UgyldigForespørselException> {
             vurderKlageNayLøser.løs(
                 kontekst = lagAvklaringsbehovKontekst(),
                 løsning = løsning

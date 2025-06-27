@@ -28,9 +28,6 @@ data class KlagevurderingKontorLøsningDto(
             KlageInnstilling.DELVIS_OMGJØR -> {
                 if (vilkårSomOmgjøres.isEmpty()) throw UgyldigForespørselException("Må sette vilkår som skal omgjøres dersom innstilling er 'DELVIS_OMGJØR' ")
                 if (vilkårSomOpprettholdes.isEmpty()) throw UgyldigForespørselException("Må sette vilkår som skal opprettholdes dersom innstilling er 'DELVIS_OMGJØR' ")
-                if (vilkårSomOmgjøres.intersect(vilkårSomOpprettholdes.toSet()).isNotEmpty()) {
-                    throw UgyldigForespørselException("Kan ikke sette vilkår som både skal opprettholdes og omgjøres")
-                }
             }
         }
     }

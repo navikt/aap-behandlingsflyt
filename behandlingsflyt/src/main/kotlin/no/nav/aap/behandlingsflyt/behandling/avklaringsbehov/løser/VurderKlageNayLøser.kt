@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKlag
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.behandlingsflyt.utils.Validation
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 
 class VurderKlageNayLøser(
     private val klagebehandlingNayRepository: KlagebehandlingNayRepository,
@@ -22,7 +23,7 @@ class VurderKlageNayLøser(
         )
 
         return when(val validatedLøsning = valider(løsning)) {
-            is Validation.Invalid -> throw IllegalArgumentException(validatedLøsning.errorMessage)
+            is Validation.Invalid -> throw UgyldigForespørselException(validatedLøsning.errorMessage)
             is Validation.Valid -> LøsningsResultat(
                 begrunnelse = løsning.klagevurderingNay.begrunnelse
             )
