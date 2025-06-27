@@ -3,17 +3,13 @@ package no.nav.aap.behandlingsflyt.behandling.etannetsted
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.Helseopphold
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.InstitusjonsoppholdDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.SoningsGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.Soningsforhold
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -33,7 +29,7 @@ import javax.sql.DataSource
 fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/institusjon/soning") {
-            authorizedGet<BehandlingReferanse, SoningsGrunnlag>(
+            authorizedGet<BehandlingReferanse, SoningsGrunnlagDto>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam(
                         "referanse"
@@ -64,15 +60,24 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource, repositoryRegistry
                     val perioderMedSoning = behov.perioderTilVurdering.mapValue { it.soning }.komprimer()
                     val vurderinger = grunnlag?.soningsVurderinger?.tilTidslinje() ?: Tidslinje()
 
-                    val manglendePerioder = perioderMedSoning.segmenter()
-                        .filterNot { it.verdi == null }
-                        .map {
-                            Soningsforhold(
-                                vurderingsdato = it.periode.fom,
-                                vurdering = vurderinger.segment(it.periode.fom)?.verdi,
-                                status = it.verdi!!.vurdering
-                            )
-                        }
+                    val manglendePerioder =
+                        perioderMedSoning
+                            .segmenter()
+                            .filterNot { it.verdi == null }
+                            .map {
+                                SoningsforholdDto(
+                                    vurderingsdato = it.periode.fom,
+                                    vurdering =
+                                        vurderinger.segment(it.periode.fom)?.verdi?.let {
+                                            SoningsvurderingDto(
+                                                skalOpphøre = it.skalOpphøre,
+                                                begrunnelse = it.begrunnelse,
+                                                fraDato = it.fraDato
+                                            )
+                                        },
+                                    status = it.verdi!!.vurdering.toDto()
+                                )
+                            }
 
                     val harTilgangTilÅSaksbehandle =
                         GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
@@ -81,8 +86,7 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource, repositoryRegistry
                             token()
                         )
 
-
-                    SoningsGrunnlag(
+                    SoningsGrunnlagDto(
                         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         soningsforholdInfo.segmenter().map { InstitusjonsoppholdDto.institusjonToDto(it) },
                         manglendePerioder
@@ -94,7 +98,7 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource, repositoryRegistry
     }
     route("/api/behandling") {
         route("/{referanse}/grunnlag/institusjon/helse") {
-            authorizedGet<BehandlingReferanse, HelseinstitusjonGrunnlag>(
+            authorizedGet<BehandlingReferanse, HelseinstitusjonGrunnlagDto>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
@@ -126,19 +130,19 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource, repositoryRegistry
                     val manglendePerioder = perioderMedHelseopphold.segmenter()
                         .filterNot { it.verdi == null }
                         .map {
-                            Helseopphold(
+                            HelseoppholdDto(
                                 periode = it.periode,
                                 vurderinger = vurderinger.begrensetTil(it.periode).segmenter()
                                     .map { helseinstitusjonsvurdering ->
-                                        HelseinstitusjonVurdering(
-                                            helseinstitusjonsvurdering.verdi.begrunnelse,
-                                            helseinstitusjonsvurdering.verdi.faarFriKostOgLosji,
-                                            helseinstitusjonsvurdering.verdi.forsoergerEktefelle,
-                                            helseinstitusjonsvurdering.verdi.harFasteUtgifter,
-                                            helseinstitusjonsvurdering.periode
+                                        HelseinstitusjonVurderingDto(
+                                            begrunnelse = helseinstitusjonsvurdering.verdi.begrunnelse,
+                                            faarFriKostOgLosji = helseinstitusjonsvurdering.verdi.faarFriKostOgLosji,
+                                            forsoergerEktefelle = helseinstitusjonsvurdering.verdi.forsoergerEktefelle,
+                                            harFasteUtgifter = helseinstitusjonsvurdering.verdi.harFasteUtgifter,
+                                            periode = helseinstitusjonsvurdering.periode,
                                         )
                                     },
-                                status = it.verdi!!.vurdering
+                                status = it.verdi!!.vurdering.toDto()
                             )
                         }
 
@@ -149,11 +153,21 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource, repositoryRegistry
                             token()
                         )
 
+                    val ansattNavnOgEnhet = grunnlag?.helseoppholdvurderinger?.let {  AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv) }
 
-                    HelseinstitusjonGrunnlag(
+                    HelseinstitusjonGrunnlagDto(
                         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
                         opphold = oppholdInfo.segmenter().map { InstitusjonsoppholdDto.institusjonToDto(it) },
-                        vurderinger = manglendePerioder
+                        vurderinger = manglendePerioder,
+                        vurdertAv =
+                            grunnlag?.helseoppholdvurderinger?.let {
+                                VurdertAvResponse(
+                                    ident = it.vurdertAv,
+                                    dato = it.vurdertTidspunkt.toLocalDate(),
+                                    ansattnavn = ansattNavnOgEnhet?.navn,
+                                    enhetsnavn = ansattNavnOgEnhet?.enhet
+                                )
+                            }
                     )
                 }
                 respond(grunnlagDto)

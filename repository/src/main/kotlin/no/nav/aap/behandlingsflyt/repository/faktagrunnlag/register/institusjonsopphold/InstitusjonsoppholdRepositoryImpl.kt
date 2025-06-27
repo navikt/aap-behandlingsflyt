@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
@@ -118,12 +120,28 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                     faarFriKostOgLosji = row.getBoolean("KOST_OG_LOSJI"),
                     forsoergerEktefelle = row.getBooleanOrNull("FORSORGER_EKTEFELLE"),
                     harFasteUtgifter = row.getBooleanOrNull("FASTE_UTGIFTER"),
-                    periode = row.getPeriode("PERIODE")
+                    periode = row.getPeriode("PERIODE"),
                 )
             }
         }.toList()
 
-        return Helseoppholdvurderinger(id = helseoppholdId, vurderinger = vurderingene)
+        return connection.queryFirst(
+            """
+                SELECT * FROM HELSEOPPHOLD_VURDERINGER WHERE ID = ?
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, helseoppholdId)
+            }
+            setRowMapper { row ->
+                Helseoppholdvurderinger(
+                    id = helseoppholdId,
+                    vurderinger = vurderingene,
+                    vurdertAv = row.getString("VURDERT_AV"),
+                    vurdertTidspunkt = row.getLocalDateTime("OPPRETTET_TID")
+                )
+            }
+        }
     }
 
     override fun hent(behandlingId: BehandlingId): InstitusjonsoppholdGrunnlag {
@@ -219,16 +237,21 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
         return vurderingerId
     }
 
-    private fun lagreHelseoppholdVurderinger(helseoppholdVurderinger: List<HelseinstitusjonVurdering>): Long? {
+    private fun lagreHelseoppholdVurderinger(helseoppholdVurderinger: List<HelseinstitusjonVurdering>, vurdertAv: String): Long? {
         if (helseoppholdVurderinger.isEmpty()) {
             return null
         }
 
         val vurderingerId = connection.executeReturnKey(
             """
-            INSERT INTO HELSEOPPHOLD_VURDERINGER DEFAULT VALUES
+            INSERT INTO HELSEOPPHOLD_VURDERINGER (VURDERT_AV)
+            VALUES (?)
         """.trimIndent()
-        )
+        ) {
+            setParams {
+                setString(1, vurdertAv)
+            }
+        }
 
         val query = """
             INSERT INTO HELSEOPPHOLD_VURDERING 
@@ -253,6 +276,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
 
     override fun lagreHelseVurdering(
         behandlingId: BehandlingId,
+        vurdertAv: String,
         helseinstitusjonVurderinger: List<HelseinstitusjonVurdering>
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
@@ -261,7 +285,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
             deaktiverEksisterendeGrunnlag(behandlingId)
         }
 
-        val vurderingerId = lagreHelseoppholdVurderinger(helseinstitusjonVurderinger)
+        val vurderingerId = lagreHelseoppholdVurderinger(helseinstitusjonVurderinger, vurdertAv)
         connection.execute(
             """
             INSERT INTO OPPHOLD_GRUNNLAG (BEHANDLING_ID, OPPHOLD_PERSON_ID, soning_vurderinger_id, HELSEOPPHOLD_VURDERINGER_ID) VALUES (?, ?, ?, ?)
