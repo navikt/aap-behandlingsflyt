@@ -39,7 +39,7 @@ class AktivitetspliktInformasjonskrav (
 
     override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
-                tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
+                !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
