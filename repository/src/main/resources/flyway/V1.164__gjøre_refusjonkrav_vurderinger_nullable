@@ -1,2 +1,0 @@
-ALTER TABLE REFUSJONKRAV_GRUNNLAG
-    ALTER column refusjonkrav_vurderinger_id DROP NOT NULL;
