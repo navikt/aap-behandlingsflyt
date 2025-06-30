@@ -92,8 +92,6 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource, repositoryR
                     val sakerMedDato =
                         relevanteSaker.map { sak -> registerYrkeskade.singleOrNull { it.ref == sak } }
 
-                    yrkesskadevurdering?.relevanteSaker
-
                     val harTilgangTilÅSaksbehandle =
                         GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
                             req.referanse,
