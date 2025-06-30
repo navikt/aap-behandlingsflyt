@@ -39,7 +39,6 @@ class BarnetilleggService(
         val personopplysningerGrunnlag = requireNotNull(personopplysningRepository.hentHvisEksisterer(behandlingId))
 
         val barnGrunnlag = barnRepository.hent(behandlingId)
-
         val folkeregisterBarn =
             barnGrunnlag.registerbarn?.identer?.mapNotNull { ident -> mapTilBarn(ident, personopplysningerGrunnlag) }
                 ?: emptyList()
