@@ -33,7 +33,7 @@ class TjenestepensjonRefusjonskravSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
-                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
                     avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
                         .avbrytForSteg(type())
                     return Fullført

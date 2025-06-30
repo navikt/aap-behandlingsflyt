@@ -41,7 +41,7 @@ class UføreService(
     override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
                 oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
-                tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
+                !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {

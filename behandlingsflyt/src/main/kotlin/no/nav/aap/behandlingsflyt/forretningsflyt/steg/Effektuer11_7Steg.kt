@@ -74,7 +74,7 @@ class Effektuer11_7Steg(
         }
 
         if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
-            if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+            if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
                 avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
                     .avbrytForSteg(type())
                 return Fullført

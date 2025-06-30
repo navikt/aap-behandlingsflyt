@@ -34,7 +34,7 @@ class EtAnnetStedSteg(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
-            if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+            if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
                 avklaringsbehovene.avbrytForSteg(type())
                 return Fullført
             }

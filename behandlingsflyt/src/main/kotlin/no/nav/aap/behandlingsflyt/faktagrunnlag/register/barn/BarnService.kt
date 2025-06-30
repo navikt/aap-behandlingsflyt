@@ -49,7 +49,7 @@ class BarnService private constructor(
 
         return gyldigBehandling &&
                 oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
-                tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
+                !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {

@@ -52,7 +52,7 @@ class LovvalgService private constructor(
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
                 && (oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
                 || kontekst.årsakerTilBehandling.contains(ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE))
-                && tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
+                && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
