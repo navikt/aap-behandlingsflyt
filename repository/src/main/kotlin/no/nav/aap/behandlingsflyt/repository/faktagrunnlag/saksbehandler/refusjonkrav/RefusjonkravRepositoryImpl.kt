@@ -20,37 +20,39 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): List<RefusjonkravVurdering>? {
         val query = """
-            SELECT * FROM REFUSJONKRAV_GRUNNLAG WHERE behandling_id = ? and aktiv = true
-        """.trimIndent()
+        SELECT * FROM REFUSJONKRAV_GRUNNLAG WHERE behandling_id = ? AND aktiv = true
+    """.trimIndent()
 
-        return connection.queryFirstOrNull(query) {
+        val vurderingerId = connection.queryFirstOrNull(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper {
-                hentRefusjonskrav(it.getLong("refusjonkrav_vurdering_id"))
+                it.getLong("refusjonkrav_vurderinger_id")
             }
         }
+
+        return vurderingerId?.let { hentRefusjonkrav(it) }
     }
 
-    private fun hentRefusjonskrav(vurderingId: Long): List<RefusjonkravVurdering> {
+    private fun hentRefusjonkrav(vurderingerId: Long): List<RefusjonkravVurdering> {
         val query = """
-            SELECT * FROM REFUSJONKRAV_VURDERING WHERE ID = ?
+            SELECT * FROM REFUSJONKRAV_VURDERING WHERE REFUSJONKRAV_VURDERINGER_ID = ?
         """.trimIndent()
 
-        return connection.queryFirst(query) {
+        return connection.queryList(query) {
             setParams {
-                setLong(1, vurderingId)
+                setLong(1, vurderingerId)
             }
             setRowMapper {
-                listOf(RefusjonkravVurdering(
+                RefusjonkravVurdering(
                     harKrav = it.getBoolean("har_krav"),
                     fom = it.getLocalDateOrNull("fom"),
                     tom = it.getLocalDateOrNull("tom"),
                     vurdertAv = it.getString("vurdert_av"),
                     navKontor = it.getString("navkontor"),
                     opprettetTid = it.getLocalDateTime("opprettet_tid")
-                ))
+                )
             }
         }
     }
@@ -66,7 +68,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
                 setLong(1, sakId.id)
             }
             setRowMapper {
-                hentRefusjonskrav(it.getLong("REFUSJONKRAV_VURDERING_ID"))
+                hentRefusjonkrav(it.getLong("REFUSJONKRAV_VURDERINGER_ID"))
             }
         }.flatten()
     }
@@ -77,34 +79,42 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
             deaktiverEksisterende(behandlingId)
         }
 
-        refusjonkravVurderinger.forEach { vurdering ->
-            val vurderingId = lagreVurdering(vurdering)
-
-            val grunnlagQuery = """
-            INSERT INTO REFUSJONKRAV_GRUNNLAG (BEHANDLING_ID, SAK_ID, REFUSJONKRAV_VURDERING_ID) VALUES (?, ?, ?)
+        val vurderingerId = connection.executeReturnKey(
+            """
+            INSERT INTO REFUSJONKRAV_VURDERINGER DEFAULT VALUES
         """.trimIndent()
-            connection.execute(grunnlagQuery) {
-                setParams {
-                    setLong(1, behandlingId.toLong())
-                    setLong(2, sakId.id)
-                    setLong(3, vurderingId)
-                }
+        )
+
+        val grunnlagQuery = """
+            INSERT INTO REFUSJONKRAV_GRUNNLAG (BEHANDLING_ID, SAK_ID, REFUSJONKRAV_VURDERINGER_ID) VALUES (?, ?, ?)
+        """.trimIndent()
+        connection.execute(grunnlagQuery) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLong(2, sakId.id)
+                setLong(3, vurderingerId)
             }
+        }
+
+        refusjonkravVurderinger.forEach { vurdering ->
+            lagreVurdering(vurdering, vurderingerId)
         }
     }
 
     override fun slett(behandlingId: BehandlingId) {
+        val refusjonskravVurderingerIds = getRefusjonskravVurderingerIds(behandlingId)
 
-        val refusjonskravVurderingIds = getRefusjonskravVurderingIds(behandlingId)
         val deletedRows = connection.executeReturnUpdated("""
             delete from REFUSJONKRAV_GRUNNLAG where behandling_id = ?;
-            delete from REFUSJONKRAV_VURDERING where id = ANY(?::bigint[]);
-          
+            delete from REFUSJONKRAV_VURDERING where refusjonkrav_vurderinger_id = ANY(?::bigint[]);
+            delete from REFUSJONKRAV_VURDERINGER where id = ANY(?::bigint[]);
+ 
             
         """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId.id)
-                setLongArray(2, refusjonskravVurderingIds)
+                setLongArray(2, refusjonskravVurderingerIds)
+                setLongArray(3, refusjonskravVurderingerIds)
             }
         }
         log.info("Slettet $deletedRows rader fra REFUSJONKRAV_GRUNNLAG")
@@ -125,10 +135,24 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
         }
     }
 
+    private fun getRefusjonskravVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT refusjonkrav_vurderinger_id
+                    FROM REFUSJONKRAV_GRUNNLAG
+                    WHERE behandling_id = ?
+                      AND refusjonkrav_vurderinger_id is not null
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("refusjonkrav_vurderinger_id")
+        }
+    }
 
-    private fun lagreVurdering(vurdering: RefusjonkravVurdering): Long {
+    private fun lagreVurdering(vurdering: RefusjonkravVurdering, vurderingerId: Long): Long {
         val query = """
-            INSERT INTO REFUSJONKRAV_VURDERING (HAR_KRAV, FOM, TOM, VURDERT_AV, NAVKONTOR) VALUES (?, ?, ?, ?, ?)
+            INSERT INTO REFUSJONKRAV_VURDERING (HAR_KRAV, FOM, TOM, VURDERT_AV, NAVKONTOR, REFUSJONKRAV_VURDERINGER_ID) VALUES (?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         return connection.executeReturnKey(query) {
@@ -138,6 +162,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
                 setLocalDate(3, vurdering.tom)
                 setString(4, vurdering.vurdertAv)
                 setString(5, vurdering.navKontor ?: "")
+                setLong(6, vurderingerId)
             }
         }
     }
@@ -146,6 +171,9 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
         connection.execute("UPDATE REFUSJONKRAV_GRUNNLAG SET AKTIV = FALSE WHERE AKTIV AND BEHANDLING_ID = ?") {
             setParams {
                 setLong(1, behandlingId.toLong())
+            }
+            setResultValidator { rowsUpdated ->
+                require(rowsUpdated == 1)
             }
         }
     }

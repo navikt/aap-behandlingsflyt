@@ -36,7 +36,21 @@ class RefusjonkravRepositoryImplTest {
                 fom = periode.fom,
                 tom = periode.tom,
                 vurdertAv = "saksbehandler",
-                navKontor = "",
+                navKontor = "Nav Hamar",
+            ),
+            RefusjonkravVurdering(
+                harKrav = true,
+                fom = periode.fom,
+                tom = periode.tom,
+                vurdertAv = "veileder",
+                navKontor = "Nav Kongsvinger",
+            ),
+            RefusjonkravVurdering(
+                harKrav = true,
+                fom = periode.fom,
+                tom = periode.tom,
+                vurdertAv = "kvalitetssikrer",
+                navKontor = "Nav Flisa,"
             )
         )
         dataSource.transaction {
@@ -50,6 +64,7 @@ class RefusjonkravRepositoryImplTest {
         }
 
         assertThat(uthentet).hasSameSizeAs(vurderinger)
+        assertThat(uthentet).hasSize(3)
         uthentet!!.zip(vurderinger).forEach { (actual, expected) ->
             assertThat(actual.harKrav).isEqualTo(expected.harKrav)
             assertThat(actual.fom).isEqualTo(expected.fom)
