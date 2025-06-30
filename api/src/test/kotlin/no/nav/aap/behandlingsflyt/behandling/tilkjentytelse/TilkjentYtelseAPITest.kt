@@ -6,7 +6,7 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import no.nav.aap.behandlingsflyt.AbstractApiTest
+import no.nav.aap.behandlingsflyt.BaseApiTest
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
@@ -19,12 +19,14 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.*
 
 @Fakes
-class TilkjentYtelseAPITest : AbstractApiTest() {
+@ExtendWith(BaseApiTest::class)
+class TilkjentYtelseAPITest : BaseApiTest() {
     private val repositoryRegistry = RepositoryRegistry()
         .register<InMemoryTilkjentYtelseRepository>()
         .register<InMemoryBehandlingRepository>()
