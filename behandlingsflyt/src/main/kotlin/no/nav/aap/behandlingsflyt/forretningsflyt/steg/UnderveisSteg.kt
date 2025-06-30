@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 
 class UnderveisSteg(
     private val underveisService: UnderveisService,
@@ -21,11 +20,10 @@ class UnderveisSteg(
         underveisService = UnderveisService(repositoryProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
     )
-    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
-            if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+            if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
                 return Fullført
             }
         }

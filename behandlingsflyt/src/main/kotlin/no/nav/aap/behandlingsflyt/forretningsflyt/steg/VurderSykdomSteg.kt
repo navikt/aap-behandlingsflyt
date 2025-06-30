@@ -42,7 +42,7 @@ class VurderSykdomSteg private constructor(
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
-                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
                     log.info("Tidligere vurderinger gir ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.SYKDOMSVILKÅRET} for behandlingId ${kontekst.behandlingId}")
                     avklaringsbehovene.avbrytForSteg(type())
                     return Fullført
