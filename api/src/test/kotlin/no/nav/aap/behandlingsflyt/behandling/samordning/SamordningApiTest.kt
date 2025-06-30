@@ -4,7 +4,7 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import no.nav.aap.behandlingsflyt.AbstractApiTest
+import no.nav.aap.behandlingsflyt.BaseApiTest
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.SamordningYtelseDTO
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.SamordningYtelseVurderingGrunnlagDTO
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
@@ -22,11 +22,13 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
 
 
 @Fakes
-class SamordningApiKtTest : AbstractApiTest() {
+@ExtendWith(BaseApiTest::class)
+class SamordningApiKtTest : BaseApiTest() {
     private val repositoryRegistry = RepositoryRegistry()
         .register<InMemorySamordningVurderingRepository>()
         .register<InMemorySamordningYtelseRepository>()

@@ -18,25 +18,18 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.security.mock.oauth2.MockOAuth2Server
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.extension.BeforeAllCallback
+import org.junit.jupiter.api.extension.ExtensionContext
 import java.time.LocalDate
 import java.util.UUID
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
 
-abstract class AbstractApiTest {
+open class BaseApiTest : BeforeAllCallback {
 
     companion object {
+        @Volatile
+        private var isStarted = false
         private val server = MockOAuth2Server()
-
-        @BeforeAll
-        @JvmStatic
-        fun beforeAll() {
-            server.start()
-
-
-            GatewayRegistry
-                .register<FakeTilgangGateway>()
-        }
 
     }
 
@@ -56,6 +49,7 @@ abstract class AbstractApiTest {
         ),
         periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
     )
+
     fun issueToken(scope: String) = server.issueToken(
         issuerId = "default",
         claims = mapOf(
@@ -86,4 +80,17 @@ abstract class AbstractApiTest {
             apiRouting(apiEndepunkt)
         }
     }
+
+    override fun beforeAll(context: ExtensionContext?) {
+        if (isStarted) {
+            return
+        }
+        server.start()
+        isStarted = true
+
+
+        GatewayRegistry
+            .register<FakeTilgangGateway>()
+    }
+
 }
