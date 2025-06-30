@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.RegisterBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.VurderteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -82,25 +81,43 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             return null
         }
 
-        return VurderteBarn(
-            id, connection.queryList(
-                """
-                SELECT p.id, p.IDENT
-                FROM BARN_VURDERING p
-                WHERE p.BARN_VURDERINGER_ID = ?
+        return connection.queryFirst(
+            """
+            SELECT * FROM BARN_VURDERINGER WHERE ID = ?
             """.trimIndent()
-            ) {
-                setParams {
-                    setLong(1, id)
-                }
-                setRowMapper { row ->
-                    VurdertBarn(
-                        ident = Ident(row.getString("IDENT")), vurderinger = hentVurderinger(row.getLong("id"))
-                    )
-                }
+        ) {
+            setParams {
+                setLong(1, id)
             }
-        )
+            setRowMapper { row ->
+                VurderteBarn(
+                    id = id,
+                    barn = hentBarnVurderinger(id),
+                    vurdertAv = row.getString("VURDERT_AV"),
+                    vurdertTidspunkt = row.getLocalDateTime("OPPRETTET_TID")
+                )
+            }
+        }
     }
+
+    private fun hentBarnVurderinger(id: Long?) =
+        connection.queryList(
+            """
+            SELECT p.id, p.IDENT
+            FROM BARN_VURDERING p
+            WHERE p.BARN_VURDERINGER_ID = ?
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, id)
+            }
+            setRowMapper { row ->
+                VurdertBarn(
+                    ident = Ident(row.getString("IDENT")),
+                    vurderinger = hentVurderinger(row.getLong("id"))
+                )
+            }
+        }
 
     private fun hentVurderinger(vurdertBarnId: Long): List<VurderingAvForeldreAnsvar> {
         return connection.queryList(
@@ -224,7 +241,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         }
     }
 
-    override fun lagreVurderinger(behandlingId: BehandlingId, vurderteBarn: List<VurdertBarn>) {
+    override fun lagreVurderinger(behandlingId: BehandlingId, vurdertAv: String, vurderteBarn: List<VurdertBarn>) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
         if (eksisterendeGrunnlag != null) {
@@ -232,7 +249,16 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         }
 
         val vurderteBarnId = if (vurderteBarn.isNotEmpty()) {
-            connection.executeReturnKey("INSERT INTO BARN_VURDERINGER DEFAULT VALUES") {}
+            connection.executeReturnKey(
+                """
+                INSERT INTO BARN_VURDERINGER (VURDERT_AV)
+                VALUES (?)
+                """.trimIndent()
+            ) {
+                setParams {
+                    setString(1, vurdertAv)
+                }
+            }
         } else {
             null
         }

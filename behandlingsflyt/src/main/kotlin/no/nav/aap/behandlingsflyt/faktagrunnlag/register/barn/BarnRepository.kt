@@ -12,6 +12,6 @@ interface BarnRepository : Repository {
     fun hent(behandlingId: BehandlingId): BarnGrunnlag
     fun lagreOppgitteBarn(behandlingId: BehandlingId, oppgitteBarn: OppgitteBarn?)
     fun lagreRegisterBarn(behandlingId: BehandlingId, barn: Set<Ident>)
-    fun lagreVurderinger(behandlingId: BehandlingId, vurderteBarn: List<VurdertBarn>)
+    fun lagreVurderinger(behandlingId: BehandlingId, vurdertAv: String, vurderteBarn: List<VurdertBarn>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

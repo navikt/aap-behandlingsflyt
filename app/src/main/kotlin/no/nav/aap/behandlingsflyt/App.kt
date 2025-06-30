@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.auditlog.auditlogApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.fatteVedtakGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypesTilAvklaringsbehovLøsning
-import no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate.barnetilleggApi
+import no.nav.aap.behandlingsflyt.behandling.barnetillegg.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder.aldersGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt.meldepliktsgrunnlagApi

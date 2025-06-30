@@ -62,7 +62,7 @@ internal class BarnRepositoryImplTest {
 
             barnRepository.lagreRegisterBarn(behandling.id, barnListe)
             barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = setOf(Ident("1"))))
-            barnRepository.lagreVurderinger(behandling.id, vurderteBarn)
+            barnRepository.lagreVurderinger(behandling.id, "ident", vurderteBarn)
             behandling
         }
 

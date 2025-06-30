@@ -100,6 +100,7 @@ class PipTest {
             barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = setOf(Ident("oppgittbarn"))))
             barnRepository.lagreVurderinger(
                 behandling.id,
+                "ident",
                 listOf(
                     VurdertBarn(
                         Ident("vurdertbarn"),
@@ -152,6 +153,7 @@ class PipTest {
             barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = setOf(Ident("oppgittbarn"))))
             barnRepository.lagreVurderinger(
                 behandling.id,
+                "ident",
                 listOf(
                     VurdertBarn(
                         Ident("vurdertbarn"),
@@ -172,6 +174,7 @@ class PipTest {
             barnRepository.lagreOppgitteBarn(behandling2.id, OppgitteBarn(identer = setOf(Ident("oppgittbar2"))))
             barnRepository.lagreVurderinger(
                 behandling2.id,
+                "ident",
                 listOf(
                     VurdertBarn(
                         Ident("vurdertbar2"),
