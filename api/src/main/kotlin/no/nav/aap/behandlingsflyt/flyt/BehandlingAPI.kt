@@ -11,11 +11,11 @@ import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.søknad.DatoFraDokumentUtleder
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårsperiodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -39,7 +39,6 @@ import no.nav.aap.tilgang.authorizedGet
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import javax.sql.DataSource
-
 
 private val log = LoggerFactory.getLogger("behandlingApi")
 
@@ -78,6 +77,10 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                     val flyt = behandling.flyt()
 
                     val kravMottatt = finnKravMottatt(repositoryProvider, behandling)
+                    val tilhørendeKlagebehandling = tilhørendeKlagebehandling(
+                        repositoryProvider,
+                        behandling
+                    )
 
                     DetaljertBehandlingDTO(
                         referanse = behandling.referanse.referanse,
@@ -127,6 +130,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                         versjon = behandling.versjon,
                         virkningstidspunkt = virkningstidspunkt,
                         kravMottatt = kravMottatt,
+                        tilhørendeKlagebehandling = tilhørendeKlagebehandling?.referanse,
                         vedtaksdato = vedtak?.virkningstidspunkt
                     )
                 }
@@ -216,5 +220,15 @@ private fun finnKravMottatt(
     behandling: Behandling
 ): LocalDate? {
     if (behandling.typeBehandling() != TypeBehandling.Klage) return null
-    return DatoFraDokumentUtleder(repositoryProvider).utledKravMottattDatoForKlageBehandling(behandling.id)
+    return KlagedokumentInformasjonUtleder(repositoryProvider)
+        .utledKravMottattDatoForKlageBehandling(behandling.id)
 }
+
+private fun tilhørendeKlagebehandling(
+    repositoryProvider: RepositoryProvider,
+    behandling: Behandling
+): BehandlingReferanse? {
+    if (behandling.typeBehandling() != TypeBehandling.SvarFraAndreinstans) return null
+    return KlagedokumentInformasjonUtleder(repositoryProvider)
+        .utledKlagebehandlingForSvar(behandling.id)
+} 

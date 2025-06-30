@@ -49,8 +49,6 @@ fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(dataSource: DataSource, re
                 val gjeldendeVurdering =
                     påklagetBehandlingService.hentGjeldendeVurderingMedReferanse(behandlingReferanse)
                 val behandlingerMedVedtak = påklagetBehandlingService.hentAlleBehandlingerMedVedtakForPerson(sak.person)
-                val kravMottattDato =
-                    datoFraDokumentUtleder.utledKravMottattDatoForKlageBehandling(behandlingId = behandling.id)
 
                 val harTilgangTilÅSaksbehandle =
                     GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
@@ -61,7 +59,6 @@ fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(dataSource: DataSource, re
                 mapTilPåklagetBehandlingGrunnlagDto(
                     gjeldendeVurdering,
                     behandlingerMedVedtak,
-                    kravMottattDato,
                     harTilgangTilÅSaksbehandle
                 )
             }
@@ -74,11 +71,9 @@ fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(dataSource: DataSource, re
 fun mapTilPåklagetBehandlingGrunnlagDto(
     påklagetBehandlingVurderingMedReferanse: PåklagetBehandlingVurderingMedReferanse?,
     behandlingerMedVedtak: List<BehandlingMedVedtak>,
-    kravMottattDato: LocalDate?,
     harTilgangTilÅSaksbehandle: Boolean
 ): PåklagetBehandlingGrunnlagDto {
     return PåklagetBehandlingGrunnlagDto(
-        kravMottatt = kravMottattDato,
         behandlinger = behandlingerMedVedtak
             .map { it.tilBehandlingMedVedtakDto() }
             .sortedByDescending { it.vedtakstidspunkt },
