@@ -28,7 +28,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
 import java.time.YearMonth
@@ -45,18 +44,22 @@ class LovvalgService private constructor(
 
     private val medlemskapGateway = GatewayProvider.provide<MedlemskapGateway>()
 
-    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+    override fun erRelevant(
+        kontekst: FlytKontekstMedPerioder,
+        steg: StegType,
+        oppdatert: InformasjonskravOppdatert?
+    ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
-            && (oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
+                && (oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
                 || kontekst.årsakerTilBehandling.contains(ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE))
-            && tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
+                && tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
 
         val medlemskapPerioder =
-            medlemskapGateway.innhent(sak.person, Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom))
+            medlemskapGateway.innhent(sak.person, sak.rettighetsperiode)
         val arbeidGrunnlag = innhentAARegisterGrunnlag(sak)
         val inntektGrunnlag = innhentAInntektGrunnlag(sak)
         val enhetGrunnlag = innhentEREGGrunnlag(inntektGrunnlag)
@@ -80,8 +83,8 @@ class LovvalgService private constructor(
         if (inntektGrunnlag.isEmpty()) return emptyList()
 
         val orgnumre = inntektGrunnlag.flatMap {
-            it.arbeidsInntektInformasjon.inntektListe.map {
-                inntekt -> inntekt.virksomhet.identifikator
+            it.arbeidsInntektInformasjon.inntektListe.map { inntekt ->
+                inntekt.virksomhet.identifikator
             }
         }.toSet()
         val gateway = GatewayProvider.provide<EnhetsregisteretGateway>()
