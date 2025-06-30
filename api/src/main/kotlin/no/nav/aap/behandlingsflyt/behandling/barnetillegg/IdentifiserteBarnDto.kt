@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate
+package no.nav.aap.behandlingsflyt.behandling.barnetillegg
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.type.Periode

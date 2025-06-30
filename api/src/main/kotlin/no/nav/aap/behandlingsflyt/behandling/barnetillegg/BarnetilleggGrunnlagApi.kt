@@ -1,9 +1,10 @@
-package no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate
+package no.nav.aap.behandlingsflyt.behandling.barnetillegg
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.barnetillegg.BarnetilleggService
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
@@ -75,6 +76,8 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource, repositoryRegistr
                             token()
                         )
 
+                    val ansattNavnOgEnhet =
+                        barnGrunnlag?.vurderteBarn?.let { AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv) }
 
                     BarnetilleggDto(
                         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
@@ -92,16 +95,26 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource, repositoryRegistr
                                 fødselsdato = hentBarn(
                                     it.ident,
                                     personopplysningGrunnlag
-                                ).fødselsdato
+                                ).fødselsdato,
                             )
                         } ?: emptyList(),
-                        barnSomTrengerVurdering = uavklarteBarn.map {
-                            hentBarn(
-                                it,
-                                personopplysningGrunnlag
-                            )
-                        }
-                            .toList()
+                        vurdertAv =
+                            barnGrunnlag?.vurderteBarn?.let {
+                                VurdertAvResponse(
+                                    ident = it.vurdertAv,
+                                    dato = it.vurdertTidspunkt.toLocalDate(),
+                                    ansattnavn = ansattNavnOgEnhet?.navn,
+                                    enhetsnavn = ansattNavnOgEnhet?.enhet
+                                )
+                            },
+                        barnSomTrengerVurdering =
+                            uavklarteBarn
+                                .map {
+                                    hentBarn(
+                                        it,
+                                        personopplysningGrunnlag
+                                    )
+                                }.toList()
                     )
                 }
 
