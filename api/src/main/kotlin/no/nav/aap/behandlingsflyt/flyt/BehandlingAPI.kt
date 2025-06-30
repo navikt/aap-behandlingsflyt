@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
-import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
@@ -59,10 +59,8 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                         repositoryProvider.provide<AvklaringsbehovRepository>()
                     val vilkårsresultatRepository =
                         repositoryProvider.provide<VilkårsresultatRepository>()
-                    val vedtakRepository = repositoryProvider.provide<VedtakRepository>()
 
                     val behandling = behandling(behandlingRepository, req)
-                    val vedtak = vedtakRepository.hent(behandling.id)
                     val virkningstidspunkt =
                         runCatching {
                             if (behandling.erYtelsesbehandling()) VirkningstidspunktUtleder(
@@ -131,7 +129,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                         virkningstidspunkt = virkningstidspunkt,
                         kravMottatt = kravMottatt,
                         tilhørendeKlagebehandling = tilhørendeKlagebehandling?.referanse,
-                        vedtaksdato = vedtak?.virkningstidspunkt
+                        vedtaksdato = VedtakService(repositoryProvider).vedtakstidspunkt(behandling)?.toLocalDate()
                     )
                 }
                 respond(dto)
@@ -231,4 +229,4 @@ private fun tilhørendeKlagebehandling(
     if (behandling.typeBehandling() != TypeBehandling.SvarFraAndreinstans) return null
     return KlagedokumentInformasjonUtleder(repositoryProvider)
         .utledKlagebehandlingForSvar(behandling.id)
-} 
+}
