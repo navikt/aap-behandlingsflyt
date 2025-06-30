@@ -2026,6 +2026,10 @@ object FakeServers : AutoCloseable {
         //Enhetsregisteret
         System.setProperty("integrasjon.ereg.url", "http://localhost:${ereg.port()}")
         System.setProperty("integrasjon.ereg.scope", "scope")
+
+        // Sam
+        System.setProperty("integrasjon.sam.url", "http://localhost:${sam.port()}")
+        System.setProperty("integrasjon.sam.scope", "sam")
     }
 
     override fun close() {
