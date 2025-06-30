@@ -48,7 +48,7 @@ class VurderLovvalgSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
-                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
                     avklaringsbehovService.avbrytForSteg(kontekst.behandlingId, type())
                     vilkårService.ingenNyeVurderinger(
                         kontekst,
