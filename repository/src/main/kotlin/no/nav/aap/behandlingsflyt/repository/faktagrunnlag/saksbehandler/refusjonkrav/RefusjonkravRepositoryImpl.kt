@@ -40,19 +40,19 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
             SELECT * FROM REFUSJONKRAV_VURDERING WHERE REFUSJONKRAV_VURDERINGER_ID = ?
         """.trimIndent()
 
-        return connection.queryFirst(query) {
+        return connection.queryList(query) {
             setParams {
                 setLong(1, vurderingerId)
             }
             setRowMapper {
-                listOf(RefusjonkravVurdering(
+                RefusjonkravVurdering(
                     harKrav = it.getBoolean("har_krav"),
                     fom = it.getLocalDateOrNull("fom"),
                     tom = it.getLocalDateOrNull("tom"),
                     vurdertAv = it.getString("vurdert_av"),
                     navKontor = it.getString("navkontor"),
                     opprettetTid = it.getLocalDateTime("opprettet_tid")
-                ))
+                )
             }
         }
     }
