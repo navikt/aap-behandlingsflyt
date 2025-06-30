@@ -20,4 +20,5 @@ data class DetaljertBehandlingDTO(
     val versjon: Long,
     val virkningstidspunkt: LocalDate?,
     val vedtaksdato: LocalDate?,
+    val kravMottatt: LocalDate?
 )

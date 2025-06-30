@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
+import no.nav.aap.behandlingsflyt.behandling.søknad.DatoFraDokumentUtleder
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
@@ -18,6 +19,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårsperiodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -30,10 +32,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 import javax.sql.DataSource
 
 
@@ -72,6 +76,9 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                             null
                         }
                     val flyt = behandling.flyt()
+
+                    val kravMottatt = finnKravMottatt(repositoryProvider, behandling)
+
                     DetaljertBehandlingDTO(
                         referanse = behandling.referanse.referanse,
                         type = behandling.typeBehandling(),
@@ -119,6 +126,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                         aktivtSteg = behandling.aktivtSteg(),
                         versjon = behandling.versjon,
                         virkningstidspunkt = virkningstidspunkt,
+                        kravMottatt = kravMottatt,
                         vedtaksdato = vedtak?.virkningstidspunkt
                     )
                 }
@@ -201,4 +209,12 @@ private fun vilkårResultat(
     behandlingId: BehandlingId
 ): Vilkårsresultat {
     return vilkårsResultatRepository.hent(behandlingId)
+}
+
+private fun finnKravMottatt(
+    repositoryProvider: RepositoryProvider,
+    behandling: Behandling
+): LocalDate? {
+    if (behandling.typeBehandling() != TypeBehandling.Klage) return null
+    return DatoFraDokumentUtleder(repositoryProvider).utledKravMottattDatoForKlageBehandling(behandling.id)
 }
