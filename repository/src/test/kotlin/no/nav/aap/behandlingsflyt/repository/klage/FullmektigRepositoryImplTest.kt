@@ -46,7 +46,7 @@ class FullmektigRepositoryImplTest {
                 FullmektigVurdering::fullmektigIdent,
                 FullmektigVurdering::fullmektigNavnOgAdresse,
                 FullmektigVurdering::vurdertAv
-            ).containsExactly(true, "12345678901", null, "Saksbehandler")
+            ).containsExactly(true, IdentMedType("12345678901", IdentType.FNR_DNR), null, "Saksbehandler")
         }
     }
 
