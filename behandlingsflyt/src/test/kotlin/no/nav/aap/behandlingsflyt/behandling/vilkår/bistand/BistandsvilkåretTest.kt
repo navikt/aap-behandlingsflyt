@@ -40,8 +40,10 @@ import java.time.Instant
 import java.time.LocalDate
 
 class BistandsvilkåretTest {
+    private val dataSource = InitTestDatabase.freshDatabase()
+
     @Test
-    fun `testNye vurderinger skal overskrive`() {
+    fun `nye vurderinger skal overskrive`() {
         val vilkårsresultat = Vilkårsresultat()
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
 
@@ -175,8 +177,6 @@ class BistandsvilkåretTest {
 
     @Test
     fun `Skal bygge tidslinje på tvers av behandlinger`() {
-        val dataSource = InitTestDatabase.freshDatabase()
-
         val bistandsvurdering1 = BistandVurdering(
             begrunnelse = "Begrunnelse",
             erBehovForAktivBehandling = true,
@@ -240,8 +240,11 @@ class BistandsvilkåretTest {
         // Send inn revurderingsløsning
         dataSource.transaction { connection ->
             // Må lagre ned sykdomsvurdering for behandlingen da vurderingenGjelderFra for 11-6 skal være lik den for 11-5 i samme behandling
-            val sykdomsvurdering = sykdomsvurdering(vurderingenGjelderFra = now.plusDays(10))
-            postgresRepositoryRegistry.provider(connection).provide<SykdomRepository>().lagre(revurdering.id, listOf(sykdomsvurdering))
+            val sykdomsvurdering = sykdomsvurdering(
+                vurderingenGjelderFra = now.plusDays(10),
+            )
+            postgresRepositoryRegistry.provider(connection).provide<SykdomRepository>()
+                .lagre(revurdering.id, listOf(sykdomsvurdering))
 
             val bistandsvurdering2 = BistandVurderingLøsningDto(
                 begrunnelse = "Begrunnelse",

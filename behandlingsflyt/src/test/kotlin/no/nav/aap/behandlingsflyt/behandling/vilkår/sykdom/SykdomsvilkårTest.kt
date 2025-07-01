@@ -1,18 +1,23 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 
 class SykdomsvilkårTest {
@@ -23,7 +28,8 @@ class SykdomsvilkårTest {
 
         Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
-                vurderingsdato = LocalDate.now(),
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                kravDato = LocalDate.now(),
                 sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
                 yrkesskadevurdering = null,
                 sykdomsvurderinger = listOf(
@@ -39,7 +45,8 @@ class SykdomsvilkårTest {
 
         Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
-                vurderingsdato = LocalDate.now(),
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                kravDato = LocalDate.now(),
                 sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
                 yrkesskadevurdering = null,
                 sykdomsvurderinger = listOf(
@@ -58,10 +65,11 @@ class SykdomsvilkårTest {
         val vilkårsresultat = Vilkårsresultat()
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
         val startDato = 1 januar 2024
-        val opprettet = Instant.now()
+        val opprettet = LocalDateTime.now()
         Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
-                vurderingsdato = startDato,
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                kravDato = startDato,
                 sisteDagMedMuligYtelse = startDato.plusYears(3),
                 yrkesskadevurdering = null,
                 sykdomsvurderinger = listOf(
@@ -90,16 +98,56 @@ class SykdomsvilkårTest {
             },
         )
     }
-    
+
+    @Test
+    fun `nei på viss varighet ved førstegangsbehandling`() {
+        val vilkårsresultat = Vilkårsresultat()
+        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
+        val startDato = 1 januar 2024
+        val opprettet = LocalDateTime.now()
+        Sykdomsvilkår(vilkårsresultat).vurder(
+            SykdomsFaktagrunnlag(
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                kravDato = startDato,
+                sisteDagMedMuligYtelse = startDato.plusYears(3),
+                yrkesskadevurdering = null,
+                sykdomsvurderinger = listOf(
+                    sykdomsvurdering(opprettet = opprettet),
+                    sykdomsvurdering(
+                        erNedsettelseIArbeidsevneAvEnVissVarighet = false,
+                        vurderingenGjelderFra = startDato.plusWeeks(1),
+                        opprettet = opprettet.plusSeconds(50)
+                    )
+                ),
+                studentvurdering = null,
+                sykepengerErstatningFaktagrunnlag = null
+            )
+        )
+
+        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+
+        assertThat(vilkår.vilkårsperioder()).hasSize(2)
+
+        vilkår.tidslinje().assertTidslinje(
+            Segment(Periode(1 januar 2024, 7 januar 2024)) { vurdering ->
+                assertThat(vurdering.utfall).isEqualTo(Utfall.OPPFYLT)
+            },
+            Segment(Periode(8 januar 2024, 1 januar 2027)) { vurdering ->
+                assertThat(vurdering.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+            },
+        )
+    }
+
     @Test
     fun `Krever ikke svar på viss varighet ved revurdering`() {
         val vilkårsresultat = Vilkårsresultat()
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
         val startDato = 1 januar 2024
-        val opprettet = Instant.now()
+        val opprettet = LocalDateTime.now()
         Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
-                vurderingsdato = startDato,
+                typeBehandling = TypeBehandling.Revurdering,
+                kravDato = startDato,
                 sisteDagMedMuligYtelse = startDato.plusYears(3),
                 yrkesskadevurdering = null,
                 sykdomsvurderinger = listOf(
@@ -129,6 +177,53 @@ class SykdomsvilkårTest {
         )
     }
 
+    @Test
+    fun `hvis revurdering av førstegangsvurdering, så skal viss varigheten vurderes`() {
+        val vilkårsresultat = Vilkårsresultat()
+        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
+        val startDato = 1 januar 2024
+        val opprettet = LocalDateTime.now()
+
+        Sykdomsvilkår(vilkårsresultat).vurder(
+            SykdomsFaktagrunnlag(
+                typeBehandling = TypeBehandling.Revurdering,
+                kravDato = startDato,
+                sisteDagMedMuligYtelse = startDato.plusYears(3),
+                yrkesskadevurdering = null,
+                sykdomsvurderinger = listOf(
+                    sykdomsvurdering(opprettet = opprettet),
+                    sykdomsvurdering(
+                        erNedsettelseIArbeidsevneAvEnVissVarighet = false,
+                        vurderingenGjelderFra = startDato,
+                        opprettet = opprettet.plusSeconds(50)
+                    )
+                ),
+                studentvurdering = null,
+                sykepengerErstatningFaktagrunnlag =
+                    SykepengerVurdering(
+                        begrunnelse = "",
+                        dokumenterBruktIVurdering = listOf(),
+                        harRettPå = true,
+                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                        vurdertAv = "abc123",
+                        vurdertTidspunkt = LocalDateTime.now()
+                    )
+
+            )
+        )
+
+        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+
+        assertThat(vilkår.vilkårsperioder()).hasSize(1)
+
+        vilkår.tidslinje().assertTidslinje(
+            Segment(Periode(1 januar 2024,  1 januar 2027)) { vurdering ->
+                assertThat(vurdering.utfall).isEqualTo(Utfall.OPPFYLT)
+                assertThat(vurdering.innvilgelsesårsak).isEqualTo(Innvilgelsesårsak.SYKEPENGEERSTATNING)
+            },
+        )
+    }
+
     private fun sykdomsvurdering(
         harSkadeSykdomEllerLyte: Boolean = true,
         erSkadeSykdomEllerLyteVesentligdel: Boolean = true,
@@ -137,7 +232,7 @@ class SykdomsvilkårTest {
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
         erArbeidsevnenNedsatt: Boolean = true,
         vurderingenGjelderFra: LocalDate? = null,
-        opprettet: Instant = Instant.now(),
+        opprettet: LocalDateTime = LocalDateTime.now()
     ) = Sykdomsvurdering(
         begrunnelse = "",
         dokumenterBruktIVurdering = listOf(),
@@ -150,6 +245,6 @@ class SykdomsvilkårTest {
         yrkesskadeBegrunnelse = null,
         vurderingenGjelderFra = vurderingenGjelderFra,
         vurdertAv = Bruker("Z00000"),
-        opprettet = opprettet,
+        opprettet = opprettet.toInstant(ZoneOffset.UTC)
     )
 }

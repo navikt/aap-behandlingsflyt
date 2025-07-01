@@ -12,10 +12,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -40,6 +40,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource, repositoryReg
                 val respons = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
                     val bistandRepository = repositoryProvider.provide<BistandRepository>()
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
 
@@ -69,8 +70,9 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource, repositoryReg
                             token()
                         )
 
-                    val erOppfylt11_5 =
-                        if (behandling.typeBehandling() == TypeBehandling.Revurdering) sisteSykdomsvurdering.erOppfyltSettBortIfraVissVarighet() else sisteSykdomsvurdering.erOppfylt()
+                    val behandlingsType = behandling.typeBehandling()
+                    val sak = sakRepository.hent(behandling.sakId)
+                    val erOppfylt11_5 = sisteSykdomsvurdering.erOppfylt(behandlingsType, sak.rettighetsperiode.fom)
 
                     BistandGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,

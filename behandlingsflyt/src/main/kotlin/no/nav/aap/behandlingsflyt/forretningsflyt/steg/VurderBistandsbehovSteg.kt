@@ -24,12 +24,14 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 
 class VurderBistandsbehovSteg private constructor(
     private val bistandRepository: BistandRepository,
@@ -83,7 +85,8 @@ class VurderBistandsbehovSteg private constructor(
                         sykdomsvurderinger,
                         bistandsGrunnlag,
                         vilkårsresultat,
-                        avklaringsbehovene
+                        avklaringsbehovene,
+                        TypeBehandling.Førstegangsbehandling,
                     )
                 ) {
                     return FantAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV)
@@ -106,7 +109,8 @@ class VurderBistandsbehovSteg private constructor(
                         sykdomsvurderinger,
                         bistandsGrunnlag,
                         vilkårsresultat,
-                        avklaringsbehovene
+                        avklaringsbehovene,
+                        TypeBehandling.Revurdering
                     )
                 ) {
                     return FantAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV)
@@ -153,10 +157,12 @@ class VurderBistandsbehovSteg private constructor(
         sykdomsvurderinger: List<Sykdomsvurdering>,
         bistandsGrunnlag: BistandGrunnlag?,
         vilkårsresultat: Vilkårsresultat,
-        avklaringsbehovene: Avklaringsbehovene
+        avklaringsbehovene: Avklaringsbehovene,
+        typeBehandling: TypeBehandling,
     ): Boolean {
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-        val erIkkeAvslagPåVilkårTidligere = erIkkeAvslagPåVilkårTidligere(vilkårsresultat, sykdomsvurderinger)
+        val erIkkeAvslagPåVilkårTidligere =
+            erIkkeAvslagPåVilkårTidligere(vilkårsresultat, sykdomsvurderinger, typeBehandling, periode.fom)
         if (!erIkkeAvslagPåVilkårTidligere || studentGrunnlag?.studentvurdering?.erOppfylt() == true) {
             return false
         }
@@ -203,11 +209,13 @@ class VurderBistandsbehovSteg private constructor(
 
     private fun erIkkeAvslagPåVilkårTidligere(
         vilkårsresultat: Vilkårsresultat,
-        sykdomsvurderinger: List<Sykdomsvurdering>
+        sykdomsvurderinger: List<Sykdomsvurdering>,
+        typeBehandling: TypeBehandling,
+        kravDato: LocalDate,
     ): Boolean {
         return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()
                 && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
-                && sykdomsvurderinger.any { it.erOppfylt() }
+                && sykdomsvurderinger.any { it.erOppfylt(typeBehandling, kravDato) }
     }
 
 

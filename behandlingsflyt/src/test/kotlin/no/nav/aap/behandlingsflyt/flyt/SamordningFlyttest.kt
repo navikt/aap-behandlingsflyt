@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FritakMeldepliktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SamordningVentPaVirkningstidspunktLøsning
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -239,10 +238,8 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest() {
         // Verifiser at samordning med 100% strekker seg ut rettighetsperioden for å unngå feilaktig utbetaling fordi perioden har passert
         assertThat(periodeMedFullSamordning.tom).isEqualTo(periode.tom)
 
-        val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
         val behandlingReferanse = behandling.referanse
-        behandling =
-            løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
+        behandling = behandling.løsVedtaksbrev()
 
         var revurdering = hentNyesteBehandlingForSak(behandling.sakId)
 
@@ -514,10 +511,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest() {
         assertThat(periodeMedFullSamordning.inneholder(sykePengerPeriode.tom)).isTrue
         // Verifiser at samordning med 100% strekker seg ut rettighetsperioden for å unngå feilaktig utbetaling fordi perioden har passert
         assertThat(periodeMedFullSamordning.tom).isEqualTo(periode.tom)
-
-        val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
-
-        løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
+        behandling = behandling.løsVedtaksbrev()
 
         val nyesteBehandling = hentNyesteBehandlingForSak(behandling.sakId)
         val behandlingReferanse = behandling.referanse

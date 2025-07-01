@@ -30,6 +30,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.Bist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
+import no.nav.aap.behandlingsflyt.flyt.AbstraktFlytOrkestratorTest.Companion.util
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.NyÅrsakTilBehandlingHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
@@ -100,8 +101,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.Random
-import java.util.UUID
+import java.util.*
 
 @Fakes
 abstract class AbstraktFlytOrkestratorTest {
@@ -303,6 +303,12 @@ abstract class AbstraktFlytOrkestratorTest {
         }
     }
 
+    protected fun hentSak(behandling: Behandling): Sak {
+        return dataSource.transaction { connection ->
+            SakRepositoryImpl(connection).hent(behandling.sakId)
+        }
+    }
+
     protected fun opprettBehandling(
         sakId: SakId,
         årsaker: List<Årsak>,
@@ -372,9 +378,13 @@ abstract class AbstraktFlytOrkestratorTest {
     }
 
     protected fun hentAlleAvklaringsbehov(behandling: Behandling): List<Avklaringsbehov> {
+        return hentAlleAvklaringsbehov(behandling.id)
+    }
+
+    protected fun hentAlleAvklaringsbehov(behandlingId: BehandlingId): List<Avklaringsbehov> {
         return dataSource.transaction(readOnly = true) {
             AvklaringsbehovRepositoryImpl(it).hentAvklaringsbehovene(
-                behandling.id
+                behandlingId
             ).alle()
         }
     }
@@ -399,6 +409,13 @@ abstract class AbstraktFlytOrkestratorTest {
         val sak = hentSak(ident, dokumentMottattPersonHendelse.periode)
         val behandling = hentNyesteBehandlingForSak(sak.id)
         return behandling
+    }
+
+    protected fun Behandling.sendInnDokument(
+        dokumentMottattPersonHendelse: DokumentMottattPersonHendelse
+    ): Behandling {
+        val aktivIdent = hentSak(this).person.aktivIdent()
+        return sendInnDokument(aktivIdent, dokumentMottattPersonHendelse)
     }
 
     protected fun sendInnDokument(
@@ -533,6 +550,18 @@ abstract class AbstraktFlytOrkestratorTest {
         Bruker("BESLUTTER")
     )
 
+    @JvmName("fattVedtakExt")
+    protected fun Behandling.fattVedtak(): Behandling {
+        return fattVedtak(this)
+    }
+
+    class BehandlingInfo(val åpneAvklaringsbehov: List<Avklaringsbehov>, val behandling: Behandling)
+
+    protected fun Behandling.medKontekst(block: BehandlingInfo.() -> Unit): Behandling {
+        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(this)
+        block(BehandlingInfo(åpneAvklaringsbehov = åpneAvklaringsbehov, behandling = this))
+        return this
+    }
 
     protected fun nyPerson(
         harYrkesskade: Boolean,
@@ -586,6 +615,12 @@ abstract class AbstraktFlytOrkestratorTest {
             brevbestillingReferanse = brevbestillingReferanse,
             handling = SkrivBrevAvklaringsbehovLøsning.Handling.FERDIGSTILL
         )
+    }
+
+    protected fun Behandling.løsVedtaksbrev(): Behandling {
+        val brevbestilling = hentBrevAvType(this, TypeBrev.VEDTAK_INNVILGELSE)
+
+        return this.løsAvklaringsBehov(vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
     }
 
     protected fun leggTilÅrsakForBehandling(behandling: Behandling, årsaker: List<Årsak>) {
