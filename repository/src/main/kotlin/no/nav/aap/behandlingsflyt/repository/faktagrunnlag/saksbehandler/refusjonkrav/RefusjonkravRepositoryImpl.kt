@@ -183,8 +183,8 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
 
         val query = """
             INSERT INTO REFUSJONKRAV_GRUNNLAG 
-                (behandling_id, sak_id, refusjonkrav_vurderinger_id) 
-            SELECT ?, sak_id, refusjonkrav_vurderinger_id
+                (behandling_id, sak_id, refusjonkrav_vurderinger_id, refusjonkrav_vurdering_id) 
+            SELECT ?, sak_id, refusjonkrav_vurderinger_id, refusjonkrav_vurdering_id
                 from REFUSJONKRAV_GRUNNLAG 
                 where behandling_id = ? and aktiv
         """.trimIndent()
