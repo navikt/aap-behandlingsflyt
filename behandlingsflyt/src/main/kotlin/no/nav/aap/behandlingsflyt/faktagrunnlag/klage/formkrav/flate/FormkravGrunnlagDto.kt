@@ -2,9 +2,12 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurdering
+import java.time.LocalDate
 
 data class FormkravGrunnlagDto(
-    val vurdering: FormkravVurderingDto? = null
+    val vurdering: FormkravVurderingDto? = null,
+    val varselSendtDato: LocalDate? = null,
+    val varselSvarfrist: LocalDate? = null,
 )
 
 data class FormkravVurderingDto(
@@ -30,5 +33,7 @@ internal fun FormkravVurdering.tilDto() =
 
 internal fun FormkravGrunnlag.tilDto() =
     FormkravGrunnlagDto(
-        vurdering = vurdering.tilDto()
+        vurdering = vurdering.tilDto(),
+        varselSendtDato = varsel?.sendtDato,
+        varselSvarfrist = varsel?.svarfrist
     )

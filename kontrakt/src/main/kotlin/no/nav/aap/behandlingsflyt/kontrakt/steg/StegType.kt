@@ -199,10 +199,6 @@ public enum class StegType(
         gruppe = StegGruppe.OPPRETTHOLDELSE,
         status = Status.IVERKSETTES
     ),
-    EFFEKTUER_AVVIST_PÅ_FORMKRAV(
-        gruppe = StegGruppe.KLAGE_AVVIST_PÅ_FORMKRAV,
-        status = Status.IVERKSETTES
-    ),
     SVAR_FRA_ANDREINSTANS(
         gruppe = StegGruppe.SVAR_FRA_ANDREINSTANS,
         status = Status.OPPRETTET,

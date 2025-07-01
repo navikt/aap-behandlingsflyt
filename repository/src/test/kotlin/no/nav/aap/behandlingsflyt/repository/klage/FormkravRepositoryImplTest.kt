@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.klage
 
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
@@ -16,12 +17,13 @@ import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.util.UUID
 
 internal class FormkravRepositoryImplTest {
     private val dataSource = InitTestDatabase.freshDatabase()
 
     @Test
-    fun `Lagrer og henter formkrav`() {
+    fun `Lagrer og henter formkrav uten varsel`() {
         dataSource.transaction { connection ->
 
             val sak = sak(connection)
@@ -38,11 +40,53 @@ internal class FormkravRepositoryImplTest {
                 likevelBehandles = null
             )
 
+
             formkravRepository.lagre(behandling.id, formkrav)
+            val grunnlag = formkravRepository.hentHvisEksisterer(behandling.id)
+
+            assertThat(grunnlag?.vurdering).isEqualTo(formkrav)
+        }
+    }
+
+    @Test
+    fun `Lagrer og henter formkrav med varsel`() {
+        dataSource.transaction { connection ->
+
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+
+            val formkravRepository = FormkravRepositoryImpl(connection)
+            val formkrav = FormkravVurdering(
+                begrunnelse = "Begrunnelse",
+                erBrukerPart = true,
+                erFristOverholdt = true,
+                erKonkret = true,
+                erSignert = true,
+                vurdertAv = "ident",
+                likevelBehandles = null
+            )
+
+            val varselSendt = LocalDate.now();
+            val varselFrist = varselSendt.plusWeeks(3)
+            val brevReferanse = BrevbestillingReferanse(UUID.randomUUID())
+
+            formkravRepository.lagre(behandling.id, formkrav)
+            formkravRepository.lagreVarsel(
+                behandlingId = behandling.id,
+                varsel = brevReferanse
+            )
+            formkravRepository.lagreFrist(
+                behandlingId = behandling.id,
+                datoVarslet = varselSendt,
+                svarfrist = varselFrist
+            )
 
             val grunnlag = formkravRepository.hentHvisEksisterer(behandling.id)
 
             assertThat(grunnlag?.vurdering).isEqualTo(formkrav)
+            assertThat(grunnlag?.varsel?.svarfrist).isEqualTo(varselFrist)
+            assertThat(grunnlag?.varsel?.sendtDato).isEqualTo(varselSendt)
+            assertThat(grunnlag?.varsel?.varselId).isEqualTo(brevReferanse)
         }
     }
 

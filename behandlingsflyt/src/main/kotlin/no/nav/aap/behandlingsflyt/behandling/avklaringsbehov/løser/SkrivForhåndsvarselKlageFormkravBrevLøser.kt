@@ -3,20 +3,20 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivForhåndsvarselKlageFormkravBrevLøsning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.effektueravvistpåformkrav.EffektuerAvvistPåFormkravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 
 class SkrivForhåndsvarselKlageFormkravBrevLøser(
     private val skrivBrevAvklaringsbehovLøser: SkrivBrevAvklaringsbehovLøser,
-    private val effektuerAvvistPåFormkravRepository: EffektuerAvvistPåFormkravRepository
+    private val formkravRepository: FormkravRepository
 ) :
     AvklaringsbehovsLøser<SkrivForhåndsvarselKlageFormkravBrevLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         skrivBrevAvklaringsbehovLøser = SkrivBrevAvklaringsbehovLøser(repositoryProvider),
-        effektuerAvvistPåFormkravRepository = repositoryProvider.provide()
+        formkravRepository = repositoryProvider.provide()
     )
 
     override fun løs(
@@ -29,7 +29,7 @@ class SkrivForhåndsvarselKlageFormkravBrevLøser(
         )
         when (løsning.handling) {
             SkrivBrevAvklaringsbehovLøsning.Handling.FERDIGSTILL -> {
-                effektuerAvvistPåFormkravRepository.lagreFrist(
+                formkravRepository.lagreFrist(
                     kontekst.kontekst.behandlingId,
                     LocalDate.now(),
                     LocalDate.now().plusWeeks(3)

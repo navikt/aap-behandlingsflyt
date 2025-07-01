@@ -368,12 +368,6 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = false
     ),
-    EFFEKTUER_AVVIST_PÅ_FORMKRAV(
-        kode = AvklaringsbehovKode.`6004`,
-        type = BehovType.MANUELT_PÅKREVD,
-        løsesISteg = StegType.EFFEKTUER_AVVIST_PÅ_FORMKRAV,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
-    ),
     FASTSETT_FULLMEKTIG(
         kode = AvklaringsbehovKode.`6009`,
         type = BehovType.MANUELT_PÅKREVD,
@@ -391,7 +385,7 @@ public enum class Definisjon(
     ),
     SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV(
         kode = AvklaringsbehovKode.`6005`,
-        løsesISteg = StegType.EFFEKTUER_AVVIST_PÅ_FORMKRAV,
+        løsesISteg = StegType.FORMKRAV,
         type = BehovType.MANUELT_PÅKREVD,
         løsesAv = listOf(
             Rolle.SAKSBEHANDLER_NASJONAL
@@ -400,7 +394,7 @@ public enum class Definisjon(
     VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV(
         kode = AvklaringsbehovKode.`6007`,
         type = BehovType.VENTEPUNKT,
-        løsesISteg = StegType.EFFEKTUER_AVVIST_PÅ_FORMKRAV,
+        løsesISteg = StegType.FORMKRAV,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         defaultFrist = Period.ofWeeks(3),
     ),
