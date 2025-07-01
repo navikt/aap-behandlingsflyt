@@ -1,6 +1,9 @@
 package no.nav.aap.behandlingsflyt.integrasjon.klage
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.Adresse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.NavnOgAdresse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -30,9 +33,22 @@ class KabalGatewayTest {
                 saksnummer = Saksnummer("1"),
                 klageresultat = Opprettholdes(
                     vilkårSomSkalOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
+                ),
+                fullmektig = FullmektigVurdering(
+                    harFullmektig = true,
+                    fullmektigIdent = null,
+                    fullmektigNavnOgAdresse = NavnOgAdresse(
+                        navn = "Ola Nordmann",
+                        adresse = Adresse(
+                            adresselinje1 = "Gateveien 1",
+                            postnummer = "1234",
+                            poststed = "Oslo",
+                            landkode = "NOR"
+                        )
+                    ),
+                    vurdertAv = "Saksbehandler",
                 )
             )
         }
-
     }
 }

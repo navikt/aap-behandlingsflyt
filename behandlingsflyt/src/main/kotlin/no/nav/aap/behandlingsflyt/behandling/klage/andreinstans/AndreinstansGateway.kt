@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.klage.andreinstans
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultat
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -15,5 +16,6 @@ interface AndreinstansGateway: Gateway {
         klagenGjelder: Person,
         klageresultat: KlageResultat,
         saksbehandlersEnhet: String,
+        fullmektig: FullmektigVurdering?
     )
 }

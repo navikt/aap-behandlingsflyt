@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
@@ -22,7 +23,8 @@ class AndreinstansService(
     private val sakRepository: SakRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val ansattInfoService: AnsattInfoService,
-    private val klagedokumentInformasjonUtleder: KlagedokumentInformasjonUtleder
+    private val klagedokumentInformasjonUtleder: KlagedokumentInformasjonUtleder,
+    private val fullmektigRepository: FullmektigRepository
 ) {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -32,7 +34,8 @@ class AndreinstansService(
         sakRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         ansattInfoService = AnsattInfoService(),
-        klagedokumentInformasjonUtleder = KlagedokumentInformasjonUtleder(repositoryProvider)
+        klagedokumentInformasjonUtleder = KlagedokumentInformasjonUtleder(repositoryProvider),
+        fullmektigRepository = repositoryProvider.provide()
     )
 
     fun oversendTilAndreinstans(klageBehandlingId: BehandlingId) {
@@ -52,6 +55,9 @@ class AndreinstansService(
 
         val kravdato = klagedokumentInformasjonUtleder.utledKravMottattDatoForKlageBehandling(klageBehandlingId)
             ?: throw IllegalStateException("Kravdato for klagebehandling $klageBehandlingId er ikke definert")
+        
+        
+        val fullmektig = fullmektigRepository.hentHvisEksisterer(klageBehandlingId)
 
         andreinstansGateway.oversendTilAndreinstans(
             saksnummer = sak.saksnummer,
@@ -60,6 +66,7 @@ class AndreinstansService(
             klagenGjelder = sak.person,
             klageresultat = klageresultat,
             saksbehandlersEnhet = besluttersEnhet,
+            fullmektig = fullmektig?.vurdering
         )
     }
 

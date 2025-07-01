@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.integrasjon.kabal
 
 import no.nav.aap.behandlingsflyt.behandling.klage.andreinstans.AndreinstansGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultat
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -44,6 +46,7 @@ class KabalGateway : AndreinstansGateway {
         klagenGjelder: Person,
         klageresultat: KlageResultat,
         saksbehandlersEnhet: String,
+        fullmektig: FullmektigVurdering?
     ) {
 
         val request = PostRequest(
@@ -63,8 +66,9 @@ class KabalGateway : AndreinstansGateway {
                 ytelse = Ytelse.AAP_AAP,
                 forrigeBehandlendeEnhet = saksbehandlersEnhet,
                 tilknyttedeJournalposter = emptyList(), // TODO: Send med relevante journalposter?
-                brukersKlageMottattVedtaksinstans = kravDato, // TODO: Må hente kravdato. Dokument er ikke knyttet mot behandling, så undersøk hvordan dette skal gjøres. Må evt. legges på behandling
+                brukersKlageMottattVedtaksinstans = kravDato,
                 hindreAutomatiskSvarbrev = false,
+                prosessfullmektig = fullmektig?.tilOversendtProsessfullmektigV4(),
                 kildeReferanse = behandlingsreferanse.referanse.toString()
             ),
             additionalHeaders = listOf(
@@ -79,6 +83,30 @@ class KabalGateway : AndreinstansGateway {
     }
 }
 
+private fun FullmektigVurdering.tilOversendtProsessfullmektigV4(): OversendtProsessfullmektigV4? {
+    if (!harFullmektig) {
+        return null
+    }
+    return OversendtProsessfullmektigV4(
+        id = fullmektigIdent?.let {
+            OversendtPartId(
+                type = it.type.tilOversendtPartIdType(),
+                verdi = it.ident
+            )
+        },
+        navn = fullmektigNavnOgAdresse?.navn,
+        adresse = fullmektigNavnOgAdresse?.adresse?.let {
+            OversendtAdresseV4(
+                adresselinje1 = it.adresselinje1,
+                adresselinje2 = it.adresselinje2,
+                postnummer = it.postnummer,
+                poststed = it.poststed,
+                land = it.landkode
+            )
+        }
+    )
+}
+
 data class OversendtKlageAnkeV4(
     val type: OversendtKlageAnkeV4Type,
     val sakenGjelder: SakenGjelder,
@@ -89,8 +117,8 @@ data class OversendtKlageAnkeV4(
     val tilknyttedeJournalposter: List<String>,
     val brukersKlageMottattVedtaksinstans: LocalDate,
     val hindreAutomatiskSvarbrev: Boolean,
-    val kildeReferanse: String
-    // TODO: Legg til støtte for prosessfullmektig
+    val kildeReferanse: String,
+    val prosessfullmektig: OversendtProsessfullmektigV4? = null
 )
 
 enum class OversendtKlageAnkeV4Type {
@@ -121,6 +149,27 @@ data class OversendtDokumentReferanse(
     val type: MottakDokumentType,
     val journalpostId: String,
 )
+
+data class OversendtProsessfullmektigV4(
+    val id: OversendtPartId?,
+    val navn: String?,
+    val adresse: OversendtAdresseV4?,
+)
+
+data class OversendtAdresseV4(
+    val adresselinje1: String?,
+    val adresselinje2: String?,
+    val postnummer: String?,
+    val poststed: String?,
+    val land: String,
+)
+
+internal fun IdentType.tilOversendtPartIdType(): OversendtPartIdType {
+    return when (this) {
+        IdentType.FNR_DNR -> OversendtPartIdType.PERSON
+        IdentType.ORGNR, IdentType.UTL_ORGNR -> OversendtPartIdType.VIRKSOMHET
+    }
+}
 
 enum class MottakDokumentType {
     BRUKERS_SOEKNAD,
