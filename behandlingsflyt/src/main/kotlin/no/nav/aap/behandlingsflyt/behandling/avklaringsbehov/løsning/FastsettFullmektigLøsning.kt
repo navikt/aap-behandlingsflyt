@@ -7,6 +7,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.FastsettFullmektigLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentMedType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.NavnOgAdresse
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FASTSETT_FULLMEKTIG_KODE
@@ -31,13 +33,20 @@ class FastsettFullmektigLøsning(
 
 data class FullmektigLøsningDto(
     val harFullmektig: Boolean,
+    val fullmektigIdentMedType: IdentMedType? = null,
+    @Deprecated("Bruk fullmektigIdentMedType i stedet")
     val fullmektigIdent: String? = null,
     val fullmektigNavnOgAdresse: NavnOgAdresse? = null,
 
     ) {
     fun tilVurdering(vurdertAv: Bruker) = FullmektigVurdering(
         harFullmektig = this.harFullmektig,
-        fullmektigIdent = this.fullmektigIdent,
+        fullmektigIdent = this.fullmektigIdentMedType ?: this.fullmektigIdent?.let {
+            IdentMedType(
+                it,
+                IdentType.FNR_DNR
+            )
+        },
         fullmektigNavnOgAdresse = this.fullmektigNavnOgAdresse,
         vurdertAv = vurdertAv.ident,
     )

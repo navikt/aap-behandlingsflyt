@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentMedType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.NavnOgAdresse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -65,16 +67,17 @@ class FullmektigRepositoryImpl(private val connection: DBConnection) : Fullmekti
     private fun lagreVurdering(vurdering: FullmektigVurdering): Long {
         val query = """
             INSERT INTO FULLMEKTIG_VURDERING 
-            (har_fullmektig, fullmektig_ident, fullmektig_navn_og_adresse, vurdert_av)
-            VALUES (?, ?, ?::jsonb, ?)
+            (har_fullmektig, fullmektig_ident, fullmektig_ident_type, fullmektig_navn_og_adresse, vurdert_av)
+            VALUES (?, ?, ?, ?::jsonb, ?)
         """.trimIndent()
 
         return connection.executeReturnKey(query) {
             setParams {
                 setBoolean(1, vurdering.harFullmektig)
-                setString(2, vurdering.fullmektigIdent)
-                setString(3, vurdering.fullmektigNavnOgAdresse?.let { DefaultJsonMapper.toJson(it) })
-                setString(4, vurdering.vurdertAv)
+                setString(2, vurdering.fullmektigIdent?.ident)
+                setEnumName(3, vurdering.fullmektigIdent?.type)
+                setString(4, vurdering.fullmektigNavnOgAdresse?.let { DefaultJsonMapper.toJson(it) })
+                setString(5, vurdering.vurdertAv)
             }
             setResultValidator { rowsUpdated ->
                 require(rowsUpdated == 1)
@@ -137,7 +140,9 @@ class FullmektigRepositoryImpl(private val connection: DBConnection) : Fullmekti
             harFullmektig = row.getBoolean("har_fullmektig"),
             fullmektigNavnOgAdresse = row.getStringOrNull("fullmektig_navn_og_adresse")
                 ?.let { DefaultJsonMapper.fromJson<NavnOgAdresse>(it) },
-            fullmektigIdent = row.getStringOrNull("fullmektig_ident"),
+            fullmektigIdent = row.getStringOrNull("fullmektig_ident")
+                ?.let { IdentMedType(it, row.getEnumOrNull("fullmektig_ident_type") 
+                    ?: IdentType.FNR_DNR) },
             vurdertAv = row.getString("VURDERT_AV"),
             opprettet = row.getInstant("opprettet_tid"),
         )

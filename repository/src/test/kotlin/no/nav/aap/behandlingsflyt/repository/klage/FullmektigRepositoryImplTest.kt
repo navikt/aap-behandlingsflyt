@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.repository.klage
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.Adresse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentMedType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.NavnOgAdresse
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
@@ -32,7 +34,9 @@ class FullmektigRepositoryImplTest {
 
             val fullmektigRepository = FullmektigRepositoryImpl(connection)
             val vurdering = FullmektigVurdering(
-                harFullmektig = true, fullmektigIdent = "12345678901", vurdertAv = "Saksbehandler"
+                harFullmektig = true,
+                fullmektigIdent = IdentMedType("12345678901", IdentType.FNR_DNR),
+                vurdertAv = "Saksbehandler"
             )
 
             fullmektigRepository.lagre(klageBehandling.id, vurdering)
@@ -72,7 +76,7 @@ class FullmektigRepositoryImplTest {
                 FullmektigVurdering::fullmektigNavnOgAdresse,
                 FullmektigVurdering::vurdertAv
             ).containsExactly(true, null, navnOgAdresse, "Saksbehandler")
-            
+
             klagebehandling
         }
 
