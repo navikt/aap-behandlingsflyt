@@ -5,17 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHend
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.*
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
@@ -82,11 +72,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFolkeregisterP
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFolkeregistermetadata
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlStatsborgerskap
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
-import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
-import no.nav.aap.behandlingsflyt.test.FakePersoner
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
-import no.nav.aap.behandlingsflyt.test.Fakes
-import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.behandlingsflyt.test.*
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
@@ -98,19 +84,20 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.testutil.TestUtil
 import no.nav.aap.verdityper.dokument.JournalpostId
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import java.io.Closeable
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
 @Fakes
 abstract class AbstraktFlytOrkestratorTest {
-    companion object {
+    companion object : Closeable {
         @JvmStatic
         protected val dataSource = InitTestDatabase.freshDatabase()
 
-        protected val motor =
+        @JvmStatic
+        private val motor =
             Motor(dataSource, 8, jobber = ProsesseringsJobber.alle(), repositoryRegistry = postgresRepositoryRegistry)
 
         @JvmStatic
@@ -150,16 +137,16 @@ abstract class AbstraktFlytOrkestratorTest {
                 .register<NomInfoGateway>()
                 .register<KabalGateway>()
                 .register<NorgGateway>()
+        }
+
+        override fun close() {
+            println("LUKKER")
+        }
+
+        init {
             motor.start()
-
-
         }
 
-        @AfterAll
-        @JvmStatic
-        internal fun afterAll() {
-            motor.stop()
-        }
     }
 
     object TestPersoner {
@@ -233,7 +220,7 @@ abstract class AbstraktFlytOrkestratorTest {
         )
     }
 
-    protected fun løsFramTilGrunnlag(behandling: Behandling) {
+    protected fun løsFramTilGrunnlag(behandling: Behandling): Behandling {
         var behandling = behandling
         behandling = løsSykdom(behandling)
         behandling = løsAvklaringsBehov(
@@ -264,7 +251,7 @@ abstract class AbstraktFlytOrkestratorTest {
                 )
             )
         )
-        kvalitetssikreOk(behandling)
+        return kvalitetssikreOk(behandling)
     }
 
     protected fun løsSykdom(behandling: Behandling): Behandling {
@@ -545,12 +532,12 @@ abstract class AbstraktFlytOrkestratorTest {
         behandling,
         FatteVedtakLøsning(
             hentAlleAvklaringsbehov(behandling)
-            .filter { behov -> behov.erTotrinn() }
-            .map { behov ->
-                TotrinnsVurdering(
-                    behov.definisjon.kode, behov.definisjon != returVed, "begrunnelse", emptyList()
-                )
-            }),
+                .filter { behov -> behov.erTotrinn() }
+                .map { behov ->
+                    TotrinnsVurdering(
+                        behov.definisjon.kode, behov.definisjon != returVed, "begrunnelse", emptyList()
+                    )
+                }),
         Bruker("BESLUTTER")
     )
 
