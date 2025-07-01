@@ -19,7 +19,12 @@ public data class AvsluttetBehandlingDTO(
 public enum class ResultatKode {
     INNVILGET,
     AVSLAG,
-    TRUKKET
+    TRUKKET,
+    KLAGE_OPPRETTHOLDES,
+    KLAGE_OMGJØRES,
+    KLAGE_DELVIS_OMGJØRES,
+    KLAGE_AVSLÅTT,
+    KLAGE_TRUKKET
 }
 
 public data class Diagnoser(
@@ -71,6 +76,7 @@ public enum class Vilkårtype {
     MEDLEMSKAP,
     LOVVALG,
     GRUNNLAGET,
+
     @Deprecated("Skal fases ut.")
     SYKEPENGEERSTATNING,
     SAMORDNING,
