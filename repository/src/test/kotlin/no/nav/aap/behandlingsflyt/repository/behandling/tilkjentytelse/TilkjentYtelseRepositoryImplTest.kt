@@ -27,9 +27,11 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 class TilkjentYtelseRepositoryImplTest {
+    private val dataSource = InitTestDatabase.freshDatabase()
+
     @Test
     fun `kan lagre og hente tilkjentYtelse`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -96,7 +98,7 @@ class TilkjentYtelseRepositoryImplTest {
 
     @Test
     fun `finner ingen tilkjentYtelse hvis den ikke eksisterer`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -108,7 +110,7 @@ class TilkjentYtelseRepositoryImplTest {
 
     @Test
     fun `test sletting`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val tilkjentYtelseRepository = TilkjentYtelseRepositoryImpl(connection)

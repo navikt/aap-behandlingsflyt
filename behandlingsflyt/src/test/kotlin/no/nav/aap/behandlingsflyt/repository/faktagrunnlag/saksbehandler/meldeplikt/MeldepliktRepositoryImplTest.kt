@@ -26,9 +26,11 @@ class MeldepliktRepositoryImplTest {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
+    private val dataSource = InitTestDatabase.freshDatabase()
+
     @Test
     fun `Finner ikke fritaksvurderinger hvis ikke lagret`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -40,7 +42,7 @@ class MeldepliktRepositoryImplTest {
 
     @Test
     fun `Lagrer og henter fritaksvurderinger`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -57,7 +59,7 @@ class MeldepliktRepositoryImplTest {
 
     @Test
     fun `Kopierer fritaksvurderinger fra en behandling til en annen`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
@@ -83,7 +85,7 @@ class MeldepliktRepositoryImplTest {
 
     @Test
     fun `Kopiering av fritaksvurderinger fra en behandling uten opplysningene skal ikke føre til feil`() {
-        val dataSource = InitTestDatabase.freshDatabase()
+        val dataSource = dataSource
         dataSource.transaction { connection ->
             val bistandRepository = MeldepliktRepositoryImpl(connection)
             org.junit.jupiter.api.assertDoesNotThrow {
@@ -94,7 +96,7 @@ class MeldepliktRepositoryImplTest {
 
     @Test
     fun `Kopierer fritaksvurderinger fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
-        val dataSource = InitTestDatabase.freshDatabase()
+        val dataSource = dataSource
         val behandling1 = dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
@@ -139,7 +141,7 @@ class MeldepliktRepositoryImplTest {
 
     @Test
     fun `Lagrer nye fritaksvurderinger som nye rader og deaktiverer forrige versjon av opplysningene`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
@@ -219,7 +221,7 @@ class MeldepliktRepositoryImplTest {
 
     @Test
     fun `Ved kopiering av fritaksvurderinger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)

@@ -26,9 +26,11 @@ class YrkesskadeRepositoryImplTest {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
+    private val source = InitTestDatabase.freshDatabase()
+
     @Test
     fun `Finner ikke yrkesskadeopplysninger hvis ikke lagret`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        source.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -40,7 +42,7 @@ class YrkesskadeRepositoryImplTest {
 
     @Test
     fun `Lagrer og henter yrkesskadeopplysninger`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        source.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -58,7 +60,7 @@ class YrkesskadeRepositoryImplTest {
 
     @Test
     fun `Lagrer ikke like opplysninger flere ganger`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        source.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -100,7 +102,7 @@ class YrkesskadeRepositoryImplTest {
 
     @Test
     fun `Kopierer yrkesskadeopplysninger fra en behandling til en annen`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        source.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
@@ -124,7 +126,7 @@ class YrkesskadeRepositoryImplTest {
 
     @Test
     fun `Kopiering av yrkesskadeopplysninger fra en behandling uten opplysningene skal ikke føre til feil`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        source.transaction { connection ->
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             assertDoesNotThrow {
                 yrkesskadeRepository.kopier(BehandlingId(Long.MAX_VALUE - 1), BehandlingId(Long.MAX_VALUE))
@@ -134,7 +136,7 @@ class YrkesskadeRepositoryImplTest {
 
     @Test
     fun `Kopierer yrkesskadeopplysninger fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        source.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
@@ -162,7 +164,7 @@ class YrkesskadeRepositoryImplTest {
 
     @Test
     fun `test sletting`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        source.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
@@ -187,7 +189,7 @@ class YrkesskadeRepositoryImplTest {
 
     @Test
     fun `Lagrer nye opplysninger som ny rad og deaktiverer forrige versjon av opplysningene`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        source.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
@@ -246,7 +248,7 @@ class YrkesskadeRepositoryImplTest {
 
     @Test
     fun `Ved kopiering av fritaksvurderinger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        source.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
