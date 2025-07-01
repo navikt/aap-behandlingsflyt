@@ -8,31 +8,19 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn.ForeldreansvarVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklarBarnetilleggLøser(
     private val barnRepository: BarnRepository,
-    private val sakRepository: SakRepository
 ) : AvklaringsbehovsLøser<AvklarBarnetilleggLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
-        barnRepository = repositoryProvider.provide(),
-        sakRepository = repositoryProvider.provide()
+        barnRepository = repositoryProvider.provide()
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarBarnetilleggLøsning): LøsningsResultat {
-        val sak = sakRepository.hent(kontekst.kontekst.sakId)
-        val flatBarn = løsning.vurderingerForBarnetillegg.vurderteBarn.flatMap { it.vurderinger }
-
-        if (flatBarn.any {
-            it.fraDato.isBefore(sak.rettighetsperiode.fom)
-        }) {
-            throw IllegalArgumentException("Kan ikke sette barnetilleggsperiode før rettighetsperioden.")
-        }
-
         val vurderteBarn = barnRepository.hentHvisEksisterer(kontekst.kontekst.behandlingId)?.vurderteBarn?.barn
             ?: emptyList()
         val oppdatertTilstand = oppdaterTilstandBasertPåNyeVurderinger(vurderteBarn, løsning)
