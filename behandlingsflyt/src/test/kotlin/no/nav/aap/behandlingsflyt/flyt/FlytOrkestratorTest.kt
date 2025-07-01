@@ -66,6 +66,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.flate.BehandlendeEnhetLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.effektueravvistpåformkrav.flate.EffektuerAvvistPåFormkravLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate.FormkravVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentMedType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.flate.KlagevurderingKontorLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.flate.KlagevurderingNayLøsningDto
@@ -2618,7 +2620,10 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
             avklaringsBehovLøsning = FastsettFullmektigLøsning(
                 fullmektigVurdering = FullmektigLøsningDto(
                     harFullmektig = true,
-                    fullmektigIdent = "21049599999"
+                    fullmektigIdentMedType = IdentMedType(
+                        "21049599999",
+                        IdentType.FNR_DNR
+                    )
                 )
             )
         )

@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentMedType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.NavnOgAdresse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -141,8 +140,7 @@ class FullmektigRepositoryImpl(private val connection: DBConnection) : Fullmekti
             fullmektigNavnOgAdresse = row.getStringOrNull("fullmektig_navn_og_adresse")
                 ?.let { DefaultJsonMapper.fromJson<NavnOgAdresse>(it) },
             fullmektigIdent = row.getStringOrNull("fullmektig_ident")
-                ?.let { IdentMedType(it, row.getEnumOrNull("fullmektig_ident_type") 
-                    ?: IdentType.FNR_DNR) },
+                ?.let { IdentMedType(it, row.getEnum("fullmektig_ident_type")) },
             vurdertAv = row.getString("VURDERT_AV"),
             opprettet = row.getInstant("opprettet_tid"),
         )
