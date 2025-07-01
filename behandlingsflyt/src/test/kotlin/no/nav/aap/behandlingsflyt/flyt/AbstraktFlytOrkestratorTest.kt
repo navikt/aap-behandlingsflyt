@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Refusjonkr
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OppgaveGateway
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
@@ -47,6 +48,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.inntekt.InntektGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.integrasjon.meldekort.MeldekortGatewayImpl
+import no.nav.aap.behandlingsflyt.integrasjon.oppgave.GosysGateway
 import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
@@ -153,6 +155,7 @@ abstract class AbstraktFlytOrkestratorTest {
                 .register<NomInfoGateway>()
                 .register<KabalGateway>()
                 .register<NorgGateway>()
+                .register<GosysGateway>()
             motor.start()
 
 
