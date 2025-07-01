@@ -2351,7 +2351,7 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
         val kravMottatt = LocalDate.now().minusMonths(1)
         var klagebehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId("21"),
+                journalpost = JournalpostId("4002"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 InnsendingType.KLAGE,
                 strukturertDokument = StrukturertDokument(KlageV0(kravMottatt = kravMottatt)),
@@ -2575,7 +2575,7 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
         val kravMottatt = LocalDate.now().minusMonths(1)
         val klagebehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId("21"),
+                journalpost = JournalpostId("4001"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 InnsendingType.KLAGE,
                 strukturertDokument = StrukturertDokument(KlageV0(kravMottatt = kravMottatt)),
@@ -2673,7 +2673,7 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
         val kravMottatt = LocalDate.now().minusMonths(1)
         val klagebehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId("21"),
+                journalpost = JournalpostId("4006"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 InnsendingType.KLAGE,
                 strukturertDokument = StrukturertDokument(KlageV0(kravMottatt = kravMottatt)),
@@ -2890,7 +2890,7 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
         val kravMottatt = LocalDate.now().minusMonths(1)
         val klagebehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId("21"),
+                journalpost = JournalpostId("4005"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 InnsendingType.KLAGE,
                 strukturertDokument = StrukturertDokument(KlageV0(kravMottatt = kravMottatt)),
