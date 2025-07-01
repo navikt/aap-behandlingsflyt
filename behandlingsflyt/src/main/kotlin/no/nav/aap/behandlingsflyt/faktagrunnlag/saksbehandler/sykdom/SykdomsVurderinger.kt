@@ -8,7 +8,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class Sykdomsvurdering(
+data class Sykdomsvurdering(
     val id: Long? = null,
     val begrunnelse: String,
     val vurderingenGjelderFra: LocalDate?,
@@ -30,8 +30,19 @@ class Sykdomsvurdering(
         return erNedsettelseIArbeidsevneMerEnnHalvparten == true || erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true
     }
 
-    fun erOppfylt(): Boolean {
-        return erOppfyltSettBortIfraVissVarighet() && erNedsettelseIArbeidsevneAvEnVissVarighet == true
+    fun erOppfylt(behandlingType: TypeBehandling, kravDato: LocalDate): Boolean {
+        return when (behandlingType) {
+            TypeBehandling.Førstegangsbehandling -> erOppfyltSettBortIfraVissVarighet() && erNedsettelseIArbeidsevneAvEnVissVarighet == true
+            TypeBehandling.Revurdering -> {
+                if (kravDato == vurderingenGjelderFra) {
+                    erOppfyltSettBortIfraVissVarighet() && erNedsettelseIArbeidsevneAvEnVissVarighet == true
+                } else {
+                    erOppfyltSettBortIfraVissVarighet()
+                }
+            }
+
+            else -> error("Ugyldig behandlingsType: $behandlingType for vurdering av sykdom.")
+        }
     }
 
     fun erOppfyltSettBortIfraVissVarighet(): Boolean {
@@ -59,7 +70,7 @@ class Sykdomsvurdering(
     }
 }
 
-class Yrkesskadevurdering(
+data class Yrkesskadevurdering(
     val id: Long? = null,
     val begrunnelse: String,
     val relevanteSaker: List<String>,

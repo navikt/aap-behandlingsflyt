@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVur
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -22,12 +23,12 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
 
     override fun vurder(grunnlag: SykdomsFaktagrunnlag) {
         val studentVurderingTidslinje = Tidslinje(
-            Periode(grunnlag.vurderingsdato, grunnlag.sisteDagMedMuligYtelse),
+            Periode(grunnlag.kravDato, grunnlag.sisteDagMedMuligYtelse),
             grunnlag.studentvurdering
         )
 
         val yrkesskadeVurderingTidslinje = Tidslinje(
-            Periode(grunnlag.vurderingsdato, grunnlag.sisteDagMedMuligYtelse),
+            Periode(grunnlag.kravDato, grunnlag.sisteDagMedMuligYtelse),
             grunnlag.yrkesskadevurdering
         )
 
@@ -36,7 +37,7 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
             .map { vurdering ->
                 Tidslinje(
                     Periode(
-                        fom = vurdering.vurderingenGjelderFra ?: grunnlag.vurderingsdato,
+                        fom = vurdering.vurderingenGjelderFra ?: grunnlag.kravDato,
                         tom = grunnlag.sisteDagMedMuligYtelse
                     ),
                     vurdering
@@ -91,7 +92,7 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
                 Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
             } else if (sykdomVurdering?.erNedsettelseIArbeidsevneMerEnnHalvparten == false && sykdomVurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != true) {
                 Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
-            } else if (sykdomVurdering?.erNedsettelseIArbeidsevneAvEnVissVarighet == false) {
+            } else if (sykdomVurdering?.erNedsettelseIArbeidsevneAvEnVissVarighet == false && relevantÅVurdereSykepengerErstatning(grunnlag, sykdomVurdering)) {
                 Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET
             } else {
                 Avslagsårsak.MANGLENDE_DOKUMENTASJON // TODO noe mer rett
@@ -106,7 +107,7 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
 
         return Vilkårsvurdering(
             Vilkårsperiode(
-                periode = Periode(grunnlag.vurderingsdato, grunnlag.sisteDagMedMuligYtelse),
+                periode = Periode(grunnlag.kravDato, grunnlag.sisteDagMedMuligYtelse),
                 utfall = utfall,
                 begrunnelse = null,
                 innvilgelsesårsak = innvilgelsesårsak,
@@ -114,6 +115,14 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
                 faktagrunnlag = grunnlag,
             )
         )
+    }
+
+    private fun relevantÅVurdereSykepengerErstatning(
+        grunnlag: SykdomsFaktagrunnlag,
+        sykdomVurdering: Sykdomsvurdering?
+    ): Boolean {
+        return grunnlag.kravDato == sykdomVurdering?.vurderingenGjelderFra
+                || (grunnlag.typeBehandling == TypeBehandling.Førstegangsbehandling)
     }
 
     private fun harSykdomBlittVurdertTilGodkjent(

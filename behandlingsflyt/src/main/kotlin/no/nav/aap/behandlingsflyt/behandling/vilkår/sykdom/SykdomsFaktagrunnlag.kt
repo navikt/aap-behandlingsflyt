@@ -5,10 +5,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVur
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import java.time.LocalDate
 
 class SykdomsFaktagrunnlag(
-    val vurderingsdato: LocalDate,
+    val typeBehandling: TypeBehandling,
+    val kravDato: LocalDate,
     val sisteDagMedMuligYtelse: LocalDate,
     val yrkesskadevurdering: Yrkesskadevurdering?,
     val sykepengerErstatningFaktagrunnlag: SykepengerVurdering?,

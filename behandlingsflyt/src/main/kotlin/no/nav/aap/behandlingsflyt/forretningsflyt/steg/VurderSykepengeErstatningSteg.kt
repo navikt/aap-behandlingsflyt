@@ -69,8 +69,7 @@ class VurderSykepengeErstatningSteg private constructor(
                 vurder(kontekst)
             }
 
-            VurderingType.MELDEKORT,
-            VurderingType.IKKE_RELEVANT -> {
+            VurderingType.MELDEKORT, VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
                 Fullført
             }
@@ -83,11 +82,18 @@ class VurderSykepengeErstatningSteg private constructor(
 
         val sykdomsvurderinger =
             sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.sykdomsvurderinger.orEmpty()
-        val erRelevantÅVurdereSykepengererstatning =
-            sykdomsvurderinger
-                .any { it.erOppfyltSettBortIfraVissVarighet() && !it.erOppfylt() } || (!vilkårsresultat.finnVilkår(
-                Vilkårtype.BISTANDSVILKÅRET
-            ).harPerioderSomErOppfylt() && sykdomsvurderinger.all { it.erOppfylt() })
+        
+        val behandlingsType = kontekst.behandlingType
+        val kravDato = kontekst.rettighetsperiode.fom
+
+        val erRelevantÅVurdereSykepengererstatning = sykdomsvurderinger.any {
+            it.erOppfyltSettBortIfraVissVarighet() && !it.erOppfylt(
+                behandlingsType, kravDato
+            ) || (!vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET).harPerioderSomErOppfylt() && it.erOppfylt(
+                behandlingsType,
+                kravDato
+            ))
+        }
 
         if (erRelevantÅVurdereSykepengererstatning) {
             val grunnlag = sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
@@ -98,8 +104,7 @@ class VurderSykepengeErstatningSteg private constructor(
                 val faktagrunnlag = SykepengerErstatningFaktagrunnlag(
                     vurderingsdato,
                     // TODO: Trenger å finne en god løsning for hvordan vi setter slutt på dette vilkåret ved tom kvote
-                    rettighetsperiode.tom,
-                    grunnlag.vurdering
+                    rettighetsperiode.tom, grunnlag.vurdering
                 )
 
                 if (grunnlag.vurdering.harRettPå) {
