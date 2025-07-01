@@ -3078,7 +3078,7 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
         val kravMottatt = LocalDate.now().minusMonths(1)
         val klagebehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId("21"),
+                journalpost = JournalpostId("401"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 InnsendingType.KLAGE,
                 strukturertDokument = StrukturertDokument(KlageV0(kravMottatt = kravMottatt)),
@@ -3091,7 +3091,7 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
 
         var svarFraAndreinstansBehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId("22"),
+                journalpost = JournalpostId("402"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 InnsendingType.KABAL_HENDELSE,
                 strukturertDokument = StrukturertDokument(
