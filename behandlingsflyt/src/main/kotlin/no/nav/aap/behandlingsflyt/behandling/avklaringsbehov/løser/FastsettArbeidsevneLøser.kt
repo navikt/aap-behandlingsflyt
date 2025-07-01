@@ -20,7 +20,7 @@ class FastsettArbeidsevneLøser(
         løsning: FastsettArbeidsevneLøsning
     ): LøsningsResultat {
         val arbeidsevneVurderinger =
-            løsning.arbeidsevneVurderinger.map { it.toArbeidsevnevurdering() }
+            løsning.arbeidsevneVurderinger.map { it.toArbeidsevnevurdering(kontekst.bruker.ident) }
         val eksisterendeArbeidsevnePerioder = ArbeidsevnePerioder(
             arbeidsevneRepository.hentHvisEksisterer(kontekst.behandlingId())?.vurderinger.orEmpty()
         )

@@ -25,7 +25,7 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
     override fun hentHvisEksisterer(behandlingId: BehandlingId): ArbeidsevneGrunnlag? {
         return connection.queryList(
             """
-            SELECT a.ID AS ARBEIDSEVNE_ID, v.BEGRUNNELSE, v.FRA_DATO, v.ANDEL_ARBEIDSEVNE, v.OPPRETTET_TID
+            SELECT a.ID AS ARBEIDSEVNE_ID, v.BEGRUNNELSE, v.FRA_DATO, v.ANDEL_ARBEIDSEVNE, v.OPPRETTET_TID, v.VURDERT_AV
             FROM ARBEIDSEVNE_GRUNNLAG g
             INNER JOIN ARBEIDSEVNE a ON g.ARBEIDSEVNE_ID = a.ID
             INNER JOIN ARBEIDSEVNE_VURDERING v ON a.ID = v.ARBEIDSEVNE_ID
@@ -35,11 +35,12 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
             setParams { setLong(1, behandlingId.toLong()) }
             setRowMapper { row ->
                 ArbeidsevneInternal(
-                    row.getLong("ARBEIDSEVNE_ID"),
-                    row.getString("BEGRUNNELSE"),
-                    row.getLocalDate("FRA_DATO"),
-                    Prosent(row.getInt("ANDEL_ARBEIDSEVNE")),
-                    row.getLocalDateTime("OPPRETTET_TID")
+                    arbeidsevneId = row.getLong("ARBEIDSEVNE_ID"),
+                    begrunnelse = row.getString("BEGRUNNELSE"),
+                    fraDato = row.getLocalDate("FRA_DATO"),
+                    arbeidsevne = Prosent(row.getInt("ANDEL_ARBEIDSEVNE")),
+                    opprettetTid = row.getLocalDateTime("OPPRETTET_TID"),
+                    vurdertAv = row.getString("VURDERT_AV")
                 )
             }
         }.toGrunnlag()
@@ -47,7 +48,7 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
 
     override fun hentAlleVurderinger(sakId: SakId, behandlingId: BehandlingId): Set<ArbeidsevneVurdering> {
         val query = """
-            SELECT a.ID AS ARBEIDSEVNE_ID, v.BEGRUNNELSE, v.FRA_DATO, v.ANDEL_ARBEIDSEVNE, v.OPPRETTET_TID
+            SELECT a.ID AS ARBEIDSEVNE_ID, v.BEGRUNNELSE, v.FRA_DATO, v.ANDEL_ARBEIDSEVNE, v.OPPRETTET_TID,  v.VURDERT_AV
             FROM ARBEIDSEVNE_GRUNNLAG g
             INNER JOIN ARBEIDSEVNE a ON g.ARBEIDSEVNE_ID = a.ID
             INNER JOIN ARBEIDSEVNE_VURDERING v ON a.ID = v.ARBEIDSEVNE_ID
@@ -62,11 +63,12 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
             }
             setRowMapper { row ->
                 ArbeidsevneInternal(
-                    row.getLong("ARBEIDSEVNE_ID"),
-                    row.getString("BEGRUNNELSE"),
-                    row.getLocalDate("FRA_DATO"),
-                    Prosent(row.getInt("ANDEL_ARBEIDSEVNE")),
-                    row.getLocalDateTime("OPPRETTET_TID")
+                    arbeidsevneId = row.getLong("ARBEIDSEVNE_ID"),
+                    begrunnelse = row.getString("BEGRUNNELSE"),
+                    fraDato = row.getLocalDate("FRA_DATO"),
+                    arbeidsevne = Prosent(row.getInt("ANDEL_ARBEIDSEVNE")),
+                    opprettetTid = row.getLocalDateTime("OPPRETTET_TID"),
+                    vurdertAv = row.getString("VURDERT_AV")
                 )
             }
         }.map { it.toArbeidsevnevurdering() }.toSet()
@@ -77,10 +79,11 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
         val begrunnelse: String,
         val fraDato: LocalDate,
         val arbeidsevne: Prosent,
-        val opprettetTid: LocalDateTime
+        val opprettetTid: LocalDateTime,
+        val vurdertAv: String
     ) {
         fun toArbeidsevnevurdering(): ArbeidsevneVurdering {
-            return ArbeidsevneVurdering(begrunnelse, arbeidsevne, fraDato, opprettetTid)
+            return ArbeidsevneVurdering(begrunnelse, arbeidsevne, fraDato, opprettetTid, vurdertAv)
         }
     }
 
@@ -116,7 +119,7 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
         connection.executeBatch(
             """
             INSERT INTO ARBEIDSEVNE_VURDERING 
-            (ARBEIDSEVNE_ID, FRA_DATO, BEGRUNNELSE, ANDEL_ARBEIDSEVNE) VALUES (?, ?, ?, ?)
+            (ARBEIDSEVNE_ID, FRA_DATO, BEGRUNNELSE, ANDEL_ARBEIDSEVNE, VURDERT_AV) VALUES (?, ?, ?, ?, ?)
             """.trimIndent(),
             nyeVurderinger
         ) {
@@ -125,13 +128,14 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
                 setLocalDate(2, it.fraDato)
                 setString(3, it.begrunnelse)
                 setInt(4, it.arbeidsevne.prosentverdi())
+                setString(5, it.vurdertAv)
             }
         }
 
         connection.executeBatch(
             """
             INSERT INTO ARBEIDSEVNE_VURDERING 
-            (ARBEIDSEVNE_ID, FRA_DATO, BEGRUNNELSE, ANDEL_ARBEIDSEVNE, OPPRETTET_TID) VALUES (?, ?, ?, ?, ?)
+            (ARBEIDSEVNE_ID, FRA_DATO, BEGRUNNELSE, ANDEL_ARBEIDSEVNE, OPPRETTET_TID, VURDERT_AV) VALUES (?, ?, ?, ?, ?, ?)
             """.trimIndent(),
             eksisterendeVurderinger
         ) {
@@ -141,6 +145,7 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
                 setString(3, it.begrunnelse)
                 setInt(4, it.arbeidsevne.prosentverdi())
                 setLocalDateTime(5, it.opprettetTid)
+                setString(6, it.vurdertAv)
             }
         }
     }

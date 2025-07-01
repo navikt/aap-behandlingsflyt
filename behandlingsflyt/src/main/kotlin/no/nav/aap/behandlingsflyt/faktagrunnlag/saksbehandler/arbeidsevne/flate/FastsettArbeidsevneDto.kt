@@ -9,5 +9,11 @@ data class FastsettArbeidsevneDto(
     val arbeidsevne: Int,
     val fraDato: LocalDate
 ) {
-    fun toArbeidsevnevurdering() = ArbeidsevneVurdering(begrunnelse, Prosent(arbeidsevne), fraDato, null)
+    fun toArbeidsevnevurdering(vurdertAv: String) =
+        ArbeidsevneVurdering(
+            begrunnelse = begrunnelse,
+            arbeidsevne = Prosent(arbeidsevne),
+            fraDato = fraDato,
+            vurdertAv = vurdertAv
+        )
 }

@@ -37,6 +37,7 @@ class GraderingArbeidRegelTest {
                         arbeidsevne = Prosent.`50_PROSENT`,
                         fraDato = fom.minusDays(1), /* viktig at vi tester vurderinger fra før rettighetsperioden */
                         opprettetTid = LocalDateTime.now(),
+                        "vurdertAv"
                     )
                 )
             )
@@ -274,6 +275,7 @@ class GraderingArbeidRegelTest {
                     arbeidsevne = it,
                     fraDato = rettighetsperiode.fom,
                     opprettetTid = LocalDateTime.now(),
+                    "vurdertAv"
                 )
             })
         )
