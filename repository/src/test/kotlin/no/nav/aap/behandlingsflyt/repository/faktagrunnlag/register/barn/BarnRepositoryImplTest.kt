@@ -18,6 +18,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -96,7 +97,7 @@ internal class BarnRepositoryImplTest {
             // When
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(gammelBehandling.id, Status.AVSLUTTET)
             val nyBehandling = finnEllerOpprettBehandling(connection, sak)
-            barnRepository.kopier(gammelBehandling.id, nyBehandling.id)
+            //Finn eller opprett behandling kopierer også
 
             // Then
             val gamleOppgitteBarn = barnRepository.hent(nyBehandling.id).oppgitteBarn?.identer
