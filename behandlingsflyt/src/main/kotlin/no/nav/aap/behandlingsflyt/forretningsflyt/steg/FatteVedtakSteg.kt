@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Omgjøres
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -19,12 +20,15 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 
 class FatteVedtakSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val personOpplysningerRepository: PersonopplysningRepository,
+    private val personRepository: PersonRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val klageresultatUtleder: KlageresultatUtleder,
     private val trekkKlageService: TrekkKlageService,
@@ -33,6 +37,8 @@ class FatteVedtakSteg(
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
+        personOpplysningerRepository = repositoryProvider.provide(),
+        personRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
         trekkKlageService = TrekkKlageService(repositoryProvider),
@@ -62,12 +68,16 @@ class FatteVedtakSteg(
             return FantAvklaringsbehov(Definisjon.FATTE_VEDTAK)
         }
 
+        val personopplysninger = personOpplysningerRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val personId = personopplysninger?.brukerPersonopplysning?.id
+        val person = personRepository.hent(personId!!)
+        val aktivIdent = person.identer().find { it.aktivIdent }
         val oppgaveRequest = OpprettOppgaveRequest(
             oppgavetype = "FATTE",
             tema = "AAP",
             prioritet = Prioritet.NORM,
             aktivDato = LocalDate.now().toString(),
-            personident = null,
+            personident = aktivIdent.toString(),
             orgnr = null,
             tildeltEnhetsnr = null,
             opprettetAvEnhetsnr = null,
