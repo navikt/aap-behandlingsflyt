@@ -15,6 +15,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.Klagev
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.lookup.repository.RepositoryProvider
 
+interface IKlageresultatUtleder {
+    fun utledKlagebehandlingResultat(behandlingId: BehandlingId): KlageResultat
+}
 class KlageresultatUtleder(
     private val formkravRepository: FormkravRepository,
     private val behandlendeEnhetRepository: BehandlendeEnhetRepository,
@@ -22,7 +25,7 @@ class KlageresultatUtleder(
     private val klagebehandlingNayRepository: KlagebehandlingNayRepository,
     private val effektuerAvvistPåFormkravRepository: EffektuerAvvistPåFormkravRepository,
     private val trekkKlageService: TrekkKlageService
-) {
+): IKlageresultatUtleder {
     constructor(repositoryProvider: RepositoryProvider) : this(
         formkravRepository = repositoryProvider.provide(),
         behandlendeEnhetRepository = repositoryProvider.provide(),
@@ -32,7 +35,7 @@ class KlageresultatUtleder(
         trekkKlageService = TrekkKlageService(repositoryProvider)
     )
 
-    fun utledKlagebehandlingResultat(behandlingId: BehandlingId): KlageResultat {
+    override fun utledKlagebehandlingResultat(behandlingId: BehandlingId): KlageResultat {
         val erKlageTrukket = trekkKlageService.klageErTrukket(behandlingId)
         val formkrav = formkravRepository.hentHvisEksisterer(behandlingId)
         val behandlendeEnhet = behandlendeEnhetRepository.hentHvisEksisterer(behandlingId)

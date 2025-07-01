@@ -19,6 +19,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentRekkefølge
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Ufullstendig
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.ÅrsakTilUfullstendigResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -205,6 +210,7 @@ class StatistikkJobbUtførerTest {
                 sykdomRepository = SykdomRepositoryImpl(connection),
                 underveisRepository = UnderveisRepositoryImpl(connection),
                 trukketSøknadService = TrukketSøknadService(postgresRepositoryRegistry.provider(connection)),
+                klageresultatUtleder = KlageresultatUtleder(postgresRepositoryRegistry.provider(connection))
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -392,6 +398,7 @@ class StatistikkJobbUtførerTest {
                 sykdomRepository = SykdomRepositoryImpl(connection),
                 underveisRepository = UnderveisRepositoryImpl(connection),
                 trukketSøknadService = TrukketSøknadService(postgresRepositoryRegistry.provider(connection)),
+                klageresultatUtleder = KlageresultatUtleder(postgresRepositoryRegistry.provider(connection))
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -610,7 +617,11 @@ class StatistikkJobbUtførerTest {
                 dokumentRepository,
                 sykdomRepository = sykdomRepository,
                 underveisRepository = InMemoryUnderveisRepository,
-                trukketSøknadService = TrukketSøknadService(InMemoryAvklaringsbehovRepository, InMemoryTrukketSøknadRepository),
+                trukketSøknadService = TrukketSøknadService(
+                    InMemoryAvklaringsbehovRepository,
+                    InMemoryTrukketSøknadRepository
+                ),
+                klageresultatUtleder = DummyKlageresultatUtleder()
             )
 
         val avklaringsbehov = listOf(
@@ -671,5 +682,11 @@ class StatistikkJobbUtførerTest {
                 årsakTilBehandling = listOf(ÅrsakTilBehandling.SØKNAD)
             )
         )
+    }
+}
+
+class DummyKlageresultatUtleder : IKlageresultatUtleder {
+    override fun utledKlagebehandlingResultat(behandlingId: BehandlingId): KlageResultat {
+        throw NotImplementedError("Lag spesifikk implementasjon for caset du vil teste")
     }
 }

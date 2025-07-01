@@ -14,6 +14,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultatType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
@@ -66,6 +69,7 @@ class StatistikkJobbUtfører(
     private val sykdomRepository: SykdomRepository,
     private val underveisRepository: UnderveisRepository,
     private val trukketSøknadService: TrukketSøknadService,
+    private val klageresultatUtleder: IKlageresultatUtleder,
 ) : JobbUtfører {
 
     private val resultatUtleder = ResultatUtleder(underveisRepository, behandlingRepository, trukketSøknadService)
@@ -280,31 +284,39 @@ class StatistikkJobbUtfører(
             beregningsGrunnlag = beregningsGrunnlagDTO,
             diagnoser = hentDiagnose(behandling),
             rettighetstypePerioder = rettighetstypePerioder,
-            resultat = hentResultat(behandling).let {
-                when (it) {
-                    Resultat.INNVILGELSE -> ResultatKode.INNVILGET
-                    Resultat.AVSLAG -> ResultatKode.AVSLAG
-                    Resultat.TRUKKET -> ResultatKode.TRUKKET
-                    null -> null
-                }
-            },
+            resultat = hentResultat(behandling)
         )
         return avsluttetBehandlingDTO
     }
 
-    private fun hentResultat(behandling: Behandling): Resultat? {
+    private fun hentResultat(behandling: Behandling): ResultatKode? {
         return when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> {
-                resultatUtleder.utledResultat(behandling.id)
+                resultatUtleder.utledResultat(behandling.id).let {
+                    when (it) {
+                        Resultat.INNVILGELSE -> ResultatKode.INNVILGET
+                        Resultat.AVSLAG -> ResultatKode.AVSLAG
+                        Resultat.TRUKKET -> ResultatKode.TRUKKET
+                    }
+                }
             }
 
-            TypeBehandling.Revurdering -> {
+            TypeBehandling.Klage -> {
+                klageresultatUtleder.utledKlagebehandlingResultat(behandling.id).type.let {
+                    when (it) {
+                        KlageResultatType.OPPRETTHOLDES -> ResultatKode.KLAGE_OPPRETTHOLDES
+                        KlageResultatType.OMGJØRES -> ResultatKode.KLAGE_OMGJØRES
+                        KlageResultatType.DELVIS_OMGJØRES -> ResultatKode.KLAGE_DELVIS_OMGJØRES
+                        KlageResultatType.AVSLÅTT -> ResultatKode.KLAGE_AVSLÅTT
+                        KlageResultatType.TRUKKET -> ResultatKode.KLAGE_TRUKKET
+                        KlageResultatType.UFULLSTENDIG -> null
+                    }
+                }
+            }
+
+            TypeBehandling.Revurdering, TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans -> {
                 null
             }
-
-            TypeBehandling.Tilbakekreving -> null
-            TypeBehandling.Klage -> null
-            TypeBehandling.SvarFraAndreinstans -> null
         }
     }
 
@@ -395,6 +407,7 @@ class StatistikkJobbUtfører(
                 sykdomRepository = repositoryProvider.provide(),
                 underveisRepository = repositoryProvider.provide(),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
+                klageresultatUtleder = KlageresultatUtleder(repositoryProvider)
             )
         }
 
