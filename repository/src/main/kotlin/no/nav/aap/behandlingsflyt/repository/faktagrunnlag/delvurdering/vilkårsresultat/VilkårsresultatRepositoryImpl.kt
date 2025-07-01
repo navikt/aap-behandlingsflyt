@@ -233,14 +233,14 @@ WHERE behandling_id = ?
 
     private class VilkårPeriodeInternal(
         val id: Long,
-        @JsonProperty("vilkar_id") val vilkårId: Long,
-        @JsonProperty("periode_fra") val periodeFra: LocalDate,
-        @JsonProperty("periode_til") val periodeTil: LocalDate,
+        @param:JsonProperty("vilkar_id") val vilkårId: Long,
+        @param:JsonProperty("periode_fra") val periodeFra: LocalDate,
+        @param:JsonProperty("periode_til") val periodeTil: LocalDate,
         val utfall: Utfall,
-        @JsonProperty("manuell_vurdering") val manuellVurdering: Boolean = false,
+        @param:JsonProperty("manuell_vurdering") val manuellVurdering: Boolean = false,
         val begrunnelse: String?,
-        @JsonProperty("innvilgelsesarsak") val innvilgelsesårsak: Innvilgelsesårsak? = null,
-        @JsonProperty("avslagsarsak") val avslagsårsak: Avslagsårsak? = null,
+        @param:JsonProperty("innvilgelsesarsak") val innvilgelsesårsak: Innvilgelsesårsak? = null,
+        @param:JsonProperty("avslagsarsak") val avslagsårsak: Avslagsårsak? = null,
         val versjon: String
     )
 }

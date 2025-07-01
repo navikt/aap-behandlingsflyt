@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSet
 import java.time.LocalDate
 
 class SettPåVentRequest(
-    @JsonProperty(
+    @param:JsonProperty(
         value = "behandlingVersjon",
         required = true,
         defaultValue = "0"

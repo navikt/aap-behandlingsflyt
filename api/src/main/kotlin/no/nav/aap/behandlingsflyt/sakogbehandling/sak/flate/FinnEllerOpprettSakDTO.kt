@@ -4,6 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.LocalDate
 
 data class FinnEllerOpprettSakDTO(
-    @JsonProperty(value = "ident", required = true) val ident: String,
-    @JsonProperty(value = "søknadsdato", required = true) val søknadsdato: LocalDate
+    @param:JsonProperty(value = "ident", required = true) val ident: String,
+    @param:JsonProperty(value = "søknadsdato", required = true) val søknadsdato: LocalDate
 )
