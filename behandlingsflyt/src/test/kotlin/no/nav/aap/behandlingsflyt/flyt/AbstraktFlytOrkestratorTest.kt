@@ -57,6 +57,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreGateway
 import no.nav.aap.behandlingsflyt.integrasjon.utbetaling.UtbetalingGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
@@ -540,19 +541,22 @@ abstract class AbstraktFlytOrkestratorTest {
         return kvalitetssikreOk(this, bruker)
     }
 
-    protected fun fattVedtak(behandling: Behandling): Behandling = løsAvklaringsBehov(
+    protected fun fattVedtak(behandling: Behandling, returVed: Definisjon? = null): Behandling = løsAvklaringsBehov(
         behandling,
-        FatteVedtakLøsning(hentAlleAvklaringsbehov(behandling).filter { behov -> behov.erTotrinn() }.map { behov ->
-            TotrinnsVurdering(
-                behov.definisjon.kode, true, "begrunnelse", null
-            )
-        }),
+        FatteVedtakLøsning(
+            hentAlleAvklaringsbehov(behandling)
+            .filter { behov -> behov.erTotrinn() }
+            .map { behov ->
+                TotrinnsVurdering(
+                    behov.definisjon.kode, behov.definisjon != returVed, "begrunnelse", emptyList()
+                )
+            }),
         Bruker("BESLUTTER")
     )
 
     @JvmName("fattVedtakExt")
-    protected fun Behandling.fattVedtak(): Behandling {
-        return fattVedtak(this)
+    protected fun Behandling.fattVedtak(returVed: Definisjon? = null): Behandling {
+        return fattVedtak(this, returVed)
     }
 
     class BehandlingInfo(val åpneAvklaringsbehov: List<Avklaringsbehov>, val behandling: Behandling)
