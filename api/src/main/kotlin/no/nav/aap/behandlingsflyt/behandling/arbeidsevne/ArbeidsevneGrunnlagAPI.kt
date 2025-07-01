@@ -1,12 +1,14 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate
+package no.nav.aap.behandlingsflyt.behandling.arbeidsevne
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevnePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -18,6 +20,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
@@ -79,10 +82,15 @@ private fun arbeidsevneGrunnlag(
         ArbeidsevneGrunnlagDto(
             harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
             historikk = historikk.map { it.toDto() }.sortedBy { it.vurderingsTidspunkt }.toSet(),
-            vurderinger = nåTilstand?.filterNot { vedtatteVerdier.contains(it) }?.map { it.toDto() }
-                ?.sortedBy { it.fraDato } ?: emptyList(),
-            gjeldendeVedtatteVurderinger = vedtatteVerdier.map { it.toDto() }
-                .sortedBy { it.fraDato }
+            vurderinger =
+                nåTilstand
+                    ?.filterNot { vedtatteVerdier.contains(it) }
+                    ?.map { it.toDto(AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv)) }
+                    ?.sortedBy { it.fraDato } ?: emptyList(),
+            gjeldendeVedtatteVurderinger =
+                vedtatteVerdier
+                    .map { it.toDto() }
+                    .sortedBy { it.fraDato }
         )
     }
 }
@@ -103,9 +111,17 @@ private fun simuleringsresulat(
         val vedtatteArbeidsevner =
             behandling.forrigeBehandlingId?.let { arbeidsevneRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
         val nåværendeArbeidsevnePerioder = ArbeidsevnePerioder(vedtatteArbeidsevner)
-        val simuleringsresultat = nåværendeArbeidsevnePerioder.leggTil(
-            ArbeidsevnePerioder(dto.vurderinger.map { it.toArbeidsevnevurdering() })
-        )
+        val simuleringsresultat =
+            nåværendeArbeidsevnePerioder.leggTil(
+                dto.vurderinger.map {
+                    ArbeidsevneVurdering(
+                        begrunnelse = it.begrunnelse,
+                        arbeidsevne = Prosent(it.arbeidsevne),
+                        fraDato = it.fraDato,
+                        vurdertAv = "simulering"
+                    )
+                }
+            )
 
         SimulertArbeidsevneResultatDto(
             simuleringsresultat.gjeldendeArbeidsevner().map { it.toDto() })

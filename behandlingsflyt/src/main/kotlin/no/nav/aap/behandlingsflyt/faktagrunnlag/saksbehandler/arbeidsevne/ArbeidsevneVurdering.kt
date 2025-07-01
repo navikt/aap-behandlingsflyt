@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.ArbeidsevneVurderingDto
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -14,23 +13,15 @@ data class ArbeidsevneVurdering(
     val begrunnelse: String,
     val arbeidsevne: Prosent,
     val fraDato: LocalDate,
-    val opprettetTid: LocalDateTime?
+    val opprettetTid: LocalDateTime? = null,
+    val vurdertAv: String,
 ) {
-    fun toDto(): ArbeidsevneVurderingDto {
-        return ArbeidsevneVurderingDto(
-            begrunnelse,
-            opprettetTid ?: LocalDateTime.now(),
-            arbeidsevne.prosentverdi(),
-            fraDato
-        )
-    }
-
     fun tidslinje(): Tidslinje<ArbeidsevneVurderingData> {
         return Tidslinje(
             listOf(
                 Segment(
                     Periode(fraDato, Tid.MAKS),
-                    ArbeidsevneVurderingData(begrunnelse, arbeidsevne, opprettetTid)
+                    ArbeidsevneVurderingData(begrunnelse, arbeidsevne, opprettetTid, vurdertAv)
                 )
             )
         )
@@ -39,10 +30,17 @@ data class ArbeidsevneVurdering(
     data class ArbeidsevneVurderingData(
         val begrunnelse: String,
         val arbeidsevne: Prosent,
-        val opprettetTid: LocalDateTime?
+        val opprettetTid: LocalDateTime?,
+        val vurdertAv: String,
     ) {
         fun toArbeidsevneVurdering(fraDato: LocalDate): ArbeidsevneVurdering {
-            return ArbeidsevneVurdering(begrunnelse, arbeidsevne, fraDato, opprettetTid)
+            return ArbeidsevneVurdering(
+                begrunnelse = begrunnelse,
+                arbeidsevne = arbeidsevne,
+                fraDato = fraDato,
+                opprettetTid = opprettetTid,
+                vurdertAv = vurdertAv
+            )
         }
     }
 

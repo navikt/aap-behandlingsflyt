@@ -62,6 +62,6 @@ class ArbeidsevnePerioderTest {
     }
 
     private fun arbeidsevneVurdering(arbeidsevne: Prosent, fraDato: LocalDate) = ArbeidsevneVurdering(
-        UUID.randomUUID().toString(), arbeidsevne, fraDato, LocalDateTime.now()
+        UUID.randomUUID().toString(), arbeidsevne, fraDato, LocalDateTime.now(), "vurdertAv"
     )
 }
