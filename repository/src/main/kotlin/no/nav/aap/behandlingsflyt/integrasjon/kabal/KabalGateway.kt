@@ -46,9 +46,9 @@ class KabalGateway : AndreinstansGateway {
         klagenGjelder: Person,
         klageresultat: KlageResultat,
         saksbehandlersEnhet: String,
+        kommentar: String,
         fullmektig: FullmektigVurdering?
     ) {
-
         val request = PostRequest(
             body = OversendtKlageAnkeV4(
                 type = OversendtKlageAnkeV4Type.KLAGE,
@@ -69,6 +69,7 @@ class KabalGateway : AndreinstansGateway {
                 brukersKlageMottattVedtaksinstans = kravDato,
                 hindreAutomatiskSvarbrev = false,
                 prosessfullmektig = fullmektig?.tilOversendtProsessfullmektigV4(),
+                kommentar = kommentar,
                 kildeReferanse = behandlingsreferanse.referanse.toString()
             ),
             additionalHeaders = listOf(
@@ -118,6 +119,7 @@ data class OversendtKlageAnkeV4(
     val brukersKlageMottattVedtaksinstans: LocalDate,
     val hindreAutomatiskSvarbrev: Boolean,
     val kildeReferanse: String,
+    val kommentar: String = "",
     val prosessfullmektig: OversendtProsessfullmektigV4? = null
 )
 

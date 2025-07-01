@@ -34,6 +34,7 @@ class KabalGatewayTest {
                 klageresultat = Opprettholdes(
                     vilkårSomSkalOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
                 ),
+                kommentar = "kommenentar",
                 fullmektig = FullmektigVurdering(
                     harFullmektig = true,
                     fullmektigIdent = null,
