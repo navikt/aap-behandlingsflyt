@@ -114,4 +114,13 @@ object InMemoryMottattDokumentRepository : MottattDokumentRepository {
             return memory.filter { it.type == type && it.behandlingId == behandlingId }.toSet()
         }
     }
+
+    override fun hentDokumenterAvType(
+        behandlingId: BehandlingId,
+        typer: List<InnsendingType>
+    ): Set<MottattDokument> {
+        synchronized(lock) {
+            return memory.filter { it.type in typer && it.behandlingId == behandlingId }.toSet()
+        }
+    }
 }

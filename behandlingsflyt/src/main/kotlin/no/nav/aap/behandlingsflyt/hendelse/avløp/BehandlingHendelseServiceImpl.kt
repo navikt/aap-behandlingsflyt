@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_AVS
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_ENDRING
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_INNVILGELSE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -145,16 +146,29 @@ class BehandlingHendelseServiceImpl(
     private fun hentMottattDokumenter(
         årsaker: List<Årsak>,
         behandling: Behandling
-    ): List<MottattDokumentDto> = if (årsaker.any { it.type === ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING }) {
-        dokumentRepository.hentDokumenterAvType(behandling.sakId, InnsendingType.LEGEERKLÆRING)
-            .map {
-                MottattDokumentDto(
-                    type = it.type,
-                    referanse = it.referanse
-                )
-            }
-            .toList()
-    } else emptyList()
+    ): List<MottattDokumentDto> {
+        // Sender kun med dokumenter ved følgende behandlingsårsaker
+        val gyldigeÅrsaker = listOf(
+            ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING,
+            ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING,
+            ÅrsakTilBehandling.MOTTATT_DIALOGMELDING
+        )
+
+        return if (årsaker.any { it.type in gyldigeÅrsaker}) {
+            val gyldigeDokumenter = listOf(
+                InnsendingType.LEGEERKLÆRING,
+                InnsendingType.LEGEERKLÆRING_AVVIST,
+                InnsendingType.DIALOGMELDING,
+            )
+
+            dokumentRepository
+                .hentDokumenterAvType(behandling.id, gyldigeDokumenter)
+                .map { it.tilMottattDokumentDto() }
+                .toList()
+        } else {
+            emptyList()
+        }
+    }
 
     private fun DomeneÅrsakTilRetur.oversettTilKontrakt(): ÅrsakTilReturKodeKontrakt {
         return when (this.årsak) {
@@ -194,4 +208,10 @@ class BehandlingHendelseServiceImpl(
             FORVALTNINGSMELDING -> TypeBrev.FORVALTNINGSMELDING
         }
     }
+
+    private fun MottattDokument.tilMottattDokumentDto(): MottattDokumentDto =
+        MottattDokumentDto(
+            type = this.type,
+            referanse = this.referanse
+        )
 }
