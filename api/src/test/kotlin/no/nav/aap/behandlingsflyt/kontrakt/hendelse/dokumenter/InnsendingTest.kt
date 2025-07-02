@@ -4,67 +4,94 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
 import java.time.LocalDate
 
 // TODO, test på at lagre og hente ut LazyDokument fungerer
 
 class InnsendingTest {
 
-    @ParameterizedTest
-    @ValueSource(
-        strings = ["""{
-  "student" : {
-    "erStudent" : "Nei",
-    "kommeTilbake" : null
-  },
-  "yrkesskade" : "Nei",
-  "oppgitteBarn" : null
-}""", """{
-  "student" : {
-    "erStudent" : "Avbrutt",
-    "kommeTilbake" : "Ja"
-  },
-  "yrkesskade" : "Nei",
-  "oppgitteBarn" : {
-    "id" : null,
-    "identer" : [ {
-      "identifikator" : "12450999448",
-      "aktivIdent" : true
-    } ]
-  }
-}""", """
-    {
-  "student" : {
-    "erStudent" : "ja",
-    "kommeTilbake" : "ja"
-  },
-  "yrkesskade" : "ja",
-  "oppgitteBarn" : {
-    "identer" : [ {
-      "identifikator" : "21283126223"
-    } ]
-  },
-  "medlemskap" : {
-    "harBoddINorgeSiste5År" : "ja",
-    "harArbeidetINorgeSiste5År" : "ja",
-    "arbeidetUtenforNorgeFørSykdom" : "ja",
-    "utenlandsOpphold" : [ {
-      "id" : "id",
-      "land" : "NOR",
-      "tilDato" : "2025-01-21",
-      "fraDato" : "2025-01-24",
-      "utenlandsId" : "utenlandsId",
-      "iArbeid" : "nei"
-    }],
-    "iTtilleggArbeidUtenforNorge" : "ja"
-  }
-}
-"""]
-    )
-    fun `kan deserialisere ting som allerede er i databasen`(input: String) {
+    @Test
+    fun `deserialisering - komplett Søknad`() {
+        val input = """
+        {
+          "student" : {
+            "erStudent" : "ja",
+            "kommeTilbake" : "ja"
+          },
+          "yrkesskade" : "ja",
+          "oppgitteBarn" : {
+            "identer" : [ {
+              "identifikator" : "21283126223"
+            } ],
+            "barn": [
+                {
+                    "navn" : "Rask Trombone",
+                    "fødselsdato" : "2020-01-01",
+                    "ident" : { "identifikator": "11223312345" },
+                    "relasjon" : "FOSTERFORELDER"
+                }
+            ]
+          },
+          "medlemskap" : {
+            "harBoddINorgeSiste5År" : "ja",
+            "harArbeidetINorgeSiste5År" : "ja",
+            "arbeidetUtenforNorgeFørSykdom" : "ja",
+            "utenlandsOpphold" : [ {
+              "id" : "id",
+              "land" : "NOR",
+              "tilDato" : "2025-01-21",
+              "fraDato" : "2025-01-24",
+              "utenlandsId" : "utenlandsId",
+              "iArbeid" : "nei"
+            }],
+            "iTtilleggArbeidUtenforNorge" : "ja"
+          }
+        }
+        """
+
         val fromJson = DefaultJsonMapper.fromJson<Melding>(input)
+
+        assertThat(fromJson).isInstanceOf(Melding::class.java)
+    }
+
+    @Test
+    fun `deserialsering - oppgitteBarn med kun identer`() {
+        val json = """
+        {
+          "student" : {
+            "erStudent" : "Avbrutt",
+            "kommeTilbake" : "Ja"
+          },
+          "yrkesskade" : "Nei",
+          "oppgitteBarn" : {
+            "id" : null,
+            "identer" : [ {
+              "identifikator" : "12450999448",
+              "aktivIdent" : true
+            } ]
+          }
+        }
+        """
+
+        val fromJson = DefaultJsonMapper.fromJson<Melding>(json)
+
+        assertThat(fromJson).isInstanceOf(Melding::class.java)
+    }
+
+    @Test
+    fun `kan deserialisere ting som allerede er i databasen`() {
+        val json = """
+        {
+          "student" : {
+            "erStudent" : "Nei",
+            "kommeTilbake" : null
+          },
+          "yrkesskade" : "Nei",
+          "oppgitteBarn" : null
+        }
+        """
+
+        val fromJson = DefaultJsonMapper.fromJson<Melding>(json)
 
         assertThat(fromJson).isInstanceOf(Melding::class.java)
     }

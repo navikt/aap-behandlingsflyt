@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 
 import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonValue
 import java.time.LocalDate
 
 public sealed interface Søknad : Melding
@@ -58,7 +59,18 @@ public data class UtenlandsPeriodeDto(
     val fraDatoLocalDate: LocalDate?
 )
 
-public data class OppgitteBarn(public val identer: Set<Ident>)
+public data class OppgitteBarn(
+    @Deprecated("Erstattes av 'barn' siden ident i en rekke tilfeller vil kunne mangle")
+    public val identer: Set<Ident>,
+    public val barn: List<ManueltOppgittBarn> = emptyList(),
+)
+
+public data class ManueltOppgittBarn(
+    public val navn: String? = null,
+    public val fødselsdato: LocalDate? = null,
+    public val ident: Ident? = null,
+    public val relasjon: String? = null,
+)
 
 public data class Ident(val identifikator: String) {
     init {
