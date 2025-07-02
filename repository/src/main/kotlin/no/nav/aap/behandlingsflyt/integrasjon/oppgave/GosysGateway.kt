@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.integrasjon.oppgave
 
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OppgaveGateway
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OpprettOppgaveRequest
+import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.Prioritet
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
@@ -16,7 +17,9 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.Client
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
 import java.net.URI
+import java.time.LocalDate
 import kotlin.jvm.javaClass
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 
 class GosysGateway : OppgaveGateway {
 
@@ -36,10 +39,28 @@ class GosysGateway : OppgaveGateway {
         tokenProvider = ClientCredentialsTokenProvider,
     )
 
-    override fun opprettOppgaveHvisIkkeEksisterer(oppgaveRequest: OpprettOppgaveRequest, bestillingReferanse: String, behandlingId: BehandlingId) {
+    override fun opprettOppgaveHvisIkkeEksisterer(aktivIdent: Ident, bestillingReferanse: String, behandlingId: BehandlingId) {
+
+        val oppgaveRequest = OpprettOppgaveRequest(
+            oppgavetype = OppgaveType.JOURNALFØRING.verdi,
+            tema = "AAP",
+            prioritet = Prioritet.NORM,
+            aktivDato = LocalDate.now().toString(),
+            personident = aktivIdent.toString(),
+            orgnr = null,
+            tildeltEnhetsnr = null,
+            opprettetAvEnhetsnr = null,
+            journalpostId = "1",
+            tilordnetRessurs = null,
+            beskrivelse = "Krav om refusjon av sosialhjelp for bruker av AAP",
+            behandlingstema = "AAP",
+            behandlingstype = "AAP",
+            fristFerdigstillelse = LocalDate.now()
+        )
+
         val oppgaver = finnOppgaverForJournalpost(
             JournalpostId(oppgaveRequest.journalpostId),
-            listOf(Oppgavetype.JOURNALFØRING, Oppgavetype.FORDELING),
+            listOf(OppgaveType.JOURNALFØRING, OppgaveType.FORDELING),
             null,
             Statuskategori.AAPEN
         )
@@ -64,10 +85,10 @@ class GosysGateway : OppgaveGateway {
     }
 
     fun finnOppgaverForJournalpost(
-        journalpostId: JournalpostId, oppgavetyper: List<Oppgavetype>, tema: String?, statuskategori: Statuskategori
+        journalpostId: JournalpostId, oppgavetyper: List<OppgaveType>, tema: String?, statuskategori: Statuskategori
     ): List<Long> {
         log.info("Finn oppgaver for journalpost: $journalpostId")
-        val oppgaveparams = oppgavetyper.map { "&oppgavetype=${it.verdi}" }.joinToString(separator = "")
+        val oppgaveparams = oppgavetyper.joinToString(separator = "") { "&oppgavetype=${it.verdi}" }
         val temaparams = if (tema != null) "&tema=$tema" else ""
         val path =
             baseUri.resolve("/api/v1/oppgaver?journalpostId=$journalpostId$oppgaveparams$temaparams&statuskategori=${statuskategori.name}")
@@ -85,7 +106,7 @@ data class FinnOppgaverResponse(
     val oppgaver: List<Oppgave>
 )
 
-enum class Oppgavetype(val verdi: String) {
+enum class OppgaveType(val verdi: String) {
     JOURNALFØRING("JFR"),
     FORDELING("FDR")
 }

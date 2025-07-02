@@ -72,24 +72,8 @@ class FatteVedtakSteg(
         val personId = personopplysninger?.brukerPersonopplysning?.id
         val person = personRepository.hent(personId!!)
         val aktivIdent = person.identer().find { it.aktivIdent }
-        val oppgaveRequest = OpprettOppgaveRequest(
-            oppgavetype = "FATTE",
-            tema = "AAP",
-            prioritet = Prioritet.NORM,
-            aktivDato = LocalDate.now().toString(),
-            personident = aktivIdent.toString(),
-            orgnr = null,
-            tildeltEnhetsnr = null,
-            opprettetAvEnhetsnr = null,
-            journalpostId = "1",
-            behandlesAvApplikasjon = null,
-            tilordnetRessurs = null,
-            beskrivelse = null,
-            behandlingstema = "AAP",
-            behandlingstype = "AAP",
-            fristFerdigstillelse = LocalDate.now()
-        )
-        gosysService.opprettOppgaveHvisIkkeEksisterer(oppgaveRequest, kontekst.behandlingId.toString(), kontekst.behandlingId)
+
+        gosysService.opprettOppgaveHvisIkkeEksisterer(aktivIdent!!, kontekst.behandlingId.toString(), kontekst.behandlingId)
         return Fullført
     }
 

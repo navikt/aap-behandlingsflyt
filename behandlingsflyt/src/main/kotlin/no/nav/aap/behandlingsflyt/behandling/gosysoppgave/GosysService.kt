@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.gosysoppgave
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 
 class GosysService(private val oppgaveGateway: OppgaveGateway) {
 
@@ -10,11 +11,11 @@ class GosysService(private val oppgaveGateway: OppgaveGateway) {
     )
 
     fun opprettOppgaveHvisIkkeEksisterer(
-        oppgaveRequest: OpprettOppgaveRequest,
+       aktivIdent: Ident,
         bestillingReferanse: String,
         behandlingId: BehandlingId
     ) {
-        oppgaveGateway.opprettOppgaveHvisIkkeEksisterer(oppgaveRequest, bestillingReferanse, behandlingId)
+        oppgaveGateway.opprettOppgaveHvisIkkeEksisterer(aktivIdent, bestillingReferanse, behandlingId)
 
     }
 }
