@@ -308,7 +308,7 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5023`,
         type = BehovType.VENTEPUNKT,
         løsesISteg = StegType.START_BEHANDLING,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         defaultFrist = Period.ofYears(5),
     ),
     REFUSJON_KRAV(

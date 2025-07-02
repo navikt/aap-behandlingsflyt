@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
-import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -58,18 +57,6 @@ class StartBehandlingSteg private constructor(
             }
         }
 
-        if (kontekst.behandlingType == TypeBehandling.Klage) {
-            if (Miljø.erLokal() || Miljø.erDev()) {
-                return Fullført
-            }
-            return FantVentebehov(
-                Ventebehov(
-                    definisjon = Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON,
-                    grunn = ÅrsakTilSettPåVent.VENTER_PÅ_KLAGE_IMPLEMENTASJON
-                )
-            )
-        }
-
         if (kontekst.behandlingType == TypeBehandling.SvarFraAndreinstans) return Fullført
 
         return Fullført
@@ -77,11 +64,9 @@ class StartBehandlingSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
-            val vilkårsresultatRepository =
-                repositoryProvider.provide<VilkårsresultatRepository>()
             return StartBehandlingSteg(
-                vilkårsresultatRepository,
-                repositoryProvider.provide()
+                repositoryProvider.provide(),
+                repositoryProvider.provide(),
             )
         }
 
