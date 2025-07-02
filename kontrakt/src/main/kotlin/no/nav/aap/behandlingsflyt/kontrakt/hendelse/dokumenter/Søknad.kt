@@ -58,7 +58,23 @@ public data class UtenlandsPeriodeDto(
     val fraDatoLocalDate: LocalDate?
 )
 
-public data class OppgitteBarn(public val identer: Set<Ident>)
+public data class OppgitteBarn(
+    @Deprecated("Erstattes av 'barn' siden ident i en rekke tilfeller vil kunne mangle")
+    public val identer: Set<Ident>,
+    public val barn: List<ManueltOppgittBarn> = emptyList(),
+)
+
+public data class ManueltOppgittBarn(
+    public val navn: String? = null,
+    public val fødselsdato: LocalDate? = null,
+    public val ident: Ident? = null,
+    public val relasjon: Relasjon? = null,
+) {
+    public enum class Relasjon {
+        FORELDER,
+        FOSTERFORELDER,
+    }
+}
 
 public data class Ident(val identifikator: String) {
     init {
