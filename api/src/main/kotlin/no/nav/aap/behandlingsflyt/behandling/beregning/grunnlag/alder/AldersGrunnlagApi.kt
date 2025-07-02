@@ -35,16 +35,20 @@ fun NormalOpenAPIRoute.aldersGrunnlagApi(dataSource: DataSource, repositoryRegis
                         repositoryProvider.provide<VilkårsresultatRepository>()
                     val behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val aldersvilkårperioder =
+                    val aldersvilkår =
                         vilkårsresultatRepository.hent(behandling.id)
                             .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
-                            .vilkårsperioder()
+
                     val fødselsdato =
                         requireNotNull(
                             personopplysningRepository.hentHvisEksisterer(behandling.id)?.brukerPersonopplysning?.fødselsdato?.toLocalDate()
                         )
 
-                    AlderDTO(fødselsdato, aldersvilkårperioder)
+                    AlderDTO(
+                        fødselsdato = fødselsdato,
+                        vilkårsperioder = aldersvilkår.vilkårsperioder(),
+                        vurdertDato = aldersvilkår.vurdertTidspunkt?.toLocalDate()
+                    )
                 }
 
                 respond(alderDTO)

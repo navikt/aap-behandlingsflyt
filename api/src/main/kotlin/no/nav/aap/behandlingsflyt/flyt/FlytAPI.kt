@@ -15,8 +15,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
-import no.nav.aap.behandlingsflyt.flyt.flate.VilkårsperiodeDTO
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.DynamiskStegGruppeVisningService
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.ProsesseringStatus
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.Visning
@@ -462,7 +460,9 @@ private fun alleVilkår(vilkårResultat: Vilkårsresultat): List<VilkårDTO> {
                     vp.avslagsårsak,
                     vp.innvilgelsesårsak
                 )
-            })
+            },
+            vurdertDato = vilkår.vurdertTidspunkt?.toLocalDate()
+        )
     }
 }
 
@@ -522,5 +522,7 @@ private fun hentUtRelevantVilkårForSteg(vilkårsresultat: Vilkårsresultat, ste
                 vp.avslagsårsak,
                 vp.innvilgelsesårsak
             )
-        })
+        },
+        vurdertDato = vilkår.vurdertTidspunkt?.toLocalDate()
+    )
 }
