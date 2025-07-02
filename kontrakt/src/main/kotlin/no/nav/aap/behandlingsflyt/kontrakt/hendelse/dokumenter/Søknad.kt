@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 
 import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonValue
 import java.time.LocalDate
 
 public sealed interface Søknad : Melding
@@ -69,8 +68,13 @@ public data class ManueltOppgittBarn(
     public val navn: String? = null,
     public val fødselsdato: LocalDate? = null,
     public val ident: Ident? = null,
-    public val relasjon: String? = null,
-)
+    public val relasjon: Relasjon? = null,
+) {
+    public enum class Relasjon {
+        FORELDER,
+        FOSTERFORELDER,
+    }
+}
 
 public data class Ident(val identifikator: String) {
     init {
