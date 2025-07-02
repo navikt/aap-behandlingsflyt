@@ -2,8 +2,10 @@ package no.nav.aap.behandlingsflyt.integrasjon.kabal
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 
-//https://github.com/navikt/klage-kodeverk/blob/main/src/main/kotlin/no/nav/klage/kodeverk/hjemmel/Hjemmel.kt
+// https://github.com/navikt/klage-kodeverk/blob/main/src/main/kotlin/no/nav/klage/kodeverk/hjemmel/YtelseToHjemler.kt
 enum class KabalHjemmel {
+    FTRL_21_12_FVL_31,
+    EOES_883_2004,
     FTRL_11_2,
     FTRL_11_3,
     FTRL_11_4,
@@ -29,7 +31,10 @@ enum class KabalHjemmel {
     FTRL_21_3,
     FTRL_22_12_22_13,
     FTRL_22_15,
-    FTRL_22_17;
+    FTRL_22_17, 
+    TRRL_9_FVL_31,
+    FVL_35,
+    TRRL_27,
 }
 
 fun Hjemmel.tilKabalHjemmel(): KabalHjemmel {
