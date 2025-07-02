@@ -16,8 +16,6 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
-import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
-import no.nav.aap.behandlingsflyt.flyt.flate.VilkårsperiodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.pip.PipRepository
@@ -122,7 +120,8 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                                                 avslagsårsak = vp.avslagsårsak,
                                                 innvilgelsesårsak = vp.innvilgelsesårsak
                                             )
-                                        })
+                                        },
+                                    vurdertDato = vilkår.vurdertTidspunkt?.toLocalDate())
                             },
                         aktivtSteg = behandling.aktivtSteg(),
                         versjon = behandling.versjon,

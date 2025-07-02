@@ -5,5 +5,6 @@ import java.time.LocalDate
 
 data class AlderDTO (
     val fødselsdato: LocalDate,
-    val vilkårsperioder: List<Vilkårsperiode>
+    val vilkårsperioder: List<Vilkårsperiode>,
+    val vurdertDato: LocalDate? = null
 )

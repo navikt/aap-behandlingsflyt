@@ -17,6 +17,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 
 class VilkårsresultatRepositoryImpl(private val connection: DBConnection) : VilkårsresultatRepository {
@@ -102,7 +103,7 @@ class VilkårsresultatRepositoryImpl(private val connection: DBConnection) : Vil
 
     private fun hentVilkårresultat(behandlingId: BehandlingId): Vilkårsresultat? {
         val query = """
-SELECT vr.id as vr_id, vilkar.id as vilkar_id, type, perioder
+SELECT vr.id as vr_id, vilkar.id as vilkar_id, type, perioder, opprettet_tid
 FROM vilkar_resultat vr
          left join VILKAR on vr.id = VILKAR.resultat_id
          left JOIN lateral (SELECT vp.vilkar_id                              as vp_vilkar_id,
@@ -138,8 +139,10 @@ WHERE behandling_id = ?
                         VilkårInternal(
                             id = vilkårId,
                             type = row.getEnum("type"),
-                            perioder = row.getStringOrNull("perioder")?.let { DefaultJsonMapper.fromJson(it) }
-                                ?: emptyList()
+                            perioder =
+                                row.getStringOrNull("perioder")?.let { DefaultJsonMapper.fromJson(it) }
+                                    ?: emptyList(),
+                            vurdertTidspunkt = row.getLocalDateTime("opprettet_tid")
                         )
                 }
             }
@@ -170,7 +173,8 @@ WHERE behandling_id = ?
                         innvilgelsesårsak = it.innvilgelsesårsak,
                         versjon = it.versjon
                     )
-                }.toSet()
+                }.toSet(),
+                vurdertTidspunkt = vilkår.vurdertTidspunkt
             )
     }
 
@@ -229,7 +233,7 @@ WHERE behandling_id = ?
     /* queryList har bound Any, så får ikke returnert null. Burde vel kunne endres til Any?. Workaround: */
     private sealed interface VilkårInternalOrNull
     private data object Null : VilkårInternalOrNull
-    private class VilkårInternal(val id: Long, val type: Vilkårtype, val perioder: List<VilkårPeriodeInternal>): VilkårInternalOrNull
+    private class VilkårInternal(val id: Long, val type: Vilkårtype, val perioder: List<VilkårPeriodeInternal>, val vurdertTidspunkt: LocalDateTime): VilkårInternalOrNull
 
     private class VilkårPeriodeInternal(
         val id: Long,

@@ -5,10 +5,12 @@ import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class Vilkår(
     val type: Vilkårtype,
-    vilkårsperioder: Set<Vilkårsperiode> = emptySet()
+    vilkårsperioder: Set<Vilkårsperiode> = emptySet(),
+    val vurdertTidspunkt: LocalDateTime? = null
 ) {
     init {
         validerKombinasjon(type, vilkårsperioder)
