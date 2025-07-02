@@ -16,6 +16,7 @@ interface AndreinstansGateway: Gateway {
         klagenGjelder: Person,
         klageresultat: KlageResultat,
         saksbehandlersEnhet: String,
+        kommentar: String,
         fullmektig: FullmektigVurdering?
     )
 }

@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagebehandlingNayRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
@@ -22,6 +23,8 @@ class AndreinstansService(
     private val behandlingRepository: BehandlingRepository,
     private val sakRepository: SakRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val klagebehandlingNayRepository: KlagebehandlingNayRepository,
+    private val klagebehandlingKontorRepository: KlagebehandlingNayRepository,
     private val ansattInfoService: AnsattInfoService,
     private val klagedokumentInformasjonUtleder: KlagedokumentInformasjonUtleder,
     private val fullmektigRepository: FullmektigRepository
@@ -33,6 +36,8 @@ class AndreinstansService(
         behandlingRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
+        klagebehandlingNayRepository = repositoryProvider.provide(),
+        klagebehandlingKontorRepository = repositoryProvider.provide(),
         ansattInfoService = AnsattInfoService(),
         klagedokumentInformasjonUtleder = KlagedokumentInformasjonUtleder(repositoryProvider),
         fullmektigRepository = repositoryProvider.provide()
@@ -59,6 +64,18 @@ class AndreinstansService(
         
         val fullmektig = fullmektigRepository.hentHvisEksisterer(klageBehandlingId)
 
+        val klagebehandlingNay = klagebehandlingNayRepository.hentHvisEksisterer(klageBehandlingId)
+        val klagebehandlingKontor = klagebehandlingKontorRepository.hentHvisEksisterer(klageBehandlingId)
+
+        val kommentarBuilder = StringBuilder()
+        klagebehandlingKontor?.vurdering?.notat?.let {
+            kommentarBuilder.append("Kommentar fra kontor:\n$it")
+            if (klagebehandlingNay?.vurdering?.notat != null) {
+                kommentarBuilder.append("\n\n")
+            }
+        }
+        klagebehandlingNay?.vurdering?.notat?.let { kommentarBuilder.append("Kommentar fra NAY:\n$it") }
+
         andreinstansGateway.oversendTilAndreinstans(
             saksnummer = sak.saksnummer,
             behandlingsreferanse = klageBehandling.referanse,
@@ -66,6 +83,7 @@ class AndreinstansService(
             klagenGjelder = sak.person,
             klageresultat = klageresultat,
             saksbehandlersEnhet = besluttersEnhet,
+            kommentar = kommentarBuilder.toString(),
             fullmektig = fullmektig?.vurdering
         )
     }
