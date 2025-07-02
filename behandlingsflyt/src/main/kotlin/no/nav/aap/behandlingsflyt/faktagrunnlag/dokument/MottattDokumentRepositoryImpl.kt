@@ -165,6 +165,23 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
         }.toSet()
     }
 
+    override fun hentDokumenterAvType(behandlingId: BehandlingId, typer: List<InnsendingType>): Set<MottattDokument> {
+        val query = """
+            SELECT * FROM MOTTATT_DOKUMENT
+            WHERE behandling_id = ? AND type = ANY(?::text[])
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setArray(2, typer.map { it.name })
+            }
+            setRowMapper { row ->
+                mapMottattDokument(row)
+            }
+        }.toSet()
+    }
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         // Denne trengs ikke implementeres
     }

@@ -548,6 +548,10 @@ class StatistikkJobbUtførerTest {
                 TODO("Not yet implemented")
             }
 
+            override fun hentDokumenterAvType(behandlingId: BehandlingId, typer: List<InnsendingType>): Set<MottattDokument> {
+                TODO("Not yet implemented")
+            }
+
             override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
             }
 
