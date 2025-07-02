@@ -39,7 +39,7 @@ class GosysGateway : OppgaveGateway {
         tokenProvider = ClientCredentialsTokenProvider,
     )
 
-    override fun opprettOppgaveHvisIkkeEksisterer(aktivIdent: Ident, bestillingReferanse: String, behandlingId: BehandlingId) {
+    override fun opprettOppgaveHvisIkkeEksisterer(aktivIdent: Ident, bestillingReferanse: String, behandlingId: BehandlingId, navKontor: String) {
 
         val oppgaveRequest = OpprettOppgaveRequest(
             oppgavetype = OppgaveType.JOURNALFØRING.verdi,
@@ -47,11 +47,8 @@ class GosysGateway : OppgaveGateway {
             prioritet = Prioritet.NORM,
             aktivDato = LocalDate.now().toString(),
             personident = aktivIdent.toString(),
-            orgnr = null,
-            tildeltEnhetsnr = null,
-            opprettetAvEnhetsnr = null,
+            tildeltEnhetsnr = navKontor,
             journalpostId = "1",
-            tilordnetRessurs = null,
             beskrivelse = "Krav om refusjon av sosialhjelp for bruker av AAP",
             behandlingstema = "AAP",
             behandlingstype = "AAP",
@@ -114,3 +111,4 @@ enum class OppgaveType(val verdi: String) {
 enum class Statuskategori {
     AAPEN, AVSLUTTET
 }
+

@@ -9,6 +9,7 @@ interface OppgaveGateway : Gateway {
     fun opprettOppgaveHvisIkkeEksisterer(
         aktivIdent: Ident,
         bestillingReferanse: String,
-        behandlingId: BehandlingId
+        behandlingId: BehandlingId,
+        navKontor: String
     )
 }

@@ -11,11 +11,12 @@ class GosysService(private val oppgaveGateway: OppgaveGateway) {
     )
 
     fun opprettOppgaveHvisIkkeEksisterer(
-       aktivIdent: Ident,
+        aktivIdent: Ident,
         bestillingReferanse: String,
-        behandlingId: BehandlingId
+        behandlingId: BehandlingId,
+        navKontor: String
     ) {
-        oppgaveGateway.opprettOppgaveHvisIkkeEksisterer(aktivIdent, bestillingReferanse, behandlingId)
+        oppgaveGateway.opprettOppgaveHvisIkkeEksisterer(aktivIdent, bestillingReferanse, behandlingId, navKontor)
 
     }
 }

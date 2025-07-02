@@ -11,6 +11,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Omgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -21,7 +23,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonOpplysningRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryRefusjonKravRepository
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -57,7 +63,7 @@ class FatteVedtakStegTest {
 
         every { klageresultatUtleder.utledKlagebehandlingResultat(BehandlingId(1L)) } returns DelvisOmgjøres(
             vilkårSomSkalOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_6),
-            vilkårSomSkalOmgjøres= listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
+            vilkårSomSkalOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
         )
         every {
             tidligereVurderinger.girIngenBehandlingsgrunnlag(
@@ -77,6 +83,9 @@ class FatteVedtakStegTest {
 
         val steg = FatteVedtakSteg(
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            personOpplysningerRepository = InMemoryPersonOpplysningRepository,
+            refusjonkravRepository = InMemoryRefusjonKravRepository,
+            personRepository = InMemoryPersonRepository,
             tidligereVurderinger = tidligereVurderinger,
             klageresultatUtleder = klageresultatUtleder,
             trekkKlageService = trekkKlageService,
@@ -122,6 +131,9 @@ class FatteVedtakStegTest {
 
         val steg = FatteVedtakSteg(
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            personOpplysningerRepository = InMemoryPersonOpplysningRepository,
+            refusjonkravRepository = InMemoryRefusjonKravRepository,
+            personRepository = InMemoryPersonRepository,
             tidligereVurderinger = tidligereVurderinger,
             klageresultatUtleder = klageresultatUtleder,
             trekkKlageService = trekkKlageService,
@@ -132,7 +144,7 @@ class FatteVedtakStegTest {
 
         assertThat(resultat).isEqualTo(FantAvklaringsbehov(Definisjon.FATTE_VEDTAK))
     }
-    
+
     @Test
     fun `Klagevurderinger skal ikke kvalitetssikres hvis resultatet er Omgjør`() {
         val kontekst = FlytKontekstMedPerioder(
@@ -154,7 +166,7 @@ class FatteVedtakStegTest {
                 StegType.FATTE_VEDTAK
             )
         } returns false
-        
+
         InMemoryAvklaringsbehovRepository.opprett(
             BehandlingId(1),
             definisjon = Definisjon.VURDER_KLAGE_NAY,
@@ -166,6 +178,9 @@ class FatteVedtakStegTest {
 
         val steg = FatteVedtakSteg(
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            personOpplysningerRepository = InMemoryPersonOpplysningRepository,
+            refusjonkravRepository = InMemoryRefusjonKravRepository,
+            personRepository = InMemoryPersonRepository,
             tidligereVurderinger = tidligereVurderinger,
             klageresultatUtleder = klageresultatUtleder,
             trekkKlageService = trekkKlageService,
@@ -173,7 +188,7 @@ class FatteVedtakStegTest {
         )
 
         val resultat = steg.utfør(kontekst)
-        
+
         assertThat(resultat).isEqualTo(Fullført)
     }
 }
