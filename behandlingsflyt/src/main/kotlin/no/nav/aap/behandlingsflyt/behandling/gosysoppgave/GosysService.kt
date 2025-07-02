@@ -3,11 +3,14 @@ package no.nav.aap.behandlingsflyt.behandling.gosysoppgave
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 
-class GosysService(private val oppgaveGateway: OppgaveGateway) {
+class GosysService(private val oppgaveGateway: OppgaveGateway, private val unleashGateway: UnleashGateway) {
 
     constructor(gatewayProvider: GatewayProvider) : this(
         oppgaveGateway = gatewayProvider.provide(),
+        unleashGateway = gatewayProvider.provide()
     )
 
     fun opprettOppgaveHvisIkkeEksisterer(
@@ -16,7 +19,9 @@ class GosysService(private val oppgaveGateway: OppgaveGateway) {
         behandlingId: BehandlingId,
         navKontor: String
     ) {
-        oppgaveGateway.opprettOppgaveHvisIkkeEksisterer(aktivIdent, bestillingReferanse, behandlingId, navKontor)
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.SosialHjelpFlereKontorer)) {
+            oppgaveGateway.opprettOppgaveHvisIkkeEksisterer(aktivIdent, bestillingReferanse, behandlingId, navKontor)
+        }
 
     }
 }

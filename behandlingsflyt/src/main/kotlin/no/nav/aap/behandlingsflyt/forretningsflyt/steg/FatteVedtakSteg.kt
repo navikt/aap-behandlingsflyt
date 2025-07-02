@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -74,6 +75,7 @@ class FatteVedtakSteg(
             return FantAvklaringsbehov(Definisjon.FATTE_VEDTAK)
         }
 
+
         val navkontorSosialRefusjon = refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId)
         if (navkontorSosialRefusjon == null) return Fullført
 
@@ -94,12 +96,12 @@ class FatteVedtakSteg(
             val aktivIdent = person.identer().find { it.aktivIdent }
 
             navKontorList.forEach { navKontor ->
-             /*   gosysService.opprettOppgaveHvisIkkeEksisterer(
+                gosysService.opprettOppgaveHvisIkkeEksisterer(
                     aktivIdent!!,
                     kontekst.behandlingId.toString(),
                     kontekst.behandlingId,
                     navKontor
-                )*/
+                )
             }
         }
         return Fullført
