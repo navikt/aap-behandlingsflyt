@@ -12,9 +12,9 @@ enum class KabalHjemmel {
     FTRL_11_7_11_8_11_9,
     FTRL_11_10,
     FTRL_11_12,
+    FTRL_11_13,
     FTRL_11_14,
     FTRL_11_15,
-    FTRL_11_13,
     FTRL_11_17,
     FTRL_11_18,
     FTRL_11_19_11_20,
@@ -28,7 +28,7 @@ enum class KabalHjemmel {
     FTRL_11_31,
     FTRL_21_3,
     FTRL_22_12_22_13,
-    FTRL_22_15_TILBAKEKREVING,
+    FTRL_22_15,
     FTRL_22_17;
 }
 
@@ -71,7 +71,7 @@ fun Hjemmel.tilKabalHjemmel(): KabalHjemmel {
         Hjemmel.FOLKETRYGDLOVEN_11_29 -> KabalHjemmel.FTRL_11_29
         Hjemmel.FOLKETRYGDLOVEN_11_31 -> KabalHjemmel.FTRL_11_31
         Hjemmel.FOLKETRYGDLOVEN_22_13 -> KabalHjemmel.FTRL_22_12_22_13
-        Hjemmel.FOLKETRYGDLOVEN_22_15 -> KabalHjemmel.FTRL_22_15_TILBAKEKREVING
+        Hjemmel.FOLKETRYGDLOVEN_22_15 -> KabalHjemmel.FTRL_22_15
         Hjemmel.FOLKETRYGDLOVEN_22_17 -> KabalHjemmel.FTRL_22_17
     }
 }
