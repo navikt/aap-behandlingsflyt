@@ -2548,43 +2548,6 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
     }
 
     @Test
-    fun `Skal sette behandling på vent hvis man mottar klage i prod`() {
-        System.setProperty("NAIS_CLUSTER_NAME", "prod-test")
-        val ident = ident()
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        val sak = hentSak(ident, periode)
-
-        opprettBehandling(
-            sak.id,
-            årsaker = listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD)),
-            forrigeBehandlingId = null,
-            typeBehandling = TypeBehandling.Førstegangsbehandling
-        )
-
-        val kravMottatt = LocalDate.now().minusDays(10)
-        val nyBehandling = sendInnDokument(
-            ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId("21"),
-                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
-                InnsendingType.KLAGE,
-                strukturertDokument = StrukturertDokument(KlageV0(kravMottatt = kravMottatt)),
-                periode
-            )
-
-        )
-
-        assertThat(nyBehandling.typeBehandling() == TypeBehandling.Klage)
-
-        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(nyBehandling.id).first()
-
-        assertTrue(åpneAvklaringsbehov.erÅpent())
-        assertTrue(åpneAvklaringsbehov.erVentepunkt())
-        assertThat(åpneAvklaringsbehov.definisjon).isEqualTo(Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON)
-
-        System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
-    }
-
-    @Test
     fun `Teste Klageflyt`() {
         val person = TestPersoner.PERSON_FOR_UNG()
         val ident = person.aktivIdent()
