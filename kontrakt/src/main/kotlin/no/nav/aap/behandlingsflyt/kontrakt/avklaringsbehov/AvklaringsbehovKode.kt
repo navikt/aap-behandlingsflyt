@@ -48,6 +48,7 @@ public const val VURDER_FORMKRAV_KODE: String = "6000"
 public const val FASTSETT_BEHANDLENDE_ENHET_KODE: String = "6001"
 public const val VURDER_KLAGE_KONTOR_KODE: String = "6002"
 public const val VURDER_KLAGE_NAY_KODE: String = "6003"
+public const val EFFEKTUER_AVVIST_PÅ_FORMKRAV_KODE: String = "6004"
 public const val SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV_KODE: String = "6005"
 public const val BEKREFT_TOTALVURDERING_KLAGE: String = "6006"
 public const val VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV_KODE: String = "6007"
@@ -208,6 +209,12 @@ public enum class AvklaringsbehovKode {
      * [VURDER_KLAGE_NAY_KODE]
      */
     `6003`,
+
+    /**
+     * [EFFEKTUER_AVVIST_PÅ_FORMKRAV_KODE]
+     * Deprecated: Kun bevart for statistikk, relevant steg og definisjon er ikke lenger i bruk
+     */
+    `6004`,
 
     /**
      * [SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV_KODE]

@@ -368,6 +368,13 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = false
     ),
+    @Deprecated("Effektuer-steget er fjernet. Kun bevart for statistikk i DEV")
+    EFFEKTUER_AVVIST_PÅ_FORMKRAV(
+        kode = AvklaringsbehovKode.`6004`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.FORMKRAV,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
     FASTSETT_FULLMEKTIG(
         kode = AvklaringsbehovKode.`6009`,
         type = BehovType.MANUELT_PÅKREVD,
