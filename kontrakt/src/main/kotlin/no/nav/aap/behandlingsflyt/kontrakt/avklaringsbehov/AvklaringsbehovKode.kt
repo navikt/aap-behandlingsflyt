@@ -22,6 +22,7 @@ public const val AVKLAR_SAMORDNING_GRADERING_KODE: String = "5012"
 public const val SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT: String = "5025"
 public const val AVKLAR_SAMORDNING_UFØRE_KODE: String = "5024"
 public const val AVKLAR_SAMORDNING_ANDRE_STATLIGE_YTELSER_KODE: String = "5027"
+public const val AVKLAR_SAMORDNING_ARBEIDSGIVER_KODE: String = "5030"
 public const val AVKLAR_YRKESSKADE_KODE: String = "5013"
 public const val FASTSETT_YRKESSKADE_BELØP_KODE: String = "5014"
 public const val EFFEKTUER_11_7_KODE: String = "5015"
@@ -149,6 +150,11 @@ public enum class AvklaringsbehovKode {
      * [AVKLAR_SAMORDNING_ANDRE_STATLIGE_YTELSER_KODE]
      */
     `5027`,
+
+    /**
+     * [AVKLAR_SAMORDNING_ARBEIDSGIVER_KODE]
+     */
+    `5030`,
 
     /**
      * [VURDER_TREKK_AV_SØKNAD_KODE]
