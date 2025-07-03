@@ -13,7 +13,6 @@ public enum class Kanal {
     }
 }
 
-
 /**
  * Kopiert fra https://github.com/navikt/saf/blob/master/app/src/main/resources/schemas/saf.graphqls#L675
  * Ikke til bruk internt i koden, kun for oversettelse til [Kanal].

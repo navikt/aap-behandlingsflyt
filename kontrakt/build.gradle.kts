@@ -9,13 +9,15 @@ plugins {
 val tilgangVersjon = "1.0.86"
 val junitVersion = "5.12.0"
 val komponenterVersjon = "1.0.277"
+val jacksonVersjon = "2.19.1"
 
 dependencies {
-    api("com.fasterxml.jackson.core:jackson-annotations:2.19.1")
+    api("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersjon}")
     api("no.nav:ktor-openapi-generator:1.0.115")
     compileOnly("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:${jacksonVersjon}")
     testRuntimeOnly("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     testImplementation("org.assertj:assertj-core:3.27.3")

@@ -1,0 +1,365 @@
+[ {
+  "kode" : "9001",
+  "type" : "VENTEPUNKT",
+  "løsesISteg" : "UDEFINERT",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_OPPFOLGING", "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "9002",
+  "type" : "BREV_VENTEPUNKT",
+  "løsesISteg" : "UDEFINERT",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ ]
+}, {
+  "kode" : "5028",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "SØKNAD",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_OPPFOLGING", "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "9003",
+  "type" : "VENTEPUNKT",
+  "løsesISteg" : "UDEFINERT",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_OPPFOLGING", "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "9004",
+  "type" : "VENTEPUNKT",
+  "løsesISteg" : "UDEFINERT",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL", "SAKSBEHANDLER_OPPFOLGING" ]
+}, {
+  "kode" : "5050",
+  "type" : "BREV",
+  "løsesISteg" : "UDEFINERT",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_OPPFOLGING", "SAKSBEHANDLER_NASJONAL", "BESLUTTER" ]
+}, {
+  "kode" : "5051",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "BREV",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "BESLUTTER" ]
+}, {
+  "kode" : "5029",
+  "type" : "MANUELT_FRIVILLIG",
+  "løsesISteg" : "VURDER_RETTIGHETSPERIODE",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "5001",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "AVKLAR_STUDENT",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "5003",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "AVKLAR_SYKDOM",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : true,
+  "løsesAv" : [ "SAKSBEHANDLER_OPPFOLGING" ]
+}, {
+  "kode" : "5097",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "KVALITETSSIKRING",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "KVALITETSSIKRER" ]
+}, {
+  "kode" : "5004",
+  "type" : "MANUELT_FRIVILLIG",
+  "løsesISteg" : "FASTSETT_ARBEIDSEVNE",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : true,
+  "løsesAv" : [ "SAKSBEHANDLER_OPPFOLGING" ]
+}, {
+  "kode" : "5008",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "FASTSETT_BEREGNINGSTIDSPUNKT",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "5014",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "FASTSETT_BEREGNINGSTIDSPUNKT",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "7001",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "MANGLENDE_LIGNING",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "5005",
+  "type" : "MANUELT_FRIVILLIG",
+  "løsesISteg" : "FRITAK_MELDEPLIKT",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : true,
+  "løsesAv" : [ "SAKSBEHANDLER_OPPFOLGING" ]
+}, {
+  "kode" : "5006",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "VURDER_BISTANDSBEHOV",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : true,
+  "løsesAv" : [ "SAKSBEHANDLER_OPPFOLGING" ]
+}, {
+  "kode" : "5007",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "VURDER_SYKEPENGEERSTATNING",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "5013",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "VURDER_YRKESSKADE",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "5009",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "BARNETILLEGG",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "5010",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "DU_ER_ET_ANNET_STED",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "5011",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "DU_ER_ET_ANNET_STED",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "5012",
+  "type" : "MANUELT_FRIVILLIG",
+  "løsesISteg" : "SAMORDNING_GRADERING",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "5024",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "SAMORDNING_UFØRE",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "5025",
+  "type" : "VENTEPUNKT",
+  "løsesISteg" : "SAMORDNING_GRADERING",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL", "SAKSBEHANDLER_OPPFOLGING" ]
+}, {
+  "kode" : "5027",
+  "type" : "MANUELT_FRIVILLIG",
+  "løsesISteg" : "SAMORDNING_ANDRE_STATLIGE_YTELSER",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "5016",
+  "type" : "BREV_VENTEPUNKT",
+  "løsesISteg" : "EFFEKTUER_11_7",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_OPPFOLGING" ]
+}, {
+  "kode" : "5052",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "EFFEKTUER_11_7",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_OPPFOLGING" ]
+}, {
+  "kode" : "5018",
+  "type" : "VENTEPUNKT",
+  "løsesISteg" : "EFFEKTUER_11_7",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_OPPFOLGING" ]
+}, {
+  "kode" : "5017",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "VURDER_LOVVALG",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "5015",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "EFFEKTUER_11_7",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_OPPFOLGING" ]
+}, {
+  "kode" : "5098",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "FORESLÅ_VEDTAK",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "5099",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "FATTE_VEDTAK",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "BESLUTTER" ]
+}, {
+  "kode" : "5019",
+  "type" : "VENTEPUNKT",
+  "løsesISteg" : "VURDER_LOVVALG",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_OPPFOLGING" ]
+}, {
+  "kode" : "5020",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "VURDER_MEDLEMSKAP",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "5021",
+  "type" : "OVERSTYR",
+  "løsesISteg" : "VURDER_LOVVALG",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "5022",
+  "type" : "OVERSTYR",
+  "løsesISteg" : "VURDER_MEDLEMSKAP",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "5023",
+  "type" : "VENTEPUNKT",
+  "løsesISteg" : "START_BEHANDLING",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "5026",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "REFUSJON_KRAV",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_OPPFOLGING" ]
+}, {
+  "kode" : "5999",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "PÅKLAGET_BEHANDLING",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "5056",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "SAMORDNING_TJENESTEPENSJON_REFUSJONSKRAV",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "6000",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "FORMKRAV",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "6001",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "BEHANDLENDE_ENHET",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "6002",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "KLAGEBEHANDLING_KONTOR",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : true,
+  "løsesAv" : [ "SAKSBEHANDLER_OPPFOLGING" ]
+}, {
+  "kode" : "6003",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "KLAGEBEHANDLING_NAY",
+  "kreverToTrinn" : true,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "6006",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "KLAGEBEHANDLING_OPPSUMMERING",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "6004",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "FORMKRAV",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "6009",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "FULLMEKTIG",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "6010",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "TREKK_KLAGE",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_OPPFOLGING", "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "6005",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "FORMKRAV",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "6007",
+  "type" : "VENTEPUNKT",
+  "løsesISteg" : "FORMKRAV",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+}, {
+  "kode" : "6008",
+  "type" : "MANUELT_PÅKREVD",
+  "løsesISteg" : "SVAR_FRA_ANDREINSTANS",
+  "kreverToTrinn" : false,
+  "kvalitetssikres" : false,
+  "løsesAv" : [ "SAKSBEHANDLER_NASJONAL" ]
+} ]
