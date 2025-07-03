@@ -118,6 +118,8 @@ spec:
           namespace: nom
         - application: norg2
           namespace: org
+        - application: kabal-api
+          namespace: klage
 
   env:
     - name: INTEGRASJON_PDL_URL
@@ -222,3 +224,7 @@ spec:
       value: https://ereg-services.prod-fss-pub.nais.io
     - name: INTEGRASJON_EREG_SCOPE
       value: api://prod-fss.arbeidsforhold.ereg-services/.default
+    - name: INTEGRASJON_KABAL_URL
+      value: http://kabal-api.klage
+    - name: INTEGRASJON_KABAL_SCOPE
+      value: api://prod-gcp.klage.kabal-api/.default
