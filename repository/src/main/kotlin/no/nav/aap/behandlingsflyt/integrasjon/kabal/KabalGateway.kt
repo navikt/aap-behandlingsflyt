@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.integrasjon.kabal
 
 import no.nav.aap.behandlingsflyt.behandling.klage.andreinstans.AndreinstansGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentMedType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultat
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -89,12 +90,7 @@ private fun FullmektigVurdering.tilOversendtProsessfullmektigV4(): OversendtPros
         return null
     }
     return OversendtProsessfullmektigV4(
-        id = fullmektigIdent?.let {
-            OversendtPartId(
-                type = it.type.tilOversendtPartIdType(),
-                verdi = it.ident
-            )
-        },
+        id = fullmektigIdent?.tilOversendtPartId(),
         navn = fullmektigNavnOgAdresse?.navn,
         adresse = fullmektigNavnOgAdresse?.adresse?.let {
             OversendtAdresseV4(
@@ -166,10 +162,22 @@ data class OversendtAdresseV4(
     val land: String,
 )
 
+internal fun IdentMedType.tilOversendtPartId(): OversendtPartId? {
+    return if (type == IdentType.UTL_ORGNR) {
+        return null
+    } else {
+        OversendtPartId(
+            type = type.tilOversendtPartIdType(),
+            verdi = ident
+        )
+    }
+}
+
 internal fun IdentType.tilOversendtPartIdType(): OversendtPartIdType {
     return when (this) {
         IdentType.FNR_DNR -> OversendtPartIdType.PERSON
-        IdentType.ORGNR, IdentType.UTL_ORGNR -> OversendtPartIdType.VIRKSOMHET
+        IdentType.ORGNR -> OversendtPartIdType.VIRKSOMHET
+        IdentType.UTL_ORGNR -> throw IllegalStateException("Kabal støtter ikke utenlandsk orgnr")
     }
 }
 

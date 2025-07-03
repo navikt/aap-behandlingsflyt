@@ -17,7 +17,12 @@ data class FullmektigVurdering(
         require(harFullmektig || (fullmektigIdent == null && fullmektigNavnOgAdresse == null)) {
             "Hvis bruker ikke har fullmektig, må fullmektig-ident og navn og adresse være null"
         }
-        require(!harFullmektig || (fullmektigIdent?.type == IdentType.FNR_DNR) xor (fullmektigNavnOgAdresse != null)) {
+        require(
+            !harFullmektig || (fullmektigIdent?.type in listOf(
+                IdentType.FNR_DNR,
+                IdentType.ORGNR
+            )) xor (fullmektigNavnOgAdresse != null)
+        ) {
             "Hvis bruker har fullmektig, må enten fullmektig-ident være av type fødselsesnummer, eller navn og adresse være satt"
         }
     }
