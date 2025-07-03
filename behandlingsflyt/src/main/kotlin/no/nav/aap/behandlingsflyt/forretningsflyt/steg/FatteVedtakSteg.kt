@@ -88,7 +88,7 @@ class FatteVedtakSteg(
             val personId = personopplysninger?.brukerPersonopplysning?.id
 
             if (personId == null) {
-                log.error("Fant ikke personopplysninger med id $personId")
+                log.error("Fant ikke personopplysninger for brukeren med behandlingsid ${kontekst.behandlingId}")
                 return Fullført
             }
 

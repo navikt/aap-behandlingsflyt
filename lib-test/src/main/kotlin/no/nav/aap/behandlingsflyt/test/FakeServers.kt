@@ -319,7 +319,7 @@ object FakeServers : AutoCloseable {
 
                     call.respond(
                         OpprettOppgaveResponse(
-                            success = false
+                            success = true
                         )
                     )
                 }
