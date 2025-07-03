@@ -245,6 +245,11 @@ public enum class AvklaringsbehovKode {
      * [VURDER_TREKK_AV_KLAGE_KODE]
      */
     `6010`,
+    
+    /**
+     * [VURDER_TREKK_AV_KLAGE_KODE]
+     */
+    `6010-2`,
 
 
     /**
