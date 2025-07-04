@@ -1,7 +1,8 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsgiver
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsgiver.SamordningArbeidsgiverRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsgiver.SamordningArbeidsgiverVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -9,70 +10,55 @@ import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 import kotlin.jvm.javaClass
 
-class SamordningArbeidsgiverImpl(private val connection: DBConnection) : SamordningArbeidsgiverRepository {
+class SamordningArbeidsgiverRepositoryImpl(private val connection: DBConnection) : SamordningArbeidsgiverRepository {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    companion object : Factory<SamordningArbeidsgiverImpl> {
-        override fun konstruer(connection: DBConnection): SamordningArbeidsgiverImpl {
-            return SamordningArbeidsgiverImpl(connection)
+    companion object : Factory<SamordningArbeidsgiverRepositoryImpl> {
+        override fun konstruer(connection: DBConnection): SamordningArbeidsgiverRepositoryImpl {
+            return SamordningArbeidsgiverRepositoryImpl(connection)
         }
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningArbeidsgiverVurdering? {
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningArbeidsgiverGrunnlag? {
+
+        val vurderingId = hentVurderingIdForBehandling(behandlingId) ?: return null
         val query = """
-        SELECT * FROM SAMORDNING_ARBEIDSGIVER_GRUNNLAG WHERE behandling_id = ? AND aktiv = true
+        SELECT * FROM SAMORDNING_ARBEIDSGIVER_VURDERING WHERE behandling_id = ? AND aktiv = true
     """.trimIndent()
-
-        val vurderingId = connection.queryFirstOrNull(query) {
-            setParams {
-                setLong(1, behandlingId.toLong())
-            }
-            setRowMapper {
-                it.getLong("samordning_arbeidsgiver_vurdering_id")
-            }
-        }
-
-        return vurderingId?.let { hentArbeidsgiverSamordning(it) }
-    }
-
-    private fun hentArbeidsgiverSamordning(vurderingId: Long): SamordningArbeidsgiverVurdering {
-        val query = """
-            SELECT * FROM SAMORDNING_ARBEIDSGIVER_VURDERING WHERE ID = ?
-        """.trimIndent()
 
         return connection.queryFirst(query) {
             setParams {
                 setLong(1, vurderingId)
             }
             setRowMapper {
-                SamordningArbeidsgiverVurdering(
-                    fom = it.getLocalDateOrNull("fom"),
-                    tom = it.getLocalDateOrNull("tom"),
-                    vurdertAv = it.getString("vurdert_av"),
-                    vurdering = it.getString("vurdering"),
-                    opprettetTid = it.getLocalDateTime("opprettet_tid")
+                SamordningArbeidsgiverGrunnlag(
+                    vurdering = SamordningArbeidsgiverVurdering(
+                        begrunnelse = it.getString("begrunnelse"),
+                        vurdertAv = it.getString("vurdert_av"),
+                        fom = it.getLocalDateOrNull("fom"),
+                        tom = it.getLocalDateOrNull("tom"),
+                        vurdertTidspunkt = it.getLocalDateTime("opprettet_tid"),
+                    )
                 )
             }
         }
+
     }
 
-    override fun hentAlleVurderingerPåSak(sakId: SakId): List<SamordningArbeidsgiverVurdering> {
+    private fun hentVurderingIdForBehandling(behandlingId: BehandlingId): Long? {
         val query = """
-            SELECT * FROM SAMORDNING_ARBEIDSGIVER_GRUNNLAG WHERE sak_id = ? and aktiv = true
+            SELECT samordning_arbeidsgiver_vurdering_id FROM SAMORDNING_ARBEIDSGIVER_GRUNNLAG WHERE behandling_id = ? AND aktiv = true
         """.trimIndent()
-
-        return connection.queryList(query) {
+        return connection.queryFirstOrNull(query) {
             setParams {
-                setLong(1, sakId.id)
+                setLong(1, behandlingId.toLong())
             }
-            setRowMapper {
-                hentArbeidsgiverSamordning(it.getLong("SAMORDNING_ARBEIDSGIVER_VURDERING_ID"))
-            }
+            setRowMapper { it.getLong("samordning_arbeidsgiver_vurdering_id") }
         }
     }
 
-    override fun lagre(sakId: SakId, behandlingId: BehandlingId, SAMORDNINGVurderinger: SamordningArbeidsgiverVurdering) {
+    override fun lagre(sakId: SakId, behandlingId: BehandlingId, samordningVurderinger: SamordningArbeidsgiverVurdering) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         if (eksisterendeGrunnlag != null) {
             deaktiverEksisterende(behandlingId)
@@ -125,18 +111,18 @@ class SamordningArbeidsgiverImpl(private val connection: DBConnection) : Samordn
     ) {
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
-            row.getLong("SAMORDNING_arbeidsgiver_vurdering_id")
+            row.getLong("samordning_arbeidsgiver_vurdering_id")
         }
     }
 
     private fun lagreVurdering(vurdering: SamordningArbeidsgiverVurdering, vurderingerId: Long): Long {
         val query = """
-            INSERT INTO SAMORDNING_ARBEIDSGIVER_VURDERING (VURDERING, FOM, TOM, VURDERT_AV, SAMORDNING_ARBEIDSGIVER_VURDERINGER_ID) VALUES (?, ?, ?, ?, ?)
+            INSERT INTO SAMORDNING_ARBEIDSGIVER_VURDERING (BEGRUNNELSE, FOM, TOM, VURDERT_AV, SAMORDNING_ARBEIDSGIVER_VURDERINGER_ID) VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
 
         return connection.executeReturnKey(query) {
             setParams {
-                setString(1, vurdering.vurdering)
+                setString(1, vurdering.begrunnelse)
                 setLocalDate(2, vurdering.fom)
                 setLocalDate(3, vurdering.tom)
                 setString(4, vurdering.vurdertAv)

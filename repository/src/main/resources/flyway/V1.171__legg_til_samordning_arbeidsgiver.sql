@@ -1,6 +1,6 @@
 CREATE TABLE SAMORDNING_ARBEIDSGIVER_VURDERING(
                                        ID                              BIGSERIAL       NOT NULL   PRIMARY KEY,
-                                       VURDERING                       TEXT            NULL,
+                                       BEGRUNNELSE                       TEXT            NULL,
                                        FOM                             DATE            NOT NULL,
                                        TOM                             DATE            NOT NULL,
                                        OPPRETTET_TID                   TIMESTAMP(3)    DEFAULT CURRENT_TIMESTAMP NOT NULL
