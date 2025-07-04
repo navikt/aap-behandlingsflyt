@@ -28,11 +28,12 @@ class AvklarSamordningArbeidsgiverLøser(
              kontekst.kontekst.sakId,
              kontekst.behandlingId(),
              SamordningArbeidsgiverVurdering(
-               vurdering = løsning.samordningArbeidsgiverVurdering.vurdering,
+                 vurdering = løsning.samordningArbeidsgiverVurdering.vurdering,
                  fom = løsning.samordningArbeidsgiverVurdering.fom,
                  tom = løsning.samordningArbeidsgiverVurdering.tom,
-
-            )
+                 opprettetTid = TODO(),
+                 vurdertAv = kontekst.bruker.ident,
+             )
         )
         return LøsningsResultat("Vurdert samordning andre statlige ytelser")
     }

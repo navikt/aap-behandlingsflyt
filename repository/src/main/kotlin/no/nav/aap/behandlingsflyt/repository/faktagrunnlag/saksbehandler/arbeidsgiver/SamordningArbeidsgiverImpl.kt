@@ -24,7 +24,7 @@ class SamordningArbeidsgiverImpl(private val connection: DBConnection) : Samordn
         SELECT * FROM SAMORDNING_ARBEIDSGIVER_GRUNNLAG WHERE behandling_id = ? AND aktiv = true
     """.trimIndent()
 
-        val vurderingerId = connection.queryFirstOrNull(query) {
+        val vurderingId = connection.queryFirstOrNull(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
@@ -33,17 +33,17 @@ class SamordningArbeidsgiverImpl(private val connection: DBConnection) : Samordn
             }
         }
 
-        return vurderingerId?.let { hentArbeidsgiverSAMORDNING(it) }
+        return vurderingId?.let { hentArbeidsgiverSamordning(it) }
     }
 
-    private fun hentArbeidsgiverSAMORDNING(vurderingerId: Long): List<SamordningArbeidsgiverVurdering> {
+    private fun hentArbeidsgiverSamordning(vurderingId: Long): SamordningArbeidsgiverVurdering {
         val query = """
             SELECT * FROM SAMORDNING_ARBEIDSGIVER_VURDERING WHERE ID = ?
         """.trimIndent()
 
-        return connection.queryList(query) {
+        return connection.queryFirst(query) {
             setParams {
-                setLong(1, vurderingerId)
+                setLong(1, vurderingId)
             }
             setRowMapper {
                 SamordningArbeidsgiverVurdering(
@@ -67,12 +67,12 @@ class SamordningArbeidsgiverImpl(private val connection: DBConnection) : Samordn
                 setLong(1, sakId.id)
             }
             setRowMapper {
-                hentArbeidsgiverSAMORDNING(it.getLong("SAMORDNING_ARBEIDSGIVER_VURDERING_ID"))
+                hentArbeidsgiverSamordning(it.getLong("SAMORDNING_ARBEIDSGIVER_VURDERING_ID"))
             }
-        }.flatten()
+        }
     }
 
-    override fun lagre(sakId: SakId, behandlingId: BehandlingId, SAMORDNINGVurderinger: List<SamordningArbeidsgiverVurdering>) {
+    override fun lagre(sakId: SakId, behandlingId: BehandlingId, SAMORDNINGVurderinger: SamordningArbeidsgiverVurdering) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         if (eksisterendeGrunnlag != null) {
             deaktiverEksisterende(behandlingId)
@@ -96,30 +96,30 @@ class SamordningArbeidsgiverImpl(private val connection: DBConnection) : Samordn
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        val refusjonskravArbeidsgiverVurderingIds = getRefusjonskravArbeidsgiverVurderingIds(behandlingId)
+        val samordningArbeidsgiverVurderingIds = getSamordningArbeidsgiverVurderingIds(behandlingId)
 
         val deletedRows = connection.executeReturnUpdated(
             """
             delete from SAMORDNING_ARBEIDSGIVER_GRUNNLAG where behandling_id = ?;
-            delete from SAMORDNING_ARBEIDSGIVER_VURDERING where SAMORDNING_arbeidsgiver_vurderinger_id = ANY(?::bigint[]);
+            delete from SAMORDNING_ARBEIDSGIVER_VURDERING where id = ANY(?::bigint[]);
  
             
         """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.id)
-                setLongArray(2, refusjonskravArbeidsgiverVurderingIds)
+                setLongArray(2, samordningArbeidsgiverVurderingIds)
             }
         }
         log.info("Slettet $deletedRows rader fra SAMORDNING_ARBEIDSGIVER_GRUNNLAG")
     }
 
-    private fun getRefusjonskravArbeidsgiverVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+    private fun getSamordningArbeidsgiverVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
         """
-                    SELECT SAMORDNING_arbeidsgiver_vurdering_id
+                    SELECT samordning_arbeidsgiver_vurdering_id
                     FROM SAMORDNING_ARBEIDSGIVER_GRUNNLAG
                     WHERE behandling_id = ?
-                      AND SAMORDNING_arbeidsgiver_vurdering_id is not null
+                      AND samordning_arbeidsgiver_vurdering_id is not null
                  
                 """.trimIndent()
     ) {
@@ -161,8 +161,8 @@ class SamordningArbeidsgiverImpl(private val connection: DBConnection) : Samordn
 
         val query = """
             INSERT INTO SAMORDNING_ARBEIDSGIVER_GRUNNLAG 
-                (behandling_id, sak_id, SAMORDNING_arbeidsgiver_vurdering_id) 
-            SELECT ?, sak_id, SAMORDNING_arbeidsgiver_vurdering_id
+                (behandling_id, sak_id, samordning_arbeidsgiver_vurdering_id) 
+            SELECT ?, sak_id, samordning_arbeidsgiver_vurdering_id
                 from SAMORDNING_ARBEIDSGIVER_GRUNNLAG 
                 where behandling_id = ? and aktiv
         """.trimIndent()
