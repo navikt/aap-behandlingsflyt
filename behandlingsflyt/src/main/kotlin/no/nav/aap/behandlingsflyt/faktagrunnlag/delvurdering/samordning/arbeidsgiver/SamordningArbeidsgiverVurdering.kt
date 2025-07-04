@@ -9,8 +9,8 @@ data class SamordningArbeidsgiverGrunnlag(
 
 data class SamordningArbeidsgiverVurdering(
     val begrunnelse: String,
-    val fom: LocalDate?,
-    val tom: LocalDate?,
+    val fom: LocalDate,
+    val tom: LocalDate,
     val vurdertAv: String,
     val vurdertTidspunkt: LocalDateTime? = null,
     val opprettetTid: LocalDateTime? = null,
@@ -18,6 +18,6 @@ data class SamordningArbeidsgiverVurdering(
 
 data class SamordningArbeidsgiverVurderingDTO(
     val vurdering: String,
-    val fom: LocalDate?,
-    val tom: LocalDate?,
+    val fom: LocalDate,
+    val tom: LocalDate,
 )

@@ -36,8 +36,8 @@ class SamordningArbeidsgiverRepositoryImpl(private val connection: DBConnection)
                     vurdering = SamordningArbeidsgiverVurdering(
                         begrunnelse = it.getString("begrunnelse"),
                         vurdertAv = it.getString("vurdert_av"),
-                        fom = it.getLocalDateOrNull("fom"),
-                        tom = it.getLocalDateOrNull("tom"),
+                        fom = it.getLocalDate("fom"),
+                        tom = it.getLocalDate("tom"),
                         vurdertTidspunkt = it.getLocalDateTime("opprettet_tid"),
                     )
                 )
