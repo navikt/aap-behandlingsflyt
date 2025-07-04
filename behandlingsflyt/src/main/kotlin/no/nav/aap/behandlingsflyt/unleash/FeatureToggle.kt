@@ -11,7 +11,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     FasttrackMeldekort,
     OverstyrStarttidspunkt,
     AvventUtbetaling,
-    FjernAutomatiskOppdateringAvBarnetillegg,
     FritakMeldeplikt,
     IngenValidering,
     InnhentEnhetsregisterData,

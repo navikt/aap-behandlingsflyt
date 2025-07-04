@@ -8,7 +8,6 @@ object FakeUnleash : UnleashGateway {
     private val flags = mapOf(
         BehandlingsflytFeature.OverstyrStarttidspunkt to true,
         BehandlingsflytFeature.AvventUtbetaling to true,
-        BehandlingsflytFeature.FjernAutomatiskOppdateringAvBarnetillegg to true,
         BehandlingsflytFeature.FasttrackMeldekort to false,
         BehandlingsflytFeature.Samvarsling to true,
         BehandlingsflytFeature.IngenValidering to false,

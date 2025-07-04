@@ -43,10 +43,7 @@ class BarnService private constructor(
 
     override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
         // Kun gjøre oppslag mot register ved førstegangsbehandling og revurdering av barnetillegg (Se AAP-933).
-        val gyldigBehandling = if (unleashGateway.isEnabled(BehandlingsflytFeature.FjernAutomatiskOppdateringAvBarnetillegg)) {
-            kontekst.erFørstegangsbehandling() || kontekst.erRevurderingMedÅrsak(BARNETILLEGG)
-        } else kontekst.erFørstegangsbehandlingEllerRevurdering()
-
+        val gyldigBehandling = kontekst.erFørstegangsbehandling() || kontekst.erRevurderingMedÅrsak(BARNETILLEGG)
         return gyldigBehandling &&
                 oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
