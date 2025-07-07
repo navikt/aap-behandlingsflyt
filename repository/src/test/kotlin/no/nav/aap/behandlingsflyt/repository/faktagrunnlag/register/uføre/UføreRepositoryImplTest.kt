@@ -24,9 +24,11 @@ class UføreRepositoryImplTest {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
+    private val dataSource = InitTestDatabase.freshDatabase()
+
     @Test
     fun `Finner ikke uføre hvis ikke lagret`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -41,7 +43,7 @@ class UføreRepositoryImplTest {
 
     @Test
     fun `Lagrer og henter uføre`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -58,7 +60,7 @@ class UføreRepositoryImplTest {
 
     @Test
     fun `Lagrer ikke lik uføre flere ganger`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -90,7 +92,7 @@ class UføreRepositoryImplTest {
 
     @Test
     fun `Kopierer uføre fra en behandling til en annen`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val uføreRepository = UføreRepositoryImpl(connection)
@@ -110,7 +112,7 @@ class UføreRepositoryImplTest {
 
     @Test
     fun `test sletting`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val uføreRepository = UføreRepositoryImpl(connection)
@@ -122,7 +124,7 @@ class UføreRepositoryImplTest {
 
     @Test
     fun `Kopiering av uføre fra en behandling uten opplysningene skal ikke føre til feil`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val uføreRepository = UføreRepositoryImpl(connection)
             assertDoesNotThrow {
                 uføreRepository.kopier(BehandlingId(Long.MAX_VALUE - 1), BehandlingId(Long.MAX_VALUE))
@@ -132,7 +134,7 @@ class UføreRepositoryImplTest {
 
     @Test
     fun `Kopierer uføre fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val uføreRepository = UføreRepositoryImpl(connection)
@@ -153,7 +155,7 @@ class UføreRepositoryImplTest {
 
     @Test
     fun `Lagrer nye uføreopplysninger som ny rad og deaktiverer forrige versjon av opplysningene`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val uføreRepository = UføreRepositoryImpl(connection)
@@ -209,7 +211,7 @@ class UføreRepositoryImplTest {
 
     @Test
     fun `Ved kopiering av uføreopplysninger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val uføreRepository = UføreRepositoryImpl(connection)

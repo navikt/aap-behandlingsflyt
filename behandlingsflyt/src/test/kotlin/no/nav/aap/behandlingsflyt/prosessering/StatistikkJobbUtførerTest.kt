@@ -119,10 +119,12 @@ class StatistikkJobbUtførerTest {
             .register<StatistikkGatewayImpl>()
     }
 
+    private val dataSource1 = InitTestDatabase.freshDatabase()
+
     @Test
     fun `mottatt tidspunkt er korrekt når revurdering`(hendelser: List<StoppetBehandling>) {
         var opprettetTidspunkt: LocalDateTime? = null
-        val dataSource = InitTestDatabase.freshDatabase()
+        val dataSource = dataSource1
         val (behandling, sak, ident) = dataSource.transaction { connection ->
             val behandlingRepository = BehandlingRepositoryImpl(connection)
 
@@ -233,7 +235,7 @@ class StatistikkJobbUtførerTest {
             fom = LocalDate.now().minusDays(1),
             tom = LocalDate.now().plusDays(1)
         )
-        val dataSource = InitTestDatabase.freshDatabase()
+        val dataSource = dataSource1
         val (behandling, sak, ident) = dataSource.transaction { connection ->
             val vilkårsResultatRepository = VilkårsresultatRepositoryImpl(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)

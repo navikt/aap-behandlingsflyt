@@ -268,7 +268,7 @@ class SamordningYtelseRepositoryImplTest {
 
     @Test
     fun `test sletting`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val samordningYtelseRepository = SamordningYtelseRepositoryImpl(connection)

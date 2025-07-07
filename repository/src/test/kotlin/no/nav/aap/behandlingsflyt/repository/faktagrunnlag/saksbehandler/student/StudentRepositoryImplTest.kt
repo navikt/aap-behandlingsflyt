@@ -22,9 +22,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class StudentRepositoryImplTest {
+    private val source = InitTestDatabase.freshDatabase()
+
     @Test
     fun `lagre, hente ut, slette`() {
-        val dataSource = InitTestDatabase.freshDatabase()
+        val dataSource = source
 
         val sak = dataSource.transaction { sak(it) }
 

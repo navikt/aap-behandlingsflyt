@@ -20,9 +20,11 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class InstitusjonsoppholdRepositoryImplTest {
+    private val source = InitTestDatabase.freshDatabase()
+
     @Test
     fun `Tom tidslinje dersom ingen opphold finnes`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        source.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -34,7 +36,7 @@ class InstitusjonsoppholdRepositoryImplTest {
 
     @Test
     fun `kan lagre og hente fra raw data fra gateway`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        source.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -69,7 +71,7 @@ class InstitusjonsoppholdRepositoryImplTest {
 
     @Test
     fun kopier() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        source.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
