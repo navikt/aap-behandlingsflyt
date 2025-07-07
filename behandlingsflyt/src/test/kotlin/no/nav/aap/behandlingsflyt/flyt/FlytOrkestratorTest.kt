@@ -76,6 +76,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.RegisterBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
@@ -121,9 +123,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FormkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -131,11 +135,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -447,6 +455,146 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
         assertThat(åpneAvklaringsbehov).isEmpty()
 
         return hentSak(behandling)
+    }
+
+    @Test
+    fun `barnetillegg gis fram til 18 år`() {
+        val fom = LocalDate.now().minusMonths(3)
+        val periode = Periode(fom, fom.plusYears(3))
+
+        val barnfødseldato = LocalDate.now().minusYears(17)
+
+        val barnIdent = genererIdent(barnfødseldato)
+        val person = TestPersoner.STANDARD_PERSON().medBarn(
+            listOf(
+                TestPerson(
+                    identer = setOf(barnIdent),
+                    fødselsdato = Fødselsdato(barnfødseldato),
+                ),
+            )
+        )
+        person.barn.forEach { FakePersoner.leggTil(it) }
+
+        val ident = person.aktivIdent()
+
+        val behandling = sendInnSøknad(
+            ident, periode, TestSøknader.STANDARD_SØKNAD
+        )
+            .løsSykdom()
+            .løsBistand()
+            .løsRefusjonskrav()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap()
+
+        val barn = dataSource.transaction {
+            BarnRepositoryImpl(it).hent(behandling.id)
+        }
+
+        // Verifiser at barn faktisk blir fanget opp
+        assertThat(barn)
+            .usingRecursiveComparison()
+            .ignoringFieldsMatchingRegexes("[a-zA-Z]+\\.id")
+            .ignoringCollectionOrder()
+            .isEqualTo(
+                BarnGrunnlag(
+                    registerbarn = RegisterBarn(id = -1, identer = listOf(barnIdent)),
+                    oppgitteBarn = null,
+                    vurderteBarn = null
+                )
+            )
+
+        val uthentetTilkjentYtelse =
+            requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) })
+            { "Tilkjent ytelse skal være beregnet her." }
+
+        val barnetillegg = uthentetTilkjentYtelse.map { Segment(it.periode, it.tilkjent.barnetillegg) }.let(::Tidslinje)
+
+        val barnBlirAttenPå = barnfødseldato.plusYears(18)
+
+        val periodeBarnUnderAtten = Periode(periode.fom, barnBlirAttenPå.minusDays(1))
+        val barnErAtten = barnetillegg.begrensetTil(periodeBarnUnderAtten)
+
+        assertThat(barnErAtten).isNotEmpty
+        // Verifiser at barnetillegg kun gis fram til barnet er 18 år
+        assertTidslinje(barnErAtten, periodeBarnUnderAtten to {
+            assertThat(it).isEqualTo(Beløp(37))
+        })
+
+        val periodeBarnOverAtten = Periode(barnBlirAttenPå, periode.tom)
+        val barnErOverAtten = barnetillegg.begrensetTil(periodeBarnOverAtten)
+        assertThat(barnErOverAtten).isNotEmpty
+        // Verifiser at barnetillegg er null etter fylte 18 år
+        assertTidslinje(barnErOverAtten, periodeBarnOverAtten to {
+            assertThat(it).isEqualTo(Beløp(0))
+        })
+    }
+
+    @Test
+    fun `barnetillegg gis ikke for gamle barn`() {
+        val fom = LocalDate.now()
+        val periode = Periode(fom, fom.plusYears(3))
+
+        val ungtBarnFødselsdato = LocalDate.now().minusYears(7)
+        val gammeltBarnFødselsdato = LocalDate.now().minusYears(20)
+
+        val person = TestPersoner.STANDARD_PERSON().medBarn(
+            listOf(
+                TestPerson(
+                    identer = setOf(Ident("aaa")),
+                    fødselsdato = Fødselsdato(ungtBarnFødselsdato),
+                ),
+                TestPerson(
+                    identer = setOf(Ident("ccc")),
+                    fødselsdato = Fødselsdato(gammeltBarnFødselsdato),
+                ),
+            )
+        )
+        person.barn.forEach { FakePersoner.leggTil(it) }
+
+        val ident = person.aktivIdent()
+
+        val behandling = sendInnSøknad(
+            ident, periode, TestSøknader.STANDARD_SØKNAD
+        )
+            .løsSykdom()
+            .løsBistand()
+            .løsRefusjonskrav()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap()
+
+        val barn = dataSource.transaction {
+            BarnRepositoryImpl(it).hent(behandling.id)
+        }
+
+        // Verifiser at barn faktisk blir fanget opp
+        assertThat(barn)
+            .usingRecursiveComparison()
+            .ignoringCollectionOrder()
+            .ignoringFieldsMatchingRegexes("[a-zA-Z]+\\.id").isEqualTo(
+                BarnGrunnlag(
+                    registerbarn = RegisterBarn(id = -1, identer = person.barn.map { it.aktivIdent() }),
+                    oppgitteBarn = null,
+                    vurderteBarn = null
+                )
+            )
+
+        val uthentetTilkjentYtelse =
+            requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) })
+            { "Tilkjent ytelse skal være beregnet her." }
+
+        val barnetillegg = uthentetTilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
+
+        val begrensetTilRettighetsperioden = barnetillegg.begrensetTil(periode)
+        assertThat(begrensetTilRettighetsperioden).isNotEmpty
+        assertThat(begrensetTilRettighetsperioden.helePerioden()).isEqualTo(periode)
+
+        // Skal kun gi barnetillegg for det unge barnet
+        assertTidslinje(begrensetTilRettighetsperioden, periode to {
+            assertThat(it.barnetillegg).isEqualTo(Beløp(37))
+            assertThat(it.antallBarn).isEqualTo(1)
+        })
     }
 
     @Test
