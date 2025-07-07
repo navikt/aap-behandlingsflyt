@@ -1,8 +1,9 @@
 CREATE TABLE SAMORDNING_ARBEIDSGIVER_VURDERING(
                                        ID                              BIGSERIAL       NOT NULL   PRIMARY KEY,
-                                       BEGRUNNELSE                       TEXT            NULL,
+                                       BEGRUNNELSE                       TEXT          NULL,
                                        FOM                             DATE            NOT NULL,
                                        TOM                             DATE            NOT NULL,
+                                       VURDERT_AV                      VARCHAR(50)     NOT NULL,
                                        OPPRETTET_TID                   TIMESTAMP(3)    DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 CREATE INDEX IDX_SAMORDNING_ARBEIDSGIVER_VURDERING_ID ON SAMORDNING_ARBEIDSGIVER_VURDERING (ID);

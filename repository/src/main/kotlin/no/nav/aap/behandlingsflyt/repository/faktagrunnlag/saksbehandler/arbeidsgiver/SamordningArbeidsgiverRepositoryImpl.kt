@@ -24,7 +24,7 @@ class SamordningArbeidsgiverRepositoryImpl(private val connection: DBConnection)
 
         val vurderingId = hentVurderingIdForBehandling(behandlingId) ?: return null
         val query = """
-        SELECT * FROM SAMORDNING_ARBEIDSGIVER_VURDERING WHERE behandling_id = ? AND aktiv = true
+        SELECT * FROM SAMORDNING_ARBEIDSGIVER_VURDERING WHERE id = ?
     """.trimIndent()
 
         return connection.queryFirst(query) {
@@ -58,16 +58,12 @@ class SamordningArbeidsgiverRepositoryImpl(private val connection: DBConnection)
         }
     }
 
-    override fun lagre(sakId: SakId, behandlingId: BehandlingId, samordningVurderinger: SamordningArbeidsgiverVurdering) {
+    override fun lagre(sakId: SakId, behandlingId: BehandlingId, samordningVurdering: SamordningArbeidsgiverVurdering) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         if (eksisterendeGrunnlag != null) {
             deaktiverEksisterende(behandlingId)
         }
-        val vurderingId = connection.executeReturnKey(
-            """
-            INSERT INTO SAMORDNING_ARBEIDSGIVER_VURDERING DEFAULT VALUES
-        """.trimIndent()
-        )
+        val vurderingId = lagreVurdering(samordningVurdering)
 
         val grunnlagQuery = """
             INSERT INTO SAMORDNING_ARBEIDSGIVER_GRUNNLAG (BEHANDLING_ID, SAK_ID, SAMORDNING_ARBEIDSGIVER_VURDERING_ID) VALUES (?, ?, ?)
@@ -115,9 +111,9 @@ class SamordningArbeidsgiverRepositoryImpl(private val connection: DBConnection)
         }
     }
 
-    private fun lagreVurdering(vurdering: SamordningArbeidsgiverVurdering, vurderingerId: Long): Long {
+    private fun lagreVurdering(vurdering: SamordningArbeidsgiverVurdering): Long {
         val query = """
-            INSERT INTO SAMORDNING_ARBEIDSGIVER_VURDERING (BEGRUNNELSE, FOM, TOM, VURDERT_AV, SAMORDNING_ARBEIDSGIVER_VURDERINGER_ID) VALUES (?, ?, ?, ?, ?)
+            INSERT INTO SAMORDNING_ARBEIDSGIVER_VURDERING (BEGRUNNELSE, FOM, TOM, VURDERT_AV) VALUES (?, ?, ?, ?)
         """.trimIndent()
 
         return connection.executeReturnKey(query) {
@@ -126,7 +122,6 @@ class SamordningArbeidsgiverRepositoryImpl(private val connection: DBConnection)
                 setLocalDate(2, vurdering.fom)
                 setLocalDate(3, vurdering.tom)
                 setString(4, vurdering.vurdertAv)
-                setLong(5, vurderingerId)
             }
         }
     }
