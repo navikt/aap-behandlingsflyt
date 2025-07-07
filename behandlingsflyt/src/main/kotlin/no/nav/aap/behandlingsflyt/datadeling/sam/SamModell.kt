@@ -9,9 +9,9 @@ data class SamordneVedtakRequest(
     val pid: String,
     val vedtakId: String,
     val sakId: Long,
-    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Europe/Oslo")
+    @param:JsonFormat(pattern = "yyyy-MM-dd", timezone = "Europe/Oslo")
     val virkFom: LocalDate,
-    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Europe/Oslo")
+    @param:JsonFormat(pattern = "yyyy-MM-dd", timezone = "Europe/Oslo")
     val virkTom: LocalDate?,
     val fagomrade: String,
     val ytelseType: String,
