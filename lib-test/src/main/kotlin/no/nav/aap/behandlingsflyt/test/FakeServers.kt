@@ -1857,6 +1857,9 @@ object FakeServers : AutoCloseable {
                     val response = HentSignaturerResponse(signaturer)
                     call.respond(response)
                 }
+                post("/avbryt") {
+                    call.respond(Unit)
+                }
             }
         }
     }

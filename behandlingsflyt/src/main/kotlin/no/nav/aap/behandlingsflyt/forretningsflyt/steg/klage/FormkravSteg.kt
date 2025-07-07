@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
@@ -97,8 +98,8 @@ class FormkravSteg (
             return false
         }
 
-        check(eksisterendeBrevBestilling.status == FULLFØRT) {
-            "Brevet er ikke fullført, men brev-service har ikke opprettet SKRIV_BREV-behov"
+        check(eksisterendeBrevBestilling.status == FULLFØRT || eksisterendeBrevBestilling.status == Status.AVBRUTT) {
+            "Brevet er ikke avbrutt eller fullført, men brev-service har ikke opprettet SKRIV_BREV-behov"
         }
 
         return true
