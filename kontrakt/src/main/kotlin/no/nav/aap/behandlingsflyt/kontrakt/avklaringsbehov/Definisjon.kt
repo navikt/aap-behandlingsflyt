@@ -390,6 +390,14 @@ public enum class Definisjon(
             Rolle.SAKSBEHANDLER_NASJONAL
         ),
     ),
+    VURDER_TREKK_AV_KLAGE_V2(
+        kode = AvklaringsbehovKode.`6010-2`,
+        løsesISteg = StegType.TREKK_KLAGE,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_NASJONAL
+        ),
+    ),
     SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV(
         kode = AvklaringsbehovKode.`6005`,
         løsesISteg = StegType.FORMKRAV,
