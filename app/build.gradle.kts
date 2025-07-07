@@ -9,7 +9,7 @@ val opentelemetryVersion = "2.17.0-alpha"
 
 plugins {
     id("behandlingsflyt.conventions")
-    id("io.ktor.plugin") version "3.2.0"
+    id("io.ktor.plugin") version "3.2.1"
 }
 
 application {
