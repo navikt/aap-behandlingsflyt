@@ -14,11 +14,11 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_HELSEINSTITUSJON_KODE)
 class AvklarHelseinstitusjonLøsning(
-    @JsonProperty(
+    @param:JsonProperty(
         "helseinstitusjonVurdering",
         required = true
     ) val helseinstitusjonVurdering: HelseinstitusjonVurderingerDto,
-    @JsonProperty(
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = AVKLAR_HELSEINSTITUSJON_KODE

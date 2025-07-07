@@ -10,10 +10,10 @@ import java.util.*
 @Response(statusCode = 202)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class LøsAvklaringsbehovPåBehandling(
-    @JsonProperty(value = "referanse", required = true) val referanse: UUID,
-    @JsonProperty(value = "behandlingVersjon", required = true, defaultValue = "0") val behandlingVersjon: Long,
-    @JsonProperty(value = "behov", required = true) val behov: AvklaringsbehovLøsning,
-    @JsonProperty(value = "ingenEndringIGruppe") val ingenEndringIGruppe: Boolean?,
+    @param:JsonProperty(value = "referanse", required = true) val referanse: UUID,
+    @param:JsonProperty(value = "behandlingVersjon", required = true, defaultValue = "0") val behandlingVersjon: Long,
+    @param:JsonProperty(value = "behov", required = true) val behov: AvklaringsbehovLøsning,
+    @param:JsonProperty(value = "ingenEndringIGruppe") val ingenEndringIGruppe: Boolean?,
 ) : Behandlingsreferanse {
     override fun hentAvklaringsbehovKode(): String {
         return behov.definisjon().kode.toString()
