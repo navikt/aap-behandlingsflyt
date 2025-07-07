@@ -81,7 +81,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
-    override fun finnSaksnummer(behandlingsreferanse: BehandlingReferanse): Saksnummer {
+    override fun finnSaksnummer(referanse: BehandlingReferanse): Saksnummer {
         return connection.queryFirst(
             """
             SELECT saksnummer FROM sak 
@@ -90,7 +90,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             """.trimIndent()
         ) {
             setParams {
-                setUUID(1, behandlingsreferanse.referanse)
+                setUUID(1, referanse.referanse)
             }
             setRowMapper { Saksnummer(it.getString("saksnummer")) }
         }

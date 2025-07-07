@@ -4,6 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.LocalDate
 
 data class FinnBehandlingForIdentDTO(
-    @JsonProperty(value = "ident", required = true) val ident: String,
-    @JsonProperty(value = "mottattTidspunkt", required = true) val mottattTidspunkt: LocalDate
+    @param:JsonProperty(value = "ident", required = true) val ident: String,
+    @param:JsonProperty(value = "mottattTidspunkt", required = true) val mottattTidspunkt: LocalDate
 )

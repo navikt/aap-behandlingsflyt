@@ -7,7 +7,7 @@ import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
 import java.util.*
 
-data class BestillLegeerklæringDto (
+data class BestillLegeerklæringDto(
     val behandlerRef: String,
     val behandlerNavn: String,
     val behandlerHprNr: String,
@@ -25,7 +25,7 @@ data class BestillLegeerklæringDto (
     }
 }
 
-data class ForhåndsvisBrevRequest (
+data class ForhåndsvisBrevRequest(
     val saksnummer: String,
     val fritekst: String,
     val dokumentasjonType: DokumentasjonType
@@ -35,7 +35,7 @@ data class ForhåndsvisBrevRequest (
     }
 }
 
-data class HentStatusLegeerklæring(@PathParam("saksnummer") val saksnummer: String)
+data class HentStatusLegeerklæring(@param:PathParam("saksnummer") val saksnummer: String)
 
 data class PurringLegeerklæringRequest(
     val dialogmeldingPurringUUID: UUID,
@@ -50,15 +50,3 @@ data class PurringLegeerklæringRequest(
     }
 }
 
-data class MarkerBestillingSomMottattRequest(
-    val dialogmeldingBestillingUUID: UUID,
-    val behandlingsReferanse: UUID
-) : Behandlingsreferanse {
-    override fun hentAvklaringsbehovKode(): String? {
-        return Definisjon.BESTILL_LEGEERKLÆRING.kode.toString()
-    }
-
-    override fun behandlingsreferanseResolverInput(): String {
-        return behandlingsReferanse.toString()
-    }
-}

@@ -24,9 +24,11 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class AktivitetspliktRepositoryImplTest {
+    private val dataSource = InitTestDatabase.freshDatabase()
+
     @Test
     fun `kan lagre feilregistrering brudd på sak`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = nySak(connection)
             val repo = AktivitetspliktRepositoryImpl(connection)
             val periode = Periode(LocalDate.now(), LocalDate.now().plusDays(5))
@@ -62,7 +64,7 @@ class AktivitetspliktRepositoryImplTest {
 
     @Test
     fun `kan lagre brudd på sak`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = nySak(connection)
             val repo = AktivitetspliktRepositoryImpl(connection)
             val periode = Periode(LocalDate.now(), LocalDate.now().plusDays(5))
@@ -89,7 +91,7 @@ class AktivitetspliktRepositoryImplTest {
 
     @Test
     fun `kan lagre flere hendelser på samme sak hver for seg`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = nySak(connection)
             val repo = AktivitetspliktRepositoryImpl(connection)
             nyeBrudd(
@@ -115,7 +117,7 @@ class AktivitetspliktRepositoryImplTest {
 
     @Test
     fun `kan lagre flere hendelser på samme sak samtidig`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = nySak(connection)
             val repo = AktivitetspliktRepositoryImpl(connection)
             nyeBrudd(
@@ -135,7 +137,7 @@ class AktivitetspliktRepositoryImplTest {
 
     @Test
     fun `nytt grunnlag endrer ikke gammelt grunnlag`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = nySak(connection)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sak.id,

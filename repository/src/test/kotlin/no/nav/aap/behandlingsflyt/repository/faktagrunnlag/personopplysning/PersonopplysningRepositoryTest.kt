@@ -24,9 +24,11 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 class PersonopplysningRepositoryImplTest {
+    private val dataSource = InitTestDatabase.freshDatabase()
+
     @Test
     fun `Finner ikke personopplysninger hvis ikke lagret`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -41,7 +43,7 @@ class PersonopplysningRepositoryImplTest {
 
     @Test
     fun `Lagrer og henter personopplysninger`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -59,7 +61,7 @@ class PersonopplysningRepositoryImplTest {
 
     @Test
     fun `Lagrer ikke like opplysninger flere ganger`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -94,7 +96,7 @@ class PersonopplysningRepositoryImplTest {
 
     @Test
     fun `Kopierer personopplysninger fra en behandling til en annen`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val personopplysningRepository = PersonopplysningRepositoryImpl(
@@ -116,7 +118,7 @@ class PersonopplysningRepositoryImplTest {
 
     @Test
     fun `Kopiering av personopplysninger fra en behandling uten opplysningene skal ikke føre til feil`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val personopplysningRepository = PersonopplysningRepositoryImpl(
                 connection,
                 PersonRepositoryImpl(connection)
@@ -129,7 +131,7 @@ class PersonopplysningRepositoryImplTest {
 
     @Test
     fun `Kopierer personopplysninger fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val personopplysningRepository = PersonopplysningRepositoryImpl(
@@ -153,7 +155,7 @@ class PersonopplysningRepositoryImplTest {
 
     @Test
     fun `Lagrer nye opplysninger som ny rad og deaktiverer forrige versjon av opplysningene`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val personopplysningRepository = PersonopplysningRepositoryImpl(
@@ -203,7 +205,7 @@ class PersonopplysningRepositoryImplTest {
 
     @Test
     fun `Ved kopiering av opplysninger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val personopplysningRepository = PersonopplysningRepositoryImpl(

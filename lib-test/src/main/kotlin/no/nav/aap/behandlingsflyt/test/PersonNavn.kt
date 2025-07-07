@@ -4,12 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 
 class PersonNavn(
-    @JsonProperty("fornavn") val fornavn: String,
-    @JsonProperty("etternavn") val etternavn: String
+    @param:JsonProperty("fornavn") val fornavn: String,
+    @param:JsonProperty("etternavn") val etternavn: String
 ) {
-    fun fulltnavn(): String {
-        return "$fornavn $etternavn"
-    }
 
     override fun toString(): String {
         return "PersonNavn(fornavn='$fornavn', etternavn='$etternavn')"

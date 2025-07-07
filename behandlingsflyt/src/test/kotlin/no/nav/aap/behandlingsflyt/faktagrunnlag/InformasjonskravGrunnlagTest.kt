@@ -97,9 +97,11 @@ class InformasjonskravGrunnlagTest {
             .register<FakeUnleash>()
     }
 
+    private val dataSource = InitTestDatabase.freshDatabase()
+
     @Test
     fun `Yrkesskadedata er oppdatert`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                 InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
@@ -132,7 +134,7 @@ class InformasjonskravGrunnlagTest {
 
     @Test
     fun `Yrkesskadedata er ikke oppdatert`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                 InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
@@ -158,7 +160,7 @@ class InformasjonskravGrunnlagTest {
 
     @Test
     fun `Yrkesskadedata er utdatert, men har ingen endring fra registeret`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val (_, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                 InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
@@ -174,7 +176,7 @@ class InformasjonskravGrunnlagTest {
 
     @Test
     fun LovvalgMedlemskapErOppdatert() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                 InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
@@ -207,7 +209,7 @@ class InformasjonskravGrunnlagTest {
 
     @Test
     fun `Førstegangsbehandling medfører henting av barn fra registeret`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection, VurderingType.FØRSTEGANGSBEHANDLING)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
             val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnService)
@@ -228,7 +230,7 @@ class InformasjonskravGrunnlagTest {
 
     @Test
     fun `Revurdering med årsak barnetillegg medfører ny henting av barn fra registeret`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection, VurderingType.REVURDERING, setOf(ÅrsakTilBehandling.BARNETILLEGG))
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
             val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnService)
@@ -249,7 +251,7 @@ class InformasjonskravGrunnlagTest {
 
     @Test
     fun `Revurdering med årsak annen enn barnetillegg medfører ingen oppdatering av barn fra registeret`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection, VurderingType.REVURDERING, setOf(ÅrsakTilBehandling.REVURDER_MEDLEMSKAP))
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
             val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnService)

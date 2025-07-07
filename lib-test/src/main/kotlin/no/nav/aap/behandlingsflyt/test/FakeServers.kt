@@ -248,8 +248,12 @@ object FakeServers : AutoCloseable {
 
     private fun Application.sam() {
         install(ContentNegotiation) {
-            jackson()
+            jackson {
+                registerModule(JavaTimeModule())
+                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            }
         }
+        
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@sam.log.info("Inntekt :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
@@ -262,14 +266,16 @@ object FakeServers : AutoCloseable {
 
         routing {
             route("/api/vedtak") {
-                post {
-                    val req = call.receive<SamordneVedtakRequest>()
+                route("samordne") {
+                    post {
+                        val req = call.receive<SamordneVedtakRequest>()
 
-                    call.respond(
-                        SamordneVedtakRespons(
-                            ventPaaSvar = false
+                        call.respond(
+                            SamordneVedtakRespons(
+                                ventPaaSvar = false
+                            )
                         )
-                    )
+                    }
                 }
                 get {
                     val params = call.queryParameters

@@ -6,7 +6,7 @@ val komponenterVersjon = "1.0.277"
 val ktorVersion = "3.2.1"
 val tilgangVersjon = "1.0.86"
 val utbetalVersjon = "0.0.50"
-val junitVersjon = "5.13.2"
+val junitVersjon = "5.13.3"
 
 dependencies {
     api(project(":kontrakt"))

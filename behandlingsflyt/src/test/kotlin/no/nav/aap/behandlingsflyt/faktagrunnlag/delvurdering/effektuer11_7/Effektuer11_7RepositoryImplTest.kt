@@ -30,9 +30,11 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class Effektuer11_7RepositoryImplTest {
+    private val dataSource = InitTestDatabase.freshDatabase()
+
     @Test
     fun `Finner ikke grunnlag hvis ikke lagret`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -43,7 +45,7 @@ class Effektuer11_7RepositoryImplTest {
 
     @Test
     fun `Lagrer og henter varsel`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val effektuer11_7Repository = Effektuer11_7RepositoryImpl(connection)
             val underveisRepository = UnderveisRepositoryImpl(connection)
 
@@ -74,7 +76,7 @@ class Effektuer11_7RepositoryImplTest {
 
     @Test
     fun `Ny vurdering når grunnlag allerede finnes`(){
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val effektuer11_7Repository = Effektuer11_7RepositoryImpl(connection)
             val underveisRepository = UnderveisRepositoryImpl(connection)
 
