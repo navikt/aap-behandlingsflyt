@@ -66,7 +66,7 @@ class BarnetilleggService(
             barnGrunnlag.oppgitteBarn?.identer
                 ?.mapNotNull { ident -> mapTilBarn(ident, personopplysningerGrunnlag) }
                 ?.filterNot { vurderteBarnIdenter.contains(it.ident) }
-                ?: emptyList()
+                .orEmpty()
 
         val oppgittBarnTidslinje = tilTidslinje(oppgittBarn)
         resultat =

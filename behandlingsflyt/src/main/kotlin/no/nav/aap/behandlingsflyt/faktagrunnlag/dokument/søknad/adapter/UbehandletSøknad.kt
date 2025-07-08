@@ -41,7 +41,7 @@ data class UbehandletSøknad(
                                 identifikator = it.identifikator,
                                 aktivIdent = true
                             )
-                        }?.toSet()?.let { id ->
+                        }?.let { id ->
                             OppgitteBarn(
                                 identer = id
                             )
