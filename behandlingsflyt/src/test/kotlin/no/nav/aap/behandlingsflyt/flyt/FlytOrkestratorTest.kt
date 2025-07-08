@@ -1643,7 +1643,7 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        var behandling = sendInnSøknad(
+        val behandling = sendInnSøknad(
             ident, periode, SøknadV0(
                 student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", null)
@@ -1693,30 +1693,19 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Oppretter vanlig søknad
-        sendInnSøknad(
-            ident, periode, SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto("JA", "JA", "NE)", "NEI", null)
-            )
-        )
-
-        val sak = hentSak(ident, periode)
-        val behandling = hentNyesteBehandlingForSak(sak.id)
-
-        // Validér avklaring
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
-        assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon == Definisjon.AVKLAR_SYKDOM).isTrue() }
+        val behandling = sendInnSøknad(ident, periode, TestSøknader.STANDARD_SØKNAD)
+            .medKontekst {
+                // Validér avklaring
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon == Definisjon.AVKLAR_SYKDOM).isTrue() }
+            }
 
         // Oppretter bestilling av legeerklæring
         hendelsesMottak.bestillLegeerklæring(behandling.id)
         util.ventPåSvar(behandling.id.toLong())
 
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
-        assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING).isTrue() }
-
-        // Validér avklaring
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertThat(åpneAvklaringsbehov.all { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING })
+        behandling.medKontekst {
+            assertThat(åpneAvklaringsbehov.all { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING })
+        }
 
         // Send inn avvist legeerklæring
         val avvistLegeerklæringId = UUID.randomUUID().toString()
@@ -1724,7 +1713,7 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
             val flytJobbRepository = FlytJobbRepository(connection)
             flytJobbRepository.leggTil(
                 HendelseMottattHåndteringJobbUtfører.nyJobb(
-                    sakId = sak.id,
+                    sakId = behandling.sakId,
                     dokumentReferanse = InnsendingReferanse(
                         InnsendingReferanse.Type.AVVIST_LEGEERKLÆRING_ID,
                         avvistLegeerklæringId
@@ -1738,12 +1727,11 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
         util.ventPåSvar()
 
         // Validér avklaring
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-
-        val legeerklæringBestillingVenteBehov =
-            åpneAvklaringsbehov.filter { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING }
-        assertThat(legeerklæringBestillingVenteBehov.isEmpty()).isTrue()
-
+        behandling.medKontekst {
+            val legeerklæringBestillingVenteBehov =
+                åpneAvklaringsbehov.filter { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING }
+            assertThat(legeerklæringBestillingVenteBehov.isEmpty()).isTrue()
+        }
     }
 
     @Test
