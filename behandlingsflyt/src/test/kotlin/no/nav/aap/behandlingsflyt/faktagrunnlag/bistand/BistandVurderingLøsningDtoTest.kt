@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.bistand
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
@@ -57,7 +58,7 @@ class BistandVurderingLøsningLøsningDtoTest {
         behov: Boolean,
         erBehovForAnnenOppfølging: Boolean
     ) {
-        assertThrows<IllegalArgumentException> {
+        assertThrows<UgyldigForespørselException> {
             BistandVurderingLøsningDto(
                 "hei",
                 erBehovForAktivBehandling = behov,
@@ -66,7 +67,7 @@ class BistandVurderingLøsningLøsningDtoTest {
                 skalVurdereAapIOvergangTilUføre = null,
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
-            )
+            ).valider()
         }
     }
 
@@ -75,7 +76,7 @@ class BistandVurderingLøsningLøsningDtoTest {
     fun `erBehovForAnnenOppfølging kan ikke være en Boolean hvis erBehovForAnnenOppfølging AND erBehovForArbeidsrettetTiltak er true`(
         erBehovForAnnenOppfølging: Boolean
     ) {
-        assertThrows<IllegalArgumentException> {
+        assertThrows<UgyldigForespørselException> {
             BistandVurderingLøsningDto(
                 "hei",
                 erBehovForAktivBehandling = true,
@@ -84,13 +85,13 @@ class BistandVurderingLøsningLøsningDtoTest {
                 skalVurdereAapIOvergangTilUføre = null,
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
-            )
+            ).valider()
         }
     }
 
     @Test
     fun `erBehovForAnnenOppfølging kan ikke være null hvis erBehovForAnnenOppfølging AND erBehovForArbeidsrettetTiltak er false`() {
-        assertThrows<IllegalArgumentException> {
+        assertThrows<UgyldigForespørselException> {
             BistandVurderingLøsningDto(
                 "hei",
                 erBehovForAktivBehandling = false,
@@ -99,7 +100,7 @@ class BistandVurderingLøsningLøsningDtoTest {
                 skalVurdereAapIOvergangTilUføre = null,
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
-            )
+            ).valider()
         }
     }
 }

@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
 import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import java.time.LocalDate
 
 data class BistandVurderingLøsningDto(
@@ -25,14 +26,20 @@ data class BistandVurderingLøsningDto(
         vurdertAv = bruker.ident
     )
 
-    init {
-        require((erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak) xor (erBehovForAnnenOppfølging != null)) {
+    fun valider() {
+        val gyldigAnnenOppfølging =
+            (erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak) xor (erBehovForAnnenOppfølging != null)
+        if (!gyldigAnnenOppfølging) throw UgyldigForespørselException(
             "erBehovForAnnenOppfølging kan bare bli besvart hvis erBehovForAktivBehandling og erBehovForArbeidsrettetTiltak er besvart med nei"
+        )
+
+        val harOppfølgingsbehov =
+            (erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak || erBehovForAnnenOppfølging == true)
+        val erGydlig = (harOppfølgingsbehov) xor (skalVurdereAapIOvergangTilUføre != null)
+        if (!erGydlig) {
+            throw UgyldigForespørselException(
+                "skalVurdereAapIOvergangTilUføre skal besvares hvis og bare hvis oppfølgingsbehov er vurdert til nei"
+            )
         }
-        
-       //  TODO: uncomment når frontend er implementert
-//        require((erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak || erBehovForAnnenOppfølging == true) xor (skalVurdereAapIOvergangTilUføre != null)) {
-//            "skalVurdereAapIOvergangTilUføre kan bare bli besvart hvis oppfølgingsbehov er vurdert til nei"
-//        }
     }
 }

@@ -1163,9 +1163,9 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
                     erBehovForAktivBehandling = false,
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = false,
-                    skalVurdereAapIOvergangTilUføre = null,
+                    skalVurdereAapIOvergangTilUføre = false,
                     skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null
+                    overgangBegrunnelse = "Nope"
                 ),
             ),
         )
