@@ -60,7 +60,6 @@ import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatew
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
@@ -94,7 +93,6 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.gateway.GatewayRegistry
@@ -590,7 +588,7 @@ abstract class AbstraktFlytOrkestratorTest {
         return kvalitetssikreOk(this, bruker)
     }
 
-    protected fun fattVedtak(behandling: Behandling, returVed: Definisjon? = null): Behandling = løsAvklaringsBehov(
+    protected fun fattVedtakEllerSendRetur(behandling: Behandling, returVed: Definisjon? = null): Behandling = løsAvklaringsBehov(
         behandling,
         FatteVedtakLøsning(
             hentAlleAvklaringsbehov(behandling)
@@ -620,8 +618,8 @@ abstract class AbstraktFlytOrkestratorTest {
     }
 
     @JvmName("fattVedtakExt")
-    protected fun Behandling.fattVedtak(returVed: Definisjon? = null): Behandling {
-        return fattVedtak(this, returVed)
+    protected fun Behandling.fattVedtakEllerSendRetur(returVed: Definisjon? = null): Behandling {
+        return fattVedtakEllerSendRetur(this, returVed)
     }
 
     class BehandlingInfo(val åpneAvklaringsbehov: List<Avklaringsbehov>, val behandling: Behandling)

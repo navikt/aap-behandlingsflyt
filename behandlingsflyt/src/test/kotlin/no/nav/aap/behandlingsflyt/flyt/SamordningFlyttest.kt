@@ -222,7 +222,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest() {
             .containsExactly(tuple(Utfall.IKKE_OPPFYLT), tuple(Utfall.IKKE_VURDERT))
 
         behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
-        behandling = fattVedtak(behandling)
+        behandling = fattVedtakEllerSendRetur(behandling)
 
         val uthentetTilkjentYtelse =
             requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) })
@@ -497,7 +497,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest() {
         assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).isEqualTo(listOf(Definisjon.FORESLÅ_VEDTAK))
 
         behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
-        behandling = fattVedtak(behandling)
+        behandling = fattVedtakEllerSendRetur(behandling)
 
         val uthentetTilkjentYtelse =
             requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) }) { "Tilkjent ytelse skal være beregnet her." }
