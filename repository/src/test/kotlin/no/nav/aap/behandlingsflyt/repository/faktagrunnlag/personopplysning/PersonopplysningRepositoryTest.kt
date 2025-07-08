@@ -64,10 +64,20 @@ class PersonopplysningRepositoryImplTest {
             val personRepository = PersonRepositoryImpl(connection)
             listOf(barn1, barn2).forEach { personRepository.finnEllerOpprett(listOf(it.ident)) }
 
-            PersonopplysningRepositoryImpl(
+            val personopplysningRepositoryImpl = PersonopplysningRepositoryImpl(
                 connection,
                 personRepository
-            ).lagre(behandling.id, setOf(barn1))
+            )
+
+            personopplysningRepositoryImpl.lagre(
+                behandling.id, Personopplysning(
+                    Fødselsdato(17 mars 1992), statsborgerskap = listOf(
+                        Statsborgerskap("NOR")
+                    ), status = PersonStatus.bosatt
+                )
+            )
+
+            personopplysningRepositoryImpl.lagre(behandling.id, setOf(barn1, barn2))
         }
     }
 
