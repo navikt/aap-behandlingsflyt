@@ -25,7 +25,11 @@ class PersonopplysningService private constructor(
 ) : Informasjonskrav {
     override val navn = Companion.navn
 
-    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+    override fun erRelevant(
+        kontekst: FlytKontekstMedPerioder,
+        steg: StegType,
+        oppdatert: InformasjonskravOppdatert?
+    ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
                 oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
@@ -37,7 +41,6 @@ class PersonopplysningService private constructor(
             personopplysningGateway.innhent(sak.person) ?: error("fødselsdato skal alltid eksistere i PDL")
         val eksisterendeData = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        // TODO: Oppdatere person tabellen med identene til bruker for å detektere splitt / merge og utlede behovet for å feile
         if (personopplysninger != eksisterendeData?.brukerPersonopplysning) {
             personopplysningRepository.lagre(kontekst.behandlingId, personopplysninger)
             return ENDRET

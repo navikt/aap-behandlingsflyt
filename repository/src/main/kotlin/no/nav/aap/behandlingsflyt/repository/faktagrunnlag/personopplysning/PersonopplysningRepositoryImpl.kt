@@ -77,7 +77,7 @@ class PersonopplysningRepositoryImpl(
                     RelatertPersonopplysning(
                         person = personRepository.hent(it.getLong("person_id")),
                         fødselsdato = Fødselsdato(it.getLocalDate("FODSELSDATO")),
-                        dødsdato = it.getLocalDateOrNull("dodsdato")?.let { Dødsdato(it) })
+                        dødsdato = it.getLocalDateOrNull("dodsdato")?.let(::Dødsdato))
                 }
             })
     }
@@ -97,10 +97,10 @@ class PersonopplysningRepositoryImpl(
                 Personopplysning(
                     id = id,
                     fødselsdato = Fødselsdato(row.getLocalDate("FODSELSDATO")),
-                    dødsdato = row.getLocalDateOrNull("dodsdato")?.let { Dødsdato(it) },
+                    dødsdato = row.getLocalDateOrNull("dodsdato")?.let(::Dødsdato),
                     statsborgerskap = hentStatsborgerskap(row),
                     status = row.getEnum("STATUS"),
-                    utenlandsAddresser = hentUtenlandsAdresser((row.getLongOrNull("UTENLANDSADRESSER_ID")))
+                    utenlandsAddresser = hentUtenlandsAdresser(row.getLongOrNull("UTENLANDSADRESSER_ID"))
                 )
             }
         }
@@ -170,7 +170,7 @@ class PersonopplysningRepositoryImpl(
             deaktiverEksisterende(behandlingId)
         }
 
-        val landkoderId = connection.executeReturnKey("INSERT INTO BRUKER_LAND_AGGREGAT DEFAULT VALUES"){}
+        val landkoderId = connection.executeReturnKey("INSERT INTO BRUKER_LAND_AGGREGAT DEFAULT VALUES")
         connection.executeBatch("INSERT INTO BRUKER_LAND (LAND, GYLDIGFRAOGMED, GYLDIGTILOGMED, LANDKODER_ID) VALUES (?, ?, ?, ?)", personopplysning.statsborgerskap){
             setParams {
                 setString(1, it.land)
@@ -182,7 +182,7 @@ class PersonopplysningRepositoryImpl(
 
         var utenlandsAdresserId: Long? = null
         if (!personopplysning.utenlandsAddresser.isNullOrEmpty()) {
-            utenlandsAdresserId = connection.executeReturnKey("INSERT INTO BRUKER_UTENLANDSADRESSER_AGGREGAT DEFAULT VALUES"){}
+            utenlandsAdresserId = connection.executeReturnKey("INSERT INTO BRUKER_UTENLANDSADRESSER_AGGREGAT DEFAULT VALUES")
             connection.executeBatch(
                 """
                     INSERT INTO BRUKER_UTENLANDSADRESSE (UTENLANDSADRESSER_ID, ADRESSENAVN, POSTKODE, BYSTED, LANDKODE, GYLDIGFRAOGMED, GYLDIGTILOGMED, ADRESSE_TYPE) 

@@ -29,7 +29,11 @@ class PersonopplysningForutgåendeService private constructor(
 ) : Informasjonskrav {
     override val navn = Companion.navn
 
-    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+    override fun erRelevant(
+        kontekst: FlytKontekstMedPerioder,
+        steg: StegType,
+        oppdatert: InformasjonskravOppdatert?
+    ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
                 oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
@@ -39,11 +43,15 @@ class PersonopplysningForutgåendeService private constructor(
         val sak = sakService.hent(kontekst.sakId)
 
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        if (vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).vilkårsperioder().any { it.innvilgelsesårsak == Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG }){
+        // Vilkåret § 11-2 om forutgående medlemskap gjelder ikke ved yrkesskade
+        if (vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).vilkårsperioder()
+                .any { it.innvilgelsesårsak == Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG }
+        ) {
             return IKKE_ENDRET
         }
 
-        val personopplysninger = personopplysningGateway.innhentMedHistorikk(sak.person) ?: error("fødselsdato skal alltid eksistere i PDL")
+        val personopplysninger =
+            personopplysningGateway.innhentMedHistorikk(sak.person) ?: error("fødselsdato skal alltid eksistere i PDL")
         val eksisterendeData = personopplysningForutgåendeRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         if (personopplysninger != eksisterendeData?.brukerPersonopplysning) {

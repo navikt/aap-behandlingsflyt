@@ -4,7 +4,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-class Fødselsdato(private val dato: LocalDate) {
+data class Fødselsdato(private val dato: LocalDate) {
 
     init {
         if (dato.isAfter(LocalDate.now())) throw IllegalArgumentException("Kan ikke sette fødselsdato inn i fremtiden")
@@ -22,25 +22,8 @@ class Fødselsdato(private val dato: LocalDate) {
         return dato
     }
 
-    fun toFormatedString(): String {
+    fun toFormattedString(): String {
         return dato.format(DateTimeFormatter.ISO_LOCAL_DATE)
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as Fødselsdato
-
-        return dato == other.dato
-    }
-
-    override fun hashCode(): Int {
-        return dato.hashCode()
-    }
-
-    override fun toString(): String {
-        return "Fødselsdato(dato=$dato)"
     }
 
     companion object {

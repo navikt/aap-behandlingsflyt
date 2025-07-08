@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
@@ -7,12 +8,14 @@ import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -28,35 +31,80 @@ class PersonopplysningRepositoryImplTest {
 
     @Test
     fun `Finner ikke personopplysninger hvis ikke lagret`() {
-        dataSource.transaction { connection ->
+        val behandling = dataSource.transaction { connection ->
             val sak = sak(connection)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
+            finnEllerOpprettBehandling(connection, sak)
+        }
 
-            val personopplysningRepository = PersonopplysningRepositoryImpl(
+        val personopplysningGrunnlag = dataSource.transaction { connection ->
+            PersonopplysningRepositoryImpl(
                 connection,
                 PersonRepositoryImpl(connection)
-            )
-            val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling.id)
-            assertThat(personopplysningGrunnlag).isNull()
+            ).hentHvisEksisterer(behandling.id)
+        }
+        assertThat(personopplysningGrunnlag).isNull()
+    }
+
+    @Test
+    fun `lagre og hente barn`() {
+        val behandling = dataSource.transaction { connection ->
+            val sak = sak(connection)
+            finnEllerOpprettBehandling(connection, sak)
+        }
+
+        val barn1 = Barn(
+            ident = Ident("1234"),
+            fødselsdato = Fødselsdato(1 januar 2022),
+        )
+        val barn2 = Barn(
+            ident = Ident("5431"),
+            fødselsdato = Fødselsdato(1 januar 2020),
+        )
+        dataSource.transaction { connection ->
+            val personRepository = PersonRepositoryImpl(connection)
+            listOf(barn1, barn2).forEach { personRepository.finnEllerOpprett(listOf(it.ident)) }
+
+            PersonopplysningRepositoryImpl(
+                connection,
+                personRepository
+            ).lagre(behandling.id, setOf(barn1))
         }
     }
 
     @Test
     fun `Lagrer og henter personopplysninger`() {
-        dataSource.transaction { connection ->
+        val behandling = dataSource.transaction { connection ->
             val sak = sak(connection)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
+            finnEllerOpprettBehandling(connection, sak)
+        }
 
+        dataSource.transaction { connection ->
             val personopplysningRepository = PersonopplysningRepositoryImpl(
                 connection,
                 PersonRepositoryImpl(connection)
             )
-            personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(17 mars 1992), statsborgerskap = listOf(
-                Statsborgerskap("NOR")
-            ), status = PersonStatus.bosatt))
-            val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling.id)
-            assertThat(personopplysningGrunnlag?.brukerPersonopplysning).isEqualTo(Personopplysning(Fødselsdato(17 mars 1992), statsborgerskap = listOf(Statsborgerskap("NOR")), status = PersonStatus.bosatt))
+            personopplysningRepository.lagre(
+                behandling.id, Personopplysning(
+                    Fødselsdato(17 mars 1992), statsborgerskap = listOf(
+                        Statsborgerskap("NOR")
+                    ), status = PersonStatus.bosatt
+                )
+            )
         }
+        val personopplysningGrunnlag = dataSource.transaction { connection ->
+            val personopplysningRepository = PersonopplysningRepositoryImpl(
+                connection,
+                PersonRepositoryImpl(connection)
+            )
+            personopplysningRepository.hentHvisEksisterer(behandling.id)
+        }
+        assertThat(personopplysningGrunnlag?.brukerPersonopplysning).isEqualTo(
+            Personopplysning(
+                Fødselsdato(17 mars 1992),
+                statsborgerskap = listOf(Statsborgerskap("NOR")),
+                status = PersonStatus.bosatt
+            )
+        )
     }
 
     @Test
@@ -69,9 +117,30 @@ class PersonopplysningRepositoryImplTest {
                 connection,
                 PersonRepositoryImpl(connection)
             )
-            personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(17 mars 1992), statsborgerskap = listOf(Statsborgerskap("NOR")), status = PersonStatus.bosatt))
-            personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(18 mars 1992), statsborgerskap = listOf(Statsborgerskap("NOR")), status = PersonStatus.bosatt))
-            personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(18 mars 1992), statsborgerskap = listOf(Statsborgerskap("NOR")), status = PersonStatus.bosatt))
+            personopplysningRepository.lagre(
+                behandling.id,
+                Personopplysning(
+                    Fødselsdato(17 mars 1992),
+                    statsborgerskap = listOf(Statsborgerskap("NOR")),
+                    status = PersonStatus.bosatt
+                )
+            )
+            personopplysningRepository.lagre(
+                behandling.id,
+                Personopplysning(
+                    Fødselsdato(18 mars 1992),
+                    statsborgerskap = listOf(Statsborgerskap("NOR")),
+                    status = PersonStatus.bosatt
+                )
+            )
+            personopplysningRepository.lagre(
+                behandling.id,
+                Personopplysning(
+                    Fødselsdato(18 mars 1992),
+                    statsborgerskap = listOf(Statsborgerskap("NOR")),
+                    status = PersonStatus.bosatt
+                )
+            )
 
             val opplysninger =
                 connection.queryList(
@@ -103,7 +172,14 @@ class PersonopplysningRepositoryImplTest {
                 connection,
                 PersonRepositoryImpl(connection)
             )
-            personopplysningRepository.lagre(behandling1.id, Personopplysning(Fødselsdato(17 mars 1992), statsborgerskap = listOf(Statsborgerskap("NOR")), status = PersonStatus.bosatt))
+            personopplysningRepository.lagre(
+                behandling1.id,
+                Personopplysning(
+                    Fødselsdato(17 mars 1992),
+                    statsborgerskap = listOf(Statsborgerskap("NOR")),
+                    status = PersonStatus.bosatt
+                )
+            )
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
                     setLong(1, behandling1.id.toLong())
@@ -112,7 +188,13 @@ class PersonopplysningRepositoryImplTest {
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(personopplysningGrunnlag?.brukerPersonopplysning).isEqualTo(Personopplysning(Fødselsdato(17 mars 1992), statsborgerskap = listOf(Statsborgerskap("NOR")), status = PersonStatus.bosatt))
+            assertThat(personopplysningGrunnlag?.brukerPersonopplysning).isEqualTo(
+                Personopplysning(
+                    Fødselsdato(17 mars 1992),
+                    statsborgerskap = listOf(Statsborgerskap("NOR")),
+                    status = PersonStatus.bosatt
+                )
+            )
         }
     }
 
@@ -138,8 +220,22 @@ class PersonopplysningRepositoryImplTest {
                 connection,
                 PersonRepositoryImpl(connection)
             )
-            personopplysningRepository.lagre(behandling1.id, Personopplysning(Fødselsdato(16 mars 1992), statsborgerskap = listOf(Statsborgerskap("NOR")), status = PersonStatus.bosatt))
-            personopplysningRepository.lagre(behandling1.id, Personopplysning(Fødselsdato(17 mars 1992), statsborgerskap = listOf(Statsborgerskap("NOR")), status = PersonStatus.bosatt))
+            personopplysningRepository.lagre(
+                behandling1.id,
+                Personopplysning(
+                    Fødselsdato(16 mars 1992),
+                    statsborgerskap = listOf(Statsborgerskap("NOR")),
+                    status = PersonStatus.bosatt
+                )
+            )
+            personopplysningRepository.lagre(
+                behandling1.id,
+                Personopplysning(
+                    Fødselsdato(17 mars 1992),
+                    statsborgerskap = listOf(Statsborgerskap("NOR")),
+                    status = PersonStatus.bosatt
+                )
+            )
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
                     setLong(1, behandling1.id.toLong())
@@ -149,7 +245,13 @@ class PersonopplysningRepositoryImplTest {
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(personopplysningGrunnlag?.brukerPersonopplysning).isEqualTo(Personopplysning(Fødselsdato(17 mars 1992), statsborgerskap = listOf(Statsborgerskap("NOR")), status = PersonStatus.bosatt))
+            assertThat(personopplysningGrunnlag?.brukerPersonopplysning).isEqualTo(
+                Personopplysning(
+                    Fødselsdato(17 mars 1992),
+                    statsborgerskap = listOf(Statsborgerskap("NOR")),
+                    status = PersonStatus.bosatt
+                )
+            )
         }
     }
 
@@ -163,13 +265,39 @@ class PersonopplysningRepositoryImplTest {
                 PersonRepositoryImpl(connection)
             )
 
-            personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(17 mars 1992), statsborgerskap = listOf(Statsborgerskap("NOR")), status = PersonStatus.bosatt))
+            personopplysningRepository.lagre(
+                behandling.id,
+                Personopplysning(
+                    Fødselsdato(17 mars 1992),
+                    statsborgerskap = listOf(Statsborgerskap("NOR")),
+                    status = PersonStatus.bosatt
+                )
+            )
             val orginaltGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling.id)
-            assertThat(orginaltGrunnlag?.brukerPersonopplysning).isEqualTo(Personopplysning(Fødselsdato(17 mars 1992), statsborgerskap = listOf(Statsborgerskap("NOR")), status = PersonStatus.bosatt))
+            assertThat(orginaltGrunnlag?.brukerPersonopplysning).isEqualTo(
+                Personopplysning(
+                    Fødselsdato(17 mars 1992),
+                    statsborgerskap = listOf(Statsborgerskap("NOR")),
+                    status = PersonStatus.bosatt
+                )
+            )
 
-            personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(18 mars 1992), statsborgerskap = listOf(Statsborgerskap("NOR")), status = PersonStatus.bosatt))
+            personopplysningRepository.lagre(
+                behandling.id,
+                Personopplysning(
+                    Fødselsdato(18 mars 1992),
+                    statsborgerskap = listOf(Statsborgerskap("NOR")),
+                    status = PersonStatus.bosatt
+                )
+            )
             val oppdatertGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling.id)
-            assertThat(oppdatertGrunnlag?.brukerPersonopplysning).isEqualTo(Personopplysning(Fødselsdato(18 mars 1992), statsborgerskap = listOf(Statsborgerskap("NOR")), status = PersonStatus.bosatt))
+            assertThat(oppdatertGrunnlag?.brukerPersonopplysning).isEqualTo(
+                Personopplysning(
+                    Fødselsdato(18 mars 1992),
+                    statsborgerskap = listOf(Statsborgerskap("NOR")),
+                    status = PersonStatus.bosatt
+                )
+            )
 
             data class Opplysning(val behandlingId: Long, val fødselsdato: LocalDate, val aktiv: Boolean)
 
@@ -212,8 +340,22 @@ class PersonopplysningRepositoryImplTest {
                 connection,
                 PersonRepositoryImpl(connection)
             )
-            personopplysningRepository.lagre(behandling1.id, Personopplysning(Fødselsdato(17 mars 1992), statsborgerskap = listOf(Statsborgerskap("NOR")), status = PersonStatus.bosatt))
-            personopplysningRepository.lagre(behandling1.id, Personopplysning(Fødselsdato(17 april 1992), statsborgerskap = listOf(Statsborgerskap("NOR")), status = PersonStatus.bosatt))
+            personopplysningRepository.lagre(
+                behandling1.id,
+                Personopplysning(
+                    Fødselsdato(17 mars 1992),
+                    statsborgerskap = listOf(Statsborgerskap("NOR")),
+                    status = PersonStatus.bosatt
+                )
+            )
+            personopplysningRepository.lagre(
+                behandling1.id,
+                Personopplysning(
+                    Fødselsdato(17 april 1992),
+                    statsborgerskap = listOf(Statsborgerskap("NOR")),
+                    status = PersonStatus.bosatt
+                )
+            )
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
                     setLong(1, behandling1.id.toLong())
@@ -272,7 +414,7 @@ class PersonopplysningRepositoryImplTest {
         }
     }
 
-        private companion object {
+    private companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 

@@ -116,8 +116,11 @@ class PersonopplysningForutgåendeRepositoryImpl(
             deaktiverEksisterende(behandlingId)
         }
 
-        val landkoderId = connection.executeReturnKey("INSERT INTO BRUKER_LAND_FORUTGAAENDE_AGGREGAT DEFAULT VALUES"){}
-        connection.executeBatch("INSERT INTO BRUKER_LAND_FORUTGAAENDE (LAND, GYLDIGFRAOGMED, GYLDIGTILOGMED, LANDKODER_ID) VALUES (?, ?, ?, ?)", personopplysning.statsborgerskap){
+        val landkoderId = connection.executeReturnKey("INSERT INTO BRUKER_LAND_FORUTGAAENDE_AGGREGAT DEFAULT VALUES")
+        connection.executeBatch(
+            "INSERT INTO BRUKER_LAND_FORUTGAAENDE (LAND, GYLDIGFRAOGMED, GYLDIGTILOGMED, LANDKODER_ID) VALUES (?, ?, ?, ?)",
+            personopplysning.statsborgerskap
+        ) {
             setParams {
                 setString(1, it.land)
                 setLocalDate(2, it.gyldigFraOgMed)
@@ -126,8 +129,12 @@ class PersonopplysningForutgåendeRepositoryImpl(
             }
         }
 
-        val statuserId = connection.executeReturnKey("INSERT INTO BRUKER_STATUSER_FORUTGAAENDE_AGGREGAT DEFAULT VALUES"){}
-        connection.executeBatch("INSERT INTO BRUKER_STATUSER_FORUTGAAENDE (STATUS, STATUSER_ID, GYLDIGHETSTIDSPUNKT, OPPHOERSTIDSPUNKT) VALUES (?, ?, ?, ?)", personopplysning.folkeregisterStatuser){
+        val statuserId =
+            connection.executeReturnKey("INSERT INTO BRUKER_STATUSER_FORUTGAAENDE_AGGREGAT DEFAULT VALUES")
+        connection.executeBatch(
+            "INSERT INTO BRUKER_STATUSER_FORUTGAAENDE (STATUS, STATUSER_ID, GYLDIGHETSTIDSPUNKT, OPPHOERSTIDSPUNKT) VALUES (?, ?, ?, ?)",
+            personopplysning.folkeregisterStatuser
+        ) {
             setParams {
                 setEnumName(1, it.status)
                 setLong(2, statuserId)
@@ -138,7 +145,8 @@ class PersonopplysningForutgåendeRepositoryImpl(
 
         var utenlandsAdresserId: Long? = null
         if (!personopplysning.utenlandsAddresser.isNullOrEmpty()) {
-            utenlandsAdresserId = connection.executeReturnKey("INSERT INTO BRUKER_UTENLANDSADRESSER_FORUTGAAENDE_AGGREGAT DEFAULT VALUES"){}
+            utenlandsAdresserId =
+                connection.executeReturnKey("INSERT INTO BRUKER_UTENLANDSADRESSER_FORUTGAAENDE_AGGREGAT DEFAULT VALUES") {}
             connection.executeBatch(
                 """
                     INSERT INTO BRUKER_UTENLANDSADRESSE_FORUTGAAENDE (UTENLANDSADRESSER_ID, ADRESSENAVN, POSTKODE, BYSTED, LANDKODE, GYLDIGFRAOGMED, GYLDIGTILOGMED, ADRESSE_TYPE) 
@@ -186,14 +194,16 @@ class PersonopplysningForutgåendeRepositoryImpl(
         val personopplysningIds = getPersonOpplysningIds(personopplysningerIds)
         val utenlandsAdresserIds = getUtenlandsAdresserIds(brukerPersonopplysningIds)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from personopplysning_forutgaaende_grunnlag where behandling_id = ?; 
             delete from bruker_utenlandsadresse_forutgaaende where utenlandsadresser_id = ANY(?::bigint[]);
             delete from bruker_utenlandsadresser_forutgaaende_aggregat where id = ANY(?::bigint[]);
             delete from bruker_personopplysning_forutgaaende where id = ANY(?::bigint[]);
             delete from personopplysning_forutgaaende where id = ANY(?::bigint[]);
             delete from personopplysninger_forutgaaende where id = ANY(?::bigint[]);        
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, utenlandsAdresserIds)
@@ -285,7 +295,7 @@ class PersonopplysningForutgåendeRepositoryImpl(
     private fun hentUtenlandsAdresser(id: Long?): List<UtenlandsAdresse> {
         if (id == null) return emptyList()
         return connection.queryList(
-        """
+            """
             SELECT * FROM BRUKER_UTENLANDSADRESSE_FORUTGAAENDE
             WHERE UTENLANDSADRESSER_ID = ?
         """.trimIndent()
@@ -340,7 +350,8 @@ class PersonopplysningForutgåendeRepositoryImpl(
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         require(fraBehandling != tilBehandling)
-        connection.execute("""
+        connection.execute(
+            """
             INSERT INTO PERSONOPPLYSNING_FORUTGAAENDE_GRUNNLAG (BEHANDLING_ID, BRUKER_PERSONOPPLYSNING_ID, PERSONOPPLYSNINGER_ID) 
             SELECT ?, BRUKER_PERSONOPPLYSNING_ID, PERSONOPPLYSNINGER_ID FROM PERSONOPPLYSNING_FORUTGAAENDE_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?
         """.trimIndent()
