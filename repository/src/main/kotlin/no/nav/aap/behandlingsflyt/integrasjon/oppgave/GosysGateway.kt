@@ -52,7 +52,7 @@ class GosysGateway : OppgaveGateway {
             beskrivelse = "Krav om refusjon av sosialhjelp for bruker av AAP",
             behandlingstema = "AAP",
             behandlingstype = "AAP",
-            fristFerdigstillelse = LocalDate.now()
+            fristFerdigstillelse = LocalDate.now().plusDays(2)
         )
 
         val oppgaver = finnOppgaverForJournalpost(
