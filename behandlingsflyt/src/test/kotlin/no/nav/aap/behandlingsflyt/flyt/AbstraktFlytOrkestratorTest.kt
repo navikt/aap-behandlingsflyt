@@ -60,7 +60,11 @@ import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatew
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -90,6 +94,7 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
+import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.gateway.GatewayRegistry
@@ -191,6 +196,20 @@ abstract class AbstraktFlytOrkestratorTest {
         }
     }
 
+    object TestSøknader {
+        val STANDARD_SØKNAD = SøknadV0(
+            student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+            medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", null)
+        )
+
+        val SØKNAD_STUDENT = SøknadV0(
+            student = SøknadStudentDto("JA", "JA"),
+            yrkesskade = "JA",
+            oppgitteBarn = null,
+            medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
+        )
+    }
+
 
     /**
      * Løser avklaringsbehov og venter på svar vha [util].
@@ -286,6 +305,22 @@ abstract class AbstraktFlytOrkestratorTest {
                     )
                 )
             ),
+        )
+    }
+
+    protected fun Behandling.løsBistand(): Behandling {
+        return this.løsAvklaringsBehov(
+            AvklarBistandsbehovLøsning(
+                BistandVurderingLøsningDto(
+                    begrunnelse = "Trenger hjelp fra nav",
+                    erBehovForAktivBehandling = true,
+                    erBehovForArbeidsrettetTiltak = false,
+                    erBehovForAnnenOppfølging = null,
+                    skalVurdereAapIOvergangTilUføre = null,
+                    skalVurdereAapIOvergangTilArbeid = null,
+                    overgangBegrunnelse = null
+                )
+            )
         )
     }
 
@@ -519,6 +554,20 @@ abstract class AbstraktFlytOrkestratorTest {
         )
     }
 
+    protected fun Behandling.løsBeregningstidspunkt(): Behandling {
+        return løsAvklaringsBehov(
+            this,
+            FastsettBeregningstidspunktLøsning(
+                beregningVurdering = BeregningstidspunktVurderingDto(
+                    begrunnelse = "Trenger hjelp fra Nav",
+                    nedsattArbeidsevneDato = LocalDate.now(),
+                    ytterligereNedsattArbeidsevneDato = null,
+                    ytterligereNedsattBegrunnelse = null
+                ),
+            ),
+        )
+    }
+
 
     protected fun kvalitetssikreOk(
         behandling: Behandling,
@@ -545,14 +594,30 @@ abstract class AbstraktFlytOrkestratorTest {
         behandling,
         FatteVedtakLøsning(
             hentAlleAvklaringsbehov(behandling)
-            .filter { behov -> behov.erTotrinn() }
-            .map { behov ->
-                TotrinnsVurdering(
-                    behov.definisjon.kode, behov.definisjon != returVed, "begrunnelse", emptyList()
-                )
-            }),
+                .filter { behov -> behov.erTotrinn() }
+                .map { behov ->
+                    TotrinnsVurdering(
+                        behov.definisjon.kode, behov.definisjon != returVed, "begrunnelse", emptyList()
+                    )
+                }),
         Bruker("BESLUTTER")
     )
+
+    protected fun Behandling.løsRefusjonskrav(): Behandling {
+        return løsAvklaringsBehov(
+            this,
+            RefusjonkravLøsning(
+                listOf(
+                    RefusjonkravVurderingDto(
+                        harKrav = true,
+                        fom = LocalDate.now(),
+                        tom = null,
+                        navKontor = "",
+                    )
+                )
+            )
+        )
+    }
 
     @JvmName("fattVedtakExt")
     protected fun Behandling.fattVedtak(returVed: Definisjon? = null): Behandling {
