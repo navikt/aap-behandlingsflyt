@@ -18,7 +18,6 @@ class Aldersvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Ald
     private val vilkår: Vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.ALDERSVILKÅRET)
 
     override fun vurder(grunnlag: Aldersgrunnlag) {
-        // TODO Det må avklares hvordan vi skal håndtere søknader som er sendt inn for tidlig
         if (grunnlag.alderPåSøknadsdato() < 18) {
             vilkår.leggTilVurdering(
                 Vilkårsperiode(

@@ -81,7 +81,7 @@ class StatistikkJobbUtfører(
         val payload = input.payload<BehandlingFlytStoppetHendelse>()
 
         håndterBehandlingStoppet(payload)
-    } // Todo skriv test på g_regulering
+    } // TODO: skriv test på g_regulering
 
     private val statistikkGateway: StatistikkGateway = GatewayProvider.provide()
 

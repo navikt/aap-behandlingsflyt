@@ -67,13 +67,6 @@ fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource, repositoryR
 }
 
 internal fun beregningDTO(beregning: Beregningsgrunnlag, behandlingOpprettet: LocalDate): BeregningDTO {
-    /**
-     * TODO:
-     * Dette er en minimumsløsning inntil det finnes en bedre måte å beregne grunnlaget hvor G er endelig fastsatt
-     * basert på virkningstidspunktet som ikke er tilgjengelig i grunnlagssteget. Antageligvis burde dette flyttes
-     * til et senere steg. I tillegg burde også beløpene som vises til saksbehandler lagres ned slik at de også er
-     * tilgjengelig ved senere visning av behandlingen uten å være påvirket av eventuelle G-endringer.
-     */
     val gjeldendeGrunnbeløp = hentGjeldendeGrunnbeløp(behandlingOpprettet)
 
     return when (beregning) {

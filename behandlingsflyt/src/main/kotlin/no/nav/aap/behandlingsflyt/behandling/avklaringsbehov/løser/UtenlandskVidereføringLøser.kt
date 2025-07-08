@@ -10,7 +10,7 @@ class UtenlandskVidereføringLøser() : AvklaringsbehovsLøser<UtenlandskVideref
     constructor(repositoryProvider: RepositoryProvider) : this()
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: UtenlandskVidereføringLøsning): LøsningsResultat {
-        // TODO: Kreve at de legger inn ny data her, denne vil låse seg selv igjen til ny manuell vurdering kommer inn
+        // TODO: Handler om utenlandsk lovvalg, legg inn når vi har støtte for dette
         return LøsningsResultat("Tatt av vent (ventet på utenlandsk videreføring)")
     }
 

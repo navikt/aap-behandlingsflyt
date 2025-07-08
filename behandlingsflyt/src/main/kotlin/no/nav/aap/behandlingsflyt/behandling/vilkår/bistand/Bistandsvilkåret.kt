@@ -80,7 +80,7 @@ class Bistandsvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<B
             utfall = Utfall.OPPFYLT
         } else {
             utfall = Utfall.IKKE_OPPFYLT
-            avslagsårsak = Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING // TODO: Må ha mer
+            avslagsårsak = Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING
         }
 
         return Vilkårsvurdering(

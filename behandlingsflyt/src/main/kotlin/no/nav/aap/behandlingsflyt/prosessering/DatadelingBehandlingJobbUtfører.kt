@@ -40,7 +40,6 @@ class DatadelingBehandlingJobbUtfører(
                 TypeBehandling.Revurdering
             )
         ) {
-            // TODO: Avgjør om vi skal sende klagebehandlinger til api-intern
             log.info("Fant behandling av type ${behandling.typeBehandling()} - oversender ikke til api-intern")
             return
         }

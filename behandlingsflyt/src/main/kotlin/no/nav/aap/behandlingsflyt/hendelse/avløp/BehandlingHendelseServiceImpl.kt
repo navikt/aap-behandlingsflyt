@@ -78,7 +78,6 @@ class BehandlingHendelseServiceImpl(
         val årsaker = behandling.årsaker()
         val mottattDokumenter = hentMottattDokumenter(årsaker, behandling)
 
-        // TODO: Utvide med flere parametere for prioritering
         val hendelse = BehandlingFlytStoppetHendelse(
             personIdent = sak.person.aktivIdent().identifikator,
             saksnummer = sak.saksnummer,

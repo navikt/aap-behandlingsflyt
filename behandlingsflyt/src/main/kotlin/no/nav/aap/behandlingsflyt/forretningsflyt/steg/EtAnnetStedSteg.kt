@@ -42,7 +42,6 @@ class EtAnnetStedSteg(
 
         val avklaringsbehov = mutableListOf<Definisjon>()
 
-        // TODO: Denne må forberedes slik at vi kan vise hva som trengs å ta stilling til basert på vurderinge fra forrige behandling
         val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId, true)
         val harBehovForAvklaringerLenger = etAnnetStedUtlederService.utled(kontekst.behandlingId)
         log.info("Perioder til vurdering: {}", harBehovForAvklaringerLenger.perioderTilVurdering)

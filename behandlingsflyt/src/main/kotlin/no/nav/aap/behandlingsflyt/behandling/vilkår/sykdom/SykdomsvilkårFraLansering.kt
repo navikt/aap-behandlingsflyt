@@ -95,6 +95,7 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
             } else if (sykdomVurdering?.erNedsettelseIArbeidsevneAvEnVissVarighet == false && relevantÅVurdereSykepengerErstatning(grunnlag, sykdomVurdering)) {
                 Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET
             } else {
+                // TODO: dekk alle muligheter for nei her
                 Avslagsårsak.MANGLENDE_DOKUMENTASJON // TODO noe mer rett
             }
 

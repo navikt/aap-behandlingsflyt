@@ -145,19 +145,5 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource, repositoryR
             }
         }
 
-        // TODO: Enten slette eller aktivere denne når vi vet hvordan bestilling-statuser skal settes til mottat
-        /*
-        route("/status/markerbestillingmottatt") {
-            authorizedPost<Unit, LegeerklæringStatusResponse, MarkerBestillingSomMottattRequest>(
-                AuthorizationBodyPathConfig(
-                    operasjon = Operasjon.SAKSBEHANDLE,
-                    applicationsOnly = false
-                )
-            ) { _, req ->
-                val request = MarkerDialogmeldingSomMottattRequest(req.dialogmeldingBestillingUUID)
-                val response = dokumentinnhentingGateway.markerDialogmeldingStatusSomMottatt(request)
-                respond(response)
-            }
-        }*/
     }
 }

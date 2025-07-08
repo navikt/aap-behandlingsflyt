@@ -65,7 +65,6 @@ class BeregnTilkjentYtelseService(
             AldersjusteringAvMinsteÅrligYtelse
         )
 
-        // TODO: Vurder om vi her skal ha en egen tidslinje for "ikke rett" som gir 0 i grunnnlag
         val årligYtelseTidslinje = minsteÅrligYtelseMedAlderTidslinje.mapValue { minsteÅrligYtelse ->
             maxOf(minsteÅrligYtelse, utgangspunktForÅrligYtelse)
         }
