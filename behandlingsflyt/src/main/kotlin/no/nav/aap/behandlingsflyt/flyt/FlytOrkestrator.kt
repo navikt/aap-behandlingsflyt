@@ -173,6 +173,9 @@ class FlytOrkestrator(
 
         while (true) {
             if (behandling.status() in stoppNårStatus) {
+                // Behanlingen blir stuck i iverksatt fordi den stopper her, men "neste" ikke er null (brevsteget)
+                // Prosesser behandling eller navigering til "fatte vedtak" vil kjøre iverksatt vedtak-steget på nytt og føre til duplicate key ved lagring av vedtak
+                log.info("Stopp når status $stoppNårStatus")
                 loggStopp(behandling, avklaringsbehovene)
                 val oppdatertBehandling = behandlingRepository.hent(behandling.id)
                 behandlingHendelseService.stoppet(oppdatertBehandling, avklaringsbehovene)
@@ -215,6 +218,7 @@ class FlytOrkestrator(
                     validerAtAvklaringsBehovErLukkede(avklaringsbehovene)
                 } else {
                     // Prosessen har stoppet opp, slipp ut hendelse om at den har stoppet opp og hvorfor?
+                    log.info("Prossessen stoppet opp. Kan forsette: ${result.kanFortsette()}")
                     loggStopp(behandling, avklaringsbehovene)
                 }
                 val oppdatertBehandling = behandlingRepository.hent(behandling.id)

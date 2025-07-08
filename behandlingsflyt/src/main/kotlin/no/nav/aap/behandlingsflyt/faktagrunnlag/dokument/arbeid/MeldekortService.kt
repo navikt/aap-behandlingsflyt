@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class MeldekortService private constructor(
@@ -34,9 +35,14 @@ class MeldekortService private constructor(
         }
     }
 
-    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
-        return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
-                !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
+    override fun erRelevant(
+        kontekst: FlytKontekstMedPerioder,
+        steg: StegType,
+        oppdatert: InformasjonskravOppdatert?
+    ): Boolean {
+        // Legg til relevans for meldekortbehandling - hvis ikke blir meldekortene aldri prossessert for denne vurderingstypen
+        return kontekst.vurderingType == VurderingType.MELDEKORT || (kontekst.erFørstegangsbehandlingEllerRevurdering() &&
+                !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg))
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
@@ -70,8 +76,13 @@ class MeldekortService private constructor(
 
     override fun flettOpplysningerFraAtomærBehandling(kontekst: FlytKontekst): Informasjonskrav.Endret {
         val forrigeBehandlingId = kontekst.forrigeBehandlingId ?: return IKKE_ENDRET
-        val forrigeBehandlingGrunnlag = meldekortRepository.hentHvisEksisterer(forrigeBehandlingId) ?: return IKKE_ENDRET
 
+        // Meldekortene ble aldri prossessert i meldekortbehandlingen. 
+        // Dette ga feil i tilkjent ytelse og førte til at meldekortene ikke dukket opp her
+        // Dette er nå endret ved at man oppdaterer informasjonskravet i meldekortbehandlingen
+        val forrigeBehandlingGrunnlag =
+            meldekortRepository.hentHvisEksisterer(forrigeBehandlingId) ?: return IKKE_ENDRET
+        
         val meldekortIBehandling = meldekortRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.meldekortene
             ?: emptySet()

@@ -17,7 +17,7 @@ class ProsesserBehandlingService(
     private val behandlingRepository: BehandlingRepository,
     private val atomærFlytOrkestrator: FlytOrkestrator,
 ) {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         flytJobbRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         atomærFlytOrkestrator = FlytOrkestrator(
@@ -35,7 +35,11 @@ class ProsesserBehandlingService(
     ) {
 
         when (opprettetBehandling) {
-            is SakOgBehandlingService.Ordinær -> triggProsesserBehandling(opprettetBehandling.åpenBehandling, parameters)
+            is SakOgBehandlingService.Ordinær -> triggProsesserBehandling(
+                opprettetBehandling.åpenBehandling,
+                parameters
+            )
+
             is SakOgBehandlingService.MåBehandlesAtomært -> kjørAtomærBehandling(opprettetBehandling)
         }
     }
@@ -82,13 +86,19 @@ class ProsesserBehandlingService(
             }
         }
 
-        triggProsesserBehandling(behandling.sakId, behandling.id)
+        // TODO: Hva trenger vi denne til? 
+        // Forårsaker at iverksett_vedtak kjøres på nytt og kræsjer fordi den prøver å lagre ned vedtaket på nytt
+        // Kommenterer ut enn så lenge
+        //triggProsesserBehandling(behandling.sakId, behandling.id)
         log.info("Prosessererte behandling ${behandling.referanse} atomært")
 
         val åpenBehandling = opprettetBehandling.åpenBehandling
         if (åpenBehandling != null) {
             val kontekst = atomærFlytOrkestrator.opprettKontekst(åpenBehandling.sakId, åpenBehandling.id)
             atomærFlytOrkestrator.tilbakeførEtterAtomærBehandling(kontekst)
+        } else {
+            // Må opprette behandling dersom informasjonskravene har endret seg.
+            // Den åpne behandlingen vil sjekke informasjonskrav uansett?
         }
     }
 }

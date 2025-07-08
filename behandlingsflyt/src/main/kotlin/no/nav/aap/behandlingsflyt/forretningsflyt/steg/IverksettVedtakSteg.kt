@@ -58,6 +58,8 @@ class IverksettVedtakSteg private constructor(
                 ?.tidspunkt() ?: error("Forventet å finne et avsluttet fatte vedtak steg")
 
         val virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId)
+        
+        // Denne gir duplicate key
         vedtakService.lagreVedtak(kontekst.behandlingId, vedtakstidspunkt, virkningstidspunkt)
 
         val tilkjentYtelseDto = utbetalingService.lagTilkjentYtelseForUtbetaling(kontekst.sakId, kontekst.behandlingId)

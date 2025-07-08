@@ -19,6 +19,8 @@ class VedtakService(
         vedtakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
     )
+    
+    private val log = org.slf4j.LoggerFactory.getLogger(javaClass)
 
     fun lagreVedtak(behandlingId: BehandlingId, vedtakstidspunkt: LocalDateTime, virkningstidspunkt: LocalDate?) {
         vedtakRepository.lagre(behandlingId, vedtakstidspunkt, virkningstidspunkt)

@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrke
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
@@ -21,6 +22,7 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
@@ -59,13 +61,20 @@ import no.nav.aap.behandlingsflyt.integrasjon.utbetaling.UtbetalingGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -98,6 +107,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.testutil.TestUtil
 import no.nav.aap.verdityper.dokument.JournalpostId
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import java.time.LocalDate
@@ -151,8 +161,6 @@ abstract class AbstraktFlytOrkestratorTest {
                 .register<KabalGateway>()
                 .register<NorgGateway>()
             motor.start()
-
-
         }
 
         @AfterAll
@@ -545,12 +553,12 @@ abstract class AbstraktFlytOrkestratorTest {
         behandling,
         FatteVedtakLøsning(
             hentAlleAvklaringsbehov(behandling)
-            .filter { behov -> behov.erTotrinn() }
-            .map { behov ->
-                TotrinnsVurdering(
-                    behov.definisjon.kode, behov.definisjon != returVed, "begrunnelse", emptyList()
-                )
-            }),
+                .filter { behov -> behov.erTotrinn() }
+                .map { behov ->
+                    TotrinnsVurdering(
+                        behov.definisjon.kode, behov.definisjon != returVed, "begrunnelse", emptyList()
+                    )
+                }),
         Bruker("BESLUTTER")
     )
 
@@ -664,6 +672,166 @@ abstract class AbstraktFlytOrkestratorTest {
                 }
             }
         }
+    }
+
+    protected fun happyCaseFørstegansbehandling(): Sak {
+        val fom = LocalDate.now().minusMonths(3)
+        val periode = Periode(fom, fom.plusYears(3))
+
+        // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
+        val person = TestPersoner.STANDARD_PERSON()
+        val ident = person.aktivIdent()
+
+        // Sender inn en søknad
+        var behandling = sendInnSøknad(
+            ident, periode, SøknadV0(
+                student = SøknadStudentDto("NEI"),
+                yrkesskade = "NEI",
+                oppgitteBarn = null,
+                medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
+            )
+        )
+
+        assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
+        behandling = behandling.medKontekst {
+            assertThat(åpneAvklaringsbehov).isNotEmpty()
+            assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+        }
+            .løsSykdom()
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    bistandsVurdering = BistandVurderingLøsningDto(
+                        begrunnelse = "Trenger hjelp fra nav",
+                        erBehovForAktivBehandling = true,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = null,
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null
+                    ),
+                )
+            ).løsAvklaringsBehov(
+                RefusjonkravLøsning(
+                    listOf(
+                        RefusjonkravVurderingDto(
+                            harKrav = true,
+                            fom = LocalDate.now(),
+                            tom = null,
+                            navKontor = "",
+                        )
+                    )
+                )
+            )
+            // Sender inn en søknad
+            .sendInnDokument(
+                DokumentMottattPersonHendelse(
+                    journalpost = JournalpostId("220"),
+                    mottattTidspunkt = LocalDateTime.now(),
+                    strukturertDokument = StrukturertDokument(
+                        MeldekortV0(
+                            harDuArbeidet = false,
+                            timerArbeidPerPeriode = listOf(
+                                ArbeidIPeriodeV0(
+                                    fraOgMedDato = LocalDate.now().minusMonths(3),
+                                    tilOgMedDato = LocalDate.now().plusMonths(3),
+                                    timerArbeid = 0.0,
+                                )
+                            )
+                        ),
+                    ),
+                    periode = periode
+                )
+            )
+            .kvalitetssikreOk()
+            .løsAvklaringsBehov(
+                FastsettBeregningstidspunktLøsning(
+                    beregningVurdering = BeregningstidspunktVurderingDto(
+                        begrunnelse = "Trenger hjelp fra Nav",
+                        nedsattArbeidsevneDato = LocalDate.now(),
+                        ytterligereNedsattArbeidsevneDato = null,
+                        ytterligereNedsattBegrunnelse = null
+                    ),
+                ),
+            )
+            .løsForutgåendeMedlemskap()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+
+        val vedtak = hentVedtak(behandling.id)
+        assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
+
+        behandling = behandling.løsVedtaksbrev()
+
+        // Henter vurder alder-vilkår
+        // Assert utfall
+        val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
+        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+
+        assertThat(sykdomsvilkåret.vilkårsperioder())
+            .hasSize(1)
+            .allMatch { vilkårsperiode -> vilkårsperiode.erOppfylt() }
+
+        val underveisGrunnlag = dataSource.transaction { connection ->
+            UnderveisRepositoryImpl(connection).hent(behandling.id)
+        }
+
+        assertThat(underveisGrunnlag.perioder).isNotEmpty
+        assertThat(underveisGrunnlag.perioder.any { it.arbeidsgradering.gradering.prosentverdi() > 0 }).isTrue()
+
+        // Saken er avsluttet, så det skal ikke være flere åpne avklaringsbehov
+        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        assertThat(åpneAvklaringsbehov).isEmpty()
+
+        return hentSak(behandling)
+    }
+
+    protected
+    fun revurdereFramTilOgMedSykdom(sak: Sak, gjelderFra: LocalDate, vissVarighet: Boolean? = null): Behandling {
+        val ident = sak.person.aktivIdent()
+        val periode = sak.rettighetsperiode
+
+        return sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("29"),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"),
+                        yrkesskade = "NEI",
+                        oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
+                    ),
+                ),
+                periode = periode
+            )
+        )
+            .medKontekst {
+                assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .løsAvklaringsBehov(
+                AvklarSykdomLøsning(
+                    sykdomsvurderinger = listOf(
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Er syk nok",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("1349532")),
+                            harSkadeSykdomEllerLyte = true,
+                            erSkadeSykdomEllerLyteVesentligdel = true,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = vissVarighet,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            erArbeidsevnenNedsatt = true,
+                            yrkesskadeBegrunnelse = null,
+                            // Ny revurdering
+                            vurderingenGjelderFra = gjelderFra
+                        )
+                    )
+                ),
+            ).medKontekst {
+                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .containsExactlyInAnyOrder(Definisjon.AVKLAR_BISTANDSBEHOV)
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
     }
 
 }
