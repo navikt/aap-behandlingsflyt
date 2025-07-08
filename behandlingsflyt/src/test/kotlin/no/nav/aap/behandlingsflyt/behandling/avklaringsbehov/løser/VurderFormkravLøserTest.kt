@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import io.mockk.every
+import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
@@ -15,24 +16,22 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtendWith
 
+@ExtendWith(MockKExtension::class)
+@MockKExtension.CheckUnnecessaryStub
 class VurderFormkravLøserTest {
     private val formkravRepositoryMock = mockk<FormkravRepository>()
     private val avklaringsbehovRepositoryMock = mockk<AvklaringsbehovRepository>()
     private val avklaringsbehoveneMock = mockk<Avklaringsbehovene>()
-    
-    @BeforeEach
-    fun setup() {
-        every { avklaringsbehoveneMock.hentBehovForDefinisjon(any<Definisjon>()) } returns null
-        every { avklaringsbehovRepositoryMock.hentAvklaringsbehovene(any()) } returns avklaringsbehoveneMock
-    }
+
 
     @Test
     fun `løs skal returnere et løsningsresultat om alle verdier er satt`() {
-
+        every { avklaringsbehovRepositoryMock.hentAvklaringsbehovene(any()) } returns avklaringsbehoveneMock
+        every { avklaringsbehoveneMock.hentBehovForDefinisjon(any<Definisjon>()) } returns null
         every { formkravRepositoryMock.lagre(any(), any()) } returns Unit
 
         val vurderFormkravLøser = VurderFormkravLøser(formkravRepositoryMock, avklaringsbehovRepositoryMock)

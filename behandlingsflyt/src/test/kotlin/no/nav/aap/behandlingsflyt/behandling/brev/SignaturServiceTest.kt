@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
 import io.mockk.every
+import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
@@ -20,12 +21,14 @@ import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDateTime
 import java.util.*
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
+@ExtendWith(MockKExtension::class)
+@MockKExtension.CheckUnnecessaryStub
 class SignaturServiceTest {
-
     @Test
     fun `den som står i signatur for en gitt rolle er den som utførte siste avklaringsbehovet for rollen (status AVSLUTTET)`() {
 
