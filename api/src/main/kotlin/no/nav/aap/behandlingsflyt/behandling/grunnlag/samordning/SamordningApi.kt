@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UførePeriodeMedEndringStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UførePeriodeSammenligner
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -112,6 +113,18 @@ data class SamordningAndreStatligeYtelserVurderingPeriodeDTO(
     val periode: Periode,
     val ytelse: AndreStatligeYtelser,
     val beløp: Int
+)
+
+data class SamordningArbeidsgiverGrunnlagDTO(
+    val harTilgangTilÅSaksbehandle: Boolean,
+    val vurdering: SamordningArbeidsgiverVurderingDTO?
+)
+
+data class SamordningArbeidsgiverVurderingDTO(
+    val begrunnelse: String,
+    val fom: LocalDate,
+    val tom: LocalDate,
+    val vurdertAv: VurdertAvResponse?
 )
 
 data class TjenestepensjonGrunnlagDTO(
@@ -358,15 +371,15 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                                 begrunnelse = samordningAndreStatligeYtelserVurdering?.begrunnelse ?: "",
                                 vurderingPerioder =
                                     (
-                                        samordningAndreStatligeYtelserVurdering?.vurderingPerioder
-                                            ?: listOf<SamordningAndreStatligeYtelserVurderingPeriode>()
-                                    ).map {
-                                        SamordningAndreStatligeYtelserVurderingPeriodeDTO(
-                                            periode = it.periode,
-                                            ytelse = it.ytelse,
-                                            beløp = it.beløp
-                                        )
-                                    },
+                                            samordningAndreStatligeYtelserVurdering?.vurderingPerioder
+                                                ?: listOf<SamordningAndreStatligeYtelserVurderingPeriode>()
+                                            ).map {
+                                            SamordningAndreStatligeYtelserVurderingPeriodeDTO(
+                                                periode = it.periode,
+                                                ytelse = it.ytelse,
+                                                beløp = it.beløp
+                                            )
+                                        },
                                 vurdertAv =
                                     samordningAndreStatligeYtelserVurdering?.let {
                                         VurdertAvResponse(
@@ -380,6 +393,65 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                                         )
                                     }
                             )
+                    )
+                )
+            }
+        }
+
+
+        route("/{referanse}/grunnlag/samordning-arbeidsgiver") {
+            authorizedGet<BehandlingReferanse, SamordningArbeidsgiverGrunnlagDTO>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam =
+                        BehandlingPathParam(
+                            "referanse"
+                        )
+                )
+            ) { behandlingReferanse ->
+                val samordningArbeidsgiverVurdering =
+                    dataSource.transaction { connection ->
+                        val repositoryProvider = repositoryRegistry.provider(connection)
+                        val samordningArbeidsgiverRepository =
+                            repositoryProvider.provide<SamordningArbeidsgiverRepository>()
+                        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+
+                        val behandling = behandlingRepository.hent(behandlingReferanse)
+
+                        samordningArbeidsgiverRepository.hentHvisEksisterer(behandling.id)?.vurdering
+                    }
+
+                val tilgangGateway = GatewayProvider.provide(TilgangGateway::class)
+                val harTilgangTilÅSaksbehandle =
+                    tilgangGateway.sjekkTilgangTilBehandling(
+                        behandlingReferanse.referanse,
+                        Definisjon.SAMORDNING_ARBEIDSGIVER,
+                        token()
+                    )
+
+                val navnOgEnhet = samordningArbeidsgiverVurdering?.let {
+                    AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv)
+                }
+
+                val vurdering = samordningArbeidsgiverVurdering?.let { vurdering ->
+                    SamordningArbeidsgiverVurderingDTO(
+                        vurdertAv = VurdertAvResponse(
+                            ident = vurdering.vurdertAv,
+                            dato = requireNotNull(vurdering.vurdertTidspunkt?.toLocalDate()) {
+                                "Fant ikke vurdert tidspunkt for samordningArbeidsgiverVurdering"
+                            },
+                            ansattnavn = navnOgEnhet?.navn,
+                            enhetsnavn = navnOgEnhet?.enhet
+                        ),
+                        begrunnelse = vurdering.begrunnelse,
+                        fom = vurdering.fom,
+                        tom = vurdering.tom
+                    )
+                }
+
+                respond(
+                    SamordningArbeidsgiverGrunnlagDTO(
+                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+                        vurdering = vurdering
                     )
                 )
             }

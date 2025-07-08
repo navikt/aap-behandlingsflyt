@@ -227,6 +227,12 @@ public enum class Definisjon(
         løsesISteg = StegType.SAMORDNING_ANDRE_STATLIGE_YTELSER,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
+    SAMORDNING_ARBEIDSGIVER(
+        kode = AvklaringsbehovKode.`5030`,
+        type = BehovType.MANUELT_FRIVILLIG,
+        løsesISteg = StegType.SAMORDNING_ARBEIDSGIVER,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
 
     @Deprecated("Ikke i bruk")
     FORHÅNDSVARSEL_AKTIVITETSPLIKT(

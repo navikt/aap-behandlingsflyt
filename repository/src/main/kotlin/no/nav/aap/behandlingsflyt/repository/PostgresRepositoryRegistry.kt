@@ -44,6 +44,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre.UføreRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsgiver.SamordningArbeidsgiverRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepositoryImpl
@@ -93,6 +94,7 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<SamordningYtelseRepositoryImpl>()
     .register<SamordningUføreRepositoryImpl>()
     .register<SamordningAndreStatligeYtelserRepositoryImpl>()
+    .register<SamordningArbeidsgiverRepositoryImpl>()
     .register<StudentRepositoryImpl>()
     .register<MeldepliktRepositoryImpl>()
     .register<MedlemskapArbeidInntektForutgåendeRepositoryImpl>()
