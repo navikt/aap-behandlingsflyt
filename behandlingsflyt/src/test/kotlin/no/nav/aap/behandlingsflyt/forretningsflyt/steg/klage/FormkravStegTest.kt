@@ -107,6 +107,10 @@ class FormkravStegTest {
 
     @Test
     fun `FormkravSteg-utfører skal gi avklaringsbehov FULLFØRT om man har løst avklaringsbehovet og vurderingen er at man har opprettholdt avklaringsbehovene`() {
+        every { brevbestillingServiceMock.hentBestillinger(any(), any()) } returns listOf(
+            Brevbestilling(id = 1L, behandlingId = BehandlingId(1L), typeBrev = TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV, referanse = BrevbestillingReferanse(UUID.randomUUID()), status = Status.FULLFØRT, opprettet = LocalDateTime.now(), )
+        )
+
         val kontekst = FlytKontekstMedPerioder(
             sakId = SakId(1L),
             behandlingId = BehandlingId(2L),
