@@ -19,9 +19,8 @@ class Beregning(
             val uføreberegning = UføreBeregning(
                 grunnlag = grunnlag11_19,
                 // TODO:
-                // Hva hvis bruker har flere uføregrader?
+                // Hva hvis bruker har flere uføregrader? (antakelig må saksbehandler legge inn manuelt)
                 // Skal saksbahandler velge den som er knyttet til ytterligere nedsatt-tidspunktet?
-                // TODO Er first() riktig her
                 uføregrad = input.uføregrad().first().uføregrad,
                 inntekterForegåendeÅr = inntekterFørYtterligereNedsattDato
             )

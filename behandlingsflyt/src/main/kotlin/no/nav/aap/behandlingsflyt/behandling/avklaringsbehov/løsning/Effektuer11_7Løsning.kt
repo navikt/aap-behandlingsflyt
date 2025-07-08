@@ -13,8 +13,8 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = EFFEKTUER_11_7_KODE)
 class Effektuer11_7Løsning(
-    @JsonProperty("begrunnelse", required = true) val begrunnelse: String,
-    @JsonProperty("behovstype", required = true, defaultValue = EFFEKTUER_11_7_KODE)
+    @param:JsonProperty("begrunnelse", required = true) val begrunnelse: String,
+    @param:JsonProperty("behovstype", required = true, defaultValue = EFFEKTUER_11_7_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5015`
 ) : AvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {

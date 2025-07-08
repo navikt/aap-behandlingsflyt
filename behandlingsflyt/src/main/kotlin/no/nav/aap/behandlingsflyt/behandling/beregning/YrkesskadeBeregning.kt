@@ -12,7 +12,6 @@ import no.nav.aap.komponenter.verdityper.Prosent
  */
 class YrkesskadeBeregning(
     private val grunnlag11_19: Beregningsgrunnlag,
-    // TODO: Skal antattÅrligInntekt begrenses til 6G i det hele tatt?...
     private val antattÅrligInntekt: InntektPerÅr,
     private val andelAvNedsettelsenSomSkyldesYrkesskaden: Prosent
 ) {

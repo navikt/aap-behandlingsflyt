@@ -1,0 +1,88 @@
+package no.nav.aap.behandlingsflyt.test.inmemoryrepo
+
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.modell.genererIdent
+import no.nav.aap.komponenter.type.Periode
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+import java.time.LocalDate
+import java.util.*
+
+class InMemoryBarnRepositoryTest {
+
+
+    @Test
+    fun `Finner ikke barn hvis det ikke finnes barn`() {
+        val (sak, behandling) = opprettPersonBehandlingOgSak()
+
+        val barnRepository = InMemoryBarnRepository
+        val barn = barnRepository.hentHvisEksisterer(behandling.id)
+        assertThat(barn?.registerbarn?.identer).isNullOrEmpty()
+    }
+
+
+    @Test
+    fun `Lagrer og henter barn`() {
+        val vurderteBarn = listOf(
+            VurdertBarn(
+                ident = Ident("12345"),
+                vurderinger = listOf(
+                    VurderingAvForeldreAnsvar(
+                        fraDato = LocalDate.now(),
+                        harForeldreAnsvar = true,
+                        begrunnelse = "fsdf"
+                    )
+                )
+            )
+        )
+        val barnListe = setOf(Ident("12345678910"), Ident("12345"))
+
+        val (_, behandling) = opprettPersonBehandlingOgSak()
+
+        val barnRepository = InMemoryBarnRepository
+
+        barnRepository.lagreRegisterBarn(behandling.id, barnListe)
+        barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = setOf(Ident("1"))))
+        barnRepository.lagreVurderinger(behandling.id, "ident", vurderteBarn)
+
+
+        val barn = barnRepository.hent(behandling.id)
+        assertThat(barn.registerbarn?.identer).containsExactlyInAnyOrderElementsOf(barnListe)
+        assertThat(barn.oppgitteBarn?.identer).containsExactly(Ident("1"))
+        assertThat(barn.vurderteBarn?.barn).isEqualTo(vurderteBarn)
+
+
+        // Slette
+        barnRepository.slett(behandling.id)
+        assertThat(barnRepository.hentHvisEksisterer(behandling.id)).isNull()
+
+    }
+
+    private companion object {
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+    }
+
+    private fun opprettPersonBehandlingOgSak(): Pair<Sak, Behandling> {
+        val person =
+            Person(Random().nextLong(), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
+        val sak = InMemorySakRepository.finnEllerOpprett(
+            person,
+            periode = Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
+        )
+        val behandling = InMemoryBehandlingRepository.opprettBehandling(
+            sakId = sak.id,
+            årsaker = listOf(),
+            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            forrigeBehandlingId = null
+        )
+        return Pair(sak, behandling)
+    }
+
+}

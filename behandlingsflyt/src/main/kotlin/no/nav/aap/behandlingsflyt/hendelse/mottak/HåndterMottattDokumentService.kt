@@ -56,10 +56,6 @@ class HåndterMottattDokumentService(
 
         val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(sak.saksnummer, årsaker)
 
-        // TODO: Evaluer at at behandlingen faktisk kan motta endringene
-        // Står hos beslutter - Hvilke endringer kan da håndteres
-        // P.d.d. ingen da de feilaktig kobles på behandling men ikke tas hensyn til
-
         val behandlingSkrivelås = opprettetBehandling.åpenBehandling?.let {
             låsRepository.låsBehandling(it.id)
         }

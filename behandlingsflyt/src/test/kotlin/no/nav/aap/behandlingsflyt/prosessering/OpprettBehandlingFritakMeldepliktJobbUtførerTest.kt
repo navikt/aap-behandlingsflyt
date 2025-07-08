@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import io.mockk.every
+import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
@@ -32,12 +33,14 @@ import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.motor.JobbInput
+import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.test.Test
 
+@ExtendWith(MockKExtension::class)
 class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
     private val sakId = SakId(123L)
@@ -49,28 +52,31 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
         utfører.utfør(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id))
 
-        verify {sakOgBehandlingServiceMock.finnEllerOpprettBehandlingFasttrack(any<SakId>(), any())}
+        verify { sakOgBehandlingServiceMock.finnEllerOpprettBehandlingFasttrack(any<SakId>(), any()) }
     }
 
     @Test
     fun `Skal ikke opprette revurdering dersom det ikke finnes fritak for meldeplikt`() {
         val sakOgBehandlingServiceMock = mockk<SakOgBehandlingService>()
-        val utfører = mockAvhengigheterForOpprettBehandlingFritakMeldepliktJobbUtfører(sakOgBehandlingServiceMock, fritak = false)
+        val utfører =
+            mockAvhengigheterForOpprettBehandlingFritakMeldepliktJobbUtfører(sakOgBehandlingServiceMock, fritak = false)
 
         utfører.utfør(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id))
 
-        verify(exactly = 0) {sakOgBehandlingServiceMock.finnEllerOpprettBehandlingFasttrack(any<SakId>(), any())}
+        verify(exactly = 0) { sakOgBehandlingServiceMock.finnEllerOpprettBehandlingFasttrack(any<SakId>(), any()) }
     }
 
     @Test
     fun `Skal ikke opprette revurdering dersom det finnes andre åpne behandlinger med årsak fritak meldeplikt`() {
         val sakOgBehandlingServiceMock = mockk<SakOgBehandlingService>()
-        val utfører = mockAvhengigheterForOpprettBehandlingFritakMeldepliktJobbUtfører(sakOgBehandlingServiceMock,
-            årsakerPåTidligereBehandling = listOf(Årsak(ÅrsakTilBehandling.FRITAK_MELDEPLIKT)))
+        val utfører = mockAvhengigheterForOpprettBehandlingFritakMeldepliktJobbUtfører(
+            sakOgBehandlingServiceMock,
+            årsakerPåTidligereBehandling = listOf(Årsak(ÅrsakTilBehandling.FRITAK_MELDEPLIKT))
+        )
 
         utfører.utfør(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id))
 
-        verify(exactly = 0) {sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any())}
+        verify(exactly = 0) { sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any()) }
     }
 
     private fun mockAvhengigheterForOpprettBehandlingFritakMeldepliktJobbUtfører(
@@ -81,7 +87,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
         val sakServiceMock = mockk<SakService>()
         val underveisRepositoryMock = mockk<UnderveisRepository>()
 
-        every {sakServiceMock.hent(any<SakId>())} returns Sak(
+        every { sakServiceMock.hent(any<SakId>()) } returns Sak(
             id = sakId,
             saksnummer = Saksnummer("BLABLA"),
             person = Person(
@@ -102,34 +108,51 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             typeBehandling = TypeBehandling.Revurdering,
             status = Status.OPPRETTET,
             årsaker = årsakerPåTidligereBehandling,
-            stegTilstand = StegTilstand(stegStatus = StegStatus.AVKLARINGSPUNKT, stegType = StegType.FORESLÅ_VEDTAK, aktiv = true),
+            stegTilstand = StegTilstand(
+                stegStatus = StegStatus.AVKLARINGSPUNKT,
+                stegType = StegType.FORESLÅ_VEDTAK,
+                aktiv = true
+            ),
             opprettetTidspunkt = LocalDateTime.now(),
             versjon = 0L
         )
 
-        every {sakOgBehandlingServiceMock.finnSisteYtelsesbehandlingFor(sakId)} returns fakeBehandling
-        every {sakOgBehandlingServiceMock.finnEllerOpprettBehandlingFasttrack(sakId, any())} returns SakOgBehandlingService.Ordinær(fakeBehandling)
+        every { sakOgBehandlingServiceMock.finnSisteYtelsesbehandlingFor(sakId) } returns fakeBehandling
+        every {
+            sakOgBehandlingServiceMock.finnEllerOpprettBehandlingFasttrack(
+                sakId,
+                any()
+            )
+        } returns SakOgBehandlingService.Ordinær(fakeBehandling)
 
-        every {underveisRepositoryMock.hentHvisEksisterer(any())} returns UnderveisGrunnlag(
+        every { underveisRepositoryMock.hentHvisEksisterer(any()) } returns UnderveisGrunnlag(
             id = 1L,
-            perioder = listOf(Underveisperiode(
-                periode = Periode(fom = LocalDate.now().minusDays(10), tom = LocalDate.now().minusDays(10)),
-                meldePeriode = Periode(fom = LocalDate.now().minusDays(10), tom = LocalDate.now().minusDays(10)),
-                utfall = Utfall.OPPFYLT,
-                rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD,
-                avslagsårsak = null,
-                grenseverdi = Prosent(50),
-                institusjonsoppholdReduksjon = Prosent(0),
-                arbeidsgradering = ArbeidsGradering(TimerArbeid(BigDecimal.ZERO), Prosent(0), Prosent(0), Prosent(0), null),
-                trekk = Dagsatser(0),
-                brukerAvKvoter = setOf(),
-                bruddAktivitetspliktId = null,
-                meldepliktStatus = if (fritak) MeldepliktStatus.FRITAK else MeldepliktStatus.IKKE_MELDT_SEG,
-                id = UnderveisperiodeId(3)
-            ))
+            perioder = listOf(
+                Underveisperiode(
+                    periode = Periode(fom = LocalDate.now().minusDays(10), tom = LocalDate.now().minusDays(10)),
+                    meldePeriode = Periode(fom = LocalDate.now().minusDays(10), tom = LocalDate.now().minusDays(10)),
+                    utfall = Utfall.OPPFYLT,
+                    rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD,
+                    avslagsårsak = null,
+                    grenseverdi = Prosent(50),
+                    institusjonsoppholdReduksjon = Prosent(0),
+                    arbeidsgradering = ArbeidsGradering(
+                        TimerArbeid(BigDecimal.ZERO),
+                        Prosent(0),
+                        Prosent(0),
+                        Prosent(0),
+                        null
+                    ),
+                    trekk = Dagsatser(0),
+                    brukerAvKvoter = setOf(),
+                    bruddAktivitetspliktId = null,
+                    meldepliktStatus = if (fritak) MeldepliktStatus.FRITAK else MeldepliktStatus.IKKE_MELDT_SEG,
+                    id = UnderveisperiodeId(3)
+                )
+            )
         )
 
-        every {sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any())} returns fakeBehandling
+        every { sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any()) } returns fakeBehandling
 
         return OpprettBehandlingFritakMeldepliktJobbUtfører(
             sakService = sakServiceMock,

@@ -11,7 +11,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonTypeName(value = MANUELT_SATT_PÅ_VENT_KODE)
 class SattPåVentLøsning(
-    @JsonProperty(
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = MANUELT_SATT_PÅ_VENT_KODE

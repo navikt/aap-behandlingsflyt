@@ -43,9 +43,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         }
         val saksnummer = Saksnummer.valueOf(sakId)
         val keys = connection.executeReturnKey(
-            "INSERT INTO " +
-                    "SAK (saksnummer, person_id, rettighetsperiode, status) " +
-                    "VALUES (?, ?, ?::daterange, ?)"
+            """INSERT INTO SAK (saksnummer, person_id, rettighetsperiode, status) VALUES (?, ?, ?::daterange, ?)"""
         ) {
             setParams {
                 setString(1, saksnummer.toString())

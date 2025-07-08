@@ -100,7 +100,7 @@ class BarnService private constructor(
                 opplysning.fødselsdato,
                 opplysning.dødsdato
             )
-        }?.toSet() ?: setOf()
+        }.orEmpty().toSet()
 
         return barn.toSet() != eksisterendeData
     }

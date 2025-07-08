@@ -91,9 +91,7 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
         }
         if (nyeIdenter.isNotEmpty()) {
             connection.executeBatch(
-                "INSERT INTO " +
-                        "PERSON_IDENT (ident, primaer, person_id) " +
-                        "VALUES (?, ?, ?)", nyeIdenter
+                """INSERT INTO PERSON_IDENT (ident, primaer, person_id) VALUES (?, ?, ?)""", nyeIdenter
             ) {
                 setParams { ident ->
                     setString(1, ident.identifikator)
@@ -154,18 +152,14 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
     private fun opprettPerson(identer: List<Ident>): Person {
         val identifikator = UUID.randomUUID()
         val personId = connection.executeReturnKey(
-            "INSERT INTO " +
-                    "PERSON (referanse) " +
-                    "VALUES (?)"
+            """INSERT INTO PERSON (referanse) VALUES (?)"""
         ) {
             setParams {
                 setUUID(1, identifikator)
             }
         }
         connection.executeBatch(
-            "INSERT INTO " +
-                    "PERSON_IDENT (ident, primaer, person_id) " +
-                    "VALUES (?, ?, ?)", identer
+            """INSERT INTO PERSON_IDENT (ident, primaer, person_id) VALUES (?, ?, ?)""", identer
         ) {
             setParams { ident ->
                 setString(1, ident.identifikator)
@@ -179,10 +173,7 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
 
     override fun finn(ident: Ident): Person? {
         return connection.queryFirstOrNull(
-            "SELECT DISTINCT p.id, p.referanse " +
-                    "FROM PERSON p " +
-                    "INNER JOIN PERSON_IDENT pi ON pi.person_id = p.id " +
-                    "WHERE pi.ident = ?"
+            """SELECT DISTINCT p.id, p.referanse FROM PERSON p INNER JOIN PERSON_IDENT pi ON pi.person_id = p.id WHERE pi.ident = ?"""
         ) {
             setParams {
                 setString(1, ident.identifikator)

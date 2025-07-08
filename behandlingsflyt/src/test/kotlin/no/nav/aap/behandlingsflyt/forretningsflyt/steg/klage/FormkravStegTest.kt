@@ -42,6 +42,7 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
 @ExtendWith(MockKExtension::class)
+@MockKExtension.CheckUnnecessaryStub
 class FormkravStegTest {
     val trekkKlageServiceMock = mockk<TrekkKlageService>()
     val formkravRepositoryMock = mockk<FormkravRepository>()
@@ -58,10 +59,7 @@ class FormkravStegTest {
         every { LocalDateTime.now() } answers { start.plusMinutes(counter.getAndIncrement().toLong()) }
 
         every { trekkKlageServiceMock.klageErTrukket(any()) } returns false
-        every { behandlingRepositoryMock.hent(any<BehandlingId>()) } returns tomBehandling(BehandlingId(1L))
-        every { formkravRepositoryMock.lagreVarsel(any(), any()) } returns Unit
         every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns null
-        every { brevbestillingServiceMock.bestillV2(any(), any(), any(), any()) } returns UUID.randomUUID()
         InMemoryAvklaringsbehovRepository.clearMemory()
     }
 
@@ -107,6 +105,17 @@ class FormkravStegTest {
 
     @Test
     fun `FormkravSteg-utfører skal gi avklaringsbehov FULLFØRT om man har løst avklaringsbehovet og vurderingen er at man har opprettholdt avklaringsbehovene`() {
+        every { brevbestillingServiceMock.hentBestillinger(any(), any()) } returns listOf(
+            Brevbestilling(
+                id = 1L,
+                behandlingId = BehandlingId(1L),
+                typeBrev = TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV,
+                referanse = BrevbestillingReferanse(UUID.randomUUID()),
+                status = Status.FULLFØRT,
+                opprettet = LocalDateTime.now(),
+            )
+        )
+
         val kontekst = FlytKontekstMedPerioder(
             sakId = SakId(1L),
             behandlingId = BehandlingId(2L),
@@ -216,6 +225,10 @@ class FormkravStegTest {
 
     @Test
     fun `FormkravSteg-utfører skal gi avklaringsbehov SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV og bestille brev om man har lagret en vurdering med ikke-oppfylte formkrav`() {
+        every { behandlingRepositoryMock.hent(any<BehandlingId>()) } returns tomBehandling(BehandlingId(1L))
+        every { brevbestillingServiceMock.bestillV2(any(), any(), any(), any()) } returns UUID.randomUUID()
+        every { formkravRepositoryMock.lagreVarsel(any(), any()) } returns Unit
+
         val kontekst = FlytKontekstMedPerioder(
             sakId = SakId(1L),
             behandlingId = BehandlingId(1L),
@@ -328,7 +341,12 @@ class FormkravStegTest {
             )
         )
 
-        every { brevbestillingServiceMock.hentBestillinger(any(), any()) } returns listOf(forhåndsvarselBrevbestilling(1L, 1L))
+        every { brevbestillingServiceMock.hentBestillinger(any(), any()) } returns listOf(
+            forhåndsvarselBrevbestilling(
+                1L,
+                1L
+            )
+        )
 
 
         val resultat = steg.utfør(kontekst)
@@ -389,14 +407,23 @@ class FormkravStegTest {
             )
         )
 
-        every { brevbestillingServiceMock.hentBestillinger(any(), any()) } returns listOf(forhåndsvarselBrevbestilling(1L, 1L))
+        every { brevbestillingServiceMock.hentBestillinger(any(), any()) } returns listOf(
+            forhåndsvarselBrevbestilling(
+                1L,
+                1L
+            )
+        )
 
         val resultat = steg.utfør(kontekst)
         assertThat(resultat).isEqualTo(Fullført)
     }
 
     private fun tomBehandling(behandlingId: BehandlingId) = Behandling(
-        behandlingId, sakId = SakId(1), typeBehandling = TypeBehandling.Førstegangsbehandling, forrigeBehandlingId = null, versjon = 1
+        behandlingId,
+        sakId = SakId(1),
+        typeBehandling = TypeBehandling.Førstegangsbehandling,
+        forrigeBehandlingId = null,
+        versjon = 1
     )
 
     private fun forhåndsvarselBrevbestilling(id: Long, behandlingId: Long) = Brevbestilling(

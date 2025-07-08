@@ -123,27 +123,17 @@ private fun genererBarn(dto: TestBarn): TestPerson {
 }
 
 fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): SøknadV0 {
-    val erStudent = if (dto.student) {
-        "JA"
-    } else {
-        "NEI"
-    }
-    val harYrkesskade = if (dto.yrkesskade) {
-        "JA"
-    } else {
-        "NEI"
-    }
+    val erStudent = if (dto.student) "JA" else "NEI"
+    val harYrkesskade = if (dto.yrkesskade) "JA" else "NEI"
+
     val oppgitteBarn = if (urelaterteBarn.isNotEmpty()) {
-        OppgitteBarn(identer = urelaterteBarn.flatMap { it.identer.filter { it.aktivIdent } }
+        OppgitteBarn(identer = urelaterteBarn
+            .flatMap { it.identer.filter { it.aktivIdent } }
             .map { Ident(it.identifikator) }.toSet())
     } else {
         null
     }
-    val harMedlemskap = if (dto.medlemskap) {
-        "JA"
-    } else {
-        "NEI"
-    }
+    val harMedlemskap = if (dto.medlemskap) "JA" else "NEI"
     return SøknadV0(
         student = SøknadStudentDto(erStudent), harYrkesskade, oppgitteBarn,
         medlemskap = SøknadMedlemskapDto(harMedlemskap, null, null, null, listOf())

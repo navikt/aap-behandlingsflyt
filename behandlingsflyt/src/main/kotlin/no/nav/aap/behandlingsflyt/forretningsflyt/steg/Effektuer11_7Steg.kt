@@ -101,6 +101,7 @@ class Effektuer11_7Steg(
             val vårReferanse = "${behandling.referanse}-$typeBrev-${effektuer117grunnlag?.varslinger?.size ?: 0}"
 
             // TODO: skulle gjerne "avbrutt" tidligere bestilling av brev, det er mulig i dag.
+            //       PS: brev kommer ikke til å sendes fra behandlingsflyt lenger i ny løsning
             val brevReferanse = brevbestillingService.bestillV2(
                 behandlingId = kontekst.behandlingId,
                 typeBrev = typeBrev,

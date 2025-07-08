@@ -14,8 +14,11 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_SAMORDNING_GRADERING_KODE)
 class AvklarSamordningGraderingLøsning(
-    @JsonProperty("vurderingerForSamordning", required = true) val vurderingerForSamordning: VurderingerForSamordning,
-    @JsonProperty(
+    @param:JsonProperty(
+        "vurderingerForSamordning",
+        required = true
+    ) val vurderingerForSamordning: VurderingerForSamordning,
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = AVKLAR_SAMORDNING_GRADERING_KODE

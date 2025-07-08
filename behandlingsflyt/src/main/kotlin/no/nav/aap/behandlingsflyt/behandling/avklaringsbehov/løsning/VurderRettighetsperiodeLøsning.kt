@@ -12,11 +12,11 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonTypeName(value = VURDER_RETTIGHETSPERIODE_KODE)
 class VurderRettighetsperiodeLøsning(
-    @JsonProperty(
+    @param:JsonProperty(
         "rettighetsperiodeVurdering",
         required = true
     ) val rettighetsperiodeVurdering: RettighetsperiodeVurderingDTO,
-    @JsonProperty("behovstype", required = true, defaultValue = VURDER_RETTIGHETSPERIODE_KODE)
+    @param:JsonProperty("behovstype", required = true, defaultValue = VURDER_RETTIGHETSPERIODE_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5029`
 ) : AvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {

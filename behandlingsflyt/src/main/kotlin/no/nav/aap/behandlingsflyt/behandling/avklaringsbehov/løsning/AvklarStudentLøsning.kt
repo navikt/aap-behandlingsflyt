@@ -14,8 +14,8 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_STUDENT_KODE)
 class AvklarStudentLøsning(
-    @JsonProperty("studentvurdering", required = true) val studentvurdering: StudentVurderingDTO,
-    @JsonProperty(
+    @param:JsonProperty("studentvurdering", required = true) val studentvurdering: StudentVurderingDTO,
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = AVKLAR_STUDENT_KODE

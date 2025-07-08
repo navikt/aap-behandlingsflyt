@@ -54,7 +54,7 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
 
         val status = requireNotNull(response.data?.hentPerson?.folkeregisterpersonstatus?.firstOrNull()?.status)
 
-        val statsborgerskap = requireNotNull(response.data?.hentPerson?.statsborgerskap?.map {
+        val statsborgerskap = requireNotNull(response.data.hentPerson.statsborgerskap?.map {
             Statsborgerskap(
                 land = it.land,
                 gyldigFraOgMed = it.gyldigFraOgMed,
@@ -65,10 +65,10 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
         return Personopplysning(
             id = 0, // Setter no bs her for å få det gjennom
             fødselsdato = foedselsdato,
-            dødsdato = response.data?.hentPerson?.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) },
+            dødsdato = response.data.hentPerson.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) },
             statsborgerskap = statsborgerskap,
             status = status,
-            utenlandsAddresser = mapUtenlandsAdresser(response.data?.hentPerson)
+            utenlandsAddresser = mapUtenlandsAdresser(response.data.hentPerson)
         )
     }
 

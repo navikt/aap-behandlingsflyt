@@ -41,18 +41,18 @@ public data class SøknadMedlemskapDto(
     val harBoddINorgeSiste5År: String?,
     val harArbeidetINorgeSiste5År: String?,
     val arbeidetUtenforNorgeFørSykdom: String?,
-    @JsonAlias("itilleggArbeidUtenforNorge") val iTilleggArbeidUtenforNorge: String?,
+    @param:JsonAlias("itilleggArbeidUtenforNorge") val iTilleggArbeidUtenforNorge: String?,
     val utenlandsOpphold: List<UtenlandsPeriodeDto>?
 )
 
 /**
-* @param iArbeid Lovlig verdi er "ja/jA/Ja/JA". Alt annet blir tolket som false.
+ * @param iArbeid Lovlig verdi er "ja/jA/Ja/JA". Alt annet blir tolket som false.
  */
 public data class UtenlandsPeriodeDto(
     val land: String?,
     val tilDato: LocalDate?,
     val fraDato: LocalDate?,
-    @JsonAlias("iarbeid") val iArbeid: String?,
+    @param:JsonAlias("iarbeid") val iArbeid: String?,
     val utenlandsId: String?,
     val tilDatoLocalDate: LocalDate?,
     val fraDatoLocalDate: LocalDate?

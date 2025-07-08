@@ -349,8 +349,6 @@ object FakeServers : AutoCloseable {
             post {
                 val req = call.receive<PdlRequest>()
 
-                FakePersoner.hentPerson(req.query)
-
                 when (req.query) {
                     IDENT_QUERY -> call.respond(identer(req))
                     PERSON_QUERY -> call.respond(personopplysninger(req))
@@ -1425,7 +1423,7 @@ object FakeServers : AutoCloseable {
             person = PdlPersoninfo(
                 foedselsdato = listOf(
                     PdlFoedsel(
-                        person.fødselsdato.toFormatedString(),
+                        person.fødselsdato.toFormattedString(),
                         "" + person.fødselsdato.toLocalDate().year
                     )
                 ),
@@ -1511,7 +1509,7 @@ object FakeServers : AutoCloseable {
                 hentPerson = PdlPersoninfo(
                     foedselsdato = listOf(
                         PdlFoedsel(
-                            testPerson.fødselsdato.toFormatedString(),
+                            testPerson.fødselsdato.toFormattedString(),
                             "" + testPerson.fødselsdato.toLocalDate().year
                         )
                     ),
@@ -1532,7 +1530,7 @@ object FakeServers : AutoCloseable {
                     PdlPersoninfo(
                         foedselsdato = listOf(
                             PdlFoedsel(
-                                person.fødselsdato.toFormatedString(),
+                                person.fødselsdato.toFormattedString(),
                                 "" + person.fødselsdato.toLocalDate().year
                             )
                         ),

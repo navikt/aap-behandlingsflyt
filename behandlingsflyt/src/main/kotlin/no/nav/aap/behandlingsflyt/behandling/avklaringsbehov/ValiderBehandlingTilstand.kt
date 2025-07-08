@@ -22,10 +22,18 @@ internal object ValiderBehandlingTilstand {
             if (!eksisterendeAvklaringsbehov.map { a -> a.definisjon }
                     .contains(avklaringsbehov) && !avklaringsbehov.erFrivillig() && !avklaringsbehov.erOverstyring()) {
                 log.warn("Forsøker å løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen, har $eksisterendeAvklaringsbehov")
-                throw UgyldigForespørselException("Forsøker å løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen, har $eksisterendeAvklaringsbehov")
+                throw UgyldigForespørselException(
+                    "Forsøker å løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen, har $eksisterendeAvklaringsbehov. Åpne behov: ${
+                        eksisterendeAvklaringsbehov.filter { it.erÅpent() }.map { it.definisjon }
+                    }"
+                )
             }
             val flyt = behandling.flyt()
-            if (!flyt.erStegFørEllerLik(avklaringsbehov.løsesISteg, behandling.aktivtSteg()) && !avklaringsbehov.erVentebehov()) {
+            if (!flyt.erStegFørEllerLik(
+                    avklaringsbehov.løsesISteg,
+                    behandling.aktivtSteg()
+                ) && !avklaringsbehov.erVentebehov()
+            ) {
                 val errorMsg = "Forsøker å løse avklaringsbehov $avklaringsbehov som er definert i et steg etter " +
                         "nåværende steg[${behandling.aktivtSteg()}] ${
                             behandling.typeBehandling().toLogString()

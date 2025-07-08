@@ -67,22 +67,40 @@ internal class BarnRepositoryImplTest {
             behandling
         }
 
-        dataSource.transaction { connection ->
+        val barn = dataSource.transaction { connection ->
             val barnRepository = BarnRepositoryImpl(connection)
-            val barn = barnRepository.hent(behandling.id)
-            assertThat(barn.registerbarn?.identer).containsExactlyInAnyOrderElementsOf(barnListe)
-            assertThat(barn.oppgitteBarn?.identer).containsExactly(Ident("1"))
-            assertThat(barn.vurderteBarn?.barn).isEqualTo(vurderteBarn)
+            barnRepository.hent(behandling.id)
         }
 
+        assertThat(barn.registerbarn?.identer).containsExactlyInAnyOrderElementsOf(barnListe)
+        assertThat(barn.oppgitteBarn?.identer).containsExactly(Ident("1"))
+        assertThat(barn.vurderteBarn?.barn).isEqualTo(vurderteBarn)
+
         dataSource.transaction { connection ->
-            {
-                val barnRepository = BarnRepositoryImpl(connection)
-                // Slette
-                barnRepository.slett(behandling.id)
-                assertThat(barnRepository.hentHvisEksisterer(behandling.id)).isNull()
-            }
+
+            val barnRepository = BarnRepositoryImpl(connection)
+            // Slette
+            barnRepository.slett(behandling.id)
+            assertThat(barnRepository.hentHvisEksisterer(behandling.id)).isNull()
+
         }
+    }
+
+    @Test
+    fun `lagre kun registerbarn`() {
+        val behandling = dataSource.transaction { connection ->
+            val sak = sak(connection)
+            finnEllerOpprettBehandling(connection, sak)
+        }
+        dataSource.transaction {
+            BarnRepositoryImpl(it).lagreRegisterBarn(behandling.id, setOf(Ident("12"), Ident("32323")))
+        }
+
+        val uthentet = dataSource.transaction {
+            BarnRepositoryImpl(it).hent(behandling.id)
+        }
+
+        assertThat(uthentet.registerbarn?.identer).containsExactlyInAnyOrder(Ident("12"), Ident("32323"))
     }
 
     @Test

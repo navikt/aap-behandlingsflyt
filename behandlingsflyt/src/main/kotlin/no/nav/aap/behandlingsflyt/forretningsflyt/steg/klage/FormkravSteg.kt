@@ -1,11 +1,14 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
@@ -52,24 +55,33 @@ class FormkravSteg (
 
         // Hvis formkravet er oppfyllt eller fristen ikke er overholdt skal vi bare gå videre til neste steg
         if (grunnlag.vurdering.erOppfylt() || grunnlag.vurdering.erFristIkkeOverholdt()) {
+            slettForhåndsvarselbrevSomIkkeErSendt(kontekst.behandlingId)
             return Fullført
         }
 
         // Hvis grunnlaget ikke er oppfyllt men fristen er overholdt så skal det sendes fårhåndsvarsel om det ikke allerede er sendt
-        if (!harAlleredeSendtFårhåndsvarselBrev(kontekst.behandlingId)) {
+        val brevbestilling = hentBrevbestilling(kontekst.behandlingId)
+        if (brevbestilling == null) {
             val brevReferanse = bestillFårhåndsvarselBrev(kontekst.behandlingId)
             formkravRepository.lagreVarsel(kontekst.behandlingId, brevReferanse)
             return FantAvklaringsbehov(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
         }
 
+        // Brevet av avbrutt, dette skjer om det er besillt et brev og så endrer man avklaringsbehovene så det ikke trengs
+        // før det ble sendt. Vi må da bare gjenåpne brevet.
+        if (brevbestilling.status == Status.AVBRUTT) {
+            brevbestillingService.oppdaterStatus(kontekst.behandlingId, brevbestilling.referanse, Status.FORHÅNDSVISNING_KLAR)
+            return FantAvklaringsbehov(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
+        }
+
         // Er vi innenfor fristen på forhåndsvarselet og man formkravet fortsatt ikke er oppfyllt har bruker rett til
         // å rette opp i formkravene fram til fristen. Saken settes derfor på vent. Om man er etter fristen går vi videre
-        // til neste steg
+        // til neste steg|
         val venteBehov = avklaringsbehov.hentBehovForDefinisjon(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV)
         val varslingstidpunkt = grunnlag.varsel?.sendtDato ?: throw IllegalStateException(
             "Fant ikke varslingstidspunkt"
         )
-        val frist = grunnlag.varsel?.svarfrist ?: throw IllegalStateException(
+        val frist = grunnlag.varsel.svarfrist ?: throw IllegalStateException(
             "Fant ikke frist"
         )
 
@@ -89,19 +101,23 @@ class FormkravSteg (
         return Fullført
     }
 
-    private fun harAlleredeSendtFårhåndsvarselBrev(behandlingId: BehandlingId): Boolean {
-        val eksisterendeBrevBestilling = brevbestillingService.hentBestillinger(behandlingId, typeBrev)
-                .maxByOrNull { it.opprettet }
+    private fun hentBrevbestilling(behandlingId: BehandlingId): Brevbestilling? {
+        return brevbestillingService.hentBestillinger(behandlingId, typeBrev)
+            .maxByOrNull { it.opprettet }
+    }
 
-        if (eksisterendeBrevBestilling == null) {
-            return false
+    private fun slettForhåndsvarselbrevSomIkkeErSendt(behandlingId: BehandlingId) {
+        brevbestillingService.hentBestillinger(behandlingId, typeBrev)
+            .filter { it.status == Status.FORHÅNDSVISNING_KLAR }
+            .map { brevbestillingService.avbryt(behandlingId, it.referanse) }
+
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
+        val avklaringForhåndsvarsel = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
+
+        if (avklaringForhåndsvarsel != null && avklaringForhåndsvarsel.status().erÅpent()) {
+            avklaringsbehovene.løsAvklaringsbehov(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV, "", SYSTEMBRUKER.ident)
         }
 
-        check(eksisterendeBrevBestilling.status == FULLFØRT) {
-            "Brevet er ikke fullført, men brev-service har ikke opprettet SKRIV_BREV-behov"
-        }
-
-        return true
     }
 
 

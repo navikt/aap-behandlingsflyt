@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.avløp
 
-import io.mockk.checkUnnecessaryStub
 import io.mockk.every
+import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
@@ -25,9 +25,12 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
 import java.util.*
 
+@ExtendWith(MockKExtension::class)
+@MockKExtension.CheckUnnecessaryStub
 class BehandlingHendelseServiceTest {
     @Test
     fun `verifiser at FlytJobbRepository blir kalt med riktige argumenter`() {
@@ -72,7 +75,5 @@ class BehandlingHendelseServiceTest {
 
         val hendelse = DefaultJsonMapper.fromJson<BehandlingFlytStoppetHendelse>(calls.first().payload())
         assertThat(hendelse.referanse.referanse).isEqualTo(behandling.referanse.referanse)
-
-        checkUnnecessaryStub(flytJobbRepository, vilkårsresultatRepository)
     }
 }
