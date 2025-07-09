@@ -193,10 +193,7 @@ class Effektuer11_7StegTest {
         )
 
         steg.bestillBrev(
-            behandling = behandling,
-            sak = sak,
-            kontekst = kontekst,
-            brevbestillingGateway = brevbestillingGateway
+            behandling = behandling, sak = sak, kontekst = kontekst, brevbestillingGateway = brevbestillingGateway
         )
         InMemoryAvklaringsbehovRepository
 
@@ -260,11 +257,8 @@ class Effektuer11_7StegTest {
 
     private fun nySak() = InMemorySakRepository.finnEllerOpprett(
         person = Person(
-            id = 0,
-            identifikator = UUID.randomUUID(),
-            identer = listOf(Ident("0".repeat(11)))
-        ),
-        periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+            id = 0, identifikator = UUID.randomUUID(), identer = listOf(Ident("0".repeat(11)))
+        ), periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
     )
 
     private fun effektuer11_7steg() = Effektuer11_7Steg(
@@ -304,9 +298,7 @@ class Effektuer11_7StegTest {
     )
 
     private fun kontekst(
-        sak: Sak,
-        behandlingId: BehandlingId,
-        typeBehandling: TypeBehandling
+        sak: Sak, behandlingId: BehandlingId, typeBehandling: TypeBehandling
     ): FlytKontekstMedPerioder {
         val vurderingType = when (typeBehandling) {
             TypeBehandling.Førstegangsbehandling -> VurderingType.FØRSTEGANGSBEHANDLING

@@ -276,7 +276,6 @@ object FakeServers : AutoCloseable {
                     }
                 }
                 get {
-                    val params = call.queryParameters
                     call.respond(
                         HttpStatusCode.OK, listOf(
                             HentSamIdResponse(
