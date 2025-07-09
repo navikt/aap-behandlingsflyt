@@ -41,8 +41,9 @@ enum class Hjemmel(val hjemmel: String) {
     // FOLKETRYGDLOVEN_11_30("§ 11-30"), // Ikke relevant
     FOLKETRYGDLOVEN_11_31("§ 11-31"), // TODO: Hva kan klages på her?
 
-    // FOLKETRYGDLOVEN_21_3("§ 21-3"), // Ikke aktuelt som hjemmel for omgjøring
-    FOLKETRYGDLOVEN_22_13("§  "), // TODO: Hva kan klages på her?
+    FOLKETRYGDLOVEN_21_3("§ 21-3"), // Ikke aktuelt som hjemmel for omgjøring
+    FOLKETRYGDLOVEN_21_7("§ 21-7"), // Ikke aktuelt som hjemmel for omgjøring
+    FOLKETRYGDLOVEN_22_13("§ 22-13"), // TODO: Hva kan klages på her?
     FOLKETRYGDLOVEN_22_15("§ 22-15"), // TODO: Må videre til Team Tilbake?
     FOLKETRYGDLOVEN_22_17("§ 22-17"); // TODO: Hva kan klages på her?
     // AVREGNING("Avregning"); // Kan ikke klage på avregning
@@ -91,6 +92,8 @@ enum class Hjemmel(val hjemmel: String) {
             FOLKETRYGDLOVEN_11_23_OVERGNG_ARB,
             FOLKETRYGDLOVEN_11_29,
             FOLKETRYGDLOVEN_11_31,
+            FOLKETRYGDLOVEN_21_3,
+            FOLKETRYGDLOVEN_21_7,
             FOLKETRYGDLOVEN_22_13,
             FOLKETRYGDLOVEN_22_15,
             FOLKETRYGDLOVEN_22_17 -> throw IllegalStateException("Ingen ÅrsaTilBehandling-mapping er implementert for klage på hjemmel $name ($hjemmel).")
