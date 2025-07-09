@@ -130,17 +130,17 @@ class BehandlingHendelseServiceImpl(
             JobbInput(jobb = StatistikkJobbUtfører).medPayload(hendelse)
                 .forBehandling(sak.id.id, behandling.id.id)
         )
-        flytJobbRepository.leggTil(
-            JobbInput(jobb = DatadelingMeldePerioderJobbUtfører).medPayload(hendelse)
-                .forBehandling(sak.id.id, behandling.id.id)
-        )
-
-        flytJobbRepository.leggTil(
-            JobbInput(jobb = DatadelingSakStatusJobbUtfører).medPayload(hendelse)
-                .forBehandling(sak.id.id, behandling.id.id)
-        )
 
         if (behandling.typeBehandling() in listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)) {
+            flytJobbRepository.leggTil(
+                JobbInput(jobb = DatadelingMeldePerioderJobbUtfører).medPayload(hendelse)
+                    .forBehandling(sak.id.id, behandling.id.id)
+            )
+
+            flytJobbRepository.leggTil(
+                JobbInput(jobb = DatadelingSakStatusJobbUtfører).medPayload(hendelse)
+                    .forBehandling(sak.id.id, behandling.id.id)
+            )
             flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, behandling.id))
         }
     }

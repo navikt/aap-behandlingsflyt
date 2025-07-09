@@ -167,6 +167,19 @@ class SakOgBehandlingService(
         )
     }
 
+    private fun opprettOppfølgingsbehandling(sisteYtelsesbehandling: Behandling): Behandling {
+        requireNotNull(sisteYtelsesbehandling) {
+            "Mottok oppfølgingsbehandling, men det finnes ingen eksisterende behandling. Behandling-ID: ${sisteYtelsesbehandling.id}"
+        }
+
+        return behandlingRepository.opprettBehandling(
+            sisteYtelsesbehandling.sakId,
+            årsaker = listOf(),
+            typeBehandling = TypeBehandling.OppfølgingsBehandling,
+            forrigeBehandlingId = null
+        )
+    }
+
     private fun opprettSvarFraKlageenhetBehandling(
         sisteYtelsesbehandling: Behandling?,
         årsaker: List<Årsak>

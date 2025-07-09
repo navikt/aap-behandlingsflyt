@@ -79,7 +79,7 @@ class InntektService private constructor(
                     Input(
                         nedsettelsesDato = nedsettelsesDato,
                         inntekter = setOf(),
-                        uføregrad = uføreGrunnlag?.vurderinger ?: emptyList(),
+                        uføregrad = uføreGrunnlag?.vurderinger.orEmpty(),
                         yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
                         registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
                         beregningGrunnlag = beregningVurdering
