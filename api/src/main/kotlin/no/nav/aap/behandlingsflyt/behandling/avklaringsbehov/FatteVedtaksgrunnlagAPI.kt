@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Aksjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.DefinisjonEndring
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Historikk
@@ -59,6 +60,16 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource, repository
                     val flyt = behandling.flyt()
 
                     val vurderinger = beslutterVurdering(avklaringsbehovene, flyt)
+                    val historikk = utledHistorikk(avklaringsbehovene)
+
+                    val beslutter = historikk
+                        .filter { it.aksjon == Aksjon.FATTET_VEDTAK }
+                        .maxByOrNull { it.tidspunkt }
+                        ?.let { historikkInnlslag ->
+                            AnsattInfoService().hentAnsattNavnOgEnhet(historikkInnlslag.avIdent)?.let {
+                                BeslutterDto(navn = it.navn, kontor = it.enhet, tidspunkt = historikkInnlslag.tidspunkt, ident = historikkInnlslag.avIdent)
+                            }
+                        }
 
                     FatteVedtakGrunnlagDto(
                         harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(
@@ -68,7 +79,8 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource, repository
                             bruker()
                         ),
                         vurderinger = vurderinger,
-                        historikk = utledHistorikk(avklaringsbehovene)
+                        historikk = historikk,
+                        besluttetAv = beslutter
                     )
                 }
                 respond(dto)
