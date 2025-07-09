@@ -42,6 +42,7 @@ class StartBehandlingSteg private constructor(
         }
 
         if (kontekst.behandlingType == TypeBehandling.Revurdering) {
+            // DEnne kan nok fjernes etterhvert
             if (kontekst.årsakerTilBehandling.contains(ÅrsakTilBehandling.REVURDER_SAMORDNING)) {
                 val ventTil =
                     requireNotNull(samordningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId))

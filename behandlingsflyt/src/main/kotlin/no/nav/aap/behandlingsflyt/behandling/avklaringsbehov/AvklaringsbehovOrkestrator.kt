@@ -27,7 +27,7 @@ class AvklaringsbehovOrkestrator(
     private val behandlingRepository: BehandlingRepository,
     private val prosesserBehandling: ProsesserBehandlingService,
 ) {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         repositoryProvider = repositoryProvider,
         behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider),
         flytOrkestrator = FlytOrkestrator(repositoryProvider),
@@ -53,10 +53,6 @@ class AvklaringsbehovOrkestrator(
             kontekst, ingenEndringIGruppe, avklaringsbehovene, bruker
         )
 
-        fortsettProsessering(kontekst)
-    }
-
-    private fun fortsettProsessering(kontekst: FlytKontekst) {
         prosesserBehandling.triggProsesserBehandling(kontekst.sakId, kontekst.behandlingId)
     }
 

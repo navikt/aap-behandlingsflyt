@@ -114,9 +114,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-
 @Fakes
-open class AbstraktFlytOrkestratorTest {
+abstract class AbstraktFlytOrkestratorTest {
     companion object {
         @JvmStatic
         protected val dataSource = InitTestDatabase.freshDatabase()
@@ -169,7 +168,7 @@ open class AbstraktFlytOrkestratorTest {
         @AfterAll
         @JvmStatic
         internal fun afterAll() {
-//            motor.stop()
+            motor.stop()
         }
     }
 
@@ -217,7 +216,7 @@ open class AbstraktFlytOrkestratorTest {
     }
 
 
-    fun happyCaseFørstegangsbehandling(): Sak {
+    fun happyCaseFørstegansbehandling(): Sak {
         val fom = LocalDate.now().minusMonths(3)
         val periode = Periode(fom, fom.plusYears(3))
 
@@ -735,20 +734,11 @@ open class AbstraktFlytOrkestratorTest {
         return fattVedtakEllerSendRetur(this, returVed)
     }
 
-    class BehandlingInfo(
-        val åpneAvklaringsbehov: List<Avklaringsbehov>,
-        val behandling: Behandling,
-        val ventebehov: List<Avklaringsbehov>
-    )
+    class BehandlingInfo(val åpneAvklaringsbehov: List<Avklaringsbehov>, val behandling: Behandling)
 
     protected fun Behandling.medKontekst(block: BehandlingInfo.() -> Unit): Behandling {
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(this)
-        block(
-            BehandlingInfo(
-                åpneAvklaringsbehov = åpneAvklaringsbehov,
-                behandling = this,
-                ventebehov = åpneAvklaringsbehov.filter { it.erVentepunkt() })
-        )
+        block(BehandlingInfo(åpneAvklaringsbehov = åpneAvklaringsbehov, behandling = this))
         return this
     }
 
@@ -850,4 +840,5 @@ open class AbstraktFlytOrkestratorTest {
             }
         }
     }
+
 }
