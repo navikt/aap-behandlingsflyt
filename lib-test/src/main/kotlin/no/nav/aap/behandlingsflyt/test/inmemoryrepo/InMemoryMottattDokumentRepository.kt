@@ -54,7 +54,7 @@ object InMemoryMottattDokumentRepository : MottattDokumentRepository {
         dokumentReferanse: InnsendingReferanse,
         behandlingId: BehandlingId,
         sakId: SakId,
-        status: no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
+        status: Status
     ) {
         synchronized(lock) {
             memory

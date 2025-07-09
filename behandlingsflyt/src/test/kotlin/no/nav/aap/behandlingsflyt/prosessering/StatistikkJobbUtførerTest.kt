@@ -16,14 +16,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentRekkefølge
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Ufullstendig
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.ÅrsakTilUfullstendigResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -58,13 +54,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.pip.IdentPåSak
 import no.nav.aap.behandlingsflyt.pip.PipRepository
-import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -81,6 +75,7 @@ import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
@@ -281,14 +276,14 @@ class StatistikkJobbUtførerTest {
                     Vilkår(
                         type = Vilkårtype.MEDLEMSKAP, vilkårsperioder = setOf(
                             Vilkårsperiode(
-                                periode,
-                                Utfall.OPPFYLT,
-                                false,
-                                "ignorert",
-                                null,
-                                null,
-                                null,
-                                "123"
+                                periode = periode,
+                                utfall = Utfall.OPPFYLT,
+                                manuellVurdering = false,
+                                begrunnelse = "ignorert",
+                                innvilgelsesårsak = null,
+                                avslagsårsak = null,
+                                faktagrunnlag = null,
+                                versjon = "123"
                             )
                         )
                     )
@@ -484,7 +479,6 @@ class StatistikkJobbUtførerTest {
             typeBehandling = TypeBehandling.Klage,
             forrigeBehandlingId = null
         )
-        val behandlingId = behandling.id
         val referanse = behandling.referanse
 
         val tilkjentYtelseRepository = InMemoryTilkjentYtelseRepository
@@ -495,69 +489,29 @@ class StatistikkJobbUtførerTest {
         val nå = LocalDateTime.now()
         val tidligsteMottattTid = nå.minusDays(3)
 
-        val dokumentRepository = object : MottattDokumentRepository {
-            override fun lagre(mottattDokument: MottattDokument) {
-                TODO("Not yet implemented")
-            }
-
-            override fun slett(behandlingId: BehandlingId) {
-            }
-
-            override fun oppdaterStatus(
-                dokumentReferanse: InnsendingReferanse,
-                behandlingId: BehandlingId,
-                sakId: SakId,
-                status: no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
-            ) {
-                TODO("Not yet implemented")
-            }
-
-            override fun hentUbehandledeDokumenterAvType(
-                sakId: SakId,
-                dokumentType: InnsendingType
-            ): Set<MottattDokument> {
-                TODO("Not yet implemented")
-            }
-
-            override fun hentDokumentRekkefølge(sakId: SakId, type: InnsendingType): Set<DokumentRekkefølge> {
-                TODO("Not yet implemented")
-            }
-
-            override fun hentDokumenterAvType(sakId: SakId, type: InnsendingType): Set<MottattDokument> {
-                return setOf(
-                    MottattDokument(
-                        referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "xxx"),
-                        sakId = sakId,
-                        behandlingId = behandlingId,
-                        mottattTidspunkt = nå.minusDays(1),
-                        type = InnsendingType.SØKNAD,
-                        kanal = Kanal.DIGITAL,
-                        strukturertDokument = null
-                    ),
-                    MottattDokument(
-                        referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "xxx2"),
-                        sakId = sakId,
-                        behandlingId = behandlingId,
-                        mottattTidspunkt = tidligsteMottattTid,
-                        type = InnsendingType.SØKNAD,
-                        kanal = Kanal.PAPIR,
-                        strukturertDokument = null
-                    )
-                )
-            }
-
-            override fun hentDokumenterAvType(behandlingId: BehandlingId, type: InnsendingType): Set<MottattDokument> {
-                TODO("Not yet implemented")
-            }
-
-            override fun hentDokumenterAvType(behandlingId: BehandlingId, typer: List<InnsendingType>): Set<MottattDokument> {
-                TODO("Not yet implemented")
-            }
-
-            override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-            }
-
-        }
+        val dokumentRepository = InMemoryMottattDokumentRepository
+        InMemoryMottattDokumentRepository.lagre(
+            MottattDokument(
+                referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "xxx"),
+                sakId = sakId,
+                behandlingId = behandling.id,
+                mottattTidspunkt = nå.minusDays(1),
+                type = InnsendingType.SØKNAD,
+                kanal = Kanal.DIGITAL,
+                strukturertDokument = null
+            )
+        )
+        InMemoryMottattDokumentRepository.lagre(
+            MottattDokument(
+                referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "xxx2"),
+                sakId = sakId,
+                behandlingId = behandling.id,
+                mottattTidspunkt = tidligsteMottattTid,
+                type = InnsendingType.SØKNAD,
+                kanal = Kanal.PAPIR,
+                strukturertDokument = null
+            )
+        )
 
         val pipRepository = object : PipRepository {
             override fun finnIdenterPåSak(saksnummer: Saksnummer): List<IdentPåSak> {

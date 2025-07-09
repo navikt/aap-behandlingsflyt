@@ -9,12 +9,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class TrekkKlageInfornmasjonskravService (
+class TrekkKlageInformasjonskravService (
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val trekkKlageRepository: TrekkKlageRepository,
 ) : Informasjonskrav {
@@ -47,7 +46,7 @@ class TrekkKlageInfornmasjonskravService (
         override val navn = InformasjonskravNavn.TRUKKET_KLAGE
 
         override fun konstruer(repositoryProvider: RepositoryProvider): Informasjonskrav {
-            return TrekkKlageInfornmasjonskravService(repositoryProvider)
+            return TrekkKlageInformasjonskravService(repositoryProvider)
         }
     }
 }
