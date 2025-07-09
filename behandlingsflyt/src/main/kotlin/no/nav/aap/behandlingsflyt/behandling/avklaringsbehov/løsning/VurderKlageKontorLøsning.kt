@@ -14,9 +14,9 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = VURDER_KLAGE_KONTOR_KODE)
 class VurderKlageKontorLøsning(
-    @JsonProperty("klagevurderingKontor", required = true)
+    @param:JsonProperty("klagevurderingKontor", required = true)
     val klagevurderingKontor: KlagevurderingKontorLøsningDto,
-    @JsonProperty(
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = VURDER_KLAGE_KONTOR_KODE

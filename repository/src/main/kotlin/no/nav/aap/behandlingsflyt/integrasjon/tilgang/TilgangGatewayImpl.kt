@@ -22,7 +22,7 @@ object TilgangGatewayImpl : TilgangGateway {
                 avklaringsbehovKode = avklaringsbehov.kode.toString(),
                 operasjon = Operasjon.SAKSBEHANDLE
             ), token
-        )
+        ).tilgang
     }
 
     override fun sjekkTilgangTilSak(saksnummer: Saksnummer, token: OidcToken, operasjon: Operasjon): Boolean {
@@ -31,6 +31,6 @@ object TilgangGatewayImpl : TilgangGateway {
                 saksnummer = saksnummer.toString(),
                 operasjon = operasjon
             ), token
-        )
+        ).tilgang
     }
 }

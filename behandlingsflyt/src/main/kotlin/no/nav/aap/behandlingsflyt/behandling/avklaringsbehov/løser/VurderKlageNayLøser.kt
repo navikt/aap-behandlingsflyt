@@ -22,7 +22,7 @@ class VurderKlageNayLøser(
             klagevurderingNay = løsning.klagevurderingNay.tilVurdering(kontekst.bruker)
         )
 
-        return when(val validatedLøsning = valider(løsning)) {
+        return when (val validatedLøsning = valider(løsning)) {
             is Validation.Invalid -> throw UgyldigForespørselException(validatedLøsning.errorMessage)
             is Validation.Valid -> LøsningsResultat(
                 begrunnelse = løsning.klagevurderingNay.begrunnelse
@@ -45,7 +45,10 @@ class VurderKlageNayLøser(
         }
 
         if (ugyldigeHjemler.isNotEmpty()) {
-            return Validation.Invalid(løsning, "Løsningen inneholder omgjøring av hjemler som ikke ikke har implementert omgjøring via revurdering: ${ugyldigeHjemler.joinToString { it.name }}")
+            return Validation.Invalid(
+                løsning,
+                "Løsningen inneholder omgjøring av hjemler som ikke ikke har implementert omgjøring via revurdering: ${ugyldigeHjemler.joinToString { it.name }}"
+            )
         }
 
         return Validation.Valid(løsning)

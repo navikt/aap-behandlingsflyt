@@ -17,7 +17,7 @@ public data class KabalHendelseKafkaMelding(
     val detaljer: BehandlingDetaljer
 ) {
 
-    public fun tilKabalHendelseV0() =
+    public fun tilKabalHendelseV0(): KabalHendelse =
         KabalHendelseV0(
             eventId = eventId,
             kildeReferanse = kildeReferanse,
