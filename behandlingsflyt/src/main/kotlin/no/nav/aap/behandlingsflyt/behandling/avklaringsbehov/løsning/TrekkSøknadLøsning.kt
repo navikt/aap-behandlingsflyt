@@ -11,9 +11,9 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonTypeName(value = VURDER_TREKK_AV_SØKNAD_KODE)
 class TrekkSøknadLøsning(
-    @JsonProperty("behovstype", required = true, defaultValue = VURDER_TREKK_AV_SØKNAD_KODE)
+    @param:JsonProperty("behovstype", required = true, defaultValue = VURDER_TREKK_AV_SØKNAD_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5028`,
-    @JsonProperty("begrunnelse", required = true) val begrunnelse: String,
+    @param:JsonProperty("begrunnelse", required = true) val begrunnelse: String,
 ) : AvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
         return TrekkSøknadLøser(repositoryProvider).løs(kontekst, this)

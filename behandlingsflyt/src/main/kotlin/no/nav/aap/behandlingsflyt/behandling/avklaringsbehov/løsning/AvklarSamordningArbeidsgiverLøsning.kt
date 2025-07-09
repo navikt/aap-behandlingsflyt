@@ -14,8 +14,11 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_SAMORDNING_ARBEIDSGIVER_KODE)
 class AvklarSamordningArbeidsgiverLøsning(
-    @JsonProperty("samordningArbeidsgiverVurdering", required = true) val samordningArbeidsgiverVurdering: SamordningArbeidsgiverVurderingDTO,
-    @JsonProperty(
+    @param:JsonProperty(
+        "samordningArbeidsgiverVurdering",
+        required = true
+    ) val samordningArbeidsgiverVurdering: SamordningArbeidsgiverVurderingDTO,
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = AVKLAR_SAMORDNING_ARBEIDSGIVER_KODE

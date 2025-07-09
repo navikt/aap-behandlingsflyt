@@ -14,8 +14,15 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = MANUELL_OVERSTYRING_LOVVALG)
 class AvklarOverstyrtLovvalgMedlemskapLøsning(
-    @JsonProperty("manuellVurderingForLovvalgMedlemskap", required = true) val manuellVurderingForLovvalgMedlemskap: ManuellVurderingForLovvalgMedlemskapDto,
-    @JsonProperty("behovstype", required = true, defaultValue = MANUELL_OVERSTYRING_LOVVALG) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5021`
+    @param:JsonProperty(
+        "manuellVurderingForLovvalgMedlemskap",
+        required = true
+    ) val manuellVurderingForLovvalgMedlemskap: ManuellVurderingForLovvalgMedlemskapDto,
+    @param:JsonProperty(
+        "behovstype",
+        required = true,
+        defaultValue = MANUELL_OVERSTYRING_LOVVALG
+    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5021`
 ) : AvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
         return AvklarOverstyrtLovvalgMedlemskapLøser(repositoryProvider).løs(kontekst, this)
