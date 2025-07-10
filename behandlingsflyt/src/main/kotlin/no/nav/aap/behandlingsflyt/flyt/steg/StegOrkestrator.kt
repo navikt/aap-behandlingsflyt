@@ -69,7 +69,10 @@ class StegOrkestrator(
         try {
             MDC.putCloseable("stegType", aktivtSteg.type().name).use {
                 var gjeldendeStegStatus = StegStatus.START
-                log.info("Behandler steg '{}'. Behandling-ref: ${behandling.referanse}", aktivtSteg.type())
+                log.info(
+                    "Behandler steg '{}'. Behandling-ref: ${behandling.referanse}. Vurderingtype: ${kontekstMedPerioder.vurderingType}",
+                    aktivtSteg.type()
+                )
 
 
                 while (true) {
@@ -175,7 +178,11 @@ class StegOrkestrator(
         return Fortsett
     }
 
-    private fun behandleSteg(aktivtSteg: FlytSteg, behandlingSteg: BehandlingSteg, kontekstMedPerioder: FlytKontekstMedPerioder): Transisjon {
+    private fun behandleSteg(
+        aktivtSteg: FlytSteg,
+        behandlingSteg: BehandlingSteg,
+        kontekstMedPerioder: FlytKontekstMedPerioder
+    ): Transisjon {
         val simpleName = behandlingSteg.javaClass.simpleName
         val utførStegTimer =
             Timer.builder("behandlingsflyt_utfør_steg_tid")
