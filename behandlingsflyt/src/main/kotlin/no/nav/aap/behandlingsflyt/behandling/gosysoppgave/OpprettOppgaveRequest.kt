@@ -14,7 +14,6 @@ data class OpprettOppgaveRequest(
     val orgnr: String? = null,
     val tildeltEnhetsnr: NavEnhet? = null, // 4 tegn
     val opprettetAvEnhetsnr: NavEnhet? = "9999", // 4 tegn
-    val journalpostId: String,
     val behandlesAvApplikasjon: String? = null,
     val tilordnetRessurs: String? = null, // navident
     val beskrivelse: String? = null,

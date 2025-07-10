@@ -42,32 +42,18 @@ class GosysGateway : OppgaveGateway {
     override fun opprettOppgaveHvisIkkeEksisterer(aktivIdent: Ident, bestillingReferanse: String, behandlingId: BehandlingId, navKontor: String) {
 
         val oppgaveRequest = OpprettOppgaveRequest(
-            oppgavetype = OppgaveType.JOURNALFØRING.verdi,
+            oppgavetype = OppgaveType.FORDELING.verdi,
             tema = "AAP",
             prioritet = Prioritet.NORM,
             aktivDato = LocalDate.now().toString(),
             personident = aktivIdent.toString(),
             tildeltEnhetsnr = navKontor,
-            journalpostId = "1",
             beskrivelse = "Krav om refusjon av sosialhjelp for bruker av AAP",
             behandlingstema = "AAP",
             behandlingstype = "AAP",
             fristFerdigstillelse = LocalDate.now().plusDays(2)
         )
 
-        val oppgaver = finnOppgaverForJournalpost(
-            JournalpostId(oppgaveRequest.journalpostId),
-            listOf(OppgaveType.JOURNALFØRING, OppgaveType.FORDELING),
-            null,
-            Statuskategori.AAPEN
-        )
-
-        if (oppgaver.isNotEmpty()) {
-            log.info("Åpen oppgave for journalpost ${oppgaveRequest.journalpostId} finnes allerede - oppretter ingen ny")
-            return
-        }
-
-        log.info("Oppretter oppave (${oppgaveRequest.oppgavetype}) for journalpost ${oppgaveRequest.journalpostId} i gosys")
         val url = baseUri.resolve("/api/bestilling/$bestillingReferanse/oppdater")
         val path = url.resolve("/api/v1/oppgaver")
         val request = PostRequest(oppgaveRequest)
@@ -81,17 +67,6 @@ class GosysGateway : OppgaveGateway {
 
     }
 
-    fun finnOppgaverForJournalpost(
-        journalpostId: JournalpostId, oppgavetyper: List<OppgaveType>, tema: String?, statuskategori: Statuskategori
-    ): List<Long> {
-        log.info("Finn oppgaver for journalpost: $journalpostId")
-        val oppgaveparams = oppgavetyper.joinToString(separator = "") { "&oppgavetype=${it.verdi}" }
-        val temaparams = if (tema != null) "&tema=$tema" else ""
-        val path =
-            baseUri.resolve("/api/v1/oppgaver?journalpostId=$journalpostId$oppgaveparams$temaparams&statuskategori=${statuskategori.name}")
-
-        return client.get<FinnOppgaverResponse>(path, GetRequest())?.oppgaver?.map { it.id } ?: emptyList()
-    }
 }
 
 
