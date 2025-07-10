@@ -47,11 +47,14 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.tuple
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
 import java.time.LocalDateTime
+import javax.sql.DataSource
 
 
-class SamordningFlyttest : AbstraktFlytOrkestratorTest() {
+@ExtendWith(MotorExtension::class)
+class SamordningFlyttest(dataSource: DataSource) : AbstraktFlytOrkestratorTest(dataSource) {
 
     @Test
     fun `ingen sykepenger i register, vurderer sykepenger for samordning med ukjent maksdato som fører til revurdering og ingen utbetaling etter kjent sykepengedato`() {

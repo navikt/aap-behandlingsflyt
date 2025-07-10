@@ -32,7 +32,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.Bist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
-import no.nav.aap.behandlingsflyt.flyt.AbstraktFlytOrkestratorTest.Companion.util
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.NyÅrsakTilBehandlingHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
@@ -110,26 +109,69 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.extension.AfterAllCallback
+import org.junit.jupiter.api.extension.BeforeAllCallback
+import org.junit.jupiter.api.extension.ExtensionContext
+import org.junit.jupiter.api.extension.ParameterContext
+import org.junit.jupiter.api.extension.ParameterResolver
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
+import javax.sql.DataSource
+
+class MotorExtension : BeforeAllCallback, AfterAllCallback, ParameterResolver {
+    override fun beforeAll(context: ExtensionContext?) {
+        motor(context!!).start()
+    }
+
+    override fun afterAll(context: ExtensionContext?) {
+        motor(context!!).stop()
+    }
+
+    override fun supportsParameter(
+        parameterContext: ParameterContext?,
+        extensionContext: ExtensionContext?
+    ): Boolean {
+        return parameterContext?.parameter?.type?.equals(DataSource::class.java) ?: false
+    }
+
+    override fun resolveParameter(
+        parameterContext: ParameterContext?,
+        extensionContext: ExtensionContext?
+    ): Any? {
+        return dataSource(extensionContext!!)
+    }
+
+    private fun dataSource(extensionContext: ExtensionContext): DataSource {
+        val rootContext = extensionContext.root
+        val store = rootContext.getStore(ExtensionContext.Namespace.GLOBAL)
+
+        return store.getOrComputeIfAbsent("ds") {
+            InitTestDatabase.freshDatabase()
+        } as DataSource
+    }
+
+    private fun motor(extensionContext: ExtensionContext): Motor {
+        val rootContext = extensionContext.root
+        val store = rootContext.getStore(ExtensionContext.Namespace.GLOBAL)
+
+        return store.getOrComputeIfAbsent("motor") {
+            val ds = dataSource(extensionContext)
+            Motor(ds, 8, jobber = ProsesseringsJobber.alle(), repositoryRegistry = postgresRepositoryRegistry)
+        } as Motor
+    }
+
+}
 
 @Fakes
-abstract class AbstraktFlytOrkestratorTest {
+abstract class AbstraktFlytOrkestratorTest(val dataSource: DataSource) {
+
+    protected val hendelsesMottak = TestHendelsesMottak(dataSource)
+
+    protected val util =
+        TestUtil(dataSource, ProsesseringsJobber.alle().filter { it.cron != null }.map { it.type })
+
     companion object {
-        @JvmStatic
-        protected val dataSource = InitTestDatabase.freshDatabase()
-
-        protected val motor =
-            Motor(dataSource, 8, jobber = ProsesseringsJobber.alle(), repositoryRegistry = postgresRepositoryRegistry)
-
-        @JvmStatic
-        protected val hendelsesMottak = TestHendelsesMottak(dataSource)
-
-        @JvmStatic
-        protected val util =
-            TestUtil(dataSource, ProsesseringsJobber.alle().filter { it.cron != null }.map { it.type })
-
         @BeforeAll
         @JvmStatic
         internal fun beforeAll() {
@@ -160,7 +202,7 @@ abstract class AbstraktFlytOrkestratorTest {
                 .register<NomInfoGateway>()
                 .register<KabalGateway>()
                 .register<NorgGateway>()
-            motor.start()
+//            motor.start()
 
 
         }
@@ -168,7 +210,7 @@ abstract class AbstraktFlytOrkestratorTest {
         @AfterAll
         @JvmStatic
         internal fun afterAll() {
-            motor.stop()
+//            motor.stop()
         }
     }
 

@@ -14,11 +14,14 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppga
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
+import javax.sql.DataSource
 
-class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest() {
+@ExtendWith(MotorExtension::class)
+class OppfølgingsBehandlingFlytTest(dataSource: DataSource) : AbstraktFlytOrkestratorTest(dataSource) {
     @Test
     fun `opprette oppfølgingsbehandling`() {
         val sak = happyCaseFørstegansbehandling()

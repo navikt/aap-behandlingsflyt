@@ -155,14 +155,17 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
 import java.util.*
+import javax.sql.DataSource
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
-class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
+@ExtendWith(MotorExtension::class)
+class FlytOrkestratorTest(dataSource: DataSource) : AbstraktFlytOrkestratorTest(dataSource) {
     @Test
     fun `happy case førstegangsbehandling + revurder førstegangssøknad, gi sykepengererstatning hele perioden`() {
         val sak = happyCaseFørstegansbehandling()
