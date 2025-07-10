@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory
 class InstitusjonRegel : UnderveisRegel {
     private val log = LoggerFactory.getLogger(javaClass)
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-        log.info("Vurderer institusjonsregel med input: $input.")
+        log.info("Vurderer institusjonsregel.")
         var institusjonTidslinje = konstruerTidslinje(input)
         if (institusjonTidslinje.isEmpty()) {
             return resultat
@@ -59,7 +59,7 @@ class InstitusjonRegel : UnderveisRegel {
         if (skalReduseres == null) {
             return null
         }
-        return if (skalReduseres == true) {
+        return if (skalReduseres) {
             Årsak.UTEN_REDUKSJON
         } else {
             null
