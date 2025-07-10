@@ -6,6 +6,7 @@ import java.time.LocalDateTime
 data class SamordningAndreStatligeYtelserGrunnlag(
     val vurdering: SamordningAndreStatligeYtelserVurdering,
 )
+
 data class SamordningAndreStatligeYtelserVurdering(
     val begrunnelse: String,
     val vurdertAv: String,
@@ -29,7 +30,9 @@ data class SamordningAndreStatligeYtelserVurderingPeriodeDto(
     val periode: Periode,
     val beløp: Int
 )
+
 enum class AndreStatligeYtelser {
+    SYKEPENGER,
     TILTAKSPENGER,
     OMSTILLINGSSTØNAD,
     OVERGANGSSTØNAD,
