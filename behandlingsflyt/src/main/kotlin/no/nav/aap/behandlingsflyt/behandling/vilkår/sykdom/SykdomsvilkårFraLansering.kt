@@ -17,9 +17,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import org.slf4j.LoggerFactory
 
 class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<SykdomsFaktagrunnlag> {
     private val vilkår: Vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun vurder(grunnlag: SykdomsFaktagrunnlag) {
         val studentVurderingTidslinje = Tidslinje(
@@ -99,6 +101,8 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
                 Avslagsårsak.MANGLENDE_DOKUMENTASJON // TODO noe mer rett
             }
 
+            log.info("Avslagsårsak $avslagsårsak. Er nedsettelse i arbeidsevne: ${sykdomVurdering?.erNedsettelseIArbeidsevneAvEnVissVarighet}. Har rett på sykepengeerstatning: ${sykepengerVurdering?.harRettPå}")
+
             if (sykepengerVurdering?.harRettPå == true && avslagsårsak == Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET) {
                 utfall = Utfall.OPPFYLT
                 innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING
@@ -141,6 +145,4 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
                             (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true && yrkesskadevurdering?.erÅrsakssammenheng == true))
         }
     }
-
-
 }
