@@ -11,6 +11,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProviderJobbSpesifikasjon
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -21,6 +22,8 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
 ) : JobbUtfører {
 
+    private val log = LoggerFactory.getLogger(javaClass)
+
     override fun utfør(input: JobbInput) {
         val sak = sakService.hent(SakId(input.sakId()))
 
@@ -30,23 +33,35 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
 
         val behandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id) ?: return
 
-        if (behandling.status().erÅpen() && ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT in behandling.årsaker().map { it.type }) {
+        if (behandling.status().erÅpen() && ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT in behandling.årsaker()
+                .map { it.type }
+        ) {
+            log.info("Det finnes allerede en kjørende jobb av årsak FASTSATT_PERIODE_PASSERT. Avbryter.")
             return
         }
 
         val underveisperioder = underveisRepository.hentHvisEksisterer(behandling.id)
             ?.perioder
-            ?: return
+
+        if (underveisperioder == null) {
+            log.info("Fant ikke underveisperioder for behandling med id ${behandling.id}. Avbryter.")
+            return
+        }
 
         val førsteAntatteMeldeperiode = underveisperioder
             .filter { it.meldepliktStatus == MeldepliktStatus.FREMTIDIG_OPPFYLT }
             .minByOrNull { it.meldePeriode }
-            ?: return
+
+        if (førsteAntatteMeldeperiode == null) {
+            log.info("Fant ikke førsteAntatteMeldeperiode. Avbryter.")
+            return
+        }
 
         val tidspunktForKjøringVedManglendeMeldekort =
             førsteAntatteMeldeperiode.meldePeriode.fom.plusDays(8).atStartOfDay().plusHours(2)
 
         if (LocalDateTime.now() < tidspunktForKjøringVedManglendeMeldekort) {
+            log.info("Jobben ble kjørt før tidspunktForKjøringVedManglendeMeldekort. Avbryter.")
             return
         }
 
