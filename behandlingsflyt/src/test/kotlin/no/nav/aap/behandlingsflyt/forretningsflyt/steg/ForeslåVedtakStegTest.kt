@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
@@ -25,7 +26,7 @@ class ForeslåVedtakStegTest {
     private val random = Random(1235123)
 
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
-    private val steg = ForeslåVedtakSteg(avklaringsbehovRepository, FakeTidligereVurderinger())
+    private val steg = ForeslåVedtakSteg(avklaringsbehovRepository, FakeTidligereVurderinger(), FakeUnleash)
     private val sakRepository = InMemorySakRepository
 
 
@@ -51,7 +52,7 @@ class ForeslåVedtakStegTest {
     }
 
     @Test
-    fun `hvis avklaringsbehov skal det gi foreslå vedtak`() {
+    fun `hvis ingen avklaringsbehov løst av NAY skal foreslå vedtak hoppes over`() {
         val person = Person(random.nextLong(), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
         val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
@@ -72,11 +73,11 @@ class ForeslåVedtakStegTest {
 
         val resultat = steg.utfør(kontekstMedPerioder)
 
-        assertThat(resultat).isEqualTo(FantAvklaringsbehov(Definisjon.FORESLÅ_VEDTAK))
+        assertThat(resultat).isEqualTo(Fullført)
     }
 
     @Test
-    fun `hvis avklaringsbehov skal det gi foreslå vedtak også etter tilbakehopp`() {
+    fun `hvis avklaringsbehov løst av NAY, gå innom foreslå vedtak`() {
         val person = Person(random.nextLong(), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
         val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
@@ -84,10 +85,35 @@ class ForeslåVedtakStegTest {
             behandlingRepository.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.AVKLAR_SYKDOM),
-            funnetISteg = StegType.AVKLAR_SYKDOM
+            definisjoner = listOf(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP),
+            funnetISteg = StegType.VURDER_LOVVALG
         )
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "ja", "TESTEN")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", "TESTEN")
+        val kontekstMedPerioder = FlytKontekstMedPerioder(
+            sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+            årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
+        )
+
+        val resultat = steg.utfør(kontekstMedPerioder)
+
+        assertThat(resultat).isEqualTo(FantAvklaringsbehov(Definisjon.FORESLÅ_VEDTAK))
+    }
+
+    @Test
+    fun `hvis NAY-avklaringsbehov skal foreslå vedtak åpnes også etter tilbakehopp`() {
+        val person = Person(random.nextLong(), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
+
+        val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val behandling =
+            behandlingRepository.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+        avklaringsbehovene.leggTil(
+            definisjoner = listOf(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP),
+            funnetISteg = StegType.VURDER_LOVVALG
+        )
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", "TESTEN")
         avklaringsbehovene.leggTil(
             definisjoner = listOf(Definisjon.FORESLÅ_VEDTAK),
             funnetISteg = StegType.FORESLÅ_VEDTAK

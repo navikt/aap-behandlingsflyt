@@ -288,9 +288,8 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
             ).medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .describedAs("Siden vurderingenGjelderFra ikke er lik kravdato (rettighetsperiode.fom), så skal man ikke vurdere 11-13")
-                    .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
+                    .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK) // ingen avklaringsbehov løst av NAY, gå rett til fatte vedtak
             }
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtakEllerSendRetur()
             .medKontekst {
                 val underveisGrunnlag = dataSource.transaction { connection ->
@@ -455,6 +454,69 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
         assertThat(åpneAvklaringsbehov).isEmpty()
 
         return hentSak(behandling)
+    }
+
+    @Test
+    fun `hopper over foreslå vedtak-steg når revurdering ikke skal innom NAY`() {
+        val sak = happyCaseFørstegansbehandling()
+        // Revurdering av sykdom uten 11-13
+        val behandling = revurdereFramTilOgMedSykdom(
+            sak = sak,
+            gjelderFra = sak.rettighetsperiode.fom,
+            vissVarighet = true)
+
+        behandling.løsAvklaringsBehov(
+            AvklarBistandsbehovLøsning(
+                bistandsVurdering = BistandVurderingLøsningDto(
+                    begrunnelse = "Trenger hjelp fra nav",
+                    erBehovForAktivBehandling = true,
+                    erBehovForArbeidsrettetTiltak = false,
+                    erBehovForAnnenOppfølging = null,
+                    skalVurdereAapIOvergangTilUføre = null,
+                    skalVurdereAapIOvergangTilArbeid = null,
+                    overgangBegrunnelse = null
+                ),
+            )).medKontekst {
+                assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).describedAs {
+                    "Revurdering av sykdom skal gå rett til beslutter når ingen avklaringsbehov trenger å løses av NAY"
+                }.containsExactly(Definisjon.FATTE_VEDTAK)
+        }
+    }
+
+    @Test
+    fun `revurdering skal innom foreslå vedtak-steg når NAY-saksbehandler har løst avklaringsbehov`() {
+        val sak = happyCaseFørstegansbehandling()
+        // Revurdering som krever 11-13-vurdering
+        val behandling = revurdereFramTilOgMedSykdom(
+            sak = sak,
+            gjelderFra = sak.rettighetsperiode.fom,
+            vissVarighet = false)
+
+        behandling.løsAvklaringsBehov(
+            AvklarBistandsbehovLøsning(
+                bistandsVurdering = BistandVurderingLøsningDto(
+                    begrunnelse = "Trenger hjelp fra nav",
+                    erBehovForAktivBehandling = true,
+                    erBehovForArbeidsrettetTiltak = false,
+                    erBehovForAnnenOppfølging = null,
+                    skalVurdereAapIOvergangTilUføre = null,
+                    skalVurdereAapIOvergangTilArbeid = null,
+                    overgangBegrunnelse = null
+                ),
+            )).løsAvklaringsBehov(
+            AvklarSykepengerErstatningLøsning(
+                sykepengeerstatningVurdering = SykepengerVurderingDto(
+                    begrunnelse = "test",
+                    dokumenterBruktIVurdering = emptyList(),
+                    harRettPå = true,
+                    grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR
+                ),
+                behovstype = Definisjon.AVKLAR_SYKEPENGEERSTATNING.kode
+            )).medKontekst {
+            assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).describedAs {
+                "Revurdering av sykdom skal innom foreslå vedtak-steg når vurdering av sykepengeerstatning er gjort av NAY"
+            }.containsExactly(Definisjon.FORESLÅ_VEDTAK)
+        }
     }
 
     @Test
@@ -1271,16 +1333,8 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
 
         behandling = kvalitetssikreOk(behandling)
 
-        // Saken er tilbake til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
+        // Saken er hos kvalitetssikrer, og skal deretter rett videre til beslutter
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertThat(åpneAvklaringsbehov).anySatisfy {
-            assertThat(it)
-                .extracting(Avklaringsbehov::erÅpent, Avklaringsbehov::definisjon)
-                .containsExactly(true, Definisjon.FORESLÅ_VEDTAK)
-        }
-        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-
-        behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
 
         // Saken står til To-trinnskontroll hos beslutter
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
