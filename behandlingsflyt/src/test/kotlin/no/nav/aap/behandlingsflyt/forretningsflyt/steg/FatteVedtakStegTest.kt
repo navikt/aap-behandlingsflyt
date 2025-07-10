@@ -23,9 +23,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonOpplysningRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonopplysningRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryRefusjonKravRepository
 import no.nav.aap.komponenter.type.Periode
@@ -83,7 +83,7 @@ class FatteVedtakStegTest {
 
         val steg = FatteVedtakSteg(
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            personOpplysningerRepository = InMemoryPersonOpplysningRepository,
+            personOpplysningerRepository = InMemoryPersonopplysningRepository,
             refusjonkravRepository = InMemoryRefusjonKravRepository,
             personRepository = InMemoryPersonRepository,
             tidligereVurderinger = tidligereVurderinger,
@@ -131,7 +131,7 @@ class FatteVedtakStegTest {
 
         val steg = FatteVedtakSteg(
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            personOpplysningerRepository = InMemoryPersonOpplysningRepository,
+            personOpplysningerRepository = InMemoryPersonopplysningRepository,
             refusjonkravRepository = InMemoryRefusjonKravRepository,
             personRepository = InMemoryPersonRepository,
             tidligereVurderinger = tidligereVurderinger,
@@ -178,7 +178,7 @@ class FatteVedtakStegTest {
 
         val steg = FatteVedtakSteg(
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            personOpplysningerRepository = InMemoryPersonOpplysningRepository,
+            personOpplysningerRepository = InMemoryPersonopplysningRepository,
             refusjonkravRepository = InMemoryRefusjonKravRepository,
             personRepository = InMemoryPersonRepository,
             tidligereVurderinger = tidligereVurderinger,
