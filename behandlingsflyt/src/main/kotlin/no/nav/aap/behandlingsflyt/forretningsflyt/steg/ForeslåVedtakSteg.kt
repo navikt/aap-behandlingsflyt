@@ -40,7 +40,7 @@ class ForeslåVedtakSteg internal constructor(
             return Fullført
         }
 
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.HoppOverForeslåVedtak)) {
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.HoppOverForeslaaVedtak)) {
             // Hvis ingen avklaringsbehov løst av NAY, hopp over steget
             if (avklaringsbehov.harHattAvklaringsbehov() && !avklaringsbehov.harHattAvklaringsbehovLøstAvNay()) {
                 log.info("Behandlingen har ingen avklaringsbehov som er løst av NAY, hopper over foreslå vedtak-steget")
