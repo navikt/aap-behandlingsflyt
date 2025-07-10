@@ -136,6 +136,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakePersoner
+import no.nav.aap.behandlingsflyt.test.MotorExtension
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
@@ -677,7 +678,7 @@ class FlytOrkestratorTest(dataSource: DataSource) : AbstraktFlytOrkestratorTest(
 
         sendInnDokument(
             ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId("29"),
+                journalpost = JournalpostId("299"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 strukturertDokument = StrukturertDokument(TestSøknader.STANDARD_SØKNAD),
                 periode = periode
@@ -1027,7 +1028,7 @@ class FlytOrkestratorTest(dataSource: DataSource) : AbstraktFlytOrkestratorTest(
                     sykdomsvurderinger = listOf(
                         SykdomsvurderingLøsningDto(
                             begrunnelse = "Er syk nok",
-                            dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                            dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
@@ -1136,7 +1137,7 @@ class FlytOrkestratorTest(dataSource: DataSource) : AbstraktFlytOrkestratorTest(
                 sykdomsvurderinger = listOf(
                     SykdomsvurderingLøsningDto(
                         begrunnelse = "Er ikke syk nok",
-                        dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                        dokumenterBruktIVurdering = listOf(JournalpostId("1231299")),
                         harSkadeSykdomEllerLyte = false,
                         vurderingenGjelderFra = null,
                         erArbeidsevnenNedsatt = null,
@@ -1229,7 +1230,7 @@ class FlytOrkestratorTest(dataSource: DataSource) : AbstraktFlytOrkestratorTest(
                 sykdomsvurderinger = listOf(
                     SykdomsvurderingLøsningDto(
                         begrunnelse = "Arbeidsevnen er nedsatt med mer enn halvparten",
-                        dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                        dokumenterBruktIVurdering = listOf(JournalpostId("12312983")),
                         harSkadeSykdomEllerLyte = true,
                         erSkadeSykdomEllerLyteVesentligdel = true,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = true,
@@ -1297,7 +1298,7 @@ class FlytOrkestratorTest(dataSource: DataSource) : AbstraktFlytOrkestratorTest(
                     sykdomsvurderinger = listOf(
                         SykdomsvurderingLøsningDto(
                             begrunnelse = "Er syk nok",
-                            dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                            dokumenterBruktIVurdering = listOf(JournalpostId("123190923")),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
@@ -1370,7 +1371,7 @@ class FlytOrkestratorTest(dataSource: DataSource) : AbstraktFlytOrkestratorTest(
                 sykdomsvurderinger = listOf(
                     SykdomsvurderingLøsningDto(
                         begrunnelse = "Arbeidsevnen er nedsatt med mer enn halvparten",
-                        dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                        dokumenterBruktIVurdering = listOf(JournalpostId("1231o9024")),
                         harSkadeSykdomEllerLyte = true,
                         erSkadeSykdomEllerLyteVesentligdel = true,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = true,
@@ -1883,7 +1884,7 @@ class FlytOrkestratorTest(dataSource: DataSource) : AbstraktFlytOrkestratorTest(
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Oppretter vanlig søknad
-        val behandling = sendInnSøknad(
+        var behandling = sendInnSøknad(
             ident, periode,
             SøknadV0(
                 student = SøknadStudentDto("NEI"), yrkesskade = "JA", oppgitteBarn = null,

@@ -36,6 +36,7 @@ import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentY
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.test.MotorExtension
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.tidslinje.Segment

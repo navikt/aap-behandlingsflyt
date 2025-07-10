@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.test.MotorExtension
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -35,7 +36,6 @@ class OppfølgingsBehandlingFlytTest(dataSource: DataSource) : AbstraktFlytOrkes
                 referanse = InnsendingReferanse(
                     InnsendingReferanse.Type.BEHANDLING_REFERANSE,
                     UUID.randomUUID().toString(),
-                    //førstegangsbehandling.referanse.referanse.toString()
                 ),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 strukturertDokument = StrukturertDokument(
