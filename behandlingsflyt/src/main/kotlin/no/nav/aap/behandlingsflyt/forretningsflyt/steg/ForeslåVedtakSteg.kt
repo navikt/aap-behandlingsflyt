@@ -11,12 +11,16 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
 class ForeslåVedtakSteg internal constructor(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -24,6 +28,7 @@ class ForeslåVedtakSteg internal constructor(
     constructor(repositoryProvider: RepositoryProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        unleashGateway = GatewayProvider.provide(),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -35,8 +40,15 @@ class ForeslåVedtakSteg internal constructor(
             return Fullført
         }
 
-        // Fastsett behandlingresultat og lagre dette
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.HoppOverForeslaaVedtak)) {
+            // Hvis ingen avklaringsbehov løst av NAY, hopp over steget
+            if (avklaringsbehov.harHattAvklaringsbehov() && !avklaringsbehov.harHattAvklaringsbehovLøstAvNay()) {
+                log.info("Behandlingen har ingen avklaringsbehov som er løst av NAY, hopper over foreslå vedtak-steget")
+                return Fullført
+            }
+        }
 
+        // Fastsett behandlingresultat og lagre dette
         if (avklaringsbehov.harHattAvklaringsbehov() && avklaringsbehov.harIkkeForeslåttVedtak()) {
             return FantAvklaringsbehov(Definisjon.FORESLÅ_VEDTAK)
         }
