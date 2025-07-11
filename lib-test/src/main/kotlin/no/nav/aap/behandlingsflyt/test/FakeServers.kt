@@ -17,6 +17,8 @@ import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.BestillLegeerkl�
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.HentStatusLegeerklæring
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.PurringLegeerklæringRequest
+import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OpprettOppgaveRequest
+import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OpprettOppgaveResponse
 import no.nav.aap.behandlingsflyt.datadeling.sam.HentSamIdResponse
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRespons
@@ -147,6 +149,7 @@ object FakeServers : AutoCloseable {
     private val kabal = embeddedServer(Netty, port = 0, module = { kabalFake() })
     private val ereg = embeddedServer(Netty, port = 0, module = { eregFake() })
     private val sam = embeddedServer(Netty, port = 0, module = { sam() })
+    private val gosys = embeddedServer(Netty, port = 0, module = { gosys() })
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
@@ -320,6 +323,35 @@ object FakeServers : AutoCloseable {
                         )
                     }.toList())
                 )
+            }
+        }
+    }
+
+    private fun Application.gosys() {
+        install(ContentNegotiation) {
+            jackson()
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@gosys.log.info("Inntekt :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                call.respond(
+                    status = HttpStatusCode.InternalServerError,
+                    message = ErrorRespons(cause.message)
+                )
+            }
+        }
+
+        routing {
+            route("/api/v1/oppgaver") {
+                post {
+                    val req = call.receive<OpprettOppgaveRequest>()
+
+                    call.respond(
+                        OpprettOppgaveResponse(
+                            success = true
+                        )
+                    )
+                }
             }
         }
     }
@@ -1896,6 +1928,7 @@ object FakeServers : AutoCloseable {
         norg.start()
         kabal.start()
         ereg.start()
+        gosys.start()
 
         println("AZURE PORT ${azure.port()}")
 
@@ -2027,6 +2060,10 @@ object FakeServers : AutoCloseable {
         // Sam
         System.setProperty("integrasjon.sam.url", "http://localhost:${sam.port()}")
         System.setProperty("integrasjon.sam.scope", "sam")
+
+        // Gosys
+        System.setProperty("integrasjon.gosys.url", "http://localhost:${gosys.port()}")
+        System.setProperty("integrasjon.gosys.scope", "scope")
     }
 
     override fun close() {

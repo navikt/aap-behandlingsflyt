@@ -15,6 +15,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     InnhentEnhetsregisterData,
     Samvarsling,
     SendForvaltningsmelding,
+    SosialHjelpFlereKontorer,
+    HoppOverForeslaaVedtak,
     AvrundingInntekt,
     ;
 

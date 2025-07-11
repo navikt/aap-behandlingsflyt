@@ -50,6 +50,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.Institusjonsop
 import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.integrasjon.meldekort.MeldekortGatewayImpl
+import no.nav.aap.behandlingsflyt.integrasjon.oppgave.GosysGateway
 import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
@@ -165,6 +166,7 @@ open class AbstraktFlytOrkestratorTest {
                 .register<NomInfoGateway>()
                 .register<KabalGateway>()
                 .register<NorgGateway>()
+                .register<GosysGateway>()
             motor.start()
 
 
