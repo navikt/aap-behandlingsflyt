@@ -72,6 +72,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.FreshDatabaseExtension
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBeregningsgrunnlagRepository
@@ -82,7 +83,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadReposi
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -96,15 +96,18 @@ import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
+import javax.sql.DataSource
 
 @Fakes
-class StatistikkJobbUtførerTest {
+@ExtendWith(FreshDatabaseExtension::class)
+class StatistikkJobbUtførerTest(val dataSource: DataSource) {
     @BeforeEach
     fun setUp() {
         GatewayRegistry.register<PdlBarnGateway>()
@@ -114,12 +117,9 @@ class StatistikkJobbUtførerTest {
             .register<StatistikkGatewayImpl>()
     }
 
-    private val dataSource1 = InitTestDatabase.freshDatabase()
-
     @Test
     fun `mottatt tidspunkt er korrekt når revurdering`(hendelser: List<StoppetBehandling>) {
         var opprettetTidspunkt: LocalDateTime? = null
-        val dataSource = dataSource1
         val (behandling, sak, ident) = dataSource.transaction { connection ->
             val behandlingRepository = BehandlingRepositoryImpl(connection)
 
@@ -231,7 +231,6 @@ class StatistikkJobbUtførerTest {
             fom = LocalDate.now().minusDays(1),
             tom = LocalDate.now().plusDays(1)
         )
-        val dataSource = dataSource1
         val (behandling, sak, ident) = dataSource.transaction { connection ->
             val vilkårsResultatRepository = VilkårsresultatRepositoryImpl(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)

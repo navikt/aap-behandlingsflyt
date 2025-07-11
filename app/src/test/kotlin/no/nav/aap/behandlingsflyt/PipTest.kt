@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
@@ -36,14 +37,9 @@ import java.time.LocalDate
 @Fakes
 class PipTest {
     companion object {
-        private val postgres = postgreSQLContainer()
         private lateinit var port: Number
 
-        private val dbConfig = DbConfig(
-            url = postgres.jdbcUrl,
-            username = postgres.username,
-            password = postgres.password
-        )
+        private val dataSource = InitTestDatabase.freshDatabase()
 
         private val client: RestClient<InputStream> = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
@@ -54,7 +50,7 @@ class PipTest {
         // Starter server
         private val server = embeddedServer(Netty, port = 0) {
             System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
-            server(dbConfig = dbConfig, repositoryRegistry = postgresRepositoryRegistry)
+            server(dataSource, repositoryRegistry = postgresRepositoryRegistry)
         }
 
         @JvmStatic
@@ -70,14 +66,11 @@ class PipTest {
         @AfterAll
         fun afterAll() {
             server.stop()
-            postgres.close()
         }
     }
 
     @Test
     fun `pip test sak`() {
-        val dataSource = initDatasource(dbConfig)
-
         val saksnummer = dataSource.transaction { connection ->
             val periode = Periode(LocalDate.now(), LocalDate.now())
             val person = PersonRepositoryImpl(connection).finnEllerOpprett(
@@ -129,8 +122,6 @@ class PipTest {
 
     @Test
     fun `pip test behandling`() {
-        val dataSource = initDatasource(dbConfig)
-
         val behandlingsreferanse = dataSource.transaction { connection ->
             val periode = Periode(LocalDate.now(), LocalDate.now())
             val person = PersonRepositoryImpl(connection).finnEllerOpprett(

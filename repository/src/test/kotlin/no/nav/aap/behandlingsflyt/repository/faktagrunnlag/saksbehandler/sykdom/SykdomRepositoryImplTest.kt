@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FreshDatabaseExtension
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -17,14 +18,18 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.extension.ExtendWith
+import java.io.Closeable
 import java.time.Instant
 import java.time.LocalDate
+import javax.sql.DataSource
 
-internal class SykdomRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+@ExtendWith(FreshDatabaseExtension::class)
+internal class SykdomRepositoryImplTest(val dataSource: DataSource) {
 
     @Test
     fun `kan lagre tom liste`() {
@@ -86,7 +91,7 @@ internal class SykdomRepositoryImplTest {
 
     @Test
     fun `test sletting`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val sykdomRepository = SykdomRepositoryImpl(connection)
@@ -115,70 +120,69 @@ internal class SykdomRepositoryImplTest {
     }
 
 
-    private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        private val sykdomsvurdering1 = Sykdomsvurdering(
-            begrunnelse = "b1",
-            vurderingenGjelderFra = null,
-            dokumenterBruktIVurdering = listOf(JournalpostId("1")),
-            harSkadeSykdomEllerLyte = true,
-            erSkadeSykdomEllerLyteVesentligdel = true,
-            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
-            yrkesskadeBegrunnelse = "b",
-            erArbeidsevnenNedsatt = true,
-            vurdertAv = Bruker("Z00000"),
-            opprettet = Instant.now(),
-        )
+    private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+    private val sykdomsvurdering1 = Sykdomsvurdering(
+        begrunnelse = "b1",
+        vurderingenGjelderFra = null,
+        dokumenterBruktIVurdering = listOf(JournalpostId("1")),
+        harSkadeSykdomEllerLyte = true,
+        erSkadeSykdomEllerLyteVesentligdel = true,
+        erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+        erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+        yrkesskadeBegrunnelse = "b",
+        erArbeidsevnenNedsatt = true,
+        vurdertAv = Bruker("Z00000"),
+        opprettet = Instant.now(),
+    )
 
-        private val sykdomsvurdering2 = Sykdomsvurdering(
-            begrunnelse = "b2",
-            vurderingenGjelderFra = LocalDate.of(2020, 1, 1),
-            dokumenterBruktIVurdering = listOf(JournalpostId("2")),
-            harSkadeSykdomEllerLyte = true,
-            erSkadeSykdomEllerLyteVesentligdel = true,
-            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
-            yrkesskadeBegrunnelse = null,
-            erArbeidsevnenNedsatt = true,
-            vurdertAv = Bruker("Z00000"),
-            opprettet = Instant.now(),
-        )
+    private val sykdomsvurdering2 = Sykdomsvurdering(
+        begrunnelse = "b2",
+        vurderingenGjelderFra = LocalDate.of(2020, 1, 1),
+        dokumenterBruktIVurdering = listOf(JournalpostId("2")),
+        harSkadeSykdomEllerLyte = true,
+        erSkadeSykdomEllerLyteVesentligdel = true,
+        erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+        erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+        yrkesskadeBegrunnelse = null,
+        erArbeidsevnenNedsatt = true,
+        vurdertAv = Bruker("Z00000"),
+        opprettet = Instant.now(),
+    )
 
-        fun assertEquals(expected: List<Sykdomsvurdering>, actual: List<Sykdomsvurdering>) {
-            assertEquals(expected.size, actual.size)
-            for ((expected, actual) in expected.zip(actual)) {
-                assertEquals(expected, actual)
-            }
-        }
-
-        fun assertEquals(expected: Sykdomsvurdering, actual: Sykdomsvurdering) {
-            if (expected.id != null && actual.id != null) {
-                assertEquals(expected.id, actual.id)
-            }
-            assertEquals(expected.begrunnelse, actual.begrunnelse)
-            assertEquals(expected.vurderingenGjelderFra, actual.vurderingenGjelderFra)
-            assertEquals(expected.dokumenterBruktIVurdering, actual.dokumenterBruktIVurdering)
-            assertEquals(expected.harSkadeSykdomEllerLyte, actual.harSkadeSykdomEllerLyte)
-            assertEquals(expected.erSkadeSykdomEllerLyteVesentligdel, actual.erSkadeSykdomEllerLyteVesentligdel)
-            assertEquals(
-                expected.erNedsettelseIArbeidsevneAvEnVissVarighet,
-                actual.erNedsettelseIArbeidsevneAvEnVissVarighet
-            )
-            assertEquals(
-                expected.erNedsettelseIArbeidsevneMerEnnHalvparten,
-                actual.erNedsettelseIArbeidsevneMerEnnHalvparten
-            )
-            assertEquals(
-                expected.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
-                actual.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense
-            )
-            assertEquals(expected.yrkesskadeBegrunnelse, actual.yrkesskadeBegrunnelse)
-            assertEquals(expected.erArbeidsevnenNedsatt, actual.erArbeidsevnenNedsatt)
+    fun assertEquals(expected: List<Sykdomsvurdering>, actual: List<Sykdomsvurdering>) {
+        assertEquals(expected.size, actual.size)
+        for ((expected, actual) in expected.zip(actual)) {
+            assertEquals(expected, actual)
         }
     }
+
+    fun assertEquals(expected: Sykdomsvurdering, actual: Sykdomsvurdering) {
+        if (expected.id != null && actual.id != null) {
+            assertEquals(expected.id, actual.id)
+        }
+        assertEquals(expected.begrunnelse, actual.begrunnelse)
+        assertEquals(expected.vurderingenGjelderFra, actual.vurderingenGjelderFra)
+        assertEquals(expected.dokumenterBruktIVurdering, actual.dokumenterBruktIVurdering)
+        assertEquals(expected.harSkadeSykdomEllerLyte, actual.harSkadeSykdomEllerLyte)
+        assertEquals(expected.erSkadeSykdomEllerLyteVesentligdel, actual.erSkadeSykdomEllerLyteVesentligdel)
+        assertEquals(
+            expected.erNedsettelseIArbeidsevneAvEnVissVarighet,
+            actual.erNedsettelseIArbeidsevneAvEnVissVarighet
+        )
+        assertEquals(
+            expected.erNedsettelseIArbeidsevneMerEnnHalvparten,
+            actual.erNedsettelseIArbeidsevneMerEnnHalvparten
+        )
+        assertEquals(
+            expected.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
+            actual.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense
+        )
+        assertEquals(expected.yrkesskadeBegrunnelse, actual.yrkesskadeBegrunnelse)
+        assertEquals(expected.erArbeidsevnenNedsatt, actual.erArbeidsevnenNedsatt)
+    }
+
 
     private fun sak(connection: DBConnection): Sak {
         return PersonOgSakService(

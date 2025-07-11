@@ -9,10 +9,10 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.FreshDatabaseExtension
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
@@ -20,9 +20,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Condition
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
+import javax.sql.DataSource
 
-class AvklaringsbehovOrkestratorTest {
+@ExtendWith(FreshDatabaseExtension::class)
+class AvklaringsbehovOrkestratorTest(val dataSource: DataSource) {
 
     @BeforeEach
     fun setUp() {
@@ -31,7 +34,7 @@ class AvklaringsbehovOrkestratorTest {
 
     @Test
     fun `behandlingHendelseService dot stoppet blir kalt når en behandling er satt på vent`() {
-        val uthentedeJobber = InitTestDatabase.freshDatabase().transaction { connection ->
+        val uthentedeJobber = dataSource.transaction { connection ->
             val avklaringsbehovOrkestrator = AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(connection))
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)

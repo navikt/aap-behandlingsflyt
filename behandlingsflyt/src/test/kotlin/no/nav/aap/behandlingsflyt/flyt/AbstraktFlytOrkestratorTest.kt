@@ -107,6 +107,9 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -114,6 +117,8 @@ import javax.sql.DataSource
 
 
 @Fakes
+@Tag("motor")
+@Execution(ExecutionMode.SAME_THREAD)
 abstract class AbstraktFlytOrkestratorTest(val dataSource: DataSource) {
 
     protected val hendelsesMottak = TestHendelsesMottak(dataSource)

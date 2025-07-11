@@ -23,6 +23,8 @@ jobs:
               with:
                   gradle-version: wrapper
             - name: Bygg & test
+              env:
+                TESTCONTAINERS_REUSE_ENABLE: true
               run: gradle test --continue --configuration-cache --stacktrace
             - uses: dorny/test-reporter@v2.1.1
               if: success() || failure()

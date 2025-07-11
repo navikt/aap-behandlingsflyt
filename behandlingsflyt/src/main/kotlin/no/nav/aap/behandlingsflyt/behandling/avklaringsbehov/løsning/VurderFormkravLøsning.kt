@@ -14,9 +14,9 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = VURDER_FORMKRAV_KODE)
 class VurderFormkravLøsning(
-    @JsonProperty("formkravVurdering", required = true)
+    @param:JsonProperty("formkravVurdering", required = true)
     val formkravVurdering: FormkravVurderingLøsningDto,
-    @JsonProperty(
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = VURDER_FORMKRAV_KODE

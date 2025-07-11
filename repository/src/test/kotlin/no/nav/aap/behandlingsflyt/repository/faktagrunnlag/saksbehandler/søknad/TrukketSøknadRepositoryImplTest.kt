@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.test.FreshDatabaseExtension
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
@@ -16,10 +17,12 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import java.time.Instant
+import javax.sql.DataSource
 
-class TrukketSøknadRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+@ExtendWith(FreshDatabaseExtension::class)
+class TrukketSøknadRepositoryImplTest(val dataSource: DataSource) {
 
     @Test
     fun `read and write vurdering`() {

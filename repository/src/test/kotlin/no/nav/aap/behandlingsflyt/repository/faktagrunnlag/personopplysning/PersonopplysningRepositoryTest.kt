@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
+import no.nav.aap.behandlingsflyt.test.FreshDatabaseExtension
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.januar
@@ -22,23 +23,14 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
+import javax.sql.DataSource
 
-class PersonopplysningRepositoryImplTest {
-    private companion object {
-        private val dataSource = InitTestDatabase.freshDatabase()
-
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-
-        @JvmStatic
-        @AfterAll
-        fun afterAll() {
-            InitTestDatabase.closerFor(dataSource)
-        }
-    }
+@ExtendWith(FreshDatabaseExtension::class)
+class PersonopplysningRepositoryImplTest(val dataSource: DataSource) {
 
     @Test
     fun `Finner ikke personopplysninger hvis ikke lagret`() {
@@ -433,6 +425,10 @@ class PersonopplysningRepositoryImplTest {
                     )
                 )
         }
+    }
+
+    private companion object {
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
     private fun sak(connection: DBConnection): Sak {

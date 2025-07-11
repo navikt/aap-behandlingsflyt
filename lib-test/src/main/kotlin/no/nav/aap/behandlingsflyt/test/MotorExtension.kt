@@ -4,22 +4,36 @@ import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.motor.Motor
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
+import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.ParameterContext
 import org.junit.jupiter.api.extension.ParameterResolver
+import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
-
 class MotorExtension : BeforeAllCallback, AfterAllCallback, ParameterResolver {
+    private val log = LoggerFactory.getLogger(javaClass)
     override fun beforeAll(context: ExtensionContext?) {
         val motor = motor(context!!)
         if (!motor.kjører()) {
-            try {
-                motor.start()
-            } catch (e: Exception) {
-                println(e)
+            startMotor(motor)
+        }
+    }
+
+    fun startMotor(motor: Motor, antallForsøk: Int = 5, sleepInMs: Long = 1000) {
+        try {
+            motor.start()
+        } catch (e: Exception) {
+            log.error("Kunne ikke starte motor", e)
+            Thread.sleep(sleepInMs)
+
+            if (antallForsøk == 0) {
+                throw e
+            } else {
+                startMotor(motor, antallForsøk - 1, sleepInMs)
             }
         }
     }

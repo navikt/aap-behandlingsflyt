@@ -47,12 +47,12 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.tuple
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
 import java.time.LocalDateTime
 import javax.sql.DataSource
-
 
 @ExtendWith(MotorExtension::class)
 class SamordningFlyttest(dataSource: DataSource) : AbstraktFlytOrkestratorTest(dataSource) {

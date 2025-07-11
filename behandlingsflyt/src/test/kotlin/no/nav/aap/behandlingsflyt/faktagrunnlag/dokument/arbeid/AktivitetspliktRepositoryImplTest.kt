@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FreshDatabaseExtension
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -21,11 +22,12 @@ import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
+import javax.sql.DataSource
 
-class AktivitetspliktRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
-
+@ExtendWith(FreshDatabaseExtension::class)
+class AktivitetspliktRepositoryImplTest(val dataSource: DataSource) {
     @Test
     fun `kan lagre feilregistrering brudd på sak`() {
         dataSource.transaction { connection ->

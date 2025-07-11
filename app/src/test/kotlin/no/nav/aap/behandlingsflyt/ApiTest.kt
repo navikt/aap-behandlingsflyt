@@ -45,11 +45,14 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.UtvidetSaksinfoDTO
 import no.nav.aap.behandlingsflyt.test.AzureTokenGen
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeServers
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -86,14 +89,8 @@ class ApiTest {
     private val log = LoggerFactory.getLogger(javaClass)
 
     companion object {
-        private val postgres = postgreSQLContainer()
+        private val ds = InitTestDatabase.freshDatabase()
         private lateinit var port: Number
-
-        private val dbConfig = DbConfig(
-            url = postgres.jdbcUrl,
-            username = postgres.username,
-            password = postgres.password
-        )
 
         private val client: RestClient<InputStream> = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
@@ -127,10 +124,9 @@ class ApiTest {
                 )!!.access_token
             )
         }
-
         // Starter server
         private val server = embeddedServer(Netty, port = 0) {
-            server(dbConfig = dbConfig, repositoryRegistry = postgresRepositoryRegistry)
+            server(ds, repositoryRegistry = postgresRepositoryRegistry)
         }
 
         @JvmStatic
@@ -146,14 +142,11 @@ class ApiTest {
         @AfterAll
         fun afterAll() {
             server.stop()
-            postgres.close()
         }
     }
 
     @Test
     fun `kalle medlemsskaps-api`() {
-        val ds = initDatasource(dbConfig)
-
         val opprettetBehandling = ds.transaction { connection ->
             val personOgSakService = PersonOgSakService(
                 FakePdlGateway,
@@ -204,7 +197,6 @@ class ApiTest {
 
     @Test
     fun `kalle beregningsgrunnlag-api`() {
-        val ds = initDatasource(dbConfig)
         val referanse = ds.transaction { connection ->
             val personOgSakService = PersonOgSakService(
                 FakePdlGateway,
@@ -438,8 +430,6 @@ class ApiTest {
                 currentToken = getToken()
             )
         )
-
-        val ds = initDatasource(dbConfig)
 
         val behandlinger = kallInntilKlar(maxTries = 10, delayMs = 500) {
             val behandlinger = ds.transaction { connection ->

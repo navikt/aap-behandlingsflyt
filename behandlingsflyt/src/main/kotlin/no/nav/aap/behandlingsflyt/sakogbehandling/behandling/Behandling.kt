@@ -64,6 +64,7 @@ class Behandling(
     }
 
     fun aktivtStegTilstand(): StegTilstand {
+
         return stegTilstand ?: StegTilstand(
             stegType = flyt().stegene().first(),
             stegStatus = StegStatus.START,

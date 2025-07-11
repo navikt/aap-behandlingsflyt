@@ -10,33 +10,41 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FreshDatabaseExtension
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
+import org.junit.jupiter.api.extension.ExtendWith
+import java.io.Closeable
 import java.time.LocalDate
+import javax.sql.DataSource
 
-internal class PåklagetBehandlingRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
-    
+@ExtendWith(FreshDatabaseExtension::class)
+internal class PåklagetBehandlingRepositoryImplTest(val dataSource: DataSource) {
+    private companion object {
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+    }
+
     @Test
     fun `Lagrer og henter påklagetbehandling med id`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val klageBehandling = finnEllerOpprettBehandling(connection, sak, ÅrsakTilBehandling.MOTATT_KLAGE)
-            
+
             val påklagetBehandlingRepository = PåklagetBehandlingRepositoryImpl(connection)
             val vurdering = PåklagetBehandlingVurdering(
                 påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
                 påklagetBehandling = behandling.id,
                 vurdertAv = "ident"
             )
-            
+
             påklagetBehandlingRepository.lagre(klageBehandling.id, vurdering)
             val grunnlag = påklagetBehandlingRepository.hentHvisEksisterer(klageBehandling.id)!!
             assertThat(grunnlag.vurdering.påklagetVedtakType).isEqualTo(PåklagetVedtakType.KELVIN_BEHANDLING)
@@ -61,7 +69,8 @@ internal class PåklagetBehandlingRepositoryImplTest {
             )
 
             påklagetBehandlingRepository.lagre(klageBehandling.id, vurdering)
-            val vurderingMedReferanse = påklagetBehandlingRepository.hentGjeldendeVurderingMedReferanse(klageBehandling.referanse)!!
+            val vurderingMedReferanse =
+                påklagetBehandlingRepository.hentGjeldendeVurderingMedReferanse(klageBehandling.referanse)!!
             assertThat(vurderingMedReferanse.påklagetVedtakType).isEqualTo(PåklagetVedtakType.KELVIN_BEHANDLING)
             assertThat(vurderingMedReferanse.påklagetBehandling).isEqualTo(behandling.id)
             assertThat(vurderingMedReferanse.referanse?.referanse).isEqualTo(behandling.referanse.referanse)
@@ -76,9 +85,5 @@ internal class PåklagetBehandlingRepositoryImplTest {
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident(), periode)
-    }
-
-    private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 }

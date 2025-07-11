@@ -8,20 +8,22 @@ import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FreshDatabaseExtension
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
+import javax.sql.DataSource
 
 
-internal class MedlemskapRepositoryTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+@ExtendWith(FreshDatabaseExtension::class)
+internal class MedlemskapRepositoryTest(val dataSource: DataSource) {
 
     @Test
     fun `lagre og hente inn unntak`() {
@@ -91,7 +93,10 @@ internal class MedlemskapRepositoryTest {
 
         // Test kopier-metode
         val nyBehandling = dataSource.transaction {
-            BehandlingRepositoryImpl(it).oppdaterBehandlingStatus(behandlingId, no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET)
+            BehandlingRepositoryImpl(it).oppdaterBehandlingStatus(
+                behandlingId,
+                no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
+            )
             finnEllerOpprettBehandling(it, sak)
         }
         val nyBehandlingId = nyBehandling.id
@@ -106,58 +111,64 @@ internal class MedlemskapRepositoryTest {
 
     @Test
     fun `test sletting`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val medlemsskapRepository = MedlemskapRepositoryImpl(connection)
-            medlemsskapRepository.lagreUnntakMedlemskap(behandling.id, listOf(
-                MedlemskapDataIntern(
-                    unntakId = 123,
-                    fraOgMed = "2017-02-13",
-                    tilOgMed = "2018-02-13",
-                    grunnlag = "grunnlag",
-                    helsedel = true,
-                    ident = "02429118789",
-                    lovvalg = "lovvalg",
-                    medlem = true,
-                    status = "GYLD",
-                    statusaarsak = null,
-                    lovvalgsland = "NORGE",
-                    kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
+            medlemsskapRepository.lagreUnntakMedlemskap(
+                behandling.id, listOf(
+                    MedlemskapDataIntern(
+                        unntakId = 123,
+                        fraOgMed = "2017-02-13",
+                        tilOgMed = "2018-02-13",
+                        grunnlag = "grunnlag",
+                        helsedel = true,
+                        ident = "02429118789",
+                        lovvalg = "lovvalg",
+                        medlem = true,
+                        status = "GYLD",
+                        statusaarsak = null,
+                        lovvalgsland = "NORGE",
+                        kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
+                    )
                 )
-            ))
-            medlemsskapRepository.lagreUnntakMedlemskap(behandling.id, listOf(
-                MedlemskapDataIntern(
-                    unntakId = 124,
-                    fraOgMed = "2019-02-13",
-                    tilOgMed = "2020-02-13",
-                    grunnlag = "grunnlag",
-                    helsedel = true,
-                    ident = "02429118789",
-                    lovvalg = "lovvalg",
-                    medlem = true,
-                    status = "GYLD",
-                    statusaarsak = null,
-                    lovvalgsland = "NORGE",
-                    kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
+            )
+            medlemsskapRepository.lagreUnntakMedlemskap(
+                behandling.id, listOf(
+                    MedlemskapDataIntern(
+                        unntakId = 124,
+                        fraOgMed = "2019-02-13",
+                        tilOgMed = "2020-02-13",
+                        grunnlag = "grunnlag",
+                        helsedel = true,
+                        ident = "02429118789",
+                        lovvalg = "lovvalg",
+                        medlem = true,
+                        status = "GYLD",
+                        statusaarsak = null,
+                        lovvalgsland = "NORGE",
+                        kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
+                    )
                 )
-            ))
-            medlemsskapRepository.lagreUnntakMedlemskap(behandling.id, listOf(
-                MedlemskapDataIntern(
-                    unntakId = 125,
-                    fraOgMed = "2020-02-13",
-                    tilOgMed = "2021-02-13",
-                    grunnlag = "grunnlag",
-                    helsedel = true,
-                    ident = "02429118789",
-                    lovvalg = "lovvalg",
-                    medlem = true,
-                    status = "GYLD",
-                    statusaarsak = null,
-                    lovvalgsland = "NORGE",
-                    kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
+            )
+            medlemsskapRepository.lagreUnntakMedlemskap(
+                behandling.id, listOf(
+                    MedlemskapDataIntern(
+                        unntakId = 125,
+                        fraOgMed = "2020-02-13",
+                        tilOgMed = "2021-02-13",
+                        grunnlag = "grunnlag",
+                        helsedel = true,
+                        ident = "02429118789",
+                        lovvalg = "lovvalg",
+                        medlem = true,
+                        status = "GYLD",
+                        statusaarsak = null,
+                        lovvalgsland = "NORGE",
+                        kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
+                    )
                 )
-            ))
+            )
             assertDoesNotThrow { medlemsskapRepository.slett(behandling.id) }
         }
     }

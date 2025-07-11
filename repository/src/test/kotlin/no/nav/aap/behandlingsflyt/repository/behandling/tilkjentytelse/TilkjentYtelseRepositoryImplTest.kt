@@ -9,10 +9,10 @@ import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FreshDatabaseExtension
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
@@ -23,13 +23,16 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.LocalDate
+import javax.sql.DataSource
 
-class TilkjentYtelseRepositoryImplTest {
+@ExtendWith(FreshDatabaseExtension::class)
+class TilkjentYtelseRepositoryImplTest(val source: DataSource) {
     @Test
     fun `kan lagre og hente tilkjentYtelse`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        source.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -96,7 +99,7 @@ class TilkjentYtelseRepositoryImplTest {
 
     @Test
     fun `finner ingen tilkjentYtelse hvis den ikke eksisterer`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        source.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -108,7 +111,7 @@ class TilkjentYtelseRepositoryImplTest {
 
     @Test
     fun `test sletting`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        source.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val tilkjentYtelseRepository = TilkjentYtelseRepositoryImpl(connection)

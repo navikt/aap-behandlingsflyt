@@ -6,6 +6,8 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
+import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
+import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.KabalHendelseId
@@ -19,6 +21,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MotorExtension
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -35,6 +38,7 @@ import org.apache.kafka.common.serialization.StringSerializer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.testcontainers.kafka.KafkaContainer
@@ -47,6 +51,8 @@ import javax.sql.DataSource
 import kotlin.concurrent.thread
 
 @ExtendWith(MotorExtension::class)
+@Fakes
+@Tag("motor")
 class KabalKafkaKonsumentTest(val dataSource: DataSource) {
     private val util =
         TestUtil(dataSource, listOf(HendelseMottattHåndteringJobbUtfører.type))
@@ -62,6 +68,8 @@ class KabalKafkaKonsumentTest(val dataSource: DataSource) {
         @JvmStatic
         internal fun beforeAll() {
             GatewayRegistry.register<FakeUnleash>()
+                .register<OppgavestyringGatewayImpl>()
+                .register<StatistikkGatewayImpl>()
             kafka.start()
 
         }

@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FreshDatabaseExtension
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -17,13 +18,20 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import java.io.Closeable
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import javax.sql.DataSource
 
-internal class TrekkKlageRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+@ExtendWith(FreshDatabaseExtension::class)
+internal class TrekkKlageRepositoryImplTest(val dataSource: DataSource) {
+    private companion object {
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+    }
     
     @Test
     fun `Lagrer og henter trukket klage`() {
@@ -92,9 +100,5 @@ internal class TrekkKlageRepositoryImplTest {
         assertThat(vurdering1.hvorforTrekkes).isEqualTo(vurdering2.hvorforTrekkes)
         assertThat(vurdering1.begrunnelse).isEqualTo(vurdering2.begrunnelse)
         assertThat(vurdering1.hvorforTrekkes).isEqualTo(vurdering2.hvorforTrekkes)
-    }
-
-    private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 }

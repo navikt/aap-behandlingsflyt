@@ -3,7 +3,10 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     id("org.jetbrains.kotlin.jvm")
     id("java")
+    id("jvm-test-suite")
     id("test-report-aggregation")
+//    jacoco
+    id("jacoco-report-aggregation")
 }
 
 group = "no.nav.aap"
@@ -11,6 +14,7 @@ version = project.findProperty("version")?.toString() ?: "0.0.0"
 
 repositories {
     mavenCentral()
+    mavenLocal()
     maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
 }
 
@@ -21,7 +25,11 @@ testing {
             targets {
                 all {
                     testTask.configure {
-                        maxParallelForks = Runtime.getRuntime().availableProcessors() / 2
+                        useJUnitPlatform {
+//                            excludeTags("motor")
+                        }
+                        maxParallelForks = 1 // Runtime.getRuntime().availableProcessors() / 2
+
                     }
                 }
             }
@@ -31,10 +39,11 @@ testing {
 
 
 //tasks.test {
-//    useJUnitPlatform()
-//    maxParallelForks = Runtime.getRuntime().availableProcessors() / 2
+//    finalizedBy(tasks.jacocoTestReport) // report is always generated after tests run
 //}
-
+//tasks.jacocoTestReport {
+//    dependsOn(tasks.test) // tests are required to run before generating the report
+//}
 kotlin {
     jvmToolchain(21)
     compilerOptions {

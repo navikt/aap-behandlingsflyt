@@ -14,21 +14,24 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FreshDatabaseExtension
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
+import javax.sql.DataSource
 
-class MeldekortRepositoryImplTest {
+@ExtendWith(FreshDatabaseExtension::class)
+class MeldekortRepositoryImplTest(val dataSource: DataSource) {
 
     companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
@@ -36,7 +39,7 @@ class MeldekortRepositoryImplTest {
 
     @Test
     fun `Skal lagre ned meldekort på sak`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -46,7 +49,8 @@ class MeldekortRepositoryImplTest {
             val meldekortFørInnsending = meldekortRepositoryImpl.hentHvisEksisterer(behandling.id)
             assertThat(meldekortFørInnsending).isNull()
 
-            val mottattMeldekort = meldekortDokument(sak, behandling, "1", LocalDateTime.now().withNano(0).minusMinutes(5))
+            val mottattMeldekort =
+                meldekortDokument(sak, behandling, "1", LocalDateTime.now().withNano(0).minusMinutes(5))
             val meldekortPeriode = Periode(periode.fom, periode.fom.plusDays(1))
             val meldekortInitielt = Meldekort(
                 journalpostId = mottattMeldekort.referanse.asJournalpostId,

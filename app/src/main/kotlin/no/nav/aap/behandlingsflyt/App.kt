@@ -123,6 +123,11 @@ fun main() {
         LoggerFactory.getLogger(App::class.java).error("Uhåndtert feil av type ${e.javaClass}.", e)
         prometheus.uhåndtertExceptionTeller(e::class.java.name).increment()
     }
+
+    val dbConfig = DbConfig()
+    val dataSource = initDatasource(dbConfig)
+    Migrering.migrate(dataSource)
+
     embeddedServer(Netty, configure = {
         connectionGroupSize = 8
         workerGroupSize = 8
@@ -132,10 +137,10 @@ fun main() {
         connector {
             port = 8080
         }
-    }) { server(DbConfig(), postgresRepositoryRegistry) }.start(wait = true)
+    }) { server(dataSource, postgresRepositoryRegistry) }.start(wait = true)
 }
 
-internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: RepositoryRegistry) {
+internal fun Application.server(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     DefaultJsonMapper.objectMapper()
         .registerSubtypes(utledSubtypesTilAvklaringsbehovLøsning() + utledSubtypesTilMottattHendelseDTO())
 
@@ -158,8 +163,6 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
         allowHeader(HttpHeaders.ContentType)
     }
 
-    val dataSource = initDatasource(dbConfig)
-    Migrering.migrate(dataSource)
     val motor = startMotor(dataSource, repositoryRegistry)
     registerGateways()
 

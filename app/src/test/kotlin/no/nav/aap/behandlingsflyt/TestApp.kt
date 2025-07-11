@@ -38,6 +38,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.motor.FlytJobbRepository
@@ -66,25 +67,20 @@ fun main() {
             port = 8080
         }
     }) {
-        val dbConfig = DbConfig(
-            url = postgres.jdbcUrl,
-            username = postgres.username,
-            password = postgres.password
-        )
+        val dataSource = InitTestDatabase.freshDatabase()
         // Useful for connecting to the test database locally
         // jdbc URL contains the host and port and database name.
         println("jdbcUrl: ${postgres.jdbcUrl}. Password: ${postgres.password}. Username: ${postgres.username}.")
-        server(dbConfig, postgresRepositoryRegistry)
+        server(dataSource, postgresRepositoryRegistry)
         System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
 
-        val datasource = initDatasource(dbConfig)
-        opprettTestKlage(datasource, alderIkkeOppfyltTestCase)
+        opprettTestKlage(dataSource, alderIkkeOppfyltTestCase)
 
         apiRouting {
             route("/test") {
                 route("/opprett") {
                     post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { _, dto ->
-                        sendInnSøknad(datasource, dto)
+                        sendInnSøknad(dataSource, dto)
                         respond(dto)
                     }
                 }

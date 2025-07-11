@@ -14,19 +14,25 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.FreshDatabaseExtension
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
+import javax.sql.DataSource
 
-internal class BistandRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+@ExtendWith(FreshDatabaseExtension::class)
+internal class BistandRepositoryImplTest(val dataSource: DataSource) {
+    companion object {
+        private val now = LocalDate.now()
+        private val periode = Periode(now, LocalDate.now().plusYears(3))
+    }
 
     @Test
     fun `Finner ikke bistand hvis ikke lagret`() {
@@ -84,7 +90,7 @@ internal class BistandRepositoryImplTest {
 
     @Test
     fun `test sletting`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val bistandRepository = BistandRepositoryImpl(connection)
@@ -110,7 +116,7 @@ internal class BistandRepositoryImplTest {
                     BistandVurdering(
                         begrunnelse = "begrunnelse",
                         erBehovForAktivBehandling = true,
-                        erBehovForArbeidsrettetTiltak =true,
+                        erBehovForArbeidsrettetTiltak = true,
                         erBehovForAnnenOppfølging = true,
                         vurderingenGjelderFra = null,
                         vurdertAv = "Z022222",
@@ -596,10 +602,6 @@ internal class BistandRepositoryImplTest {
             val historikk = repo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id)
             assertEquals(listOf(bistandsvurdering2), historikk)
         }
-    }
-
-    private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
     private fun sak(connection: DBConnection): Sak {

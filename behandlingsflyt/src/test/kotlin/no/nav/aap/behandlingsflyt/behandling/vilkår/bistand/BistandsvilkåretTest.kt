@@ -28,19 +28,25 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FreshDatabaseExtension
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import java.time.Instant
 import java.time.LocalDate
+import javax.sql.DataSource
 
-class BistandsvilkåretTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+@ExtendWith(FreshDatabaseExtension::class)
+class BistandsvilkåretTest(val dataSource: DataSource) {
+    companion object {
+        private val now = LocalDate.now()
+        private val periode = Periode(now, LocalDate.now().plusYears(3))
+    }
 
     @Test
     fun `nye vurderinger skal overskrive`() {
@@ -326,11 +332,6 @@ class BistandsvilkåretTest {
         vurdertAv = vurdertAv,
         vurderingenGjelderFra = vurderingenGjelderFra
     )
-
-    companion object {
-        private val now = LocalDate.now()
-        private val periode = Periode(now, LocalDate.now().plusYears(3))
-    }
 
     private fun sak(connection: DBConnection): Sak {
         return PersonOgSakService(

@@ -18,20 +18,22 @@ import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.test.FreshDatabaseExtension
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
+import javax.sql.DataSource
 
-internal class MedlemskapArbeidInntektRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+@ExtendWith(FreshDatabaseExtension::class)
+internal class MedlemskapArbeidInntektRepositoryImplTest(val dataSource: DataSource) {
 
     @Test
     fun mapperOrgnavnKorrektTilInntekt() {
@@ -44,14 +46,16 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val repo = MedlemskapArbeidInntektRepositoryImpl(connection)
 
-            val sak = personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
-            val behandling = behandlingRepo.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+            val sak =
+                personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            val behandling =
+                behandlingRepo.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
             lagNyFullVurdering(behandling.id, repo, "Første begrunnelse")
 
             val lagretInntekt = repo.hentHvisEksisterer(behandling.id)!!
 
-            val inntekt1 = lagretInntekt.inntekterINorgeGrunnlag.first{it.identifikator == "1234"}
-            val inntekt2 = lagretInntekt.inntekterINorgeGrunnlag.first{it.identifikator == "4321"}
+            val inntekt1 = lagretInntekt.inntekterINorgeGrunnlag.first { it.identifikator == "1234" }
+            val inntekt2 = lagretInntekt.inntekterINorgeGrunnlag.first { it.identifikator == "4321" }
 
             assertEquals(inntekt1.organisasjonsNavn, "Bepis AS")
             assertEquals(inntekt1.identifikator, "1234")
@@ -103,7 +107,8 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         repo: MedlemskapArbeidInntektRepositoryImpl,
         begrunnelse: String
     ) {
-        repo.lagreArbeidsforholdOgInntektINorge(behandlingId, listOf(),
+        repo.lagreArbeidsforholdOgInntektINorge(
+            behandlingId, listOf(),
             listOf(
                 ArbeidsInntektMaaned(
                     aarMaaned = YearMonth.now(),

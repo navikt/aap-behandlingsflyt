@@ -1,14 +1,15 @@
 package no.nav.aap.behandlingsflyt.repository.sak
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.test.FreshDatabaseExtension
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import javax.sql.DataSource
 
-class PersonRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
-
+@ExtendWith(FreshDatabaseExtension::class)
+class PersonRepositoryImplTest(val dataSource: DataSource) {
     @Test
     fun `lagre, hente ut igjen`() {
         val identer = listOf(Ident("12345678910"), Ident("12345", aktivIdent = false))
