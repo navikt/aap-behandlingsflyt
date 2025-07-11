@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 
 val ktorVersion = "3.2.1"
-val komponenterVersjon = "1.0.280"
+val komponenterVersjon = "1.0.282"
 val junitVersjon = "5.13.3"
 val opentelemetryVersion = "2.17.0-alpha"
 
