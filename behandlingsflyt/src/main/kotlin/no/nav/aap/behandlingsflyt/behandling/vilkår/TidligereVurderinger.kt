@@ -70,7 +70,6 @@ class TidligereVurderingerImpl(
         },
 
         Sjekk(StegType.VURDER_LOVVALG) { vilkårsresultat, _ ->
-            /* TODO: Er dette avslag? Eller skal det ikke fattes vedtak? */
             ikkeOppfyltFørerTilAvslag(Vilkårtype.LOVVALG, vilkårsresultat)
         },
 
