@@ -27,6 +27,7 @@ import no.nav.aap.meldekort.kontrakt.sak.SakStatus
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProviderJobbSpesifikasjon
+import org.slf4j.LoggerFactory
 
 class MeldeperiodeTilMeldekortBackendJobbUtfører(
     private val sakService: SakService,
@@ -38,6 +39,8 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
     private val vedtakRepository: VedtakRepository,
     private val trukketSøknadService: TrukketSøknadService,
 ) : JobbUtfører {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
@@ -66,6 +69,9 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
         }
 
         if (opplysningerTilMeldekortBackend != null) {
+            val antallMeldePerioder = opplysningerTilMeldekortBackend.meldeperioder.size
+            val antallOpplysningsbehov = opplysningerTilMeldekortBackend.opplysningsbehov.size
+            log.info("Sender $antallMeldePerioder meldeperioder og $antallOpplysningsbehov opplysningsbehov til meldekort-backend for behandling $behandlingId")
             meldekortGateway.oppdaterMeldeperioder(opplysningerTilMeldekortBackend)
         }
     }
@@ -167,10 +173,10 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
             meldeplikt = emptyList(),
         )
 
-        private val no.nav.aap.komponenter.type.Periode.somKontraktperiode:  Periode
+        private val no.nav.aap.komponenter.type.Periode.somKontraktperiode: Periode
             get() = Periode(fom, tom)
 
-        private val List<no.nav.aap.komponenter.type.Periode>.somKontraktperioder:  List<Periode>
+        private val List<no.nav.aap.komponenter.type.Periode>.somKontraktperioder: List<Periode>
             get() = map { it.somKontraktperiode }
     }
 }
