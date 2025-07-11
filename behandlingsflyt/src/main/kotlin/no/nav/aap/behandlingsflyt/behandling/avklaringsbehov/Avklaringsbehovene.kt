@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.tilgang.Rolle
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
@@ -208,6 +209,11 @@ class Avklaringsbehovene(
 
     fun harHattAvklaringsbehov(): Boolean {
         return alle().any { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
+    }
+
+    fun harHattAvklaringsbehovLøstAvNay(): Boolean {
+        return alle().filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
+            .any { it.definisjon.løsesAv == listOf(Rolle.SAKSBEHANDLER_NASJONAL) }
     }
 
     fun harHattAvklaringsbehovSomHarKrevdToTrinn(): Boolean {
