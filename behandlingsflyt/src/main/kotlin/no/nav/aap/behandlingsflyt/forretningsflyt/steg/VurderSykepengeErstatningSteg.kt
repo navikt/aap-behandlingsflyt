@@ -96,6 +96,8 @@ class VurderSykepengeErstatningSteg private constructor(
             ))
         }
 
+        log.info("Relevant å vurdere sykepengeerstatning: $erRelevantÅVurdereSykepengererstatning for behandlingId ${kontekst.behandlingId}.")
+
         if (erRelevantÅVurdereSykepengererstatning) {
             val grunnlag = sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
 

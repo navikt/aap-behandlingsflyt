@@ -126,7 +126,7 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
         grunnlag: SykdomsFaktagrunnlag,
         sykdomVurdering: Sykdomsvurdering?
     ): Boolean {
-        return grunnlag.kravDato == sykdomVurdering?.vurderingenGjelderFra
+        return (grunnlag.kravDato == (sykdomVurdering?.vurderingenGjelderFra ?: grunnlag.kravDato))
                 || (grunnlag.typeBehandling == TypeBehandling.Førstegangsbehandling)
     }
 

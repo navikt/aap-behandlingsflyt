@@ -34,7 +34,7 @@ data class Sykdomsvurdering(
         return when (behandlingType) {
             TypeBehandling.Førstegangsbehandling -> erOppfyltSettBortIfraVissVarighet() && erNedsettelseIArbeidsevneAvEnVissVarighet == true
             TypeBehandling.Revurdering -> {
-                if (kravDato == vurderingenGjelderFra) {
+                if (vurderingenGjelderFra == null || kravDato == vurderingenGjelderFra) {
                     erOppfyltSettBortIfraVissVarighet() && erNedsettelseIArbeidsevneAvEnVissVarighet == true
                 } else {
                     erOppfyltSettBortIfraVissVarighet()

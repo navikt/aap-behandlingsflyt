@@ -1024,22 +1024,8 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
                 )
             ),
         )
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            RefusjonkravLøsning(
-                listOf(
-                    RefusjonkravVurderingDto(
-                        harKrav = true,
-                        fom = LocalDate.now(),
-                        tom = null,
-                        navKontor = "",
-                    )
-                )
-            )
-        )
-
-        behandling = kvalitetssikreOk(behandling)
+            .løsRefusjonskrav()
+            .kvalitetssikreOk()
 
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
         assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
@@ -1109,6 +1095,54 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
             periode to {
                 assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
             })
+
+        // Verifisere at det går an å kun 1 mnd med sykepengeerstatning
+        var revurdering = sendInnDokument(
+            ident,
+            DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("123123"),
+                mottattTidspunkt = LocalDateTime.now(),
+                innsendingType = InnsendingType.MANUELL_REVURDERING,
+                strukturertDokument = StrukturertDokument(
+                    ManuellRevurderingV0(
+                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+                        beskrivelse = "..."
+                    )
+                ),
+                periode = periode
+            ),
+        )
+            .løsAvklaringsBehov(
+                AvklarSykdomLøsning(
+                    sykdomsvurderinger = listOf(
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Er syk nok",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                            harSkadeSykdomEllerLyte = false,
+                            erSkadeSykdomEllerLyteVesentligdel = false,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = null,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = null,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            erArbeidsevnenNedsatt = true,
+                            yrkesskadeBegrunnelse = null,
+                            vurderingenGjelderFra = periode.fom.plusMonths(1),
+                        )
+                    )
+                )
+            )
+            .løsBeregningstidspunkt()
+            .medKontekst {
+                assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FORESLÅ_VEDTAK)
+
+                val underveisTidslinje = dataSource.transaction {
+                    UnderveisRepositoryImpl(it).hent(this.behandling.id).perioder
+                }.map { Segment(it.periode, it) }.let(::Tidslinje)
+
+                val oppfyltPeriode = underveisTidslinje.filter { it.verdi.rettighetsType != null }.helePerioden()
+
+                assertThat(oppfyltPeriode.fom).isEqualTo(periode.fom)
+                assertThat(oppfyltPeriode.tom).isEqualTo(periode.fom.plusMonths(1).minusDays(1))
+            }
     }
 
     @Test
