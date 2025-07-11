@@ -14,8 +14,8 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_SYKDOM_KODE)
 class AvklarSykdomLøsning(
-    @JsonProperty("sykdomsvurderinger", required = true) val sykdomsvurderinger: List<SykdomsvurderingLøsningDto>,
-    @JsonProperty(
+    @param:JsonProperty("sykdomsvurderinger", required = true) val sykdomsvurderinger: List<SykdomsvurderingLøsningDto>,
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = AVKLAR_SYKDOM_KODE
