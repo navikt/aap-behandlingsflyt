@@ -38,12 +38,10 @@ internal class SamordningAndreStatligeYtelserRepositoryImplTest {
             vurderingPerioder = listOf(
                 SamordningAndreStatligeYtelserVurderingPeriode(
                     periode = periode,
-                    beløp = 344,
                     ytelse = AndreStatligeYtelser.DAGPENGER,
                 ),
                 SamordningAndreStatligeYtelserVurderingPeriode(
                     periode = periodeTo,
-                    beløp = 399,
                     ytelse = AndreStatligeYtelser.BARNEPENSJON,
                 )
             )
@@ -73,12 +71,10 @@ internal class SamordningAndreStatligeYtelserRepositoryImplTest {
                     vurderingPerioder = listOf(
                         SamordningAndreStatligeYtelserVurderingPeriode(
                             periode = periode,
-                            beløp = 344,
                             ytelse = AndreStatligeYtelser.DAGPENGER,
                         ),
                         SamordningAndreStatligeYtelserVurderingPeriode(
                             periode = periodeTo,
-                            beløp = 399,
                             ytelse = AndreStatligeYtelser.BARNEPENSJON,
                         )
                     )
@@ -91,12 +87,10 @@ internal class SamordningAndreStatligeYtelserRepositoryImplTest {
                     vurderingPerioder = listOf(
                         SamordningAndreStatligeYtelserVurderingPeriode(
                             periode = periode,
-                            beløp = 1000,
                             ytelse = AndreStatligeYtelser.OMSTILLINGSSTØNAD,
                         ),
                         SamordningAndreStatligeYtelserVurderingPeriode(
                             periode = periodeTo,
-                            beløp = 2500,
                             ytelse = AndreStatligeYtelser.TILTAKSPENGER,
                         )
                     )

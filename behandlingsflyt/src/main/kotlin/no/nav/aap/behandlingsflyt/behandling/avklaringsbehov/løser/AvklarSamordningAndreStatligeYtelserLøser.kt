@@ -29,7 +29,6 @@ class AvklarSamordningAndreStatligeYtelserLøser(
                     SamordningAndreStatligeYtelserVurderingPeriode(
                         ytelse = it.ytelse,
                         periode = it.periode,
-                        beløp = it.beløp
                     )
                 }
             )

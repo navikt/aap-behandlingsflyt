@@ -1,0 +1,2 @@
+ALTER TABLE samordning_andre_statlige_ytelser_vurdering_periode
+DROP COLUMN BELOP;

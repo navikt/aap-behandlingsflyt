@@ -17,7 +17,6 @@ data class SamordningAndreStatligeYtelserVurdering(
 data class SamordningAndreStatligeYtelserVurderingPeriode(
     val ytelse: AndreStatligeYtelser,
     val periode: Periode,
-    val beløp: Int
 )
 
 data class SamordningAndreStatligeYtelserVurderingDto(
@@ -28,7 +27,6 @@ data class SamordningAndreStatligeYtelserVurderingDto(
 data class SamordningAndreStatligeYtelserVurderingPeriodeDto(
     val ytelse: AndreStatligeYtelser,
     val periode: Periode,
-    val beløp: Int
 )
 
 enum class AndreStatligeYtelser {
