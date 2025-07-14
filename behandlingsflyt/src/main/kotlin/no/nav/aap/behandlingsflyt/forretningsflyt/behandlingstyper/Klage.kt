@@ -25,7 +25,6 @@ object Klage : BehandlingType {
     override fun flyt(): BehandlingFlyt {
 
         return BehandlingFlytBuilder()
-            .medSteg(steg = StartBehandlingSteg)
             .medSteg(
                 steg = TrekkKlageSteg,
                 årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.KLAGE_TRUKKET),

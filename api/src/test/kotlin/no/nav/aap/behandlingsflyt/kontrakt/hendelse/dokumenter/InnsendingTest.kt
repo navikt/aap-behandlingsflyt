@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.assertj.core.api.Assertions.assertThat
+import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
@@ -203,12 +204,42 @@ class InnsendingTest {
         assertThat(melding).isInstanceOf(SøknadV0::class.java)
     }
 
+    @Test
+    fun `parse oppfølgingsoppgave fra full melding`() {
+        @Language("JSON")
+        val s = """{
+  "saksnummer": "4LDRRYo",
+  "referanse": {
+    "type": "BEHANDLING_REFERANSE",
+    "verdi": "a3cc3dfc-3337-444f-900c-d9232affe66f"
+  },
+  "type": "OPPFØLGINGSOPPGAVE",
+  "kanal": "DIGITAL",
+  "mottattTidspunkt": "2025-07-15T07:12:44.487Z",
+  "melding": {
+    "meldingType": "OppfølgingsoppgaveV0",
+    "datoForOppfølging": "2025-07-15",
+    "hvaSkalFølgesOpp": "dsfsdf",
+    "hvemSkalFølgeOpp": {
+      "@type": "nasjonalEnhet"
+    }
+  }
+}"""
+        val obj = DefaultJsonMapper.fromJson<Innsending>(s)
+
+        assertThat(obj.melding).isInstanceOf(OppfølgingsoppgaveV0::class.java)
+        val oppfølgingsOppgaveActual = obj.melding as OppfølgingsoppgaveV0
+        assertThat(oppfølgingsOppgaveActual.hvemSkalFølgeOpp).isEqualTo(HvemSkalFølgeOpp.NasjonalEnhet())
+    }
+
+
     @ParameterizedTest
     @MethodSource("hvemSkalFølgeOppMethodSource")
     fun `serialisering av oppfølgingsoppgavejson`(hvemSkalFølgeOpp: HvemSkalFølgeOpp) {
         val oppfølgingsoppgave = OppfølgingsoppgaveV0(
             datoForOppfølging = LocalDate.now(),
             hvemSkalFølgeOpp = hvemSkalFølgeOpp,
+            reserverTilBruker = "xx",
             hvaSkalFølgesOpp = "da"
         )
 
@@ -222,7 +253,7 @@ class InnsendingTest {
     companion object {
         @JvmStatic
         fun hvemSkalFølgeOppMethodSource() = listOf(
-            HvemSkalFølgeOpp.Bruker("1234"), HvemSkalFølgeOpp.NasjonalEnhet(),
+            HvemSkalFølgeOpp.NasjonalEnhet(),
             HvemSkalFølgeOpp.Kontor("2201")
         )
     }

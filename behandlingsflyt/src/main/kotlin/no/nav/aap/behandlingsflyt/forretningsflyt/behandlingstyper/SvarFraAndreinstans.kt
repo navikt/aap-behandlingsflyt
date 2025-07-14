@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.svarfraandreinstans.SvarF
 object SvarFraAndreinstans : BehandlingType {
     override fun flyt(): BehandlingFlyt {
         return BehandlingFlytBuilder()
-            .medSteg(steg = StartBehandlingSteg)
             .medSteg(steg = SvarFraAndreinstansSteg)
             .medSteg(steg = IverksettKonsekvensSteg)
             .build()

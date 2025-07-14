@@ -81,6 +81,24 @@ class OppfølgingsBehandlingRepositoryImpl(private val connection: DBConnection)
     }
 
     override fun slett(behandlingId: BehandlingId) {
+        val vurderingIder =
+            connection.queryList("SELECT vurdering_id FROM OPPFOLGINGSOPPGAVE_GRUNNLAG WHERE behandling_id = ?") {
+                setParams {
+                    setLong(1, behandlingId.id)
+                }
+                setRowMapper { it.getLong("vurdering_id") }
+            }
 
+        connection.execute("DELETE FROM OPPFOLGINGSOPPGAVE_GRUNNLAG WHERE behandling_id = ?") {
+            setParams {
+                setLong(1, behandlingId.id)
+            }
+        }
+
+        connection.executeBatch("DELETE FROM OPPFOLGINGSOPPGAVE_VURDERING WHERE id = ?", vurderingIder) {
+            setParams {
+                setLong(1, it)
+            }
+        }
     }
 }

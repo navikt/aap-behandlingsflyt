@@ -420,11 +420,24 @@ public enum class Definisjon(
     ),
 
     // Oppfølgingsbehandling
-    AVKLAR_OPPFØLGINGSBEHOV(
+    AVKLAR_OPPFØLGINGSBEHOV_LOKALKONTOR(
         kode = AvklaringsbehovKode.`8001`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.AVKLAR_OPPFØLGING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
+    ),
+    AVKLAR_OPPFØLGINGSBEHOV_NAY(
+        kode = AvklaringsbehovKode.`8002`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.AVKLAR_OPPFØLGING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+    ),
+    VENT_PÅ_OPPFØLGING(
+        kode = AvklaringsbehovKode.`8003`,
+        type = BehovType.VENTEPUNKT,
+        løsesISteg = StegType.START_OPPFØLGINGSBEHANDLING,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.SAKSBEHANDLER_NASJONAL),
+        defaultFrist = Period.ofWeeks(4),
     );
 
     public companion object {

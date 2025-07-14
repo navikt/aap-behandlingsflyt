@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppfølgingLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppfølgingNAYLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentPåOppfølgingLøsning
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsoppgaveGrunnlagDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
@@ -11,6 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -36,9 +38,10 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest() {
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 strukturertDokument = StrukturertDokument(
                     OppfølgingsoppgaveV0(
-                        datoForOppfølging = LocalDate.now(),
+                        datoForOppfølging = LocalDate.now().plusDays(1),
                         hvaSkalFølgesOpp = "noe",
-                        hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet()
+                        hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet(),
+                        reserverTilBruker = "MEGSELV"
                     )
                 ),
                 periode = periode
@@ -47,11 +50,16 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest() {
             .medKontekst {
                 assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.OppfølgingsBehandling)
                 assertThat(behandling.referanse).isNotEqualTo(førstegangsbehandling.referanse)
-
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.AVKLAR_OPPFØLGINGSBEHOV)
+                assertThat(ventebehov.map { it.definisjon }).containsOnly(Definisjon.VENT_PÅ_OPPFØLGING)
+            }
+            .løsAvklaringsBehov(VentPåOppfølgingLøsning())
+            .medKontekst {
+                assertThat(behandling.aktivtSteg())
+                    .describedAs { "Forventer at steget har endret seg" }
+                    .isNotEqualTo(StegType.START_OPPFØLGINGSBEHANDLING)
             }
             .løsAvklaringsBehov(
-                AvklarOppfølgingLøsning(
+                AvklarOppfølgingNAYLøsning(
                     OppfølgingsoppgaveGrunnlagDto(
                         konsekvensAvOppfølging = KonsekvensAvOppfølging.OPPRETT_VURDERINGSBEHOV,
                         opplysningerTilRevurdering = listOf(ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
@@ -64,7 +72,10 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest() {
             }
 
         val opprettetBehandling =
-            hentNyesteBehandlingForSak(oppfølgingsbehandling.sakId, listOf(TypeBehandling.Revurdering))
+            hentNyesteBehandlingForSak(
+                oppfølgingsbehandling.sakId,
+                listOf(TypeBehandling.Revurdering)
+            )
 
         util.ventPåSvar(opprettetBehandling)
 

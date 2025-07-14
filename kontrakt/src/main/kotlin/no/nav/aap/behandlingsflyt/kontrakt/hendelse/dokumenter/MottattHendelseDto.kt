@@ -107,10 +107,10 @@ public fun Melding.innsendingType(): InnsendingType = when (this) {
     is Søknad -> InnsendingType.SØKNAD
     is AnnetRelevantDokument -> InnsendingType.ANNET_RELEVANT_DOKUMENT
     is ManuellRevurdering -> InnsendingType.MANUELL_REVURDERING
-    is KlageV0 -> InnsendingType.KLAGE
+    is Klage -> InnsendingType.KLAGE
     is NyÅrsakTilBehandling -> InnsendingType.NY_ÅRSAK_TIL_BEHANDLING
     is KabalHendelse -> InnsendingType.KABAL_HENDELSE
-    is OppfølgingsoppgaveV0 -> InnsendingType.OPPFØLGINGSOPPGAVE
+    is Oppfølgingsoppgave -> InnsendingType.OPPFØLGINGSOPPGAVE
 }
 
 /**

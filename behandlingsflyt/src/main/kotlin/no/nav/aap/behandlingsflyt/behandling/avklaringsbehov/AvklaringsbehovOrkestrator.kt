@@ -87,7 +87,7 @@ class AvklaringsbehovOrkestrator(
         behandling: Behandling
     ) {
         val definisjoner = avklaringsbehov.definisjon()
-        log.info("Forsøker løse avklaringsbehov[${definisjoner}] på behandling[${behandling.referanse}]")
+        log.info("Forsøker å løse avklaringsbehov[${definisjoner}] på behandling[${behandling.referanse}]")
 
         avklaringsbehovene.validateTilstand(
             behandling = behandling, avklaringsbehov = definisjoner

@@ -215,6 +215,10 @@ public enum class StegType(
     ),
 
     // Oppfølgingsbehandling start
+    START_OPPFØLGINGSBEHANDLING(
+        gruppe = StegGruppe.START_OPPFØLGINGSBEHANDLING,
+        status = Status.OPPRETTET
+    ),
     AVKLAR_OPPFØLGING(
         gruppe = StegGruppe.AVKLAR_OPPPFØLGING,
         status = Status.UTREDES

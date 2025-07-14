@@ -120,7 +120,7 @@ class KabalKafkaKonsumentTest {
         assertThat(konsument.antallMeldinger).isEqualTo(1)
         konsument.lukk()
 
-        util.ventPåSvar(klagebehandling.id.id)
+        util.ventPåSvar(klagebehandling.sakId.id, klagebehandling.id.id)
         val svarFraAnderinstansBehandling = dataSource.transaction { connection ->
             val behandlinger = BehandlingRepositoryImpl(connection).hentAlleFor(
                 klagebehandling.sakId,

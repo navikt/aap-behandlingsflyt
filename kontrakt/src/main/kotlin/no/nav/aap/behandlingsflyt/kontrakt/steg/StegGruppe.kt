@@ -37,5 +37,6 @@ public enum class StegGruppe(public val skalVises: Boolean, public val obligator
     IVERKSETT_KONSEKVENS(true, true),
 
     // Oppfølgingsbehandling
+    START_OPPFØLGINGSBEHANDLING(false, false),
     AVKLAR_OPPPFØLGING(true, true)
 }

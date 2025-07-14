@@ -32,6 +32,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.Bist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
+import no.nav.aap.behandlingsflyt.flyt.AbstraktFlytOrkestratorTest.Companion.util
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.NyÅrsakTilBehandlingHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
@@ -108,17 +109,10 @@ import no.nav.aap.motor.testutil.TestUtil
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Tag
-import org.junit.jupiter.api.extension.ExtensionContext
-import org.junit.jupiter.api.extension.TestInstancePreDestroyCallback
-import org.junit.jupiter.api.parallel.Execution
-import org.junit.jupiter.api.parallel.ExecutionMode
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
-import javax.sql.DataSource
 
 
 @Fakes
@@ -741,11 +735,20 @@ open class AbstraktFlytOrkestratorTest {
         return fattVedtakEllerSendRetur(this, returVed)
     }
 
-    class BehandlingInfo(val åpneAvklaringsbehov: List<Avklaringsbehov>, val behandling: Behandling)
+    class BehandlingInfo(
+        val åpneAvklaringsbehov: List<Avklaringsbehov>,
+        val behandling: Behandling,
+        val ventebehov: List<Avklaringsbehov>
+    )
 
     protected fun Behandling.medKontekst(block: BehandlingInfo.() -> Unit): Behandling {
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(this)
-        block(BehandlingInfo(åpneAvklaringsbehov = åpneAvklaringsbehov, behandling = this))
+        block(
+            BehandlingInfo(
+                åpneAvklaringsbehov = åpneAvklaringsbehov,
+                behandling = this,
+                ventebehov = åpneAvklaringsbehov.filter { it.erVentepunkt() })
+        )
         return this
     }
 

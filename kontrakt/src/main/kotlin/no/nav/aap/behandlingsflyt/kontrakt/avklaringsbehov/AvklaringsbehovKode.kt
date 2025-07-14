@@ -56,7 +56,9 @@ public const val VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV_KODE: String = "
 public const val HÅNDTER_SVAR_FRA_ANDREINSTANS_KODE: String = "6008"
 public const val FASTSETT_FULLMEKTIG_KODE: String = "6009"
 public const val VURDER_TREKK_AV_KLAGE_KODE: String = "6010"
-public const val AVKLAR_OPPFØLGINGSBEHOV: String = "8001"
+public const val AVKLAR_OPPFØLGINGSBEHOV_LOKALKONTOR: String = "8001"
+public const val AVKLAR_OPPFØLGINGSBEHOV_NAY: String = "8002"
+public const val VENT_PÅ_OPPFØLGING: String = "8003"
 
 @Suppress("EnumEntryName")
 public enum class AvklaringsbehovKode {
@@ -232,7 +234,7 @@ public enum class AvklaringsbehovKode {
      * [BEKREFT_TOTALVURDERING_KLAGE]
      */
     `6006`,
-    
+
     /**
      * [VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV_KODE]
      */
@@ -260,7 +262,13 @@ public enum class AvklaringsbehovKode {
     `7001`,
 
     /**
-     * [AVKLAR_OPPFØLGINGSBEHOV]
+     * [AVKLAR_OPPFØLGINGSBEHOV_LOKALKONTOR]
      */
-    `8001`
+    `8001`,
+
+    /**
+     * [AVKLAR_OPPFØLGINGSBEHOV_NAY]
+     */
+    `8002`,
+    `8003`
 }

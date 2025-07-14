@@ -1610,8 +1610,6 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         val behov = hentÅpneAvklaringsbehov(behandling.id)
         assertThat(behov).isEmpty()
 
-        util.ventPåSvar()
-
         assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
         assertThat(hendelser.last().behandlingStatus).isEqualTo(Status.AVSLUTTET)
     }
