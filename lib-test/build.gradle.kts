@@ -1,7 +1,4 @@
 val ktorVersion = "3.2.1"
-val komponenterVersjon = "1.0.282"
-val tilgangVersjon = "1.0.95"
-val junitVersjon = "5.13.3"
 
 plugins {
     id("behandlingsflyt.conventions")
@@ -14,11 +11,11 @@ dependencies {
     implementation(project(":repository"))
     implementation(project(":kontrakt"))
     implementation("no.nav.aap.brev:kontrakt:0.0.130")
-    implementation("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
-    implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:tidslinje:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
+    implementation(libs.tilgangKontrakt)
+    implementation(libs.httpklient)
+    implementation(libs.verdityper)
+    implementation(libs.tidslinje)
+    implementation(libs.dbconnect)
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
@@ -39,6 +36,5 @@ dependencies {
 
     implementation("com.nimbusds:nimbus-jose-jwt:10.3.1")
 
-    implementation("org.junit.jupiter:junit-jupiter-api:$junitVersjon")
-    implementation("org.assertj:assertj-core:3.27.3")
+    implementation(libs.bundles.junit)
 }
