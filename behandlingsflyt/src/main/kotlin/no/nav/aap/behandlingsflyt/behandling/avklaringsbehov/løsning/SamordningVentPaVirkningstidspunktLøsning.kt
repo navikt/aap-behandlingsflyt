@@ -12,7 +12,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonTypeName(value = SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
 class SamordningVentPaVirkningstidspunktLøsning(
-    @JsonProperty(
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT
