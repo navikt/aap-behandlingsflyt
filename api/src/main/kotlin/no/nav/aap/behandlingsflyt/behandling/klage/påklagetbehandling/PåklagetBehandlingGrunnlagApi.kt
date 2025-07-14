@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.søknad.DatoFraDokumentUtleder
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurderingMedReferanse
@@ -38,7 +39,6 @@ fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(dataSource: DataSource, re
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val påklagetBehandlingRepository = repositoryProvider.provide<PåklagetBehandlingRepository>()
                 val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
-                val datoFraDokumentUtleder = DatoFraDokumentUtleder(mottattDokumentRepository)
                 val behandling = behandlingRepository.hent(behandlingReferanse)
                 val sak = sakRepository.hent(behandling.sakId)
 
@@ -82,7 +82,8 @@ fun mapTilPåklagetBehandlingGrunnlagDto(
                 påklagetVedtakType = påklagetBehandlingVurderingMedReferanse.påklagetVedtakType
             )
         },
-        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle
+        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+        vurdertAv = påklagetBehandlingVurderingMedReferanse?.let { VurdertAvResponse.fraIdent(it.vurdertAv, it.opprettet) }
     )
 }
         

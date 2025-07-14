@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.klage.formkrav
 
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurdering
 import java.time.LocalDate
@@ -17,7 +18,7 @@ data class FormkravVurderingDto(
     val likevelBehandles: Boolean?,
     val erKonkret: Boolean,
     val erSignert: Boolean,
-    val vurdertAv: String
+    val vurdertAv: VurdertAvResponse?
 )
 
 internal fun FormkravVurdering.tilDto() =
@@ -27,7 +28,7 @@ internal fun FormkravVurdering.tilDto() =
         erFristOverholdt = erFristOverholdt,
         erKonkret = erKonkret,
         erSignert = erSignert,
-        vurdertAv = vurdertAv,
+        vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet),
         likevelBehandles = likevelBehandles
     )
 

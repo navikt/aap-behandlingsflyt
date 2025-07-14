@@ -16,6 +16,7 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
@@ -37,6 +38,7 @@ internal class FormkravRepositoryImplTest {
                 erKonkret = true,
                 erSignert = true,
                 vurdertAv = "ident",
+                opprettet = Instant.parse("2023-01-01T12:00:00Z"),
                 likevelBehandles = null
             )
 
@@ -63,6 +65,7 @@ internal class FormkravRepositoryImplTest {
                 erKonkret = true,
                 erSignert = true,
                 vurdertAv = "ident",
+                opprettet = Instant.parse("2023-01-01T12:00:00Z"),
                 likevelBehandles = null
             )
 

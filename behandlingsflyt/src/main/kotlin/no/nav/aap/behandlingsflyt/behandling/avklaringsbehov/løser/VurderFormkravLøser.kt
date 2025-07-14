@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDateTime
 
 class VurderFormkravLøser(
     private val formkravRepository: FormkravRepository,
@@ -22,7 +23,7 @@ class VurderFormkravLøser(
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: VurderFormkravLøsning): LøsningsResultat {
-        val vurdering = løsning.formkravVurdering.tilVurdering(kontekst.bruker)
+        val vurdering = løsning.formkravVurdering.tilVurdering(kontekst.bruker, LocalDateTime.now())
         formkravRepository.lagre(
             kontekst.kontekst.behandlingId,
             formkravVurdering = vurdering

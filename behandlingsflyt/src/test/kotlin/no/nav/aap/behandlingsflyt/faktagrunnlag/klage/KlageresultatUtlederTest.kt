@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.ÅrsakTilAvslag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.ÅrsakTilUfullstendigResultat
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.time.LocalDate
 
 class KlageresultatUtlederTest {
@@ -29,6 +30,7 @@ class KlageresultatUtlederTest {
             erKonkret = true,
             erSignert = true,
             vurdertAv = "Saksbehandler",
+            opprettet = Instant.now(),
             likevelBehandles = null
         )
 
@@ -50,6 +52,7 @@ class KlageresultatUtlederTest {
             erKonkret = true,
             erSignert = true,
             vurdertAv = "Saksbehandler",
+            opprettet = Instant.now(),
             likevelBehandles = null
         )
 
@@ -71,6 +74,7 @@ class KlageresultatUtlederTest {
             erKonkret = true,
             erSignert = true,
             vurdertAv = "Saksbehandler",
+            opprettet = Instant.now(),
             likevelBehandles = false
         )
 
@@ -292,6 +296,7 @@ class KlageresultatUtlederTest {
             erKonkret = true,
             erSignert = true,
             vurdertAv = "Saksbehandler",
+            opprettet = Instant.now(),
             likevelBehandles = null
         )
     }

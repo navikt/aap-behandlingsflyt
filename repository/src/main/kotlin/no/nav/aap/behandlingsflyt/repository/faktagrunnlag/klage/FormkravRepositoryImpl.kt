@@ -29,7 +29,7 @@ class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRep
             LEFT JOIN formkrav_grunnlag fg ON fv.id = fg.vurdering_id
             LEFT JOIN avvist_formkrav_varsel afv ON afv.behandling_id = fg.behandling_id
             WHERE fg.aktiv = true AND fg.behandling_id = ?
-            
+
         """.trimIndent()
         return connection.queryFirstOrNull(query) {
             setParams {
@@ -101,8 +101,8 @@ class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRep
     private fun lagreVurdering(vurdering: FormkravVurdering): Long {
         val query = """
             INSERT INTO FORMKRAV_VURDERING 
-            (BEGRUNNELSE, ER_BRUKER_PART, ER_FRIST_OVERHOLDT, ER_KONKRET, ER_SIGNERT, VURDERT_AV, LIKEVEL_BEHANDLES) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            (BEGRUNNELSE, ER_BRUKER_PART, ER_FRIST_OVERHOLDT, ER_KONKRET, ER_SIGNERT, VURDERT_AV, LIKEVEL_BEHANDLES, OPPRETTET_TID) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         return connection.executeReturnKey(query) {
@@ -114,6 +114,7 @@ class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRep
                 setBoolean(5, vurdering.erSignert)
                 setString(6, vurdering.vurdertAv)
                 setBoolean(7, vurdering.likevelBehandles)
+                setInstant(8, vurdering.opprettet)
             }
             setResultValidator { rowsUpdated ->
                 require(rowsUpdated == 1)
@@ -189,6 +190,7 @@ class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRep
             erKonkret = row.getBoolean("ER_KONKRET"),
             erSignert = row.getBoolean("ER_SIGNERT"),
             vurdertAv = row.getString("VURDERT_AV"),
+            opprettet = row.getInstant("OPPRETTET_TID"),
             likevelBehandles = row.getBooleanOrNull("LIKEVEL_BEHANDLES"),
         )
     }

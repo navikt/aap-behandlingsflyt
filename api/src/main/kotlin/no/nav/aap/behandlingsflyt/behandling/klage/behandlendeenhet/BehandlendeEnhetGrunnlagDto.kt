@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.klage.behandlendeenhet
 
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetVurdering
 
 data class BehandlendeEnhetGrunnlagDto(
@@ -9,12 +10,12 @@ data class BehandlendeEnhetGrunnlagDto(
 data class BehandlendeEnhetVurderingDto(
     val skalBehandlesAvNay: Boolean,
     val skalBehandlesAvKontor: Boolean,
-    val vurdertAv: String
+    val vurdertAv: VurdertAvResponse?
 )
 
 internal fun BehandlendeEnhetVurdering.tilDto() =
     BehandlendeEnhetVurderingDto(
         skalBehandlesAvNay = skalBehandlesAvNay,
         skalBehandlesAvKontor = skalBehandlesAvKontor,
-        vurdertAv = vurdertAv,
+        vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet),
     )

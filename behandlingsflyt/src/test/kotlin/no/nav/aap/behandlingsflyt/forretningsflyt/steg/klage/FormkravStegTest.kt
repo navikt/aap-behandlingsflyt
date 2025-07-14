@@ -36,6 +36,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -159,7 +160,8 @@ class FormkravStegTest {
                 erSignert = true,
                 erFristOverholdt = true,
                 likevelBehandles = null,
-                vurdertAv = "indent"
+                vurdertAv = "indent",
+                opprettet = Instant.now(),
             )
         )
 
@@ -212,7 +214,8 @@ class FormkravStegTest {
                 erSignert = false,
                 erFristOverholdt = false,
                 likevelBehandles = false,
-                vurdertAv = "indent"
+                vurdertAv = "indent",
+                opprettet = Instant.now(),
             )
         )
 
@@ -271,7 +274,8 @@ class FormkravStegTest {
                 erSignert = false,
                 erFristOverholdt = true,
                 likevelBehandles = null,
-                vurdertAv = "indent"
+                vurdertAv = "indent",
+                opprettet = Instant.now(),
             ),
             varsel = FormkravVarsel(
                 varselId = BrevbestillingReferanse(UUID.randomUUID()),
@@ -332,7 +336,8 @@ class FormkravStegTest {
                 erSignert = false,
                 erFristOverholdt = true,
                 likevelBehandles = true,
-                vurdertAv = "indent"
+                vurdertAv = "indent",
+                opprettet = Instant.now(),
             ),
             varsel = FormkravVarsel(
                 varselId = BrevbestillingReferanse(UUID.randomUUID()),
@@ -398,7 +403,8 @@ class FormkravStegTest {
                 erSignert = false,
                 erFristOverholdt = true,
                 likevelBehandles = true,
-                vurdertAv = "indent"
+                vurdertAv = "indent",
+                opprettet = Instant.now(),
             ),
             varsel = FormkravVarsel(
                 varselId = BrevbestillingReferanse(UUID.randomUUID()),
