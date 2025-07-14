@@ -1,6 +1,5 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.flate
+package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetVurdering
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 
 data class BehandlendeEnhetLøsningDto(

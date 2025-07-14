@@ -1,6 +1,5 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate
+package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurdering
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 
 data class FormkravVurderingLøsningDto(

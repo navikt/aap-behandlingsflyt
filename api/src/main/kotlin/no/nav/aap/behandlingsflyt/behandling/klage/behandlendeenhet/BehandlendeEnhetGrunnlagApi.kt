@@ -1,11 +1,9 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.flate
+package no.nav.aap.behandlingsflyt.behandling.klage.behandlendeenhet
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate.FormkravGrunnlagDto
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
