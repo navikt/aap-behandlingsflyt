@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.klage.fullmektig
 
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentMedType
@@ -16,8 +17,7 @@ data class FullmektigVurderingDto(
     val fullmektigIdentMedType: IdentMedType? = null,
     val fullmektigIdent: String? = null,
     val fullmektigNavnOgAdresse: NavnOgAdresse? = null,
-    val vurdertAv: String,
-    val opprettet: Instant
+    val vurdertAv: VurdertAvResponse?
 )
 
 internal fun FullmektigGrunnlag.tilDto(): FullmektigGrunnlagDto {
@@ -32,8 +32,7 @@ internal fun FullmektigVurdering.tilDto(): FullmektigVurderingDto {
         fullmektigIdent = fullmektigIdent?.ident,
         fullmektigIdentMedType = this.fullmektigIdent,
         fullmektigNavnOgAdresse = this.fullmektigNavnOgAdresse,
-        vurdertAv = this.vurdertAv,
-        opprettet = this.opprettet!!
+        vurdertAv = VurdertAvResponse.fraIdent(this.vurdertAv, this.opprettet)
     )
 }
 
