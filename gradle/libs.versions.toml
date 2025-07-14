@@ -1,0 +1,17 @@
+[versions]
+komponenter = "1.0.282"
+
+[libraries]
+json = {module = "no.nav.aap.kelvin:json", version.ref = "komponenter"}
+dbconnect = {module = "no.nav.aap.kelvin:dbconnect", version.ref = "komponenter"}
+verdityper = {module = "no.nav.aap.kelvin:verdityper", version.ref = "komponenter"}
+dbmigrering = {module = "no.nav.aap.kelvin:dbmigrering", version.ref = "komponenter"}
+httpklient = {module = "no.nav.aap.kelvin:httpklient", version.ref = "komponenter"}
+infrastructure = {module = "no.nav.aap.kelvin:infrastructure", version.ref = "komponenter"}
+server = {module = "no.nav.aap.kelvin:server", version.ref = "komponenter"}
+tidslinje = {module = "no.nav.aap.kelvin:tidslinje", version.ref = "komponenter"}
+motor = {module = "no.nav.aap.kelvin:motor", version.ref = "komponenter"}
+motorApi = {module = "no.nav.aap.kelvin:motor-api", version.ref = "komponenter"}
+gateway = {module = "no.nav.aap.kelvin:gateway", version.ref = "komponenter"}
+dbtest = {module = "no.nav.aap.kelvin:dbtest", version.ref = "komponenter"}
+motorTestUtils = {module = "no.nav.aap.kelvin:motor-test-utils", version.ref = "komponenter"}

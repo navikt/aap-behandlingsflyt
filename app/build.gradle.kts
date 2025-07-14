@@ -2,7 +2,6 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 
 val ktorVersion = "3.2.1"
-val komponenterVersjon = "1.0.282"
 val junitVersjon = "5.13.3"
 val opentelemetryVersion = "2.17.1-alpha"
 
@@ -76,16 +75,16 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
 
-    implementation("no.nav.aap.kelvin:motor:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:dbmigrering:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:motor-api:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:json:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:server:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:tidslinje:$komponenterVersjon")
+    implementation(libs.motor)
+    implementation(libs.dbconnect)
+    implementation(libs.dbmigrering)
+    implementation(libs.motorApi)
+    implementation(libs.httpklient)
+    implementation(libs.json)
+    implementation(libs.infrastructure)
+    implementation(libs.server)
+    implementation(libs.verdityper)
+    implementation(libs.tidslinje)
 
     // Auditlogging
     runtimeOnly(group = "com.papertrailapp", name = "logback-syslog4j", version = "1.0.0")
@@ -102,8 +101,8 @@ dependencies {
     implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:${opentelemetryVersion}")
 
     testImplementation(project(":lib-test"))
-    testImplementation("no.nav.aap.kelvin:dbtest:$komponenterVersjon")
-    testImplementation("no.nav.aap.kelvin:motor-test-utils:$komponenterVersjon")
+    implementation(libs.dbtest)
+    implementation(libs.motorTestUtils)
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersjon")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersjon")
     testImplementation("org.assertj:assertj-core:3.27.3")

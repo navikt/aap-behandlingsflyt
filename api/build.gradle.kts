@@ -2,7 +2,6 @@ plugins {
     id("behandlingsflyt.conventions")
 }
 
-val komponenterVersjon = "1.0.282"
 val ktorVersion = "3.2.1"
 val tilgangVersjon = "1.0.95"
 val junitVersjon = "5.13.3"
@@ -11,13 +10,13 @@ val kafkaVersion = "4.0.0"
 
 dependencies {
     api(project(":behandlingsflyt"))
-    implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:server:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:motor-api:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:tidslinje:$komponenterVersjon")
+    implementation(libs.dbconnect)
+    implementation(libs.infrastructure)
+    implementation(libs.httpklient)
+    implementation(libs.server)
+    implementation(libs.motorApi)
+    implementation(libs.verdityper)
+    implementation(libs.tidslinje)
     implementation("org.apache.kafka:kafka-clients:${kafkaVersion}")
     api("no.nav.aap.tilgang:plugin:$tilgangVersjon")
     api("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
