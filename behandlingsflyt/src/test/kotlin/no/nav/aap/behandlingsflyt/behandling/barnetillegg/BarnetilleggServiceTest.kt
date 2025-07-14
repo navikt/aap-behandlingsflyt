@@ -93,7 +93,7 @@ class BarnetilleggServiceTest {
     ) {
         InMemoryBarnRepository.lagreRegisterBarn(
             behandling.id,
-            barn.map { it.ident }.toSet(),
+            barn.map { it.ident },
         )
         InMemoryPersonopplysningRepository.lagre(
             behandling.id, barn.toSet()

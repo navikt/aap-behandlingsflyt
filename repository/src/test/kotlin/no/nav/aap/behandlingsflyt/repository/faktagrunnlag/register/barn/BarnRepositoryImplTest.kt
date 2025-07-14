@@ -52,7 +52,7 @@ internal class BarnRepositoryImplTest {
                 )
             )
         )
-        val barnListe = setOf(Ident("12345678910"), Ident("12345"))
+        val barnListe = listOf(Ident("12345678910"), Ident("12345"))
 
         val behandling = dataSource.transaction { connection ->
             val sak = sak(connection)
@@ -62,7 +62,7 @@ internal class BarnRepositoryImplTest {
 
 
             barnRepository.lagreRegisterBarn(behandling.id, barnListe)
-            barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = setOf(Ident("1"))))
+            barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = listOf(Ident("1"))))
             barnRepository.lagreVurderinger(behandling.id, "ident", vurderteBarn)
             behandling
         }
@@ -93,7 +93,7 @@ internal class BarnRepositoryImplTest {
             finnEllerOpprettBehandling(connection, sak)
         }
         dataSource.transaction {
-            BarnRepositoryImpl(it).lagreRegisterBarn(behandling.id, setOf(Ident("12"), Ident("32323")))
+            BarnRepositoryImpl(it).lagreRegisterBarn(behandling.id, listOf(Ident("12"), Ident("32323")))
         }
 
         val uthentet = dataSource.transaction {
@@ -110,7 +110,7 @@ internal class BarnRepositoryImplTest {
             // Given
             val sak = sak(connection)
             val gammelBehandling = finnEllerOpprettBehandling(connection, sak)
-            barnRepository.lagreOppgitteBarn(gammelBehandling.id, OppgitteBarn(identer = setOf(Ident("1"))))
+            barnRepository.lagreOppgitteBarn(gammelBehandling.id, OppgitteBarn(identer = listOf(Ident("1"))))
 
             // When
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(gammelBehandling.id, Status.AVSLUTTET)

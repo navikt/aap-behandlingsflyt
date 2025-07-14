@@ -20,7 +20,7 @@ class InMemoryBarnRepositoryTest {
 
     @Test
     fun `Finner ikke barn hvis det ikke finnes barn`() {
-        val (sak, behandling) = opprettPersonBehandlingOgSak()
+        val (_, behandling) = opprettPersonBehandlingOgSak()
 
         val barnRepository = InMemoryBarnRepository
         val barn = barnRepository.hentHvisEksisterer(behandling.id)
@@ -42,14 +42,14 @@ class InMemoryBarnRepositoryTest {
                 )
             )
         )
-        val barnListe = setOf(Ident("12345678910"), Ident("12345"))
+        val barnListe = listOf(Ident("12345678910"), Ident("12345"))
 
         val (_, behandling) = opprettPersonBehandlingOgSak()
 
         val barnRepository = InMemoryBarnRepository
 
         barnRepository.lagreRegisterBarn(behandling.id, barnListe)
-        barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = setOf(Ident("1"))))
+        barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = listOf(Ident("1"))))
         barnRepository.lagreVurderinger(behandling.id, "ident", vurderteBarn)
 
 
@@ -65,13 +65,13 @@ class InMemoryBarnRepositoryTest {
 
     }
 
-    private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-    }
-
     private fun opprettPersonBehandlingOgSak(): Pair<Sak, Behandling> {
         val person =
-            Person(Random().nextLong(), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
+            Person(
+                Random().nextLong(),
+                UUID.randomUUID(),
+                listOf(genererIdent(LocalDate.now().minusYears(23)))
+            )
         val sak = InMemorySakRepository.finnEllerOpprett(
             person,
             periode = Periode(LocalDate.now(), LocalDate.now().plusDays(5)),

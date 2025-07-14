@@ -72,7 +72,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                         row.getString("IDENT")
                     )
                 }
-            }.toSet()
+            }
         )
     }
 
@@ -206,7 +206,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         }
     }
 
-    override fun lagreRegisterBarn(behandlingId: BehandlingId, barn: Set<Ident>) {
+    override fun lagreRegisterBarn(behandlingId: BehandlingId, barn: List<Ident>) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
         if (eksisterendeGrunnlag != null) {

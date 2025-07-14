@@ -58,7 +58,7 @@ class BarnService private constructor(
 
         val oppgitteBarnIdenter = barnGrunnlag?.oppgitteBarn?.identer?.toList() ?: emptyList()
         val barn = barnGateway.hentBarn(sak.person, oppgitteBarnIdenter)
-        val registerBarnIdenter = barn.registerBarn.map { it.ident }.toSet()
+        val registerBarnIdenter = barn.registerBarn.map { it.ident }
 
         val relatertePersonopplysninger =
             personopplysningRepository.hentHvisEksisterer(behandlingId)?.relatertePersonopplysninger?.personopplysninger
@@ -106,10 +106,10 @@ class BarnService private constructor(
     }
 
     private fun manglerBarnGrunnlagEllerFantNyeBarnFraRegister(
-        barnIdenter: Set<Ident>,
+        barnIdenter: List<Ident>,
         barnGrunnlag: BarnGrunnlag?
     ): Boolean {
-        return barnIdenter != barnGrunnlag?.registerbarn?.identer?.toSet()
+        return barnIdenter.toSet() != barnGrunnlag?.registerbarn?.identer?.toSet()
     }
 
     companion object : Informasjonskravkonstruktør {
