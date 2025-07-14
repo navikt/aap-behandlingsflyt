@@ -290,9 +290,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             ).medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .describedAs("Siden vurderingenGjelderFra ikke er lik kravdato (rettighetsperiode.fom), så skal man ikke vurdere 11-13")
-                    .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
+                    .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)  // ingen avklaringsbehov løst av NAY, gå rett til fatte vedtak
             }
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtakEllerSendRetur()
             .medKontekst {
                 val underveisGrunnlag = dataSource.transaction { connection ->
@@ -1261,19 +1260,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
 
         behandling = kvalitetssikreOk(behandling)
 
-        // Saken er tilbake til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertThat(åpneAvklaringsbehov).anySatisfy {
-            assertThat(it)
-                .extracting(Avklaringsbehov::erÅpent, Avklaringsbehov::definisjon)
-                .containsExactly(true, Definisjon.FORESLÅ_VEDTAK)
-        }
-        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-
-        behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
-
         // Saken står til To-trinnskontroll hos beslutter
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
+        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
         assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.FATTE_VEDTAK) }
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
