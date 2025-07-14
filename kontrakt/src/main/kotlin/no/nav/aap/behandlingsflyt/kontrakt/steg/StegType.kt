@@ -163,6 +163,8 @@ public enum class StegType(
         gruppe = StegGruppe.BREV,
         status = Status.IVERKSETTES,
     ),
+
+    // Klage start
     PÅKLAGET_BEHANDLING(
         gruppe = StegGruppe.FORMKRAV,
         status = Status.UTREDES,
@@ -211,6 +213,14 @@ public enum class StegType(
         gruppe = StegGruppe.IVERKSETT_KONSEKVENS,
         status = Status.IVERKSETTES,
     ),
+
+    // Oppfølgingsbehandling start
+    AVKLAR_OPPFØLGING(
+        gruppe = StegGruppe.AVKLAR_OPPPFØLGING,
+        status = Status.UTREDES
+    ),
+
+    // Oppfølgingsbehandling slutt
     UDEFINERT(
         gruppe = StegGruppe.UDEFINERT,
         status = Status.UTREDES,

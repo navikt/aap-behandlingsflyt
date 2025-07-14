@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.tilgang.log
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -96,6 +97,7 @@ class HåndterMottattDokumentService(
         brevkategori: InnsendingType,
         melding: Melding?,
     ) {
+        log.info("Mottok dokument på sak-id $sakId, og referanse $referanse, med brevkategori $brevkategori.")
         val sak = sakService.hent(sakId)
         val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
         val årsaker = utledÅrsaker(brevkategori, melding, periode)
@@ -179,6 +181,7 @@ class HåndterMottattDokumentService(
                 }
 
             InnsendingType.KABAL_HENDELSE -> listOf(Årsak(ÅrsakTilBehandling.MOTTATT_KABAL_HENDELSE))
+            InnsendingType.OPPFØLGINGSOPPGAVE -> listOf(Årsak(ÅrsakTilBehandling.OPPFØLGINGSOPPGAVE))
         }
     }
 

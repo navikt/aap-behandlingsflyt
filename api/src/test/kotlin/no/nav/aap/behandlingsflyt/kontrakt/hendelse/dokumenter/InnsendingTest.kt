@@ -4,6 +4,8 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 
 
@@ -199,5 +201,29 @@ class InnsendingTest {
 
         val melding = assertDoesNotThrow { DefaultJsonMapper.fromJson<Melding>(eksempelJSON) }
         assertThat(melding).isInstanceOf(SøknadV0::class.java)
+    }
+
+    @ParameterizedTest
+    @MethodSource("hvemSkalFølgeOppMethodSource")
+    fun `serialisering av oppfølgingsoppgavejson`(hvemSkalFølgeOpp: HvemSkalFølgeOpp) {
+        val oppfølgingsoppgave = OppfølgingsoppgaveV0(
+            datoForOppfølging = LocalDate.now(),
+            hvemSkalFølgeOpp = hvemSkalFølgeOpp,
+            hvaSkalFølgesOpp = "da"
+        )
+
+        val json = DefaultJsonMapper.toJson(oppfølgingsoppgave)
+
+        val tilbakeIgjen = DefaultJsonMapper.fromJson<Oppfølgingsoppgave>(json)
+
+        assertThat(oppfølgingsoppgave).isEqualTo(tilbakeIgjen)
+    }
+
+    companion object {
+        @JvmStatic
+        fun hvemSkalFølgeOppMethodSource() = listOf(
+            HvemSkalFølgeOpp.Bruker("1234"), HvemSkalFølgeOpp.NasjonalEnhet(),
+            HvemSkalFølgeOpp.Kontor("2201")
+        )
     }
 }

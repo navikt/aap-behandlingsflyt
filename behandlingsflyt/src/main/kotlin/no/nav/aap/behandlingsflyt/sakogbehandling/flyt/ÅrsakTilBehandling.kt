@@ -30,7 +30,8 @@ enum class ÅrsakTilBehandling {
     FASTSATT_PERIODE_PASSERT,
     FRITAK_MELDEPLIKT,
     VURDER_RETTIGHETSPERIODE,
-    MOTTATT_KABAL_HENDELSE;
+    MOTTATT_KABAL_HENDELSE,
+    OPPFØLGINGSOPPGAVE;
 
     companion object {
         /**

@@ -96,9 +96,12 @@ class SakOgBehandlingService(
         val mottokKabalHendelse = årsaker.any { it.type == ÅrsakTilBehandling.MOTTATT_KABAL_HENDELSE }
         val mottokKlage = årsaker.any { it.type == ÅrsakTilBehandling.MOTATT_KLAGE }
 
+        val mottokOppfølgingsOppgave = årsaker.any { it.type == ÅrsakTilBehandling.OPPFØLGINGSOPPGAVE }
+
         return when {
-            mottokKlage -> Ordinær(opprettKlagebehandling(sisteYtelsesbehandling, sakId, årsaker))
-            mottokKabalHendelse -> Ordinær(opprettSvarFraKlageenhetBehandling(sisteYtelsesbehandling, sakId, årsaker))
+            mottokKlage -> Ordinær(opprettKlagebehandling(sisteYtelsesbehandling, årsaker))
+            mottokKabalHendelse -> Ordinær(opprettSvarFraKlageenhetBehandling(sisteYtelsesbehandling, årsaker))
+            mottokOppfølgingsOppgave -> Ordinær(opprettOppfølgingsbehandling(sisteYtelsesbehandling!!))
 
             /* Tilbakekreving kommer kanskje som et case her ... */
 
@@ -135,7 +138,6 @@ class SakOgBehandlingService(
 
     private fun opprettKlagebehandling(
         sisteYtelsesbehandling: Behandling?,
-        sakId: SakId,
         årsaker: List<Årsak>
     ): Behandling {
         requireNotNull(sisteYtelsesbehandling) {
@@ -144,7 +146,7 @@ class SakOgBehandlingService(
 
         //if referanse == null opprettBehandling
         return behandlingRepository.opprettBehandling(
-            sakId = sakId,
+            sakId = sisteYtelsesbehandling.sakId,
             årsaker = årsaker,
             typeBehandling = TypeBehandling.Klage,
             forrigeBehandlingId = null,
@@ -152,9 +154,21 @@ class SakOgBehandlingService(
         //else koble på eksisterende behandling?
     }
 
+    private fun opprettOppfølgingsbehandling(sisteYtelsesbehandling: Behandling): Behandling {
+        requireNotNull(sisteYtelsesbehandling) {
+            "Mottok oppfølgingsbehandling, men det finnes ingen eksisterende behandling. Behandling-ID: ${sisteYtelsesbehandling.id}"
+        }
+
+        return behandlingRepository.opprettBehandling(
+            sisteYtelsesbehandling.sakId,
+            årsaker = listOf(),
+            typeBehandling = TypeBehandling.OppfølgingsBehandling,
+            forrigeBehandlingId = null
+        )
+    }
+
     private fun opprettSvarFraKlageenhetBehandling(
         sisteYtelsesbehandling: Behandling?,
-        sakId: SakId,
         årsaker: List<Årsak>
     ): Behandling {
         // Kan vurdere en bedre sjekk her, men vi validerer allerede ved mottak at en tilhørende klagebehandling eksisterer
@@ -162,7 +176,7 @@ class SakOgBehandlingService(
             "Mottok kabalehndelse, men det finnes ingen eksisterende behandling"
         }
         return behandlingRepository.opprettBehandling(
-            sakId = sakId,
+            sakId = sisteYtelsesbehandling.sakId,
             årsaker = årsaker,
             typeBehandling = TypeBehandling.SvarFraAndreinstans,
             forrigeBehandlingId = null,

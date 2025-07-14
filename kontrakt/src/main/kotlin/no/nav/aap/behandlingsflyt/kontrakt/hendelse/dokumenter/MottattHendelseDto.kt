@@ -67,7 +67,7 @@ public class Innsending(
                 requireNotNull(melding)
                 require(melding is ManuellRevurdering)
             }
-            
+
             InnsendingType.KLAGE -> {
                 require(referanse.type == InnsendingReferanse.Type.JOURNALPOST || referanse.type == InnsendingReferanse.Type.MANUELL_OPPRETTELSE)
                 require(melding is Klage)
@@ -77,11 +77,15 @@ public class Innsending(
                 require(referanse.type == InnsendingReferanse.Type.BEHANDLING_REFERANSE)
                 require(melding is NyÅrsakTilBehandling)
             }
-            
+
             InnsendingType.KABAL_HENDELSE -> {
                 require(referanse.type == InnsendingReferanse.Type.KABAL_HENDELSE_ID)
                 requireNotNull(melding)
                 require(melding is KabalHendelse)
+            }
+
+            InnsendingType.OPPFØLGINGSOPPGAVE -> {
+                requireNotNull(melding)
             }
         }
     }
@@ -106,6 +110,7 @@ public fun Melding.innsendingType(): InnsendingType = when (this) {
     is KlageV0 -> InnsendingType.KLAGE
     is NyÅrsakTilBehandling -> InnsendingType.NY_ÅRSAK_TIL_BEHANDLING
     is KabalHendelse -> InnsendingType.KABAL_HENDELSE
+    is OppfølgingsoppgaveV0 -> InnsendingType.OPPFØLGINGSOPPGAVE
 }
 
 /**
@@ -133,10 +138,10 @@ private fun example(innsending: Innsending) {
         is KlageV0 -> TODO()
 
         is NyÅrsakTilBehandlingV0 -> TODO()
-        
+
         is KabalHendelse -> TODO()
 
         null -> TODO()
-
+        is OppfølgingsoppgaveV0 -> TODO()
     }
 }

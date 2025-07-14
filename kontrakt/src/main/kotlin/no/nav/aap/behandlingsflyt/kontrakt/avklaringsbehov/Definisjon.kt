@@ -374,6 +374,7 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = false
     ),
+
     @Deprecated("Effektuer-steget er fjernet. Kun bevart for statistikk i DEV")
     EFFEKTUER_AVVIST_PÅ_FORMKRAV(
         kode = AvklaringsbehovKode.`6004`,
@@ -415,7 +416,15 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`6008`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.SVAR_FRA_ANDREINSTANS,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+    ),
+
+    // Oppfølgingsbehandling
+    AVKLAR_OPPFØLGINGSBEHOV(
+        kode = AvklaringsbehovKode.`8001`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.AVKLAR_OPPFØLGING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.SAKSBEHANDLER_NASJONAL),
     );
 
     public companion object {

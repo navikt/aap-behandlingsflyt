@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.gjenopptak.GjenopptakRepositor
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.samid.SamIdRepositoryImpl
@@ -125,4 +126,5 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<SamIdRepositoryImpl>()
     .register<SvarFraAndreinstansRepositoryImpl>()
     .register<FullmektigRepositoryImpl>()
+    .register<OppfølgingsBehandlingRepositoryImpl>()
 

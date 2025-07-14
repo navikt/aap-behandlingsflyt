@@ -43,7 +43,7 @@ public const val VENTE_PÅ_KLAGE_IMPLEMENTASJON_KODE: String = "5023"
 public const val VURDER_TREKK_AV_SØKNAD_KODE: String = "5028"
 public const val REFUSJON_KRAV: String = "5026"
 public const val FASTSETT_PÅKLAGET_BEHANDLING_KODE: String = "5999"
-public const val SAMORDNING_REFUSJONS_KRAV = "5056"
+public const val SAMORDNING_REFUSJONS_KRAV: String = "5056"
 public const val FASTSETT_MANUELL_INNTEKT: String = "7001"
 public const val VURDER_FORMKRAV_KODE: String = "6000"
 public const val FASTSETT_BEHANDLENDE_ENHET_KODE: String = "6001"
@@ -56,6 +56,7 @@ public const val VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV_KODE: String = "
 public const val HÅNDTER_SVAR_FRA_ANDREINSTANS_KODE: String = "6008"
 public const val FASTSETT_FULLMEKTIG_KODE: String = "6009"
 public const val VURDER_TREKK_AV_KLAGE_KODE: String = "6010"
+public const val AVKLAR_OPPFØLGINGSBEHOV: String = "8001"
 
 @Suppress("EnumEntryName")
 public enum class AvklaringsbehovKode {
@@ -256,5 +257,10 @@ public enum class AvklaringsbehovKode {
     /**
      * [FASTSETT_MANUELL_INNTEKT]
      */
-    `7001`
+    `7001`,
+
+    /**
+     * [AVKLAR_OPPFØLGINGSBEHOV]
+     */
+    `8001`
 }

@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.kontrakt.steg
 
 public enum class StegGruppe(public val skalVises: Boolean, public val obligatoriskVisning: Boolean) {
+
+    // Førstegangsbehandling/revurdering
     START_BEHANDLING(false, true),
     SEND_FORVALTNINGSMELDING(false, true),
     RETTIGHETSPERIODE(true, false),
@@ -23,6 +25,8 @@ public enum class StegGruppe(public val skalVises: Boolean, public val obligator
     IVERKSETT_VEDTAK(false, true),
     BREV(true, true),
     UDEFINERT(false, true),
+
+    // Klage
     FORMKRAV(true, true),
     KLAGEBEHANDLING_KONTOR(true, false),
     KLAGEBEHANDLING_NAY(true, false),
@@ -31,4 +35,7 @@ public enum class StegGruppe(public val skalVises: Boolean, public val obligator
     OPPRETTHOLDELSE(true, false),
     SVAR_FRA_ANDREINSTANS(true, true),
     IVERKSETT_KONSEKVENS(true, true),
+
+    // Oppfølgingsbehandling
+    AVKLAR_OPPPFØLGING(true, true)
 }
