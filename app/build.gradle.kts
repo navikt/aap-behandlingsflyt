@@ -2,7 +2,6 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 
 val ktorVersion = "3.2.1"
-val junitVersjon = "5.13.3"
 val opentelemetryVersion = "2.17.1-alpha"
 
 
@@ -103,9 +102,7 @@ dependencies {
     testImplementation(project(":lib-test"))
     implementation(libs.dbtest)
     implementation(libs.motorTestUtils)
-    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersjon")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersjon")
-    testImplementation("org.assertj:assertj-core:3.27.3")
+    testImplementation(libs.bundles.junit)
     testImplementation("org.testcontainers:postgresql:1.21.3")
     constraints {
         implementation("org.apache.commons:commons-compress:1.27.1") {

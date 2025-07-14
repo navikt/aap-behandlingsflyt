@@ -3,8 +3,6 @@ plugins {
 }
 
 val ktorVersion = "3.2.1"
-val tilgangVersjon = "1.0.95"
-val junitVersjon = "5.13.3"
 val mockOAuth2ServerVersion = "2.2.1"
 val kafkaVersion = "4.0.0"
 
@@ -18,13 +16,11 @@ dependencies {
     implementation(libs.verdityper)
     implementation(libs.tidslinje)
     implementation("org.apache.kafka:kafka-clients:${kafkaVersion}")
-    api("no.nav.aap.tilgang:plugin:$tilgangVersjon")
-    api("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
+    api(libs.tilgangPlugin)
+    api(libs.tilgangKontrakt)
     compileOnly("io.ktor:ktor-http-jvm:$ktorVersion")
 
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersjon")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersjon")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersjon")
+    testImplementation(libs.bundles.junit)
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     constraints {
         implementation("commons-codec:commons-codec:1.18.0")
