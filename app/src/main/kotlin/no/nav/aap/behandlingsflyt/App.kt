@@ -43,11 +43,11 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerAPI
 import no.nav.aap.behandlingsflyt.drift.driftAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.flate.behandlendeEnhetGrunnlagApi
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate.formkravGrunnlagApi
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.flate.klagebehandlingKontorGrunnlagApi
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.flate.klagebehandlingNayGrunnlagApi
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.flate.påklagetBehandlingGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.klage.behandlendeenhet.behandlendeEnhetGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.klage.formkrav.formkravGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.klage.klagebehandling.klagebehandlingKontorGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.klage.klagebehandling.klagebehandlingNayGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.klage.påklagetbehandling.påklagetBehandlingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.arbeidsevne.arbeidsevneGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.bistand.bistandsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.fullmektig.fullmektigGrunnlagApi

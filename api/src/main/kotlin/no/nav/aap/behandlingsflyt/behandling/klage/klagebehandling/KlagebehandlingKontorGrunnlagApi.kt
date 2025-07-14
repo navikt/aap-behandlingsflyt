@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.flate
+package no.nav.aap.behandlingsflyt.behandling.klage.klagebehandling
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond

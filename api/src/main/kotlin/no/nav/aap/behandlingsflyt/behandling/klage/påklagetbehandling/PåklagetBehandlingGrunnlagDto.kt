@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.flate
+package no.nav.aap.behandlingsflyt.behandling.klage.påklagetbehandling
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status

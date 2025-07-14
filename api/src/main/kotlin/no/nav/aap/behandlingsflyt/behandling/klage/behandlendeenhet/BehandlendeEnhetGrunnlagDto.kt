@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.flate
+package no.nav.aap.behandlingsflyt.behandling.klage.behandlendeenhet
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetVurdering
 

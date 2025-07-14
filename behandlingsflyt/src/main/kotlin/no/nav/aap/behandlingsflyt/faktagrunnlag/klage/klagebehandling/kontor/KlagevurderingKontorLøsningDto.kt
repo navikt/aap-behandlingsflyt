@@ -1,12 +1,11 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.flate
+package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagevurderingNay
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 
-data class KlagevurderingNayLøsningDto(
+data class KlagevurderingKontorLøsningDto(
     val begrunnelse: String,
     val notat: String?,
     val innstilling: KlageInnstilling,
@@ -32,7 +31,7 @@ data class KlagevurderingNayLøsningDto(
         }
     }
 
-    fun tilVurdering(vurdertAv: Bruker) = KlagevurderingNay(
+    fun tilVurdering(vurdertAv: Bruker) = KlagevurderingKontor(
         begrunnelse = begrunnelse,
         notat = notat,
         innstilling = innstilling,
