@@ -108,6 +108,7 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.JournalpostTilgangRequest
+import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakTilgangRequest
 import no.nav.aap.tilgang.TilgangResponse
 import org.intellij.lang.annotations.Language
@@ -253,7 +254,7 @@ object FakeServers : AutoCloseable {
                 disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             }
         }
-        
+
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@sam.log.info("Inntekt :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
@@ -449,7 +450,11 @@ object FakeServers : AutoCloseable {
         routing {
             post("/tilgang/behandling") {
                 call.receive<BehandlingTilgangRequest>()
-                call.respond(TilgangResponse(true))
+                call.respond(
+                    TilgangResponse(
+                        true,
+                        tilgangIKontekst = mapOf(Operasjon.SAKSBEHANDLE to true)
+                    ))
             }
         }
         routing {
