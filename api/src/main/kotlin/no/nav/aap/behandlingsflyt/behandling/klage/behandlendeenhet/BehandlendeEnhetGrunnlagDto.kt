@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.Behandlen
 
 data class BehandlendeEnhetGrunnlagDto(
     val vurdering: BehandlendeEnhetVurderingDto?,
+    val harTilgangTilÅSaksbehandle: Boolean,
 )
 
 data class BehandlendeEnhetVurderingDto(

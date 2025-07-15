@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.Kla
 
 data class KlagebehandlingKontorGrunnlagDto(
     val vurdering: KlagevurderingKontorDto? = null,
+    val harTilgangTilÅSaksbehandle: Boolean
 )
 
 data class KlagevurderingKontorDto(
@@ -19,7 +20,7 @@ data class KlagevurderingKontorDto(
     val vurdertAv: VurdertAvResponse?
 )
 
-internal fun KlagevurderingKontor.tilDto() = 
+internal fun KlagevurderingKontor.tilDto() =
     KlagevurderingKontorDto(
         begrunnelse = begrunnelse,
         notat = notat,
@@ -29,7 +30,8 @@ internal fun KlagevurderingKontor.tilDto() =
         vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet),
     )
 
-internal fun KlagebehandlingKontorGrunnlag.tilDto() =
+internal fun KlagebehandlingKontorGrunnlag.tilDto(harTilgangTilÅSaksbehandle: Boolean) =
     KlagebehandlingKontorGrunnlagDto(
-        vurdering = vurdering.tilDto()
+        vurdering = vurdering.tilDto(),
+        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle
     )

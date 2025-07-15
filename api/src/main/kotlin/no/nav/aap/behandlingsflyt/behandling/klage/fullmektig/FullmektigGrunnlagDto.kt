@@ -9,7 +9,8 @@ import java.time.Instant
 
 
 data class FullmektigGrunnlagDto(
-    val vurdering: FullmektigVurderingDto? = null
+    val vurdering: FullmektigVurderingDto? = null,
+    val harTilgangTilÅSaksbehandle: Boolean
 )
 
 data class FullmektigVurderingDto(
@@ -20,9 +21,10 @@ data class FullmektigVurderingDto(
     val vurdertAv: VurdertAvResponse?
 )
 
-internal fun FullmektigGrunnlag.tilDto(): FullmektigGrunnlagDto {
+internal fun FullmektigGrunnlag.tilDto(harTilgangTilÅSaksbehandle: Boolean): FullmektigGrunnlagDto {
     return FullmektigGrunnlagDto(
-        vurdering = this.vurdering.tilDto()
+        vurdering = this.vurdering.tilDto(),
+        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle
     )
 }
 

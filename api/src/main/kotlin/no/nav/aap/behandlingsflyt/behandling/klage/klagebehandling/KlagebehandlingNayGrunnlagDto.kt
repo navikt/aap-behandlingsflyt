@@ -9,6 +9,7 @@ import java.time.Instant
 
 data class KlagebehandlingNayGrunnlagDto(
     val vurdering: KlagevurderingNayDto? = null,
+    val harTilgangTilÅSaksbehandle: Boolean
 )
 
 data class KlagevurderingNayDto(
@@ -20,7 +21,7 @@ data class KlagevurderingNayDto(
     val vurdertAv: VurdertAvResponse?
 )
 
-internal fun KlagevurderingNay.tilDto() = 
+internal fun KlagevurderingNay.tilDto() =
     KlagevurderingNayDto(
         begrunnelse = begrunnelse,
         notat = notat,
@@ -30,7 +31,8 @@ internal fun KlagevurderingNay.tilDto() =
         vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet),
     )
 
-internal fun KlagebehandlingNayGrunnlag.tilDto() =
+internal fun KlagebehandlingNayGrunnlag.tilDto(harTilgangTilÅSaksbehandle: Boolean) =
     KlagebehandlingNayGrunnlagDto(
-        vurdering = vurdering.tilDto()
+        vurdering = vurdering.tilDto(),
+        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle
     )

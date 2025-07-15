@@ -9,6 +9,7 @@ data class FormkravGrunnlagDto(
     val vurdering: FormkravVurderingDto? = null,
     val varselSendtDato: LocalDate? = null,
     val varselSvarfrist: LocalDate? = null,
+    val harTilgangTilÅSaksbehandle: Boolean
 )
 
 data class FormkravVurderingDto(
@@ -32,9 +33,10 @@ internal fun FormkravVurdering.tilDto() =
         likevelBehandles = likevelBehandles
     )
 
-internal fun FormkravGrunnlag.tilDto() =
+internal fun FormkravGrunnlag.tilDto(harTilgangTilÅSaksbehandle: Boolean) =
     FormkravGrunnlagDto(
         vurdering = vurdering.tilDto(),
         varselSendtDato = varsel?.sendtDato,
-        varselSvarfrist = varsel?.svarfrist
+        varselSvarfrist = varsel?.svarfrist,
+        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle
     )
