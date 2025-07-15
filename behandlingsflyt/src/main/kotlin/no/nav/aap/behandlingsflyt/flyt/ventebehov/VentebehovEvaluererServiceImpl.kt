@@ -29,9 +29,6 @@ class VentebehovEvaluererServiceImpl(private val repositoryProvider: RepositoryP
         kontekst: FlytKontekst,
         avklaringsbehovene: Avklaringsbehovene
     ): List<Avklaringsbehov> {
-        // TODO: Vurdere om det er hendelser som trigger prosesserBehandling
-        //  (f.eks ankommet dokument) skal ta behandling av vent
-
         val ventebehovSomErLøst = avklaringsbehovene.hentÅpneVentebehov()
             .filter { behov -> ansesSomLøst(kontekst, behov) }
 

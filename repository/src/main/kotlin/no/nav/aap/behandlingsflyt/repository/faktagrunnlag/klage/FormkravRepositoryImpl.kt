@@ -123,7 +123,6 @@ class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRep
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        // TODO: Avklar om vi trenger flere behandlinger per klage
         // Gjør ingenting
     }
 

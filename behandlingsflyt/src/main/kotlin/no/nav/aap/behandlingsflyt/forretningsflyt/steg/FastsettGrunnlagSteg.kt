@@ -76,10 +76,10 @@ class FastsettGrunnlagSteg(
             vilkår.leggTilVurdering(
                 Vilkårsperiode(
                     periode = rettighetsperiode,
-                    utfall = Utfall.OPPFYLT, // TODO: Ta med utfall av beregning hvis bruker er over 62 elns
+                    utfall = Utfall.OPPFYLT,
                     manuellVurdering = false,
                     begrunnelse = null,
-                    innvilgelsesårsak = null, // TODO: Sett hjemmel
+                    innvilgelsesårsak = null,
                     avslagsårsak = null,
                     faktagrunnlag = beregningsgrunnlag.faktagrunnlag()
                 )

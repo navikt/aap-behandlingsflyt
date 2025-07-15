@@ -101,9 +101,6 @@ import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.Språk
 import no.nav.aap.brev.kontrakt.Status
 import no.nav.aap.brev.kontrakt.Tekstbolk
-import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
-import no.nav.aap.komponenter.httpklient.httpclient.RestClient
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
 import no.nav.aap.tilgang.BehandlingTilgangRequest
@@ -313,10 +310,6 @@ object FakeServers : AutoCloseable {
             post {
                 val req = call.receive<InntektRequest>()
                 val person = hentEllerGenererTestPerson(req.fnr)
-
-                for (år in req.fomAr..req.tomAr) {
-                    //person.leggTilInntektHvisÅrMangler(Year.of(år), Beløp("0")) //TODO: Fjern denne helt
-                }
 
                 call.respond(
                     InntektResponse(person.inntekter().map { inntekt ->
@@ -627,6 +620,7 @@ object FakeServers : AutoCloseable {
                             )
                         ))
 
+                    @Suppress("UnusedVariable")
                     @Language("JSON")
                     val foreldrepengerOgSvangerskapspengerResponse = """
            [{
@@ -1306,7 +1300,7 @@ object FakeServers : AutoCloseable {
                         call.respond<List<MedlemskapResponse>>(emptyList())
                     }
 
-                    @Suppress("UNUSED_VARIABLE")
+                    @Suppress("UnusedVariable")
                     @Language("JSON") val eksempelRespons =
                         """[
   {
@@ -1477,7 +1471,6 @@ object FakeServers : AutoCloseable {
         )
     }
 
-    // TODO!?
     private fun hentEllerGenererTestPerson(forespurtIdent: String): TestPerson {
         val person = FakePersoner.hentPerson(forespurtIdent)
         if (person == null) {
@@ -1738,11 +1731,6 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.brevFake() {
-        val config = ClientConfig(scope = "")
-        val client = RestClient.withDefaultResponseHandler(
-            config = config,
-            tokenProvider = ClientCredentialsTokenProvider
-        )
         install(ContentNegotiation) {
             register(
                 ContentType.Application.Json,
