@@ -10,15 +10,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
-import no.nav.aap.tilgang.Operasjon
-import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDate
 import javax.sql.DataSource
 
@@ -39,52 +35,47 @@ data class RettighetsperiodeVurderingResponse(
 
 
 fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
-    route("/api/behandling/{referanse}/grunnlag/rettighetsperiode").authorizedGet<BehandlingReferanse, RettighetsperiodeGrunnlagResponse>(
-        AuthorizationParamPathConfig(
-            operasjon = Operasjon.SE,
-            behandlingPathParam = BehandlingPathParam("referanse")
-        )
-    ) { req ->
-        val rettighetsperiodeGrunnlagDto = dataSource.transaction(readOnly = true) { connection ->
-            val repositoryProvider = repositoryRegistry.provider(connection)
-            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val rettighetsperiodeRepository = repositoryProvider.provide<VurderRettighetsperiodeRepository>()
-            val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
-            val datoFraDokumentUtleder = DatoFraDokumentUtleder(mottattDokumentRepository)
-            val hartilgangTilÅSaksbehandle = GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                req.referanse,
-                Definisjon.VURDER_RETTIGHETSPERIODE,
-                token()
-            )
+    route("/api/behandling/{referanse}/grunnlag/rettighetsperiode")
+        .getGrunnlag<BehandlingReferanse, RettighetsperiodeGrunnlagResponse>(
+            behandlingPathParam = BehandlingPathParam("referanse"),
+            avklaringsbehovKode = Definisjon.VURDER_RETTIGHETSPERIODE.kode.toString()
 
-            val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
-            val vurdering = rettighetsperiodeRepository.hentVurdering(behandling.id)
+        ) { req ->
+            val rettighetsperiodeGrunnlagDto = dataSource.transaction(readOnly = true) { connection ->
+                val repositoryProvider = repositoryRegistry.provider(connection)
+                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                val rettighetsperiodeRepository = repositoryProvider.provide<VurderRettighetsperiodeRepository>()
+                val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
+                val datoFraDokumentUtleder = DatoFraDokumentUtleder(mottattDokumentRepository)
 
-            val ansattNavnOgEnhet = vurdering?.let { AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv) }
+                val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
+                val vurdering = rettighetsperiodeRepository.hentVurdering(behandling.id)
 
-            RettighetsperiodeGrunnlagResponse(
-                vurdering =
-                    rettighetsperiodeRepository.hentVurdering(behandling.id)?.let {
-                        RettighetsperiodeVurderingResponse(
-                            begrunnelse = it.begrunnelse,
-                            startDato = it.startDato,
-                            harRettUtoverSøknadsdato = it.harRettUtoverSøknadsdato,
-                            harKravPåRenter = it.harKravPåRenter,
-                            vurdertAv =
-                                VurdertAvResponse(
-                                    ident = it.vurdertAv,
-                                    dato =
-                                        it.vurdertDato?.toLocalDate()
-                                            ?: error("Mangler vurdertdato på rettighetsperiodevurderingen"),
-                                    ansattnavn = ansattNavnOgEnhet?.navn,
-                                    enhetsnavn = ansattNavnOgEnhet?.enhet
-                                )
-                        )
-                    },
-                søknadsdato = datoFraDokumentUtleder.utledSøknadsdatoForSak(behandling.sakId)?.toLocalDate(),
-                harTilgangTilÅSaksbehandle = hartilgangTilÅSaksbehandle
-            )
+                val ansattNavnOgEnhet = vurdering?.let { AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv) }
+
+                RettighetsperiodeGrunnlagResponse(
+                    vurdering =
+                        rettighetsperiodeRepository.hentVurdering(behandling.id)?.let {
+                            RettighetsperiodeVurderingResponse(
+                                begrunnelse = it.begrunnelse,
+                                startDato = it.startDato,
+                                harRettUtoverSøknadsdato = it.harRettUtoverSøknadsdato,
+                                harKravPåRenter = it.harKravPåRenter,
+                                vurdertAv =
+                                    VurdertAvResponse(
+                                        ident = it.vurdertAv,
+                                        dato =
+                                            it.vurdertDato?.toLocalDate()
+                                                ?: error("Mangler vurdertdato på rettighetsperiodevurderingen"),
+                                        ansattnavn = ansattNavnOgEnhet?.navn,
+                                        enhetsnavn = ansattNavnOgEnhet?.enhet
+                                    )
+                            )
+                        },
+                    søknadsdato = datoFraDokumentUtleder.utledSøknadsdatoForSak(behandling.sakId)?.toLocalDate(),
+                    harTilgangTilÅSaksbehandle = kanSaksbehandle()
+                )
+            }
+            respond(rettighetsperiodeGrunnlagDto)
         }
-        respond(rettighetsperiodeGrunnlagDto)
-    }
 }

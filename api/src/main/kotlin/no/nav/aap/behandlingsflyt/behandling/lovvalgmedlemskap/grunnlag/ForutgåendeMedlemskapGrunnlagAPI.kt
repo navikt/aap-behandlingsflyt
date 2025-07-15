@@ -9,21 +9,19 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
-import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.forutgåendeMedlemskapAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/forutgaaendemedlemskap") {
-            authorizedGet<BehandlingReferanse, ForutgåendeMedlemskapGrunnlagResponse>(
-                AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
+            getGrunnlag<BehandlingReferanse, ForutgåendeMedlemskapGrunnlagResponse>(
+                behandlingPathParam = BehandlingPathParam("referanse"),
+                avklaringsbehovKode =  Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP.kode.toString()
             ) { req ->
                 val grunnlag = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
@@ -36,16 +34,10 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapAPI(dataSource: DataSource, reposit
                     val historiskeManuelleVurderinger =
                         forutgåendeRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
                     val ansattNavnOgEnhet = data?.let { AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv) }
-
-                    val harTilgangTilÅSaksbehandle =
-                        GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                            req.referanse,
-                            Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP,
-                            token()
-                        )
+                    
 
                     ForutgåendeMedlemskapGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = data?.toResponse(ansattNavnOgEnhet = ansattNavnOgEnhet),
                         historiskeManuelleVurderinger = historiskeManuelleVurderinger.map { it.toResponse() }
                     )

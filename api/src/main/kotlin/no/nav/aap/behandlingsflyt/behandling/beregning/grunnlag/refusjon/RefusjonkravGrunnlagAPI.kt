@@ -12,15 +12,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
-import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
+import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
@@ -29,10 +27,9 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
 ) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/refusjon") {
-            authorizedGet<BehandlingReferanse, RefusjonkravGrunnlagResponse>(
-                AuthorizationParamPathConfig(
-                    behandlingPathParam = BehandlingPathParam("referanse")
-                )
+            getGrunnlag<BehandlingReferanse, RefusjonkravGrunnlagResponse>(
+                behandlingPathParam = BehandlingPathParam("referanse"),
+                avklaringsbehovKode = Definisjon.REFUSJON_KRAV.kode.toString()
             ) { req ->
                 val response =
                     dataSource.transaction(readOnly = true) { connection ->
@@ -53,15 +50,8 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
                                     behandling.sakId
                                 ).map { it.tilResponse() }
 
-                        val harTilgangTilÅSaksbehandle =
-                            GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                                req.referanse,
-                                Definisjon.REFUSJON_KRAV,
-                                token()
-                            )
-
                         RefusjonkravGrunnlagResponse(
-                            harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+                            harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                             gjeldendeVurdering = gjeldendeVurdering,
                             gjeldendeVurderinger = gjeldendeVurderinger,
                             historiskeVurderinger = historiskeVurderinger
@@ -80,10 +70,15 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
                 )
             ) { req, body ->
                 val response =
-                    NavKontorService().hentNavEnheter()?.filter { enhet -> enhet.navn.contains(body.navn, ignoreCase = true) || enhet.enhetsNummer.contains(body.navn, ignoreCase = true) }
-                ?.map { enhet ->
-                    NavEnheterResponse(navn = enhet.navn, enhetsnummer = enhet.enhetsNummer)
-                } ?: emptyList()
+                    NavKontorService().hentNavEnheter()?.filter { enhet ->
+                        enhet.navn.contains(
+                            body.navn,
+                            ignoreCase = true
+                        ) || enhet.enhetsNummer.contains(body.navn, ignoreCase = true)
+                    }
+                        ?.map { enhet ->
+                            NavEnheterResponse(navn = enhet.navn, enhetsnummer = enhet.enhetsNummer)
+                        } ?: emptyList()
                 respond(response)
             }
         }

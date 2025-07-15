@@ -14,33 +14,27 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.auth.token
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
-import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
+import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling/{referanse}/grunnlag/arbeidsevne") {
-        authorizedGet<BehandlingReferanse, ArbeidsevneGrunnlagDto>(
-            AuthorizationParamPathConfig(
-                behandlingPathParam = BehandlingPathParam(
-                    "referanse"
-                )
-            )
+        getGrunnlag<BehandlingReferanse, ArbeidsevneGrunnlagDto>(
+            behandlingPathParam = BehandlingPathParam("referanse"),
+            avklaringsbehovKode = Definisjon.FASTSETT_ARBEIDSEVNE.kode.toString()
+
         ) { behandlingReferanse ->
 
-            arbeidsevneGrunnlag(dataSource, behandlingReferanse, token(), repositoryRegistry)?.let { respond(it) }
-                ?: respondWithStatus(
-                    HttpStatusCode.NoContent
-                )
+            arbeidsevneGrunnlag(dataSource, behandlingReferanse, kanSaksbehandle(), repositoryRegistry)?.let {
+                respond(it)
+            } ?: respondWithStatus(HttpStatusCode.NoContent)
         }
 
         route("/simulering") {
@@ -57,7 +51,7 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(dataSource: DataSource, repository
 private fun arbeidsevneGrunnlag(
     dataSource: DataSource,
     behandlingReferanse: BehandlingReferanse,
-    token: OidcToken,
+    kanSaksbehandle: Boolean,
     repositoryRegistry: RepositoryRegistry
 ): ArbeidsevneGrunnlagDto? {
     return dataSource.transaction { connection ->
@@ -73,14 +67,8 @@ private fun arbeidsevneGrunnlag(
             behandling.forrigeBehandlingId?.let { arbeidsevneRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
         val historikk = arbeidsevneRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
 
-        val harTilgangTilÅSaksbehandle = GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-            behandlingReferanse.referanse,
-            Definisjon.FASTSETT_ARBEIDSEVNE,
-            token
-        )
-
         ArbeidsevneGrunnlagDto(
-            harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+            harTilgangTilÅSaksbehandle = kanSaksbehandle,
             historikk = historikk.map { it.toDto() }.sortedBy { it.vurderingsTidspunkt }.toSet(),
             vurderinger =
                 nåTilstand

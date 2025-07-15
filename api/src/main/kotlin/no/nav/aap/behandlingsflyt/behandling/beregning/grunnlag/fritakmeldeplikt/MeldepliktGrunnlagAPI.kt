@@ -12,14 +12,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
-import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -28,8 +25,9 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
     repositoryRegistry: RepositoryRegistry
 ) {
     route("/api/behandling/{referanse}/grunnlag/fritak-meldeplikt") {
-        authorizedGet<BehandlingReferanse, FritakMeldepliktGrunnlagResponse>(
-            AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
+        getGrunnlag<BehandlingReferanse, FritakMeldepliktGrunnlagResponse>(
+            behandlingPathParam = BehandlingPathParam("referanse"),
+            avklaringsbehovKode = Definisjon.FRITAK_MELDEPLIKT.kode.toString(),
         ) { req ->
             val meldepliktGrunnlag =
                 dataSource.transaction(readOnly = true) { connection ->
@@ -48,15 +46,9 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
                     val historikk =
                         meldepliktRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
 
-                    val harTilgangTilÅSaksbehandle =
-                        GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                            req.referanse,
-                            Definisjon.FRITAK_MELDEPLIKT,
-                            token()
-                        )
 
                     FritakMeldepliktGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         historikk =
                             historikk
                                 .map { tilResponse(it) }
