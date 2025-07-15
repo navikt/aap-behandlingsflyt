@@ -1,5 +1,5 @@
 [versions]
-komponenter = "1.0.286"
+komponenter = "1.0.288"
 tilgang = "1.0.95"
 utbetaling = "0.0.52"
 junit = "5.13.3"
