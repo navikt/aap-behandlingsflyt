@@ -123,7 +123,7 @@ class FormkravSteg (
 
     private fun bestillFårhåndsvarselBrev(behandlingId: BehandlingId): BrevbestillingReferanse {
         val behandling = behandlingRepository.hent(behandlingId)
-        val vårReferanse = "${behandling.referanse}-$typeBrev" // TODO: Støtte flere varsler per behandling?
+        val vårReferanse = "${behandling.referanse}-$typeBrev"
 
         val brevReferanse = brevbestillingService.bestillV2(
             behandlingId,

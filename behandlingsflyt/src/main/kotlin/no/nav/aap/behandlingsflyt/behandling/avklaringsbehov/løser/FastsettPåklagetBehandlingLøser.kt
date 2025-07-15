@@ -45,7 +45,7 @@ class FastsettPåklagetBehandlingLøser(
             throw IllegalArgumentException("Kan ikke klage på type ${this.typeBehandling()}")
         }
 
-        // TODO: Sjekk hva som er kravet for status for å kunne sende inn en klage på behandlingen
+
         if (!this.status().erAvsluttet()) {
             throw IllegalArgumentException("Kan ikke klage på åpen behandling ${this.status()}")
         }

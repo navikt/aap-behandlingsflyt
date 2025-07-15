@@ -85,7 +85,6 @@ class FullmektigRepositoryImpl(private val connection: DBConnection) : Fullmekti
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        // TODO: Avklar om vi trenger flere behandlinger per klage
         // Gjør ingenting
     }
 

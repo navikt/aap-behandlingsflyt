@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
-// TODO, test på at lagre og hente ut LazyDokument fungerer
 
 class InnsendingTest {
 

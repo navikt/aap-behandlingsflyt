@@ -84,7 +84,6 @@ class KlagebehandlingNayRepositoryImpl(private val connection: DBConnection) : K
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        // TODO: Avklar om vi trenger flere behandlinger per klage
         // Gjør ingenting
     }
 

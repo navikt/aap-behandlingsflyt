@@ -278,7 +278,7 @@ class SakOgBehandlingService(
             val periode = Periode(
                 fom,
                 tom
-            ) // TODO: Usikker på om dette blir helt korrekt..
+            ) // TODO: Usikker på om dette blir helt korrekt.. // Spør Peter
             if (periode != rettighetsperiode) {
                 sakRepository.oppdaterRettighetsperiode(sakId, periode)
             }
@@ -303,8 +303,6 @@ class SakOgBehandlingService(
 
     private fun validerStegStatus(behandling: Behandling) {
         val flyt = behandling.flyt()
-        // TODO Utvide med regler for hva som kan knyttes til en behandling og når den eventuelt skal tilbake likevel
-        // Om den skal tilbake krever det endringer for å ta hensyn til disse
         if (!flyt.skalOppdatereFaktagrunnlag()) {
             throw IllegalStateException("Behandlingen[${behandling.referanse}] kan ikke motta opplysinger nå, avventer fullføring av steg som ligger etter at oppdatering av faktagrunnlag opphører.")
         }

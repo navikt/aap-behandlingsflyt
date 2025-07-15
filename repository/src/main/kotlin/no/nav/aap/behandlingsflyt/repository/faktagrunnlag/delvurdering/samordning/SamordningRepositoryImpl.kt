@@ -92,16 +92,15 @@ class SamordningRepositoryImpl(private val connection: DBConnection) : Samordnin
         }
 
         val grunnlagQuery = """
-            INSERT INTO SAMORDNING_GRUNNLAG (behandling_id, perioder_id) VALUES (?, ?)
+            INSERT INTO SAMORDNING_GRUNNLAG (behandling_id, perioder_id, faktagrunnlag) VALUES (?, ?, ?)
         """.trimIndent()
         connection.execute(grunnlagQuery) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, perioderId)
+                setString(3, input.hent())
             }
         }
-
-        // TODO: lagre faktagrunnlag for sporing
     }
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
