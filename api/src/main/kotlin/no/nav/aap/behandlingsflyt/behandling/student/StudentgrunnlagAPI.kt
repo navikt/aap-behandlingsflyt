@@ -12,14 +12,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
-import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.studentgrunnlagApi(
@@ -28,13 +25,9 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(
 ) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/student") {
-            authorizedGet<BehandlingReferanse, StudentGrunnlagResponse>(
-                AuthorizationParamPathConfig(
-                    behandlingPathParam =
-                        BehandlingPathParam(
-                            "referanse"
-                        )
-                )
+            getGrunnlag<BehandlingReferanse, StudentGrunnlagResponse>(
+                behandlingPathParam = BehandlingPathParam("referanse"),
+                avklaringsbehovKode = Definisjon.AVKLAR_STUDENT.kode.toString()
             ) { req ->
                 val studentGrunnlag: StudentGrunnlag? =
                     dataSource.transaction(readOnly = true) { connection ->
@@ -47,17 +40,10 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(
                         studentRepository.hentHvisEksisterer(behandlingId = behandling.id)
                     }
 
-                val harTilgangTilÅSaksbehandle =
-                    GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                        req.referanse,
-                        Definisjon.AVKLAR_STUDENT,
-                        token()
-                    )
-
                 if (studentGrunnlag != null) {
                     respond(
                         StudentGrunnlagResponse(
-                            harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+                            harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                             studentvurdering = studentGrunnlag.studentvurdering?.tilResponse(),
                             oppgittStudent = studentGrunnlag.oppgittStudent
                         )

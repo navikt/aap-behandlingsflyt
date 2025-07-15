@@ -10,14 +10,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektG
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
-import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.getGrunnlag
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.time.MonthDay
@@ -46,10 +43,9 @@ private val log = LoggerFactory.getLogger("ManuellInntektGrunnlagApi")
 fun NormalOpenAPIRoute.manglendeGrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/beregning/manuellinntekt") {
-            authorizedGet<BehandlingReferanse, ManuellInntektGrunnlagResponse>(
-                AuthorizationParamPathConfig(
-                    behandlingPathParam = BehandlingPathParam("referanse")
-                )
+            getGrunnlag<BehandlingReferanse, ManuellInntektGrunnlagResponse>(
+                behandlingPathParam = BehandlingPathParam("referanse"),
+                avklaringsbehovKode = Definisjon.FASTSETT_MANUELL_INNTEKT.kode.toString()
             ) { req ->
                 val (manuellInntekt, år) = dataSource.transaction {
                     val provider = repositoryRegistry.provider(it)
@@ -77,17 +73,11 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(dataSource: DataSource, repositoryRe
                     )
                 )!!.verdi
 
-                val harTilgangTilÅSaksbehandle = GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                    req.referanse,
-                    Definisjon.FASTSETT_MANUELL_INNTEKT,
-                    token()
-                )
-
                 respond(
                     ManuellInntektGrunnlagResponse(
                         ar = år.value,
                         gverdi = gVerdi.verdi,
-                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = manuellInntekt?.let {
                             ManuellInntektVurderingGrunnlagResponse(
                                 begrunnelse = it.begrunnelse,
