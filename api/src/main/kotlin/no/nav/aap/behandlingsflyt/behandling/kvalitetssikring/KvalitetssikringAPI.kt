@@ -7,44 +7,38 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.KanIkkeVurdereEgneVurderingerException
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Aksjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.DefinisjonEndring
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Historikk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.KVALITETSSIKRING_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.bruker
-import no.nav.aap.komponenter.httpklient.auth.token
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.komponenter.miljo.Miljø
-import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.verdityper.Interval
-import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
-import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDateTime
-import java.util.UUID
 import javax.sql.DataSource
 import kotlin.collections.any
 
 fun NormalOpenAPIRoute.kvalitetssikringApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/kvalitetssikring") {
-            authorizedGet<BehandlingReferanse, KvalitetssikringGrunnlagDto>(
-                AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse")),
-                auditLogConfig = null,
+            getGrunnlag<BehandlingReferanse, KvalitetssikringGrunnlagDto>(
+                behandlingPathParam = BehandlingPathParam("referanse"),
+                avklaringsbehovKode = KVALITETSSIKRING_KODE,
                 TagModule(listOf(Tags.Grunnlag))
             ) { req ->
 
@@ -63,8 +57,7 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(dataSource: DataSource, repositoryReg
 
                     KvalitetssikringGrunnlagDto(
                         harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(
-                            req.referanse,
-                            token(),
+                            kanSaksbehandle(),
                             avklaringsbehovene,
                             bruker()
                         ),
@@ -79,28 +72,20 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(dataSource: DataSource, repositoryReg
 }
 
 private fun utledHarTilgangTilÅSaksbehandle(
-    behandlingReferanse: UUID,
-    token: OidcToken,
+    kanSaksbehandle: Boolean,
     avklaringsbehovene: Avklaringsbehovene,
     bruker: Bruker
 ): Boolean {
     val unleashGateway = GatewayProvider.provide<UnleashGateway>()
-    val harTilgang = GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-        behandlingReferanse,
-        Definisjon.KVALITETSSIKRING,
-        token
-    )
-
     if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
         val harIkkeGjortNoenVurderinger =
             avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }
                 .any { !it.brukere().contains(bruker.ident) }
 
-        return harTilgang && harIkkeGjortNoenVurderinger
+        return kanSaksbehandle && harIkkeGjortNoenVurderinger
     } else {
-        return harTilgang
+        return kanSaksbehandle
     }
-
 }
 
 private fun utledKvalitetssikringHistorikk(avklaringsbehovene: Avklaringsbehovene): List<Historikk> {
