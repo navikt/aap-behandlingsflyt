@@ -1192,9 +1192,8 @@ class FlytOrkestratorTest : AbstraktFlytOrkestratorTest() {
                     )
                 )
             )
-            .løsBeregningstidspunkt()
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FORESLÅ_VEDTAK)
+                assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
 
                 val underveisTidslinje = dataSource.transaction {
                     UnderveisRepositoryImpl(it).hent(this.behandling.id).perioder
