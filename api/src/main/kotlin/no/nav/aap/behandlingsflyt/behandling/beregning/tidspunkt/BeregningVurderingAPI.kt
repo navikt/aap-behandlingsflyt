@@ -16,24 +16,21 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.verdityper.Beløp
-import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
-import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/beregning/tidspunkt") {
-            authorizedGet<BehandlingReferanse, BeregningTidspunktAvklaringResponse>(
-                AuthorizationParamPathConfig(
-                    behandlingPathParam = BehandlingPathParam("referanse")
-                )
+            getGrunnlag<BehandlingReferanse, BeregningTidspunktAvklaringResponse>(
+
+                behandlingPathParam = BehandlingPathParam("referanse"),
+                avklaringsbehovKode = Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT.kode.toString()
             ) { req ->
                 val responsDto = dataSource.transaction(readOnly = true) {
                     val repositoryProvider = repositoryRegistry.provider(it)
@@ -48,16 +45,8 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource, repositoryR
                         repositoryProvider.provide<BeregningVurderingRepository>()
                             .hentHvisEksisterer(behandlingId = behandling.id)
 
-                    val harTilgangTilÅSaksbehandle =
-                        GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                            req.referanse,
-                            Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
-                            token()
-                        )
-
-
                     BeregningTidspunktAvklaringResponse(
-                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = beregningGrunnlag?.tidspunktVurdering?.tilResponse(),
                         skalVurdereYtterligere = skalVurdereUføre
                     )
@@ -67,10 +56,9 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource, repositoryR
             }
         }
         route("/{referanse}/grunnlag/beregning/yrkesskade") {
-            authorizedGet<BehandlingReferanse, BeregningYrkesskadeAvklaringResponse>(
-                AuthorizationParamPathConfig(
-                    behandlingPathParam = BehandlingPathParam("referanse")
-                )
+            getGrunnlag<BehandlingReferanse, BeregningYrkesskadeAvklaringResponse>(
+                behandlingPathParam = BehandlingPathParam("referanse"),
+                avklaringsbehovKode = Definisjon.FASTSETT_YRKESSKADEINNTEKT.kode.toString()
             ) { req ->
                 val responsDto = dataSource.transaction(readOnly = true) {
                     val repositoryProvider = repositoryRegistry.provider(it)
@@ -92,15 +80,8 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource, repositoryR
                     val sakerMedDato =
                         relevanteSaker.map { sak -> registerYrkeskade.singleOrNull { it.ref == sak } }
 
-                    val harTilgangTilÅSaksbehandle =
-                        GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                            req.referanse,
-                            Definisjon.FASTSETT_YRKESSKADEINNTEKT,
-                            token()
-                        )
-
                     BeregningYrkesskadeAvklaringResponse(
-                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         skalVurderes =
                             sakerMedDato.filterNotNull().map {
                                 YrkesskadeTilVurderingResponse(

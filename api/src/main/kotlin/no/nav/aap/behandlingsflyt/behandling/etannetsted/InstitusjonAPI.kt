@@ -15,26 +15,20 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
-import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/institusjon/soning") {
-            authorizedGet<BehandlingReferanse, SoningsGrunnlagDto>(
-                AuthorizationParamPathConfig(
-                    behandlingPathParam = BehandlingPathParam(
-                        "referanse"
-                    )
-                )
+            getGrunnlag<BehandlingReferanse, SoningsGrunnlagDto>(
+                behandlingPathParam = BehandlingPathParam("referanse"),
+                avklaringsbehovKode = Definisjon.AVKLAR_SONINGSFORRHOLD.kode.toString()
             ) { req ->
                 val soningsgrunnlag = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
@@ -79,19 +73,12 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource, repositoryRegistry
                                 )
                             }
 
-                    val harTilgangTilÅSaksbehandle =
-                        GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                            req.referanse,
-                            Definisjon.AVKLAR_SONINGSFORRHOLD,
-                            token()
-                        )
-
                     val ansattNavnOgEnhet =
                         grunnlag?.soningsVurderinger?.let { AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv) }
 
 
                     SoningsGrunnlagDto(
-                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         soningsforholdInfo.segmenter().map { InstitusjonsoppholdDto.institusjonToDto(it) },
                         manglendePerioder,
                         vurdertAv =
@@ -111,10 +98,9 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource, repositoryRegistry
     }
     route("/api/behandling") {
         route("/{referanse}/grunnlag/institusjon/helse") {
-            authorizedGet<BehandlingReferanse, HelseinstitusjonGrunnlagDto>(
-                AuthorizationParamPathConfig(
-                    behandlingPathParam = BehandlingPathParam("referanse")
-                )
+            getGrunnlag<BehandlingReferanse, HelseinstitusjonGrunnlagDto>(
+                behandlingPathParam = BehandlingPathParam("referanse"),
+                avklaringsbehovKode = Definisjon.AVKLAR_HELSEINSTITUSJON.kode.toString()
             ) { req ->
                 val grunnlagDto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
@@ -159,17 +145,11 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource, repositoryRegistry
                             )
                         }
 
-                    val harTilgangTilÅSaksbehandle =
-                        GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                            req.referanse,
-                            Definisjon.AVKLAR_HELSEINSTITUSJON,
-                            token()
-                        )
-
-                    val ansattNavnOgEnhet = grunnlag?.helseoppholdvurderinger?.let {  AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv) }
+                    val ansattNavnOgEnhet =
+                        grunnlag?.helseoppholdvurderinger?.let { AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv) }
 
                     HelseinstitusjonGrunnlagDto(
-                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         opphold = oppholdInfo.segmenter().map { InstitusjonsoppholdDto.institusjonToDto(it) },
                         vurderinger = manglendePerioder,
                         vurdertAv =
