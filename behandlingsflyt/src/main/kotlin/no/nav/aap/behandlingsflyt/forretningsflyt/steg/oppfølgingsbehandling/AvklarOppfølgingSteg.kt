@@ -37,8 +37,8 @@ class AvklarOppfølgingSteg(
         if (grunnlag == null) {
             return FantAvklaringsbehov(
                 when (oppfølgingsoppgavedokument.hvemSkalFølgeOpp) {
-                    is HvemSkalFølgeOpp.Kontor -> Definisjon.AVKLAR_OPPFØLGINGSBEHOV_LOKALKONTOR
-                    is HvemSkalFølgeOpp.NasjonalEnhet -> Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY
+                    HvemSkalFølgeOpp.Lokalkontor   -> Definisjon.AVKLAR_OPPFØLGINGSBEHOV_LOKALKONTOR
+                    HvemSkalFølgeOpp.NasjonalEnhet -> Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY
                 }
             )
         }

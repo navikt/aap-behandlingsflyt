@@ -40,7 +40,7 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest() {
                     OppfølgingsoppgaveV0(
                         datoForOppfølging = LocalDate.now().plusDays(1),
                         hvaSkalFølgesOpp = "noe",
-                        hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet(),
+                        hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet,
                         reserverTilBruker = "MEGSELV"
                     )
                 ),

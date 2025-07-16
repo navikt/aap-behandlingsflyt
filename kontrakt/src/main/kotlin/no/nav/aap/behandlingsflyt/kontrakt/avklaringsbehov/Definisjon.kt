@@ -521,7 +521,7 @@ public enum class Definisjon(
     private fun validerBrevpunkt() {
         if (this == SKRIV_BREV && !this.løsesISteg.tekniskSteg) {
             throw IllegalArgumentException(
-                "Brevbeho må være knyttet til et teknisk steg"
+                "Brevbehov må være knyttet til et teknisk steg"
             )
         }
     }
@@ -529,7 +529,7 @@ public enum class Definisjon(
     private fun validerBrevVentepunkt() {
         if (this == BESTILL_BREV && !this.løsesISteg.tekniskSteg) {
             throw IllegalArgumentException(
-                "Brev ventebehov må være knyttet til et teknisk steg"
+                "Brev-ventebehov må være knyttet til et teknisk steg"
             )
         }
     }

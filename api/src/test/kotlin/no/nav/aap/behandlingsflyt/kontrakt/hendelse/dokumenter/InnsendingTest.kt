@@ -208,28 +208,28 @@ class InnsendingTest {
     fun `parse oppfølgingsoppgave fra full melding`() {
         @Language("JSON")
         val s = """{
-  "saksnummer": "4LDRRYo",
+  "saksnummer": "4LDQPDS",
   "referanse": {
     "type": "BEHANDLING_REFERANSE",
-    "verdi": "a3cc3dfc-3337-444f-900c-d9232affe66f"
+    "verdi": "e8a9ca4b-83b9-44dc-b54a-df2199a4a244"
   },
   "type": "OPPFØLGINGSOPPGAVE",
   "kanal": "DIGITAL",
-  "mottattTidspunkt": "2025-07-15T07:12:44.487Z",
+  "mottattTidspunkt": "2025-07-16T10:15:53.359Z",
   "melding": {
     "meldingType": "OppfølgingsoppgaveV0",
-    "datoForOppfølging": "2025-07-15",
+    "datoForOppfølging": "2025-07-16",
     "hvaSkalFølgesOpp": "dsfsdf",
-    "hvemSkalFølgeOpp": {
-      "@type": "nasjonalEnhet"
-    }
+    "reserverTilBruker": "dd",
+    "hvemSkalFølgeOpp": "NasjonalEnhet"
   }
-}"""
+}
+"""
         val obj = DefaultJsonMapper.fromJson<Innsending>(s)
 
         assertThat(obj.melding).isInstanceOf(OppfølgingsoppgaveV0::class.java)
         val oppfølgingsOppgaveActual = obj.melding as OppfølgingsoppgaveV0
-        assertThat(oppfølgingsOppgaveActual.hvemSkalFølgeOpp).isEqualTo(HvemSkalFølgeOpp.NasjonalEnhet())
+        assertThat(oppfølgingsOppgaveActual.hvemSkalFølgeOpp).isEqualTo(HvemSkalFølgeOpp.NasjonalEnhet)
     }
 
 
@@ -245,6 +245,8 @@ class InnsendingTest {
 
         val json = DefaultJsonMapper.toJson(oppfølgingsoppgave)
 
+        println(json)
+
         val tilbakeIgjen = DefaultJsonMapper.fromJson<Oppfølgingsoppgave>(json)
 
         assertThat(oppfølgingsoppgave).isEqualTo(tilbakeIgjen)
@@ -253,8 +255,8 @@ class InnsendingTest {
     companion object {
         @JvmStatic
         fun hvemSkalFølgeOppMethodSource() = listOf(
-            HvemSkalFølgeOpp.NasjonalEnhet(),
-            HvemSkalFølgeOpp.Kontor("2201")
+            HvemSkalFølgeOpp.NasjonalEnhet,
+            HvemSkalFølgeOpp.Lokalkontor
         )
     }
 }

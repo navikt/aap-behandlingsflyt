@@ -71,7 +71,7 @@ class AvklarOppfølgingStegTest {
 
         every { mottaDokumentService.hentOppfølgingsBehandlingDokument(any())} returns BehandletOppfølgingsOppgave(
             datoForOppfølging = LocalDate.now(),
-            hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet(),
+            hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet,
             hvaSkalFølgesOpp = "..."
         )
     }
