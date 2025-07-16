@@ -19,7 +19,7 @@ dependencies {
 
     implementation(libs.ktorServerNetty)
     constraints {
-        implementation("io.netty:netty-common:4.2.2.Final")
+        implementation("io.netty:netty-common:4.2.3.Final")
     }
     implementation(libs.ktorServerStatusPages)
 
