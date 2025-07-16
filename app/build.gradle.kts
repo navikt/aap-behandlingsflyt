@@ -1,13 +1,11 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-
-val ktorVersion = "3.2.2"
 val opentelemetryVersion = "2.17.1-alpha"
 
 
 plugins {
     id("behandlingsflyt.conventions")
-    id("io.ktor.plugin") version "3.2.2"
+    alias(libs.plugins.ktor)
 }
 
 application {
@@ -67,8 +65,8 @@ fun getCheckedOutGitCommitHash(): String {
 }
 
 dependencies {
-    implementation("io.ktor:ktor-server-cors:$ktorVersion")
-    implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
+    implementation(libs.ktorServerCors)
+    implementation(libs.ktorServerStatusPages)
 
     implementation("io.micrometer:micrometer-registry-prometheus:1.15.2")
     implementation("ch.qos.logback:logback-classic:1.5.18")

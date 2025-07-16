@@ -1,10 +1,19 @@
 [versions]
+ktor = "3.2.2"
 komponenter = "1.0.288"
 tilgang = "1.0.95"
 utbetaling = "0.0.52"
 junit = "5.13.3"
 
 [libraries]
+ktorClientContentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktorServerContentNegotation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
+ktorHttpJvm = { module = "io.ktor:ktor-http-jvm", version.ref = "ktor"}
+ktorServerNetty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor"}
+ktorServerTestHost = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor"}
+ktorServerCors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor"}
+ktorServerStatusPages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor"}
+ktorSerializationJackson = { module = "io.ktor:ktor-serialization-jackson", version.ref = "ktor"}
 json = { module = "no.nav.aap.kelvin:json", version.ref = "komponenter" }
 dbconnect = { module = "no.nav.aap.kelvin:dbconnect", version.ref = "komponenter" }
 verdityper = { module = "no.nav.aap.kelvin:verdityper", version.ref = "komponenter" }
@@ -20,12 +29,15 @@ dbtest = { module = "no.nav.aap.kelvin:dbtest", version.ref = "komponenter" }
 motorTestUtils = { module = "no.nav.aap.kelvin:motor-test-utils", version.ref = "komponenter" }
 tilgangKontrakt = { module = "no.nav.aap.tilgang:api-kontrakt", version.ref = "tilgang" }
 tilgangPlugin = { module = "no.nav.aap.tilgang:plugin", version.ref = "tilgang" }
-utbetalKontrakt = { module = "no.nav.aap.utbetal:api-kontrakt", version.ref = "utbetaling"}
+utbetalKontrakt = { module = "no.nav.aap.utbetal:api-kontrakt", version.ref = "utbetaling" }
 
 junitApi = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junitJupiterEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junitJupiterParams = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
-assertJ = { module = "org.assertj:assertj-core", version = "3.27.3"}
+assertJ = { module = "org.assertj:assertj-core", version = "3.27.3" }
 
 [bundles]
 junit = ["junitApi", "junitJupiterEngine", "junitJupiterParams", "assertJ"]
+
+[plugins]
+ktor = {id = "io.ktor.plugin", version.ref = "ktor"}

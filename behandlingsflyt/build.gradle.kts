@@ -2,8 +2,6 @@ plugins {
     id("behandlingsflyt.conventions")
 }
 
-val ktorVersion = "3.2.2"
-
 dependencies {
     api(project(":kontrakt"))
     implementation("io.micrometer:micrometer-registry-prometheus:1.15.2")
@@ -25,8 +23,6 @@ dependencies {
     implementation(libs.verdityper)
     implementation(libs.tidslinje)
     implementation(kotlin("reflect"))
-    // TODO: fjern når alle api er flyttet til api-modul
-    compileOnly("io.ktor:ktor-http-jvm:$ktorVersion")
     implementation("org.flywaydb:flyway-database-postgresql:11.10.2")
     runtimeOnly("org.postgresql:postgresql:42.7.7")
 

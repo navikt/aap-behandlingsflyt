@@ -1,5 +1,3 @@
-val ktorVersion = "3.2.2"
-
 plugins {
     id("behandlingsflyt.conventions")
 }
@@ -16,19 +14,16 @@ dependencies {
     implementation(libs.verdityper)
     implementation(libs.tidslinje)
     implementation(libs.dbconnect)
-    implementation("io.ktor:ktor-server-auth:$ktorVersion")
-    implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
-    implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
-    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
-    implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty:$ktorVersion")
+
+    implementation(libs.ktorServerContentNegotation)
+
+    implementation(libs.ktorServerNetty)
     constraints {
         implementation("io.netty:netty-common:4.2.2.Final")
     }
-    implementation("io.ktor:ktor-server-cors:$ktorVersion")
-    implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
+    implementation(libs.ktorServerStatusPages)
 
-    implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
+    implementation(libs.ktorSerializationJackson)
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersjon")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersjon")
 

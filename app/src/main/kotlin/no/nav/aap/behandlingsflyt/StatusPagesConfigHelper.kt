@@ -6,7 +6,10 @@ import io.ktor.serialization.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
+import no.nav.aap.behandlingsflyt.exception.BehandlingUnderProsesseringException
 import no.nav.aap.behandlingsflyt.exception.FlytOperasjonException
+import no.nav.aap.behandlingsflyt.exception.KanIkkeVurdereEgneVurderingerException
+import no.nav.aap.behandlingsflyt.exception.OutdatedBehandlingException
 import no.nav.aap.komponenter.httpklient.exception.ApiErrorCode
 import no.nav.aap.komponenter.httpklient.exception.ApiException
 import no.nav.aap.komponenter.httpklient.exception.IkkeTillattException
@@ -40,7 +43,11 @@ object StatusPagesConfigHelper {
                 is FlytOperasjonException -> {
                     call.respondWithError(
                         ApiException(
-                            status = cause.status(),
+                            status = when (cause) {
+                                is BehandlingUnderProsesseringException -> HttpStatusCode.Conflict
+                                is KanIkkeVurdereEgneVurderingerException -> HttpStatusCode.Forbidden
+                                is OutdatedBehandlingException -> HttpStatusCode.Conflict
+                            },
                             message = cause.body().message ?: "Ukjent feil i behandlingsflyt"
                         )
                     )
