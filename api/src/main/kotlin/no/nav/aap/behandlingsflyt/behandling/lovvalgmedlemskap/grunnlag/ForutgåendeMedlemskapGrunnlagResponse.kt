@@ -23,7 +23,8 @@ data class ManuellVurderingForForutgåendeMedlemskapResponse(
 
 data class HistoriskManuellVurderingForForutgåendeMedlemskapResponse(
     val manuellVurdering: ManuellVurderingForForutgåendeMedlemskapResponse,
-    val opprettet: LocalDate
+    val opprettet: LocalDate,
+    val erGjeldendeVurdering: Boolean
 )
 
 fun ManuellVurderingForForutgåendeMedlemskap.toResponse(ansattNavnOgEnhet: AnsattNavnOgEnhet?): ManuellVurderingForForutgåendeMedlemskapResponse =
@@ -47,5 +48,6 @@ fun ManuellVurderingForForutgåendeMedlemskap.toResponse(ansattNavnOgEnhet: Ansa
 fun HistoriskManuellVurderingForForutgåendeMedlemskap.toResponse(): HistoriskManuellVurderingForForutgåendeMedlemskapResponse =
     HistoriskManuellVurderingForForutgåendeMedlemskapResponse(
         manuellVurdering = manuellVurdering.toResponse(ansattNavnOgEnhet = null),
-        opprettet = opprettet.toLocalDate()
+        opprettet = opprettet.toLocalDate(),
+        erGjeldendeVurdering = erGjeldendeVurdering
     )

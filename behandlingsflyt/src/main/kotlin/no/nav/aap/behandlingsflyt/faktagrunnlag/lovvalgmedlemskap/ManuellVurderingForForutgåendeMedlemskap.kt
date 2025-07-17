@@ -21,5 +21,6 @@ data class ManuellVurderingForForutgåendeMedlemskapDto(
 
 data class HistoriskManuellVurderingForForutgåendeMedlemskap(
     val manuellVurdering: ManuellVurderingForForutgåendeMedlemskap,
-    val opprettet: LocalDateTime
+    val opprettet: LocalDateTime,
+    val erGjeldendeVurdering: Boolean
 )
