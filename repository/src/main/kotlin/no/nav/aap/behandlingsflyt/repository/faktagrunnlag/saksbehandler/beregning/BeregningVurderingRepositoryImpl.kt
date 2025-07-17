@@ -160,6 +160,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandling)
         if (eksisterendeGrunnlag == null) {
+            log.info("Fant ikke eksisterende grunnlag for behandling $fraBehandling, kan derfor ikke kopiere til behandling $tilBehandling.")
             return
         }
         val query = """

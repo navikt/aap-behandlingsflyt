@@ -119,7 +119,7 @@ private const val ANTALL_WORKERS = 4
 
 fun main() {
     Thread.currentThread().setUncaughtExceptionHandler { _, e ->
-        LoggerFactory.getLogger(App::class.java).error("Uhåndtert feil.", e)
+        LoggerFactory.getLogger(App::class.java).error("Uhåndtert feil av type ${e.javaClass}.", e)
         prometheus.uhåndtertExceptionTeller(e::class.java.name).increment()
     }
     embeddedServer(Netty, configure = {
