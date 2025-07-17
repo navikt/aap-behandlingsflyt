@@ -12,7 +12,7 @@ dependencies {
     implementation(libs.httpklient)
     implementation(libs.infrastructure)
     implementation(libs.tidslinje)
-    implementation("org.flywaydb:flyway-database-postgresql:11.10.2")
+    implementation("org.flywaydb:flyway-database-postgresql:11.10.3")
     implementation("io.getunleash:unleash-client-java:11.0.2")
     runtimeOnly("org.postgresql:postgresql:42.7.7")
 
