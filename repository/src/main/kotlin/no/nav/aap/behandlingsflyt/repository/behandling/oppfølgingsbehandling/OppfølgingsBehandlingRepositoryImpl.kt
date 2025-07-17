@@ -6,11 +6,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
-import org.slf4j.LoggerFactory
 
 class OppfølgingsBehandlingRepositoryImpl(private val connection: DBConnection) : OppfølgingsBehandlingRepository {
-
-    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<OppfølgingsBehandlingRepositoryImpl> {
         override fun konstruer(connection: DBConnection): OppfølgingsBehandlingRepositoryImpl {

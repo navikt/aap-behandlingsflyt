@@ -37,16 +37,21 @@ class AvklarOppfølgingSteg(
         if (grunnlag == null) {
             return FantAvklaringsbehov(
                 when (oppfølgingsoppgavedokument.hvemSkalFølgeOpp) {
-                    HvemSkalFølgeOpp.Lokalkontor   -> Definisjon.AVKLAR_OPPFØLGINGSBEHOV_LOKALKONTOR
+                    HvemSkalFølgeOpp.Lokalkontor -> Definisjon.AVKLAR_OPPFØLGINGSBEHOV_LOKALKONTOR
                     HvemSkalFølgeOpp.NasjonalEnhet -> Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY
                 }
             )
         }
 
         when (grunnlag.konsekvensAvOppfølging) {
-            KonsekvensAvOppfølging.INGEN -> return Fullført
+            KonsekvensAvOppfølging.INGEN -> {
+                log.info("Ingen konsens av oppfølging. Avslutter oppfølgingsbehandling for sak ${kontekst.sakId}.")
+                return Fullført
+            }
+
             KonsekvensAvOppfølging.OPPRETT_VURDERINGSBEHOV -> {
                 val årsaker = grunnlag.opplysningerTilRevurdering
+                log.info("Oppretter ny behandling med årsaker $årsaker for sak ${kontekst.sakId}.")
                 val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
                     sakId = kontekst.sakId,
                     årsaker = årsaker.map { Årsak(it) }

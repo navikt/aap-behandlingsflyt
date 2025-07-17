@@ -270,5 +270,9 @@ public enum class AvklaringsbehovKode {
      * [AVKLAR_OPPFØLGINGSBEHOV_NAY]
      */
     `8002`,
+
+    /**
+     * [VENT_PÅ_OPPFØLGING]
+     */
     `8003`
 }

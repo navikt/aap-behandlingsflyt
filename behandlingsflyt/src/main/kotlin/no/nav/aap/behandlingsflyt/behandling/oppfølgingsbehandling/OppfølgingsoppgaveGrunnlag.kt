@@ -12,13 +12,13 @@ enum class KonsekvensAvOppfølging {
  */
 data class OppfølgingsoppgaveGrunnlagDto(
     val konsekvensAvOppfølging: KonsekvensAvOppfølging,
-    val opplysningerTilRevurdering: List<ÅrsakTilBehandling>,
+    val opplysningerTilRevurdering: List<ÅrsakTilBehandling>? = emptyList(),
     val årsak: String
 ) {
     fun tilOppfølgingsoppgaveGrunnlag(vurdertAv: String): OppfølgingsoppgaveGrunnlag {
         return OppfølgingsoppgaveGrunnlag(
             konsekvensAvOppfølging = konsekvensAvOppfølging,
-            opplysningerTilRevurdering = opplysningerTilRevurdering,
+            opplysningerTilRevurdering = opplysningerTilRevurdering.orEmpty(),
             årsak = årsak,
             vurdertAv = vurdertAv,
         )

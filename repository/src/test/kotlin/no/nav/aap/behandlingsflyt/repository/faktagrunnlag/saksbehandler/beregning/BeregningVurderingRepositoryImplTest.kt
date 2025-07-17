@@ -47,10 +47,9 @@ class BeregningVurderingRepositoryImplTest {
             )
         )
 
+        val sak = dataSource.transaction { sak(it) }
         val behandling = dataSource.transaction { connection ->
-            val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
-
             val beregningVurderingRepository = BeregningVurderingRepositoryImpl(connection)
 
             // Lagre tidspunktVurdering
@@ -91,6 +90,12 @@ class BeregningVurderingRepositoryImplTest {
             assertThat(hentedeVurderinger)
                 .usingRecursiveFieldByFieldElementComparatorIgnoringFields("vurdertTidspunkt")
                 .containsExactlyInAnyOrderElementsOf(yrkesskadeVurderinger)
+
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
+            assertThat(behandling2.id).isNotEqualTo(behandling.id)
+            beregningVurderingRepository.kopier(behandling.id, behandling2.id)
+
+            assertThat(beregningVurderingRepository.hentHvisEksisterer(behandling2.id)).isNotNull
 
             // Slett og verifiser at det er slettet
             beregningVurderingRepository.slett(behandling.id)

@@ -131,8 +131,12 @@ class MottaDokumentService(
         mottattDokumentRepository.oppdaterStatus(referanse, behandlingId, sakId, Status.BEHANDLET)
     }
 
-    fun hentOppfølgingsBehandlingDokument(behandlingId: BehandlingId): BehandletOppfølgingsOppgave {
+    fun hentOppfølgingsBehandlingDokument(behandlingId: BehandlingId): BehandletOppfølgingsOppgave? {
         val uthentede = mottattDokumentRepository.hentDokumenterAvType(behandlingId, InnsendingType.OPPFØLGINGSOPPGAVE)
+
+        if (uthentede.isEmpty()) {
+            return null
+        }
 
         require(uthentede.size == 1) { "Forventer kun ett dokument per behandling." }
 

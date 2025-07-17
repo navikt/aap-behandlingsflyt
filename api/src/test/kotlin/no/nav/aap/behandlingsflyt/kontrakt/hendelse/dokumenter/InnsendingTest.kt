@@ -245,8 +245,6 @@ class InnsendingTest {
 
         val json = DefaultJsonMapper.toJson(oppfølgingsoppgave)
 
-        println(json)
-
         val tilbakeIgjen = DefaultJsonMapper.fromJson<Oppfølgingsoppgave>(json)
 
         assertThat(oppfølgingsoppgave).isEqualTo(tilbakeIgjen)

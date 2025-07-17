@@ -69,6 +69,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.integrasjon.meldekort.MeldekortGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
 import no.nav.aap.behandlingsflyt.behandling.klage.trekk.trekkKlageGrunnlagAPI
+import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.avklarOppfolgingsoppgaveGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
@@ -199,7 +200,7 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
                 auditlogApi(dataSource, repositoryRegistry)
                 refusjonGrunnlagAPI(dataSource, repositoryRegistry)
                 manglendeGrunnlagApi(dataSource, repositoryRegistry)
-                //Klage
+                // Klage
                 påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry)
                 fullmektigGrunnlagApi(dataSource, repositoryRegistry)
                 formkravGrunnlagApi(dataSource, repositoryRegistry)
@@ -210,6 +211,8 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
                 trekkKlageGrunnlagAPI(dataSource, repositoryRegistry)
                 // Svar fra kabal
                 svarFraAndreinstansGrunnlagApi(dataSource, repositoryRegistry)
+                // Oppfølgingsbehandling
+                avklarOppfolgingsoppgaveGrunnlag(dataSource, repositoryRegistry)
                 // Flytt
                 brevApi(dataSource, repositoryRegistry)
                 dokumentinnhentingAPI(dataSource, repositoryRegistry)

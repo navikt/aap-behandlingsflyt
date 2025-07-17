@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_AVS
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_ENDRING
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_INNVILGELSE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -43,6 +44,7 @@ import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJo
 import no.nav.aap.behandlingsflyt.prosessering.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -113,6 +115,7 @@ class BehandlingHendelseServiceImpl(
             },
             erPåVent = erPåVent,
             mottattDokumenter = mottattDokumenter,
+            reserverTil = hentReservertTil(behandling.id),
             opprettetTidspunkt = behandling.opprettetTidspunkt,
             hendelsesTidspunkt = LocalDateTime.now(),
             versjon = ApplikasjonsVersjon.versjon
@@ -142,6 +145,17 @@ class BehandlingHendelseServiceImpl(
         }
     }
 
+    private fun hentReservertTil(behandlingId: BehandlingId): String? {
+        val oppfølgingsoppgavedokument =
+            MottaDokumentService(dokumentRepository).hentOppfølgingsBehandlingDokument(behandlingId)
+
+        if (oppfølgingsoppgavedokument == null) {
+            return null
+        }
+
+        return oppfølgingsoppgavedokument.reserverTilBruker
+    }
+
     private fun hentMottattDokumenter(
         årsaker: List<Årsak>,
         behandling: Behandling
@@ -153,7 +167,7 @@ class BehandlingHendelseServiceImpl(
             ÅrsakTilBehandling.MOTTATT_DIALOGMELDING
         )
 
-        return if (årsaker.any { it.type in gyldigeÅrsaker}) {
+        return if (årsaker.any { it.type in gyldigeÅrsaker }) {
             val gyldigeDokumenter = listOf(
                 InnsendingType.LEGEERKLÆRING,
                 InnsendingType.LEGEERKLÆRING_AVVIST,
