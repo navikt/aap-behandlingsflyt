@@ -5,16 +5,15 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.innsendingType
-import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDateTime
 
 data class DokumentMottattSakHendelse(
-    val journalpost: JournalpostId,
+    val referanse: InnsendingReferanse,
     val mottattTidspunkt: LocalDateTime,
     private val innsendingType: InnsendingType?,
     val strukturertDokument: StrukturertDokument<Melding>?
 ) : SakHendelse {
-    
+
     init {
         require(innsendingType != null || strukturertDokument != null) {
             "Hvis det ikke finnes et strukturert dokument må innsendingstype være satt"
@@ -30,7 +29,7 @@ data class DokumentMottattSakHendelse(
     }
 
     override fun getInnsendingReferanse(): InnsendingReferanse {
-        return InnsendingReferanse(journalpost)
+        return referanse
     }
 
     override fun getMelding(): StrukturertDokument<*>? {

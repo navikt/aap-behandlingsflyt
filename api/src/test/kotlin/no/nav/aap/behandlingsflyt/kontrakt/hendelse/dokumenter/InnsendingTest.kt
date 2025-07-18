@@ -2,8 +2,11 @@ package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.assertj.core.api.Assertions.assertThat
+import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 
 
@@ -199,5 +202,59 @@ class InnsendingTest {
 
         val melding = assertDoesNotThrow { DefaultJsonMapper.fromJson<Melding>(eksempelJSON) }
         assertThat(melding).isInstanceOf(SøknadV0::class.java)
+    }
+
+    @Test
+    fun `parse oppfølgingsoppgave fra full melding`() {
+        @Language("JSON")
+        val s = """{
+  "saksnummer": "4LDQPDS",
+  "referanse": {
+    "type": "BEHANDLING_REFERANSE",
+    "verdi": "e8a9ca4b-83b9-44dc-b54a-df2199a4a244"
+  },
+  "type": "OPPFØLGINGSOPPGAVE",
+  "kanal": "DIGITAL",
+  "mottattTidspunkt": "2025-07-16T10:15:53.359Z",
+  "melding": {
+    "meldingType": "OppfølgingsoppgaveV0",
+    "datoForOppfølging": "2025-07-16",
+    "hvaSkalFølgesOpp": "dsfsdf",
+    "reserverTilBruker": "dd",
+    "hvemSkalFølgeOpp": "NasjonalEnhet"
+  }
+}
+"""
+        val obj = DefaultJsonMapper.fromJson<Innsending>(s)
+
+        assertThat(obj.melding).isInstanceOf(OppfølgingsoppgaveV0::class.java)
+        val oppfølgingsOppgaveActual = obj.melding as OppfølgingsoppgaveV0
+        assertThat(oppfølgingsOppgaveActual.hvemSkalFølgeOpp).isEqualTo(HvemSkalFølgeOpp.NasjonalEnhet)
+    }
+
+
+    @ParameterizedTest
+    @MethodSource("hvemSkalFølgeOppMethodSource")
+    fun `serialisering av oppfølgingsoppgavejson`(hvemSkalFølgeOpp: HvemSkalFølgeOpp) {
+        val oppfølgingsoppgave = OppfølgingsoppgaveV0(
+            datoForOppfølging = LocalDate.now(),
+            hvemSkalFølgeOpp = hvemSkalFølgeOpp,
+            reserverTilBruker = "xx",
+            hvaSkalFølgesOpp = "da"
+        )
+
+        val json = DefaultJsonMapper.toJson(oppfølgingsoppgave)
+
+        val tilbakeIgjen = DefaultJsonMapper.fromJson<Oppfølgingsoppgave>(json)
+
+        assertThat(oppfølgingsoppgave).isEqualTo(tilbakeIgjen)
+    }
+
+    companion object {
+        @JvmStatic
+        fun hvemSkalFølgeOppMethodSource() = listOf(
+            HvemSkalFølgeOpp.NasjonalEnhet,
+            HvemSkalFølgeOpp.Lokalkontor
+        )
     }
 }

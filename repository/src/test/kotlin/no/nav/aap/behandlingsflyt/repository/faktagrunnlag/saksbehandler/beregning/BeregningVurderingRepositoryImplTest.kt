@@ -47,10 +47,9 @@ class BeregningVurderingRepositoryImplTest {
             )
         )
 
+        val sak = dataSource.transaction { sak(it) }
         val behandling = dataSource.transaction { connection ->
-            val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
-
             val beregningVurderingRepository = BeregningVurderingRepositoryImpl(connection)
 
             // Lagre tidspunktVurdering

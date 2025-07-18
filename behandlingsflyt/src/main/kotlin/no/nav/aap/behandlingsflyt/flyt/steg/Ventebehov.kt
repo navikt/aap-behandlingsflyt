@@ -7,7 +7,7 @@ import java.time.LocalDate
 data class Ventebehov(val definisjon: Definisjon, val grunn: ÅrsakTilSettPåVent, val frist: LocalDate? = null) {
     init {
         if (frist != null) {
-            require(frist.isAfter(LocalDate.now()))
+            require(frist.isAfter(LocalDate.now())) { "Ventefrist må være i framtiden. Fikk $frist." }
         }
     }
 }

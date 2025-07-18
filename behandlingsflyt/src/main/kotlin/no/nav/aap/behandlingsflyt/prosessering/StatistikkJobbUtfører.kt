@@ -150,6 +150,7 @@ class StatistikkJobbUtfører(
                     ÅrsakTilBehandling.REVURDER_MANUELL_INNTEKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REVURDER_MANUELL_INNTEKT
                     ÅrsakTilBehandling.FRITAK_MELDEPLIKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.FRITAK_MELDEPLIKT
                     ÅrsakTilBehandling.MOTTATT_KABAL_HENDELSE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.MOTTATT_KABAL_HENDELSE
+                    ÅrsakTilBehandling.OPPFØLGINGSOPPGAVE -> TODO()
                 }
             }.distinct()
         )
@@ -314,7 +315,7 @@ class StatistikkJobbUtfører(
                 }
             }
 
-            TypeBehandling.Revurdering, TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans -> {
+            TypeBehandling.Revurdering, TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling -> {
                 null
             }
         }

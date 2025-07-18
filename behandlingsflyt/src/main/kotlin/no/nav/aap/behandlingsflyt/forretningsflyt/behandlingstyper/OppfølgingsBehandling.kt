@@ -4,14 +4,14 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
 import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.svarfraandreinstans.IverksettKonsekvensSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.svarfraandreinstans.SvarFraAndreinstansSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.oppfølgingsbehandling.AvklarOppfølgingSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.oppfølgingsbehandling.StartOppfølgingsBehandlingSteg
 
-object SvarFraAndreinstans : BehandlingType {
+object OppfølgingsBehandling : BehandlingType {
     override fun flyt(): BehandlingFlyt {
         return BehandlingFlytBuilder()
-            .medSteg(steg = SvarFraAndreinstansSteg)
-            .medSteg(steg = IverksettKonsekvensSteg)
+            .medSteg(StartOppfølgingsBehandlingSteg)
+            .medSteg(AvklarOppfølgingSteg)
             .build()
     }
 }

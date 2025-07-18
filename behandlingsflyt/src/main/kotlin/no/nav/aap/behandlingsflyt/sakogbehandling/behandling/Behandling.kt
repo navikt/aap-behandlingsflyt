@@ -65,12 +65,12 @@ class Behandling(
 
     fun aktivtStegTilstand(): StegTilstand {
         return stegTilstand ?: StegTilstand(
-            stegType = StegType.START_BEHANDLING,
+            stegType = flyt().stegene().first(),
             stegStatus = StegStatus.START,
             aktiv = true
         )
     }
-    
+
     fun erYtelsesbehandling(): Boolean {
         return typeBehandling.erYtelsesbehandling()
     }

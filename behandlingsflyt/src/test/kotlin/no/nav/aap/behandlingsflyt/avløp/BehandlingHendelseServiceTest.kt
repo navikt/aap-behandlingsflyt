@@ -7,10 +7,12 @@ import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -41,12 +43,27 @@ class BehandlingHendelseServiceTest {
         val mottattDokumentRepository = mockk<MottattDokumentRepository>()
 
         every { flytJobbRepository.leggTil(any()) } returns Unit
-        val vilkårsresultatRepository = mockk<VilkårsresultatRepository>()
+        every {
+            mottattDokumentRepository.hentDokumenterAvType(
+                any<BehandlingId>(),
+                InnsendingType.OPPFØLGINGSOPPGAVE
+            )
+        } returns  emptySet()
+
         val behandlingHendelseService =
-            BehandlingHendelseServiceImpl(flytJobbRepository, brevbestillingRepository, sakService, mottattDokumentRepository)
+            BehandlingHendelseServiceImpl(
+                flytJobbRepository,
+                brevbestillingRepository,
+                sakService,
+                mottattDokumentRepository
+            )
 
         val behandling = Behandling(
-            BehandlingId(0), sakId = SakId(1), typeBehandling = TypeBehandling.Førstegangsbehandling, forrigeBehandlingId = null, versjon = 1
+            BehandlingId(0),
+            sakId = SakId(1),
+            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            forrigeBehandlingId = null,
+            versjon = 1
         )
 
         every { sakService.hent(SakId(1)) } returns Sak(

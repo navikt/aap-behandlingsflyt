@@ -50,6 +50,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+
 class SamordningFlyttest : AbstraktFlytOrkestratorTest() {
 
     @Test
@@ -72,123 +73,92 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest() {
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
             ),
         )
-        assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-
-        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        assertThat(alleAvklaringsbehov).isNotEmpty()
-        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-
-        behandling = løsSykdom(behandling)
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingLøsningDto(
-                    begrunnelse = "Trenger hjelp fra nav",
-                    erBehovForAktivBehandling = true,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null
-                ),
-            ),
-        )
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            RefusjonkravLøsning(
-                listOf(
-                    RefusjonkravVurderingDto(
-                        harKrav = true,
-                        fom = LocalDate.now(),
-                        tom = null,
-                        navKontor = "",
-                    )
+            .medKontekst {
+                assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
+                assertThat(åpneAvklaringsbehov).isNotEmpty()
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .løsSykdom()
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    bistandsVurdering = BistandVurderingLøsningDto(
+                        begrunnelse = "Trenger hjelp fra nav",
+                        erBehovForAktivBehandling = true,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = null,
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null
+                    ),
                 )
             )
-        )
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            avklaringsBehovLøsning = FritakMeldepliktLøsning(
-                fritaksvurderinger = listOf(
-                    FritaksvurderingDto(
-                        harFritak = true,
-                        fraDato = periode.fom,
-                        begrunnelse = "...",
-                    )
-                ),
-            ),
-        )
-
-        behandling = kvalitetssikreOk(behandling)
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            FastsettBeregningstidspunktLøsning(
-                beregningVurdering = BeregningstidspunktVurderingDto(
-                    begrunnelse = "Trenger hjelp fra Nav",
-                    nedsattArbeidsevneDato = LocalDate.now(),
-                    ytterligereNedsattArbeidsevneDato = null,
-                    ytterligereNedsattBegrunnelse = null
-                ),
-            ),
-        )
-
-        behandling = løsForutgåendeMedlemskap(behandling)
-        assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            AvklarSamordningGraderingLøsning(
-                vurderingerForSamordning = VurderingerForSamordning(
-                    vurderteSamordningerData = listOf(
-                        SamordningVurderingData(
-                            ytelseType = Ytelse.SYKEPENGER,
-                            periode = sykePengerPeriode,
-                            gradering = 100,
-                            kronesum = null,
+            .løsRefusjonskrav()
+            .løsAvklaringsBehov(
+                FritakMeldepliktLøsning(
+                    fritaksvurderinger = listOf(
+                        FritaksvurderingDto(
+                            harFritak = true,
+                            fraDato = periode.fom,
+                            begrunnelse = "...",
                         )
                     ),
-                    begrunnelse = "",
-                    maksDatoEndelig = true,
-                    fristNyRevurdering = null,
                 ),
-            ),
-        )
-        assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).isEqualTo(listOf(Definisjon.FORESLÅ_VEDTAK))
-
-        // Vilkår skal ikke være oppfylt med 100% gradert samordning
-        val vilkår = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
-        assertThat(vilkår.vilkårsperioder()).hasSize(1)
-            .first()
-            .extracting(Vilkårsperiode::utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            AvklarSamordningGraderingLøsning(
-                vurderingerForSamordning = VurderingerForSamordning(
-                    vurderteSamordningerData = listOf(
-                        SamordningVurderingData(
-                            ytelseType = Ytelse.SYKEPENGER,
-                            periode = sykePengerPeriode,
-                            gradering = 50,
-                            kronesum = null,
+            )
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
+            }
+            .løsAvklaringsBehov(
+                AvklarSamordningGraderingLøsning(
+                    vurderingerForSamordning = VurderingerForSamordning(
+                        vurderteSamordningerData = listOf(
+                            SamordningVurderingData(
+                                ytelseType = Ytelse.SYKEPENGER,
+                                periode = sykePengerPeriode,
+                                gradering = 100,
+                                kronesum = null,
+                            )
                         ),
-                        SamordningVurderingData(
-                            ytelseType = Ytelse.PLEIEPENGER,
-                            periode = sykePengerPeriode,
-                            gradering = 50,
-                            kronesum = null,
-                        )
+                        begrunnelse = "",
+                        maksDatoEndelig = true,
+                        fristNyRevurdering = null,
                     ),
-                    begrunnelse = "",
-                    maksDatoEndelig = true,
-                    fristNyRevurdering = null,
                 ),
-            ),
-        )
+            )
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).isEqualTo(listOf(Definisjon.FORESLÅ_VEDTAK))
+
+                // Vilkår skal ikke være oppfylt med 100% gradert samordning
+                val vilkår = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
+                assertThat(vilkår.vilkårsperioder()).hasSize(1)
+                    .first()
+                    .extracting(Vilkårsperiode::utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+            }
+            .løsAvklaringsBehov(
+                AvklarSamordningGraderingLøsning(
+                    vurderingerForSamordning = VurderingerForSamordning(
+                        vurderteSamordningerData = listOf(
+                            SamordningVurderingData(
+                                ytelseType = Ytelse.SYKEPENGER,
+                                periode = sykePengerPeriode,
+                                gradering = 50,
+                                kronesum = null,
+                            ),
+                            SamordningVurderingData(
+                                ytelseType = Ytelse.PLEIEPENGER,
+                                periode = sykePengerPeriode,
+                                gradering = 50,
+                                kronesum = null,
+                            )
+                        ),
+                        begrunnelse = "",
+                        maksDatoEndelig = true,
+                        fristNyRevurdering = null,
+                    ),
+                ),
+            )
 
         // Vilkår skal være ikke vurdert når samordningen har mindre enn 100% gradering
         var vilkårOppdatert = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
@@ -222,7 +192,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest() {
             .containsExactly(tuple(Utfall.IKKE_OPPFYLT), tuple(Utfall.IKKE_VURDERT))
 
         behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
-        behandling = fattVedtakEllerSendRetur(behandling)
+            .fattVedtakEllerSendRetur()
 
         val uthentetTilkjentYtelse =
             requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) })

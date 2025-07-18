@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt.internals
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.komponenter.type.Periode
@@ -8,12 +9,19 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDateTime
 
 class DokumentMottattPersonHendelse(
-    val journalpost: JournalpostId,
+    val referanse: InnsendingReferanse,
     val mottattTidspunkt: LocalDateTime,
     val innsendingType: InnsendingType? = null,
     val strukturertDokument: StrukturertDokument<Melding>?,
     val periode: Periode
 ) : PersonHendelse {
+    constructor(
+        journalpost: JournalpostId,
+        mottattTidspunkt: LocalDateTime,
+        innsendingType: InnsendingType? = null,
+        strukturertDokument: StrukturertDokument<Melding>?,
+        periode: Periode
+    ) : this(InnsendingReferanse(journalpost), mottattTidspunkt, innsendingType, strukturertDokument, periode)
 
     init {
         require(innsendingType != null || strukturertDokument != null) {
@@ -26,6 +34,6 @@ class DokumentMottattPersonHendelse(
     }
 
     override fun tilSakshendelse(): SakHendelse {
-        return DokumentMottattSakHendelse(journalpost, mottattTidspunkt, innsendingType, strukturertDokument)
+        return DokumentMottattSakHendelse(referanse, mottattTidspunkt, innsendingType, strukturertDokument)
     }
 }
