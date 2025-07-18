@@ -10,12 +10,14 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDokumentV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.tilÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
@@ -26,13 +28,15 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDateTime
+import java.util.UUID
 
 class HåndterMottattDokumentService(
     private val sakService: SakService,
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val låsRepository: TaSkriveLåsRepository,
     private val prosesserBehandling: ProsesserBehandlingService,
-    private val mottaDokumentService: MottaDokumentService
+    private val mottaDokumentService: MottaDokumentService,
+    private val behandlingRepository: BehandlingRepository,
 ) {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
@@ -40,8 +44,50 @@ class HåndterMottattDokumentService(
         sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
         låsRepository = repositoryProvider.provide(),
         prosesserBehandling = ProsesserBehandlingService(repositoryProvider),
-        mottaDokumentService = MottaDokumentService(repositoryProvider)
+        mottaDokumentService = MottaDokumentService(repositoryProvider),
+        behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
+
     )
+
+    fun håndterMottatteKlage(
+        sakId: SakId,
+        referanse: InnsendingReferanse,
+        mottattTidspunkt: LocalDateTime,
+        brevkategori: InnsendingType,
+        melding: Klage,
+    ){
+        when (melding) {
+            is KlageV0 -> {
+                val sak = sakService.hent(sakId)
+                val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
+                val årsaker = utledÅrsaker(brevkategori, melding, periode)
+
+                val behandling = if(melding.behandlingReferanse!=null){
+                    behandlingRepository.hent(BehandlingReferanse(UUID.fromString(melding.behandlingReferanse)))
+                } else {
+                    sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(sak.saksnummer, årsaker).åpenBehandling
+                }
+
+                val behandlingSkrivelås = behandling?.let {
+                    låsRepository.låsBehandling(it.id)
+                }
+
+                sakOgBehandlingService.oppdaterRettighetsperioden(sakId, brevkategori, mottattTidspunkt.toLocalDate())
+
+                mottaDokumentService.knyttTilBehandling(sakId, behandling!!.id, referanse)
+
+                prosesserBehandling.triggProsesserBehandling(
+                    behandling,
+                    listOf("trigger" to DefaultJsonMapper.toJson(årsaker.map { it.type }))
+                )
+
+                if (behandlingSkrivelås != null) {
+                    låsRepository.verifiserSkrivelås(behandlingSkrivelås)
+                }
+            }
+        }
+
+    }
 
     fun håndterMottatteDokumenter(
         sakId: SakId,
@@ -64,7 +110,7 @@ class HåndterMottattDokumentService(
 
         // Knytter klage direkte til behandlingen den opprettet, i stedet for via informasjonskrav.
         // Dette fordi vi kan ha flere åpne klagebehandlinger.
-        if (melding is Klage || melding is KabalHendelse) {
+        if (melding is KabalHendelse) {
             require(opprettetBehandling is SakOgBehandlingService.Ordinær)
             mottaDokumentService.knyttTilBehandling(sakId, opprettetBehandling.åpenBehandling.id, referanse)
         }
