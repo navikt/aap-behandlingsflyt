@@ -56,7 +56,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource, repositoryReg
                         sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger.orEmpty()
 
                     val sisteSykdomsvurdering = gjeldendeSykdomsvurderinger.maxBy { it.opprettet }
-                    
+
                     val behandlingsType = behandling.typeBehandling()
                     val sak = sakRepository.hent(behandling.sakId)
                     val erOppfylt11_5 = sisteSykdomsvurdering.erOppfylt(behandlingsType, sak.rettighetsperiode.fom)
@@ -65,7 +65,10 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource, repositoryReg
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = vurdering?.tilResponse(),
                         gjeldendeVedtatteVurderinger = vedtatteBistandsvurderinger.map { it.tilResponse() },
-                        historiskeVurderinger = historiskeVurderinger.map { it.tilResponse() },
+                        historiskeVurderinger = historiskeVurderinger
+                            .mapIndexed { index, vurdering ->
+                                vurdering.tilResponse(erGjeldende = index == historiskeVurderinger.lastIndex)
+                            },
                         gjeldendeSykdsomsvurderinger = gjeldendeSykdomsvurderinger.map { it.tilResponse() },
                         harOppfylt11_5 = erOppfylt11_5
                     )
@@ -77,7 +80,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource, repositoryReg
     }
 }
 
-private fun BistandVurdering.tilResponse(): BistandVurderingResponse {
+private fun BistandVurdering.tilResponse(erGjeldende: Boolean? = false): BistandVurderingResponse {
     val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv)
     return BistandVurderingResponse(
         begrunnelse = begrunnelse,
@@ -94,7 +97,8 @@ private fun BistandVurdering.tilResponse(): BistandVurderingResponse {
                 ?: error("Mangler opprettet dato for bistandvurdering"),
             ansattnavn = navnOgEnhet?.navn,
             enhetsnavn = navnOgEnhet?.enhet,
-        )
+        ),
+        erGjeldende = erGjeldende
     )
 }
 
@@ -120,5 +124,6 @@ private fun Sykdomsvurdering.tilResponse(): SykdomsvurderingResponse {
             ansattnavn = navnOgEnhet?.navn,
             enhetsnavn = navnOgEnhet?.enhet,
         ),
+        erGjeldende = null
     )
 }
