@@ -9,7 +9,7 @@ public sealed interface Klage : Melding
 public data class KlageV0(
     public val kravMottatt: LocalDate,
     public val beskrivelse: String = "",
-    public val behandlingReferanse: String?,
+    public val behandlingReferanse: String? = null,
     @Deprecated("Skal bestemmes automatisk av systemet")
     public val skalOppretteNyBehandling: Boolean? = true
 ) : Klage
