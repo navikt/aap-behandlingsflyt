@@ -8,6 +8,8 @@ public sealed interface Klage : Melding
 @JsonIgnoreProperties(ignoreUnknown = true)
 public data class KlageV0(
     public val kravMottatt: LocalDate,
-    public val skalOppretteNyBehandling: Boolean? = true,
     public val beskrivelse: String = "",
+    public val behandlingReferanse: String?,
+    @Deprecated("Skal bestemmes automatisk av systemet")
+    public val skalOppretteNyBehandling: Boolean? = true
 ) : Klage

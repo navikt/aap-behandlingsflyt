@@ -141,12 +141,15 @@ class SakOgBehandlingService(
         requireNotNull(sisteYtelsesbehandling) {
             "Mottok klage, men det finnes ingen eksisterende behandling"
         }
+
+        //if referanse == null opprettBehandling
         return behandlingRepository.opprettBehandling(
             sakId = sakId,
             årsaker = årsaker,
             typeBehandling = TypeBehandling.Klage,
             forrigeBehandlingId = null,
         )
+        //else koble på eksisterende behandling?
     }
 
     private fun opprettSvarFraKlageenhetBehandling(
