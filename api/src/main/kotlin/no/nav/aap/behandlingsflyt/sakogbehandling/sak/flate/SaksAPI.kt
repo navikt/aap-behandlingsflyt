@@ -10,7 +10,10 @@ import com.papsign.ktor.openapigen.route.tag
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.flyt.BehandlingAvTypeDTO
+import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -193,6 +196,8 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
             }
         }
 
+
+
         route("/finnEllerOpprett") {
             authorizedPost<Unit, SaksinfoDTO, FinnEllerOpprettSakDTO>(
                 modules = arrayOf(TagModule(listOf(Tags.Sak))),
@@ -296,6 +301,38 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
             }
         }
 
+        route("/{saksnummer}/finnBehandlingerAvType")
+        {
+            authorizedPost<SaksnummerParameter, List<BehandlingAvTypeDTO>, TypeBehandling>(
+                AuthorizationParamPathConfig(
+                    operasjon = Operasjon.SE,
+                    sakPathParam = SakPathParam(
+                        "saksnummer"
+                    ),
+                )
+            ) { saksnummer, body ->
+                val behandlinger = dataSource.transaction { connection ->
+                    val sakRepository = repositoryRegistry.provider(connection).provide<SakRepository>()
+                    val behandlingRepository =
+                        repositoryRegistry.provider(connection).provide<BehandlingRepository>()
+                    val sakId = sakRepository.hent(Saksnummer(saksnummer.saksnummer)).id
+
+                    val behandlinger = behandlingRepository.hentAlleFor(sakId)
+
+                    behandlinger.filter { it.typeBehandling() == body }
+                        .map {
+                            BehandlingAvTypeDTO(
+                                it.referanse,
+                                it.opprettetTidspunkt
+                            )
+                        }
+
+
+                }
+                respond(behandlinger)
+            }
+        }
+
         route("/{saksnummer}/personinformasjon") {
             authorizedGet<HentSakDTO, SakPersoninfoDTO>(
                 AuthorizationParamPathConfig(
@@ -327,3 +364,4 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
         }
     }
 }
+
