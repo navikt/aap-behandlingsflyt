@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import java.time.LocalDateTime
+import java.util.UUID
 
 data class BehandlingAvTypeDTO(
-    val behandlingsReferanse: BehandlingReferanse,
+    val behandlingsReferanse: UUID,
     val opprettetDato: LocalDateTime
 )

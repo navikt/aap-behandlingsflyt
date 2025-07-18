@@ -7,13 +7,13 @@ import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
+import no.nav.aap.behandlingsflyt.Azp
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.flyt.BehandlingAvTypeDTO
-import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -301,14 +301,10 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
             }
         }
 
-        route("/{saksnummer}/finnBehandlingerAvType")
-        {
+        route("/{saksnummer}/finnBehandlingerAvType") {
             authorizedPost<SaksnummerParameter, List<BehandlingAvTypeDTO>, TypeBehandling>(
-                AuthorizationParamPathConfig(
-                    operasjon = Operasjon.SE,
-                    sakPathParam = SakPathParam(
-                        "saksnummer"
-                    ),
+                routeConfig = AuthorizationMachineToMachineConfig(
+                    authorizedAzps = listOf(Azp.Postmottak.uuid)
                 )
             ) { saksnummer, body ->
                 val behandlinger = dataSource.transaction { connection ->
@@ -322,7 +318,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
                     behandlinger.filter { it.typeBehandling() == body }
                         .map {
                             BehandlingAvTypeDTO(
-                                it.referanse,
+                                it.referanse.referanse,
                                 it.opprettetTidspunkt
                             )
                         }
