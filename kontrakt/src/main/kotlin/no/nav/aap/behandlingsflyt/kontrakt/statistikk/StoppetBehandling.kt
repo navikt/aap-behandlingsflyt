@@ -49,19 +49,19 @@ public data class StoppetBehandling(
  * Eksponert versjon av [no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling] til kontrakt.
  */
 public enum class ÅrsakTilBehandling {
-    SØKNAD,                 // deprecated
-    AKTIVITETSMELDING,      // deprecated
-    MELDEKORT,              // deprecated
-    LEGEERKLÆRING,          // deprecated
-    AVVIST_LEGEERKLÆRING,   // deprecated
-    DIALOGMELDING,          // deprecated
-    G_REGULERING,           // deprecated
-    REVURDER_MEDLEMSKAP,    // deprecated
+    SØKNAD,
+    AKTIVITETSMELDING,
+    MELDEKORT,
+    LEGEERKLÆRING,
+    AVVIST_LEGEERKLÆRING,
+    DIALOGMELDING,
+    G_REGULERING,
+    REVURDER_MEDLEMSKAP,
     REVURDER_YRKESSKADE,        // Yrkesskade
     REVURDER_BEREGNING,         // Beregningstidspunkt
-    REVURDER_LOVVALG,       // deprecated
-    REVURDER_SAMORDNING,    // deprecated
-    KLAGE,                  // deprecated
+    REVURDER_LOVVALG,
+    REVURDER_SAMORDNING,
+    KLAGE,
     LOVVALG_OG_MEDLEMSKAP,      // Lovvalg og medlemskap
     FORUTGAENDE_MEDLEMSKAP,     // Forutgående medlemskap
     SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, // Sykdom, arbeidsevne og behov for bistand
@@ -75,7 +75,8 @@ public enum class ÅrsakTilBehandling {
     FRITAK_MELDEPLIKT,
     KLAGE_TRUKKET,
     REVURDER_MANUELL_INNTEKT,   // Manuell inntekt
-    MOTTATT_KABAL_HENDELSE // Hendelser fra klage andreinstans
+    MOTTATT_KABAL_HENDELSE, // Hendelser fra klage andreinstans
+    OPPFØLGINGSOPPGAVE
 }
 
 /**

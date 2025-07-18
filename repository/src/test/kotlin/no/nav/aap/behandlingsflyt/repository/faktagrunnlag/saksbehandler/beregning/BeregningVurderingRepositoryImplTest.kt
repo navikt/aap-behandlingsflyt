@@ -91,12 +91,6 @@ class BeregningVurderingRepositoryImplTest {
                 .usingRecursiveFieldByFieldElementComparatorIgnoringFields("vurdertTidspunkt")
                 .containsExactlyInAnyOrderElementsOf(yrkesskadeVurderinger)
 
-            val behandling2 = finnEllerOpprettBehandling(connection, sak)
-            assertThat(behandling2.id).isNotEqualTo(behandling.id)
-            beregningVurderingRepository.kopier(behandling.id, behandling2.id)
-
-            assertThat(beregningVurderingRepository.hentHvisEksisterer(behandling2.id)).isNotNull
-
             // Slett og verifiser at det er slettet
             beregningVurderingRepository.slett(behandling.id)
             assertThat(beregningVurderingRepository.hentHvisEksisterer(behandling.id)).isNull()

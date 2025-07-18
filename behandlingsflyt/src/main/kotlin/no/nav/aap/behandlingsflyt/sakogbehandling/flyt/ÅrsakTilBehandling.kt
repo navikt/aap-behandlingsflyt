@@ -83,4 +83,5 @@ fun EksponertÅrsak.tilÅrsakTilBehandling() =
         EksponertÅrsak.KLAGE_TRUKKET -> ÅrsakTilBehandling.KLAGE_TRUKKET
         EksponertÅrsak.REVURDER_MANUELL_INNTEKT -> ÅrsakTilBehandling.REVURDER_MANUELL_INNTEKT
         EksponertÅrsak.MOTTATT_KABAL_HENDELSE -> ÅrsakTilBehandling.MOTTATT_KABAL_HENDELSE
+        EksponertÅrsak.OPPFØLGINGSOPPGAVE -> ÅrsakTilBehandling.OPPFØLGINGSOPPGAVE
     }

@@ -51,7 +51,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 
-class SamordningFlyttest     : AbstraktFlytOrkestratorTest() {
+class SamordningFlyttest : AbstraktFlytOrkestratorTest() {
 
     @Test
     fun `ingen sykepenger i register, vurderer sykepenger for samordning med ukjent maksdato som fører til revurdering og ingen utbetaling etter kjent sykepengedato`() {

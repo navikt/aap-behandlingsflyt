@@ -184,6 +184,7 @@ class StatistikkJobbUtførerTest {
             hendelsesTidspunkt = hendelseTidspunkt,
             versjon = "123",
             årsakerTilBehandling = listOf(ÅrsakTilBehandling.SØKNAD.name),
+            mottattDokumenter = listOf()
         )
 
         val hendelse2 = DefaultJsonMapper.toJson(payload)
@@ -372,6 +373,8 @@ class StatistikkJobbUtførerTest {
             hendelsesTidspunkt = hendelseTidspunkt,
             versjon = "123",
             årsakerTilBehandling = listOf(ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE.name),
+            reserverTil = "meg",
+            mottattDokumenter = listOf()
         )
 
         val hendelse2 = DefaultJsonMapper.toJson(payload)
@@ -611,6 +614,8 @@ class StatistikkJobbUtførerTest {
             hendelsesTidspunkt = hendelsesTidspunkt,
             versjon = ApplikasjonsVersjon.versjon,
             årsakerTilBehandling = listOf(ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE.name),
+            mottattDokumenter = listOf(),
+            reserverTil = "meg",
         )
 
         val hendelse = DefaultJsonMapper.toJson(payload)

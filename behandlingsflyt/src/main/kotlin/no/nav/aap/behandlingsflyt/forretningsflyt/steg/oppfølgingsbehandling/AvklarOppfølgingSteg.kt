@@ -32,7 +32,8 @@ class AvklarOppfølgingSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
 
         val grunnlag = oppfølgingsBehandlingRepository.hent(kontekst.behandlingId)
-        val oppfølgingsoppgavedokument = mottaDokumentService.hentOppfølgingsBehandlingDokument(kontekst.behandlingId)
+        val oppfølgingsoppgavedokument =
+            requireNotNull(mottaDokumentService.hentOppfølgingsBehandlingDokument(kontekst.behandlingId))
 
         if (grunnlag == null) {
             return FantAvklaringsbehov(

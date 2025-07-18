@@ -62,9 +62,11 @@ fun NormalOpenAPIRoute.avklarOppfolgingsoppgaveGrunnlag(
                 oppfølgingsBehandlingRepository.hent(behandling.id)
 
             val dokument =
-                MottaDokumentService(repositoryProvider.provide()).hentOppfølgingsBehandlingDokument(
-                    behandling.id
-                )
+                requireNotNull(
+                    MottaDokumentService(repositoryProvider.provide()).hentOppfølgingsBehandlingDokument(
+                        behandling.id
+                    )
+                ) { "Skal alltid finnes dokumenter på oppfølgingsbehandlinger. BehandlingId: ${behandling.id}" }
 
             AvklarOppfolgingsoppgaveGrunnlagResponse(
                 datoForOppfølging = dokument.datoForOppfølging,
