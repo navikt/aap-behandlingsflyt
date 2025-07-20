@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flyt
+package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 
 import java.time.LocalDateTime
 import java.util.UUID
