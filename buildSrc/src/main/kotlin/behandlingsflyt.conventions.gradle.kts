@@ -10,6 +10,7 @@ version = project.findProperty("version")?.toString() ?: "0.0.0"
 repositories {
     mavenCentral()
     maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
+    mavenLocal()
 }
 
 testing {
@@ -24,6 +25,9 @@ testing {
 tasks.test {
     useJUnitPlatform()
     maxParallelForks = Runtime.getRuntime().availableProcessors() / 2
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
 }
 
 kotlin {
