@@ -36,7 +36,6 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
-import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.LoggerFactory
@@ -230,7 +229,6 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
         route("/{referanse}/ny-markering") {
             authorizedPost<BehandlingReferanse, BehandlingReferanse, MarkeringDto>(
                 AuthorizationParamPathConfig(
-                    operasjon = Operasjon.SAKSBEHANDLE,
                     behandlingPathParam = BehandlingPathParam("referanse"),
                 )
             ) { request, body ->
