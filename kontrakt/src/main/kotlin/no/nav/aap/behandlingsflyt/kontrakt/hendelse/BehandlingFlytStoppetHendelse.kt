@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.kontrakt.hendelse
 
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.MarkeringDto
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -25,6 +26,7 @@ public data class BehandlingFlytStoppetHendelse(
     val erPåVent: Boolean,
     val mottattDokumenter: List<MottattDokumentDto>,
     val reserverTil: String? = null,
+    val markeringer: List<MarkeringDto> = emptyList(),
     val opprettetTidspunkt: LocalDateTime,
     val hendelsesTidspunkt: LocalDateTime,
     val versjon: String

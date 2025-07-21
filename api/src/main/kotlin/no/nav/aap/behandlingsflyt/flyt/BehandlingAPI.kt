@@ -8,6 +8,7 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
@@ -16,7 +17,10 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.markering.Markering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.markering.MarkeringRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.MarkeringDto
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
@@ -29,11 +33,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import javax.sql.DataSource
@@ -189,6 +195,80 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                 respond(
                     BehandlingPersoninfo(response)
                 )
+            }
+        }
+        route("/{referanse}/hent-markeringer") {
+            authorizedGet<BehandlingReferanse, List<MarkeringDto>>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam(
+                        "referanse"
+                    )
+                )
+            ) { request ->
+                val dto = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val behandling = behandling(behandlingRepository, request)
+                    val markeringRepository = repositoryProvider.provide<MarkeringRepository>()
+                    val markeringer = markeringRepository.hentAktiveMarkeringerForBehandling(behandling.id)
+
+                    if (markeringer.isEmpty()) {
+                        null
+                    } else {
+                        markeringer.map { MarkeringDto(
+                            markeringType = it.markeringType,
+                            begrunnelse = it.begrunnelse,
+                            opprettetAv = AnsattInfoService().hentAnsattNavn(it.opprettetAv),
+                        ) }
+                    }
+                }
+                if (dto == null) {
+                    respondWithStatus(HttpStatusCode.NoContent)
+                } else {
+                    respond(dto)
+                }
+            }
+        }
+        route("/{referanse}/ny-markering") {
+            authorizedPost<BehandlingReferanse, BehandlingReferanse, MarkeringDto>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse"),
+                )
+            ) { request, body ->
+                dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val behandling = behandling(behandlingRepository, request)
+                    val markeringRepository = repositoryProvider.provide<MarkeringRepository>()
+                    markeringRepository.lagre(
+                        Markering(
+                            forBehandling = behandling.id,
+                            markeringType = body.markeringType,
+                            begrunnelse = body.begrunnelse,
+                            erAktiv = true,
+                            opprettetAv = bruker().ident
+                        )
+                    )
+                }
+                respondWithStatus(HttpStatusCode.Created)
+            }
+        }
+        route("/{referanse}/fjern-markering") {
+            authorizedPost<BehandlingReferanse, BehandlingReferanse, MarkeringDto>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam(
+                        "referanse"
+                    )
+                )
+            ) { request, body ->
+                dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val behandling = behandling(behandlingRepository, request)
+                    val markeringRepository = repositoryProvider.provide<MarkeringRepository>()
+                    markeringRepository.deaktiverMarkering(behandling.id, body.markeringType)
+                }
+                respondWithStatus(HttpStatusCode.NoContent)
             }
         }
     }
