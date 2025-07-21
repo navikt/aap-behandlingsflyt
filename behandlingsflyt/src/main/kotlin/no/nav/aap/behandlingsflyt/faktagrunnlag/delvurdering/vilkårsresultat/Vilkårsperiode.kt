@@ -75,10 +75,6 @@ class Vilkårsperiode(
         return result
     }
 
-    fun erIkkeVurdert(): Boolean {
-        return utfall !in setOf(Utfall.IKKE_OPPFYLT, Utfall.OPPFYLT)
-    }
-
     fun faktagrunnlagSomString(): String? {
         if (faktagrunnlag == null) {
             return null

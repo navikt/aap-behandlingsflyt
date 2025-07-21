@@ -19,9 +19,7 @@ class BistandGrunnlag(
 
         other as BistandGrunnlag
 
-        if (vurderinger != other.vurderinger) return false
-
-        return true
+        return vurderinger == other.vurderinger
     }
 
     override fun hashCode(): Int {

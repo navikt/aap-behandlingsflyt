@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.test
 
-import ch.qos.logback.core.util.OptionHelper.getEnv
 import com.nimbusds.jose.JOSEObjectType
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
@@ -10,7 +9,6 @@ import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
 import org.intellij.lang.annotations.Language
-import java.lang.System.getProperty
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*

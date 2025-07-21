@@ -31,7 +31,7 @@ class ProsesserBehandlingJobbUtfører(
 
         kontroller.forberedOgProsesserBehandling(kontekst, triggere)
 
-        log.info("Prosesserer behandling for jobb ${input.type()} med behandlingId ${behandlingId}")
+        log.info("Prosesserer behandling for jobb ${input.type()} med behandlingId $behandlingId")
 
         låsRepository.verifiserSkrivelås(skrivelås)
     }

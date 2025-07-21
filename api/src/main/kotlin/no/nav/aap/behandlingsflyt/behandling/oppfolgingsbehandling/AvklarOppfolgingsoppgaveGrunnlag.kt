@@ -50,8 +50,8 @@ fun NormalOpenAPIRoute.avklarOppfolgingsoppgaveGrunnlag(
         avklaringsbehovKode = Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY.kode.toString()
     ) { req ->
 
-        val respons = dataSource.transaction {
-            val repositoryProvider = repositoryRegistry.provider(it)
+        val respons = dataSource.transaction { connection ->
+            val repositoryProvider = repositoryRegistry.provider(connection)
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
 
             val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)

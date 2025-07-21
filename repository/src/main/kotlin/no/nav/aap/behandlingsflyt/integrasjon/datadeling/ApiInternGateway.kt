@@ -40,7 +40,7 @@ class ApiInternGatewayImpl() : ApiInternGateway {
     private val uri = URI.create(requiredConfigForKey("integrasjon.datadeling.url"))
 
     override fun sendPerioder(ident: String, perioder: List<Periode>) {
-        restClient.post<_, Unit>(
+        restClient.post(
             uri = uri.resolve("/api/insert/meldeperioder"),
             request = PostRequest(body = MeldekortPerioderDTO(ident, perioder)),
             mapper = { _, _ ->

@@ -68,11 +68,11 @@ class MeldepliktRegel(
         return resultat.leggTilVurderinger(meldepliktVurderinger, Vurdering::leggTilMeldepliktVurdering)
     }
 
-    protected fun utenRettTidslinje(vurderinger: Tidslinje<Vurdering>): Tidslinje<MeldepliktData> {
+    private fun utenRettTidslinje(vurderinger: Tidslinje<Vurdering>): Tidslinje<MeldepliktData> {
         return vurderinger.mapValue { MeldepliktData(utenRett = it.fårAapEtter == null) }
     }
 
-    protected fun førsteDagMedRettTidslinje(vurderinger: Tidslinje<Vurdering>): Tidslinje<MeldepliktData> {
+    private fun førsteDagMedRettTidslinje(vurderinger: Tidslinje<Vurdering>): Tidslinje<MeldepliktData> {
         val dagenFørVurderinger = vurderinger.firstOrNull()?.periode?.fom?.minusDays(1) ?: return Tidslinje()
         val virtuellPrefixUtenRett = listOf(Segment(Periode(dagenFørVurderinger, dagenFørVurderinger), null))
 

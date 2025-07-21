@@ -4,7 +4,6 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 class Vilkår(
@@ -66,26 +65,6 @@ class Vilkår(
         )
     }
 
-    fun forleng(periode: Periode) {
-        val eksisterendeVurdering = vilkårTidslinje.begrensetTil(periode)
-        if (eksisterendeVurdering.isEmpty() || eksisterendeVurdering.maxDato().isAfter(periode.tom)) {
-            return
-        }
-
-        val segmentSomSkalForlenges = eksisterendeVurdering.max()
-
-        vilkårTidslinje = vilkårTidslinje.kombiner(
-            Tidslinje(
-                listOf(
-                    Segment(
-                        Periode(segmentSomSkalForlenges.periode.fom, periode.tom),
-                        segmentSomSkalForlenges.verdi
-                    )
-                )
-            ), StandardSammenslåere.prioriterHøyreSideCrossJoin()
-        )
-    }
-
     fun leggTilIkkeVurdertPeriode(rettighetsperiode: Periode): Vilkår {
         this.leggTilVurdering(
             Vilkårsperiode(
@@ -113,10 +92,6 @@ class Vilkår(
         return vilkårTidslinje.kryss(Tidslinje(periodeTilVurdering.map { Segment(it, Unit) }))
             .segmenter()
             .any { periode -> periode.verdi.erIkkeVurdert() }
-    }
-
-    fun førsteDatoTilVurdering(): LocalDate {
-        return vilkårTidslinje.minDato()
     }
 
     fun harPerioderSomErOppfylt(): Boolean {

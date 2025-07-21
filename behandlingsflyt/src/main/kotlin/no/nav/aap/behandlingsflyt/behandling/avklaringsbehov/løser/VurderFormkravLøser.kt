@@ -52,7 +52,7 @@ class VurderFormkravLøser(
     }
 
     private fun VurderFormkravLøsning.valider(): Validation<VurderFormkravLøsning> {
-        if (formkravVurdering.erFristOverholdt == false && formkravVurdering.likevelBehandles == null) {
+        if (!formkravVurdering.erFristOverholdt && formkravVurdering.likevelBehandles == null) {
             return Validation.Invalid(this, "likevelBehandles må være satt dersom frist ikke er overholdt")
         }
         return Validation.Valid(this)

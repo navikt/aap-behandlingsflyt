@@ -120,21 +120,6 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
         log.info("Slettet $deletedRows rader fra REFUSJONKRAV_GRUNNLAG")
     }
 
-    private fun getRefusjonskravVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
-        """
-                    SELECT refusjonkrav_vurdering_id
-                    FROM REFUSJONKRAV_GRUNNLAG
-                    WHERE behandling_id = ?
-                      AND refusjonkrav_vurdering_id is not null
-                 
-                """.trimIndent()
-    ) {
-        setParams { setLong(1, behandlingId.id) }
-        setRowMapper { row ->
-            row.getLong("refusjonkrav_vurdering_id")
-        }
-    }
-
     private fun getRefusjonskravVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
         """
                     SELECT refusjonkrav_vurderinger_id

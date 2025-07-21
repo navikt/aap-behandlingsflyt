@@ -84,14 +84,12 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                     val tilkjentYtelse = TilkjentYtelseService(
                         behandlingRepository,
                         tilkjentYtelseRepository
-                    ).hentTilkjentYtelse(req);
+                    ).hentTilkjentYtelse(req)
 
 
                     val meldekortene =
-                        meldekortRepository.hentHvisEksisterer(behandling.id)?.meldekort()?.sortedByDescending {
-                            it
-                                .mottattTidspunkt
-                        }
+                        meldekortRepository.hentHvisEksisterer(behandling.id)?.meldekort()
+                            ?.sortedByDescending { it.mottattTidspunkt }
 
                     tilkjentYtelse.groupBy { utledAktuellMeldeperiode(meldeperioder, it.periode) }
                         .map { (meldeperiode, vurdertePerioder) ->

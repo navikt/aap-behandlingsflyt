@@ -111,8 +111,8 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
 
     private fun oppdaterFunnetISteg(avklaringsbehovId: Long, funnetISteg: StegType) {
         val holder = memory.values
-            .single {
-                it.avklaringsbehovene
+            .single { avklaringsbehovHolder ->
+                avklaringsbehovHolder.avklaringsbehovene
                     .find { it.id == avklaringsbehovId } != null
             }
 

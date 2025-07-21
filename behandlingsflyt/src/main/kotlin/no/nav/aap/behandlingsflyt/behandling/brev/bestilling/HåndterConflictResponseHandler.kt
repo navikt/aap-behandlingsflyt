@@ -8,7 +8,6 @@ import java.net.HttpURLConnection
 import java.net.http.HttpHeaders
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import kotlin.jvm.java
 
 class HåndterConflictResponseHandler : RestResponseHandler<InputStream> {
 

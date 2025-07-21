@@ -109,7 +109,7 @@ class BarnetilleggService(
 
     private fun mapTilBarn(ident: Ident, personopplysningerGrunnlag: PersonopplysningGrunnlag): Barn? {
         val personopplysning =
-            personopplysningerGrunnlag.relatertePersonopplysninger?.personopplysninger?.singleOrNull() {
+            personopplysningerGrunnlag.relatertePersonopplysninger?.personopplysninger?.singleOrNull {
                 it.gjelderForIdent(ident)
             }
         if (personopplysning == null) {

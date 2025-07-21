@@ -36,8 +36,6 @@ class EtAnnetStedUtlederService(
         behandlingRepository = repositoryProvider.provide(),
     )
 
-    private val log = LoggerFactory.getLogger(javaClass)
-
     fun utled(
         behandlingId: BehandlingId,
         basertPåVurderingerFørDenneBehandlingen: Boolean = false

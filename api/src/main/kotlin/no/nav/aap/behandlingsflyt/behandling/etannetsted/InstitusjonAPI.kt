@@ -62,11 +62,11 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource, repositoryRegistry
                                 SoningsforholdDto(
                                     vurderingsdato = it.periode.fom,
                                     vurdering =
-                                        vurderinger.segment(it.periode.fom)?.verdi?.let {
+                                        vurderinger.segment(it.periode.fom)?.verdi?.let { vurdering ->
                                             SoningsvurderingDto(
-                                                skalOpphøre = it.skalOpphøre,
-                                                begrunnelse = it.begrunnelse,
-                                                fraDato = it.fraDato
+                                                skalOpphøre = vurdering.skalOpphøre,
+                                                begrunnelse = vurdering.begrunnelse,
+                                                fraDato = vurdering.fraDato
                                             )
                                         },
                                     status = it.verdi!!.vurdering.toDto()

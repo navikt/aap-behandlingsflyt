@@ -65,7 +65,7 @@ class MedlemskapLovvalgVurderingService {
                     || (grunnlag.harArbeidetINorgeSiste5År && grunnlag.iTilleggArbeidUtenforNorge && relevantePerioder?.isNotEmpty() == true)
 
                 if (harRelevanteUtlandsPerioderIJobb){
-                    val mappedArbeidUtland = relevantePerioder!!.map { OppgittJobbetIUtlandGrunnlag(it.land, it.fraDato, it.tilDato) }
+                    val mappedArbeidUtland = relevantePerioder.map { OppgittJobbetIUtlandGrunnlag(it.land, it.fraDato, it.tilDato) }
                     arbeidUtlandPerioder.addAll(mappedArbeidUtland)
                     true
                 } else {

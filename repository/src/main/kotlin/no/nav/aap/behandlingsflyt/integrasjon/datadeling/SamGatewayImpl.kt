@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.integrasjon.datadeling
 
-import no.nav.aap.behandlingsflyt.datadeling.sam.HentSamIdResponse
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamGateway
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRespons
@@ -33,8 +32,7 @@ class SamGatewayImpl : SamGateway {
         prometheus = prometheus
     )
 
-    val uri = URI.create(requiredConfigForKey("integrasjon.sam.url"))
-
+    private val uri = URI.create(requiredConfigForKey("integrasjon.sam.url"))
 
     override fun varsleVedtak(request: SamordneVedtakRequest) {
         restClient.post<SamordneVedtakRequest, SamordneVedtakRespons>(

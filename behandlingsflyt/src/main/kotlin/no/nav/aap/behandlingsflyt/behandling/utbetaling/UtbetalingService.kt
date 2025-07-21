@@ -37,7 +37,7 @@ class UtbetalingService(
         val sak = sakRepository.hent(sakId)
         val behandling = behandlingRepository.hent(behandlingId)
 
-        if (simulering == true && behandling.status() == Status.AVSLUTTET) {
+        if (simulering && behandling.status() == Status.AVSLUTTET) {
             //Utbetaling skal ikke simuleres dersom behandling er avsluttet
             return null
         }

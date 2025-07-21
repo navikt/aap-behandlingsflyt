@@ -69,7 +69,7 @@ internal class FormkravRepositoryImplTest {
                 likevelBehandles = null
             )
 
-            val varselSendt = LocalDate.now();
+            val varselSendt = LocalDate.now()
             val varselFrist = varselSendt.plusWeeks(3)
             val brevReferanse = BrevbestillingReferanse(UUID.randomUUID())
 

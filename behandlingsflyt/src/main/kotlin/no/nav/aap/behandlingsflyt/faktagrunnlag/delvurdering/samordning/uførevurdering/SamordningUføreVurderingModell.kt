@@ -18,7 +18,7 @@ data class SamordningUføreVurdering(
     val vurdertTidspunkt: LocalDateTime? = null
 ) {
     fun tilTidslinje(): Tidslinje<Prosent> {
-        val sorterteVurderinger = vurderingPerioder.sortedBy { it.virkningstidspunkt };
+        val sorterteVurderinger = vurderingPerioder.sortedBy { it.virkningstidspunkt }
         val sisteElement = sorterteVurderinger.lastOrNull()
 
         return if (sisteElement == null) {

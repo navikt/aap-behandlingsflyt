@@ -14,8 +14,8 @@ import javax.sql.DataSource
 class DefaultAuditLogConfig(
     private val repositoryRegistry: RepositoryRegistry,
 ) {
-    val auditLogger = LoggerFactory.getLogger("auditLogger")
-    val app = requiredConfigForKey("nais.app.name")
+    private val auditLogger = LoggerFactory.getLogger("auditLogger")
+    private val app = requiredConfigForKey("nais.app.name")
 
     fun fraBehandlingPathParam(pathParam: String, dataSource: DataSource) =
         AuditLogPathParamConfig(
