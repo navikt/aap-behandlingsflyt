@@ -19,7 +19,8 @@ class BehandlingTilstandValidator(
 
         val jobberForBehandling = flytJobbRepository.hentJobberForBehandling(behandling.id.toLong())
         if (jobberForBehandling.isNotEmpty()) {
-            throw BehandlingUnderProsesseringException()
+            val typer = jobberForBehandling.map { it.type() }
+            throw BehandlingUnderProsesseringException(typer)
         }
     }
 }
