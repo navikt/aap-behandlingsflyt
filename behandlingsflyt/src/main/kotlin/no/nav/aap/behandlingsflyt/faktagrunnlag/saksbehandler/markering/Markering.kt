@@ -7,5 +7,6 @@ data class Markering(
     val forBehandling: BehandlingId,
     val markeringType: MarkeringType,
     val begrunnelse: String,
-    val erAktiv: Boolean
+    val erAktiv: Boolean,
+    val opprettetAv: String
 )

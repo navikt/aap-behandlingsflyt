@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.hendelse.avløp
 
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.ÅrsakTilReturKode
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_FUNKSJONALITET
@@ -239,5 +240,6 @@ class BehandlingHendelseServiceImpl(
         MarkeringDto(
             markeringType = this.markeringType,
             begrunnelse = this.begrunnelse,
+            opprettetAv = AnsattInfoService().hentAnsattNavn(this.opprettetAv)
         )
 }

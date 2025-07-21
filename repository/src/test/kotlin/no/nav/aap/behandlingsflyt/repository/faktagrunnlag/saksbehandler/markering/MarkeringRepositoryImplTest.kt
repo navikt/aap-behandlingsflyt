@@ -37,6 +37,7 @@ internal class MarkeringRepositoryImplTest {
                 markeringType = MarkeringType.HASTER,
                 begrunnelse = "behandlingen haster",
                 erAktiv = true,
+                opprettetAv = "saksbehandler"
             )
 
             behandlingMarkeringRepository.lagre(nyMarkering)
@@ -58,6 +59,7 @@ internal class MarkeringRepositoryImplTest {
                 markeringType = MarkeringType.HASTER,
                 begrunnelse = "behandlingen haster",
                 erAktiv = true,
+                opprettetAv = "saksbehandler"
             )
 
             behandlingMarkeringRepository.lagre(gammelMarkering)
@@ -82,6 +84,7 @@ internal class MarkeringRepositoryImplTest {
                 markeringType = MarkeringType.HASTER,
                 begrunnelse = "behandlingen haster",
                 erAktiv = true,
+                opprettetAv = "saksbehandler"
             )
 
             behandlingMarkeringRepository.lagre(nyMarkering)
@@ -91,6 +94,7 @@ internal class MarkeringRepositoryImplTest {
                 markeringType = MarkeringType.HASTER,
                 begrunnelse = "behandlingen haster fortsatt",
                 erAktiv = true,
+                opprettetAv = "saksbehandler"
             )
 
             behandlingMarkeringRepository.lagre(duplisertMarkering)

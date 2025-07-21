@@ -21,14 +21,14 @@ class MarkeringRepositoryImpl(
                 it.markeringType ==
                     markering.markeringType
             }
-        if (!eksisterendeMarkeringer.isEmpty()) {
+        if (eksisterendeMarkeringer.isNotEmpty()) {
             eksisterendeMarkeringer.forEach { deaktiverMarkering(it.forBehandling, it.markeringType) }
         }
 
         val insertQuery =
             """
-            INSERT INTO MARKERING (behandling_id, markering_type, begrunnelse, er_aktiv)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO MARKERING (behandling_id, markering_type, begrunnelse, er_aktiv, opprettet_av)
+            VALUES (?, ?, ?, ?, ?)
             """.trimIndent()
 
         connection.execute(insertQuery) {
@@ -37,6 +37,7 @@ class MarkeringRepositoryImpl(
                 setEnumName(2, markering.markeringType)
                 setString(3, markering.begrunnelse)
                 setBoolean(4, markering.erAktiv)
+                setString(5, markering.opprettetAv)
             }
         }
     }
@@ -91,7 +92,7 @@ class MarkeringRepositoryImpl(
                     setLong(1, behandlingId.id)
                 }
             }
-        log.info("Slettet $deletedRows rader fra behandling_markering")
+        log.info("Slettet $deletedRows rader fra tabell markering")
     }
 
     private fun mapMarkering(row: Row): Markering =
@@ -99,7 +100,8 @@ class MarkeringRepositoryImpl(
             forBehandling = BehandlingId(row.getLong("behandling_id")),
             markeringType = row.getEnum("markering_type"),
             begrunnelse = row.getString("begrunnelse"),
-            erAktiv = row.getBoolean("er_aktiv")
+            erAktiv = row.getBoolean("er_aktiv"),
+            opprettetAv = row.getString("opprettet_av")
         )
 
     companion object : Factory<MarkeringRepositoryImpl> {

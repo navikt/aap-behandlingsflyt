@@ -8,6 +8,7 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
@@ -32,6 +33,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -216,6 +218,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                         markeringer.map { MarkeringDto(
                             markeringType = it.markeringType,
                             begrunnelse = it.begrunnelse,
+                            opprettetAv = AnsattInfoService().hentAnsattNavn(it.opprettetAv),
                         ) }
                     }
                 }
@@ -232,7 +235,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                     behandlingPathParam = BehandlingPathParam("referanse"),
                 )
             ) { request, body ->
-                dataSource.transaction(readOnly = true) { connection ->
+                dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val behandling = behandling(behandlingRepository, request)
@@ -243,6 +246,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                             markeringType = body.markeringType,
                             begrunnelse = body.begrunnelse,
                             erAktiv = true,
+                            opprettetAv = bruker().ident
                         )
                     )
                 }
@@ -257,7 +261,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                     )
                 )
             ) { request, body ->
-                dataSource.transaction(readOnly = true) { connection ->
+                dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val behandling = behandling(behandlingRepository, request)
