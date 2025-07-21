@@ -6,9 +6,8 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.markering.MarkeringRepository
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
@@ -41,6 +40,7 @@ class BehandlingHendelseServiceTest {
         val flytJobbRepository = mockk<FlytJobbRepository>()
         val brevbestillingRepository = mockk<BrevbestillingRepository>()
         val mottattDokumentRepository = mockk<MottattDokumentRepository>()
+        val markeringRepository = mockk<MarkeringRepository>()
 
         every { flytJobbRepository.leggTil(any()) } returns Unit
         every {
@@ -55,7 +55,8 @@ class BehandlingHendelseServiceTest {
                 flytJobbRepository,
                 brevbestillingRepository,
                 sakService,
-                mottattDokumentRepository
+                mottattDokumentRepository,
+                markeringRepository
             )
 
         val behandling = Behandling(
@@ -77,6 +78,7 @@ class BehandlingHendelseServiceTest {
 
         every { avklaringsbehovene.alle() } returns emptyList()
         every { avklaringsbehovene.hentÅpneVentebehov() } returns emptyList()
+        every { markeringRepository.hentAktiveMarkeringerForBehandling(behandling.id) } returns emptyList()
 
 
         // ACT
