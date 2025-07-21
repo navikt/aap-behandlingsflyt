@@ -21,6 +21,9 @@ data class InstitusjonoppholdRequest(
     val foedselsnumre: String
 )
 
+/**
+ * Hentet [herfra](https://github.com/navikt/institusjon/blob/d176c942e599658c887c5fe970e358b62fea1c06/apps/inst2/src/main/java/no/nav/inst2/provider/rs/api/domain/EnkeltInstitusjonsopphold.java#L65).
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class InstitusjonsoppholdJSON(
@@ -67,6 +70,9 @@ object InstitusjonsoppholdGateway : InstitusjonsoppholdGateway {
         prometheus = prometheus
     )
 
+    /**
+     * https://inst2-q2.dev.intern.nav.no/swagger-ui/index.html#/institusjonsopphold/institusjonsopphold
+     */
     private fun query(request: InstitusjonoppholdRequest): List<InstitusjonsoppholdJSON> {
         val httpRequest = GetRequest(
             additionalHeaders = listOf(
@@ -90,8 +96,8 @@ object InstitusjonsoppholdGateway : InstitusjonsoppholdGateway {
                 requireNotNull(opphold.kategori),
                 requireNotNull(opphold.startdato),
                 opphold.faktiskSluttdato ?: opphold.forventetSluttdato,
-                requireNotNull(opphold.organisasjonsnummer),
-                requireNotNull(opphold.institusjonsnavn)
+                opphold.organisasjonsnummer,
+                opphold.institusjonsnavn ?: "Ukjent institusjon"
             )
         }
         return institusjonsopphold
