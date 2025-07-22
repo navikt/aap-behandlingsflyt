@@ -100,7 +100,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
 
     }
 
-    override fun finnSøker(referanse: BehandlingReferanse): Person {
+    override fun hentSakId(referanse: BehandlingReferanse): SakId {
         TODO("Not yet implemented")
     }
 

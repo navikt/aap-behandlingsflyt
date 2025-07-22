@@ -159,32 +159,15 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         }
     }
 
-    override fun finnSøker(saksnummer: Saksnummer): Person {
+    override fun finnPersonId(sakId: SakId): Long {
         return connection.queryFirst(
-            "SELECT person_id " +
-                    "FROM SAK " +
-                    "WHERE saksnummer = ?"
-        ) {
-            setParams {
-                setString(1, saksnummer.toString())
-            }
-            setRowMapper { row ->
-                personRepository.hent(row.getLong("person_id"))
-            }
-        }
-    }
-
-    override fun finnSøker(sakId: SakId): Person {
-        return connection.queryFirst(
-            "SELECT person_id " +
-                    "FROM SAK " +
-                    "WHERE id = ?"
+            """SELECT person_id FROM SAK WHERE id = ?"""
         ) {
             setParams {
                 setLong(1, sakId.toLong())
             }
             setRowMapper { row ->
-                personRepository.hent(row.getLong("person_id"))
+                row.getLong("person_id")
             }
         }
     }

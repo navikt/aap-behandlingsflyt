@@ -39,7 +39,7 @@ interface BehandlingRepository : Repository {
 
     fun oppdaterÅrsaker(behandling: Behandling, årsaker: List<Årsak>)
 
-    fun finnSøker(referanse: BehandlingReferanse): Person
+    fun hentSakId(referanse: BehandlingReferanse): SakId
 
     fun oppdaterBehandlingStatus(behandlingId: BehandlingId, status: Status)
 
@@ -48,7 +48,7 @@ interface BehandlingRepository : Repository {
     fun flyttForrigeBehandlingId(behandlingId: BehandlingId, nyForrigeBehandlingId: BehandlingId)
 
     fun markerSavepoint()
-    
+
     fun finnSaksnummer(referanse: BehandlingReferanse): Saksnummer
 }
 
