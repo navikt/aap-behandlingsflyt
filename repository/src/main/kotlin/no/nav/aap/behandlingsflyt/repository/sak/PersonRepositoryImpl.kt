@@ -111,15 +111,6 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
         return person.aktivIdent().identifikator != nyPrimær.identifikator
     }
 
-    override fun hent(identifikator: UUID): Person {
-        return connection.queryFirst("SELECT id, referanse FROM PERSON WHERE referanse = ?") {
-            setParams {
-                setUUID(1, identifikator)
-            }
-            setRowMapper(::mapPerson)
-        }
-    }
-
     private fun mapPerson(row: Row): Person {
         val personId = row.getLong("id")
         return Person(personId, row.getUUID("referanse"), hentIdenter(personId))

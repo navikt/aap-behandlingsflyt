@@ -17,10 +17,6 @@ object InMemoryPersonRepository : PersonRepository {
         return person
     }
 
-    override fun hent(identifikator: UUID): Person {
-        return personer.values.single { it.identifikator == identifikator }
-    }
-
     override fun hent(personId: Long): Person {
         return personer[personId]!!
     }
