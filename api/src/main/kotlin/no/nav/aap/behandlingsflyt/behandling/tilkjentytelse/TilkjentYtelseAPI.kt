@@ -88,8 +88,9 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
 
 
                     val meldekortene =
-                        meldekortRepository.hentHvisEksisterer(behandling.id)?.meldekort()
-                            ?.sortedByDescending { it.mottattTidspunkt }
+                        meldekortRepository.hentHvisEksisterer(behandling.id)?.meldekort()?.sortedByDescending {
+                            it.mottattTidspunkt
+                        }
 
                     tilkjentYtelse.groupBy { utledAktuellMeldeperiode(meldeperioder, it.periode) }
                         .map { (meldeperiode, vurdertePerioder) ->
@@ -102,10 +103,24 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                                     }
                                 }
 
+                            val sisteAktuelleMeldekort = meldekortene?.lastOrNull {
+                                it.timerArbeidPerPeriode.any {
+                                    it.periode.overlapper(
+                                        meldeperiode
+                                    )
+                                }
+                            }
+
                             TilkjentYtelsePeriode2Dto(
                                 meldeperiode = meldeperiode,
                                 levertMeldekortDato = førsteAktuelleMeldekort?.mottattTidspunkt,
-                                sisteLeverteMeldekort = null,
+                                sisteLeverteMeldekort = sisteAktuelleMeldekort?.let {
+                                    MeldekortDto(
+                                        timerArbeidPerPeriode = ArbeidIPeriodeDto(
+                                            timerArbeid = it.timerArbeidPerPeriode.sumOf { it.timerArbeid.antallTimer.toDouble() }),
+                                        mottattTidspunkt = it.mottattTidspunkt,
+                                    )
+                                },
                                 meldekortStatus = null,
                                 vurdertePerioder = vurdertePerioder
                                     .map {
