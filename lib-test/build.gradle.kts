@@ -29,7 +29,7 @@ dependencies {
 
     implementation("ch.qos.logback:logback-classic:1.5.18")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:10.3.1")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.4")
 
     implementation(libs.bundles.junit)
 }
