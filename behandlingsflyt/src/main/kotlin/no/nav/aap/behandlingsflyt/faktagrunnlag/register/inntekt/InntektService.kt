@@ -68,7 +68,7 @@ class InntektService private constructor(
                 val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
 
                 if (beregningVurdering?.tidspunktVurdering?.nedsattArbeidsevneDato == null && studentGrunnlag?.studentvurdering?.avbruttStudieDato == null) {
-                    log.error("Verken tidspunktVurdering eller studentGrunnlag fantes. Returner IKKE_ENDRET.")
+                    log.error("Verken tidspunktVurdering eller studentGrunnlag fantes. Returner IKKE_ENDRET. BehandlingId $behandlingId. Sak: ${kontekst.sakId}")
                     return IKKE_ENDRET
                 }
                 val nedsettelsesDato = utledNedsettelsesdato(
