@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDate
 
 class AvklarOverstyrtLovvalgMedlemskapLøser(
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,

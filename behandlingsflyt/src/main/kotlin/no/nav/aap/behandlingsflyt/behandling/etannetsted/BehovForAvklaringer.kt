@@ -9,7 +9,7 @@ class BehovForAvklaringer(
 ) {
 
     fun harBehovForAvklaring(): Boolean {
-        return perioderTilVurdering.segmenter().filter { it.verdi.harNoeUavklart() }.isNotEmpty()
+        return perioderTilVurdering.segmenter().any { it.verdi.harNoeUavklart() }
     }
 
     fun avklaringsbehov(): List<Definisjon> {

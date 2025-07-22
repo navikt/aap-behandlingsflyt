@@ -52,7 +52,7 @@ class Vilkårsresultat(
                 }
 
                 // Vi filtrerer bort vurderinger hvor noen vilkår er avslått
-                val harVilkårIkkeOppfylt = vurderinger.any { (vilkår, vurdering) ->
+                val harVilkårIkkeOppfylt = vurderinger.any { (_, vurdering) ->
                     vurdering.utfall == Utfall.IKKE_OPPFYLT
                 }
                 if (harVilkårIkkeOppfylt) {

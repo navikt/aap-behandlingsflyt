@@ -14,7 +14,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.utbetal.simulering.UtbetalingOgSimuleringDto
 
 
-object UtbetalingGatewayImpl: UtbetalingGateway {
+object UtbetalingGatewayImpl : UtbetalingGateway {
 
     private val baseUri = URI.create(requiredConfigForKey("integrasjon.utbetal.url"))
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.utbetal.scope"))
@@ -27,25 +27,17 @@ object UtbetalingGatewayImpl: UtbetalingGateway {
     )
 
     override fun utbetal(tilkjentYtelseDto: TilkjentYtelseDto) {
-        val url = baseUri.resolve("/tilkjentytelse")
-        val request = PostRequest<TilkjentYtelseDto>(
-            body = tilkjentYtelseDto
-        )
         client.post<TilkjentYtelseDto, Unit?>(
-            uri = url,
-            request = request,
+            uri = baseUri.resolve("/tilkjentytelse"),
+            request = PostRequest(body = tilkjentYtelseDto),
             mapper = { _, _ -> }
         )
     }
 
     override fun simulering(tilkjentYtelseDto: TilkjentYtelseDto): List<UtbetalingOgSimuleringDto> {
-        val url = baseUri.resolve("/simulering")
-        val request = PostRequest<TilkjentYtelseDto>(
-            body = tilkjentYtelseDto
-        )
         return client.post(
-            uri = url,
-            request = request
+            uri = baseUri.resolve("/simulering"),
+            request = PostRequest(body = tilkjentYtelseDto)
         )!!
     }
 }

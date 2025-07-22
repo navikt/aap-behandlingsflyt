@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning
 
 import no.nav.aap.komponenter.verdityper.Beløp
-import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.Year
 

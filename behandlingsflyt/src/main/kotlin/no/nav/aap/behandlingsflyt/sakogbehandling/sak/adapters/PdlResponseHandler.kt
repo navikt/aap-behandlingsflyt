@@ -23,7 +23,7 @@ class PdlResponseHandler() : RestResponseHandler<InputStream> {
                 throw PdlQueryException(
                     String.format(
                         "Feil %s ved GraphQL oppslag mot %s",
-                        respons.errors.map(GraphQLError::message).joinToString(), request.uri()
+                        respons.errors.joinToString(transform = GraphQLError::message), request.uri()
                     )
                 )
             }

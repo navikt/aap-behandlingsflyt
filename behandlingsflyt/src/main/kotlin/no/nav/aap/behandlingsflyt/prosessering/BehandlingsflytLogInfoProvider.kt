@@ -21,7 +21,7 @@ object BehandlingsflytLogInfoProvider : JobbLogInfoProvider {
 
             return connection.queryFirst(query) {
                 setParams {
-                    setLong(1, behandlingId.toLong())
+                    setLong(1, behandlingId)
                 }
                 setRowMapper { row ->
                     LogInformasjon(mapOf("saksnummer" to row.getString("saksnummer"), "behandlingReferanse" to row.getString("referanse")))
@@ -36,7 +36,7 @@ object BehandlingsflytLogInfoProvider : JobbLogInfoProvider {
 
             return connection.queryFirst(query) {
                 setParams {
-                    setLong(1, sakId.toLong())
+                    setLong(1, sakId)
                 }
                 setRowMapper {
                     LogInformasjon(mapOf("saksnummer" to it.getString("saksnummer")))

@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.alder
 
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
-import no.nav.aap.behandlingsflyt.behandling.vilkår.VurderingsResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår

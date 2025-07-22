@@ -167,7 +167,7 @@ class StatistikkJobbUtfører(
             .map { it.kanal }
 
         // Om minst én av søknadene er papir, regn med at hele behandlingen er papir
-        return kanaler.reduceOrNull() { acc, curr ->
+        return kanaler.reduceOrNull { acc, curr ->
             when (acc) {
                 Kanal.DIGITAL -> curr
                 Kanal.PAPIR -> Kanal.PAPIR

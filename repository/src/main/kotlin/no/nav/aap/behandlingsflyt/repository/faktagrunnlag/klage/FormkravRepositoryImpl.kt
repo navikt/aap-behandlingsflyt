@@ -170,7 +170,7 @@ class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRep
     }
 
     private fun mapFormkravVarsel(row: Row): FormkravVarsel? {
-        var varselUuid = row.getUUIDOrNull("brev_referanse")
+        val varselUuid = row.getUUIDOrNull("brev_referanse")
 
         return varselUuid?.let {
             FormkravVarsel(

@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.kontrakt.datadeling
 
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import java.math.BigDecimal
 import java.time.LocalDate

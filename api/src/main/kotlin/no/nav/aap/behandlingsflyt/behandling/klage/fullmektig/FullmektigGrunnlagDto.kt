@@ -5,8 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentMedType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.NavnOgAdresse
-import java.time.Instant
-
 
 data class FullmektigGrunnlagDto(
     val vurdering: FullmektigVurderingDto? = null,

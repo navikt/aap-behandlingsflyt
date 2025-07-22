@@ -60,8 +60,8 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource, repositoryR
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.FASTSETT_YRKESSKADEINNTEKT.kode.toString()
             ) { req ->
-                val responsDto = dataSource.transaction(readOnly = true) {
-                    val repositoryProvider = repositoryRegistry.provider(it)
+                val responsDto = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
                     val yrkesskadeRepository = repositoryProvider.provide<YrkesskadeRepository>()

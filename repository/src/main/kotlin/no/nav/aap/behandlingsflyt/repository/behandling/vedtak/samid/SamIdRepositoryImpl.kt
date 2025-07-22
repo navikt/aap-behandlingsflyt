@@ -18,13 +18,11 @@ class SamIdRepositoryImpl(private val connection: DBConnection) : SamIdRepositor
             SELECT * FROM SAM_ID WHERE behandling_id = ?
         """.trimIndent()
 
-        return connection.queryFirstOrNull(
-            query, {
-                setParams {
-                    setLong(1, behandlingId.id)
-                }
+        return connection.queryFirstOrNull(query) {
+            setParams {
+                setLong(1, behandlingId.id)
             }
-        )
+        }
     }
 
     override fun lagre(

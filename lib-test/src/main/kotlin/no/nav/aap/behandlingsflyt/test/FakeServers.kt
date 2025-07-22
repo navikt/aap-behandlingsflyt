@@ -1805,7 +1805,7 @@ object FakeServers : AutoCloseable {
                 }
                 route("/bestilling/{referanse}") { ->
                     get {
-                        val ref = UUID.fromString(call.pathParameters.get("referanse"))!!
+                        val ref = UUID.fromString(call.pathParameters["referanse"])!!
 
                         call.respond(
                             synchronized(mutex) {
@@ -1819,7 +1819,7 @@ object FakeServers : AutoCloseable {
                         )
                     }
                     put("/oppdater") {
-                        val ref = UUID.fromString(call.pathParameters.get("referanse"))!!
+                        val ref = UUID.fromString(call.pathParameters["referanse"])!!
                         val brev = call.receive<Brev>()
                         synchronized(mutex) {
                             val i = brevStore.indexOfFirst { it.referanse == ref }
