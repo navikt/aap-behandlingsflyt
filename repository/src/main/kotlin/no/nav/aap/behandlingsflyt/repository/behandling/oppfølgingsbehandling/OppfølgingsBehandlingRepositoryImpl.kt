@@ -64,7 +64,7 @@ class OppfølgingsBehandlingRepositoryImpl(private val connection: DBConnection)
                     opplysningerTilRevurdering = it.getArray("opplysninger_til_revurdering", String::class).map(
                         ÅrsakTilBehandling::valueOf
                     ),
-                    årsak = it.getString("aarsak_til_revurdering"),
+                    årsak = it.getStringOrNull("aarsak_til_revurdering"),
                     vurdertAv = it.getString("vurdert_av"),
                 )
             }

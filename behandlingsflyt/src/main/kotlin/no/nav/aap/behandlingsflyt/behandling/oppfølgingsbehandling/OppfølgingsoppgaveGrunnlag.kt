@@ -13,7 +13,7 @@ enum class KonsekvensAvOppfølging {
 data class OppfølgingsoppgaveGrunnlagDto(
     val konsekvensAvOppfølging: KonsekvensAvOppfølging,
     val opplysningerTilRevurdering: List<ÅrsakTilBehandling>? = emptyList(),
-    val årsak: String
+    val årsak: String? = null,
 ) {
     fun tilOppfølgingsoppgaveGrunnlag(vurdertAv: String): OppfølgingsoppgaveGrunnlag {
         return OppfølgingsoppgaveGrunnlag(
@@ -28,6 +28,13 @@ data class OppfølgingsoppgaveGrunnlagDto(
 data class OppfølgingsoppgaveGrunnlag(
     val konsekvensAvOppfølging: KonsekvensAvOppfølging,
     val opplysningerTilRevurdering: List<ÅrsakTilBehandling>,
-    val årsak: String,
-    val vurdertAv: String?
-)
+    val årsak: String?,
+    val vurdertAv: String
+) {
+    init {
+        if (konsekvensAvOppfølging != KonsekvensAvOppfølging.INGEN) {
+            requireNotNull(årsak)
+            require(opplysningerTilRevurdering.isNotEmpty())
+        }
+    }
+}

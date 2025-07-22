@@ -26,11 +26,14 @@ enum class KonsekvensAvOppfølging {
     INGEN, OPPRETT_VURDERINGSBEHOV
 }
 
+/**
+ * @param årsak Skal kun være null om [konsekvensAvOppfølging] er [no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging.INGEN].
+ */
 data class OppfølgingsoppgaveGrunnlagResponse(
     val konsekvensAvOppfølging: KonsekvensAvOppfølging,
     val opplysningerTilRevurdering: List<ÅrsakTilBehandling>,
-    val årsak: String,
-    val vurdertAv: String?
+    val årsak: String?,
+    val vurdertAv: String
 )
 
 
