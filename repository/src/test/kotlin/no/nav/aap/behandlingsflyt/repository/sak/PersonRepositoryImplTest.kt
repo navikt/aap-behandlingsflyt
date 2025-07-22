@@ -30,7 +30,7 @@ class PersonRepositoryImplTest {
             "271828", aktivIdent = false
         )
         dataSource.transaction {
-            PersonRepositoryImpl(it).oppdater(person, listOf(nyIdentÅLeggeTil))
+            PersonRepositoryImpl(it).finnEllerOpprett(listOf(nyIdentÅLeggeTil, person.aktivIdent()))
         }
 
         // Hent på nytt

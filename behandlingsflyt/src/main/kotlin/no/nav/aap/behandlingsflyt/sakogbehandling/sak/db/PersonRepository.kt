@@ -7,7 +7,6 @@ import java.util.*
 
 interface PersonRepository : Repository {
     fun finnEllerOpprett(identer: List<Ident>): Person
-    fun oppdater(person: Person, identer: List<Ident>)
     fun hent(identifikator: UUID): Person
     fun hent(personId: Long): Person
     fun finn(ident: Ident): Person?

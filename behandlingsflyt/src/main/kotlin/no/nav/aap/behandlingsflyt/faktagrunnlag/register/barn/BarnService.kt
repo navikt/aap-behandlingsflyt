@@ -79,7 +79,7 @@ class BarnService private constructor(
         barnIdenter.forEach { ident ->
             val identliste = pdlGateway.hentAlleIdenterForPerson(ident)
             if (identliste.isEmpty()) {
-                throw IllegalStateException("Fikk ingen treff på ident i PDL")
+                throw IllegalStateException("Fikk ingen treff på ident i PDL.")
             }
 
             personRepository.finnEllerOpprett(identliste)
