@@ -22,7 +22,7 @@ dependencies {
     testImplementation(libs.bundles.junit)
     testImplementation(libs.ktorServerTestHost)
     constraints {
-        implementation("commons-codec:commons-codec:1.18.0")
+        implementation("commons-codec:commons-codec:1.19.0")
     }
     testImplementation(libs.ktorClientContentNegotiation)
     testImplementation("no.nav.security:mock-oauth2-server:$mockOAuth2ServerVersion")
