@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.hendelse.avløp
 
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.ÅrsakTilReturKode
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_FUNKSJONALITET
@@ -29,10 +28,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.markering.Markering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.markering.MarkeringRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.MarkeringDto
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
@@ -65,14 +61,12 @@ class BehandlingHendelseServiceImpl(
     private val brevbestillingRepository: BrevbestillingRepository,
     private val sakService: SakService,
     private val dokumentRepository: MottattDokumentRepository,
-    private val markeringRepository: MarkeringRepository
 ) : BehandlingHendelseService {
     constructor(repositoryProvider: RepositoryProvider) : this(
         flytJobbRepository = repositoryProvider.provide(),
         brevbestillingRepository = repositoryProvider.provide(),
         sakService = SakService(repositoryProvider),
         dokumentRepository = repositoryProvider.provide(),
-        markeringRepository = repositoryProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -85,7 +79,6 @@ class BehandlingHendelseServiceImpl(
         val erPåVent = avklaringsbehovene.hentÅpneVentebehov().isNotEmpty()
         val årsaker = behandling.årsaker()
         val mottattDokumenter = hentMottattDokumenter(årsaker, behandling)
-        val aktiveMarkeringer = markeringRepository.hentAktiveMarkeringerForBehandling(behandling.id).map { it.tilBehandlingMarkeringDto() }
 
         val hendelse = BehandlingFlytStoppetHendelse(
             personIdent = sak.person.aktivIdent().identifikator,
@@ -123,7 +116,6 @@ class BehandlingHendelseServiceImpl(
             erPåVent = erPåVent,
             mottattDokumenter = mottattDokumenter,
             reserverTil = hentReservertTil(behandling.id),
-            markeringer = aktiveMarkeringer,
             opprettetTidspunkt = behandling.opprettetTidspunkt,
             hendelsesTidspunkt = LocalDateTime.now(),
             versjon = ApplikasjonsVersjon.versjon
@@ -234,12 +226,5 @@ class BehandlingHendelseServiceImpl(
         MottattDokumentDto(
             type = this.type,
             referanse = this.referanse
-        )
-
-    private fun Markering.tilBehandlingMarkeringDto(): MarkeringDto =
-        MarkeringDto(
-            markeringType = this.markeringType,
-            begrunnelse = this.begrunnelse,
-            opprettetAv = AnsattInfoService().hentAnsattNavn(this.opprettetAv) ?: "Ukjent",
         )
 }
