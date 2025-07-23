@@ -99,6 +99,7 @@ class ApiInternGatewayImpl() : ApiInternGateway {
                                 tilkjentTom = tilkjentPeriode.periode.tom,
                                 dagsats = tilkjentPeriode.tilkjent.dagsats.verdi.toInt(),
                                 gradering = tilkjentPeriode.tilkjent.gradering.endeligGradering.prosentverdi(),
+                                samordningUføregradering = tilkjentPeriode.tilkjent.gradering.samordningUføregradering?.prosentverdi(),
                                 grunnlag = tilkjentPeriode.tilkjent.grunnlag.verdi,
                                 grunnlagsfaktor = tilkjentPeriode.tilkjent.grunnlagsfaktor.verdi(),
                                 grunnbeløp = tilkjentPeriode.tilkjent.grunnbeløp.verdi,

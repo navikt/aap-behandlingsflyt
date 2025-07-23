@@ -48,6 +48,7 @@ public data class TilkjentDTO(
     val tilkjentTom: LocalDate,
     val dagsats: Int,
     val gradering: Int,
+    val samordningUføregradering: Int? = null,
     val grunnlag: BigDecimal,
     val grunnlagsfaktor: BigDecimal,
     val grunnbeløp: BigDecimal,
