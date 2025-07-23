@@ -96,7 +96,7 @@ class VurderLovvalgSteg private constructor(
             Medlemskapvilkåret(vilkårsresultat, rettighetsperiode).vurder(
                 MedlemskapLovvalgGrunnlag(
                     medlemskapArbeidInntektGrunnlag,
-                    personopplysningGrunnlag,
+                    personopplysningGrunnlag.brukerPersonopplysning,
                     oppgittUtenlandsOppholdGrunnlag
                 )
             )

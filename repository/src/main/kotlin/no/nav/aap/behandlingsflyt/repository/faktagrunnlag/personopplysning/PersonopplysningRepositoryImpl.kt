@@ -149,8 +149,8 @@ class PersonopplysningRepositoryImpl(
             }
             setRowMapper { row ->
                 UtenlandsAdresse(
-                    gyldigFraOgMed = row.getLocalDateTimeOrNull("GYLDIGFRAOGMED"),
-                    gyldigTilOgMed = row.getLocalDateTimeOrNull("GYLDIGTILOGMED"),
+                    gyldigFraOgMed = row.getLocalDateOrNull("GYLDIGFRAOGMED"),
+                    gyldigTilOgMed = row.getLocalDateOrNull("GYLDIGTILOGMED"),
                     adresseNavn = row.getStringOrNull("ADRESSENAVN"),
                     postkode = row.getStringOrNull("POSTKODE"),
                     bySted = row.getStringOrNull("BYSTED"),
@@ -196,8 +196,8 @@ class PersonopplysningRepositoryImpl(
                     setString(3, it.postkode)
                     setString(4, it.bySted)
                     setString(5, it.landkode)
-                    setLocalDateTime(6, it.gyldigFraOgMed)
-                    setLocalDateTime(7, it.gyldigTilOgMed)
+                    setLocalDate(6, it.gyldigFraOgMed)
+                    setLocalDate(7, it.gyldigTilOgMed)
                     setEnumName(8, it.adresseType)
                 }
             }
@@ -315,7 +315,7 @@ class PersonopplysningRepositoryImpl(
         """
                     SELECT bruker_personopplysning_id
                     FROM personopplysning_grunnlag
-                    WHERE behandling_id = ? AND bruker_personopplysning_id is not null
+                    WHERE behandling_id = ?
                  
                 """.trimIndent()
     ) {

@@ -12,27 +12,7 @@ data class PersonopplysningMedHistorikk(
     val statsborgerskap: List<Statsborgerskap>,
     val folkeregisterStatuser: List<FolkeregisterStatus>,
     val utenlandsAddresser: List<UtenlandsAdresse>? = null
-) {
-
-    // Denne skal kun sammenlikne data og ikke tidspunkter
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as PersonopplysningMedHistorikk
-
-        if (fødselsdato != other.fødselsdato) return false
-        if (dødsdato != other.dødsdato) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = fødselsdato.hashCode()
-        result = 31 * result + (dødsdato?.hashCode() ?: 0)
-        return result
-    }
-}
+)
 
 data class FolkeregisterStatus(
     val status: PersonStatus,
@@ -47,8 +27,8 @@ data class Statsborgerskap(
 )
 
 data class UtenlandsAdresse (
-    val gyldigFraOgMed: LocalDateTime? = null,
-    val gyldigTilOgMed: LocalDateTime? = null,
+    val gyldigFraOgMed: LocalDate? = null,
+    val gyldigTilOgMed: LocalDate? = null,
     val adresseNavn: String?,
     val postkode: String?,
     val bySted: String?,

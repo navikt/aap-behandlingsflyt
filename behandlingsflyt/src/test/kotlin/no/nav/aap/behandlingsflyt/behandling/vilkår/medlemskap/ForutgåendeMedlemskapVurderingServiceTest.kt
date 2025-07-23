@@ -36,21 +36,21 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     }
 
     @Test
-    fun automatiskOmInntektErOppfylt() {
+    fun `automatisk om inntekt er oppfylt`() {
         val grunnlag = lagGrunnlag(false, true, false)
         val resultat = service.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         assertEquals(true, resultat.kanBehandlesAutomatisk)
     }
 
     @Test
-    fun stoppOmInntektHarHullSiste5År() {
+    fun `stopp om inntekt har hull sste 5 år`() {
         val grunnlag = lagGrunnlag(false, false, true)
         val resultat = service.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         assertEquals(false, resultat.kanBehandlesAutomatisk)
     }
 
     @Test
-    fun automatiskOmMedlErOppfylt() {
+    fun `automatisk om medl er oppfylt`() {
         val grunnlag = lagGrunnlag(true, false, true)
         val resultat = service.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         assertEquals(true, resultat.kanBehandlesAutomatisk)
@@ -114,7 +114,6 @@ class ForutgåendeMedlemskapVurderingServiceTest {
                         )
                     )
                 ),
-                relatertePersonopplysninger = null
             ),
             nyeSoknadGrunnlag = UtenlandsOppholdData(true, true, false, false, null)
         )

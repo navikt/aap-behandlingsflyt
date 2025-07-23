@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import no.nav.aap.komponenter.type.Periode
@@ -129,8 +129,8 @@ class ForutgåendeMedlemskapVurderingService {
             )
         }?.filter {
             (it.gyldigTilOgMed == null)
-                || forutgåendePeriode.inneholder(it.gyldigTilOgMed.toLocalDate())
-                || (it.gyldigFraOgMed != null && forutgåendePeriode.inneholder(it.gyldigFraOgMed.toLocalDate()))
+                || forutgåendePeriode.inneholder(it.gyldigTilOgMed)
+                || (it.gyldigFraOgMed != null && forutgåendePeriode.inneholder(it.gyldigFraOgMed))
         }
 
         return TilhørighetVurdering(

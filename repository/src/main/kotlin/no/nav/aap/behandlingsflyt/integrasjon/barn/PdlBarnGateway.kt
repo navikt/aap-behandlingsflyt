@@ -1,3 +1,5 @@
+@file:Suppress("GraphQLUnresolvedReference")
+
 package no.nav.aap.behandlingsflyt.integrasjon.barn
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
@@ -20,6 +22,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import org.intellij.lang.annotations.Language
 import java.net.URI
 
 class PdlBarnGateway : BarnGateway {
@@ -42,10 +45,10 @@ class PdlBarnGateway : BarnGateway {
         }
     }
 
-    override fun hentBarn(person: Person, relaterteBarnIdenter: List<Ident>): BarnInnhentingRespons {
+    override fun hentBarn(person: Person, oppgitteBarnIdenter: List<Ident>): BarnInnhentingRespons {
         val barnRelasjoner = hentBarnRelasjoner(person)
         val registerBarn = hentBarn(barnRelasjoner)
-        val oppgitteBarn = hentBarn(relaterteBarnIdenter)
+        val oppgitteBarn = hentBarn(oppgitteBarnIdenter)
         return BarnInnhentingRespons(registerBarn, oppgitteBarn)
     }
 
@@ -93,10 +96,8 @@ class PdlBarnGateway : BarnGateway {
     }
 }
 
-private const val ident = "\$ident"
-private const val identer = "\$identer"
-
-val BARN_RELASJON_QUERY = """
+@Language("GraphQL")
+val BARN_RELASJON_QUERY = $$"""
     query($ident: ID!) {
         hentPerson(ident: $ident) {
             forelderBarnRelasjon {
@@ -106,7 +107,8 @@ val BARN_RELASJON_QUERY = """
     }
 """.trimIndent()
 
-val PERSON_BOLK_QUERY = """
+@Language("GraphQL")
+val PERSON_BOLK_QUERY = $$"""
     query($identer: [ID!]!) {
         hentPersonBolk(identer: $identer) {
             ident,

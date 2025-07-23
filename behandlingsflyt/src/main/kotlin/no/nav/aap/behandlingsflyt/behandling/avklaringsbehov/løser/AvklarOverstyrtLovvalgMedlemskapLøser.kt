@@ -52,7 +52,7 @@ class AvklarOverstyrtLovvalgMedlemskapLøser(
         Medlemskapvilkåret(vilkårsresultat, sak.rettighetsperiode).vurderOverstyrt(
             MedlemskapLovvalgGrunnlag(
                 medlemskapArbeidInntektGrunnlag,
-                personopplysningGrunnlag,
+                personopplysningGrunnlag.brukerPersonopplysning,
                 oppgittUtenlandsOppholdGrunnlag
             )
         )
