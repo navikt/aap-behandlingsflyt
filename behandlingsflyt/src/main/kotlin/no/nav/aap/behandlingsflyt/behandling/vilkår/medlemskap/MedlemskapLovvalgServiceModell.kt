@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemM
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.AdresseType
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 data class KanBehandlesAutomatiskVurdering(
     val kanBehandlesAutomatisk: Boolean,
@@ -65,8 +64,8 @@ data class OppgittUtenlandsOppholdGrunnlag(
 )
 
 data class UtenlandsAdresseGrunnlag(
-    val gyldigFraOgMed: LocalDateTime?,
-    val gyldigTilOgMed: LocalDateTime?,
+    val gyldigFraOgMed: LocalDate?,
+    val gyldigTilOgMed: LocalDate?,
     val adresseNavn: String?,
     val postkode: String?,
     val bySted: String?,

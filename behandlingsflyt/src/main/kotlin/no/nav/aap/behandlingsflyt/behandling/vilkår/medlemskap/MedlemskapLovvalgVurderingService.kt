@@ -160,8 +160,8 @@ class MedlemskapLovvalgVurderingService {
             )
         }?.filter {
             (it.gyldigTilOgMed == null)
-                    || rettighetsPeriode.inneholder(it.gyldigTilOgMed.toLocalDate())
-                    || (it.gyldigFraOgMed != null && rettighetsPeriode.inneholder(it.gyldigFraOgMed.toLocalDate()))
+                    || rettighetsPeriode.inneholder(it.gyldigTilOgMed)
+                    || (it.gyldigFraOgMed != null && rettighetsPeriode.inneholder(it.gyldigFraOgMed))
         }
 
         return TilhørighetVurdering(

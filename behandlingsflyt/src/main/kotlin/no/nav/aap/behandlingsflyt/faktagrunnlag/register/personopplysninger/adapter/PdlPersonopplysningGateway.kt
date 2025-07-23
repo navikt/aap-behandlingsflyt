@@ -22,6 +22,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import org.intellij.lang.annotations.Language
 import java.net.URI
 
 object PdlPersonopplysningGateway : PersonopplysningGateway {
@@ -80,9 +81,13 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
             ?: return null
 
         val folkeregisterStatuser = requireNotNull(response.data?.hentPerson?.folkeregisterpersonstatus?.map {
-            FolkeregisterStatus(it.status, it.folkeregistermetadata?.gyldighetstidspunkt?.toLocalDate(), it.folkeregistermetadata?.opphoerstidspunkt?.toLocalDate())
+            FolkeregisterStatus(
+                it.status,
+                it.folkeregistermetadata?.gyldighetstidspunkt?.toLocalDate(),
+                it.folkeregistermetadata?.opphoerstidspunkt?.toLocalDate()
+            )
         })
-        val statsborgerskap = requireNotNull(response.data?.hentPerson?.statsborgerskap?.map {
+        val statsborgerskap = requireNotNull(response.data.hentPerson.statsborgerskap?.map {
             Statsborgerskap(
                 land = it.land,
                 gyldigFraOgMed = it.gyldigFraOgMed,
@@ -93,10 +98,10 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
         return PersonopplysningMedHistorikk(
             id = 0, // Setter no bs her for å få det gjennom
             fødselsdato = foedselsdato,
-            dødsdato = response.data?.hentPerson?.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) },
+            dødsdato = response.data.hentPerson.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) },
             statsborgerskap = statsborgerskap,
             folkeregisterStatuser = folkeregisterStatuser,
-            utenlandsAddresser = mapUtenlandsAdresser(response.data?.hentPerson)
+            utenlandsAddresser = mapUtenlandsAdresser(response.data.hentPerson)
         )
     }
 }
@@ -107,8 +112,8 @@ private fun mapUtenlandsAdresser(personInfo: PdlPersoninfo?): List<UtenlandsAdre
     val bostedsAdresser = personInfo.bostedsadresse.orEmpty().mapNotNull {
         it.utenlandskAdresse?.let { adresse ->
             UtenlandsAdresse(
-                gyldigFraOgMed = it.gyldigFraOgMed,
-                gyldigTilOgMed = it.gyldigTilOgMed,
+                gyldigFraOgMed = it.gyldigFraOgMed?.toLocalDate(),
+                gyldigTilOgMed = it.gyldigTilOgMed?.toLocalDate(),
                 adresseNavn = adresse.adressenavnNummer,
                 postkode = adresse.postkode,
                 bySted = adresse.bySted,
@@ -123,8 +128,8 @@ private fun mapUtenlandsAdresser(personInfo: PdlPersoninfo?): List<UtenlandsAdre
             it.utenlandskAdresse != null -> {
                 val adresse = it.utenlandskAdresse
                 UtenlandsAdresse(
-                    gyldigFraOgMed = it.gyldigFraOgMed,
-                    gyldigTilOgMed = it.gyldigTilOgMed,
+                    gyldigFraOgMed = it.gyldigFraOgMed?.toLocalDate(),
+                    gyldigTilOgMed = it.gyldigTilOgMed?.toLocalDate(),
                     adresseNavn = adresse.adressenavnNummer,
                     postkode = adresse.postkode,
                     bySted = adresse.bySted,
@@ -132,6 +137,7 @@ private fun mapUtenlandsAdresser(personInfo: PdlPersoninfo?): List<UtenlandsAdre
                     adresseType = AdresseType.KONTAKT_ADRESSE
                 )
             }
+
             it.utenlandskAdresseIFrittFormat != null -> {
                 val frittFormat = it.utenlandskAdresseIFrittFormat
                 val adresseNavn = listOfNotNull(
@@ -141,8 +147,8 @@ private fun mapUtenlandsAdresser(personInfo: PdlPersoninfo?): List<UtenlandsAdre
                 ).joinToString(", ")
 
                 UtenlandsAdresse(
-                    gyldigFraOgMed = it.gyldigFraOgMed,
-                    gyldigTilOgMed = it.gyldigTilOgMed,
+                    gyldigFraOgMed = it.gyldigFraOgMed?.toLocalDate(),
+                    gyldigTilOgMed = it.gyldigTilOgMed?.toLocalDate(),
                     adresseNavn = adresseNavn,
                     postkode = frittFormat.postkode,
                     bySted = frittFormat.byEllerStedsnavn,
@@ -150,6 +156,7 @@ private fun mapUtenlandsAdresser(personInfo: PdlPersoninfo?): List<UtenlandsAdre
                     adresseType = AdresseType.KONTAKT_ADRESSE
                 )
             }
+
             else -> null
         }
     }
@@ -157,8 +164,8 @@ private fun mapUtenlandsAdresser(personInfo: PdlPersoninfo?): List<UtenlandsAdre
     val oppholdsAdresser = personInfo.oppholdsadresse.orEmpty().mapNotNull {
         it.utenlandskAdresse?.let { adresse ->
             UtenlandsAdresse(
-                gyldigFraOgMed = it.gyldigFraOgMed,
-                gyldigTilOgMed = it.gyldigTilOgMed,
+                gyldigFraOgMed = it.gyldigFraOgMed?.toLocalDate(),
+                gyldigTilOgMed = it.gyldigTilOgMed?.toLocalDate(),
                 adresseNavn = adresse.adressenavnNummer,
                 postkode = adresse.postkode,
                 bySted = adresse.bySted,
@@ -171,10 +178,9 @@ private fun mapUtenlandsAdresser(personInfo: PdlPersoninfo?): List<UtenlandsAdre
     return oppholdsAdresser + kontaktAdresser + bostedsAdresser
 }
 
-
-private const val ident = "\$ident"
-
-val PERSON_QUERY = """
+@Suppress("GraphQLUnresolvedReference")
+@Language("GraphQL")
+val PERSON_QUERY = $$"""
     query($ident: ID!){
       hentPerson(ident: $ident) {
         oppholdsadresse {
@@ -242,7 +248,9 @@ val PERSON_QUERY = """
     }
 """.trimIndent()
 
-val PERSON_QUERY_HISTORIKK = """
+@Suppress("GraphQLUnresolvedReference")
+@Language("GraphQL")
+val PERSON_QUERY_HISTORIKK = $$"""
     query($ident: ID!){
       hentPerson(ident: $ident) {
         oppholdsadresse(historikk: true) {

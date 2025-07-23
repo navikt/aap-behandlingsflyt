@@ -29,7 +29,7 @@ class PersonopplysningForutgåendeRepositoryImpl(
     override fun hentHvisEksisterer(behandlingId: BehandlingId): PersonopplysningMedHistorikkGrunnlag? {
         return connection.queryFirstOrNull(
             """
-            SELECT g.bruker_personopplysning_id, g.personopplysninger_id
+            SELECT g.bruker_personopplysning_id
             FROM PERSONOPPLYSNING_FORUTGAAENDE_GRUNNLAG g
             WHERE g.AKTIV AND g.BEHANDLING_ID = ?
             """.trimIndent()
@@ -68,10 +68,10 @@ class PersonopplysningForutgåendeRepositoryImpl(
                 PersonopplysningMedHistorikk(
                     id = id,
                     fødselsdato = Fødselsdato(row.getLocalDate("FODSELSDATO")),
-                    dødsdato = row.getLocalDateOrNull("DODSDATO")?.let { Dødsdato(it) },
+                    dødsdato = row.getLocalDateOrNull("DODSDATO")?.let(::Dødsdato),
                     statsborgerskap = hentStatsborgerskap(row.getLong("LANDKODER_ID")),
                     folkeregisterStatuser = hentStatuser(row.getLong("STATUSER_ID")),
-                    utenlandsAddresser = hentUtenlandsAdresser((row.getLongOrNull("UTENLANDSADRESSER_ID")))
+                    utenlandsAddresser = row.getLongOrNull("UTENLANDSADRESSER_ID")?.let(::hentUtenlandsAdresser).orEmpty()
                 )
             }
         }
@@ -130,8 +130,8 @@ class PersonopplysningForutgåendeRepositoryImpl(
                     setString(3, it.postkode)
                     setString(4, it.bySted)
                     setString(5, it.landkode)
-                    setLocalDateTime(6, it.gyldigFraOgMed)
-                    setLocalDateTime(7, it.gyldigTilOgMed)
+                    setLocalDate(6, it.gyldigFraOgMed)
+                    setLocalDate(7, it.gyldigTilOgMed)
                     setEnumName(8, it.adresseType)
                 }
             }
@@ -148,12 +148,10 @@ class PersonopplysningForutgåendeRepositoryImpl(
                 }
             }
 
-        connection.execute("INSERT INTO PERSONOPPLYSNING_FORUTGAAENDE_GRUNNLAG (BEHANDLING_ID, BRUKER_PERSONOPPLYSNING_ID, PERSONOPPLYSNINGER_ID) VALUES (?, ?, ?)") {
+        connection.execute("INSERT INTO PERSONOPPLYSNING_FORUTGAAENDE_GRUNNLAG (BEHANDLING_ID, BRUKER_PERSONOPPLYSNING_ID) VALUES (?, ?)") {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, personopplysningId)
-//                setLong(3, personopplysningGrunnlag?.relatertePersonopplysninger?.id)
-                setLong(3, null)
             }
         }
     }
@@ -161,27 +159,21 @@ class PersonopplysningForutgåendeRepositoryImpl(
     override fun slett(behandlingId: BehandlingId) {
         // Sletter ikke bruker_land_forutgaaende, bruker_statuser_forutgaaende, og bruker_land_forutgaaende_aggregat, da det ikke er personopplysninger her
         val brukerPersonopplysningIds = getBrukerPersonopplysningIds(behandlingId)
-        val personopplysningerIds = getPersonOpplysningerIds(behandlingId)
-        val personopplysningIds = getPersonOpplysningIds(personopplysningerIds)
         val utenlandsAdresserIds = getUtenlandsAdresserIds(brukerPersonopplysningIds)
 
         val deletedRows = connection.executeReturnUpdated(
             """
             delete from personopplysning_forutgaaende_grunnlag where behandling_id = ?; 
             delete from bruker_utenlandsadresse_forutgaaende where utenlandsadresser_id = ANY(?::bigint[]);
-            delete from bruker_utenlandsadresser_forutgaaende_aggregat where id = ANY(?::bigint[]);
             delete from bruker_personopplysning_forutgaaende where id = ANY(?::bigint[]);
-            delete from personopplysning_forutgaaende where id = ANY(?::bigint[]);
-            delete from personopplysninger_forutgaaende where id = ANY(?::bigint[]);        
+            delete from bruker_utenlandsadresser_forutgaaende_aggregat where id = ANY(?::bigint[]);
         """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, utenlandsAdresserIds)
-                setLongArray(3, utenlandsAdresserIds)
-                setLongArray(4, brukerPersonopplysningIds)
-                setLongArray(5, personopplysningIds)
-                setLongArray(6, personopplysningerIds)
+                setLongArray(3, brukerPersonopplysningIds)
+                setLongArray(4, utenlandsAdresserIds)
             }
         }
         log.info("Slettet $deletedRows rader fra personopplysning_forutgaaende_grunnlag")
@@ -191,27 +183,13 @@ class PersonopplysningForutgåendeRepositoryImpl(
         """
                     SELECT bruker_personopplysning_id
                     FROM personopplysning_forutgaaende_grunnlag
-                    WHERE behandling_id = ? AND bruker_personopplysning_id is not null
+                    WHERE behandling_id = ?
                  
                 """.trimIndent()
     ) {
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
             row.getLong("bruker_personopplysning_id")
-        }
-    }
-
-    private fun getPersonOpplysningerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
-        """
-                    SELECT personopplysninger_id
-                    FROM personopplysning_forutgaaende_grunnlag
-                    WHERE behandling_id = ? AND personopplysninger_id is not null
-                 
-                """.trimIndent()
-    ) {
-        setParams { setLong(1, behandlingId.id) }
-        setRowMapper { row ->
-            row.getLong("personopplysninger_id")
         }
     }
 
@@ -263,8 +241,7 @@ class PersonopplysningForutgåendeRepositoryImpl(
         }
     }
 
-    private fun hentUtenlandsAdresser(id: Long?): List<UtenlandsAdresse> {
-        if (id == null) return emptyList()
+    private fun hentUtenlandsAdresser(id: Long): List<UtenlandsAdresse> {
         return connection.queryList(
             """
             SELECT * FROM BRUKER_UTENLANDSADRESSE_FORUTGAAENDE
@@ -276,8 +253,8 @@ class PersonopplysningForutgåendeRepositoryImpl(
             }
             setRowMapper { row ->
                 UtenlandsAdresse(
-                    gyldigFraOgMed = row.getLocalDateTimeOrNull("GYLDIGFRAOGMED"),
-                    gyldigTilOgMed = row.getLocalDateTimeOrNull("GYLDIGTILOGMED"),
+                    gyldigFraOgMed = row.getLocalDateOrNull("GYLDIGFRAOGMED"),
+                    gyldigTilOgMed = row.getLocalDateOrNull("GYLDIGTILOGMED"),
                     adresseNavn = row.getStringOrNull("ADRESSENAVN"),
                     postkode = row.getStringOrNull("POSTKODE"),
                     bySted = row.getStringOrNull("BYSTED"),
@@ -323,8 +300,8 @@ class PersonopplysningForutgåendeRepositoryImpl(
         require(fraBehandling != tilBehandling)
         connection.execute(
             """
-            INSERT INTO PERSONOPPLYSNING_FORUTGAAENDE_GRUNNLAG (BEHANDLING_ID, BRUKER_PERSONOPPLYSNING_ID, PERSONOPPLYSNINGER_ID) 
-            SELECT ?, BRUKER_PERSONOPPLYSNING_ID, PERSONOPPLYSNINGER_ID FROM PERSONOPPLYSNING_FORUTGAAENDE_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?
+            INSERT INTO PERSONOPPLYSNING_FORUTGAAENDE_GRUNNLAG (BEHANDLING_ID, BRUKER_PERSONOPPLYSNING_ID) 
+            SELECT ?, BRUKER_PERSONOPPLYSNING_ID FROM PERSONOPPLYSNING_FORUTGAAENDE_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?
         """.trimIndent()
         ) {
             setParams {
