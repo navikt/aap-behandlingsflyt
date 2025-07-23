@@ -121,7 +121,7 @@ fun hentBarn(ident: Ident, personopplysningGrunnlag: PersonopplysningGrunnlag): 
 
     return IdentifiserteBarnDto(
         ident,
-        Barn(ident, personopplysning.fødselsdato, personopplysning.dødsdato).periodeMedRettTil(),
+        Barn.periodeMedRettTil(personopplysning.fødselsdato),
         personopplysning.fødselsdato.toLocalDate()
     )
 }

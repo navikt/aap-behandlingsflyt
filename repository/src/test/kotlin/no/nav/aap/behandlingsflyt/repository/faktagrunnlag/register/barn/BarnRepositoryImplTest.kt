@@ -103,6 +103,35 @@ internal class BarnRepositoryImplTest {
     }
 
     @Test
+    fun `oppdatering av oppgitte barn`() {
+        val behandling = dataSource.transaction { connection ->
+            val sak = sak(connection)
+            finnEllerOpprettBehandling(connection, sak)
+        }
+
+        dataSource.transaction {
+            BarnRepositoryImpl(it).lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = listOf(Ident("1"))))
+        }
+
+        val uthentet = dataSource.transaction {
+            BarnRepositoryImpl(it).hent(behandling.id)
+        }
+
+        assertThat(uthentet.oppgitteBarn?.identer).containsExactly(Ident("1"))
+
+        // Oppdater med ingen oppgitte barn
+        dataSource.transaction {
+            BarnRepositoryImpl(it).lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = emptyList()))
+        }
+
+        val uthentet2 = dataSource.transaction {
+            BarnRepositoryImpl(it).hent(behandling.id)
+        }
+
+        assertThat(uthentet2.oppgitteBarn?.identer).isNullOrEmpty()
+    }
+
+    @Test
     fun `Kopiering av barn fra en behandling til en annen`() {
         dataSource.transaction { connection ->
             val barnRepository = BarnRepositoryImpl(connection)

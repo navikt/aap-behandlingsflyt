@@ -124,7 +124,7 @@ class BarnetilleggService(
                 Tidslinje(
                     listOf(
                         Segment(
-                            barnet.periodeMedRettTil(),
+                            Barn.periodeMedRettTil(barnet.fødselsdato),
                             barnet.ident
                         )
                     )
