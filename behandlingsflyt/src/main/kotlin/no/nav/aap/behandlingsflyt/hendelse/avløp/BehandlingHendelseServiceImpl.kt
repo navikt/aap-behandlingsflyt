@@ -240,6 +240,6 @@ class BehandlingHendelseServiceImpl(
         MarkeringDto(
             markeringType = this.markeringType,
             begrunnelse = this.begrunnelse,
-            opprettetAv = AnsattInfoService().hentAnsattNavn(this.opprettetAv)
+            opprettetAv = AnsattInfoService().hentAnsattNavn(this.opprettetAv) ?: "Ukjent",
         )
 }
