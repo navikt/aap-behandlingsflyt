@@ -53,7 +53,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource, repositoryRe
                     MedlemskapLovvalgVurderingService().vurderTilhørighet(
                         MedlemskapLovvalgGrunnlag(
                             medlemskapArbeidInntektGrunnlag,
-                            personopplysningGrunnlag,
+                            personopplysningGrunnlag.brukerPersonopplysning,
                             oppgittUtenlandsOppholdGrunnlag
                         ),
                         sak.rettighetsperiode

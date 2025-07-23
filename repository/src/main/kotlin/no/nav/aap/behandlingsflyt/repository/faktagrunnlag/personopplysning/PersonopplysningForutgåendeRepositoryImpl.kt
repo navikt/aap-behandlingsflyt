@@ -6,28 +6,23 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningForutgåendeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.RelatertPersonopplysning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.RelatertePersonopplysninger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.UtenlandsAdresse
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
-// Mangler full støtte for barn / relaterte personer
 class PersonopplysningForutgåendeRepositoryImpl(
-    private val connection: DBConnection, private val personRepository: PersonRepository
+    private val connection: DBConnection
 ) : PersonopplysningForutgåendeRepository {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<PersonopplysningForutgåendeRepositoryImpl> {
         override fun konstruer(connection: DBConnection): PersonopplysningForutgåendeRepositoryImpl {
-            return PersonopplysningForutgåendeRepositoryImpl(connection, PersonRepositoryImpl(connection))
+            return PersonopplysningForutgåendeRepositoryImpl(connection)
         }
     }
 
@@ -55,32 +50,7 @@ class PersonopplysningForutgåendeRepositoryImpl(
         }
         return PersonopplysningMedHistorikkGrunnlag(
             brukerPersonopplysning = hentBrukerPersonopplysninger(brukerPersonopplysningId),
-            relatertePersonopplysninger = hentRelatertePersonopplysninger(row.getLongOrNull("PERSONOPPLYSNINGER_ID"))
         )
-    }
-
-    private fun hentRelatertePersonopplysninger(id: Long?): RelatertePersonopplysninger? {
-        if (id == null) {
-            return null
-        }
-
-        return RelatertePersonopplysninger(
-            id = id, personopplysninger = connection.queryList(
-                """
-            SELECT * FROM PERSONOPPLYSNING_FORUTGAAENDE 
-            WHERE PERSONOPPLYSNINGER_ID = ?
-        """.trimIndent()
-            ) {
-                setParams {
-                    setLong(1, id)
-                }
-                setRowMapper {
-                    RelatertPersonopplysning(
-                        person = personRepository.hent(it.getLong("PERSON_ID")),
-                        fødselsdato = Fødselsdato(it.getLocalDate("FODSELSDATO")),
-                        dødsdato = it.getLocalDateOrNull("DODSDATO")?.let { Dødsdato(it) })
-                }
-            })
     }
 
     private fun hentBrukerPersonopplysninger(id: Long): PersonopplysningMedHistorikk {
@@ -182,7 +152,8 @@ class PersonopplysningForutgåendeRepositoryImpl(
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, personopplysningId)
-                setLong(3, personopplysningGrunnlag?.relatertePersonopplysninger?.id)
+//                setLong(3, personopplysningGrunnlag?.relatertePersonopplysninger?.id)
+                setLong(3, null)
             }
         }
     }

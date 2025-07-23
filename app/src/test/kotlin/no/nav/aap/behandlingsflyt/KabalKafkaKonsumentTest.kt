@@ -63,7 +63,7 @@ class KabalKafkaKonsumentTest {
                 repositoryRegistry = repositoryRegistry
             )
         val kafka = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.0.0"))
-            .withReuse(true)
+            .withReuse(true).withStartupTimeout(Duration.ofSeconds(60))
         private val util =
             TestUtil(dataSource, listOf(HendelseMottattHåndteringJobbUtfører.type))
 

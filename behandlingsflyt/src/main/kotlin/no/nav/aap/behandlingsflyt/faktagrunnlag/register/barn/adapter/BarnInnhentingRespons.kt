@@ -2,6 +2,9 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 
+/**
+ * Respons fra PDL.
+ */
 data class BarnInnhentingRespons(val registerBarn: List<Barn>, private val oppgitteBarn: List<Barn>) {
     fun alleBarn(): Set<Barn> {
         val alleBarn = registerBarn + oppgitteBarn

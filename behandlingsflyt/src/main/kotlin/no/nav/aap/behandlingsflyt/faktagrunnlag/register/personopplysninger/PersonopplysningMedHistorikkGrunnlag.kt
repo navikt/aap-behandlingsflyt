@@ -1,3 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger
 
-class PersonopplysningMedHistorikkGrunnlag(val brukerPersonopplysning: PersonopplysningMedHistorikk, val relatertePersonopplysninger: RelatertePersonopplysninger?)
+class PersonopplysningMedHistorikkGrunnlag(
+    val brukerPersonopplysning: PersonopplysningMedHistorikk
+)
