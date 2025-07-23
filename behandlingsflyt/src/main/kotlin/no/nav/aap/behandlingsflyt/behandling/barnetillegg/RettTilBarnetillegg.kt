@@ -1,36 +1,37 @@
 package no.nav.aap.behandlingsflyt.behandling.barnetillegg
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 
-class RettTilBarnetillegg(barn: Set<Ident> = emptySet()) {
+class RettTilBarnetillegg(barn: Set<BarnIdentifikator> = emptySet()) {
     private val barnMedFolkeregisterRelasjonTil = barn.toMutableSet()
-    private val uavklarteBarn = mutableSetOf<Ident>()
-    private val godkjenteUavklarteBarn = mutableSetOf<Ident>()
-    private val underkjenteUavklarteBarn = mutableSetOf<Ident>()
+    private val uavklarteBarn = mutableSetOf<BarnIdentifikator>()
+    private val godkjenteUavklarteBarn = mutableSetOf<BarnIdentifikator>()
+    private val underkjenteUavklarteBarn = mutableSetOf<BarnIdentifikator>()
 
-    fun leggTilFolkeregisterBarn(ident: Set<Ident>): RettTilBarnetillegg {
-        barnMedFolkeregisterRelasjonTil.addAll(ident)
+    fun leggTilFolkeregisterBarn(barn: Set<BarnIdentifikator>): RettTilBarnetillegg {
+        barnMedFolkeregisterRelasjonTil.addAll(barn)
         return this
     }
 
-    fun leggTilOppgitteBarn(identer: Set<Ident>): RettTilBarnetillegg {
+    fun leggTilOppgitteBarn(barn: Set<BarnIdentifikator>): RettTilBarnetillegg {
+        val identer = barn.toSet()
         uavklarteBarn.addAll(identer.filter { ident -> !barnMedFolkeregisterRelasjonTil.any { it.er(ident) } })
         return this
     }
 
-    fun godkjenteBarn(ident: Set<Ident>): RettTilBarnetillegg {
+    fun godkjenteBarn(ident: Set<BarnIdentifikator>): RettTilBarnetillegg {
         uavklarteBarn.removeAll(ident)
         godkjenteUavklarteBarn.addAll(ident)
         return this
     }
 
-    fun underkjenteBarn(ident: Set<Ident>): RettTilBarnetillegg {
+    fun underkjenteBarn(ident: Set<BarnIdentifikator>): RettTilBarnetillegg {
         uavklarteBarn.removeAll(ident)
         underkjenteUavklarteBarn.addAll(ident)
         return this
     }
 
-    fun barnMedRettTil(): Set<Ident> {
+    fun barnMedRettTil(): Set<BarnIdentifikator> {
         return barnMedFolkeregisterRelasjonTil.toSet() + godkjenteUavklarteBarn.toSet()
     }
 
@@ -38,16 +39,16 @@ class RettTilBarnetillegg(barn: Set<Ident> = emptySet()) {
         return uavklarteBarnIdenter().isNotEmpty()
     }
 
-    fun barnTilAvklaring(): Set<Ident> {
+    fun barnTilAvklaring(): Set<BarnIdentifikator> {
         return uavklarteBarnIdenter().toSet()
     }
 
-    private fun uavklarteBarnIdenter(): List<Ident> {
+    private fun uavklarteBarnIdenter(): List<BarnIdentifikator> {
         return uavklarteBarn.filterNot { ident -> godkjenteUavklarteBarn.any { it.er(ident) } }
             .filterNot { ident -> underkjenteUavklarteBarn.any { it.er(ident) } }
     }
 
-    fun registerBarn(): Set<Ident> {
+    fun registerBarn(): Set<BarnIdentifikator> {
         return barnMedFolkeregisterRelasjonTil
     }
 
@@ -74,7 +75,7 @@ class RettTilBarnetillegg(barn: Set<Ident> = emptySet()) {
     }
 
     override fun toString(): String {
-        return "RettTilBarnetillegg(antallBarn=${barnMedRettTil()}, harBarnTilAvklaring=${harBarnTilAvklaring()})"
+        return "RettTilBarnetillegg(barnMedFolkeregisterRelasjonTil=$barnMedFolkeregisterRelasjonTil, uavklarteBarn=$uavklarteBarn, godkjenteUavklarteBarn=$godkjenteUavklarteBarn, underkjenteUavklarteBarn=$underkjenteUavklarteBarn)"
     }
 
     fun copy(): RettTilBarnetillegg {

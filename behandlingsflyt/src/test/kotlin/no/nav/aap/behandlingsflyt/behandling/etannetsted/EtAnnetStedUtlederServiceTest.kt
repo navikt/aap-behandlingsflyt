@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.Barnet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
@@ -203,7 +204,7 @@ class EtAnnetStedUtlederServiceTest {
                         LocalDate.now().minusMonths(4)
                     ),
                     setOf(
-                        Ident("123")
+                        BarnIdentifikator.BarnIdent("123")
                     )
                 )
             ),
@@ -240,7 +241,7 @@ class EtAnnetStedUtlederServiceTest {
                         LocalDate.now().minusMonths(2)
                     ),
                     setOf(
-                        Ident("123")
+                        BarnIdentifikator.BarnIdent("123")
                     )
                 )
             ),
@@ -381,7 +382,7 @@ class EtAnnetStedUtlederServiceTest {
                         LocalDate.now()
                     ),
                     setOf(
-                        Ident("123")
+                        BarnIdentifikator.BarnIdent("123")
                     )
                 )
             ),

@@ -9,13 +9,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.RelatertPersonopplysning
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling.BARNETILLEGG
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
@@ -28,10 +27,9 @@ import java.time.Duration
 class BarnService private constructor(
     private val sakService: SakService,
     private val barnRepository: BarnRepository,
-    private val personopplysningRepository: PersonopplysningRepository,
     private val personRepository: PersonRepository,
     private val barnGateway: BarnGateway,
-    private val pdlGateway: IdentGateway,
+    private val identGateway: IdentGateway,
     private val tidligereVurderinger: TidligereVurderinger,
     private val unleashGateway: UnleashGateway
 ) : Informasjonskrav {
@@ -61,60 +59,52 @@ class BarnService private constructor(
 
         val oppgitteBarnIdenter = barnGrunnlag?.oppgitteBarn?.oppgitteBarn?.mapNotNull { it.ident }.orEmpty()
         val barn = barnGateway.hentBarn(sak.person, oppgitteBarnIdenter)
-        val registerBarnIdenter = barn.registerBarn.map { it.ident }
-
-        val relatertePersonopplysninger =
-            personopplysningRepository.hentHvisEksisterer(behandlingId)?.relatertePersonopplysninger?.personopplysninger
-
-        oppdaterPersonIdenter(barn.alleBarn().map { it.ident }.toSet())
+        val registerBarn = barn.registerBarn
 
         val manglerBarnGrunnlagEllerFantNyeBarnFraRegister =
-            manglerBarnGrunnlagEllerFantNyeBarnFraRegister(registerBarnIdenter, barnGrunnlag)
+            manglerBarnGrunnlagEllerFantNyeBarnFraRegister(
+                registerBarn.map { it.ident },
+                barnGrunnlag?.registerbarn
+            )
         val personopplysningerForBarnErOppdatert =
-            personopplysningerForBarnErOppdatert(barn.alleBarn(), relatertePersonopplysninger)
+            personopplysningerForBarnErOppdatert(barn.alleBarn().toSet(), barnGrunnlag?.registerbarn?.barn)
 
         if (manglerBarnGrunnlagEllerFantNyeBarnFraRegister || personopplysningerForBarnErOppdatert) {
-            barnRepository.lagreRegisterBarn(behandlingId, registerBarnIdenter)
-            personopplysningRepository.lagre(behandlingId, barn.alleBarn())
+            val barnMedPersonId = oppdaterPersonIdenter(barn.alleBarn())
+            barnRepository.lagreRegisterBarn(behandlingId, barnMedPersonId)
             return ENDRET
         }
         return IKKE_ENDRET
     }
 
-    private fun oppdaterPersonIdenter(barnIdenter: Set<Ident>) {
-        barnIdenter.forEach { ident ->
-            val identliste = pdlGateway.hentAlleIdenterForPerson(ident)
+    private fun oppdaterPersonIdenter(barn: List<Barn>): List<Pair<Barn, PersonId>> {
+        return barn.map { barn ->
+            val identliste = identGateway.hentAlleIdenterForPerson(barn.ident)
             if (identliste.isEmpty()) {
                 throw IllegalStateException("Fikk ingen treff på ident i PDL.")
             }
 
-            personRepository.finnEllerOpprett(identliste)
+            Pair(barn, personRepository.finnEllerOpprett(identliste).id)
         }
     }
 
     private fun personopplysningerForBarnErOppdatert(
         barn: Set<Barn>,
-        relatertePersonopplysninger: List<RelatertPersonopplysning>?
+        eksisterendeRegisterBarn: List<Barn>?
     ): Boolean {
-        if (barn.isNotEmpty() && relatertePersonopplysninger.isNullOrEmpty()) {
+        if (barn.isNotEmpty() && eksisterendeRegisterBarn.isNullOrEmpty()) {
             return true
         }
-        val eksisterendeData = relatertePersonopplysninger?.map { opplysning ->
-            Barn(
-                opplysning.ident(),
-                opplysning.fødselsdato,
-                opplysning.dødsdato
-            )
-        }.orEmpty().toSet()
+        val eksisterendeData = eksisterendeRegisterBarn.orEmpty().toSet()
 
         return barn.toSet() != eksisterendeData
     }
 
     private fun manglerBarnGrunnlagEllerFantNyeBarnFraRegister(
         barnIdenter: List<Ident>,
-        barnGrunnlag: BarnGrunnlag?
+        registerbarn: RegisterBarn?
     ): Boolean {
-        return barnIdenter.toSet() != barnGrunnlag?.registerbarn?.identer?.toSet()
+        return barnIdenter.toSet() != registerbarn?.barn?.map { it.ident }?.toSet()
     }
 
     companion object : Informasjonskravkonstruktør {
@@ -122,19 +112,14 @@ class BarnService private constructor(
 
         override fun konstruer(repositoryProvider: RepositoryProvider): BarnService {
             val sakRepository = repositoryProvider.provide<SakRepository>()
-            val personRepository = repositoryProvider.provide<PersonRepository>()
-            val personopplysningRepository =
-                repositoryProvider.provide<PersonopplysningRepository>()
             val barnGateway = GatewayProvider.provide(BarnGateway::class)
-            val identGateway = GatewayProvider.provide(IdentGateway::class)
             val unleashGateway = GatewayProvider.provide(UnleashGateway::class)
             return BarnService(
                 SakService(sakRepository),
                 repositoryProvider.provide(),
-                personopplysningRepository,
-                personRepository,
+                repositoryProvider.provide(),
                 barnGateway,
-                identGateway,
+                GatewayProvider.provide(),
                 TidligereVurderingerImpl(repositoryProvider),
                 unleashGateway,
             )

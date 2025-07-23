@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.ÅrsakTilReturKode
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarLovvalgMedlemskapLøsning
@@ -76,9 +77,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.RegisterBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvarDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingerForBarnetillegg
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarnDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
@@ -458,7 +463,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             .ignoringCollectionOrder()
             .isEqualTo(
                 BarnGrunnlag(
-                    registerbarn = RegisterBarn(id = -1, identer = listOf(barnIdent)),
+                    registerbarn = RegisterBarn(id = -1, barn = listOf(Barn(barnIdent, Fødselsdato(barnfødseldato)))),
                     oppgitteBarn = null,
                     vurderteBarn = null
                 )
@@ -534,7 +539,9 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             .ignoringCollectionOrder()
             .ignoringFieldsMatchingRegexes("[a-zA-Z]+\\.id").isEqualTo(
                 BarnGrunnlag(
-                    registerbarn = RegisterBarn(id = -1, identer = person.barn.map { it.aktivIdent() }),
+                    registerbarn = RegisterBarn(
+                        id = -1,
+                        barn = person.barn.map { Barn(it.aktivIdent(), it.fødselsdato) }),
                     oppgitteBarn = null,
                     vurderteBarn = null
                 )
@@ -555,6 +562,73 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             assertThat(it.barnetillegg).isEqualTo(Beløp(37))
             assertThat(it.antallBarn).isEqualTo(1)
         })
+    }
+
+    @Test
+    fun `oppgir manuelle barn, avklarer dem`() {
+        val fom = LocalDate.now()
+        val periode = Periode(fom, fom.plusYears(3))
+
+        val person = TestPersoner.STANDARD_PERSON()
+        val ident = person.aktivIdent()
+
+        val barnNavn = "Gregor Gorgh"
+        val barnAlder = LocalDate.now().minusYears(17)
+        val søknad = TestSøknader.SØKNAD_MED_BARN(barnNavn, barnAlder)
+
+        sendInnSøknad(
+            ident, periode, søknad
+        )
+            .løsSykdom()
+            .løsBistand()
+            .løsRefusjonskrav()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_BARNETILLEGG)
+            }
+            .løsAvklaringsBehov(
+                AvklarBarnetilleggLøsning(
+                    vurderingerForBarnetillegg = VurderingerForBarnetillegg(
+                        vurderteBarn = listOf(
+                            VurdertBarnDto(
+                                ident = null,
+                                navn = barnNavn,
+                                fødselsdato = barnAlder,
+                                vurderinger = listOf(
+                                    VurderingAvForeldreAnsvarDto(
+                                        fraDato = periode.fom,
+                                        harForeldreAnsvar = true,
+                                        begrunnelse = "bra forelder"
+                                    )
+                                )
+                            )
+                        )
+                    ),
+                ),
+            )
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
+
+                val tilkjentYtelse =
+                    dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) }
+                        .orEmpty().map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
+
+                val periodeMedBarneTillegg =
+                    tilkjentYtelse.filter { it.verdi.barnetillegg.verdi.toDouble() > 0 }.helePerioden()
+                val periodeUtenBarneTillegg =
+                    tilkjentYtelse.filter { it.verdi.barnetillegg.verdi.toDouble() == 0.0 }.helePerioden()
+
+                // Barnet er 18 fram til periode.fom.plusYears(1).minusDays(1)
+                assertThat(periodeMedBarneTillegg).isEqualTo(
+                    Periode(
+                        periode.fom,
+                        periode.fom.plusYears(1).minusDays(1)
+                    )
+                )
+                assertThat(periodeUtenBarneTillegg).isEqualTo(Periode(periode.fom.plusYears(1), periode.tom))
+            }
     }
 
     @Test
@@ -1071,7 +1145,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             })
 
         // Verifisere at det går an å kun 1 mnd med sykepengeerstatning
-        var revurdering = sendInnDokument(
+        val revurdering = sendInnDokument(
             ident,
             DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("123123"),

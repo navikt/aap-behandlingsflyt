@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 
 class BarnetilleggSteg(
     private val barnetilleggService: BarnetilleggService,
@@ -30,9 +31,12 @@ class BarnetilleggSteg(
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
     )
 
+    private val log = LoggerFactory.getLogger(javaClass)
+
     override fun utfør(kontekst: FlytKontekstMedPerioder) = when (kontekst.vurderingType) {
         VurderingType.FØRSTEGANGSBEHANDLING -> {
             if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
+                log.info("Gir avslag eller ingen behandlingsgrunnlag, avbryter steg. BehandlingId: ${kontekst.behandlingId}.")
                 avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
                     .avbrytForSteg(type())
                 Fullført
@@ -67,6 +71,8 @@ class BarnetilleggSteg(
         )
 
         if (barnetillegg.segmenter().any { it.verdi.harBarnTilAvklaring() }) {
+            val perioderTilAvklaring = barnetillegg.segmenter().filter { it.verdi.harBarnTilAvklaring() }
+            log.info("Det finnes perioder med barn som ikke har blitt avklart. Antall: ${perioderTilAvklaring.size}")
             return FantAvklaringsbehov(Definisjon.AVKLAR_BARNETILLEGG)
         }
 

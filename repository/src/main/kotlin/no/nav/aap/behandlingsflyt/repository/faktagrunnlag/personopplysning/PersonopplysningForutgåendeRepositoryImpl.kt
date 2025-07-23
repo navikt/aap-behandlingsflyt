@@ -193,20 +193,6 @@ class PersonopplysningForutgåendeRepositoryImpl(
         }
     }
 
-    private fun getPersonOpplysningIds(personopplysningerIds: List<Long>): List<Long> = connection.queryList(
-        """
-                    SELECT id
-                    FROM personopplysninger_forutgaaende
-                    WHERE id = ANY(?::bigint[]);
-                 
-                """.trimIndent()
-    ) {
-        setParams { setLongArray(1, personopplysningerIds) }
-        setRowMapper { row ->
-            row.getLong("id")
-        }
-    }
-
     private fun getUtenlandsAdresserIds(brukerPersonopplysningIds: List<Long>): List<Long> = connection.queryList(
         """
                     SELECT utenlandsadresser_id

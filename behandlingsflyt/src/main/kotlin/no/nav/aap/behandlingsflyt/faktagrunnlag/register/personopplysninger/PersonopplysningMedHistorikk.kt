@@ -26,7 +26,7 @@ data class Statsborgerskap(
     val gyldigTilOgMed: LocalDate? = null,
 )
 
-data class UtenlandsAdresse (
+data class UtenlandsAdresse(
     val gyldigFraOgMed: LocalDate? = null,
     val gyldigTilOgMed: LocalDate? = null,
     val adresseNavn: String?,

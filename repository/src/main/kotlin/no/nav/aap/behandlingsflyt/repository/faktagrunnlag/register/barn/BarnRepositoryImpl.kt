@@ -1,15 +1,19 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.RegisterBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.VurderteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
@@ -42,6 +46,25 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                     oppgitteBarn = it.getLongOrNull("oppgitt_barn_id")?.let(::hentOppgittBarn),
                     vurderteBarn = it.getLongOrNull("vurderte_barn_id")?.let(::hentVurderteBarn)
                 )
+            }
+        }
+
+        return grunnlag
+    }
+
+    override fun hentVurderteBarnHvisEksisterer(behandlingId: BehandlingId): VurderteBarn? {
+        val grunnlag = connection.queryFirstOrNull(
+            """
+            SELECT * 
+            FROM BARNOPPLYSNING_GRUNNLAG g 
+            WHERE g.AKTIV AND g.BEHANDLING_ID = ?
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.id)
+            }
+            setRowMapper {
+                it.getLongOrNull("vurderte_barn_id")?.let(::hentVurderteBarn)
             }
         }
 
@@ -99,7 +122,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
     private fun hentBarnVurderinger(id: Long?) =
         connection.queryList(
             """
-            SELECT p.id, p.IDENT
+            SELECT p.id, p.IDENT, p.navn, p.fodselsdato
             FROM BARN_VURDERING p
             WHERE p.BARN_VURDERINGER_ID = ?
             """.trimIndent()
@@ -108,8 +131,17 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                 setLong(1, id)
             }
             setRowMapper { row ->
+                val identifikator = row.getStringOrNull("IDENT")
+                val barnIdentifikator = if (identifikator != null) {
+                    BarnIdentifikator.BarnIdent(Ident(identifikator))
+                } else {
+                    BarnIdentifikator.NavnOgFødselsdato(
+                        row.getString("navn"),
+                        row.getLocalDate("fodselsdato").let(::Fødselsdato)
+                    )
+                }
                 VurdertBarn(
-                    ident = Ident(row.getString("IDENT")),
+                    ident = barnIdentifikator,
                     vurderinger = hentVurderinger(row.getLong("id"))
                 )
             }
@@ -138,9 +170,9 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
 
     private fun hentBarn(id: Long): RegisterBarn {
         return RegisterBarn(
-            id = id, identer = connection.queryList(
+            id = id, barn = connection.queryList(
                 """
-                SELECT p.IDENT
+                SELECT p.IDENT, fodselsdato, dodsdato
                 FROM BARNOPPLYSNING p
                 WHERE p.bgb_id = ?
             """.trimIndent()
@@ -149,8 +181,10 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                     setLong(1, id)
                 }
                 setRowMapper { row ->
-                    Ident(
-                        row.getString("IDENT")
+                    Barn(
+                        ident = Ident(row.getString("ident")),
+                        fødselsdato = Fødselsdato(row.getLocalDate("fodselsdato")),
+                        dødsdato = row.getLocalDateOrNull("dodsdato")?.let(::Dødsdato)
                     )
                 }
             })
@@ -201,7 +235,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         }
     }
 
-    override fun lagreRegisterBarn(behandlingId: BehandlingId, barn: List<Ident>) {
+    override fun lagreRegisterBarn(behandlingId: BehandlingId, barn: List<Pair<Barn, PersonId>>) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
         if (eksisterendeGrunnlag != null) {
@@ -212,13 +246,17 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
 
         connection.executeBatch(
             """
-                INSERT INTO BARNOPPLYSNING (IDENT, BGB_ID) VALUES (?, ?)
+                INSERT INTO BARNOPPLYSNING (IDENT, BGB_ID, fodselsdato, dodsdato, person_id) VALUES (?, ?, ?, ?, ?)
             """.trimIndent(),
             barn
         ) {
             setParams { barnet ->
-                setString(1, barnet.identifikator)
+                val (barn, personId) = barnet
+                setString(1, barn.ident.identifikator)
                 setLong(2, bgbId)
+                setLocalDate(3, barn.fødselsdato.toLocalDate())
+                setLocalDate(4, barn.dødsdato?.toLocalDate())
+                setLong(5, personId.id)
             }
         }
 
@@ -260,10 +298,26 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
 
         for (barn in vurderteBarn) {
             val barnVurderingId =
-                connection.executeReturnKey("INSERT INTO BARN_VURDERING (IDENT, BARN_VURDERINGER_ID) VALUES (?, ?)") {
+                connection.executeReturnKey(
+                    """INSERT INTO BARN_VURDERING (IDENT, BARN_VURDERINGER_ID, navn, fodselsdato)
+VALUES (?, ?, ?, ?)"""
+                ) {
                     setParams {
-                        setString(1, barn.ident.identifikator)
-                        setLong(2, vurderteBarnId)
+                        when (val barnIdent = barn.ident) {
+                            is BarnIdentifikator.BarnIdent -> {
+                                setString(1, barnIdent.ident.identifikator)
+                                setLong(2, vurderteBarnId)
+                                setString(3, null)
+                                setLocalDate(4, null)
+                            }
+
+                            is BarnIdentifikator.NavnOgFødselsdato -> {
+                                setString(1, null)
+                                setLong(2, vurderteBarnId)
+                                setString(3, barnIdent.navn)
+                                setLocalDate(4, barnIdent.fødselsdato.toLocalDate())
+                            }
+                        }
                     }
                 }
             connection.executeBatch(

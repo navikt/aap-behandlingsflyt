@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.integrasjon.ident
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
-import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
@@ -18,6 +16,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import org.intellij.lang.annotations.Language
 import java.net.URI
 
 class PdlIdentGateway : IdentGateway {
@@ -60,11 +59,10 @@ class PdlIdentGateway : IdentGateway {
     }
 }
 
-private const val ident = "\$ident"
-
-val IDENT_QUERY = """
+@Suppress("GraphQLUnresolvedReference")
+@Language("GraphQL")
+val IDENT_QUERY = $$"""
     query($ident: ID!) {
-
         hentIdenter(ident: $ident, historikk: true) {
             identer {
                 ident,

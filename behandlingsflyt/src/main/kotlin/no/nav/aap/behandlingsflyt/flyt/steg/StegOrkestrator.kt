@@ -193,7 +193,7 @@ class StegOrkestrator(
             utførStegTimer.record(Supplier {
                 behandlingSteg.utfør(kontekstMedPerioder)
             })
-        log.info("Fullført steg av type $simpleName", behandlingSteg::javaClass.name)
+        log.info("Fullført steg av type $simpleName med resultat $stegResultat")
 
         @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
         val resultat = stegResultat.transisjon()
