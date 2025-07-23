@@ -1,33 +1,27 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.RelatertPersonopplysning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.RelatertePersonopplysninger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.UtenlandsAdresse
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
 class PersonopplysningRepositoryImpl(
-    private val connection: DBConnection, private val personRepository: PersonRepository
+    private val connection: DBConnection
 ) : PersonopplysningRepository {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<PersonopplysningRepositoryImpl> {
         override fun konstruer(connection: DBConnection): PersonopplysningRepositoryImpl {
-            return PersonopplysningRepositoryImpl(connection, PersonRepositoryImpl(connection))
+            return PersonopplysningRepositoryImpl(connection)
         }
     }
 
@@ -76,33 +70,7 @@ class PersonopplysningRepositoryImpl(
         }
         return PersonopplysningGrunnlag(
             brukerPersonopplysning = hentBrukerPersonopplysninger(brukerPersonopplysningId),
-            relatertePersonopplysninger = hentRelatertePersonopplysninger(row.getLongOrNull("personopplysninger_id"))
         )
-    }
-
-    private fun hentRelatertePersonopplysninger(id: Long?): RelatertePersonopplysninger? {
-        if (id == null) {
-            return null
-        }
-
-        return RelatertePersonopplysninger(
-            id = id, personopplysninger = connection.queryList(
-                """
-            SELECT * FROM PERSONOPPLYSNING 
-            WHERE personopplysninger_id = ?
-        """.trimIndent()
-            ) {
-                setParams {
-                    setLong(1, id)
-                }
-                setRowMapper {
-                    RelatertPersonopplysning(
-                        person = personRepository.hent(it.getLong("person_id").let(::PersonId)),
-                        fødselsdato = Fødselsdato(it.getLocalDate("FODSELSDATO")),
-                        dødsdato = it.getLocalDateOrNull("dodsdato")?.let(::Dødsdato)
-                    )
-                }
-            })
     }
 
     private fun hentBrukerPersonopplysninger(id: Long): Personopplysning {
@@ -247,47 +215,7 @@ class PersonopplysningRepositoryImpl(
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, personopplysningId)
-                setLong(3, personopplysningGrunnlag?.relatertePersonopplysninger?.id)
-            }
-        }
-    }
-
-    override fun lagre(behandlingId: BehandlingId, barn: Set<Barn>) {
-        val personopplysningGrunnlag = hentHvisEksisterer(behandlingId)
-
-        if (personopplysningGrunnlag != null) {
-            deaktiverEksisterende(behandlingId)
-        }
-
-        val relatertePersonopplysningerId = if (barn.isEmpty()) {
-            null
-        } else {
-            val personopplysningerId = connection.executeReturnKey(
-                """
-            INSERT INTO PERSONOPPLYSNINGER DEFAULT VALUES
-        """.trimIndent()
-            )
-            connection.executeBatch(
-                "INSERT INTO PERSONOPPLYSNING (person_id, personopplysninger_id, FODSELSDATO, dodsdato) VALUES (?, ?, ?, ?)",
-                barn
-            ) {
-                setParams {
-                    setLong(1, requireNotNull(personRepository.finn(it.ident)).id.id)
-                    setLong(2, personopplysningerId)
-                    setLocalDate(3, it.fødselsdato.toLocalDate())
-                    setLocalDate(4, it.dødsdato?.toLocalDate())
-                }
-            }
-
-            personopplysningerId
-        }
-
-
-        connection.execute("INSERT INTO PERSONOPPLYSNING_GRUNNLAG (BEHANDLING_ID, personopplysninger_id, bruker_personopplysning_id) VALUES (?, ?, ?)") {
-            setParams {
-                setLong(1, behandlingId.toLong())
-                setLong(2, relatertePersonopplysningerId)
-                setLong(3, personopplysningGrunnlag?.brukerPersonopplysning?.id)
+                setLong(3, null)
             }
         }
     }
@@ -326,7 +254,6 @@ class PersonopplysningRepositoryImpl(
             delete from bruker_utenlandsadresser_aggregat where id = ANY(?::bigint[]);
             delete from personopplysning where personopplysninger_id = ANY(?::bigint[]);
             delete from personopplysninger where id = ANY(?::bigint[]);
-           
              delete from bruker_personopplysning where id = ANY(?::bigint[]);
         """.trimIndent()
         ) {

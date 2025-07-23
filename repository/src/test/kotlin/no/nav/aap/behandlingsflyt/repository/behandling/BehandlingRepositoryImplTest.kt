@@ -296,7 +296,7 @@ fun main() {
         MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection).slett(BehandlingId(1L))
         MedlemskapArbeidInntektRepositoryImpl(connection).slett(BehandlingId(1L))
         PersonopplysningForutgåendeRepositoryImpl(connection).slett(BehandlingId(1L))
-        PersonopplysningRepositoryImpl(connection, PersonRepositoryImpl(connection)).slett(BehandlingId(1L))
+        PersonopplysningRepositoryImpl(connection).slett(BehandlingId(1L))
         BarnRepositoryImpl(connection).slett(BehandlingId(1L))
         InntektGrunnlagRepositoryImpl(connection).slett(BehandlingId(1L))
         InstitusjonsoppholdRepositoryImpl(connection).slett(BehandlingId(1L))

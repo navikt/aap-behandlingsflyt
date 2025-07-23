@@ -4,4 +4,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
-data class IdentifiserteBarnDto(val ident: Ident, val forsorgerPeriode: Periode, val fødselsdato: LocalDate)
+data class IdentifiserteBarnDto(
+    val ident: Ident?,
+    val fodselsDato: LocalDate?,
+    val navn: String?,
+    val forsorgerPeriode: Periode?
+)

@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
@@ -34,7 +36,7 @@ internal class BarnRepositoryImplTest {
 
             val barnRepository = BarnRepositoryImpl(connection)
             val barn = barnRepository.hentHvisEksisterer(behandling.id)
-            assertThat(barn?.registerbarn?.identer).isNullOrEmpty()
+            assertThat(barn?.registerbarn?.barn).isNullOrEmpty()
         }
     }
 
@@ -42,7 +44,7 @@ internal class BarnRepositoryImplTest {
     fun `Lagrer og henter barn`() {
         val vurderteBarn = listOf(
             VurdertBarn(
-                ident = Ident("12345"),
+                ident = BarnIdentifikator.BarnIdent("12345"),
                 vurderinger = listOf(
                     VurderingAvForeldreAnsvar(
                         fraDato = LocalDate.now(),
@@ -52,7 +54,8 @@ internal class BarnRepositoryImplTest {
                 )
             )
         )
-        val barnListe = listOf(Ident("12345678910"), Ident("12345"))
+        val barnListe =
+            listOf(Ident("12345678910"), Ident("12345")).map { Barn(it, Fødselsdato(LocalDate.now().minusYears(10))) }
 
         val oppgittBarn = OppgitteBarn.OppgittBarn(
             Ident("1"),
@@ -68,8 +71,14 @@ internal class BarnRepositoryImplTest {
             val barnRepository = BarnRepositoryImpl(connection)
 
 
-            barnRepository.lagreRegisterBarn(behandling.id, barnListe)
-            barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(oppgitteBarn = listOf(oppgittBarn)))
+            barnRepository.lagreRegisterBarn(
+                behandling.id,
+                barnListe
+            )
+            barnRepository.lagreOppgitteBarn(
+                behandling.id,
+                OppgitteBarn(oppgitteBarn = listOf(oppgittBarn))
+            )
             barnRepository.lagreVurderinger(behandling.id, "ident", vurderteBarn)
             behandling
         }
@@ -79,7 +88,7 @@ internal class BarnRepositoryImplTest {
             barnRepository.hent(behandling.id)
         }
 
-        assertThat(barn.registerbarn?.identer).containsExactlyInAnyOrderElementsOf(barnListe)
+        assertThat(barn.registerbarn?.barn).containsExactlyInAnyOrderElementsOf(barnListe)
         assertThat(barn.oppgitteBarn?.oppgitteBarn).containsExactly(oppgittBarn)
         assertThat(barn.vurderteBarn?.barn).isEqualTo(vurderteBarn)
 
@@ -99,15 +108,20 @@ internal class BarnRepositoryImplTest {
             val sak = sak(connection)
             finnEllerOpprettBehandling(connection, sak)
         }
+        val barnListe =
+            listOf(Ident("12"), Ident("32323")).map { Barn(it, Fødselsdato(LocalDate.now().minusYears(10))) }
         dataSource.transaction {
-            BarnRepositoryImpl(it).lagreRegisterBarn(behandling.id, listOf(Ident("12"), Ident("32323")))
+            BarnRepositoryImpl(it).lagreRegisterBarn(
+                behandling.id,
+                barnListe
+            )
         }
 
         val uthentet = dataSource.transaction {
             BarnRepositoryImpl(it).hent(behandling.id)
         }
 
-        assertThat(uthentet.registerbarn?.identer).containsExactlyInAnyOrder(Ident("12"), Ident("32323"))
+        assertThat(uthentet.registerbarn?.barn).containsExactlyInAnyOrderElementsOf(barnListe)
     }
 
     @Test

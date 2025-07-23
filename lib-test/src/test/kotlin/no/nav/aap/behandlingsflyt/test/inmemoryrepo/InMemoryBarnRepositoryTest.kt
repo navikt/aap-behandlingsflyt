@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -25,7 +27,7 @@ class InMemoryBarnRepositoryTest {
 
         val barnRepository = InMemoryBarnRepository
         val barn = barnRepository.hentHvisEksisterer(behandling.id)
-        assertThat(barn?.registerbarn?.identer).isNullOrEmpty()
+        assertThat(barn?.registerbarn?.barn).isNullOrEmpty()
     }
 
 
@@ -33,7 +35,7 @@ class InMemoryBarnRepositoryTest {
     fun `Lagrer og henter barn`() {
         val vurderteBarn = listOf(
             VurdertBarn(
-                ident = Ident("12345"),
+                ident = BarnIdentifikator.BarnIdent("12345"),
                 vurderinger = listOf(
                     VurderingAvForeldreAnsvar(
                         fraDato = LocalDate.now(),
@@ -43,7 +45,12 @@ class InMemoryBarnRepositoryTest {
                 )
             )
         )
-        val barnListe = listOf(Ident("12345678910"), Ident("12345"))
+        val barnListe = listOf(Ident("12345678910"), Ident("12345")).map {
+            no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn(
+                it,
+                Fødselsdato(LocalDate.now().minusYears(18))
+            )
+        }
 
         val (_, behandling) = opprettPersonBehandlingOgSak()
 
@@ -58,7 +65,8 @@ class InMemoryBarnRepositoryTest {
 
 
         val barn = barnRepository.hent(behandling.id)
-        assertThat(barn.registerbarn?.identer).containsExactlyInAnyOrderElementsOf(barnListe)
+
+        assertThat(barn.registerbarn?.barn).containsExactlyInAnyOrderElementsOf(barnListe)
         assertThat(barn.oppgitteBarn?.oppgitteBarn).containsExactly(
             OppgitteBarn.OppgittBarn(
                 ident = Ident("1"),

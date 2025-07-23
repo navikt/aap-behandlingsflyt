@@ -3,9 +3,11 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn.ForeldreansvarVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarnDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
@@ -21,9 +23,10 @@ class AvklarBarnetilleggLøser(
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarBarnetilleggLøsning): LøsningsResultat {
-        val vurderteBarn = barnRepository.hentHvisEksisterer(kontekst.kontekst.behandlingId)?.vurderteBarn?.barn
+        val vurderteBarn = barnRepository.hentVurderteBarnHvisEksisterer(kontekst.kontekst.behandlingId)?.barn
             ?: emptyList()
-        val oppdatertTilstand = oppdaterTilstandBasertPåNyeVurderinger(vurderteBarn, løsning)
+        val oppdatertTilstand =
+            oppdaterTilstandBasertPåNyeVurderinger(vurderteBarn, løsning.vurderingerForBarnetillegg.vurderteBarn)
 
         barnRepository.lagreVurderinger(kontekst.kontekst.behandlingId, kontekst.bruker.ident, oppdatertTilstand)
 
@@ -37,27 +40,25 @@ class AvklarBarnetilleggLøser(
 
 internal fun oppdaterTilstandBasertPåNyeVurderinger(
     vurderteBarn: List<VurdertBarn>,
-    løsning: AvklarBarnetilleggLøsning
+    nyeVurderinger: List<VurdertBarnDto>
 ): List<VurdertBarn> {
-    val tidslinjePerBarn = HashMap<String, Tidslinje<ForeldreansvarVurdering>>()
-    vurderteBarn.forEach { barn -> tidslinjePerBarn[barn.ident.identifikator] = barn.tilTidslinje() }
-
-    val nyeVurderinger = løsning.vurderingerForBarnetillegg.vurderteBarn
+    val tidslinjePerBarn = HashMap<BarnIdentifikator, Tidslinje<ForeldreansvarVurdering>>()
+    vurderteBarn.forEach { barn -> tidslinjePerBarn[barn.ident] = barn.tilTidslinje() }
 
     nyeVurderinger.map { it.toVurdertBarn() }.forEach { nyVurdering ->
-        val eksisterendeTidslinje = tidslinjePerBarn[nyVurdering.ident.identifikator] ?: Tidslinje()
+        val eksisterendeTidslinje = tidslinjePerBarn[nyVurdering.ident] ?: Tidslinje()
         val oppdatertTidslinje = eksisterendeTidslinje.kombiner(
             nyVurdering.tilTidslinje(),
             StandardSammenslåere.prioriterHøyreSideCrossJoin()
         )
 
-        tidslinjePerBarn[nyVurdering.ident.identifikator] = oppdatertTidslinje.komprimer()
+        tidslinjePerBarn[nyVurdering.ident] = oppdatertTidslinje.komprimer()
     }
 
-    val oppdatertTilstand = tidslinjePerBarn.map {
+    val oppdatertTilstand = tidslinjePerBarn.map { (key, value) ->
         VurdertBarn(
-            ident = Ident(it.key),
-            vurderinger = it.value.segmenter().map {
+            ident = key,
+            vurderinger = value.segmenter().map {
                 VurderingAvForeldreAnsvar(
                     it.periode.fom,
                     it.verdi.harForeldreAnsvar,

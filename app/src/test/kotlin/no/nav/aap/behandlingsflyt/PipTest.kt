@@ -3,8 +3,11 @@ package no.nav.aap.behandlingsflyt
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import kotlinx.coroutines.runBlocking
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -96,7 +99,10 @@ class PipTest {
 
             val barnRepository = postgresRepositoryRegistry.provider(connection).provide<BarnRepository>()
 
-            barnRepository.lagreRegisterBarn(behandling.id, listOf(Ident("regbarn")))
+            barnRepository.lagreRegisterBarn(
+                behandling.id,
+                listOf(Barn(ident = Ident("regbarn"), Fødselsdato(LocalDate.now())))
+            )
             barnRepository.lagreOppgitteBarn(
                 behandling.id,
                 OppgitteBarn(oppgitteBarn = listOf(OppgitteBarn.OppgittBarn(Ident("oppgittbarn"), null)))
@@ -106,7 +112,7 @@ class PipTest {
                 "ident",
                 listOf(
                     VurdertBarn(
-                        Ident("vurdertbarn"),
+                        BarnIdentifikator.BarnIdent("vurdertbarn"),
                         listOf(VurderingAvForeldreAnsvar(periode.fom, true, "fordi"))
                     )
                 )
@@ -152,7 +158,10 @@ class PipTest {
 
             val barnRepository = postgresRepositoryRegistry.provider(connection).provide<BarnRepository>()
 
-            barnRepository.lagreRegisterBarn(behandling.id, listOf(Ident("regbarn")))
+            barnRepository.lagreRegisterBarn(
+                behandling.id,
+                listOf(Barn(ident = Ident("regbarn"), Fødselsdato(LocalDate.now())))
+            )
             barnRepository.lagreOppgitteBarn(
                 behandling.id,
                 OppgitteBarn(oppgitteBarn = listOf(OppgitteBarn.OppgittBarn(Ident("oppgittbarn"), null)))
@@ -162,7 +171,7 @@ class PipTest {
                 "ident",
                 listOf(
                     VurdertBarn(
-                        Ident("vurdertbarn"),
+                        BarnIdentifikator.BarnIdent("vurdertbarn"),
                         listOf(VurderingAvForeldreAnsvar(periode.fom, true, "fordi"))
                     )
                 )
@@ -176,17 +185,23 @@ class PipTest {
                 TypeBehandling.Førstegangsbehandling, null
             )
 
-            barnRepository.lagreRegisterBarn(behandling2.id, listOf(Ident("regbar2")))
-            barnRepository.lagreOppgitteBarn(
+            barnRepository.lagreRegisterBarn(
                 behandling2.id,
+                listOf(
+                    Barn(ident = Ident("regbar2"), Fødselsdato(LocalDate.now()))
+                )
+            )
+            barnRepository.lagreOppgitteBarn(
+                behandling.id,
                 OppgitteBarn(oppgitteBarn = listOf(OppgitteBarn.OppgittBarn(Ident("oppgittbar2"), null)))
             )
+
             barnRepository.lagreVurderinger(
                 behandling2.id,
                 "ident",
                 listOf(
                     VurdertBarn(
-                        Ident("vurdertbar2"),
+                        BarnIdentifikator.BarnIdent("vurdertbar2"),
                         listOf(VurderingAvForeldreAnsvar(periode.fom, true, "fordi"))
                     )
                 )

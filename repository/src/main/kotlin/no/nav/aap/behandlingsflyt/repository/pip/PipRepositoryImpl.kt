@@ -35,14 +35,14 @@ class PipRepositoryImpl(private val connection: DBConnection) : PipRepository {
             INNER JOIN BARNOPPLYSNING_GRUNNLAG g ON ob.oppgitt_barn_id = g.oppgitt_barn_id
             INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
             INNER JOIN SAK s ON b.SAK_ID = s.ID
-            WHERE s.SAKSNUMMER = ?
+            WHERE s.SAKSNUMMER = ? AND ob.ident is not null
             UNION 
             SELECT bv.IDENT as IDENT, '${IdentPåSak.Opprinnelse.BARN}' AS OPPRINNELSE
             FROM BARN_VURDERING bv
             INNER JOIN BARNOPPLYSNING_GRUNNLAG g ON bv.barn_vurderinger_id = g.vurderte_barn_id
             INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
             INNER JOIN SAK s ON b.SAK_ID = s.ID
-            WHERE s.SAKSNUMMER = ?
+            WHERE s.SAKSNUMMER = ? and bv.ident is not null
         """.trimIndent()
         ) {
             setParams {
