@@ -268,7 +268,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                     val markeringRepository = repositoryProvider.provide<MarkeringRepository>()
                     markeringRepository.deaktiverMarkering(behandling.id, body.markeringType)
                 }
-                respondWithStatus(HttpStatusCode.NoContent)
+                respondWithStatus(HttpStatusCode.OK)
             }
         }
     }
