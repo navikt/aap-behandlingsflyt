@@ -88,7 +88,6 @@ dependencies {
 
     implementation(project(":api"))
     implementation(project(":behandlingsflyt"))
-    implementation(project(":kontrakt"))
     implementation(project(":repository"))
     implementation("com.zaxxer:HikariCP:6.3.0")
     implementation("org.flywaydb:flyway-database-postgresql:11.10.3")
