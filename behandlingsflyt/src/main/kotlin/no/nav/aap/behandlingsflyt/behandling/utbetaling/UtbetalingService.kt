@@ -13,9 +13,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDetaljerDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
@@ -60,14 +57,9 @@ class UtbetalingService(
             } else {
                 vedtakRepository.hent(behandlingId)?.vedtakstidspunkt ?: error("Fant ikke vedtak")
             }
-            val unleashGateway = GatewayProvider.provide<UnleashGateway>()
-            val avventUtbetaling = if (unleashGateway.isEnabled(BehandlingsflytFeature.AvventUtbetaling)) {
-                if (tilkjentYtelse.isNotEmpty()) {
-                    AvventUtbetalingService(refusjonskravRepository, tjenestepensjonRefusjonsKravVurderingRepository, samordningAndreStatligeYtelserRepository).
-                        finnEventuellAvventUtbetaling(behandlingId, vedtakstidspunkt, tilkjentYtelse.finnHelePerioden())
-                } else {
-                    null
-                }
+            val avventUtbetaling = if (tilkjentYtelse.isNotEmpty()) {
+                AvventUtbetalingService(refusjonskravRepository, tjenestepensjonRefusjonsKravVurderingRepository, samordningAndreStatligeYtelserRepository).
+                    finnEventuellAvventUtbetaling(behandlingId, vedtakstidspunkt, tilkjentYtelse.finnHelePerioden())
             } else {
                 null
             }
