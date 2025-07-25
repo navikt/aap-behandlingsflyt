@@ -19,16 +19,6 @@ class AnsattInfoService {
             return null
         }
     }
-
-    fun hentAnsattNavn(navIdent: String): String? {
-        try {
-            val ansattInfo = ansattInfoGateway.hentAnsattInfo(navIdent)
-            return ansattInfo.navn
-        } catch (e: Exception) {
-            logger.warn("Kunne ikke hente ansattnavn. Fortsetter uten.", e)
-            return null
-        }
-    }
     
     fun hentAnsattEnhet(navIdent: String): String? {
         return try {
