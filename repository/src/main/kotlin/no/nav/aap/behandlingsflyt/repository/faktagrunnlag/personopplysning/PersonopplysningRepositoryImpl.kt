@@ -47,6 +47,27 @@ class PersonopplysningRepositoryImpl(
         }
     }
 
+    override fun hentBrukerPersonOpplysningHvisEksisterer(behandlingId: BehandlingId): Personopplysning? {
+        return connection.queryFirstOrNull(
+            """
+            SELECT g.bruker_personopplysning_id, g.personopplysninger_id
+            FROM PERSONOPPLYSNING_GRUNNLAG g
+            WHERE g.AKTIV AND g.BEHANDLING_ID = ?
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper { row ->
+                val brukerPersonopplysningId = row.getLongOrNull("bruker_personopplysning_id")
+                if (brukerPersonopplysningId == null) {
+                    return@setRowMapper null
+                }
+                hentBrukerPersonopplysninger(brukerPersonopplysningId)
+            }
+        }
+    }
+
     private fun mapGrunnlag(row: Row): PersonopplysningGrunnlag? {
         val brukerPersonopplysningId = row.getLongOrNull("bruker_personopplysning_id")
         if (brukerPersonopplysningId == null) {
@@ -77,7 +98,8 @@ class PersonopplysningRepositoryImpl(
                     RelatertPersonopplysning(
                         person = personRepository.hent(it.getLong("person_id")),
                         fødselsdato = Fødselsdato(it.getLocalDate("FODSELSDATO")),
-                        dødsdato = it.getLocalDateOrNull("dodsdato")?.let(::Dødsdato))
+                        dødsdato = it.getLocalDateOrNull("dodsdato")?.let(::Dødsdato)
+                    )
                 }
             })
     }
@@ -111,11 +133,13 @@ class PersonopplysningRepositoryImpl(
         val gyldigTilOgMedDeprecated = row.getLocalDateOrNull("GYLDIGTILOGMED")
         val landDeprecated = row.getString("LAND")
 
-        val landKoderId = row.getLongOrNull("LANDKODER_ID") ?: return listOf(Statsborgerskap(
-            land = landDeprecated,
-            gyldigFraOgMed = gyldigFraOgMedDeprecated,
-            gyldigTilOgMed = gyldigTilOgMedDeprecated,
-        ))
+        val landKoderId = row.getLongOrNull("LANDKODER_ID") ?: return listOf(
+            Statsborgerskap(
+                land = landDeprecated,
+                gyldigFraOgMed = gyldigFraOgMedDeprecated,
+                gyldigTilOgMed = gyldigTilOgMedDeprecated,
+            )
+        )
 
         return connection.queryList(
             """
@@ -171,7 +195,10 @@ class PersonopplysningRepositoryImpl(
         }
 
         val landkoderId = connection.executeReturnKey("INSERT INTO BRUKER_LAND_AGGREGAT DEFAULT VALUES")
-        connection.executeBatch("INSERT INTO BRUKER_LAND (LAND, GYLDIGFRAOGMED, GYLDIGTILOGMED, LANDKODER_ID) VALUES (?, ?, ?, ?)", personopplysning.statsborgerskap){
+        connection.executeBatch(
+            "INSERT INTO BRUKER_LAND (LAND, GYLDIGFRAOGMED, GYLDIGTILOGMED, LANDKODER_ID) VALUES (?, ?, ?, ?)",
+            personopplysning.statsborgerskap
+        ) {
             setParams {
                 setString(1, it.land)
                 setLocalDate(2, it.gyldigFraOgMed)
@@ -182,7 +209,8 @@ class PersonopplysningRepositoryImpl(
 
         var utenlandsAdresserId: Long? = null
         if (!personopplysning.utenlandsAddresser.isNullOrEmpty()) {
-            utenlandsAdresserId = connection.executeReturnKey("INSERT INTO BRUKER_UTENLANDSADRESSER_AGGREGAT DEFAULT VALUES")
+            utenlandsAdresserId =
+                connection.executeReturnKey("INSERT INTO BRUKER_UTENLANDSADRESSER_AGGREGAT DEFAULT VALUES")
             connection.executeBatch(
                 """
                     INSERT INTO BRUKER_UTENLANDSADRESSE (UTENLANDSADRESSER_ID, ADRESSENAVN, POSTKODE, BYSTED, LANDKODE, GYLDIGFRAOGMED, GYLDIGTILOGMED, ADRESSE_TYPE) 
@@ -290,7 +318,8 @@ class PersonopplysningRepositoryImpl(
         val personopplysningerIds = getPersonOpplysningerIds(behandlingId)
         val utenlandsAdresserIds = getUtenlandsAdresserIds(brukerPersonopplysningIds)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from personopplysning_grunnlag where behandling_id = ?; 
             delete from bruker_utenlandsadresse where utenlandsadresser_id = ANY(?::bigint[]);
             delete from bruker_utenlandsadresser_aggregat where id = ANY(?::bigint[]);
@@ -298,7 +327,8 @@ class PersonopplysningRepositoryImpl(
             delete from personopplysninger where id = ANY(?::bigint[]);
            
              delete from bruker_personopplysning where id = ANY(?::bigint[]);
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, utenlandsAdresserIds)

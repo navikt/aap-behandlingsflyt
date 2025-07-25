@@ -60,14 +60,15 @@ class VurderAlderSteg private constructor(
     }
 
     private fun vurderVilkår(kontekst: FlytKontekstMedPerioder) {
-        val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?: throw IllegalStateException("Forventet å finne personopplysninger")
+        val brukerPersonopplysning =
+            personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)
+                ?: throw IllegalStateException("Forventet å finne personopplysninger")
 
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val aldersgrunnlag =
             Aldersgrunnlag(
                 kontekst.rettighetsperiode,
-                personopplysningGrunnlag.brukerPersonopplysning.fødselsdato
+                brukerPersonopplysning.fødselsdato
             )
         Aldersvilkåret(vilkårsresultat).vurder(aldersgrunnlag)
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
