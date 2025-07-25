@@ -15,13 +15,23 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
-import java.util.UUID
+import java.util.*
 
 internal class FormkravRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+    companion object {
+        private val dataSource = InitTestDatabase.freshDatabase()
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        @AfterAll
+        @JvmStatic
+        fun afterall() {
+            InitTestDatabase.closerFor(dataSource)
+        }
+    }
 
     @Test
     fun `Lagrer og henter formkrav uten varsel`() {
@@ -99,9 +109,5 @@ internal class FormkravRepositoryImplTest {
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident(), periode)
-    }
-
-    private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 }

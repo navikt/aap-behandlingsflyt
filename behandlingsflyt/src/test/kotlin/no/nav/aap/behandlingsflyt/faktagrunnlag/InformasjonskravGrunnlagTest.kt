@@ -53,6 +53,7 @@ import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -62,6 +63,13 @@ class InformasjonskravGrunnlagTest {
 
     companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        private val dataSource = InitTestDatabase.freshDatabase()
+
+        @AfterAll
+        @JvmStatic
+        fun afterAll() {
+            InitTestDatabase.closerFor(dataSource)
+        }
     }
 
     private val repositoryRegistry =
@@ -97,14 +105,13 @@ class InformasjonskravGrunnlagTest {
             .register<FakeUnleash>()
     }
 
-    private val dataSource = InitTestDatabase.freshDatabase()
-
     @Test
     fun `Yrkesskadedata er oppdatert`() {
         dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
+                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection)
+            )
 
             FakePersoner.leggTil(
                 TestPerson(
@@ -137,7 +144,8 @@ class InformasjonskravGrunnlagTest {
         dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
+                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection)
+            )
 
             FakePersoner.leggTil(
                 TestPerson(
@@ -163,7 +171,8 @@ class InformasjonskravGrunnlagTest {
         dataSource.transaction { connection ->
             val (_, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
+                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection)
+            )
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
                 listOf(StegType.VURDER_YRKESSKADE to YrkesskadeService),
@@ -175,11 +184,12 @@ class InformasjonskravGrunnlagTest {
     }
 
     @Test
-    fun LovvalgMedlemskapErOppdatert() {
+    fun `Lovvalg og medlemskap er oppdatert`() {
         dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
+                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection)
+            )
 
             FakePersoner.leggTil(
                 TestPerson(
@@ -211,7 +221,10 @@ class InformasjonskravGrunnlagTest {
     fun `Førstegangsbehandling medfører henting av barn fra registeret`() {
         dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection, VurderingType.FØRSTEGANGSBEHANDLING)
-            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
+                InformasjonskravRepositoryImpl(connection),
+                repositoryRegistry.provider(connection)
+            )
             val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnService)
 
             leggTilBarnPåPerson(ident)
@@ -231,8 +244,15 @@ class InformasjonskravGrunnlagTest {
     @Test
     fun `Revurdering med årsak barnetillegg medfører ny henting av barn fra registeret`() {
         dataSource.transaction { connection ->
-            val (ident, kontekst) = klargjør(connection, VurderingType.REVURDERING, setOf(ÅrsakTilBehandling.BARNETILLEGG))
-            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
+            val (ident, kontekst) = klargjør(
+                connection,
+                VurderingType.REVURDERING,
+                setOf(ÅrsakTilBehandling.BARNETILLEGG)
+            )
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
+                InformasjonskravRepositoryImpl(connection),
+                repositoryRegistry.provider(connection)
+            )
             val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnService)
 
             leggTilBarnPåPerson(ident)
@@ -252,8 +272,15 @@ class InformasjonskravGrunnlagTest {
     @Test
     fun `Revurdering med årsak annen enn barnetillegg medfører ingen oppdatering av barn fra registeret`() {
         dataSource.transaction { connection ->
-            val (ident, kontekst) = klargjør(connection, VurderingType.REVURDERING, setOf(ÅrsakTilBehandling.REVURDER_MEDLEMSKAP))
-            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection))
+            val (ident, kontekst) = klargjør(
+                connection,
+                VurderingType.REVURDERING,
+                setOf(ÅrsakTilBehandling.REVURDER_MEDLEMSKAP)
+            )
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
+                InformasjonskravRepositoryImpl(connection),
+                repositoryRegistry.provider(connection)
+            )
             val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnService)
 
             leggTilBarnPåPerson(ident)
@@ -278,14 +305,15 @@ class InformasjonskravGrunnlagTest {
         ).finnEllerOpprett(ident, periode)
         val behandling = finnEllerOpprettBehandling(connection, sak)
         val personopplysningRepository = PersonopplysningRepositoryImpl(
-            connection,
-            PersonRepositoryImpl(connection)
+            connection, PersonRepositoryImpl(connection),
         )
         personopplysningRepository.lagre(
             behandling.id,
-            Personopplysning(Fødselsdato(LocalDate.now().minusYears(20)), status = PersonStatus.bosatt, statsborgerskap = listOf(
-                Statsborgerskap("NOR")
-            ))
+            Personopplysning(
+                Fødselsdato(LocalDate.now().minusYears(20)), status = PersonStatus.bosatt, statsborgerskap = listOf(
+                    Statsborgerskap("NOR")
+                )
+            )
         )
 
         val flytKontekst = behandling.flytKontekst()

@@ -15,12 +15,24 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 
 class TjenestepensjonRefusjonskravVurderingRepositoryImplTest {
+
+    companion object {
+        val dataSource = InitTestDatabase.freshDatabase()
+
+        @AfterAll
+        @JvmStatic
+        fun afterall() {
+            InitTestDatabase.closerFor(dataSource)
+        }
+    }
+
     @Test
     fun `lagre, hente ut igjen, slette`() {
-        val dataSource = InitTestDatabase.freshDatabase()
+
 
         val sak = dataSource.transaction { sak(it) }
 
