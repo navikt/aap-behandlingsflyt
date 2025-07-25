@@ -165,6 +165,7 @@ open class AbstraktFlytOrkestratorTest {
                 .register<YrkesskadeRegisterGatewayImpl>()
                 .register<MeldekortGatewayImpl>()
                 .register<TjenestePensjonGatewayImpl>()
+                .register<InntektkomponentenGatewayImpl>()
                 .register<FakeUnleash>()
                 .register<SamGatewayImpl>()
                 .register<NomInfoGateway>()

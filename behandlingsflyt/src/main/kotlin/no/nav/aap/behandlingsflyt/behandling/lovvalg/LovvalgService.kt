@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
 import java.time.YearMonth
