@@ -83,8 +83,9 @@ class VurderLovvalgSteg private constructor(
 
         if (kontekst.harNoeTilBehandling()) {
             val rettighetsperiode = kontekst.rettighetsperiode
-            val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)
-                ?: throw IllegalStateException("Forventet å finne personopplysninger")
+            val brukerPersonopplysning =
+                personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)
+                    ?: throw IllegalStateException("Forventet å finne personopplysninger")
             val medlemskapArbeidInntektGrunnlag =
                 medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
             val oppgittUtenlandsOppholdGrunnlag =
@@ -96,7 +97,7 @@ class VurderLovvalgSteg private constructor(
             Medlemskapvilkåret(vilkårsresultat, rettighetsperiode).vurder(
                 MedlemskapLovvalgGrunnlag(
                     medlemskapArbeidInntektGrunnlag,
-                    personopplysningGrunnlag.brukerPersonopplysning,
+                    brukerPersonopplysning,
                     oppgittUtenlandsOppholdGrunnlag
                 )
             )

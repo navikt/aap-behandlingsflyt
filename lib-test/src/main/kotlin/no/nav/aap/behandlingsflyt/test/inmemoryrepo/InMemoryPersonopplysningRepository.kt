@@ -49,6 +49,10 @@ object InMemoryPersonopplysningRepository : PersonopplysningRepository {
         }
     }
 
+    override fun hentBrukerPersonOpplysningHvisEksisterer(behandlingId: BehandlingId): Personopplysning? {
+        TODO("Not yet implemented")
+    }
+
     override fun lagre(
         behandlingId: BehandlingId,
         personopplysning: Personopplysning

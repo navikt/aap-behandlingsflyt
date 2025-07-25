@@ -39,9 +39,10 @@ class PersonopplysningService private constructor(
         val sak = sakService.hent(kontekst.sakId)
         val personopplysninger =
             personopplysningGateway.innhent(sak.person) ?: error("fødselsdato skal alltid eksistere i PDL")
-        val eksisterendeData = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val eksisterendeData =
+            personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)
 
-        if (personopplysninger != eksisterendeData?.brukerPersonopplysning) {
+        if (personopplysninger != eksisterendeData) {
             personopplysningRepository.lagre(kontekst.behandlingId, personopplysninger)
             return ENDRET
         }

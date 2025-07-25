@@ -42,8 +42,9 @@ class AvklarOverstyrtLovvalgMedlemskapLøser(
 
         val sak = sakRepository.hent(kontekst.kontekst.sakId)
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId())
-        val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId())
-            ?: throw IllegalStateException("Forventet å finne personopplysninger")
+        val brukerPersonopplysning =
+            personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId())
+                ?: throw IllegalStateException("Forventet å finne personopplysninger")
         val medlemskapArbeidInntektGrunnlag =
             medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId())
         val oppgittUtenlandsOppholdGrunnlag =
@@ -52,7 +53,7 @@ class AvklarOverstyrtLovvalgMedlemskapLøser(
         Medlemskapvilkåret(vilkårsresultat, sak.rettighetsperiode).vurderOverstyrt(
             MedlemskapLovvalgGrunnlag(
                 medlemskapArbeidInntektGrunnlag,
-                personopplysningGrunnlag.brukerPersonopplysning,
+                brukerPersonopplysning,
                 oppgittUtenlandsOppholdGrunnlag
             )
         )
