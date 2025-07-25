@@ -38,11 +38,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.Meld
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.SumPi
-import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeModell
 import no.nav.aap.behandlingsflyt.integrasjon.ident.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
+import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomData
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomDataRessurs
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgEnhet
@@ -81,6 +80,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.ufore.UførePeriode
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRequest
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRespons
 import no.nav.aap.behandlingsflyt.integrasjon.util.GraphQLResponse
+import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeModell
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRequest
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
