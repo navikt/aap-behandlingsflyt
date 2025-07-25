@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.søknad
 
-import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant
 

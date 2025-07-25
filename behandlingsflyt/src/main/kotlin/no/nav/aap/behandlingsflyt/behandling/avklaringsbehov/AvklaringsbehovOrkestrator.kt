@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
-import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -27,7 +27,7 @@ class AvklaringsbehovOrkestrator(
     private val behandlingRepository: BehandlingRepository,
     private val prosesserBehandling: ProsesserBehandlingService,
 ) {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         repositoryProvider = repositoryProvider,
         behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider),
         flytOrkestrator = FlytOrkestrator(repositoryProvider),
