@@ -8,7 +8,7 @@ plugins {
 
 dependencies {
     api("com.fasterxml.jackson.core:jackson-annotations:2.19.2")
-    api("no.nav:ktor-openapi-generator:1.0.118")
+    api("no.nav:ktor-openapi-generator:1.0.119")
     compileOnly(libs.tilgangKontrakt)
 
 
