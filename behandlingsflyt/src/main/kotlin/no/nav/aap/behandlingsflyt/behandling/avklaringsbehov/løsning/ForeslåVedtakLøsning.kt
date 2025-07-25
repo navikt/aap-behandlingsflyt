@@ -11,7 +11,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonTypeName(value = FORESLÅ_VEDTAK_KODE)
 class ForeslåVedtakLøsning(
-    @JsonProperty(
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = FORESLÅ_VEDTAK_KODE

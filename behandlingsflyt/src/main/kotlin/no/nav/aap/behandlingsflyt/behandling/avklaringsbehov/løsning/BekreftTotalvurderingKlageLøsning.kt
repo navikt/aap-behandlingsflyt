@@ -11,7 +11,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonTypeName(value = BEKREFT_TOTALVURDERING_KLAGE)
 class BekreftTotalvurderingKlageLøsning(
-    @JsonProperty(
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = BEKREFT_TOTALVURDERING_KLAGE

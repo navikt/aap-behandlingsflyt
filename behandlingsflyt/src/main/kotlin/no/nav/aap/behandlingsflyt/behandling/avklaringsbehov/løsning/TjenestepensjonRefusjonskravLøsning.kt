@@ -14,8 +14,11 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = SAMORDNING_REFUSJONS_KRAV)
 class TjenestepensjonRefusjonskravLøsning (
-    @JsonProperty("samordningRefusjonskrav", required = true) val samordningRefusjonskrav: TjenestepensjonRefusjonskravVurdering,
-    @JsonProperty(
+    @param:JsonProperty(
+        "samordningRefusjonskrav",
+        required = true
+    ) val samordningRefusjonskrav: TjenestepensjonRefusjonskravVurdering,
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = SAMORDNING_REFUSJONS_KRAV

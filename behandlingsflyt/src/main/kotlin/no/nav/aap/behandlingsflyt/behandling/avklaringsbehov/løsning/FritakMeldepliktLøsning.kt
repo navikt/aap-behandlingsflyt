@@ -14,8 +14,8 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = FRITAK_MELDEPLIKT_KODE)
 class FritakMeldepliktLøsning(
-    @JsonProperty("fritaksvurderinger", required = true) val fritaksvurderinger: List<FritaksvurderingDto>,
-    @JsonProperty(
+    @param:JsonProperty("fritaksvurderinger", required = true) val fritaksvurderinger: List<FritaksvurderingDto>,
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = FRITAK_MELDEPLIKT_KODE

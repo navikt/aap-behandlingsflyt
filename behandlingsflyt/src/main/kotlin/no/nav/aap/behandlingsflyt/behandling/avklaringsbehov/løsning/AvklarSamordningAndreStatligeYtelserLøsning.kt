@@ -14,8 +14,11 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_SAMORDNING_ANDRE_STATLIGE_YTELSER_KODE)
 class AvklarSamordningAndreStatligeYtelserLøsning(
-    @JsonProperty("samordningAndreStatligeYtelserVurdering", required = true) val samordningAndreStatligeYtelserVurdering: SamordningAndreStatligeYtelserVurderingDto,
-    @JsonProperty(
+    @param:JsonProperty(
+        "samordningAndreStatligeYtelserVurdering",
+        required = true
+    ) val samordningAndreStatligeYtelserVurdering: SamordningAndreStatligeYtelserVurderingDto,
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = AVKLAR_SAMORDNING_ANDRE_STATLIGE_YTELSER_KODE

@@ -14,8 +14,15 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_FORUTGÅENDE_MEDLEMSKAP_KODE)
 class AvklarForutgåendeMedlemskapLøsning(
-    @JsonProperty("manuellVurderingForForutgåendeMedlemskap", required = true) val manuellVurderingForForutgåendeMedlemskap: ManuellVurderingForForutgåendeMedlemskapDto,
-    @JsonProperty("behovstype", required = true, defaultValue = AVKLAR_FORUTGÅENDE_MEDLEMSKAP_KODE) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5020`
+    @param:JsonProperty(
+        "manuellVurderingForForutgåendeMedlemskap",
+        required = true
+    ) val manuellVurderingForForutgåendeMedlemskap: ManuellVurderingForForutgåendeMedlemskapDto,
+    @param:JsonProperty(
+        "behovstype",
+        required = true,
+        defaultValue = AVKLAR_FORUTGÅENDE_MEDLEMSKAP_KODE
+    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5020`
 ) : AvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
         return AvklarForutgåendeMedlemskapLøser(repositoryProvider).løs(kontekst, this)

@@ -12,9 +12,9 @@ import java.util.*
 
 @JsonTypeName(value = SKRIV_FORHÅNDSVARSEL_AKTIVITETSPLIKT_BREV_KODE)
 class SkrivForhåndsvarselBruddAktivitetspliktBrevLøsning(
-    @JsonProperty("brevbestillingReferanse", required = true) val brevbestillingReferanse: UUID,
-    @JsonProperty("handling", required = true) val handling: SkrivBrevAvklaringsbehovLøsning.Handling,
-    @JsonProperty("behovstype", required = true, defaultValue = SKRIV_FORHÅNDSVARSEL_AKTIVITETSPLIKT_BREV_KODE)
+    @param:JsonProperty("brevbestillingReferanse", required = true) val brevbestillingReferanse: UUID,
+    @param:JsonProperty("handling", required = true) val handling: SkrivBrevAvklaringsbehovLøsning.Handling,
+    @param:JsonProperty("behovstype", required = true, defaultValue = SKRIV_FORHÅNDSVARSEL_AKTIVITETSPLIKT_BREV_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5052`
 ) : AvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {

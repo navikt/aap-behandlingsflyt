@@ -14,9 +14,9 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = FASTSETT_PÅKLAGET_BEHANDLING_KODE)
 class FastsettPåklagetBehandlingLøsning(
-    @JsonProperty("påklagetBehandlingVurdering", required = true)
+    @param:JsonProperty("påklagetBehandlingVurdering", required = true)
     val påklagetBehandlingVurdering: PåklagetBehandlingVurderingLøsningDto,
-    @JsonProperty(
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = FASTSETT_PÅKLAGET_BEHANDLING_KODE

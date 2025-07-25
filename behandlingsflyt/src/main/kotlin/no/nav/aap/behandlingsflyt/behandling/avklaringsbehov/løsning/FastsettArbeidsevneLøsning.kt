@@ -14,8 +14,15 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = FASTSETT_ARBEIDSEVNE_KODE)
 class FastsettArbeidsevneLøsning(
-    @JsonProperty("arbeidsevneVurderinger", required = true) val arbeidsevneVurderinger: List<FastsettArbeidsevneDto>,
-    @JsonProperty("behovstype", required = true, defaultValue = FASTSETT_ARBEIDSEVNE_KODE) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5004`
+    @param:JsonProperty(
+        "arbeidsevneVurderinger",
+        required = true
+    ) val arbeidsevneVurderinger: List<FastsettArbeidsevneDto>,
+    @param:JsonProperty(
+        "behovstype",
+        required = true,
+        defaultValue = FASTSETT_ARBEIDSEVNE_KODE
+    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5004`
 ) : AvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
         return FastsettArbeidsevneLøser(repositoryProvider).løs(kontekst, this)

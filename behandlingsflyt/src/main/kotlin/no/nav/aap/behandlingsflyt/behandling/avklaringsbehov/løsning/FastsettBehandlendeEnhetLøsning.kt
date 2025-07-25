@@ -14,9 +14,9 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = FASTSETT_BEHANDLENDE_ENHET_KODE)
 class FastsettBehandlendeEnhetLøsning(
-    @JsonProperty("behandlendeEnhetVurdering", required = true)
+    @param:JsonProperty("behandlendeEnhetVurdering", required = true)
     val behandlendeEnhetVurdering: BehandlendeEnhetLøsningDto,
-    @JsonProperty(
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = FASTSETT_BEHANDLENDE_ENHET_KODE

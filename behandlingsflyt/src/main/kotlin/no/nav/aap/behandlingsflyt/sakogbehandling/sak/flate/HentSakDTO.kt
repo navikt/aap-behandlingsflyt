@@ -2,4 +2,4 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 
-data class HentSakDTO(@PathParam("saksnummer") val saksnummer: String)
+data class HentSakDTO(@param:PathParam("saksnummer") val saksnummer: String)

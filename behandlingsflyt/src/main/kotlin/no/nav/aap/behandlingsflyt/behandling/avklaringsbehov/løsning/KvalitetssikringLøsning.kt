@@ -12,8 +12,8 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonTypeName(value = KVALITETSSIKRING_KODE)
 class KvalitetssikringLøsning(
-    @JsonProperty("vurderinger", required = true) val vurderinger: List<TotrinnsVurdering>,
-    @JsonProperty(
+    @param:JsonProperty("vurderinger", required = true) val vurderinger: List<TotrinnsVurdering>,
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = KVALITETSSIKRING_KODE

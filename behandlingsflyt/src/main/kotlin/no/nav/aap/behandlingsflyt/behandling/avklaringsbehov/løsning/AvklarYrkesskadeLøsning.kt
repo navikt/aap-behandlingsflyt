@@ -14,8 +14,8 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_YRKESSKADE_KODE)
 class AvklarYrkesskadeLøsning(
-    @JsonProperty("yrkesskadesvurdering", required = true) val yrkesskadesvurdering: YrkesskadevurderingDto,
-    @JsonProperty(
+    @param:JsonProperty("yrkesskadesvurdering", required = true) val yrkesskadesvurdering: YrkesskadevurderingDto,
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = AVKLAR_YRKESSKADE_KODE

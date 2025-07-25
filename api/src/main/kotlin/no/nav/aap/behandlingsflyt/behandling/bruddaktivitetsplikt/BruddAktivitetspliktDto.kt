@@ -92,7 +92,7 @@ data class Effektuer11_7Dto(
     val gjeldendeBrudd: List<BruddAktivitetspliktHendelseDto>,
 )
 
-data class SaksnummerParameter(@PathParam("saksnummer") val saksnummer: String)
+data class SaksnummerParameter(@param:PathParam("saksnummer") val saksnummer: String)
 
 data class BruddAktivitetspliktHendelseDto(
     val brudd: BruddType,
