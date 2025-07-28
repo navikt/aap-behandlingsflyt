@@ -28,7 +28,6 @@ class PerioderTilVurderingServiceTest {
             Person(
                 identifikator = UUID.randomUUID(),
                 identer = listOf(),
-                id = 0
             ), periode
         )
 

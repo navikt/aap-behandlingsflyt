@@ -459,7 +459,6 @@ class StatistikkJobbUtførerTest {
 
         val sak = InMemorySakRepository.finnEllerOpprett(
             Person(
-                id = 1,
                 identifikator = UUID.randomUUID(),
                 identer = listOf(
                     Ident(

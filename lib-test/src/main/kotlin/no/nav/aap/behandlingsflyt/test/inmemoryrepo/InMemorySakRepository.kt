@@ -60,7 +60,7 @@ object InMemorySakRepository : SakRepository {
         }
     }
 
-    override fun finnPersonId(sakId: SakId): Long {
+    override fun finnPersonId(sakId: SakId): PersonId {
         TODO("Not yet implemented")
     }
 

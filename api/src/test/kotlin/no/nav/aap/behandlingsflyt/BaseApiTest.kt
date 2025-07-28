@@ -43,7 +43,6 @@ open class BaseApiTest : BeforeAllCallback {
 
     fun nySak() = InMemorySakRepository.finnEllerOpprett(
         person = Person(
-            id = 0,
             identifikator = UUID.randomUUID(),
             identer = listOf(Ident("0".repeat(11)))
         ),

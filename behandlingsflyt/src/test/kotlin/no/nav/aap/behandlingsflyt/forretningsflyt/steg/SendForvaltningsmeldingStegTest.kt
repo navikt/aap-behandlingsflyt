@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -120,7 +121,7 @@ class SendForvaltningsmeldingStegTest {
     private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
 
     private fun opprettSakOgbehandling(typeBehandling: TypeBehandling): Behandling {
-        val person = Person(1, UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
+        val person = Person(PersonId(1), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
         val sak = InMemorySakRepository.finnEllerOpprett(person, periode)
         return InMemoryBehandlingRepository.opprettBehandling(
             sak.id,

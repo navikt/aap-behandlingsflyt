@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -47,7 +48,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         ) {
             setParams {
                 setString(1, saksnummer.toString())
-                setLong(2, person.id)
+                setLong(2, person.id.id)
                 setPeriode(3, periode)
                 setEnumName(4, Status.OPPRETTET)
             }
@@ -91,7 +92,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
                 Sak(
                     id = SakId(row.getLong("id")),
                     person = Person(
-                        id = row.getLong("person_id"),
+                        id = row.getLong("person_id").let(::PersonId),
                         identifikator = row.getUUID("person_referanse"),
                         identer = DefaultJsonMapper.fromJson(row.getString("identer"))
                     ),
@@ -111,7 +112,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
                     "WHERE person_id = ?"
         ) {
             setParams {
-                setLong(1, person.id)
+                setLong(1, person.id.id)
             }
             setRowMapper { row ->
                 mapSak(row)
@@ -124,7 +125,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
             """SELECT * FROM SAK WHERE person_id = ? AND rettighetsperiode && ?::daterange"""
         ) {
             setParams {
-                setLong(1, person.id)
+                setLong(1, person.id.id)
                 setPeriode(2, periode)
             }
             setRowMapper { row ->
@@ -159,7 +160,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         }
     }
 
-    override fun finnPersonId(sakId: SakId): Long {
+    override fun finnPersonId(sakId: SakId): PersonId {
         return connection.queryFirst(
             """SELECT person_id FROM SAK WHERE id = ?"""
         ) {
@@ -167,7 +168,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
                 setLong(1, sakId.toLong())
             }
             setRowMapper { row ->
-                row.getLong("person_id")
+                row.getLong("person_id").let(::PersonId)
             }
         }
     }
@@ -178,7 +179,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
 
     private fun mapSak(row: Row) = Sak(
         id = SakId(row.getLong("id")),
-        person = personRepository.hent(row.getLong("person_id")),
+        person = personRepository.hent(row.getLong("person_id").let(::PersonId)),
         rettighetsperiode = row.getPeriode("rettighetsperiode"),
         saksnummer = Saksnummer(row.getString("saksnummer")),
         status = row.getEnum("status"),

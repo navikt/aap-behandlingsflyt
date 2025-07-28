@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -91,7 +92,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             id = sakId,
             saksnummer = Saksnummer("BLABLA"),
             person = Person(
-                id = 456L,
+                id = 456L.let(::PersonId),
                 identifikator = UUID.randomUUID(),
                 identer = listOf()
             ),
