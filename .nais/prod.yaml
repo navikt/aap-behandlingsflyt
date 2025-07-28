@@ -228,3 +228,7 @@ spec:
       value: http://kabal-api.klage
     - name: INTEGRASJON_KABAL_SCOPE
       value: api://prod-gcp.klage.kabal-api/.default
+    - name: INTEGRASJON_SAM_SCOPE
+      value: api://prod-fss.pensjonsamhandling.sam/.default
+    - name: INTEGRASJON_SAM_URL
+      value: https://sam.prod-fss-pub.nais.io
