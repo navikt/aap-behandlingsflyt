@@ -31,7 +31,8 @@ data class OpprettTestcaseDTO(
 
 data class TestBarn(
     @param:JsonProperty(value = "fodselsdato", required = true) val fodselsdato: LocalDate,
-    val harRelasjon: Boolean = true
+    val harRelasjon: Boolean = true,
+    val skalFinnesIPDL: Boolean = true,
 )
 
 data class InntektPerÅrDto(val år: Int, val beløp: Beløp) {

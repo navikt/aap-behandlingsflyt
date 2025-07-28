@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
@@ -43,6 +44,7 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
+import org.slf4j.LoggerFactory
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import java.time.Duration
@@ -51,6 +53,8 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
+
+private val log = LoggerFactory.getLogger("TestApp")
 
 // Kjøres opp for å få logback i console uten json
 fun main() {
@@ -127,25 +131,36 @@ fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): S�
     val harYrkesskade = if (dto.yrkesskade) "JA" else "NEI"
 
     val oppgitteBarn = if (urelaterteBarn.isNotEmpty()) {
-        OppgitteBarn(identer = urelaterteBarn
-            .flatMap { it.identer.filter { it.aktivIdent } }
-            .map { Ident(it.identifikator) }.toSet())
+        OppgitteBarn(
+            barn = urelaterteBarn
+                .map {
+                    ManueltOppgittBarn(
+                        ident = it.identer.filter { it.aktivIdent }.map { Ident(it.identifikator) }.firstOrNull(),
+                        fødselsdato = it.fødselsdato.toLocalDate(),
+                        navn = it.navn.fornavn + " " + it.navn.etternavn,
+                        relasjon = ManueltOppgittBarn.Relasjon.FORELDER
+                    )
+                },
+            identer = setOf()
+        )
     } else {
+        log.info("Oppretter ikke oppgitte barn siden det ikke er noen urelatert barn i testcase")
         null
     }
     val harMedlemskap = if (dto.medlemskap) "JA" else "NEI"
     return SøknadV0(
         student = SøknadStudentDto(erStudent), harYrkesskade, oppgitteBarn,
-        medlemskap = SøknadMedlemskapDto(harMedlemskap, null, null, null, listOf())
+        medlemskap = SøknadMedlemskapDto(harMedlemskap, null, null, null, listOf()),
     )
 }
 
 private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak {
     val ident = genererIdent(dto.fødselsdato)
     val barn = dto.barn.filter { it.harRelasjon }.map { genererBarn(it) }
-    val urelaterteBarn = dto.barn.filter { !it.harRelasjon }.map { genererBarn(it) }
+    val urelaterteBarnIPDL = dto.barn.filter { !it.harRelasjon && it.skalFinnesIPDL }.map { genererBarn(it) }
+    val urelaterteBarnIkkeIPDL = dto.barn.filter { !it.harRelasjon && !it.skalFinnesIPDL }.map { genererBarn(it) }
     barn.forEach { FakePersoner.leggTil(it) }
-    urelaterteBarn.forEach { FakePersoner.leggTil(it) }
+    urelaterteBarnIPDL.forEach { FakePersoner.leggTil(it) }
     FakePersoner.leggTil(
         TestPerson(
             identer = setOf(ident),
@@ -201,13 +216,15 @@ private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak
 
         val flytJobbRepository = FlytJobbRepository(connection)
 
+        val melding = mapTilSøknad(dto, urelaterteBarnIkkeIPDL + urelaterteBarnIPDL)
+
         flytJobbRepository.leggTil(
             HendelseMottattHåndteringJobbUtfører.nyJobb(
                 sakId = sak.id,
                 dokumentReferanse = InnsendingReferanse(JournalpostId("" + System.currentTimeMillis())),
                 brevkategori = InnsendingType.SØKNAD,
                 kanal = Kanal.DIGITAL,
-                melding = mapTilSøknad(dto, urelaterteBarn),
+                melding = melding,
                 mottattTidspunkt = dto.søknadsdato?.atStartOfDay() ?: LocalDateTime.now(),
             )
         )
