@@ -374,6 +374,7 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = false
     ),
+
     @Deprecated("Effektuer-steget er fjernet. Kun bevart for statistikk i DEV")
     EFFEKTUER_AVVIST_PÅ_FORMKRAV(
         kode = AvklaringsbehovKode.`6004`,
@@ -415,7 +416,28 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`6008`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.SVAR_FRA_ANDREINSTANS,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+    ),
+
+    // Oppfølgingsbehandling
+    AVKLAR_OPPFØLGINGSBEHOV_LOKALKONTOR(
+        kode = AvklaringsbehovKode.`8001`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.AVKLAR_OPPFØLGING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
+    ),
+    AVKLAR_OPPFØLGINGSBEHOV_NAY(
+        kode = AvklaringsbehovKode.`8002`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.AVKLAR_OPPFØLGING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+    ),
+    VENT_PÅ_OPPFØLGING(
+        kode = AvklaringsbehovKode.`8003`,
+        type = BehovType.VENTEPUNKT,
+        løsesISteg = StegType.START_OPPFØLGINGSBEHANDLING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.SAKSBEHANDLER_NASJONAL),
+        defaultFrist = Period.ofWeeks(4),
     );
 
     public companion object {
@@ -499,7 +521,7 @@ public enum class Definisjon(
     private fun validerBrevpunkt() {
         if (this == SKRIV_BREV && !this.løsesISteg.tekniskSteg) {
             throw IllegalArgumentException(
-                "Brevbeho må være knyttet til et teknisk steg"
+                "Brevbehov må være knyttet til et teknisk steg"
             )
         }
     }
@@ -507,7 +529,7 @@ public enum class Definisjon(
     private fun validerBrevVentepunkt() {
         if (this == BESTILL_BREV && !this.løsesISteg.tekniskSteg) {
             throw IllegalArgumentException(
-                "Brev ventebehov må være knyttet til et teknisk steg"
+                "Brev-ventebehov må være knyttet til et teknisk steg"
             )
         }
     }

@@ -12,8 +12,9 @@ public enum class TypeBehandling(
     Revurdering("ae0028"),
     Tilbakekreving(""),
     Klage("ae0058"),
-    SvarFraAndreinstans("svar-fra-andreinstans"); // TODO: Undersøk om vi bør opprette kode i kodeverk
-    
+    SvarFraAndreinstans("svar-fra-andreinstans"),  // TODO: Undersøk om vi bør opprette kode i kodeverk
+    OppfølgingsBehandling("oppfølgingsbehandling");
+
     public fun identifikator(): String = identifikator
 
     public fun toLogString(): String = "${this.name}($identifikator)"
@@ -23,7 +24,7 @@ public enum class TypeBehandling(
             return entries.first { it.identifikator == identifikator }
         }
     }
-    
+
     public fun erYtelsesbehandling(): Boolean {
         return this == Førstegangsbehandling || this == Revurdering
     }

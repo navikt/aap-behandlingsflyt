@@ -115,6 +115,7 @@ class FlytKontekstMedPeriodeService(
             ÅrsakTilBehandling.MOTATT_KLAGE,
             ÅrsakTilBehandling.KLAGE_TRUKKET, ÅrsakTilBehandling.MOTTATT_KABAL_HENDELSE ->
                 IKKE_RELEVANT // TODO: Verifiser at dette er korrekt.
+            ÅrsakTilBehandling.OPPFØLGINGSOPPGAVE -> IKKE_RELEVANT
         }
     }
 }

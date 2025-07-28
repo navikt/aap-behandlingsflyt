@@ -12,5 +12,6 @@ data class BistandVurderingResponse(
     val skalVurdereAapIOvergangTilUføre: Boolean?,
     val skalVurdereAapIOvergangTilArbeid: Boolean?,
     val vurderingenGjelderFra: LocalDate?,
-    val vurdertAv: VurdertAvResponse
+    val vurdertAv: VurdertAvResponse,
+    val erGjeldende: Boolean?
 )

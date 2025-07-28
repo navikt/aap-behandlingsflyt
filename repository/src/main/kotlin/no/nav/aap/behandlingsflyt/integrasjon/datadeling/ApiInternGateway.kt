@@ -40,7 +40,7 @@ class ApiInternGatewayImpl() : ApiInternGateway {
     private val uri = URI.create(requiredConfigForKey("integrasjon.datadeling.url"))
 
     override fun sendPerioder(ident: String, perioder: List<Periode>) {
-        restClient.post<_, Unit>(
+        restClient.post(
             uri = uri.resolve("/api/insert/meldeperioder"),
             request = PostRequest(body = MeldekortPerioderDTO(ident, perioder)),
             mapper = { _, _ ->
@@ -99,6 +99,7 @@ class ApiInternGatewayImpl() : ApiInternGateway {
                                 tilkjentTom = tilkjentPeriode.periode.tom,
                                 dagsats = tilkjentPeriode.tilkjent.dagsats.verdi.toInt(),
                                 gradering = tilkjentPeriode.tilkjent.gradering.endeligGradering.prosentverdi(),
+                                samordningUføregradering = tilkjentPeriode.tilkjent.gradering.samordningUføregradering?.prosentverdi(),
                                 grunnlag = tilkjentPeriode.tilkjent.grunnlag.verdi,
                                 grunnlagsfaktor = tilkjentPeriode.tilkjent.grunnlagsfaktor.verdi(),
                                 grunnbeløp = tilkjentPeriode.tilkjent.grunnbeløp.verdi,

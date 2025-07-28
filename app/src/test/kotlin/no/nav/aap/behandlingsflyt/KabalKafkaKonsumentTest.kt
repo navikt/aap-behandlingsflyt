@@ -63,7 +63,7 @@ class KabalKafkaKonsumentTest {
                 repositoryRegistry = repositoryRegistry
             )
         val kafka = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.0.0"))
-            .withReuse(true)
+            .withReuse(true).withStartupTimeout(Duration.ofSeconds(60))
         private val util =
             TestUtil(dataSource, listOf(HendelseMottattHåndteringJobbUtfører.type))
 
@@ -120,7 +120,7 @@ class KabalKafkaKonsumentTest {
         assertThat(konsument.antallMeldinger).isEqualTo(1)
         konsument.lukk()
 
-        util.ventPåSvar(klagebehandling.id.id)
+        util.ventPåSvar(klagebehandling.sakId.id, klagebehandling.id.id)
         val svarFraAnderinstansBehandling = dataSource.transaction { connection ->
             val behandlinger = BehandlingRepositoryImpl(connection).hentAlleFor(
                 klagebehandling.sakId,

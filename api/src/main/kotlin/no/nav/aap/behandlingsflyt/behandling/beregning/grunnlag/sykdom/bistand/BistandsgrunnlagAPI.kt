@@ -16,26 +16,20 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
-import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.getGrunnlag
 import java.time.ZoneId
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/bistand") {
-            authorizedGet<BehandlingReferanse, BistandGrunnlagResponse>(
-                AuthorizationParamPathConfig(
-                    behandlingPathParam = BehandlingPathParam(
-                        "referanse"
-                    )
-                )
+            getGrunnlag<BehandlingReferanse, BistandGrunnlagResponse>(
+                behandlingPathParam = BehandlingPathParam("referanse"),
+                avklaringsbehovKode = Definisjon.AVKLAR_BISTANDSBEHOV.kode.toString()
             ) { req ->
                 val respons = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
@@ -63,22 +57,18 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource, repositoryReg
 
                     val sisteSykdomsvurdering = gjeldendeSykdomsvurderinger.maxBy { it.opprettet }
 
-                    val harTilgangTilÅSaksbehandle =
-                        GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                            req.referanse,
-                            Definisjon.AVKLAR_BISTANDSBEHOV,
-                            token()
-                        )
-
                     val behandlingsType = behandling.typeBehandling()
                     val sak = sakRepository.hent(behandling.sakId)
                     val erOppfylt11_5 = sisteSykdomsvurdering.erOppfylt(behandlingsType, sak.rettighetsperiode.fom)
 
                     BistandGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = vurdering?.tilResponse(),
                         gjeldendeVedtatteVurderinger = vedtatteBistandsvurderinger.map { it.tilResponse() },
-                        historiskeVurderinger = historiskeVurderinger.map { it.tilResponse() },
+                        historiskeVurderinger = historiskeVurderinger
+                            .mapIndexed { index, vurdering ->
+                                vurdering.tilResponse(erGjeldende = index == historiskeVurderinger.lastIndex)
+                            },
                         gjeldendeSykdsomsvurderinger = gjeldendeSykdomsvurderinger.map { it.tilResponse() },
                         harOppfylt11_5 = erOppfylt11_5
                     )
@@ -90,7 +80,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource, repositoryReg
     }
 }
 
-private fun BistandVurdering.tilResponse(): BistandVurderingResponse {
+private fun BistandVurdering.tilResponse(erGjeldende: Boolean? = false): BistandVurderingResponse {
     val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv)
     return BistandVurderingResponse(
         begrunnelse = begrunnelse,
@@ -107,7 +97,8 @@ private fun BistandVurdering.tilResponse(): BistandVurderingResponse {
                 ?: error("Mangler opprettet dato for bistandvurdering"),
             ansattnavn = navnOgEnhet?.navn,
             enhetsnavn = navnOgEnhet?.enhet,
-        )
+        ),
+        erGjeldende = erGjeldende
     )
 }
 
@@ -133,5 +124,6 @@ private fun Sykdomsvurdering.tilResponse(): SykdomsvurderingResponse {
             ansattnavn = navnOgEnhet?.navn,
             enhetsnavn = navnOgEnhet?.enhet,
         ),
+        erGjeldende = null
     )
 }

@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrke
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
@@ -21,6 +22,7 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
@@ -59,7 +61,10 @@ import no.nav.aap.behandlingsflyt.integrasjon.utbetaling.UtbetalingGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
@@ -69,6 +74,7 @@ import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -101,14 +107,16 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.testutil.TestUtil
 import no.nav.aap.verdityper.dokument.JournalpostId
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
+
 @Fakes
-abstract class AbstraktFlytOrkestratorTest {
+open class AbstraktFlytOrkestratorTest {
     companion object {
         @JvmStatic
         protected val dataSource = InitTestDatabase.freshDatabase()
@@ -161,7 +169,7 @@ abstract class AbstraktFlytOrkestratorTest {
         @AfterAll
         @JvmStatic
         internal fun afterAll() {
-            motor.stop()
+//            motor.stop()
         }
     }
 
@@ -209,6 +217,111 @@ abstract class AbstraktFlytOrkestratorTest {
     }
 
 
+    fun happyCaseFørstegangsbehandling(): Sak {
+        val fom = LocalDate.now().minusMonths(3)
+        val periode = Periode(fom, fom.plusYears(3))
+
+        // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
+        val person = TestPersoner.STANDARD_PERSON()
+        val ident = person.aktivIdent()
+
+        // Sender inn en søknad
+        var behandling = sendInnSøknad(ident, periode, TestSøknader.STANDARD_SØKNAD)
+
+        assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
+        behandling = behandling.medKontekst {
+            assertThat(åpneAvklaringsbehov).isNotEmpty()
+            assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+        }
+            .løsSykdom()
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    bistandsVurdering = BistandVurderingLøsningDto(
+                        begrunnelse = "Trenger hjelp fra nav",
+                        erBehovForAktivBehandling = true,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = null,
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null
+                    ),
+                )
+            ).løsAvklaringsBehov(
+                RefusjonkravLøsning(
+                    listOf(
+                        RefusjonkravVurderingDto(
+                            harKrav = true,
+                            fom = LocalDate.now(),
+                            tom = null,
+                            navKontor = "",
+                        )
+                    )
+                )
+            )
+            // Sender inn en søknad
+            .sendInnDokument(
+                DokumentMottattPersonHendelse(
+                    journalpost = JournalpostId("220"),
+                    mottattTidspunkt = LocalDateTime.now(),
+                    strukturertDokument = StrukturertDokument(
+                        MeldekortV0(
+                            harDuArbeidet = false,
+                            timerArbeidPerPeriode = listOf(
+                                ArbeidIPeriodeV0(
+                                    fraOgMedDato = LocalDate.now().minusMonths(3),
+                                    tilOgMedDato = LocalDate.now().plusMonths(3),
+                                    timerArbeid = 0.0,
+                                )
+                            )
+                        ),
+                    ),
+                    periode = periode
+                )
+            )
+            .kvalitetssikreOk()
+            .løsAvklaringsBehov(
+                FastsettBeregningstidspunktLøsning(
+                    beregningVurdering = BeregningstidspunktVurderingDto(
+                        begrunnelse = "Trenger hjelp fra Nav",
+                        nedsattArbeidsevneDato = LocalDate.now(),
+                        ytterligereNedsattArbeidsevneDato = null,
+                        ytterligereNedsattBegrunnelse = null
+                    ),
+                ),
+            )
+            .løsForutgåendeMedlemskap()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtakEllerSendRetur()
+
+        val vedtak = hentVedtak(behandling.id)
+        assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
+
+        behandling = behandling.løsVedtaksbrev()
+
+        // Henter vurder alder-vilkår
+        // Assert utfall
+        val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
+        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+
+        assertThat(sykdomsvilkåret.vilkårsperioder())
+            .hasSize(1)
+            .allMatch { vilkårsperiode -> vilkårsperiode.erOppfylt() }
+
+        val underveisGrunnlag = dataSource.transaction { connection ->
+            UnderveisRepositoryImpl(connection).hent(behandling.id)
+        }
+
+        assertThat(underveisGrunnlag.perioder).isNotEmpty
+        assertThat(underveisGrunnlag.perioder.any { it.arbeidsgradering.gradering.prosentverdi() > 0 }).isTrue()
+
+        // Saken er avsluttet, så det skal ikke være flere åpne avklaringsbehov
+        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        assertThat(åpneAvklaringsbehov).isEmpty()
+
+        return hentSak(behandling)
+    }
+
+
     /**
      * Løser avklaringsbehov og venter på svar vha [util].
      */
@@ -234,6 +347,10 @@ abstract class AbstraktFlytOrkestratorTest {
         }
         util.ventPåSvar(behandling.sakId.id, behandling.id.id)
         return hentBehandling(behandling.referanse)
+    }
+
+    protected fun TestUtil.ventPåSvar(behandling: Behandling) {
+        util.ventPåSvar(behandling.sakId.id, behandling.id.id)
     }
 
     @JvmName("løsAvklaringsBehovExt")
@@ -368,7 +485,6 @@ abstract class AbstraktFlytOrkestratorTest {
     protected fun hentNyesteBehandlingForSak(
         sakId: SakId,
         typeBehandling: List<TypeBehandling> = TypeBehandling.entries
-
     ): Behandling {
         return dataSource.transaction(readOnly = true) { connection ->
             val finnSisteBehandlingFor = BehandlingRepositoryImpl(connection).finnSisteBehandlingFor(
@@ -491,39 +607,35 @@ abstract class AbstraktFlytOrkestratorTest {
     protected fun løsFramTilForutgåendeMedlemskap(
         behandling: Behandling,
         harYrkesskade: Boolean = false,
-    ) {
+    ): Behandling {
         var behandling = behandling
         behandling = løsSykdom(behandling)
-        behandling = løsAvklaringsBehov(
-            behandling,
-            AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingLøsningDto(
-                    begrunnelse = "Trenger hjelp fra nav",
-                    erBehovForAktivBehandling = true,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    bistandsVurdering = BistandVurderingLøsningDto(
+                        begrunnelse = "Trenger hjelp fra nav",
+                        erBehovForAktivBehandling = true,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = null,
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null
+                    ),
                 ),
-            ),
-        )
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            RefusjonkravLøsning(
-                listOf(
-                    RefusjonkravVurderingDto(
-                        harKrav = true,
-                        fom = LocalDate.now(),
-                        tom = null,
-                        navKontor = "",
+            )
+            .løsAvklaringsBehov(
+                RefusjonkravLøsning(
+                    listOf(
+                        RefusjonkravVurderingDto(
+                            harKrav = true,
+                            fom = LocalDate.now(),
+                            tom = null,
+                            navKontor = "",
+                        )
                     )
                 )
             )
-        )
-
-        behandling = kvalitetssikreOk(behandling)
+            .kvalitetssikreOk()
 
         if (harYrkesskade) {
             behandling = løsAvklaringsBehov(
@@ -539,7 +651,7 @@ abstract class AbstraktFlytOrkestratorTest {
             )
         }
 
-        løsAvklaringsBehov(
+        return løsAvklaringsBehov(
             behandling,
             FastsettBeregningstidspunktLøsning(
                 beregningVurdering = BeregningstidspunktVurderingDto(
@@ -588,18 +700,19 @@ abstract class AbstraktFlytOrkestratorTest {
         return kvalitetssikreOk(this, bruker)
     }
 
-    protected fun fattVedtakEllerSendRetur(behandling: Behandling, returVed: Definisjon? = null): Behandling = løsAvklaringsBehov(
-        behandling,
-        FatteVedtakLøsning(
-            hentAlleAvklaringsbehov(behandling)
-                .filter { behov -> behov.erTotrinn() }
-                .map { behov ->
-                    TotrinnsVurdering(
-                        behov.definisjon.kode, behov.definisjon != returVed, "begrunnelse", emptyList()
-                    )
-                }),
-        Bruker("BESLUTTER")
-    )
+    protected fun fattVedtakEllerSendRetur(behandling: Behandling, returVed: Definisjon? = null): Behandling =
+        løsAvklaringsBehov(
+            behandling,
+            FatteVedtakLøsning(
+                hentAlleAvklaringsbehov(behandling)
+                    .filter { behov -> behov.erTotrinn() }
+                    .map { behov ->
+                        TotrinnsVurdering(
+                            behov.definisjon.kode, behov.definisjon != returVed, "begrunnelse", emptyList()
+                        )
+                    }),
+            Bruker("BESLUTTER")
+        )
 
     protected fun Behandling.løsRefusjonskrav(): Behandling {
         return løsAvklaringsBehov(
@@ -622,11 +735,20 @@ abstract class AbstraktFlytOrkestratorTest {
         return fattVedtakEllerSendRetur(this, returVed)
     }
 
-    class BehandlingInfo(val åpneAvklaringsbehov: List<Avklaringsbehov>, val behandling: Behandling)
+    class BehandlingInfo(
+        val åpneAvklaringsbehov: List<Avklaringsbehov>,
+        val behandling: Behandling,
+        val ventebehov: List<Avklaringsbehov>
+    )
 
     protected fun Behandling.medKontekst(block: BehandlingInfo.() -> Unit): Behandling {
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(this)
-        block(BehandlingInfo(åpneAvklaringsbehov = åpneAvklaringsbehov, behandling = this))
+        block(
+            BehandlingInfo(
+                åpneAvklaringsbehov = åpneAvklaringsbehov,
+                behandling = this,
+                ventebehov = åpneAvklaringsbehov.filter { it.erVentepunkt() })
+        )
         return this
     }
 
@@ -728,5 +850,4 @@ abstract class AbstraktFlytOrkestratorTest {
             }
         }
     }
-
 }

@@ -6,6 +6,7 @@ import no.nav.aap.lookup.repository.Repository
 
 interface PersonopplysningRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): PersonopplysningGrunnlag?
+    fun hentBrukerPersonOpplysningHvisEksisterer(behandlingId: BehandlingId): Personopplysning?
     fun lagre(behandlingId: BehandlingId, personopplysning: Personopplysning)
     fun lagre(behandlingId: BehandlingId, barn: Set<Barn>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)

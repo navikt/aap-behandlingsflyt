@@ -45,7 +45,8 @@ class BeregningAvklarFaktaSteg private constructor(
         val behandlingId = kontekst.behandlingId
 
         if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
-            // TODO: Avbryte eventuelle avklaringsbehov som henger her hvis de er aktive
+            avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+                .avbrytForSteg(type())
             return Fullført
         }
 

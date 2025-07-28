@@ -20,7 +20,7 @@ data class RettighetsperiodeVurderingDTO(
     val harKravPåRenter: Boolean?
 ) {
     init {
-        if (harRettUtoverSøknadsdato == true) {
+        if (harRettUtoverSøknadsdato) {
             if (startDato == null) {
                 throw UgyldigForespørselException("Må sette startdato når bruker har rett utover søknadsdatoen")
             }
@@ -28,7 +28,7 @@ data class RettighetsperiodeVurderingDTO(
                 throw UgyldigForespørselException("Må vurdere renter når bruker har rett utover søknadsdatoen")
             }
         }
-        if (harRettUtoverSøknadsdato == false) {
+        if (!harRettUtoverSøknadsdato) {
             if (startDato != null) {
                 throw UgyldigForespørselException("Kan ikke sette startdato når bruker ikke har rett utover søknadsdatoen")
             }

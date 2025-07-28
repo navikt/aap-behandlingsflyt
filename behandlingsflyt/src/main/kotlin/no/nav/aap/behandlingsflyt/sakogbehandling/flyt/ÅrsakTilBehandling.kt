@@ -30,7 +30,8 @@ enum class ÅrsakTilBehandling {
     FASTSATT_PERIODE_PASSERT,
     FRITAK_MELDEPLIKT,
     VURDER_RETTIGHETSPERIODE,
-    MOTTATT_KABAL_HENDELSE;
+    MOTTATT_KABAL_HENDELSE,
+    OPPFØLGINGSOPPGAVE;
 
     companion object {
         /**
@@ -82,4 +83,5 @@ fun EksponertÅrsak.tilÅrsakTilBehandling() =
         EksponertÅrsak.KLAGE_TRUKKET -> ÅrsakTilBehandling.KLAGE_TRUKKET
         EksponertÅrsak.REVURDER_MANUELL_INNTEKT -> ÅrsakTilBehandling.REVURDER_MANUELL_INNTEKT
         EksponertÅrsak.MOTTATT_KABAL_HENDELSE -> ÅrsakTilBehandling.MOTTATT_KABAL_HENDELSE
+        EksponertÅrsak.OPPFØLGINGSOPPGAVE -> ÅrsakTilBehandling.OPPFØLGINGSOPPGAVE
     }

@@ -75,7 +75,7 @@ class OmgjøringSteg private constructor(
 
     private fun konstruerBegrunnelse(hjemler: List<Hjemmel>): String {
         return "Revurdering etter klage som tas til følge. Følgende vilkår omgjøres: ${
-            hjemler.map { it.hjemmel }.joinToString(", ")
+            hjemler.joinToString(", ") { it.hjemmel }
         }"
     }
 

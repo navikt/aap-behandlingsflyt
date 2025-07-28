@@ -17,9 +17,9 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = FASTSETT_FULLMEKTIG_KODE)
 class FastsettFullmektigLøsning(
-    @JsonProperty("fullmektigVurdering", required = true)
+    @param:JsonProperty("fullmektigVurdering", required = true)
     val fullmektigVurdering: FullmektigLøsningDto,
-    @JsonProperty(
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = FASTSETT_FULLMEKTIG_KODE

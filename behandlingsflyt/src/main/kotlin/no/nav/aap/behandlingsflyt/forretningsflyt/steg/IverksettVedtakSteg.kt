@@ -63,9 +63,8 @@ class IverksettVedtakSteg private constructor(
         val tilkjentYtelseDto = utbetalingService.lagTilkjentYtelseForUtbetaling(kontekst.sakId, kontekst.behandlingId)
         if (tilkjentYtelseDto != null) {
             utbetalingGateway.utbetal(tilkjentYtelseDto)
-
         } else {
-            log.error("Fant ikke tilkjent ytelse for behandingsref ${kontekst.behandlingId}")
+            log.info("Fant ikke tilkjent ytelse for behandingsref ${kontekst.behandlingId}. Virkningstidspunkt: $virkningstidspunkt.")
         }
         if (GatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.Samvarsling)) {
             flytJobbRepository.leggTil(
@@ -89,7 +88,8 @@ class IverksettVedtakSteg private constructor(
             val tilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>()
             val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
             val vedtakRepository = repositoryProvider.provide<VedtakRepository>()
-            val samordningAndreStatligeYtelserRepository = repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>()
+            val samordningAndreStatligeYtelserRepository =
+                repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>()
             val utbetalingGateway = GatewayProvider.provide<UtbetalingGateway>()
             val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
             val virkningstidspunktUtlederService = VirkningstidspunktUtleder(

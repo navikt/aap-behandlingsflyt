@@ -44,7 +44,7 @@ class SignaturService(
 
             // Automatiske brev
             TypeBrev.VARSEL_OM_BESTILLING, TypeBrev.FORVALTNINGSMELDING -> emptyList()
-        }
+        }.distinctBy { it.navIdent }
     }
 
     private val rolleTilAvklaringsbehov: Map<Rolle, List<Definisjon>> = buildMap {

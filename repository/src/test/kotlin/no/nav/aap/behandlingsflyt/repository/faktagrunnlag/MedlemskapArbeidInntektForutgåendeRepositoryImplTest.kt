@@ -26,6 +26,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -33,7 +34,15 @@ import java.time.LocalDateTime
 import java.time.YearMonth
 
 internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+    companion object {
+        private val dataSource = InitTestDatabase.freshDatabase()
+
+        @AfterAll
+        @JvmStatic
+        fun afterAll() {
+            InitTestDatabase.closerFor(dataSource)
+        }
+    }
 
     @Test
     fun mapperOrgnavnKorrektTilForutgåendeInntekt() {
@@ -46,14 +55,16 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val repo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
 
-            val sak = personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
-            val behandling = behandlingRepo.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+            val sak =
+                personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            val behandling =
+                behandlingRepo.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
             lagNyFullVurdering(behandling.id, repo, "Første begrunnelse", connection)
 
             val lagretInntekt = repo.hentHvisEksisterer(behandling.id)!!
 
-            val inntekt1 = lagretInntekt.inntekterINorgeGrunnlag.first{it.identifikator == "1234"}
-            val inntekt2 = lagretInntekt.inntekterINorgeGrunnlag.first{it.identifikator == "4321"}
+            val inntekt1 = lagretInntekt.inntekterINorgeGrunnlag.first { it.identifikator == "1234" }
+            val inntekt2 = lagretInntekt.inntekterINorgeGrunnlag.first { it.identifikator == "4321" }
 
             assertEquals(inntekt1.organisasjonsNavn, "Bepis AS")
             assertEquals(inntekt1.identifikator, "1234")
@@ -95,7 +106,13 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
                 sak.id,
                 førstegangsBehandling.id,
                 listOf(),
-                UtenlandsOppholdData(true, false, false, false, null)
+                UtenlandsOppholdData(
+                    harBoddINorgeSiste5År = true,
+                    harArbeidetINorgeSiste5År = false,
+                    arbeidetUtenforNorgeFørSykdom = false,
+                    iTilleggArbeidUtenforNorge = false,
+                    utenlandsOpphold = null
+                )
             )
             opprettBehandlingMedVurdering(
                 TypeBehandling.Revurdering,
@@ -180,7 +197,13 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
         forutgåendeRepository: MedlemskapArbeidInntektForutgåendeRepositoryImpl,
         begrunnelse: String,
         connection: DBConnection,
-        utenlandsOppholdData: UtenlandsOppholdData? = UtenlandsOppholdData(false, false, false, false, null)
+        utenlandsOppholdData: UtenlandsOppholdData? = UtenlandsOppholdData(
+            harBoddINorgeSiste5År = false,
+            harArbeidetINorgeSiste5År = false,
+            arbeidetUtenforNorgeFørSykdom = false,
+            iTilleggArbeidUtenforNorge = false,
+            utenlandsOpphold = null
+        )
     ) {
         val lovvalgRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
         if (utenlandsOppholdData != null) lovvalgRepository.lagreOppgittUtenlandsOppplysninger(
@@ -188,7 +211,8 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             JournalpostId("1"),
             utenlandsOppholdData
         )
-        forutgåendeRepository.lagreArbeidsforholdOgInntektINorge(behandlingId, listOf(),
+        forutgåendeRepository.lagreArbeidsforholdOgInntektINorge(
+            behandlingId, listOf(),
             listOf(
                 ArbeidsInntektMaaned(
                     aarMaaned = YearMonth.now(),

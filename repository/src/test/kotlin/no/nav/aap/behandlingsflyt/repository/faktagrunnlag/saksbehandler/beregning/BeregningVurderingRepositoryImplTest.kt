@@ -3,24 +3,44 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.AARegisterGateway
+import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
+import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
+import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
+import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
+import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.util.stream.Stream
 
 class BeregningVurderingRepositoryImplTest {
     private val dataSource = InitTestDatabase.freshDatabase()
+
+    @BeforeEach
+    fun setUp() {
+        GatewayRegistry
+            .register<FakeUnleash>()
+    }
+
 
     @Test
     fun `lagre, hent ut igjen, og slett`() {
@@ -47,10 +67,9 @@ class BeregningVurderingRepositoryImplTest {
             )
         )
 
+        val sak = dataSource.transaction { sak(it) }
         val behandling = dataSource.transaction { connection ->
-            val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
-
             val beregningVurderingRepository = BeregningVurderingRepositoryImpl(connection)
 
             // Lagre tidspunktVurdering
@@ -98,8 +117,61 @@ class BeregningVurderingRepositoryImplTest {
         }
     }
 
+    @ParameterizedTest
+    @MethodSource("testDataAvrunding")
+    fun `Skal avrunde opp til nærmeste tusen`(beløp: Int, avrundetBeløp: Int) {
+        val yrkesskadeVurderinger = listOf(
+            YrkesskadeBeløpVurdering(
+                antattÅrligInntekt = Beløp(beløp),
+                referanse = "Referanse 1",
+                begrunnelse = "Begrunnelse for yrkesskade 1",
+                vurdertAv = "saksbehandler"
+            )
+        )
+
+        val sak = dataSource.transaction { sak(it) }
+        val behandling = dataSource.transaction { connection ->
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val beregningVurderingRepository = BeregningVurderingRepositoryImpl(connection)
+
+            // Lagre yrkesskadeVurderinger
+            beregningVurderingRepository.lagre(behandling.id, yrkesskadeVurderinger)
+
+            behandling
+        }
+
+        dataSource.transaction { connection ->
+            val beregningVurderingRepository = BeregningVurderingRepositoryImpl(connection)
+
+            // Hent og verifiser
+            val beregningGrunnlag = beregningVurderingRepository.hent(behandling.id)
+
+
+
+            // Verifiser yrkesskadeVurderinger
+            assertThat(beregningGrunnlag.yrkesskadeBeløpVurdering?.vurderinger?.size).isEqualTo(yrkesskadeVurderinger.size)
+
+            // Verifiser at antattÅrligInntekt er riktig avrundet
+            val hentedeVurderinger = beregningGrunnlag.yrkesskadeBeløpVurdering?.vurderinger
+            assertThat(hentedeVurderinger).isNotNull()
+            assertThat(hentedeVurderinger!![0].antattÅrligInntekt).isEqualTo(Beløp(avrundetBeløp))
+
+        }
+    }
+
+
     private companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        @JvmStatic
+        fun testDataAvrunding(): Stream<Arguments> {
+            return Stream.of(
+                Arguments.of(500001, 501000),
+                Arguments.of(499999, 500000),
+                Arguments.of(367000, 367000),
+            )
+        }
+
     }
 
     private fun sak(connection: DBConnection): Sak {

@@ -10,13 +10,12 @@ enum class BehandlingsflytFeature : FeatureToggle {
     DummyFeature,
     FasttrackMeldekort,
     OverstyrStarttidspunkt,
-    AvventUtbetaling,
     FritakMeldeplikt,
     IngenValidering,
     InnhentEnhetsregisterData,
     Samvarsling,
     SendForvaltningsmelding,
-    HoppOverForeslaaVedtak,
+    AvrundingInntekt,
     ;
 
     override fun key(): String = name

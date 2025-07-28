@@ -4,7 +4,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import org.slf4j.LoggerFactory
 
 class AnsattInfoService {
-    val logger = LoggerFactory.getLogger(javaClass)
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     private val ansattInfoGateway = GatewayProvider.provide<AnsattInfoGateway>()
     private val enhetGateway = GatewayProvider.provide<EnhetGateway>()

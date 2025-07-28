@@ -14,11 +14,11 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = FASTSETT_YRKESSKADE_BELØP_KODE)
 class FastsettYrkesskadeInntektLøsning(
-    @JsonProperty(
+    @param:JsonProperty(
         "yrkesskadeInntektVurdering",
         required = true
     ) val yrkesskadeInntektVurdering: BeregningYrkeskaderBeløpVurderingDTO,
-    @JsonProperty(
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = FASTSETT_YRKESSKADE_BELØP_KODE

@@ -6,5 +6,5 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.gateway.Gateway
 
 interface BarnGateway : Gateway {
-    fun hentBarn(person: Person, relaterteBarnIdenter: List<Ident>): BarnInnhentingRespons
+    fun hentBarn(person: Person, oppgitteBarnIdenter: List<Ident>): BarnInnhentingRespons
 }

@@ -17,9 +17,7 @@ interface SakRepository : Repository {
 
     fun hent(saksnummer: Saksnummer): Sak
 
-    fun finnSøker(saksnummer: Saksnummer): Person
-
-    fun finnSøker(sakId: SakId): Person
+    fun finnPersonId(sakId: SakId): Long
 
     fun oppdaterRettighetsperiode(sakId: SakId, periode: Periode)
 

@@ -101,13 +101,11 @@ import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.Språk
 import no.nav.aap.brev.kontrakt.Status
 import no.nav.aap.brev.kontrakt.Tekstbolk
-import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
-import no.nav.aap.komponenter.httpklient.httpclient.RestClient
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.JournalpostTilgangRequest
+import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakTilgangRequest
 import no.nav.aap.tilgang.TilgangResponse
 import org.intellij.lang.annotations.Language
@@ -253,7 +251,7 @@ object FakeServers : AutoCloseable {
                 disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             }
         }
-        
+
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@sam.log.info("Inntekt :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
@@ -312,10 +310,6 @@ object FakeServers : AutoCloseable {
             post {
                 val req = call.receive<InntektRequest>()
                 val person = hentEllerGenererTestPerson(req.fnr)
-
-                for (år in req.fomAr..req.tomAr) {
-                    //person.leggTilInntektHvisÅrMangler(Year.of(år), Beløp("0")) //TODO: Fjern denne helt
-                }
 
                 call.respond(
                     InntektResponse(person.inntekter().map { inntekt ->
@@ -449,7 +443,11 @@ object FakeServers : AutoCloseable {
         routing {
             post("/tilgang/behandling") {
                 call.receive<BehandlingTilgangRequest>()
-                call.respond(TilgangResponse(true))
+                call.respond(
+                    TilgangResponse(
+                        true,
+                        tilgangIKontekst = mapOf(Operasjon.SAKSBEHANDLE to true)
+                    ))
             }
         }
         routing {
@@ -622,6 +620,7 @@ object FakeServers : AutoCloseable {
                             )
                         ))
 
+                    @Suppress("UnusedVariable")
                     @Language("JSON")
                     val foreldrepengerOgSvangerskapspengerResponse = """
            [{
@@ -1301,7 +1300,7 @@ object FakeServers : AutoCloseable {
                         call.respond<List<MedlemskapResponse>>(emptyList())
                     }
 
-                    @Suppress("UNUSED_VARIABLE")
+                    @Suppress("UnusedVariable")
                     @Language("JSON") val eksempelRespons =
                         """[
   {
@@ -1472,7 +1471,6 @@ object FakeServers : AutoCloseable {
         )
     }
 
-    // TODO!?
     private fun hentEllerGenererTestPerson(forespurtIdent: String): TestPerson {
         val person = FakePersoner.hentPerson(forespurtIdent)
         if (person == null) {
@@ -1733,11 +1731,6 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.brevFake() {
-        val config = ClientConfig(scope = "")
-        val client = RestClient.withDefaultResponseHandler(
-            config = config,
-            tokenProvider = ClientCredentialsTokenProvider
-        )
         install(ContentNegotiation) {
             register(
                 ContentType.Application.Json,
@@ -1812,7 +1805,7 @@ object FakeServers : AutoCloseable {
                 }
                 route("/bestilling/{referanse}") { ->
                     get {
-                        val ref = UUID.fromString(call.pathParameters.get("referanse"))!!
+                        val ref = UUID.fromString(call.pathParameters["referanse"])!!
 
                         call.respond(
                             synchronized(mutex) {
@@ -1826,7 +1819,7 @@ object FakeServers : AutoCloseable {
                         )
                     }
                     put("/oppdater") {
-                        val ref = UUID.fromString(call.pathParameters.get("referanse"))!!
+                        val ref = UUID.fromString(call.pathParameters["referanse"])!!
                         val brev = call.receive<Brev>()
                         synchronized(mutex) {
                             val i = brevStore.indexOfFirst { it.referanse == ref }

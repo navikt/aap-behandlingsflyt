@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.VurderFormkravLøser
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.flate.FormkravVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_FORMKRAV_KODE
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -14,9 +14,9 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = VURDER_FORMKRAV_KODE)
 class VurderFormkravLøsning(
-    @JsonProperty("formkravVurdering", required = true)
+    @param:JsonProperty("formkravVurdering", required = true)
     val formkravVurdering: FormkravVurderingLøsningDto,
-    @JsonProperty(
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = VURDER_FORMKRAV_KODE

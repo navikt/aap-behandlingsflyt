@@ -77,7 +77,7 @@ class AvventUtbetalingService(
     private fun overlapperMedSamordningAndreStatligeYtelser(behandlingId: BehandlingId): TilkjentYtelseAvventDto? {
         val samordningAndreStatligeYtelser = samordningAndreStatligeYtelserRepository.hentHvisEksisterer(behandlingId)
 
-        if (samordningAndreStatligeYtelser?.vurdering?.vurderingPerioder == null) {
+        if (samordningAndreStatligeYtelser?.vurdering?.vurderingPerioder.isNullOrEmpty()) {
             return null
         }
         val fom = samordningAndreStatligeYtelser.vurdering.vurderingPerioder.minOf {it.periode.fom}

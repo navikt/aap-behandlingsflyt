@@ -6,20 +6,15 @@ plugins {
     `java-library`
 }
 
-val tilgangVersjon = "1.0.95"
-val junitVersion = "5.12.0"
-val komponenterVersjon = "1.0.282"
-
 dependencies {
-    api("com.fasterxml.jackson.core:jackson-annotations:2.19.1")
-    api("no.nav:ktor-openapi-generator:1.0.117")
-    compileOnly("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
+    api("com.fasterxml.jackson.core:jackson-annotations:2.19.2")
+    api("no.nav:ktor-openapi-generator:1.0.118")
+    compileOnly(libs.tilgangKontrakt)
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
-    testRuntimeOnly("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
-    testImplementation("org.assertj:assertj-core:3.27.3")
-    testImplementation("no.nav.aap.kelvin:json:$komponenterVersjon")
+
+    testRuntimeOnly(libs.tilgangKontrakt)
+    testImplementation(libs.bundles.junit)
+    testImplementation(libs.json)
 }
 
 group = "no.nav.aap.behandlingsflyt"

@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonOrdning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRepository
@@ -29,15 +28,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
-import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDate
 import javax.sql.DataSource
 
@@ -145,13 +141,11 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
 ) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/samordning-ufore") {
-            authorizedGet<BehandlingReferanse, SamordningUføreVurderingGrunnlagDTO>(
-                AuthorizationParamPathConfig(
-                    behandlingPathParam =
-                        BehandlingPathParam(
-                            "referanse"
-                        )
-                )
+            getGrunnlag<BehandlingReferanse, SamordningUføreVurderingGrunnlagDTO>(
+                BehandlingPathParam(
+                    "referanse"
+                ),
+                avklaringsbehovKode = Definisjon.AVKLAR_SAMORDNING_UFØRE.kode.toString()
             ) { behandlingReferanse ->
                 val (registerGrunnlag, vurdering) =
                     dataSource.transaction { connection ->
@@ -169,16 +163,10 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                         Pair(uføregrunnlagMedEndretStatus, samordningUføreVurdering)
                     }
 
-                val harTilgangTilÅSaksbehandle =
-                    GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                        behandlingReferanse.referanse,
-                        Definisjon.AVKLAR_SAMORDNING_UFØRE,
-                        token()
-                    )
 
                 respond(
                     SamordningUføreVurderingGrunnlagDTO(
-                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = mapSamordningUføreVurdering(vurdering),
                         grunnlag = mapSamordningUføreGrunnlag(registerGrunnlag)
                     )
@@ -186,13 +174,12 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
             }
         }
         route("/{referanse}/grunnlag/samordning/tjenestepensjon") {
-            authorizedGet<BehandlingReferanse, TjenestepensjonGrunnlagDTO>(
-                AuthorizationParamPathConfig(
-                    behandlingPathParam =
-                        BehandlingPathParam(
-                            "referanse"
-                        )
-                )
+            getGrunnlag<BehandlingReferanse, TjenestepensjonGrunnlagDTO>(
+                behandlingPathParam =
+                    BehandlingPathParam(
+                        "referanse"
+                    ),
+                avklaringsbehovKode = Definisjon.SAMORDNING_REFUSJONS_KRAV.kode.toString(),
             ) { req ->
                 val (tp, vurdering) =
                     dataSource.transaction { connection ->
@@ -212,16 +199,9 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                         Pair(tp, vurdering)
                     }
 
-                val harTilgangTilÅSaksbehandle =
-                    GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                        req.referanse,
-                        Definisjon.SAMORDNING_REFUSJONS_KRAV,
-                        token()
-                    )
-
                 respond(
                     TjenestepensjonGrunnlagDTO(
-                        harTilgangTilÅSaksbehandle,
+                        kanSaksbehandle(),
                         tp.flatMap { ordning ->
                             ordning.ytelser.map { ytelse ->
                                 TjenestepensjonYtelseDTO(
@@ -239,13 +219,9 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
         }
 
         route("/{referanse}/grunnlag/samordning") {
-            authorizedGet<BehandlingReferanse, SamordningYtelseVurderingGrunnlagDTO>(
-                AuthorizationParamPathConfig(
-                    behandlingPathParam =
-                        BehandlingPathParam(
-                            "referanse"
-                        )
-                )
+            getGrunnlag<BehandlingReferanse, SamordningYtelseVurderingGrunnlagDTO>(
+                behandlingPathParam = BehandlingPathParam("referanse"),
+                avklaringsbehovKode = Definisjon.AVKLAR_SAMORDNING_GRADERING.kode.toString()
             ) { req ->
                 val (registerYtelser, samordning, tp) =
                     dataSource.transaction { connection ->
@@ -271,19 +247,12 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                         Triple(perioderMedEndringer, samordning, tp)
                     }
 
-                val harTilgangTilÅSaksbehandle =
-                    GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                        req.referanse,
-                        Definisjon.AVKLAR_SAMORDNING_GRADERING,
-                        token()
-                    )
-
                 val ansattNavnOgEnhet =
                     samordning?.let { AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv) }
 
                 respond(
                     SamordningYtelseVurderingGrunnlagDTO(
-                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         ytelser =
                             registerYtelser.map { ytelse ->
                                 SamordningYtelseDTO(
@@ -330,13 +299,12 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
         }
 
         route("/{referanse}/grunnlag/samordning-andre-statlige-ytelser") {
-            authorizedGet<BehandlingReferanse, SamordningAndreStatligeYtelserGrunnlagDTO>(
-                AuthorizationParamPathConfig(
-                    behandlingPathParam =
-                        BehandlingPathParam(
-                            "referanse"
-                        )
-                )
+            getGrunnlag<BehandlingReferanse, SamordningAndreStatligeYtelserGrunnlagDTO>(
+                behandlingPathParam =
+                    BehandlingPathParam(
+                        "referanse"
+                    ),
+                avklaringsbehovKode = Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER.kode.toString(),
             ) { behandlingReferanse ->
                 val samordningAndreStatligeYtelserVurdering =
                     dataSource.transaction { connection ->
@@ -350,28 +318,20 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                         samordningAndreStatligeYtelserRepository.hentHvisEksisterer(behandling.id)?.vurdering
                     }
 
-                val tilgangGateway = GatewayProvider.provide(TilgangGateway::class)
-                val harTilgangTilÅSaksbehandle =
-                    tilgangGateway.sjekkTilgangTilBehandling(
-                        behandlingReferanse.referanse,
-                        Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER,
-                        token()
-                    )
-
                 val navnOgEnhet = samordningAndreStatligeYtelserVurdering?.let {
                     AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv)
                 }
 
                 respond(
                     SamordningAndreStatligeYtelserGrunnlagDTO(
-                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering =
                             SamordningAndreStatligeYtelserVurderingDTO(
                                 begrunnelse = samordningAndreStatligeYtelserVurdering?.begrunnelse ?: "",
                                 vurderingPerioder =
                                     (
                                             samordningAndreStatligeYtelserVurdering?.vurderingPerioder
-                                                ?: listOf<SamordningAndreStatligeYtelserVurderingPeriode>()
+                                                ?: listOf()
                                             ).map {
                                             SamordningAndreStatligeYtelserVurderingPeriodeDTO(
                                                 periode = it.periode,
@@ -398,13 +358,12 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
 
 
         route("/{referanse}/grunnlag/samordning-arbeidsgiver") {
-            authorizedGet<BehandlingReferanse, SamordningArbeidsgiverGrunnlagDTO>(
-                AuthorizationParamPathConfig(
-                    behandlingPathParam =
-                        BehandlingPathParam(
-                            "referanse"
-                        )
-                )
+            getGrunnlag<BehandlingReferanse, SamordningArbeidsgiverGrunnlagDTO>(
+                behandlingPathParam =
+                    BehandlingPathParam(
+                        "referanse"
+                    ),
+                avklaringsbehovKode = Definisjon.SAMORDNING_ARBEIDSGIVER.kode.toString(),
             ) { behandlingReferanse ->
                 val samordningArbeidsgiverVurdering =
                     dataSource.transaction { connection ->
@@ -417,14 +376,6 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
 
                         samordningArbeidsgiverRepository.hentHvisEksisterer(behandling.id)?.vurdering
                     }
-
-                val tilgangGateway = GatewayProvider.provide(TilgangGateway::class)
-                val harTilgangTilÅSaksbehandle =
-                    tilgangGateway.sjekkTilgangTilBehandling(
-                        behandlingReferanse.referanse,
-                        Definisjon.SAMORDNING_ARBEIDSGIVER,
-                        token()
-                    )
 
                 val navnOgEnhet = samordningArbeidsgiverVurdering?.let {
                     AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv)
@@ -448,7 +399,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
 
                 respond(
                     SamordningArbeidsgiverGrunnlagDTO(
-                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = vurdering
                     )
                 )

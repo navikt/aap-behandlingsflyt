@@ -18,7 +18,6 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -52,7 +51,7 @@ internal class BarnRepositoryImplTest {
                 )
             )
         )
-        val barnListe = setOf(Ident("12345678910"), Ident("12345"))
+        val barnListe = listOf(Ident("12345678910"), Ident("12345"))
 
         val behandling = dataSource.transaction { connection ->
             val sak = sak(connection)
@@ -62,7 +61,7 @@ internal class BarnRepositoryImplTest {
 
 
             barnRepository.lagreRegisterBarn(behandling.id, barnListe)
-            barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = setOf(Ident("1"))))
+            barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = listOf(Ident("1"))))
             barnRepository.lagreVurderinger(behandling.id, "ident", vurderteBarn)
             behandling
         }
@@ -93,7 +92,7 @@ internal class BarnRepositoryImplTest {
             finnEllerOpprettBehandling(connection, sak)
         }
         dataSource.transaction {
-            BarnRepositoryImpl(it).lagreRegisterBarn(behandling.id, setOf(Ident("12"), Ident("32323")))
+            BarnRepositoryImpl(it).lagreRegisterBarn(behandling.id, listOf(Ident("12"), Ident("32323")))
         }
 
         val uthentet = dataSource.transaction {
@@ -104,13 +103,42 @@ internal class BarnRepositoryImplTest {
     }
 
     @Test
+    fun `oppdatering av oppgitte barn`() {
+        val behandling = dataSource.transaction { connection ->
+            val sak = sak(connection)
+            finnEllerOpprettBehandling(connection, sak)
+        }
+
+        dataSource.transaction {
+            BarnRepositoryImpl(it).lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = listOf(Ident("1"))))
+        }
+
+        val uthentet = dataSource.transaction {
+            BarnRepositoryImpl(it).hent(behandling.id)
+        }
+
+        assertThat(uthentet.oppgitteBarn?.identer).containsExactly(Ident("1"))
+
+        // Oppdater med ingen oppgitte barn
+        dataSource.transaction {
+            BarnRepositoryImpl(it).lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = emptyList()))
+        }
+
+        val uthentet2 = dataSource.transaction {
+            BarnRepositoryImpl(it).hent(behandling.id)
+        }
+
+        assertThat(uthentet2.oppgitteBarn?.identer).isNullOrEmpty()
+    }
+
+    @Test
     fun `Kopiering av barn fra en behandling til en annen`() {
         dataSource.transaction { connection ->
             val barnRepository = BarnRepositoryImpl(connection)
             // Given
             val sak = sak(connection)
             val gammelBehandling = finnEllerOpprettBehandling(connection, sak)
-            barnRepository.lagreOppgitteBarn(gammelBehandling.id, OppgitteBarn(identer = setOf(Ident("1"))))
+            barnRepository.lagreOppgitteBarn(gammelBehandling.id, OppgitteBarn(identer = listOf(Ident("1"))))
 
             // When
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(gammelBehandling.id, Status.AVSLUTTET)

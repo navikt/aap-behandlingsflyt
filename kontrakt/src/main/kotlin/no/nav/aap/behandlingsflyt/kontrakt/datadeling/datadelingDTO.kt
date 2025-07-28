@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.kontrakt.datadeling
 
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -49,6 +48,7 @@ public data class TilkjentDTO(
     val tilkjentTom: LocalDate,
     val dagsats: Int,
     val gradering: Int,
+    val samordningUføregradering: Int? = null,
     val grunnlag: BigDecimal,
     val grunnlagsfaktor: BigDecimal,
     val grunnbeløp: BigDecimal,

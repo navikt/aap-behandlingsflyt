@@ -56,7 +56,7 @@ class BrevUtlederService(
                 }
             }
 
-            TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans ->
+            TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling ->
                 return BrevBehov(null) // TODO
         }
     }

@@ -43,8 +43,7 @@ class AvklarSoningsforholdLøser(
             oppdaterteVurderinger
         )
 
-        return LøsningsResultat(løsning.soningsvurdering.vurderinger.map { it.begrunnelse }
-            .joinToString(" "))
+        return LøsningsResultat(løsning.soningsvurdering.vurderinger.joinToString(" ") { it.begrunnelse })
     }
 
     private fun slåSammenMedNyeVurderinger(

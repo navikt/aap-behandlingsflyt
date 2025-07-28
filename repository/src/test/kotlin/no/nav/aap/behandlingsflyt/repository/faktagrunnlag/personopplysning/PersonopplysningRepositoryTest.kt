@@ -22,12 +22,23 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 class PersonopplysningRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+    private companion object {
+        private val dataSource = InitTestDatabase.freshDatabase()
+
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        @JvmStatic
+        @AfterAll
+        fun afterAll() {
+            InitTestDatabase.closerFor(dataSource)
+        }
+    }
 
     @Test
     fun `Finner ikke personopplysninger hvis ikke lagret`() {
@@ -422,10 +433,6 @@ class PersonopplysningRepositoryImplTest {
                     )
                 )
         }
-    }
-
-    private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
     private fun sak(connection: DBConnection): Sak {

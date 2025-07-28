@@ -12,8 +12,8 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonTypeName(value = FATTE_VEDTAK_KODE)
 class FatteVedtakLøsning(
-    @JsonProperty("vurderinger", required = true) val vurderinger: List<TotrinnsVurdering>,
-    @JsonProperty(
+    @param:JsonProperty("vurderinger", required = true) val vurderinger: List<TotrinnsVurdering>,
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = FATTE_VEDTAK_KODE

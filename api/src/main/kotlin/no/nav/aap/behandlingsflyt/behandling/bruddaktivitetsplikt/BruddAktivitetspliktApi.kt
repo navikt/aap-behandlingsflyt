@@ -24,14 +24,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.brev.kontrakt.Status
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.bruker
-import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -41,67 +40,64 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
+import no.nav.aap.tilgang.getGrunnlag
 import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api").tag(Tags.Aktivitetsplikt) {
-        route("/behandling/{referanse}/aktivitetsplikt/effektuer").authorizedGet<BehandlingReferanse, Effektuer11_7Dto>(
-            AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
-        ) { behandlingReferanse ->
-            val respons = dataSource.transaction(readOnly = true) { conn ->
-                val repositoryProvider = repositoryRegistry.provider(conn)
-                val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
-                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                val brevGateway = GatewayProvider.provide<BrevbestillingGateway>()
-                val aktivitetspliktRepository =
-                    repositoryProvider.provide<AktivitetspliktRepository>()
-                val effektuer117Repository =
-                    repositoryProvider.provide<Effektuer11_7Repository>()
+        route("/behandling/{referanse}/aktivitetsplikt/effektuer")
+            .getGrunnlag<BehandlingReferanse, Effektuer11_7Dto>(
+                behandlingPathParam = BehandlingPathParam("referanse"),
+                avklaringsbehovKode = Definisjon.EFFEKTUER_11_7.kode.toString()
+            ) { behandlingReferanse ->
+                val respons = dataSource.transaction(readOnly = true) { conn ->
+                    val repositoryProvider = repositoryRegistry.provider(conn)
+                    val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val brevGateway = GatewayProvider.provide<BrevbestillingGateway>()
+                    val aktivitetspliktRepository =
+                        repositoryProvider.provide<AktivitetspliktRepository>()
+                    val effektuer117Repository =
+                        repositoryProvider.provide<Effektuer11_7Repository>()
 
-                val behandlingId =
-                    BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse).id
+                    val behandlingId =
+                        BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse).id
 
-                val brudd = underveisRepository.hent(behandlingId)
-                    .perioder
-                    .mapNotNull {
-                        val id = it.bruddAktivitetspliktId ?: return@mapNotNull null
-                        Segment(it.periode, id)
-                    }
-                    .let { Tidslinje(it) }
-                    .komprimer()
-                    .map { segment ->
-                        val dokument = aktivitetspliktRepository.hentBrudd(segment.verdi)
-                        bruddAktivitetspliktHendelseDto(dokument, segment.periode)
-                    }
+                    val brudd = underveisRepository.hent(behandlingId)
+                        .perioder
+                        .mapNotNull {
+                            val id = it.bruddAktivitetspliktId ?: return@mapNotNull null
+                            Segment(it.periode, id)
+                        }
+                        .let { Tidslinje(it) }
+                        .komprimer()
+                        .map { segment ->
+                            val dokument = aktivitetspliktRepository.hentBrudd(segment.verdi)
+                            bruddAktivitetspliktHendelseDto(dokument, segment.periode)
+                        }
 
-                val effektuer11_7Grunnlag = effektuer117Repository.hentHvisEksisterer(behandlingId)
-                val brevBestillingReferanse = effektuer11_7Grunnlag
-                    ?.varslinger
-                    ?.maxByOrNull { it.datoVarslet }
-                    ?.referanse
-                val forhåndsvarselDato = brevBestillingReferanse
-                    ?.let { brevGateway.hent(it) }
-                    ?.takeIf { it.status == Status.FERDIGSTILT }
-                    ?.oppdatert?.toLocalDate()
+                    val effektuer11_7Grunnlag = effektuer117Repository.hentHvisEksisterer(behandlingId)
+                    val brevBestillingReferanse = effektuer11_7Grunnlag
+                        ?.varslinger
+                        ?.maxByOrNull { it.datoVarslet }
+                        ?.referanse
+                    val forhåndsvarselDato = brevBestillingReferanse
+                        ?.let { brevGateway.hent(it) }
+                        ?.takeIf { it.status == Status.FERDIGSTILT }
+                        ?.oppdatert?.toLocalDate()
 
-                val harTilgangTilÅSaksbehandle = GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                    behandlingReferanse.referanse,
-                    Definisjon.EFFEKTUER_11_7,
-                    token()
-                )
+                    Effektuer11_7Dto(
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        begrunnelse = effektuer11_7Grunnlag?.vurdering?.begrunnelse,
+                        forhåndsvarselDato = forhåndsvarselDato,
+                        gjeldendeBrudd = brudd,
+                    )
+                }
 
-                Effektuer11_7Dto(
-                    harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
-                    begrunnelse = effektuer11_7Grunnlag?.vurdering?.begrunnelse,
-                    forhåndsvarselDato = forhåndsvarselDato,
-                    gjeldendeBrudd = brudd,
-                )
+                respond(respons)
             }
-
-            respond(respons)
-        }
 
         route("/sak/{saksnummer}/aktivitetsplikt") {
             route("/opprett") {

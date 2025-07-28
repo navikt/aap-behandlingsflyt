@@ -110,7 +110,7 @@ class BrevGateway : BrevbestillingGateway {
     ): Boolean {
         val url = baseUri.resolve("/api/ferdigstill")
 
-        val request = PostRequest<FerdigstillBrevRequest>(
+        val request = PostRequest(
             body = FerdigstillBrevRequest(referanse.brevbestillingReferanse, signaturer),
             additionalHeaders = listOf(
                 Header("Accept", "application/json")
@@ -150,7 +150,7 @@ class BrevGateway : BrevbestillingGateway {
     override fun oppdater(bestillingReferanse: BrevbestillingReferanse, brev: Brev) {
         val url = baseUri.resolve("/api/bestilling/$bestillingReferanse/oppdater")
 
-        val request = PutRequest<Brev>(body = brev)
+        val request = PutRequest(body = brev)
 
         client.put<_, Unit>(url, request)
     }
@@ -181,7 +181,7 @@ class BrevGateway : BrevbestillingGateway {
     override fun avbryt(bestillingReferanse: BrevbestillingReferanse) {
         val url = baseUri.resolve("/api/avbryt")
 
-        val request = PostRequest<AvbrytBrevbestillingRequest>(
+        val request = PostRequest(
             body = AvbrytBrevbestillingRequest(bestillingReferanse.brevbestillingReferanse),
             additionalHeaders = listOf(
                 Header("Accept", "application/json")

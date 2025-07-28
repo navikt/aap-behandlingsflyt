@@ -12,7 +12,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonTypeName(value = VURDER_TREKK_AV_KLAGE_KODE)
 class TrekkKlageLøsning(
-    @JsonProperty("behovstype", required = true, defaultValue = VURDER_TREKK_AV_KLAGE_KODE)
+    @param:JsonProperty("behovstype", required = true, defaultValue = VURDER_TREKK_AV_KLAGE_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`6010`,
     val vurdering: TrekkKlageVurderingDto
 ) : AvklaringsbehovLøsning {

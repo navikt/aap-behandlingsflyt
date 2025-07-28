@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import java.util.*
 import java.util.concurrent.atomic.AtomicLong
 
-object InMemoryPersonRepository: PersonRepository {
+object InMemoryPersonRepository : PersonRepository {
     val personer = mutableMapOf<Long, Person>()
     private val idSeq = AtomicLong(10000)
     override fun finnEllerOpprett(identer: List<Ident>): Person {
@@ -15,14 +15,6 @@ object InMemoryPersonRepository: PersonRepository {
         val person = Person(id, UUID.randomUUID(), identer)
         personer[id] = person
         return person
-    }
-
-    override fun oppdater(person: Person, identer: List<Ident>) {
-        personer[person.id] = Person(person.id, person.identifikator, identer)
-    }
-
-    override fun hent(identifikator: UUID): Person {
-        return personer.values.single { it.identifikator == identifikator }
     }
 
     override fun hent(personId: Long): Person {

@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
-import kotlin.jvm.javaClass
 
 class SamordningArbeidsgiverRepositoryImpl(private val connection: DBConnection) : SamordningArbeidsgiverRepository {
 
@@ -58,12 +57,16 @@ class SamordningArbeidsgiverRepositoryImpl(private val connection: DBConnection)
         }
     }
 
-    override fun lagre(sakId: SakId, behandlingId: BehandlingId, samordningVurdering: SamordningArbeidsgiverVurdering) {
+    override fun lagre(
+        sakId: SakId,
+        behandlingId: BehandlingId,
+        refusjonkravVurderinger: SamordningArbeidsgiverVurdering
+    ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         if (eksisterendeGrunnlag != null) {
             deaktiverEksisterende(behandlingId)
         }
-        val vurderingId = lagreVurdering(samordningVurdering)
+        val vurderingId = lagreVurdering(refusjonkravVurderinger)
 
         val grunnlagQuery = """
             INSERT INTO SAMORDNING_ARBEIDSGIVER_GRUNNLAG (BEHANDLING_ID, SAK_ID, SAMORDNING_ARBEIDSGIVER_VURDERING_ID) VALUES (?, ?, ?)
@@ -101,8 +104,6 @@ class SamordningArbeidsgiverRepositoryImpl(private val connection: DBConnection)
                     SELECT samordning_arbeidsgiver_vurdering_id
                     FROM SAMORDNING_ARBEIDSGIVER_GRUNNLAG
                     WHERE behandling_id = ?
-                      AND samordning_arbeidsgiver_vurdering_id is not null
-                 
                 """.trimIndent()
     ) {
         setParams { setLong(1, behandlingId.id) }

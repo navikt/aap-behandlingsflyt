@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -10,7 +12,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Av
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -31,6 +32,7 @@ class VurderLovvalgSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val personopplysningRepository: PersonopplysningRepository,
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val vilkårService: VilkårService,
@@ -39,6 +41,7 @@ class VurderLovvalgSteg private constructor(
         vilkårsresultatRepository = repositoryProvider.provide(),
         personopplysningRepository = repositoryProvider.provide(),
         medlemskapArbeidInntektRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         vilkårService = VilkårService(repositoryProvider),
@@ -76,11 +79,13 @@ class VurderLovvalgSteg private constructor(
         val manuellVurdering =
             medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)?.manuellVurdering
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         if (kontekst.harNoeTilBehandling()) {
             val rettighetsperiode = kontekst.rettighetsperiode
-            val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)
-                ?: throw IllegalStateException("Forventet å finne personopplysninger")
+            val brukerPersonopplysning =
+                personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)
+                    ?: throw IllegalStateException("Forventet å finne personopplysninger")
             val medlemskapArbeidInntektGrunnlag =
                 medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
             val oppgittUtenlandsOppholdGrunnlag =
@@ -92,7 +97,7 @@ class VurderLovvalgSteg private constructor(
             Medlemskapvilkåret(vilkårsresultat, rettighetsperiode).vurder(
                 MedlemskapLovvalgGrunnlag(
                     medlemskapArbeidInntektGrunnlag,
-                    personopplysningGrunnlag,
+                    brukerPersonopplysning,
                     oppgittUtenlandsOppholdGrunnlag
                 )
             )
@@ -115,7 +120,7 @@ class VurderLovvalgSteg private constructor(
             )
         }
         if (!alleVilkårOppfylt && manuellVurdering == null
-            || spesifiktTriggetRevurderLovvalgUtenManuellVurdering(kontekst, manuellVurdering)
+            || spesifiktTriggetRevurderLovvalgUtenManuellVurdering(kontekst, avklaringsbehovene)
         ) {
             return FantAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
         }
@@ -124,11 +129,17 @@ class VurderLovvalgSteg private constructor(
 
     private fun spesifiktTriggetRevurderLovvalgUtenManuellVurdering(
         kontekst: FlytKontekstMedPerioder,
-        manuellVurdering: ManuellVurderingForLovvalgMedlemskap?
+        avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         val erSpesifiktTriggetRevurderLovvalg =
-            kontekst.årsakerTilBehandling.any { it == ÅrsakTilBehandling.REVURDER_LOVVALG }
-        return erSpesifiktTriggetRevurderLovvalg && manuellVurdering == null
+            kontekst.årsakerTilBehandling.any { it == ÅrsakTilBehandling.REVURDER_LOVVALG || it == ÅrsakTilBehandling.LOVVALG_OG_MEDLEMSKAP }
+        return erSpesifiktTriggetRevurderLovvalg && erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene)
+    }
+
+    private fun erIkkeVurdertTidligereIBehandlingen(
+        avklaringsbehovene: Avklaringsbehovene
+    ): Boolean {
+        return !avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
     }
 
     companion object : FlytSteg {

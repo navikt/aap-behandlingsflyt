@@ -66,7 +66,7 @@ class BarnetilleggService(
             barnGrunnlag.oppgitteBarn?.identer
                 ?.mapNotNull { ident -> mapTilBarn(ident, personopplysningerGrunnlag) }
                 ?.filterNot { vurderteBarnIdenter.contains(it.ident) }
-                ?: emptyList()
+                .orEmpty()
 
         val oppgittBarnTidslinje = tilTidslinje(oppgittBarn)
         resultat =
@@ -109,7 +109,7 @@ class BarnetilleggService(
 
     private fun mapTilBarn(ident: Ident, personopplysningerGrunnlag: PersonopplysningGrunnlag): Barn? {
         val personopplysning =
-            personopplysningerGrunnlag.relatertePersonopplysninger?.personopplysninger?.singleOrNull() {
+            personopplysningerGrunnlag.relatertePersonopplysninger?.personopplysninger?.singleOrNull {
                 it.gjelderForIdent(ident)
             }
         if (personopplysning == null) {
@@ -124,7 +124,7 @@ class BarnetilleggService(
                 Tidslinje(
                     listOf(
                         Segment(
-                            barnet.periodeMedRettTil(),
+                            Barn.periodeMedRettTil(barnet.fødselsdato),
                             barnet.ident
                         )
                     )

@@ -13,7 +13,6 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProviderJobbSpesifikasjon
-import kotlin.text.compareTo
 
 class VarsleVedtakJobbUtfører(
     private val repositoryProvider: RepositoryProvider,

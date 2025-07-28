@@ -12,8 +12,11 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonTypeName(value = BESTILL_BREV_KODE)
 class BrevbestillingLøsning(
-    @JsonProperty("oppdatertStatusForBestilling", required = true) val oppdatertStatusForBestilling: LøsBrevbestillingDto,
-    @JsonProperty(
+    @param:JsonProperty(
+        "oppdatertStatusForBestilling",
+        required = true
+    ) val oppdatertStatusForBestilling: LøsBrevbestillingDto,
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = BESTILL_BREV_KODE

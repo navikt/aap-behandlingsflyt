@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -128,5 +129,19 @@ class MottaDokumentService(
 
     fun knyttTilBehandling(sakId: SakId, behandlingId: BehandlingId, referanse: InnsendingReferanse) {
         mottattDokumentRepository.oppdaterStatus(referanse, behandlingId, sakId, Status.BEHANDLET)
+    }
+
+    fun hentOppfølgingsBehandlingDokument(behandlingId: BehandlingId): BehandletOppfølgingsOppgave? {
+        val uthentede = mottattDokumentRepository.hentDokumenterAvType(behandlingId, InnsendingType.OPPFØLGINGSOPPGAVE)
+
+        if (uthentede.isEmpty()) {
+            return null
+        }
+
+        require(uthentede.size == 1) { "Forventer kun ett dokument per behandling." }
+
+        val dokument = uthentede.first().strukturerteData<Oppfølgingsoppgave>()!!.data
+
+        return BehandletOppfølgingsOppgave.fraDokument(dokument)
     }
 }

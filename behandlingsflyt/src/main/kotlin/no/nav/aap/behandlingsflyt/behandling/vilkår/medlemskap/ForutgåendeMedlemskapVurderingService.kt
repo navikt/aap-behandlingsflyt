@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import no.nav.aap.komponenter.type.Periode
@@ -58,7 +58,7 @@ class ForutgåendeMedlemskapVurderingService {
                     || (grunnlag.harArbeidetINorgeSiste5År && grunnlag.iTilleggArbeidUtenforNorge && relevantePerioder?.isNotEmpty() == true)
 
                 if (harRelevanteUtlandsPerioderIJobb) {
-                    val mappedArbeidUtland = relevantePerioder!!.map { OppgittJobbetIUtlandGrunnlag(it.land, it.fraDato, it.tilDato) }
+                    val mappedArbeidUtland = relevantePerioder.map { OppgittJobbetIUtlandGrunnlag(it.land, it.fraDato, it.tilDato) }
                     arbeidUtlandPerioder.addAll(mappedArbeidUtland)
                     true
                 } else {
@@ -129,8 +129,8 @@ class ForutgåendeMedlemskapVurderingService {
             )
         }?.filter {
             (it.gyldigTilOgMed == null)
-                || forutgåendePeriode.inneholder(it.gyldigTilOgMed.toLocalDate())
-                || (it.gyldigFraOgMed != null && forutgåendePeriode.inneholder(it.gyldigFraOgMed.toLocalDate()))
+                || forutgåendePeriode.inneholder(it.gyldigTilOgMed)
+                || (it.gyldigFraOgMed != null && forutgåendePeriode.inneholder(it.gyldigFraOgMed))
         }
 
         return TilhørighetVurdering(

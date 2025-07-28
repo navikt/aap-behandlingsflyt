@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Klage
+import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.OppfølgingsBehandling
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Revurdering
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.SvarFraAndreinstans
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Tilbakekreving
@@ -17,4 +18,5 @@ fun TypeBehandling.flyt(): BehandlingFlyt = when (this) {
     TypeBehandling.Tilbakekreving -> Tilbakekreving.flyt()
     TypeBehandling.Klage -> Klage.flyt()
     TypeBehandling.SvarFraAndreinstans -> SvarFraAndreinstans.flyt()
+    TypeBehandling.OppfølgingsBehandling -> OppfølgingsBehandling.flyt()
 }

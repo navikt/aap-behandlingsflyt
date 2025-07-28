@@ -37,9 +37,9 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             }
             setRowMapper {
                 BarnGrunnlag(
-                    registerbarn = hentBarn(it.getLongOrNull("register_barn_id")),
-                    oppgitteBarn = hentOppgittBarn(it.getLongOrNull("oppgitt_barn_id")),
-                    vurderteBarn = hentVurderteBarn(it.getLongOrNull("vurderte_barn_id"))
+                    registerbarn = it.getLongOrNull("register_barn_id")?.let(::hentBarn),
+                    oppgitteBarn = it.getLongOrNull("oppgitt_barn_id")?.let(::hentOppgittBarn),
+                    vurderteBarn = it.getLongOrNull("vurderte_barn_id")?.let(::hentVurderteBarn)
                 )
             }
         }
@@ -51,11 +51,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         return requireNotNull(hentHvisEksisterer(behandlingId))
     }
 
-    private fun hentOppgittBarn(id: Long?): OppgitteBarn? {
-        if (id == null) {
-            return null
-        }
-
+    private fun hentOppgittBarn(id: Long): OppgitteBarn {
         return OppgitteBarn(
             id, connection.queryList(
                 """
@@ -72,15 +68,11 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                         row.getString("IDENT")
                     )
                 }
-            }.toSet()
+            }
         )
     }
 
-    private fun hentVurderteBarn(id: Long?): VurderteBarn? {
-        if (id == null) {
-            return null
-        }
-
+    private fun hentVurderteBarn(id: Long): VurderteBarn {
         return connection.queryFirst(
             """
             SELECT * FROM BARN_VURDERINGER WHERE ID = ?
@@ -140,11 +132,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         }
     }
 
-    private fun hentBarn(id: Long?): RegisterBarn? {
-        if (id == null) {
-            return null
-        }
-
+    private fun hentBarn(id: Long): RegisterBarn {
         return RegisterBarn(
             id = id, identer = connection.queryList(
                 """
@@ -171,11 +159,10 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             deaktiverEksisterende(behandlingId)
         }
 
-        val alleOppgitteBarn = HashSet(eksisterendeGrunnlag?.oppgitteBarn?.identer ?: emptySet())
-        alleOppgitteBarn.addAll(oppgitteBarn?.identer ?: emptySet())
+        val oppgittBarn = oppgitteBarn?.identer.orEmpty().toSet()
 
-        val oppgittBarnId = if (alleOppgitteBarn.isNotEmpty()) {
-            connection.executeReturnKey("INSERT INTO OPPGITT_BARNOPPLYSNING DEFAULT VALUES") {}
+        val oppgittBarnId = if (oppgittBarn.isNotEmpty()) {
+            connection.executeReturnKey("INSERT INTO OPPGITT_BARNOPPLYSNING DEFAULT VALUES")
         } else {
             null
         }
@@ -184,7 +171,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             """
                 INSERT INTO OPPGITT_BARN (IDENT, oppgitt_barn_id) VALUES (?, ?)
             """.trimIndent(),
-            alleOppgitteBarn
+            oppgittBarn
         ) {
             setParams { barnet ->
                 setString(1, barnet.identifikator)
@@ -206,7 +193,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         }
     }
 
-    override fun lagreRegisterBarn(behandlingId: BehandlingId, barn: Set<Ident>) {
+    override fun lagreRegisterBarn(behandlingId: BehandlingId, barn: List<Ident>) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
         if (eksisterendeGrunnlag != null) {

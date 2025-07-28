@@ -20,6 +20,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: DBConnection) :
     MedlemskapArbeidInntektForutgåendeRepository {
@@ -65,13 +66,13 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
               AND behandling.opprettet_tid < (SELECT a.opprettet_tid from behandling a where id = ?)
         """.trimIndent()
 
-        return connection.queryList(query) {
+        val vurderinger = connection.queryList(query) {
             setParams {
                 setLong(1, sakId.id)
                 setLong(2, behandlingId.id)
             }
             setRowMapper {
-                HistoriskManuellVurderingForForutgåendeMedlemskap(
+                InternalHistoriskManuellVurderingForForutgåendeMedlemskap(
                     ManuellVurderingForForutgåendeMedlemskap(
                         begrunnelse = it.getString("begrunnelse"),
                         harForutgåendeMedlemskap = it.getBoolean("har_forutgaaende_medlemskap"),
@@ -81,10 +82,16 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                         vurdertTidspunkt = it.getLocalDateTime("opprettet_tid"),
                         overstyrt = it.getBoolean("overstyrt")
                     ),
-                    opprettet = it.getLocalDateTime("opprettet_tid")
+                    vurdertDato = it.getLocalDateTime("opprettet_tid")
                 )
             }
-        }
+        }.sortedBy { it.manuellVurdering.vurdertTidspunkt }
+
+        return vurderinger.map { HistoriskManuellVurderingForForutgåendeMedlemskap(
+            manuellVurdering = it.manuellVurdering,
+            opprettet = it.vurdertDato,
+            erGjeldendeVurdering = it == vurderinger.last(),
+        ) }
     }
 
     override fun lagreManuellVurdering(
@@ -464,5 +471,10 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         val inntektINorgeId: Long?,
         val arbeiderId: Long?,
         val manuellVurderingId: Long?
+    )
+
+    internal data class InternalHistoriskManuellVurderingForForutgåendeMedlemskap(
+        val manuellVurdering: ManuellVurderingForForutgåendeMedlemskap,
+        val vurdertDato: LocalDateTime
     )
 }

@@ -15,7 +15,8 @@ import java.time.LocalDateTime
 
 data class SvarFraAndreinstansGrunnlagDto(
     val svarFraAndreinstans: SvarFraAndreinstansDto,
-    val gjeldendeVurdering: SvarFraAndreinstansVurderingDto?
+    val gjeldendeVurdering: SvarFraAndreinstansVurderingDto?,
+    val harTilgangTilÅSaksbehandle: Boolean
 )
 
 data class SvarFraAndreinstansDto(

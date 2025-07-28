@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDate
 
 class AvklarOverstyrtLovvalgMedlemskapLøser(
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
@@ -43,8 +42,9 @@ class AvklarOverstyrtLovvalgMedlemskapLøser(
 
         val sak = sakRepository.hent(kontekst.kontekst.sakId)
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId())
-        val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId())
-            ?: throw IllegalStateException("Forventet å finne personopplysninger")
+        val brukerPersonopplysning =
+            personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId())
+                ?: throw IllegalStateException("Forventet å finne personopplysninger")
         val medlemskapArbeidInntektGrunnlag =
             medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId())
         val oppgittUtenlandsOppholdGrunnlag =
@@ -53,7 +53,7 @@ class AvklarOverstyrtLovvalgMedlemskapLøser(
         Medlemskapvilkåret(vilkårsresultat, sak.rettighetsperiode).vurderOverstyrt(
             MedlemskapLovvalgGrunnlag(
                 medlemskapArbeidInntektGrunnlag,
-                personopplysningGrunnlag,
+                brukerPersonopplysning,
                 oppgittUtenlandsOppholdGrunnlag
             )
         )

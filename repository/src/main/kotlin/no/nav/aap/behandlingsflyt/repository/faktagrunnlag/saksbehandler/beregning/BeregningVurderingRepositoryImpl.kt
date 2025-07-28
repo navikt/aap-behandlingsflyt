@@ -6,10 +6,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : BeregningVurderingRepository {
 
@@ -160,6 +165,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandling)
         if (eksisterendeGrunnlag == null) {
+            log.info("Fant ikke eksisterende grunnlag for behandling $fraBehandling, kan derfor ikke kopiere til behandling $tilBehandling.")
             return
         }
         val query = """
@@ -284,11 +290,26 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
                 setLong(1, inntekterId)
                 setString(2, vurdering.begrunnelse)
                 setString(3, vurdering.referanse)
-                setBigDecimal(4, vurdering.antattÅrligInntekt.verdi)
+                setBigDecimal(4, vurdering.antattÅrligInntekt.avrundOppTilNærmesteTusen())
                 setString(5, vurdering.vurdertAv)
             }
         }
 
         return inntekterId
     }
+
+    private fun Beløp.avrundOppTilNærmesteTusen(): BigDecimal {
+        val tusen = BigDecimal(1000)
+        return if (verdi.remainder(tusen) == BigDecimal.ZERO) {
+            verdi
+        } else {
+            val unleashGateway: UnleashGateway = GatewayProvider.provide()
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.AvrundingInntekt)) {
+                verdi.divide(tusen, 0, RoundingMode.UP).multiply(tusen)
+            } else {
+                verdi
+            }
+        }
+    }
+
 }

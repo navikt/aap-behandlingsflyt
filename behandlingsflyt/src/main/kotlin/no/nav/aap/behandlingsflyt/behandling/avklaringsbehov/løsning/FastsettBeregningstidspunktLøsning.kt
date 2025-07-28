@@ -14,8 +14,8 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = FASTSETT_BEREGNINGSTIDSPUNKT_KODE)
 class FastsettBeregningstidspunktLøsning(
-    @JsonProperty("beregningVurdering", required = true) val beregningVurdering: BeregningstidspunktVurderingDto,
-    @JsonProperty(
+    @param:JsonProperty("beregningVurdering", required = true) val beregningVurdering: BeregningstidspunktVurderingDto,
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = FASTSETT_BEREGNINGSTIDSPUNKT_KODE

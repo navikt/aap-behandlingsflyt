@@ -11,7 +11,6 @@ import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
-import java.util.UUID
 
 class FakeApiInternGateway : ApiInternGateway {
     companion object : Factory<ApiInternGateway> {

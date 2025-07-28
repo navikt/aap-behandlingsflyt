@@ -15,13 +15,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
-import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
 
 interface AktivitetspliktDTO {
     fun tilDomene(sak: Sak, innsender: Bruker): List<DokumentInput>
 }
-
 
 data class OpprettAktivitetspliktDTO(
     val brudd: BruddType,
@@ -94,7 +92,7 @@ data class Effektuer11_7Dto(
     val gjeldendeBrudd: List<BruddAktivitetspliktHendelseDto>,
 )
 
-data class SaksnummerParameter(@PathParam("saksnummer") val saksnummer: String)
+data class SaksnummerParameter(@param:PathParam("saksnummer") val saksnummer: String)
 
 data class BruddAktivitetspliktHendelseDto(
     val brudd: BruddType,

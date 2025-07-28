@@ -13,7 +13,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = BESTILL_LEGEERKLÆRING_KODE)
 class LegeerklæringBestillingLøsning(
-    @JsonProperty(
+    @param:JsonProperty(
         "behovstype", required = true, defaultValue = BESTILL_LEGEERKLÆRING_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`9003`
 ) : AvklaringsbehovLøsning {

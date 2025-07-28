@@ -41,7 +41,7 @@ fun NormalOpenAPIRoute.aldersGrunnlagApi(dataSource: DataSource, repositoryRegis
 
                     val fødselsdato =
                         requireNotNull(
-                            personopplysningRepository.hentHvisEksisterer(behandling.id)?.brukerPersonopplysning?.fødselsdato?.toLocalDate()
+                            personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(behandling.id)?.fødselsdato?.toLocalDate()
                         )
 
                     AlderDTO(

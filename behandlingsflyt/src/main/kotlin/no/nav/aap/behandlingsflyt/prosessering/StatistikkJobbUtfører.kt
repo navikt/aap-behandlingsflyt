@@ -81,7 +81,7 @@ class StatistikkJobbUtfører(
         val payload = input.payload<BehandlingFlytStoppetHendelse>()
 
         håndterBehandlingStoppet(payload)
-    } // TODO: skriv test på g_regulering
+    }
 
     private val statistikkGateway: StatistikkGateway = GatewayProvider.provide()
 
@@ -150,6 +150,7 @@ class StatistikkJobbUtfører(
                     ÅrsakTilBehandling.REVURDER_MANUELL_INNTEKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REVURDER_MANUELL_INNTEKT
                     ÅrsakTilBehandling.FRITAK_MELDEPLIKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.FRITAK_MELDEPLIKT
                     ÅrsakTilBehandling.MOTTATT_KABAL_HENDELSE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.MOTTATT_KABAL_HENDELSE
+                    ÅrsakTilBehandling.OPPFØLGINGSOPPGAVE -> TODO()
                 }
             }.distinct()
         )
@@ -166,7 +167,7 @@ class StatistikkJobbUtfører(
             .map { it.kanal }
 
         // Om minst én av søknadene er papir, regn med at hele behandlingen er papir
-        return kanaler.reduceOrNull() { acc, curr ->
+        return kanaler.reduceOrNull { acc, curr ->
             when (acc) {
                 Kanal.DIGITAL -> curr
                 Kanal.PAPIR -> Kanal.PAPIR
@@ -314,7 +315,7 @@ class StatistikkJobbUtfører(
                 }
             }
 
-            TypeBehandling.Revurdering, TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans -> {
+            TypeBehandling.Revurdering, TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling -> {
                 null
             }
         }
@@ -322,7 +323,8 @@ class StatistikkJobbUtfører(
 
     private fun hentDiagnose(behandling: Behandling): Diagnoser? {
         val sykdomsvurdering =
-            sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger?.last() // TODO: Det kan være flere vurderinger og diagnoser som er aktuelle for statistikk - ikke bare én, men dette støttes ikke i kontrakten nedenfor?
+            sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger.orEmpty()
+                .sortedBy { it.vurderingenGjelderFra }.lastOrNull()
 
         if (sykdomsvurdering == null) {
             log.info("Fant ikke sykdomsvurdering for behandling ${behandling.referanse} (id: ${behandling.id})")
@@ -356,7 +358,7 @@ class StatistikkJobbUtfører(
                 grunnlagYtterligereNedsatt = grunnlag1119dto(grunnlag.underliggendeYtterligereNedsatt()),
                 uføreYtterligereNedsattArbeidsevneÅr = grunnlag.uføreYtterligereNedsattArbeidsevneÅr().value,
                 uføregrad = grunnlag.uføregrad().prosentverdi(),
-                uføreInntekterFraForegåendeÅr = grunnlag.uføreInntekterFraForegåendeÅr() // TODO: Vurdere hvilke felter som skal være med fra uføreinntektene
+                uføreInntekterFraForegåendeÅr = grunnlag.uføreInntekterFraForegåendeÅr()
                     .associate { it.år.value.toString() to it.inntektIKroner.verdi().toDouble() }
             )
         )

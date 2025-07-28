@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDoku
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
@@ -72,7 +73,16 @@ class HendelseMottattHåndteringJobbUtfører(
                     melding = parsedMelding
                 )
             }
+            InnsendingType.KLAGE -> {
+                håndterMottattDokumentService.håndterMottatteKlage(
+                    sakId = sakId,
+                    referanse = referanse,
+                    mottattTidspunkt = mottattTidspunkt,
+                    brevkategori = innsendingType,
+                    melding = parsedMelding as Klage
+                )
 
+            }
             else -> {
                 håndterMottattDokumentService.håndterMottatteDokumenter(
                     sakId,

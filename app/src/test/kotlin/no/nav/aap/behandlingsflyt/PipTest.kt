@@ -96,8 +96,8 @@ class PipTest {
 
             val barnRepository = postgresRepositoryRegistry.provider(connection).provide<BarnRepository>()
 
-            barnRepository.lagreRegisterBarn(behandling.id, setOf(Ident("regbarn")))
-            barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = setOf(Ident("oppgittbarn"))))
+            barnRepository.lagreRegisterBarn(behandling.id, listOf(Ident("regbarn")))
+            barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = listOf(Ident("oppgittbarn"))))
             barnRepository.lagreVurderinger(
                 behandling.id,
                 "ident",
@@ -149,8 +149,8 @@ class PipTest {
 
             val barnRepository = postgresRepositoryRegistry.provider(connection).provide<BarnRepository>()
 
-            barnRepository.lagreRegisterBarn(behandling.id, setOf(Ident("regbarn")))
-            barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = setOf(Ident("oppgittbarn"))))
+            barnRepository.lagreRegisterBarn(behandling.id, listOf(Ident("regbarn")))
+            barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = listOf(Ident("oppgittbarn"))))
             barnRepository.lagreVurderinger(
                 behandling.id,
                 "ident",
@@ -170,8 +170,8 @@ class PipTest {
                 TypeBehandling.Førstegangsbehandling, null
             )
 
-            barnRepository.lagreRegisterBarn(behandling2.id, setOf(Ident("regbar2")))
-            barnRepository.lagreOppgitteBarn(behandling2.id, OppgitteBarn(identer = setOf(Ident("oppgittbar2"))))
+            barnRepository.lagreRegisterBarn(behandling2.id, listOf(Ident("regbar2")))
+            barnRepository.lagreOppgitteBarn(behandling2.id, OppgitteBarn(identer = listOf(Ident("oppgittbar2"))))
             barnRepository.lagreVurderinger(
                 behandling2.id,
                 "ident",

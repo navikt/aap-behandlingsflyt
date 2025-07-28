@@ -16,7 +16,7 @@ class TrekkKlageRepositoryImpl(
         vurdering: TrekkKlageVurdering
     ) {
         settGamleGrunnlagTilInaktive(behandlingId)
-        val vurderingId = lagreVurdering(vurdering = vurdering);
+        val vurderingId = lagreVurdering(vurdering = vurdering)
         lagreGrunnlag(behandlingId = behandlingId, vurderingId = vurderingId)
     }
 

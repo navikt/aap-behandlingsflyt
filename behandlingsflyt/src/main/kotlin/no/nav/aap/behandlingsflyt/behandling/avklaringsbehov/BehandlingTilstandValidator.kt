@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
+import no.nav.aap.behandlingsflyt.exception.BehandlingUnderProsesseringException
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.motor.FlytJobbRepository
@@ -18,7 +19,8 @@ class BehandlingTilstandValidator(
 
         val jobberForBehandling = flytJobbRepository.hentJobberForBehandling(behandling.id.toLong())
         if (jobberForBehandling.isNotEmpty()) {
-            throw BehandlingUnderProsesseringException()
+            val typer = jobberForBehandling.map { it.type() }
+            throw BehandlingUnderProsesseringException(typer)
         }
     }
 }

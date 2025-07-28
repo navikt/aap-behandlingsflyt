@@ -1,15 +1,11 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-
-val ktorVersion = "3.2.1"
-val komponenterVersjon = "1.0.282"
-val junitVersjon = "5.13.3"
-val opentelemetryVersion = "2.17.1-alpha"
+val opentelemetryVersion = "2.18.1-alpha"
 
 
 plugins {
     id("behandlingsflyt.conventions")
-    id("io.ktor.plugin") version "3.2.1"
+    alias(libs.plugins.ktor)
 }
 
 application {
@@ -69,44 +65,41 @@ fun getCheckedOutGitCommitHash(): String {
 }
 
 dependencies {
-    implementation("io.ktor:ktor-server-cors:$ktorVersion")
-    implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
+    implementation(libs.ktorServerCors)
+    implementation(libs.ktorServerStatusPages)
 
-    implementation("io.micrometer:micrometer-registry-prometheus:1.15.1")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.15.2")
     implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
 
-    implementation("no.nav.aap.kelvin:motor:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:dbmigrering:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:motor-api:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:json:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:server:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:tidslinje:$komponenterVersjon")
+    implementation(libs.motor)
+    implementation(libs.dbconnect)
+    implementation(libs.dbmigrering)
+    implementation(libs.motorApi)
+    implementation(libs.httpklient)
+    implementation(libs.json)
+    implementation(libs.infrastructure)
+    implementation(libs.server)
+    implementation(libs.verdityper)
+    implementation(libs.tidslinje)
 
     // Auditlogging
     runtimeOnly(group = "com.papertrailapp", name = "logback-syslog4j", version = "1.0.0")
 
     implementation(project(":api"))
     implementation(project(":behandlingsflyt"))
-    implementation(project(":kontrakt"))
     implementation(project(":repository"))
     implementation("com.zaxxer:HikariCP:6.3.0")
-    implementation("org.flywaydb:flyway-database-postgresql:11.10.2")
+    implementation("org.flywaydb:flyway-database-postgresql:11.10.4")
     runtimeOnly("org.postgresql:postgresql:42.7.7")
     implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:${opentelemetryVersion}")
     implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:${opentelemetryVersion}")
 
     testImplementation(project(":lib-test"))
-    testImplementation("no.nav.aap.kelvin:dbtest:$komponenterVersjon")
-    testImplementation("no.nav.aap.kelvin:motor-test-utils:$komponenterVersjon")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersjon")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersjon")
-    testImplementation("org.assertj:assertj-core:3.27.3")
+    implementation(libs.dbtest)
+    implementation(libs.motorTestUtils)
+    testImplementation(libs.bundles.junit)
     testImplementation("org.testcontainers:postgresql:1.21.3")
     constraints {
         implementation("org.apache.commons:commons-compress:1.27.1") {

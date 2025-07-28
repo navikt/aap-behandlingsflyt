@@ -6,7 +6,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import org.slf4j.LoggerFactory
 
 class NavKontorService {
-    val logger = LoggerFactory.getLogger(javaClass)
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     private val enhetGateway = GatewayProvider.provide<EnhetGateway>()
 

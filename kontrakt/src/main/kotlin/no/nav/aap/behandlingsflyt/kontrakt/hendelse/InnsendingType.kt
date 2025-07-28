@@ -20,5 +20,7 @@ public enum class InnsendingType {
      * Legger til ny årsak på en behandling, men oppretter ikke ny behandling.
      */
     NY_ÅRSAK_TIL_BEHANDLING,
-    KABAL_HENDELSE
+    KABAL_HENDELSE,
+
+    OPPFØLGINGSOPPGAVE
 }

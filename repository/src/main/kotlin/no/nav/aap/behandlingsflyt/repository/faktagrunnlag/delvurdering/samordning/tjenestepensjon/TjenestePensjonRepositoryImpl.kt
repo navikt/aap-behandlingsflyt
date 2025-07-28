@@ -76,21 +76,18 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
                 FROM TJENESTEPENSJON_YTELSE WHERE TJENESTEPENSJON_ORDNING_ID = ?
         """.trimIndent()
 
-        return dbConnection.queryList(
-            sql,
-            {
-                setParams { setLong(1, ordningId) }
-                setRowMapper {
-                    TjenestePensjonYtelse(
-                        innmeldtYtelseFom = it.getLocalDateOrNull("INNMELDT_FOM"),
-                        ytelseIverksattFom = it.getLocalDate("IVERKSATT_FOM"),
-                        ytelseIverksattTom = it.getLocalDateOrNull("IVERKSATT_TOM"),
-                        ytelseType = YtelseTypeCode.valueOf(it.getString("YTELSE_TYPE")),
-                        ytelseId = it.getLong("EXTERN_ID")
-                    )
-                }
+        return dbConnection.queryList(sql) {
+            setParams { setLong(1, ordningId) }
+            setRowMapper {
+                TjenestePensjonYtelse(
+                    innmeldtYtelseFom = it.getLocalDateOrNull("INNMELDT_FOM"),
+                    ytelseIverksattFom = it.getLocalDate("IVERKSATT_FOM"),
+                    ytelseIverksattTom = it.getLocalDateOrNull("IVERKSATT_TOM"),
+                    ytelseType = YtelseTypeCode.valueOf(it.getString("YTELSE_TYPE")),
+                    ytelseId = it.getLong("EXTERN_ID")
+                )
             }
-        )
+        }
     }
 
 
@@ -109,7 +106,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
         """.trimIndent()
         )
 
-        val tgId = dbConnection.executeReturnKey(
+        dbConnection.execute(
             """
             INSERT INTO TJENESTEPENSJON_FORHOLD_GRUNNLAG (BEHANDLING_ID, AKTIV, TJENESTEPENSJON_ORDNINGER_ID)
             VALUES (?, true, ?)

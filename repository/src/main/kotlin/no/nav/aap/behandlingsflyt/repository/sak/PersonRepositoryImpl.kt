@@ -44,7 +44,7 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
         }
     }
 
-    override fun oppdater(person: Person, identer: List<Ident>) {
+    private fun oppdater(person: Person, identer: List<Ident>) {
         require(identer.filter { it.aktivIdent }.size < 2)
 
         val oppdaterteIdenter = identer.filterNot { ident -> person.identer().contains(ident) }
@@ -109,15 +109,6 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
         val nyPrimær = oppdaterteIdenter.single { it.aktivIdent }
 
         return person.aktivIdent().identifikator != nyPrimær.identifikator
-    }
-
-    override fun hent(identifikator: UUID): Person {
-        return connection.queryFirst("SELECT id, referanse FROM PERSON WHERE referanse = ?") {
-            setParams {
-                setUUID(1, identifikator)
-            }
-            setRowMapper(::mapPerson)
-        }
     }
 
     private fun mapPerson(row: Row): Person {

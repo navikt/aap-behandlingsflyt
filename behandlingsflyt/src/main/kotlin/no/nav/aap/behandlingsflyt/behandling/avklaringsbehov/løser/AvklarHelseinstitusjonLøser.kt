@@ -43,8 +43,7 @@ class AvklarHelseinstitusjonLøser(
             oppdaterteVurderinger
         )
 
-        return LøsningsResultat(løsning.helseinstitusjonVurdering.vurderinger.map { it.begrunnelse }
-            .joinToString(" "))
+        return LøsningsResultat(løsning.helseinstitusjonVurdering.vurderinger.joinToString(" ") { it.begrunnelse })
     }
 
     private fun slåSammenMedNyeVurderinger(

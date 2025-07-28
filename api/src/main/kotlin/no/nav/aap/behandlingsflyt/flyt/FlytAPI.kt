@@ -109,7 +109,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource, repositoryRegistry: Repos
                     val stegGrupper: Map<StegGruppe, List<StegType>> =
                         flyt.stegene().groupBy { steg -> steg.gruppe }
                     val aktivtSteg = behandling.aktivtSteg()
-                    val aktivtStegDefinisjon = Definisjon.fraStegType(aktivtSteg);
+                    val aktivtStegDefinisjon = Definisjon.fraStegType(aktivtSteg)
                     var erFullført = true
 
                     val alleAvklaringsbehovInkludertFrivillige = FrivilligeAvklaringsbehov(
@@ -126,7 +126,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource, repositoryRegistry: Repos
                         LogKontekst(referanse = BehandlingReferanse(req.referanse))
                     ).use {
                         val behandlingVersjon = behandling.versjon
-                        log.info("Henter flyt med behandlingversjon: ${behandlingVersjon}")
+                        log.info("Henter flyt med behandlingversjon: $behandlingVersjon")
                     }
 
 

@@ -16,13 +16,12 @@ class FødselsnummerGenerator private constructor(
         val month = String.format("%02d", fodselsdato.monthValue + NAV_SYNTETISK_IDENT_OFFSET_MND)
         val year = fodselsdato.year.toString().substring(2)
 
-        val birthNumber: Int
-        if (this.kjonn === Kjønn.KVINNE) {
-            birthNumber = 100 + random.nextInt(900 / 2) * 2
+        val birthNumber: Int = if (this.kjonn === Kjønn.KVINNE) {
+            100 + random.nextInt(900 / 2) * 2
         } else if (this.kjonn === Kjønn.MANN) {
-            birthNumber = 100 + random.nextInt(900 / 2) * 2 + 1
+            100 + random.nextInt(900 / 2) * 2 + 1
         } else {
-            birthNumber = 999
+            999
         }
 
         if (this.identType === IdentType.DNR) {

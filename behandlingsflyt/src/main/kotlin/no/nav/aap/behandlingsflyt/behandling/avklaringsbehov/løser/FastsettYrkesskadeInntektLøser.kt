@@ -35,7 +35,7 @@ class FastsettYrkesskadeInntektLøser(
         )
 
         return LøsningsResultat(
-            begrunnelse = løsning.yrkesskadeInntektVurdering.vurderinger.map { it.begrunnelse }.joinToString()
+            begrunnelse = løsning.yrkesskadeInntektVurdering.vurderinger.joinToString { it.begrunnelse }
         )
     }
 

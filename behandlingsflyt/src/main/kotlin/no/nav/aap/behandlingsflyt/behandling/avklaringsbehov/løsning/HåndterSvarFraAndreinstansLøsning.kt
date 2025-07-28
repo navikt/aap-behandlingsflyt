@@ -18,9 +18,9 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = HÅNDTER_SVAR_FRA_ANDREINSTANS_KODE)
 class HåndterSvarFraAndreinstansLøsning(
-    @JsonProperty("svarFraAndreinstansVurdering", required = true)
+    @param:JsonProperty("svarFraAndreinstansVurdering", required = true)
     val svarFraAndreinstansVurdering: HåndterSvarFraAndreinstansLøsningDto,
-    @JsonProperty(
+    @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = HÅNDTER_SVAR_FRA_ANDREINSTANS_KODE

@@ -66,11 +66,11 @@ object InMemoryBarnRepository : BarnRepository {
 
     override fun lagreRegisterBarn(
         behandlingId: BehandlingId,
-        barn: Set<Ident>
+        barn: List<Ident>
     ) {
         synchronized(lock) {
             if (barn.isNotEmpty()) {
-                registerBarn[behandlingId] = barn.toList()
+                registerBarn[behandlingId] = barn
             } else {
                 registerBarn.remove(behandlingId)
             }

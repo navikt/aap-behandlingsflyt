@@ -15,7 +15,7 @@ data class MeldekortGrunnlag(
 
         val rekkefølgeIder = rekkefølge.map { it.referanse.asJournalpostId }
         require(meldekortene.all { it.journalpostId in rekkefølgeIder }) {
-            "sjekk feilet: ${meldekortene.joinToString {it.journalpostId.toString()}} subset ${rekkefølge.joinToString {it.referanse.toString()}}"
+            "sjekk feilet: ${meldekortene.joinToString { it.journalpostId.toString() }} subset ${rekkefølge.joinToString { it.referanse.toString() }}"
         }
     }
 

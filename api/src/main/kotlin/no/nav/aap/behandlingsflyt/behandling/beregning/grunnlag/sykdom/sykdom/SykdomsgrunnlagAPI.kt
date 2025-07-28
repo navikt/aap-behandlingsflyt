@@ -16,14 +16,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
-import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDate
 import java.time.ZoneId
 import javax.sql.DataSource
@@ -31,8 +28,9 @@ import javax.sql.DataSource
 fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/sykdom/sykdom") {
-            authorizedGet<BehandlingReferanse, SykdomGrunnlagResponse>(
-                AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
+            getGrunnlag<BehandlingReferanse, SykdomGrunnlagResponse>(
+                behandlingPathParam = BehandlingPathParam("referanse"),
+                avklaringsbehovKode = Definisjon.AVKLAR_SYKDOM.kode.toString()
             ) { req ->
                 val response = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
@@ -59,14 +57,6 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource, repositoryRegi
                     val vedtatteSykdomsvurderingerIder = vedtatteSykdomsvurderinger.map { it.id }
                     val sykdomsvurderinger = nåTilstand.filterNot { it.id in vedtatteSykdomsvurderingerIder }
 
-                    val harTilgangTilÅSaksbehandle =
-                        GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                            behandling.referanse.referanse,
-                            Definisjon.AVKLAR_SYKDOM,
-                            token()
-                        )
-
-
                     SykdomGrunnlagResponse(
                         opplysninger = InnhentetSykdomsOpplysninger(
                             oppgittYrkesskadeISøknad = false,
@@ -78,11 +68,13 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource, repositoryRegi
                             .map { it.toDto() },
                         historikkSykdomsvurderinger = historikkSykdomsvurderinger
                             .sortedBy { it.opprettet }
-                            .map { it.toDto() },
+                            .mapIndexed { index, vurdering ->
+                                vurdering.toDto(erGjeldende = index == historikkSykdomsvurderinger.lastIndex)
+                            },
                         gjeldendeVedtatteSykdomsvurderinger = vedtatteSykdomsvurderinger
                             .sortedBy { it.vurderingenGjelderFra ?: LocalDate.MIN }
                             .map { it.toDto() },
-                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle()
                     )
                 }
 
@@ -90,10 +82,9 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource, repositoryRegi
             }
         }
         route("/{referanse}/grunnlag/sykdom/yrkesskade") {
-            authorizedGet<BehandlingReferanse, YrkesskadeVurderingGrunnlagResponse>(
-                AuthorizationParamPathConfig(
-                    behandlingPathParam = BehandlingPathParam("referanse")
-                )
+            getGrunnlag<BehandlingReferanse, YrkesskadeVurderingGrunnlagResponse>(
+                behandlingPathParam = BehandlingPathParam("referanse"),
+                avklaringsbehovKode = Definisjon.AVKLAR_YRKESSKADE.kode.toString()
             ) { req ->
                 val response = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
@@ -113,16 +104,8 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource, repositoryRegi
                     val innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader.orEmpty()
                         .map { yrkesskade -> RegistrertYrkesskade(yrkesskade, "Yrkesskaderegisteret") }
 
-                    val harTilgangTilÅSaksbehandle =
-                        GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilBehandling(
-                            req.referanse,
-                            Definisjon.AVKLAR_YRKESSKADE,
-                            token()
-                        )
-
-
                     YrkesskadeVurderingGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         opplysninger = InnhentetSykdomsOpplysninger(
                             oppgittYrkesskadeISøknad = false,
                             innhentedeYrkesskader = innhentedeYrkesskader,
@@ -153,7 +136,7 @@ private fun Yrkesskadevurdering.toResponse(): YrkesskadevurderingResponse {
     )
 }
 
-private fun Sykdomsvurdering.toDto(): SykdomsvurderingResponse {
+private fun Sykdomsvurdering.toDto(erGjeldende: Boolean? = null): SykdomsvurderingResponse {
     val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv.ident)
     return SykdomsvurderingResponse(
         begrunnelse = begrunnelse,
@@ -175,6 +158,7 @@ private fun Sykdomsvurdering.toDto(): SykdomsvurderingResponse {
             ansattnavn = navnOgEnhet?.navn,
             enhetsnavn = navnOgEnhet?.enhet,
         ),
+        erGjeldende = erGjeldende,
     )
 }
 

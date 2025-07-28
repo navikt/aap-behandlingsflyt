@@ -14,8 +14,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettGrunnlagSteg
@@ -69,9 +67,8 @@ class InntektService private constructor(
                 val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
                 val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
 
-                val sak = sakService.hent(kontekst.sakId)
                 if (beregningVurdering?.tidspunktVurdering?.nedsattArbeidsevneDato == null && studentGrunnlag?.studentvurdering?.avbruttStudieDato == null) {
-                    log.error("Verken tidspunktVurdering eller studentGrunnlag fantes. Returner IKKE_ENDRET.")
+                    log.error("Verken tidspunktVurdering eller studentGrunnlag fantes. Returner IKKE_ENDRET. BehandlingId $behandlingId. Sak: ${kontekst.sakId}")
                     return IKKE_ENDRET
                 }
                 val nedsettelsesDato = utledNedsettelsesdato(
@@ -90,6 +87,7 @@ class InntektService private constructor(
                 )
                 val inntektsBehov = behov.utledAlleRelevanteÅr()
 
+                val sak = sakService.hent(kontekst.sakId)
                 inntektRegisterGateway.innhent(sak.person, inntektsBehov)
             } else {
                 emptySet()

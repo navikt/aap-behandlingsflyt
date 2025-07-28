@@ -3,8 +3,6 @@ package no.nav.aap.behandlingsflyt.flyt.internals
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
-import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDateTime
 
 data class NyÅrsakTilBehandlingSakHendelse(

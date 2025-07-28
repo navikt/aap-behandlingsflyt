@@ -19,7 +19,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -58,7 +57,7 @@ class BarnService private constructor(
 
         val oppgitteBarnIdenter = barnGrunnlag?.oppgitteBarn?.identer?.toList() ?: emptyList()
         val barn = barnGateway.hentBarn(sak.person, oppgitteBarnIdenter)
-        val registerBarnIdenter = barn.registerBarn.map { it.ident }.toSet()
+        val registerBarnIdenter = barn.registerBarn.map { it.ident }
 
         val relatertePersonopplysninger =
             personopplysningRepository.hentHvisEksisterer(behandlingId)?.relatertePersonopplysninger?.personopplysninger
@@ -80,7 +79,7 @@ class BarnService private constructor(
         barnIdenter.forEach { ident ->
             val identliste = pdlGateway.hentAlleIdenterForPerson(ident)
             if (identliste.isEmpty()) {
-                throw IllegalStateException("Fikk ingen treff på ident i PDL")
+                throw IllegalStateException("Fikk ingen treff på ident i PDL.")
             }
 
             personRepository.finnEllerOpprett(identliste)
@@ -106,10 +105,10 @@ class BarnService private constructor(
     }
 
     private fun manglerBarnGrunnlagEllerFantNyeBarnFraRegister(
-        barnIdenter: Set<Ident>,
+        barnIdenter: List<Ident>,
         barnGrunnlag: BarnGrunnlag?
     ): Boolean {
-        return barnIdenter != barnGrunnlag?.registerbarn?.identer?.toSet()
+        return barnIdenter.toSet() != barnGrunnlag?.registerbarn?.identer?.toSet()
     }
 
     companion object : Informasjonskravkonstruktør {

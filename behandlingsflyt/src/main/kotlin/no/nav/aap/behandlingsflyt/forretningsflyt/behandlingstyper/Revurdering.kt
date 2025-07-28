@@ -162,8 +162,6 @@ object Revurdering : BehandlingType {
                 steg = BeregningAvklarFaktaSteg, årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.REVURDER_BEREGNING,
-                    ÅrsakTilBehandling.REVURDER_YRKESSKADE,
-                    ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
                 )
             )
             .medSteg(steg = VisGrunnlagSteg)

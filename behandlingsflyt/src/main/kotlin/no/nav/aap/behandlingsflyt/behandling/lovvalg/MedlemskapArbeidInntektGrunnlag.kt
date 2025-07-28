@@ -2,22 +2,22 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalg
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
 data class MedlemskapLovvalgGrunnlag(
     val medlemskapArbeidInntektGrunnlag: MedlemskapArbeidInntektGrunnlag?,
-    val personopplysningGrunnlag: PersonopplysningGrunnlag,
+    val personopplysning: Personopplysning,
     var nyeSoknadGrunnlag: UtenlandsOppholdData?
 ) : Faktagrunnlag
 
 data class MedlemskapArbeidInntektGrunnlag(
     val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,
-    val inntekterINorgeGrunnlag : List<InntektINorgeGrunnlag>,
-    val arbeiderINorgeGrunnlag : List<ArbeidINorgeGrunnlag>,
+    val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
+    val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
     val manuellVurdering: ManuellVurderingForLovvalgMedlemskap?
 )
 
