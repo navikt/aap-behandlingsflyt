@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.LagretBarnFraRegister
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
@@ -54,8 +54,16 @@ internal class BarnRepositoryImplTest {
                 )
             )
         )
-        val barnListe =
-            listOf(Ident("12345678910"), Ident("12345")).map { Barn(it, Fødselsdato(LocalDate.now().minusYears(10))) }
+        val barnListe = dataSource.transaction { conn ->
+            val personRepo = PersonRepositoryImpl(conn)
+            listOf(Ident("12345678910"), Ident("12345")).map {
+                val personId = personRepo.finnEllerOpprett(listOf(it)).id
+                LagretBarnFraRegister(
+                    personId,
+                    Fødselsdato(LocalDate.now().minusYears(10))
+                )
+            }
+        }
 
         val oppgittBarn = OppgitteBarn.OppgittBarn(
             Ident("1"),
@@ -108,8 +116,17 @@ internal class BarnRepositoryImplTest {
             val sak = sak(connection)
             finnEllerOpprettBehandling(connection, sak)
         }
-        val barnListe =
-            listOf(Ident("12"), Ident("32323")).map { Barn(it, Fødselsdato(LocalDate.now().minusYears(10))) }
+        val barnListe = dataSource.transaction { conn ->
+            val personRepo = PersonRepositoryImpl(conn)
+            listOf(Ident("12"), Ident("32323")).map {
+                val personId = personRepo.finnEllerOpprett(listOf(it)).id
+                LagretBarnFraRegister(
+                    personId,
+                    Fødselsdato(LocalDate.now().minusYears(10))
+                )
+            }
+        }
+
         dataSource.transaction {
             BarnRepositoryImpl(it).lagreRegisterBarn(
                 behandling.id,

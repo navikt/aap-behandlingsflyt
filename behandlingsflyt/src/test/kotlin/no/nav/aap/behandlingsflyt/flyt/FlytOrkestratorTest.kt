@@ -77,8 +77,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnFraRegister
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.LagretBarnFraRegister
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.RegisterBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvarDto
@@ -139,6 +140,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.ident
@@ -366,7 +368,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         val behandling = revurdereFramTilOgMedSykdom(
             sak = sak,
             gjelderFra = sak.rettighetsperiode.fom,
-            vissVarighet = true)
+            vissVarighet = true
+        )
 
         behandling.løsAvklaringsBehov(
             AvklarBistandsbehovLøsning(
@@ -379,10 +382,11 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     skalVurdereAapIOvergangTilArbeid = null,
                     overgangBegrunnelse = null
                 ),
-            )).medKontekst {
-                assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).describedAs {
-                    "Revurdering av sykdom skal gå rett til beslutter når ingen avklaringsbehov trenger å løses av NAY"
-                }.containsExactly(Definisjon.FATTE_VEDTAK)
+            )
+        ).medKontekst {
+            assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).describedAs {
+                "Revurdering av sykdom skal gå rett til beslutter når ingen avklaringsbehov trenger å løses av NAY"
+            }.containsExactly(Definisjon.FATTE_VEDTAK)
         }
     }
 
@@ -393,7 +397,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         val behandling = revurdereFramTilOgMedSykdom(
             sak = sak,
             gjelderFra = sak.rettighetsperiode.fom,
-            vissVarighet = false)
+            vissVarighet = false
+        )
 
         behandling.løsAvklaringsBehov(
             AvklarBistandsbehovLøsning(
@@ -406,7 +411,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     skalVurdereAapIOvergangTilArbeid = null,
                     overgangBegrunnelse = null
                 ),
-            )).løsAvklaringsBehov(
+            )
+        ).løsAvklaringsBehov(
             AvklarSykepengerErstatningLøsning(
                 sykepengeerstatningVurdering = SykepengerVurderingDto(
                     begrunnelse = "test",
@@ -415,7 +421,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR
                 ),
                 behovstype = Definisjon.AVKLAR_SYKEPENGEERSTATNING.kode
-            )).medKontekst {
+            )
+        ).medKontekst {
             assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).describedAs {
                 "Revurdering av sykdom skal innom foreslå vedtak-steg når vurdering av sykepengeerstatning er gjort av NAY"
             }.containsExactly(Definisjon.FORESLÅ_VEDTAK)
@@ -463,7 +470,10 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             .ignoringCollectionOrder()
             .isEqualTo(
                 BarnGrunnlag(
-                    registerbarn = RegisterBarn(id = -1, barn = listOf(Barn(barnIdent, Fødselsdato(barnfødseldato)))),
+                    registerbarn = RegisterBarn(
+                        id = -1,
+                        barn = listOf(LagretBarnFraRegister(PersonId(0L), Fødselsdato(barnfødseldato)))
+                    ), //!!
                     oppgitteBarn = null,
                     vurderteBarn = null
                 )
@@ -541,7 +551,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 BarnGrunnlag(
                     registerbarn = RegisterBarn(
                         id = -1,
-                        barn = person.barn.map { Barn(it.aktivIdent(), it.fødselsdato) }),
+                        barn = person.barn.map { LagretBarnFraRegister(PersonId(0L), it.fødselsdato) }),
                     oppgitteBarn = null,
                     vurderteBarn = null
                 )
@@ -2012,7 +2022,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 strukturertDokument = StrukturertDokument(
                     ManuellRevurderingV0(
-                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.FORUTGAENDE_MEDLEMSKAP), ""
+                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.FORUTGAENDE_MEDLEMSKAP),
+                        ""
                     ),
                 ),
                 innsendingType = InnsendingType.MANUELL_REVURDERING,
@@ -2053,7 +2064,10 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             behandling,
             AvklarForutgåendeMedlemskapLøsning(
                 manuellVurderingForForutgåendeMedlemskap = ManuellVurderingForForutgåendeMedlemskapDto(
-                    "begrunnelseforutgående", false, varMedlemMedNedsattArbeidsevne = false, medlemMedUnntakAvMaksFemAar = null
+                    "begrunnelseforutgående",
+                    false,
+                    varMedlemMedNedsattArbeidsevne = false,
+                    medlemMedUnntakAvMaksFemAar = null
                 )
             )
         )

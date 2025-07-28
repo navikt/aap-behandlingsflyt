@@ -119,6 +119,7 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
 
 
     override fun hent(personId: PersonId): Person {
+        // TODO, ikke bruk nøstede queries
         return connection.queryFirst("SELECT referanse FROM PERSON WHERE id = ?") {
             setParams {
                 setLong(1, personId.id)

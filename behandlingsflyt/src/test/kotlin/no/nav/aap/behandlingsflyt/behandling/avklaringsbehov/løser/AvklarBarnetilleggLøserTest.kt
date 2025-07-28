@@ -44,7 +44,12 @@ class AvklarBarnetilleggLøserTest {
 
         val oppdaterteVurderinger = oppdaterTilstandBasertPåNyeVurderinger(
             eksisterendeVurderinger,
-            nyeVurderinger.vurderingerForBarnetillegg.vurderteBarn
+            nyeVurderinger.vurderingerForBarnetillegg.vurderteBarn.map {
+                VurdertBarn(
+                    ident = BarnIdentifikator.BarnIdent(it.ident!!),
+                    vurderinger = it.vurderinger.map { it.tilVurderingAvForeldreAnsvar() }
+                )
+            }
         )
 
         assertThat(oppdaterteVurderinger).hasSize(1)

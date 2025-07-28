@@ -3,9 +3,11 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.komponenter.type.Periode
 
-data class Barn(val ident: Ident, val fødselsdato: Fødselsdato, val dødsdato: Dødsdato? = null) : IBarn {
+data class BarnFraRegister(val ident: Ident, val fødselsdato: Fødselsdato, val dødsdato: Dødsdato? = null) :
+    BarnMedIdent {
     override fun identifikator(): BarnIdentifikator {
         return ident.let { BarnIdentifikator.BarnIdent(it) }
     }
@@ -25,6 +27,20 @@ data class Barn(val ident: Ident, val fødselsdato: Fødselsdato, val dødsdato:
         }
     }
 }
+
+data class LagretBarnFraRegister(val personId: PersonId, val fødselsdato: Fødselsdato, val dødsdato: Dødsdato? = null) :
+    BarnMedIdent {
+    override fun identifikator(): BarnIdentifikator {
+        return BarnIdentifikator.RegistertBarnPerson(personId)
+    }
+
+    override fun fødselsdato(): Fødselsdato {
+        return fødselsdato
+    }
+
+}
+
+sealed interface BarnMedIdent : IBarn
 
 sealed interface IBarn {
     fun identifikator(): BarnIdentifikator

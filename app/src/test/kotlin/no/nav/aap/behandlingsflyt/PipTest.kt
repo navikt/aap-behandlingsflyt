@@ -3,8 +3,8 @@ package no.nav.aap.behandlingsflyt
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import kotlinx.coroutines.runBlocking
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.LagretBarnFraRegister
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
@@ -99,9 +99,14 @@ class PipTest {
 
             val barnRepository = postgresRepositoryRegistry.provider(connection).provide<BarnRepository>()
 
+            val regBarn = PersonRepositoryImpl(connection).finnEllerOpprett(
+                listOf(
+                    Ident("regbarn", true),
+                )
+            )
             barnRepository.lagreRegisterBarn(
                 behandling.id,
-                listOf(Barn(ident = Ident("regbarn"), Fødselsdato(LocalDate.now())))
+                listOf(LagretBarnFraRegister(personId = regBarn.id, Fødselsdato(LocalDate.now())))
             )
             barnRepository.lagreOppgitteBarn(
                 behandling.id,
@@ -112,7 +117,7 @@ class PipTest {
                 "ident",
                 listOf(
                     VurdertBarn(
-                        BarnIdentifikator.BarnIdent("vurdertbarn"),
+                        BarnIdentifikator.RegistertBarnPerson(regBarn.id),
                         listOf(VurderingAvForeldreAnsvar(periode.fom, true, "fordi"))
                     )
                 )
@@ -158,9 +163,10 @@ class PipTest {
 
             val barnRepository = postgresRepositoryRegistry.provider(connection).provide<BarnRepository>()
 
+            val regBarn = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("regbarn", true)))
             barnRepository.lagreRegisterBarn(
                 behandling.id,
-                listOf(Barn(ident = Ident("regbarn"), Fødselsdato(LocalDate.now())))
+                listOf(LagretBarnFraRegister(personId = regBarn.id, Fødselsdato(LocalDate.now())))
             )
             barnRepository.lagreOppgitteBarn(
                 behandling.id,
@@ -171,7 +177,7 @@ class PipTest {
                 "ident",
                 listOf(
                     VurdertBarn(
-                        BarnIdentifikator.BarnIdent("vurdertbarn"),
+                        BarnIdentifikator.RegistertBarnPerson(regBarn.id),
                         listOf(VurderingAvForeldreAnsvar(periode.fom, true, "fordi"))
                     )
                 )
@@ -185,10 +191,11 @@ class PipTest {
                 TypeBehandling.Førstegangsbehandling, null
             )
 
+            val regBarn2 = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("regbar2")))
             barnRepository.lagreRegisterBarn(
                 behandling2.id,
                 listOf(
-                    Barn(ident = Ident("regbar2"), Fødselsdato(LocalDate.now()))
+                    LagretBarnFraRegister(personId = regBarn2.id, Fødselsdato(LocalDate.now()))
                 )
             )
             barnRepository.lagreOppgitteBarn(
@@ -201,7 +208,7 @@ class PipTest {
                 "ident",
                 listOf(
                     VurdertBarn(
-                        BarnIdentifikator.BarnIdent("vurdertbar2"),
+                        BarnIdentifikator.RegistertBarnPerson(regBarn2.id),
                         listOf(VurderingAvForeldreAnsvar(periode.fom, true, "fordi"))
                     )
                 )

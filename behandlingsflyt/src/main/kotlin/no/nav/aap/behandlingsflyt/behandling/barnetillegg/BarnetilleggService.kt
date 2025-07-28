@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.barnetillegg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnFraRegister
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.IBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
@@ -105,7 +105,7 @@ class BarnetilleggService(
                 Tidslinje(
                     listOf(
                         Segment(
-                            Barn.periodeMedRettTil(barnet.fødselsdato()),
+                            BarnFraRegister.periodeMedRettTil(barnet.fødselsdato()),
                             barnet.identifikator()
                         )
                     )

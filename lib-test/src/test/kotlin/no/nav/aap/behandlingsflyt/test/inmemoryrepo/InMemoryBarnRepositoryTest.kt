@@ -35,7 +35,7 @@ class InMemoryBarnRepositoryTest {
     fun `Lagrer og henter barn`() {
         val vurderteBarn = listOf(
             VurdertBarn(
-                ident = BarnIdentifikator.BarnIdent("12345"),
+                ident = BarnIdentifikator.BarnIdent(Ident("12345")),
                 vurderinger = listOf(
                     VurderingAvForeldreAnsvar(
                         fraDato = LocalDate.now(),
@@ -46,8 +46,8 @@ class InMemoryBarnRepositoryTest {
             )
         )
         val barnListe = listOf(Ident("12345678910"), Ident("12345")).map {
-            no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn(
-                it,
+            no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.LagretBarnFraRegister(
+                InMemoryPersonRepository.finnEllerOpprett(listOf(it)).id,
                 Fødselsdato(LocalDate.now().minusYears(18))
             )
         }

@@ -7,9 +7,10 @@ import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnFraRegister
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvarDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -17,6 +18,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -43,6 +45,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource, repositoryRegistr
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
                     val barnRepository = repositoryProvider.provide<BarnRepository>()
+                    val personRepository = repositoryProvider.provide<PersonRepository>()
 
                     val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider)
                     val barnetilleggService = BarnetilleggService(
@@ -61,32 +64,30 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource, repositoryRegistr
                     val ansattNavnOgEnhet =
                         vurderteBarn?.let { AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv) }
 
+                    val uavklarteBarnIdentifiserbare =
+                        tilIdentifiserbartBarnDto(uavklarteBarn, personRepository, barnGrunnlag)
+
                     BarnetilleggDto(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         søknadstidspunkt = sakOgBehandlingService.hentSakFor(behandling.id).rettighetsperiode.fom,
-                        folkeregisterbarn = folkeregister.map {
-                            hentBarn(
-                                it,
-                                barnGrunnlag
-                            )
-                        },
+                        folkeregisterbarn = tilIdentifiserbartBarnDto(folkeregister, personRepository, barnGrunnlag),
                         vurderteBarn = vurderteBarn?.barn.orEmpty().map {
                             val vurdertBartIdent = it.ident
                             when (vurdertBartIdent) {
-                                is BarnIdentifikator.BarnIdent -> ExtendedVurdertBarnDto(
-                                    vurdertBartIdent.ident.identifikator, null,
-                                    it.vurderinger.map {
-                                        VurderingAvForeldreAnsvarDto(
-                                            it.fraDato,
-                                            it.harForeldreAnsvar,
-                                            it.begrunnelse
-                                        )
-                                    },
-                                    hentBarn(
-                                        it.ident,
-                                        barnGrunnlag
-                                    ).fodselsDato,
-                                )
+                                is BarnIdentifikator.RegistertBarnPerson -> {
+                                    val person = personRepository.hent(vurdertBartIdent.personId)
+                                    ExtendedVurdertBarnDto(
+                                        person.aktivIdent().identifikator, null,
+                                        it.vurderinger.map {
+                                            VurderingAvForeldreAnsvarDto(
+                                                it.fraDato,
+                                                it.harForeldreAnsvar,
+                                                it.begrunnelse
+                                            )
+                                        },
+                                        barnGrunnlag?.fødselsdatoFor(vurdertBartIdent)?.toLocalDate()
+                                    )
+                                }
 
                                 is BarnIdentifikator.NavnOgFødselsdato -> ExtendedVurdertBarnDto(
                                     ident = null,
@@ -100,6 +101,19 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource, repositoryRegistr
                                     navn = vurdertBartIdent.navn,
                                     fødselsdato = vurdertBartIdent.fødselsdato.toLocalDate()
                                 )
+
+                                is BarnIdentifikator.BarnIdent -> ExtendedVurdertBarnDto(
+                                    ident = vurdertBartIdent.ident.identifikator,
+                                    vurderinger = it.vurderinger.map {
+                                        VurderingAvForeldreAnsvarDto(
+                                            it.fraDato,
+                                            it.harForeldreAnsvar,
+                                            it.begrunnelse
+                                        )
+                                    },
+                                    navn = null,
+                                    fødselsdato = null,
+                                )
                             }
                         },
                         vurdertAv =
@@ -111,14 +125,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource, repositoryRegistr
                                     enhetsnavn = ansattNavnOgEnhet?.enhet
                                 )
                             },
-                        barnSomTrengerVurdering =
-                            uavklarteBarn
-                                .map {
-                                    hentBarn(
-                                        it,
-                                        barnGrunnlag
-                                    )
-                                }.toList()
+                        barnSomTrengerVurdering = uavklarteBarnIdentifiserbare
                     )
                 }
 
@@ -128,42 +135,60 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource, repositoryRegistr
     }
 }
 
-fun hentBarn(ident: BarnIdentifikator, barnGrunnlag: BarnGrunnlag?): IdentifiserteBarnDto {
-    val registerBarn = barnGrunnlag?.registerbarn?.barn.orEmpty()
-    val oppgitteBarn = barnGrunnlag?.oppgitteBarn?.oppgitteBarn.orEmpty()
-
-    return when (ident) {
-        is BarnIdentifikator.BarnIdent -> {
-            val barn = registerBarn.singleOrNull { it.ident == ident.ident }
-            val oppgittBarn = oppgitteBarn.singleOrNull { it.ident == ident.ident }
-
-            if (barn != null && oppgittBarn != null && barn.ident != oppgittBarn.ident) {
-                log.warn("Mismatch mellom idnet for registerbarn og oppgitte barn for ident ${ident.ident}.")
+private fun tilIdentifiserbartBarnDto(
+    uavklarteBarn: Set<BarnIdentifikator>,
+    personRepository: PersonRepository,
+    barnGrunnlag: BarnGrunnlag?
+): List<IdentifiserteBarnDto> {
+    val uavklarteBarnIdentifiserbare = uavklarteBarn.map {
+        val (identifikator, ident) = when (it) {
+            is BarnIdentifikator.BarnIdent -> {
+                val lagretPerson = personRepository.finn(it.ident)
+                if (lagretPerson != null) {
+                    Pair(
+                        BarnIdentifikator.RegistertBarnPerson(lagretPerson.id),
+                        lagretPerson.aktivIdent()
+                    )
+                } else {
+                    Pair(BarnIdentifikator.BarnIdent(it.ident), it.ident)
+                }
             }
 
-            if (barn != null && oppgittBarn != null && barn.fødselsdato != oppgittBarn.fødselsdato) {
-                log.warn("Mismatch mellom fødselsdato registerbarn og oppgitte barn for ident ${ident.ident}.")
-            }
-
-            val fødselsdato = if (barn?.fødselsdato != null) {
-                barn.fødselsdato
-            } else {
-                oppgittBarn?.fødselsdato
-            }
-
-            IdentifiserteBarnDto(
-                ident = ident.ident,
-                fodselsDato = fødselsdato?.toLocalDate(),
-                navn = oppgittBarn?.navn,
-                forsorgerPeriode = fødselsdato?.let { Barn.periodeMedRettTil(fødselsdato) }
+            is BarnIdentifikator.NavnOgFødselsdato -> Pair(it, null)
+            is BarnIdentifikator.RegistertBarnPerson -> Pair(
+                it,
+                personRepository.hent(it.personId).aktivIdent()
             )
         }
 
-        is BarnIdentifikator.NavnOgFødselsdato -> IdentifiserteBarnDto(
-            ident = null,
-            fodselsDato = ident.fødselsdato.toLocalDate(),
-            navn = ident.navn,
-            forsorgerPeriode = Barn.periodeMedRettTil(ident.fødselsdato),
+        val fødselsdato = barnGrunnlag?.fødselsdatoFor(identifikator)
+        IdentifiserteBarnDto(
+            ident = ident,
+            fodselsDato = fødselsdato?.toLocalDate(),
+            navn = barnGrunnlag?.finnNavnFor(identifikator),
+            forsorgerPeriode = fødselsdato?.let { BarnFraRegister.periodeMedRettTil(it) }
         )
     }
+    return uavklarteBarnIdentifiserbare
 }
+
+fun BarnGrunnlag.fødselsdatoFor(ident: BarnIdentifikator): Fødselsdato? {
+    val fødselsdatoBlantOppgitteBarn =
+        this.oppgitteBarn?.oppgitteBarn.orEmpty().find { it.identifikator() == ident }?.fødselsdato
+    val fødselssdatoFraRegisterbarn =
+        this.registerbarn?.barn.orEmpty().find { it.identifikator() == ident }?.fødselsdato
+
+    return if (fødselssdatoFraRegisterbarn != null) {
+        fødselssdatoFraRegisterbarn
+    } else {
+        fødselsdatoBlantOppgitteBarn
+    }
+}
+
+fun BarnGrunnlag.finnNavnFor(ident: BarnIdentifikator): String? {
+    val navnBlantOppgitteBarn =
+        this.oppgitteBarn?.oppgitteBarn.orEmpty().find { it.identifikator() == ident }?.navn
+
+    return navnBlantOppgitteBarn
+}
+

@@ -2,7 +2,7 @@
 
 package no.nav.aap.behandlingsflyt.integrasjon.barn
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnFraRegister
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
@@ -65,7 +65,7 @@ class PdlBarnGateway : BarnGateway {
         }
     }
 
-    private fun hentBarn(identer: List<Ident>): List<Barn> {
+    private fun hentBarn(identer: List<Ident>): List<BarnFraRegister> {
         if (identer.isEmpty()) {
             return emptyList()
         }
@@ -79,7 +79,7 @@ class PdlBarnGateway : BarnGateway {
             res.person?.let { person ->
                 person.foedselsdato?.let { foedsel ->
                     val fødselsdato = PdlParser.utledFødselsdato(foedsel)
-                    Barn(
+                    BarnFraRegister(
                         ident = Ident(res.ident),
                         fødselsdato = requireNotNull(fødselsdato),
                         dødsdato = person.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) })

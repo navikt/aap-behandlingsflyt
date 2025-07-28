@@ -13,8 +13,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling.BARNETILLEGG
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -24,7 +26,9 @@ import java.time.Duration
 class BarnService private constructor(
     private val sakService: SakService,
     private val barnRepository: BarnRepository,
+    private val personRepository: PersonRepository,
     private val barnGateway: BarnGateway,
+    private val identGateway: IdentGateway,
     private val tidligereVurderinger: TidligereVurderinger,
     private val unleashGateway: UnleashGateway
 ) : Informasjonskrav {
@@ -56,24 +60,33 @@ class BarnService private constructor(
         val barn = barnGateway.hentBarn(sak.person, oppgitteBarnIdenter)
         val registerBarn = barn.registerBarn
 
+        val registrerteBarnIdenter =
+            barnGrunnlag?.registerbarn?.barn.orEmpty().map { personRepository.hent(it.personId) }
+                .flatMap { it.identer() }
+
         val manglerBarnGrunnlagEllerFantNyeBarnFraRegister =
             manglerBarnGrunnlagEllerFantNyeBarnFraRegister(
-                registerBarn.map { it.ident },
-                barnGrunnlag?.registerbarn
+                registerBarn.map { it.ident }, // TODO, hent alle her?
+                registrerteBarnIdenter,
             )
         val personopplysningerForBarnErOppdatert =
             personopplysningerForBarnErOppdatert(barn.alleBarn(), barnGrunnlag?.registerbarn?.barn)
 
         if (manglerBarnGrunnlagEllerFantNyeBarnFraRegister || personopplysningerForBarnErOppdatert) {
-            barnRepository.lagreRegisterBarn(behandlingId, barn.alleBarn().toList())
+            val barnMedPersonId = barn.alleBarn().map {
+                val alleIdenterForBarn = identGateway.hentAlleIdenterForPerson(it.ident)
+                val person = personRepository.finnEllerOpprett(alleIdenterForBarn)
+                LagretBarnFraRegister(person.id, it.fødselsdato, it.dødsdato)
+            }
+            barnRepository.lagreRegisterBarn(behandlingId, barnMedPersonId)
             return ENDRET
         }
         return IKKE_ENDRET
     }
 
     private fun personopplysningerForBarnErOppdatert(
-        barn: Set<Barn>,
-        eksisterendeRegisterBarn: List<Barn>?
+        barn: List<BarnFraRegister>,
+        eksisterendeRegisterBarn: List<BarnMedIdent>?
     ): Boolean {
         if (barn.isNotEmpty() && eksisterendeRegisterBarn.isNullOrEmpty()) {
             return true
@@ -85,9 +98,9 @@ class BarnService private constructor(
 
     private fun manglerBarnGrunnlagEllerFantNyeBarnFraRegister(
         barnIdenter: List<Ident>,
-        registerbarn: RegisterBarn?
+        lagredeRegisterBarnIdenter: List<Ident>?
     ): Boolean {
-        return barnIdenter.toSet() != registerbarn?.barn?.map { it.ident }?.toSet()
+        return barnIdenter.toSet() != lagredeRegisterBarnIdenter?.toSet()
     }
 
     companion object : Informasjonskravkonstruktør {
@@ -100,7 +113,9 @@ class BarnService private constructor(
             return BarnService(
                 SakService(sakRepository),
                 repositoryProvider.provide(),
+                repositoryProvider.provide(),
                 barnGateway,
+                GatewayProvider.provide(),
                 TidligereVurderingerImpl(repositoryProvider),
                 unleashGateway,
             )

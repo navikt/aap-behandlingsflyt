@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.LagretBarnFraRegister
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.RegisterBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.VurderteBarn
@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap
 object InMemoryBarnRepository : BarnRepository {
     private val barn = ConcurrentHashMap<BehandlingId, List<String>>()
     private val oppgitteBarn = ConcurrentHashMap<BehandlingId, OppgitteBarn>()
-    private val registerBarn = ConcurrentHashMap<BehandlingId, List<Barn>>()
+    private val registerBarn = ConcurrentHashMap<BehandlingId, List<LagretBarnFraRegister>>()
     private val vurdertBarn = ConcurrentHashMap<BehandlingId, List<VurdertBarn>>()
     private val lock = Object()
 
@@ -66,7 +66,7 @@ object InMemoryBarnRepository : BarnRepository {
 
     override fun lagreRegisterBarn(
         behandlingId: BehandlingId,
-        barn: List<Barn>
+        barn: List<LagretBarnFraRegister>
     ) {
         synchronized(lock) {
             if (barn.isNotEmpty()) {

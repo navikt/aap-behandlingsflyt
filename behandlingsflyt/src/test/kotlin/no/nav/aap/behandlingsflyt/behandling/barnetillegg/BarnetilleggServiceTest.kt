@@ -4,7 +4,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnFraRegister
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.LagretBarnFraRegister
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
@@ -18,6 +19,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBarnRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
@@ -62,15 +64,8 @@ class BarnetilleggServiceTest {
         val fødselsdatoGammeltBarn = LocalDate.now().minusYears(21)
         val fødseldatoUngtBarn = LocalDate.now().minusYears(5)
 
-        val gammeltBarn = Barn(
-            ident = genererIdent(fødselsdatoGammeltBarn),
-            fødselsdato = Fødselsdato(fødselsdatoGammeltBarn)
-        )
-
-        val ungtBarn = Barn(
-            ident = genererIdent(fødseldatoUngtBarn),
-            fødselsdato = Fødselsdato(fødseldatoUngtBarn)
-        )
+        val gammeltBarn = opprettRegisterBarn(fødselsdatoGammeltBarn)
+        val ungtBarn = opprettRegisterBarn(fødseldatoUngtBarn)
 
         lagreRegisterOpplysninger(
             behandling,
@@ -88,6 +83,16 @@ class BarnetilleggServiceTest {
                 )
             )
         })
+    }
+
+    private fun opprettRegisterBarn(fødselsdatoGammeltBarn: LocalDate): LagretBarnFraRegister = BarnFraRegister(
+        ident = genererIdent(fødselsdatoGammeltBarn),
+        fødselsdato = Fødselsdato(fødselsdatoGammeltBarn)
+    ).let {
+        LagretBarnFraRegister(
+            personId = InMemoryPersonRepository.finnEllerOpprett(listOf(it.ident)).id,
+            fødselsdato = it.fødselsdato,
+        )
     }
 
     @Test
@@ -120,7 +125,8 @@ class BarnetilleggServiceTest {
 
         val res = service.beregn(behandlingId = behandling.id)
 
-        val barnFremdelesSyttenÅr = Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom.plusYears(1).minusDays(1))
+        val barnFremdelesSyttenÅr =
+            Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom.plusYears(1).minusDays(1))
         val ingenBarnUnderAttenÅr = Periode(sak.rettighetsperiode.fom.plusYears(1), sak.rettighetsperiode.tom)
 
         assertTidslinje(
@@ -169,7 +175,7 @@ class BarnetilleggServiceTest {
 
     private fun lagreRegisterOpplysninger(
         behandling: Behandling,
-        barn: List<Barn>,
+        barn: List<LagretBarnFraRegister>,
         sak: Sak
     ) {
         InMemoryBarnRepository.lagreRegisterBarn(

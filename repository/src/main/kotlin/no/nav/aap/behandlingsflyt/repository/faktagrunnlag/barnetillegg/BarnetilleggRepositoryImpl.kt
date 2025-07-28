@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
@@ -114,7 +115,7 @@ class BarnetilleggRepositoryImpl(private val connection: DBConnection) : Barneti
             INSERT INTO BARNETILLEGG_PERIODE (perioder_id, periode) VALUES (?, ?::daterange)
             """.trimIndent()
         val insertBarnQuery = """
-            INSERT INTO BARN_TILLEGG (ident, barnetillegg_periode_id, navn, fodselsdato) VALUES (?, ?, ?, ?)
+            INSERT INTO BARN_TILLEGG (ident, barnetillegg_periode_id, navn, fodselsdato, person_id) VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
 
         barnetilleggPerioder.forEach { periode ->
@@ -129,11 +130,12 @@ class BarnetilleggRepositoryImpl(private val connection: DBConnection) : Barneti
                 setParams { ident ->
                     var c = 1
                     when (ident) {
-                        is BarnIdentifikator.BarnIdent -> {
-                            setString(c++, ident.ident.identifikator)
+                        is BarnIdentifikator.RegistertBarnPerson -> {
+                            setString(c++, null)
                             setLong(c++, periodeId)
                             setString(c++, null)
                             setLocalDate(c++, null)
+                            setLong(c++, ident.personId.id)
                         }
 
                         is BarnIdentifikator.NavnOgFødselsdato -> {
@@ -141,6 +143,15 @@ class BarnetilleggRepositoryImpl(private val connection: DBConnection) : Barneti
                             setLong(c++, periodeId)
                             setString(c++, ident.navn)
                             setLocalDate(c++, ident.fødselsdato.toLocalDate())
+                            setLong(c++, null)
+                        }
+
+                        is BarnIdentifikator.BarnIdent -> {
+                            setString(c++, ident.ident.identifikator)
+                            setLong(c++, periodeId)
+                            setString(c++, null)
+                            setLocalDate(c++, null)
+                            setLong(c++, null)
                         }
                     }
                 }
@@ -206,7 +217,7 @@ class BarnetilleggRepositoryImpl(private val connection: DBConnection) : Barneti
     private fun mapPeriode(periodeRow: Row): BarnetilleggPeriode {
 
         val query = """
-            SELECT IDENT, navn, fodselsdato FROM BARN_TILLEGG WHERE BARNETILLEGG_PERIODE_ID = ?
+            SELECT IDENT, navn, fodselsdato, person_id FROM BARN_TILLEGG WHERE BARNETILLEGG_PERIODE_ID = ?
         """.trimIndent()
 
         val identer = connection.querySet(query = query) {
@@ -215,13 +226,18 @@ class BarnetilleggRepositoryImpl(private val connection: DBConnection) : Barneti
             }
             setRowMapper {
                 val identifikator = it.getStringOrNull("IDENT")
-                if (identifikator == null) {
+                val personId = it.getLongOrNull("person_id")
+                val navn = it.getStringOrNull("navn")
+                val fødselsdato = it.getLocalDateOrNull("fodselsdato")?.let(::Fødselsdato)
+                if (navn != null && fødselsdato != null) {
                     BarnIdentifikator.NavnOgFødselsdato(
-                        it.getString("navn"),
-                        it.getLocalDate("fodselsdato").let(::Fødselsdato)
+                        navn,
+                        fødselsdato
                     )
+                } else if (personId != null) {
+                    BarnIdentifikator.RegistertBarnPerson(PersonId(personId))
                 } else {
-                    BarnIdentifikator.BarnIdent(Ident(identifikator))
+                    BarnIdentifikator.BarnIdent(Ident(identifikator!!))
                 }
             }
         }

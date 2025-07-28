@@ -45,15 +45,19 @@ internal class BarnetilleggRepositoryImplTest {
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
+            val person = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("12345678910")))
             val barnetilleggRepository = BarnetilleggRepositoryImpl(connection)
             val barnetilleggPeriode = listOf(
                 BarnetilleggPeriode(
                     Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)),
-                    setOf(BarnIdentifikator.BarnIdent("12345678910"), BarnIdentifikator.BarnIdent("12345678911"))
+                    setOf(
+                        BarnIdentifikator.RegistertBarnPerson(person.id),
+                        BarnIdentifikator.BarnIdent(Ident("12345678911"))
+                    )
                 ),
                 BarnetilleggPeriode(
                     Periode(LocalDate.of(2024, 1, 2), LocalDate.of(2024, 1, 2)),
-                    setOf(BarnIdentifikator.BarnIdent("12345678910"))
+                    setOf(BarnIdentifikator.RegistertBarnPerson(person.id))
                 )
             )
 
@@ -78,13 +82,16 @@ internal class BarnetilleggRepositoryImplTest {
             val barnetilleggRepository = BarnetilleggRepositoryImpl(connection)
             val barnetilleggPeriode1 = BarnetilleggPeriode(
                 Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)),
-                setOf(BarnIdentifikator.BarnIdent("12345678910"), BarnIdentifikator.BarnIdent("12345678911"))
+                setOf(
+                    BarnIdentifikator.BarnIdent(Ident("12345678910")),
+                    BarnIdentifikator.BarnIdent(Ident("12345678911"))
+                )
             )
 
 
             val barnetilleggPeriode2 = BarnetilleggPeriode(
                 Periode(LocalDate.of(2024, 1, 2), LocalDate.of(2024, 1, 2)),
-                setOf(BarnIdentifikator.BarnIdent("12345678910"))
+                setOf(BarnIdentifikator.BarnIdent(Ident("12345678910")))
             )
 
 
@@ -107,12 +114,19 @@ internal class BarnetilleggRepositoryImplTest {
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val barnetilleggRepository = BarnetilleggRepositoryImpl(connection)
+            val personRepositoryImpl = PersonRepositoryImpl(connection)
+            val person = personRepositoryImpl.finnEllerOpprett(listOf(Ident("12345678910")))
+            val person2 = personRepositoryImpl.finnEllerOpprett(listOf(Ident("12345678911")))
+
             barnetilleggRepository.lagre(
                 behandling1.id,
                 listOf(
                     BarnetilleggPeriode(
                         Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)),
-                        setOf(BarnIdentifikator.BarnIdent("12345678910"), BarnIdentifikator.BarnIdent("12345678911"))
+                        setOf(
+                            BarnIdentifikator.RegistertBarnPerson(person.id),
+                            BarnIdentifikator.RegistertBarnPerson(person2.id)
+                        )
                     ),
                 )
             )
@@ -128,7 +142,10 @@ internal class BarnetilleggRepositoryImplTest {
                 .containsExactly(
                     BarnetilleggPeriode(
                         Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)),
-                        setOf(BarnIdentifikator.BarnIdent("12345678910"), BarnIdentifikator.BarnIdent("12345678911"))
+                        setOf(
+                            BarnIdentifikator.RegistertBarnPerson(person.id),
+                            BarnIdentifikator.RegistertBarnPerson(person2.id)
+                        )
                     ),
                 )
         }
@@ -144,7 +161,7 @@ internal class BarnetilleggRepositoryImplTest {
                 behandling.id, listOf(
                     BarnetilleggPeriode(
                         Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1).plusYears(18)),
-                        setOf(BarnIdentifikator.BarnIdent("12345678910"))
+                        setOf(BarnIdentifikator.BarnIdent(Ident("12345678910")))
                     )
                 )
             )
@@ -152,7 +169,7 @@ internal class BarnetilleggRepositoryImplTest {
                 behandling.id, listOf(
                     BarnetilleggPeriode(
                         Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1).plusYears(18)),
-                        setOf(BarnIdentifikator.BarnIdent("12345678910"))
+                        setOf(BarnIdentifikator.BarnIdent(Ident("12345678910")))
                     )
                 )
             )
