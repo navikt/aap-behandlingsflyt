@@ -15,13 +15,24 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 
 internal class MedlemskapRepositoryTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+    companion object {
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        private val dataSource = InitTestDatabase.freshDatabase()
+
+        @AfterAll
+        @JvmStatic
+        fun afterAll() {
+            InitTestDatabase.closerFor(dataSource)
+        }
+    }
+
 
     @Test
     fun `lagre og hente inn unntak`() {
@@ -91,7 +102,10 @@ internal class MedlemskapRepositoryTest {
 
         // Test kopier-metode
         val nyBehandling = dataSource.transaction {
-            BehandlingRepositoryImpl(it).oppdaterBehandlingStatus(behandlingId, no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET)
+            BehandlingRepositoryImpl(it).oppdaterBehandlingStatus(
+                behandlingId,
+                no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
+            )
             finnEllerOpprettBehandling(it, sak)
         }
         val nyBehandlingId = nyBehandling.id
@@ -110,54 +124,60 @@ internal class MedlemskapRepositoryTest {
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val medlemsskapRepository = MedlemskapRepositoryImpl(connection)
-            medlemsskapRepository.lagreUnntakMedlemskap(behandling.id, listOf(
-                MedlemskapDataIntern(
-                    unntakId = 123,
-                    fraOgMed = "2017-02-13",
-                    tilOgMed = "2018-02-13",
-                    grunnlag = "grunnlag",
-                    helsedel = true,
-                    ident = "02429118789",
-                    lovvalg = "lovvalg",
-                    medlem = true,
-                    status = "GYLD",
-                    statusaarsak = null,
-                    lovvalgsland = "NORGE",
-                    kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
+            medlemsskapRepository.lagreUnntakMedlemskap(
+                behandling.id, listOf(
+                    MedlemskapDataIntern(
+                        unntakId = 123,
+                        fraOgMed = "2017-02-13",
+                        tilOgMed = "2018-02-13",
+                        grunnlag = "grunnlag",
+                        helsedel = true,
+                        ident = "02429118789",
+                        lovvalg = "lovvalg",
+                        medlem = true,
+                        status = "GYLD",
+                        statusaarsak = null,
+                        lovvalgsland = "NORGE",
+                        kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
+                    )
                 )
-            ))
-            medlemsskapRepository.lagreUnntakMedlemskap(behandling.id, listOf(
-                MedlemskapDataIntern(
-                    unntakId = 124,
-                    fraOgMed = "2019-02-13",
-                    tilOgMed = "2020-02-13",
-                    grunnlag = "grunnlag",
-                    helsedel = true,
-                    ident = "02429118789",
-                    lovvalg = "lovvalg",
-                    medlem = true,
-                    status = "GYLD",
-                    statusaarsak = null,
-                    lovvalgsland = "NORGE",
-                    kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
+            )
+            medlemsskapRepository.lagreUnntakMedlemskap(
+                behandling.id, listOf(
+                    MedlemskapDataIntern(
+                        unntakId = 124,
+                        fraOgMed = "2019-02-13",
+                        tilOgMed = "2020-02-13",
+                        grunnlag = "grunnlag",
+                        helsedel = true,
+                        ident = "02429118789",
+                        lovvalg = "lovvalg",
+                        medlem = true,
+                        status = "GYLD",
+                        statusaarsak = null,
+                        lovvalgsland = "NORGE",
+                        kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
+                    )
                 )
-            ))
-            medlemsskapRepository.lagreUnntakMedlemskap(behandling.id, listOf(
-                MedlemskapDataIntern(
-                    unntakId = 125,
-                    fraOgMed = "2020-02-13",
-                    tilOgMed = "2021-02-13",
-                    grunnlag = "grunnlag",
-                    helsedel = true,
-                    ident = "02429118789",
-                    lovvalg = "lovvalg",
-                    medlem = true,
-                    status = "GYLD",
-                    statusaarsak = null,
-                    lovvalgsland = "NORGE",
-                    kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
+            )
+            medlemsskapRepository.lagreUnntakMedlemskap(
+                behandling.id, listOf(
+                    MedlemskapDataIntern(
+                        unntakId = 125,
+                        fraOgMed = "2020-02-13",
+                        tilOgMed = "2021-02-13",
+                        grunnlag = "grunnlag",
+                        helsedel = true,
+                        ident = "02429118789",
+                        lovvalg = "lovvalg",
+                        medlem = true,
+                        status = "GYLD",
+                        statusaarsak = null,
+                        lovvalgsland = "NORGE",
+                        kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
+                    )
                 )
-            ))
+            )
             assertDoesNotThrow { medlemsskapRepository.slett(behandling.id) }
         }
     }
@@ -168,9 +188,5 @@ internal class MedlemskapRepositoryTest {
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident(), periode)
-    }
-
-    companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 }

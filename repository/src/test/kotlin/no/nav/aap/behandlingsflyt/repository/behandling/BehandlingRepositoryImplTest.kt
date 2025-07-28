@@ -4,9 +4,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
-import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7RepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepositoryImpl
@@ -56,13 +56,22 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 internal class BehandlingRepositoryImplTest {
+    companion object {
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        private val dataSource = InitTestDatabase.freshDatabase()
 
-    private val dataSource = InitTestDatabase.freshDatabase()
+        @AfterAll
+        @JvmStatic
+        fun afterAll() {
+            InitTestDatabase.closerFor(dataSource)
+        }
+    }
 
     @Test
     fun `kan lagre og hente ut behandling med uuid`() {
@@ -241,10 +250,10 @@ internal class BehandlingRepositoryImplTest {
         dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
-            val  behandlingRepository = BehandlingRepositoryImpl(connection)
+            val behandlingRepository = BehandlingRepositoryImpl(connection)
 
             val saksnummer = behandlingRepository.finnSaksnummer(behandling.referanse)
-            
+
             assertThat(saksnummer).isEqualTo(sak.saksnummer)
         }
     }
@@ -257,17 +266,14 @@ internal class BehandlingRepositoryImplTest {
         ).finnEllerOpprett(ident(), periode)
     }
 
-    private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-    }
-
 }
 
 // Midlertidig test
-fun main()
-{
-    InitTestDatabase.freshDatabase().transaction { connection -> BeregningsgrunnlagRepositoryImpl(connection).slett(
-        BehandlingId(1L))
+fun main() {
+    InitTestDatabase.freshDatabase().transaction { connection ->
+        BeregningsgrunnlagRepositoryImpl(connection).slett(
+            BehandlingId(1L)
+        )
         BehandlingRepositoryImpl(connection).slett(BehandlingId(1L))
         //AvklaringsbehovRepositoryImpl(connection).slett(BehandlingId(1L))
         BrevbestillingRepositoryImpl(connection).slett(BehandlingId(1L))

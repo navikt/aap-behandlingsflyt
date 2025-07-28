@@ -4,10 +4,19 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 
 class PersonRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+    companion object {
+        private val dataSource = InitTestDatabase.freshDatabase()
+
+        @AfterAll
+        @JvmStatic
+        fun afterall() {
+            InitTestDatabase.closerFor(dataSource)
+        }
+    }
 
     @Test
     fun `lagre, hente ut igjen`() {
@@ -41,6 +50,10 @@ class PersonRepositoryImplTest {
         assertThat(oppdatert.identer()).containsExactlyInAnyOrderElementsOf(
             listOf(nyIdentÅLeggeTil) + identer
         )
-    }
 
+        // Identer fjernes
+        dataSource.transaction {
+            PersonRepositoryImpl(it).finnEllerOpprett(listOf(person.aktivIdent()))
+        }
+    }
 }

@@ -13,7 +13,7 @@ import java.time.LocalDate
 @Fakes
 class AbakusSykepengerGatewayTest {
     @Test
-    fun kanHenteInformasjonFraSykepenger() {
+    fun `kan hente informasjon fra sykepenger`() {
         val person = TestPerson(
             sykepenger = listOf(
                 TestPerson.Sykepenger(

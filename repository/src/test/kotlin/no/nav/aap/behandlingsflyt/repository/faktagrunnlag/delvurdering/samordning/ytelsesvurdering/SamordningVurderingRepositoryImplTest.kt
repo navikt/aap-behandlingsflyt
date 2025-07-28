@@ -18,15 +18,24 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 
 internal class SamordningVurderingRepositoryImplTest {
-    private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+    companion object {
+        private val dataSource = InitTestDatabase.freshDatabase()
 
-    private val dataSource = InitTestDatabase.freshDatabase()
+        @AfterAll
+        @JvmStatic
+        fun afterAll() {
+            InitTestDatabase.closerFor(dataSource)
+        }
+    }
+
+    private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
     @Test
     fun `lagre og hente ut igjen`() {
@@ -93,13 +102,14 @@ internal class SamordningVurderingRepositoryImplTest {
         val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak(it)) }
 
         dataSource.transaction {
-            SamordningVurderingRepositoryImpl(it).lagreVurderinger(behandling.id, SamordningVurderingGrunnlag(
-                begrunnelse = "xxxx",
-                maksDatoEndelig = true,
-                fristNyRevurdering = LocalDate.now().plusYears(1),
-                vurderinger = listOf(),
-                vurdertAv = "ident"
-            )
+            SamordningVurderingRepositoryImpl(it).lagreVurderinger(
+                behandling.id, SamordningVurderingGrunnlag(
+                    begrunnelse = "xxxx",
+                    maksDatoEndelig = true,
+                    fristNyRevurdering = LocalDate.now().plusYears(1),
+                    vurderinger = listOf(),
+                    vurdertAv = "ident"
+                )
             )
         }
 
@@ -292,39 +302,43 @@ internal class SamordningVurderingRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val samordningVurderingRepository = SamordningVurderingRepositoryImpl(connection)
             samordningVurderingRepository.lagreVurderinger(
-                behandling.id,  SamordningVurderingGrunnlag(
+                behandling.id, SamordningVurderingGrunnlag(
                     begrunnelse = "begrunnelse1",
                     maksDatoEndelig = false,
                     fristNyRevurdering = null,
                     vurdertAv = "ident",
-                    vurderinger = listOf(SamordningVurdering(
-                        ytelseType = Ytelse.SYKEPENGER,
-                        vurderingPerioder = listOf(
-                            SamordningVurderingPeriode(
-                                periode = Periode(5 januar 2024, 10 januar 2024),
-                                gradering = Prosent.`50_PROSENT`,
-                                manuell = false,
+                    vurderinger = listOf(
+                        SamordningVurdering(
+                            ytelseType = Ytelse.SYKEPENGER,
+                            vurderingPerioder = listOf(
+                                SamordningVurderingPeriode(
+                                    periode = Periode(5 januar 2024, 10 januar 2024),
+                                    gradering = Prosent.`50_PROSENT`,
+                                    manuell = false,
+                                )
                             )
                         )
-                    ))
+                    )
                 )
             )
             samordningVurderingRepository.lagreVurderinger(
-                behandling.id,  SamordningVurderingGrunnlag(
+                behandling.id, SamordningVurderingGrunnlag(
                     begrunnelse = "begrunnelse2",
                     maksDatoEndelig = false,
                     fristNyRevurdering = null,
                     vurdertAv = "ident",
-                    vurderinger = listOf(SamordningVurdering(
-                        ytelseType = Ytelse.SYKEPENGER,
-                        vurderingPerioder = listOf(
-                            SamordningVurderingPeriode(
-                                periode = Periode(11 januar 2024, 15 januar 2024),
-                                gradering = Prosent.`50_PROSENT`,
-                                manuell = false,
+                    vurderinger = listOf(
+                        SamordningVurdering(
+                            ytelseType = Ytelse.SYKEPENGER,
+                            vurderingPerioder = listOf(
+                                SamordningVurderingPeriode(
+                                    periode = Periode(11 januar 2024, 15 januar 2024),
+                                    gradering = Prosent.`50_PROSENT`,
+                                    manuell = false,
+                                )
                             )
                         )
-                    ))
+                    )
                 )
             )
             assertDoesNotThrow {
