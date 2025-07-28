@@ -52,8 +52,7 @@ class GosysGateway : OppgaveGateway {
             fristFerdigstillelse = LocalDate.now().plusDays(2)
         )
 
-        val url = baseUri.resolve("/api/bestilling/$bestillingReferanse/oppdater")
-        val path = url.resolve("/api/v1/oppgaver")
+        val path = baseUri.resolve("/api/v1/oppgaver")
         val request = PostRequest(oppgaveRequest)
 
         try {

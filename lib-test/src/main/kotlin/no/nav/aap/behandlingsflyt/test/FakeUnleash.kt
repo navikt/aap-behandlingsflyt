@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.test
 
-import kotlinx.io.bytestring.ByteString
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
