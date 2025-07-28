@@ -1,12 +1,12 @@
 package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
-import org.junit.jupiter.api.Test
 import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.KabalHendelseId
@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -41,13 +42,13 @@ import org.apache.kafka.common.serialization.StringSerializer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
-import java.time.LocalDateTime
-import java.util.UUID
+import org.junit.jupiter.api.Test
 import org.testcontainers.kafka.KafkaContainer
 import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 import java.time.LocalDate
-import java.util.Properties
+import java.time.LocalDateTime
+import java.util.*
 import kotlin.concurrent.thread
 
 class KabalKafkaKonsumentTest {
@@ -81,14 +82,15 @@ class KabalKafkaKonsumentTest {
         internal fun afterAll() {
             motor.stop()
             kafka.stop()
+            InitTestDatabase.closerFor(dataSource)
         }
     }
 
     @Test
     fun `Kan motta og lagre ned hendelse fra Kabal`() {
+        val sak = dataSource.transaction { sak(it) }
+        dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
         val klagebehandling = dataSource.transaction { connection ->
-            val sak = sak(connection)
-            finnEllerOpprettBehandling(connection, sak)
             finnEllerOpprettBehandling(connection, sak, ÅrsakTilBehandling.MOTATT_KLAGE)
         }
 
@@ -120,12 +122,21 @@ class KabalKafkaKonsumentTest {
         assertThat(konsument.antallMeldinger).isEqualTo(1)
         konsument.lukk()
 
-        util.ventPåSvar(klagebehandling.sakId.id, klagebehandling.id.id)
+        util.ventPåSvar()
         val svarFraAnderinstansBehandling = dataSource.transaction { connection ->
-            val behandlinger = BehandlingRepositoryImpl(connection).hentAlleFor(
-                klagebehandling.sakId,
-                listOf(TypeBehandling.SvarFraAndreinstans)
-            )
+            var behandlinger: List<Behandling> = emptyList()
+            var tries = 0
+            while (tries < 5) {
+                behandlinger = BehandlingRepositoryImpl(connection).hentAlleFor(
+                    klagebehandling.sakId,
+                    listOf(TypeBehandling.SvarFraAndreinstans)
+                )
+                if (behandlinger.isNotEmpty()) {
+                    break
+                }
+                tries++
+                Thread.sleep(200)
+            }
             assertThat(behandlinger).hasSize(1)
             behandlinger.first()
         }
@@ -142,7 +153,7 @@ class KabalKafkaKonsumentTest {
         assertThat(hendelser.first().sakId).isEqualTo(klagebehandling.sakId)
         assertThat(hendelser.first().behandlingId).isEqualTo(svarFraAnderinstansBehandling.id)
         assertThat(hendelser.first().kanal).isEqualTo(Kanal.DIGITAL)
-        assertThat(hendelser.first().status).isEqualTo(no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status.BEHANDLET)
+        assertThat(hendelser.first().status).isEqualTo(Status.BEHANDLET)
         assertThat(hendelser.first().strukturertDokument).isNotNull
     }
 
