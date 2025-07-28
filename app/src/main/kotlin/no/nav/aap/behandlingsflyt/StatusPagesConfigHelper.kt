@@ -96,7 +96,7 @@ object StatusPagesConfigHelper {
                 }
 
                 else -> {
-                    logger.error("Ukjent/uhåndtert feil ved kall til '$uri'", cause)
+                    logger.error("Ukjent/uhåndtert feil ved kall til '$uri' av type ${cause.javaClass}.", cause)
 
                     call.respondWithError(InternfeilException("En ukjent feil oppsto"))
                 }
