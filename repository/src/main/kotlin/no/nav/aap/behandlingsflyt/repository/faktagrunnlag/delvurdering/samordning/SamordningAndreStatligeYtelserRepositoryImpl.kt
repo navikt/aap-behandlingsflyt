@@ -67,7 +67,6 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
                 SamordningAndreStatligeYtelserVurderingPeriode(
                     periode = it.getPeriode("periode"),
                     ytelse = it.getEnum("ytelse_type"),
-                    beløp = it.getInt("belop")
                 )
             }
         }
@@ -100,14 +99,13 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
         }
 
         val periodeQuery = """
-                INSERT INTO SAMORDNING_ANDRE_STATLIGE_YTELSER_VURDERING_PERIODE (vurdering_id, periode, ytelse_type, belop) VALUES (?, ?::daterange, ?, ?)
+                INSERT INTO SAMORDNING_ANDRE_STATLIGE_YTELSER_VURDERING_PERIODE (vurdering_id, periode, ytelse_type) VALUES (?, ?::daterange, ?)
                 """.trimIndent()
         connection.executeBatch(periodeQuery, vurdering.vurderingPerioder) {
             setParams {
                 setLong(1, vurderingId)
                 setPeriode(2, it.periode)
                 setEnumName(3, it.ytelse)
-                setInt(4, it.beløp)
             }
         }
     }

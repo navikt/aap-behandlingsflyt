@@ -108,7 +108,6 @@ data class SamordningAndreStatligeYtelserVurderingDTO(
 data class SamordningAndreStatligeYtelserVurderingPeriodeDTO(
     val periode: Periode,
     val ytelse: AndreStatligeYtelser,
-    val beløp: Int
 )
 
 data class SamordningArbeidsgiverGrunnlagDTO(
@@ -337,7 +336,6 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                                             SamordningAndreStatligeYtelserVurderingPeriodeDTO(
                                                 periode = it.periode,
                                                 ytelse = it.ytelse,
-                                                beløp = it.beløp
                                             )
                                         },
                                 vurdertAv =
