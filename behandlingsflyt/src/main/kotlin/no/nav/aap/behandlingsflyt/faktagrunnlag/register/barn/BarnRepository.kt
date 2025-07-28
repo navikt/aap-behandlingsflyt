@@ -8,7 +8,7 @@ import no.nav.aap.lookup.repository.Repository
 interface BarnRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): BarnGrunnlag?
     fun hent(behandlingId: BehandlingId): BarnGrunnlag
-    fun lagreOppgitteBarn(behandlingId: BehandlingId, oppgitteBarn: OppgitteBarn?)
+    fun lagreOppgitteBarn(behandlingId: BehandlingId, oppgitteBarn: OppgitteBarn)
     fun lagreRegisterBarn(behandlingId: BehandlingId, barn: List<Ident>)
     fun lagreVurderinger(behandlingId: BehandlingId, vurdertAv: String, vurderteBarn: List<VurdertBarn>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)

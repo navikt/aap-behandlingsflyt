@@ -49,13 +49,21 @@ class InMemoryBarnRepositoryTest {
         val barnRepository = InMemoryBarnRepository
 
         barnRepository.lagreRegisterBarn(behandling.id, barnListe)
-        barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = listOf(Ident("1"))))
+        barnRepository.lagreOppgitteBarn(
+            behandling.id,
+            OppgitteBarn(oppgitteBarn = listOf(OppgitteBarn.OppgittBarn(Ident("1"))))
+        )
         barnRepository.lagreVurderinger(behandling.id, "ident", vurderteBarn)
 
 
         val barn = barnRepository.hent(behandling.id)
         assertThat(barn.registerbarn?.identer).containsExactlyInAnyOrderElementsOf(barnListe)
-        assertThat(barn.oppgitteBarn?.identer).containsExactly(Ident("1"))
+        assertThat(barn.oppgitteBarn?.oppgitteBarn).containsExactly(
+            OppgitteBarn.OppgittBarn(
+                ident = Ident("1"),
+                navn = null
+            )
+        )
         assertThat(barn.vurderteBarn?.barn).isEqualTo(vurderteBarn)
 
 

@@ -1,17 +1,19 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.adapter
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.ErStudentStatus
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenopptaStudieStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.ErStudentStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenopptaStudieStatus
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
-import kotlin.text.uppercase
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn as OppgitteBarnFraSøknad
 
 data class UbehandletSøknad(
     val journalpostId: JournalpostId,
@@ -30,23 +32,11 @@ data class UbehandletSøknad(
                     studentData = if (søknad.student == null) null else søknad.student?.let {
                         val erStudent = erStudent(it.erStudent) ?: return@let null
                         StudentData(
-                            erStudent = erStudent,
-                            skalGjenopptaStudie = skalGjennopptaStudie(it.kommeTilbake)
+                            erStudent = erStudent, skalGjenopptaStudie = skalGjennopptaStudie(it.kommeTilbake)
                         )
                     },
                     harYrkesskade = søknad.yrkesskade.uppercase() == "JA",
-                    oppgitteBarn = søknad.oppgitteBarn.let {
-                        it?.identer?.map {
-                            Ident(
-                                identifikator = it.identifikator,
-                                aktivIdent = true
-                            )
-                        }?.let { id ->
-                            OppgitteBarn(
-                                identer = id
-                            )
-                        }
-                    },
+                    oppgitteBarn = søknad.oppgitteBarn?.let { mapOppgitteBarn(it) },
                     utenlandsOppholdData = if (søknad.medlemskap == null) null else søknad.medlemskap?.let {
                         val utenlandsOpphold = it.utenlandsOpphold?.map { opphold ->
                             UtenlandsPeriode(
@@ -65,8 +55,7 @@ data class UbehandletSøknad(
                             iTilleggArbeidUtenforNorge = it.iTilleggArbeidUtenforNorge?.uppercase() == "JA",
                             utenlandsOpphold = utenlandsOpphold
                         )
-                    }
-                )
+                    })
             }
         }
 
@@ -96,5 +85,37 @@ data class UbehandletSøknad(
         }
     }
 }
+
+private fun mapOppgitteBarn(oppgitteBarn: OppgitteBarnFraSøknad): OppgitteBarn? =
+    oppgitteBarn.let { oppgitteBarn ->
+        if (oppgitteBarn.barn.isNotEmpty()) {
+            OppgitteBarn(oppgitteBarn = oppgitteBarn.barn.map { oppgittBarn ->
+                OppgitteBarn.OppgittBarn(
+                    ident = oppgittBarn.ident?.let {
+                        Ident(
+                            identifikator = it.identifikator, aktivIdent = true
+                        )
+                    },
+                    navn = oppgittBarn.navn,
+                    fødselsdato = oppgittBarn.fødselsdato?.let(::Fødselsdato),
+                    relasjon = oppgittBarn.relasjon?.let {
+                        when (it) {
+                            ManueltOppgittBarn.Relasjon.FORELDER -> OppgitteBarn.Relasjon.FORELDER
+                            ManueltOppgittBarn.Relasjon.FOSTERFORELDER -> OppgitteBarn.Relasjon.FOSTERFORELDER
+                        }
+                    })
+            })
+        } else if (oppgitteBarn.identer.isNotEmpty()) {
+            OppgitteBarn(oppgitteBarn = oppgitteBarn.identer.map {
+                OppgitteBarn.OppgittBarn(
+                    ident = Ident(
+                        identifikator = it.identifikator, aktivIdent = true
+                    ), navn = null, relasjon = null, fødselsdato = null
+                )
+            })
+        } else {
+            null
+        }
+    }
 
 data class StudentData(val erStudent: ErStudentStatus, val skalGjenopptaStudie: SkalGjenopptaStudieStatus)

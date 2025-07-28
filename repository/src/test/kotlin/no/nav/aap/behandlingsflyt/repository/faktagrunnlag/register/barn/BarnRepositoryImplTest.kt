@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
@@ -53,6 +54,13 @@ internal class BarnRepositoryImplTest {
         )
         val barnListe = listOf(Ident("12345678910"), Ident("12345"))
 
+        val oppgittBarn = OppgitteBarn.OppgittBarn(
+            Ident("1"),
+            "John Johnsen",
+            Fødselsdato(LocalDate.now().minusYears(13)),
+            OppgitteBarn.Relasjon.FOSTERFORELDER
+        )
+
         val behandling = dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
@@ -61,7 +69,7 @@ internal class BarnRepositoryImplTest {
 
 
             barnRepository.lagreRegisterBarn(behandling.id, barnListe)
-            barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = listOf(Ident("1"))))
+            barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(oppgitteBarn = listOf(oppgittBarn)))
             barnRepository.lagreVurderinger(behandling.id, "ident", vurderteBarn)
             behandling
         }
@@ -72,7 +80,7 @@ internal class BarnRepositoryImplTest {
         }
 
         assertThat(barn.registerbarn?.identer).containsExactlyInAnyOrderElementsOf(barnListe)
-        assertThat(barn.oppgitteBarn?.identer).containsExactly(Ident("1"))
+        assertThat(barn.oppgitteBarn?.oppgitteBarn).containsExactly(oppgittBarn)
         assertThat(barn.vurderteBarn?.barn).isEqualTo(vurderteBarn)
 
         dataSource.transaction { connection ->
@@ -110,25 +118,33 @@ internal class BarnRepositoryImplTest {
         }
 
         dataSource.transaction {
-            BarnRepositoryImpl(it).lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = listOf(Ident("1"))))
+            BarnRepositoryImpl(it).lagreOppgitteBarn(
+                behandling.id,
+                OppgitteBarn(oppgitteBarn = listOf(OppgitteBarn.OppgittBarn(ident = Ident("1"), null)))
+            )
         }
 
         val uthentet = dataSource.transaction {
             BarnRepositoryImpl(it).hent(behandling.id)
         }
 
-        assertThat(uthentet.oppgitteBarn?.identer).containsExactly(Ident("1"))
+        assertThat(uthentet.oppgitteBarn?.oppgitteBarn).containsExactly(
+            OppgitteBarn.OppgittBarn(
+                ident = Ident("1"),
+                null
+            )
+        )
 
         // Oppdater med ingen oppgitte barn
         dataSource.transaction {
-            BarnRepositoryImpl(it).lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = emptyList()))
+            BarnRepositoryImpl(it).lagreOppgitteBarn(behandling.id, OppgitteBarn(oppgitteBarn = emptyList()))
         }
 
         val uthentet2 = dataSource.transaction {
             BarnRepositoryImpl(it).hent(behandling.id)
         }
 
-        assertThat(uthentet2.oppgitteBarn?.identer).isNullOrEmpty()
+        assertThat(uthentet2.oppgitteBarn?.oppgitteBarn).isNullOrEmpty()
     }
 
     @Test
@@ -138,7 +154,10 @@ internal class BarnRepositoryImplTest {
             // Given
             val sak = sak(connection)
             val gammelBehandling = finnEllerOpprettBehandling(connection, sak)
-            barnRepository.lagreOppgitteBarn(gammelBehandling.id, OppgitteBarn(identer = listOf(Ident("1"))))
+            barnRepository.lagreOppgitteBarn(
+                gammelBehandling.id,
+                OppgitteBarn(oppgitteBarn = listOf(OppgitteBarn.OppgittBarn(ident = Ident("1"), null)))
+            )
 
             // When
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(gammelBehandling.id, Status.AVSLUTTET)
@@ -146,8 +165,8 @@ internal class BarnRepositoryImplTest {
             //Finn eller opprett behandling kopierer også
 
             // Then
-            val gamleOppgitteBarn = barnRepository.hent(nyBehandling.id).oppgitteBarn?.identer
-            val nyeOppgitteBarn = barnRepository.hent(nyBehandling.id).oppgitteBarn?.identer
+            val gamleOppgitteBarn = barnRepository.hent(nyBehandling.id).oppgitteBarn?.oppgitteBarn
+            val nyeOppgitteBarn = barnRepository.hent(nyBehandling.id).oppgitteBarn?.oppgitteBarn
             assertThat(nyeOppgitteBarn).isEqualTo(gamleOppgitteBarn)
         }
     }

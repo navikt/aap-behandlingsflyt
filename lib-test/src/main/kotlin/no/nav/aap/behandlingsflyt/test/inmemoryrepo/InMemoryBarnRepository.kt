@@ -53,14 +53,10 @@ object InMemoryBarnRepository : BarnRepository {
 
     override fun lagreOppgitteBarn(
         behandlingId: BehandlingId,
-        oppgitteBarn: OppgitteBarn?
+        oppgitteBarn: OppgitteBarn
     ) {
         synchronized(lock) {
-            if (oppgitteBarn != null) {
-                this.oppgitteBarn[behandlingId] = oppgitteBarn
-            } else {
-                this.oppgitteBarn.remove(behandlingId)
-            }
+            this.oppgitteBarn[behandlingId] = oppgitteBarn
         }
     }
 

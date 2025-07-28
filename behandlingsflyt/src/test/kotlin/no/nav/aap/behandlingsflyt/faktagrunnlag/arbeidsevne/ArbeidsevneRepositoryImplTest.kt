@@ -16,6 +16,7 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
@@ -23,7 +24,16 @@ import java.time.LocalDateTime
 
 class ArbeidsevneRepositoryImplTest {
 
-    private val dataSource = InitTestDatabase.freshDatabase()
+    private companion object {
+        private val dataSource = InitTestDatabase.freshDatabase()
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        @JvmStatic
+        @AfterAll
+        fun afterAll() {
+            InitTestDatabase.closerFor(dataSource)
+        }
+    }
 
     @Test
     fun `Finner ikke arbeidsevne hvis ikke lagret`() {
@@ -178,7 +188,8 @@ class ArbeidsevneRepositoryImplTest {
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
-            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now(), "vurdertAv")
+            val arbeidsevne =
+                ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now(), "vurdertAv")
             val arbeidsevne2 = arbeidsevne.copy("annen begrunnelse")
 
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
@@ -250,10 +261,6 @@ class ArbeidsevneRepositoryImplTest {
                     )
                 )
         }
-    }
-
-    private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
     private fun sak(connection: DBConnection): Sak {
