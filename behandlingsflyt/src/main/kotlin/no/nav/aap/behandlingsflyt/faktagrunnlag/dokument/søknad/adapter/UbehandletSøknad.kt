@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn as OppgitteBarnFraSøknad
 
 data class UbehandletSøknad(
     val journalpostId: JournalpostId,
@@ -35,36 +36,7 @@ data class UbehandletSøknad(
                         )
                     },
                     harYrkesskade = søknad.yrkesskade.uppercase() == "JA",
-                    oppgitteBarn = søknad.oppgitteBarn.let { oppgitteBarn ->
-                        if (oppgitteBarn?.barn != null && oppgitteBarn.barn.isNotEmpty()) {
-                            OppgitteBarn(oppgitteBarn = oppgitteBarn.barn.map { oppgittBarn ->
-                                OppgitteBarn.OppgittBarn(
-                                    ident = oppgittBarn.ident?.let {
-                                        Ident(
-                                            identifikator = it.identifikator, aktivIdent = true
-                                        )
-                                    },
-                                    navn = oppgittBarn.navn,
-                                    fødselsdato = oppgittBarn.fødselsdato?.let(::Fødselsdato),
-                                    relasjon = oppgittBarn.relasjon?.let {
-                                        when (it) {
-                                            ManueltOppgittBarn.Relasjon.FORELDER -> OppgitteBarn.Relasjon.FORELDER
-                                            ManueltOppgittBarn.Relasjon.FOSTERFORELDER -> OppgitteBarn.Relasjon.FOSTERFORELDER
-                                        }
-                                    })
-                            })
-                        } else if (oppgitteBarn?.identer != null && oppgitteBarn.identer.isNotEmpty()) {
-                            OppgitteBarn(oppgitteBarn = oppgitteBarn.identer.map {
-                                OppgitteBarn.OppgittBarn(
-                                    ident = Ident(
-                                        identifikator = it.identifikator, aktivIdent = true
-                                    ), navn = null, relasjon = null, fødselsdato = null
-                                )
-                            })
-                        } else {
-                            null
-                        }
-                    },
+                    oppgitteBarn = søknad.oppgitteBarn?.let { mapOppgitteBarn(it) },
                     utenlandsOppholdData = if (søknad.medlemskap == null) null else søknad.medlemskap?.let {
                         val utenlandsOpphold = it.utenlandsOpphold?.map { opphold ->
                             UtenlandsPeriode(
@@ -113,5 +85,37 @@ data class UbehandletSøknad(
         }
     }
 }
+
+private fun mapOppgitteBarn(oppgitteBarn: OppgitteBarnFraSøknad): OppgitteBarn? =
+    oppgitteBarn.let { oppgitteBarn ->
+        if (oppgitteBarn.barn.isNotEmpty()) {
+            OppgitteBarn(oppgitteBarn = oppgitteBarn.barn.map { oppgittBarn ->
+                OppgitteBarn.OppgittBarn(
+                    ident = oppgittBarn.ident?.let {
+                        Ident(
+                            identifikator = it.identifikator, aktivIdent = true
+                        )
+                    },
+                    navn = oppgittBarn.navn,
+                    fødselsdato = oppgittBarn.fødselsdato?.let(::Fødselsdato),
+                    relasjon = oppgittBarn.relasjon?.let {
+                        when (it) {
+                            ManueltOppgittBarn.Relasjon.FORELDER -> OppgitteBarn.Relasjon.FORELDER
+                            ManueltOppgittBarn.Relasjon.FOSTERFORELDER -> OppgitteBarn.Relasjon.FOSTERFORELDER
+                        }
+                    })
+            })
+        } else if (oppgitteBarn.identer.isNotEmpty()) {
+            OppgitteBarn(oppgitteBarn = oppgitteBarn.identer.map {
+                OppgitteBarn.OppgittBarn(
+                    ident = Ident(
+                        identifikator = it.identifikator, aktivIdent = true
+                    ), navn = null, relasjon = null, fødselsdato = null
+                )
+            })
+        } else {
+            null
+        }
+    }
 
 data class StudentData(val erStudent: ErStudentStatus, val skalGjenopptaStudie: SkalGjenopptaStudieStatus)
