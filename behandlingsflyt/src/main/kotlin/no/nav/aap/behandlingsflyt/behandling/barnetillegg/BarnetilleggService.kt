@@ -63,7 +63,14 @@ class BarnetilleggService(
         val vurderteBarn = barnGrunnlag.vurderteBarn?.barn ?: emptyList()
         val vurderteBarnIdenter = vurderteBarn.map { it.ident }
         val oppgittBarn =
-            barnGrunnlag.oppgitteBarn?.identer
+            barnGrunnlag.oppgitteBarn?.oppgitteBarn?.map { oppgittBarn ->
+                oppgittBarn.ident.also {
+                    if (it == null) {
+                        log.info("Ignorerer oppgitt barn uten ident.")
+                    }
+                }
+            }
+                ?.mapNotNull { it }
                 ?.mapNotNull { ident -> mapTilBarn(ident, personopplysningerGrunnlag) }
                 ?.filterNot { vurderteBarnIdenter.contains(it.ident) }
                 .orEmpty()

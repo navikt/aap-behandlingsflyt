@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.RegisterBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.VurderteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -55,7 +56,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         return OppgitteBarn(
             id, connection.queryList(
                 """
-                SELECT p.IDENT
+                SELECT p.IDENT, p.navn, p.fodselsdato, p.relasjon
                 FROM OPPGITT_BARN p
                 WHERE p.oppgitt_barn_id = ?
             """.trimIndent()
@@ -64,8 +65,11 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                     setLong(1, id)
                 }
                 setRowMapper { row ->
-                    Ident(
-                        row.getString("IDENT")
+                    OppgitteBarn.OppgittBarn(
+                        ident = row.getStringOrNull("IDENT")?.let(::Ident),
+                        navn = row.getStringOrNull("navn"),
+                        fødselsdato = row.getLocalDateOrNull("fodselsdato")?.let(::Fødselsdato),
+                        relasjon = row.getStringOrNull("relasjon")?.let(OppgitteBarn.Relasjon::valueOf),
                     )
                 }
             }
@@ -152,14 +156,14 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             })
     }
 
-    override fun lagreOppgitteBarn(behandlingId: BehandlingId, oppgitteBarn: OppgitteBarn?) {
+    override fun lagreOppgitteBarn(behandlingId: BehandlingId, oppgitteBarn: OppgitteBarn) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
         if (eksisterendeGrunnlag != null) {
             deaktiverEksisterende(behandlingId)
         }
 
-        val oppgittBarn = oppgitteBarn?.identer.orEmpty().toSet()
+        val oppgittBarn = oppgitteBarn.oppgitteBarn
 
         val oppgittBarnId = if (oppgittBarn.isNotEmpty()) {
             connection.executeReturnKey("INSERT INTO OPPGITT_BARNOPPLYSNING DEFAULT VALUES")
@@ -169,13 +173,17 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
 
         connection.executeBatch(
             """
-                INSERT INTO OPPGITT_BARN (IDENT, oppgitt_barn_id) VALUES (?, ?)
+            INSERT INTO OPPGITT_BARN (IDENT, oppgitt_barn_id, navn, fodselsdato, relasjon)
+            VALUES (?, ?, ?, ?, ?)
             """.trimIndent(),
             oppgittBarn
         ) {
             setParams { barnet ->
-                setString(1, barnet.identifikator)
+                setString(1, barnet.ident?.identifikator)
                 setLong(2, oppgittBarnId)
+                setString(3, barnet.navn)
+                setLocalDate(4, barnet.fødselsdato?.toLocalDate())
+                setString(5, barnet.relasjon?.name)
             }
         }
 
@@ -200,7 +208,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             deaktiverEksisterende(behandlingId)
         }
 
-        val bgbId = connection.executeReturnKey("INSERT INTO BARNOPPLYSNING_GRUNNLAG_BARNOPPLYSNING DEFAULT VALUES") {}
+        val bgbId = connection.executeReturnKey("INSERT INTO BARNOPPLYSNING_GRUNNLAG_BARNOPPLYSNING DEFAULT VALUES")
 
         connection.executeBatch(
             """

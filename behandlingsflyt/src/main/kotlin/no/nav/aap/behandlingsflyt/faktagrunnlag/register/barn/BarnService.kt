@@ -40,7 +40,11 @@ class BarnService private constructor(
 
     override val navn = Companion.navn
 
-    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+    override fun erRelevant(
+        kontekst: FlytKontekstMedPerioder,
+        steg: StegType,
+        oppdatert: InformasjonskravOppdatert?
+    ): Boolean {
         // Kun gjøre oppslag mot register ved førstegangsbehandling og revurdering av barnetillegg (Se AAP-933).
         val gyldigBehandling = kontekst.erFørstegangsbehandling() || kontekst.erRevurderingMedÅrsak(BARNETILLEGG)
         return gyldigBehandling &&
@@ -55,7 +59,7 @@ class BarnService private constructor(
         val sak = sakService.hent(kontekst.sakId)
         val barnGrunnlag = barnRepository.hentHvisEksisterer(behandlingId)
 
-        val oppgitteBarnIdenter = barnGrunnlag?.oppgitteBarn?.identer?.toList() ?: emptyList()
+        val oppgitteBarnIdenter = barnGrunnlag?.oppgitteBarn?.oppgitteBarn?.mapNotNull { it.ident }.orEmpty()
         val barn = barnGateway.hentBarn(sak.person, oppgitteBarnIdenter)
         val registerBarnIdenter = barn.registerBarn.map { it.ident }
 
@@ -64,8 +68,10 @@ class BarnService private constructor(
 
         oppdaterPersonIdenter(barn.alleBarn().map { it.ident }.toSet())
 
-        val manglerBarnGrunnlagEllerFantNyeBarnFraRegister = manglerBarnGrunnlagEllerFantNyeBarnFraRegister(registerBarnIdenter, barnGrunnlag)
-        val personopplysningerForBarnErOppdatert = personopplysningerForBarnErOppdatert(barn.alleBarn(), relatertePersonopplysninger)
+        val manglerBarnGrunnlagEllerFantNyeBarnFraRegister =
+            manglerBarnGrunnlagEllerFantNyeBarnFraRegister(registerBarnIdenter, barnGrunnlag)
+        val personopplysningerForBarnErOppdatert =
+            personopplysningerForBarnErOppdatert(barn.alleBarn(), relatertePersonopplysninger)
 
         if (manglerBarnGrunnlagEllerFantNyeBarnFraRegister || personopplysningerForBarnErOppdatert) {
             barnRepository.lagreRegisterBarn(behandlingId, registerBarnIdenter)
