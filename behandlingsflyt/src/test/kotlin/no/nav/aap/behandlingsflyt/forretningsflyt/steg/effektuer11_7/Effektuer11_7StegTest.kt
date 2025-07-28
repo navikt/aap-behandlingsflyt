@@ -260,7 +260,6 @@ class Effektuer11_7StegTest {
 
     private fun nySak() = InMemorySakRepository.finnEllerOpprett(
         person = Person(
-            id = 0,
             identifikator = UUID.randomUUID(),
             identer = listOf(Ident("0".repeat(11)))
         ),

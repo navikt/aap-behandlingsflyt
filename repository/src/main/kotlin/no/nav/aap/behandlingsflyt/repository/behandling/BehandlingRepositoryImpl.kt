@@ -286,7 +286,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
         return connection.queryList(query) {
             setParams {
-                setLong(1, person.id)
+                setLong(1, person.id.id)
                 setArray(2, behandlingstypeFilter.map { it.identifikator() })
             }
             setRowMapper {

@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Stat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.UtenlandsAdresse
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
@@ -96,7 +97,7 @@ class PersonopplysningRepositoryImpl(
                 }
                 setRowMapper {
                     RelatertPersonopplysning(
-                        person = personRepository.hent(it.getLong("person_id")),
+                        person = personRepository.hent(it.getLong("person_id").let(::PersonId)),
                         fødselsdato = Fødselsdato(it.getLocalDate("FODSELSDATO")),
                         dødsdato = it.getLocalDateOrNull("dodsdato")?.let(::Dødsdato)
                     )
@@ -271,7 +272,7 @@ class PersonopplysningRepositoryImpl(
                 barn
             ) {
                 setParams {
-                    setLong(1, requireNotNull(personRepository.finn(it.ident)).id)
+                    setLong(1, requireNotNull(personRepository.finn(it.ident)).id.id)
                     setLong(2, personopplysningerId)
                     setLocalDate(3, it.fødselsdato.toLocalDate())
                     setLocalDate(4, it.dødsdato?.toLocalDate())

@@ -27,7 +27,6 @@ object InMemoryPersonopplysningRepository : PersonopplysningRepository {
                         id = 0,
                         personopplysninger = barn.map { RelatertPersonopplysning(
                             person = Person(
-                                id = -1L,
                                 identifikator = UUID.randomUUID(),
                                 identer = listOf(it.ident)
                             ),

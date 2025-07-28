@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
@@ -76,7 +77,7 @@ class InMemoryBarnRepositoryTest {
     private fun opprettPersonBehandlingOgSak(): Pair<Sak, Behandling> {
         val person =
             Person(
-                Random().nextLong(),
+                Random().nextLong().let(::PersonId),
                 UUID.randomUUID(),
                 listOf(genererIdent(LocalDate.now().minusYears(23)))
             )

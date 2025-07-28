@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.repository.sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
@@ -60,7 +61,7 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
             """.trimIndent()
             ) {
                 setParams {
-                    setLong(1, person.id)
+                    setLong(1, person.id.id)
                 }
             }
         }
@@ -75,7 +76,7 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
             """.trimIndent()
             ) {
                 setParams {
-                    setLong(1, person.id)
+                    setLong(1, person.id.id)
                     setString(2, nyPrimær.identifikator)
                 }
             }
@@ -96,7 +97,7 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
                 setParams { ident ->
                     setString(1, ident.identifikator)
                     setBoolean(2, ident.aktivIdent)
-                    setLong(3, person.id)
+                    setLong(3, person.id.id)
                 }
             }
         }
@@ -112,15 +113,15 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
     }
 
     private fun mapPerson(row: Row): Person {
-        val personId = row.getLong("id")
+        val personId = PersonId(row.getLong("id"))
         return Person(personId, row.getUUID("referanse"), hentIdenter(personId))
     }
 
 
-    override fun hent(personId: Long): Person {
+    override fun hent(personId: PersonId): Person {
         return connection.queryFirst("SELECT referanse FROM PERSON WHERE id = ?") {
             setParams {
-                setLong(1, personId)
+                setLong(1, personId.id)
             }
             setRowMapper { row ->
                 val identer = hentIdenter(personId)
@@ -129,10 +130,10 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
         }
     }
 
-    private fun hentIdenter(personId: Long): List<Ident> {
+    private fun hentIdenter(personId: PersonId): List<Ident> {
         return connection.queryList("SELECT ident, primaer FROM PERSON_IDENT WHERE person_id = ?") {
             setParams {
-                setLong(1, personId)
+                setLong(1, personId.id)
             }
             setRowMapper { row ->
                 Ident(row.getString("ident"), row.getBoolean("primaer"))
@@ -159,7 +160,7 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
             }
         }
 
-        return Person(personId, identifikator, identer)
+        return Person(PersonId(personId), identifikator, identer)
     }
 
     override fun finn(ident: Ident): Person? {

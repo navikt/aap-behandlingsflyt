@@ -46,7 +46,7 @@ class BehandlingHendelseServiceTest {
                 any<BehandlingId>(),
                 InnsendingType.OPPFØLGINGSOPPGAVE
             )
-        } returns  emptySet()
+        } returns emptySet()
 
         val behandlingHendelseService =
             BehandlingHendelseServiceImpl(
@@ -67,7 +67,7 @@ class BehandlingHendelseServiceTest {
         every { sakService.hent(SakId(1)) } returns Sak(
             id = SakId(1),
             saksnummer = Saksnummer("1"),
-            person = Person(0, UUID.randomUUID(), listOf(Ident("123", true))),
+            person = Person(UUID.randomUUID(), listOf(Ident("123", true))),
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         )
 
