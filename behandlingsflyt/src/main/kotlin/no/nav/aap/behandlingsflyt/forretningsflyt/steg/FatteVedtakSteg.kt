@@ -97,7 +97,7 @@ class FatteVedtakSteg(
             navKontorList.forEach { navKontor ->
                 log.info("Oppretter Gosysoppgave for $navKontor")
                 gosysService.opprettOppgaveHvisIkkeEksisterer(
-                    aktivIdent!!,
+                    aktivIdent,
                     kontekst.behandlingId.toString(),
                     kontekst.behandlingId,
                     navKontor

@@ -39,7 +39,7 @@ class GosysGateway : OppgaveGateway {
 
     override fun opprettOppgaveHvisIkkeEksisterer(aktivIdent: Ident, bestillingReferanse: String, behandlingId: BehandlingId, navKontor: String) {
 
-        val oppgaveRequest = OpprettOppgaveRequest(
+         val oppgaveRequest = OpprettOppgaveRequest(
             oppgavetype = OppgaveType.FORDELING.verdi,
             tema = "AAP",
             prioritet = Prioritet.NORM,
