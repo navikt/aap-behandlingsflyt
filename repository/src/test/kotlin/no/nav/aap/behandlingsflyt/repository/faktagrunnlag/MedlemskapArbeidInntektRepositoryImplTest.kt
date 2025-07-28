@@ -23,6 +23,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -31,7 +32,15 @@ import java.time.LocalDateTime
 import java.time.YearMonth
 
 internal class MedlemskapArbeidInntektRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+    companion object {
+        private val dataSource = InitTestDatabase.freshDatabase()
+
+        @AfterAll
+        @JvmStatic
+        fun afterAll() {
+            InitTestDatabase.closerFor(dataSource)
+        }
+    }
 
     @Test
     fun mapperOrgnavnKorrektTilInntekt() {
@@ -44,14 +53,16 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val repo = MedlemskapArbeidInntektRepositoryImpl(connection)
 
-            val sak = personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
-            val behandling = behandlingRepo.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+            val sak =
+                personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            val behandling =
+                behandlingRepo.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
             lagNyFullVurdering(behandling.id, repo, "Første begrunnelse")
 
             val lagretInntekt = repo.hentHvisEksisterer(behandling.id)!!
 
-            val inntekt1 = lagretInntekt.inntekterINorgeGrunnlag.first{it.identifikator == "1234"}
-            val inntekt2 = lagretInntekt.inntekterINorgeGrunnlag.first{it.identifikator == "4321"}
+            val inntekt1 = lagretInntekt.inntekterINorgeGrunnlag.first { it.identifikator == "1234" }
+            val inntekt2 = lagretInntekt.inntekterINorgeGrunnlag.first { it.identifikator == "4321" }
 
             assertEquals(inntekt1.organisasjonsNavn, "Bepis AS")
             assertEquals(inntekt1.identifikator, "1234")
@@ -103,7 +114,8 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         repo: MedlemskapArbeidInntektRepositoryImpl,
         begrunnelse: String
     ) {
-        repo.lagreArbeidsforholdOgInntektINorge(behandlingId, listOf(),
+        repo.lagreArbeidsforholdOgInntektINorge(
+            behandlingId, listOf(),
             listOf(
                 ArbeidsInntektMaaned(
                     aarMaaned = YearMonth.now(),

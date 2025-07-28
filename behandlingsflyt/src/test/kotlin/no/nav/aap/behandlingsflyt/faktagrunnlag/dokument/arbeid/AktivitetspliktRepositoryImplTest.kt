@@ -19,12 +19,21 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class AktivitetspliktRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+    companion object {
+        private val dataSource = InitTestDatabase.freshDatabase()
+
+        @JvmStatic
+        @AfterAll
+        fun afterAll() {
+            InitTestDatabase.closerFor(dataSource)
+        }
+    }
 
     @Test
     fun `kan lagre feilregistrering brudd på sak`() {
