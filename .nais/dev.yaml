@@ -10,6 +10,9 @@ spec:
   image: {{image}}
   ingresses:
     - https://aap-behandlingsflyt.intern.dev.nav.no
+  replicas:
+    max: 2
+    min: 1
   resources:
     limits:
       memory: 1024Mi
@@ -44,12 +47,12 @@ spec:
     path: /actuator/live
     initialDelay: 3
     periodSeconds: 3
-    failureThreshold: 1000
+    failureThreshold: 1500
   readiness:
     path: /actuator/ready
     initialDelay: 3
     periodSeconds: 3
-    failureThreshold: 1000
+    failureThreshold: 1500
   prometheus:
     enabled: true
     path: /actuator/metrics
