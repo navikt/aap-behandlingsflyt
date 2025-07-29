@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.etannetsted
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
@@ -18,7 +19,6 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.util.stream.IntStream
 import kotlin.math.max
@@ -29,7 +29,7 @@ class EtAnnetStedUtlederService(
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository
 ) {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         barnetilleggRepository = repositoryProvider.provide(),
         institusjonsoppholdRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
@@ -70,13 +70,7 @@ class EtAnnetStedUtlederService(
 
         val helseOpphold = opprettTidslinje(helseopphold).begrensetTil(input.rettighetsperiode)
 
-        val barnetilleggTidslinje =
-            opprettTidslinje(barnetillegg.filter { it.personIdenter.isNotEmpty() }.map { segment ->
-                Segment(
-                    segment.periode,
-                    true
-                )
-            })
+        val barnetilleggTidslinje = barnetillegg.tilTidslinje()
 
         //fjern perioder hvor bruker har barnetillegg gjennom hele helseinstitusjonsoppholdet
         val oppholdUtenBarnetillegg =
@@ -253,17 +247,17 @@ class EtAnnetStedUtlederService(
     ): Tidslinje<Boolean> {
         val tidslinje = Tidslinje(
             helseOpphold.segmenter()
-            .filter { segment -> segment.verdi }
-            .filter { segment ->
-                segment.periode.tom < LocalDate.now() && oppholdUtenBarnetillegg.segmenter()
-                    .filter { it.verdi.helse?.vurdering == OppholdVurdering.AVSLÅTT }
-                    .any {
-                        Periode(
-                            it.periode.tom.plusDays(1),
-                            it.periode.tom.plusMonths(3).minusDays(1)
-                        ).inneholder(segment.periode.fom)
-                    }
-            })
+                .filter { segment -> segment.verdi }
+                .filter { segment ->
+                    segment.periode.tom < LocalDate.now() && oppholdUtenBarnetillegg.segmenter()
+                        .filter { it.verdi.helse?.vurdering == OppholdVurdering.AVSLÅTT }
+                        .any {
+                            Periode(
+                                it.periode.tom.plusDays(1),
+                                it.periode.tom.plusMonths(3).minusDays(1)
+                            ).inneholder(segment.periode.fom)
+                        }
+                })
         return tidslinje
     }
 
@@ -272,11 +266,10 @@ class EtAnnetStedUtlederService(
     ): Tidslinje<Boolean> {
         return Tidslinje(
             oppholdUtenBarnetillegg.segmenter()
-            .filter { segment -> segment.verdi }
-            .filterNotNull()
-            .filter { segment ->
-                harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(segment)
-            })
+                .filter { segment -> segment.verdi }
+                .filter { segment ->
+                    harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(segment)
+                })
     }
 
     private fun harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(
@@ -310,7 +303,7 @@ class EtAnnetStedUtlederService(
         val behandling = behandlingRepository.hent(behandlingId)
         val rettighetsperiode = sakRepository.hent(behandling.sakId).rettighetsperiode
         val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandlingId)
-        val barnetillegg = barnetilleggRepository.hentHvisEksisterer(behandlingId)?.perioder ?: emptyList()
+        val barnetillegg = barnetilleggRepository.hentHvisEksisterer(behandlingId)?.perioder.orEmpty()
 
         val opphold = grunnlag?.oppholdene?.opphold ?: emptyList()
         val soningsvurderinger: List<Soningsvurdering>

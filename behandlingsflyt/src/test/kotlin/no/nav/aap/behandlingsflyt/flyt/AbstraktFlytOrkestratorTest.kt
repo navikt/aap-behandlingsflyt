@@ -64,7 +64,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
@@ -214,6 +216,25 @@ open class AbstraktFlytOrkestratorTest {
             oppgitteBarn = null,
             medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
         )
+
+        val SØKNAD_MED_BARN: (String, LocalDate) -> SøknadV0 = { navn, fødseldato ->
+            SøknadV0(
+                student = null,
+                yrkesskade = "NEI",
+                oppgitteBarn = OppgitteBarn(
+                    identer = emptySet(),
+                    barn = listOf(
+                        ManueltOppgittBarn(
+                            navn = navn,
+                            fødselsdato = fødseldato,
+                            ident = null,
+                            relasjon = ManueltOppgittBarn.Relasjon.FOSTERFORELDER
+                        )
+                    )
+                ),
+                medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
+            )
+        }
     }
 
 

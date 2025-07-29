@@ -304,9 +304,7 @@ class InformasjonskravGrunnlagTest {
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident, periode)
         val behandling = finnEllerOpprettBehandling(connection, sak)
-        val personopplysningRepository = PersonopplysningRepositoryImpl(
-            connection, PersonRepositoryImpl(connection),
-        )
+        val personopplysningRepository = PersonopplysningRepositoryImpl(connection)
         personopplysningRepository.lagre(
             behandling.id,
             Personopplysning(

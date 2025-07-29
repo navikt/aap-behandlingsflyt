@@ -55,11 +55,11 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource, repositoryReg
                     val gjeldendeSykdomsvurderinger =
                         sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger.orEmpty()
 
-                    val sisteSykdomsvurdering = gjeldendeSykdomsvurderinger.maxBy { it.opprettet }
+                    val sisteSykdomsvurdering = gjeldendeSykdomsvurderinger.maxByOrNull { it.opprettet }
 
                     val behandlingsType = behandling.typeBehandling()
                     val sak = sakRepository.hent(behandling.sakId)
-                    val erOppfylt11_5 = sisteSykdomsvurdering.erOppfylt(behandlingsType, sak.rettighetsperiode.fom)
+                    val erOppfylt11_5 = sisteSykdomsvurdering?.erOppfylt(behandlingsType, sak.rettighetsperiode.fom)
 
                     BistandGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),

@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
-import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
@@ -28,19 +28,6 @@ class BeregnTilkjentYtelseService(
     private val samordningUføre: SamordningUføreGrunnlag?
 ) {
 
-    private fun tilTidslinje(barnetilleggGrunnlag: BarnetilleggGrunnlag): Tidslinje<RettTilBarnetillegg> {
-        return Tidslinje(
-            barnetilleggGrunnlag.perioder.map {
-                Segment(
-                    it.periode,
-                    RettTilBarnetillegg(
-                        it.personIdenter
-                    )
-                )
-            }
-        )
-    }
-
     internal companion object {
         private const val ANTALL_ÅRLIGE_ARBEIDSDAGER = 260
 
@@ -57,7 +44,7 @@ class BeregnTilkjentYtelseService(
         val minsteÅrligYtelseAlderStrategiTidslinje = MinsteÅrligYtelseAlderTidslinje(fødselsdato).tilTidslinje()
         val underveisTidslinje = Tidslinje(underveisgrunnlag.perioder.map { Segment(it.periode, it) })
         val grunnlagsfaktor = beregningsgrunnlag?.grunnlaget()
-        val barnetilleggGrunnlagTidslinje = tilTidslinje(barnetilleggGrunnlag)
+        val barnetilleggGrunnlagTidslinje = barnetilleggGrunnlag.perioder.tilTidslinje()
         val utgangspunktForÅrligYtelse = grunnlagsfaktor?.multiplisert(Prosent.`66_PROSENT`) ?: GUnit(0)
 
         val minsteÅrligYtelseMedAlderTidslinje = minsteÅrligYtelseAlderStrategiTidslinje.kombiner(
@@ -83,8 +70,9 @@ class BeregnTilkjentYtelseService(
                 }
 
                 val meldeperiode = venstre.verdi.meldePeriode
-                val utbetalingsdato = (venstre.verdi.arbeidsgradering.opplysningerMottatt ?: meldeperiode.tom.plusDays(9))
-                    .coerceIn(meldeperiode.tom.plusDays(1) .. meldeperiode.tom.plusDays(9))
+                val utbetalingsdato =
+                    (venstre.verdi.arbeidsgradering.opplysningerMottatt ?: meldeperiode.tom.plusDays(9))
+                        .coerceIn(meldeperiode.tom.plusDays(1)..meldeperiode.tom.plusDays(9))
 
                 Segment(
                     periode,

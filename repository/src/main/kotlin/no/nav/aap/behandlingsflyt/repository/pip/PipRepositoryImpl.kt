@@ -35,14 +35,14 @@ class PipRepositoryImpl(private val connection: DBConnection) : PipRepository {
             INNER JOIN BARNOPPLYSNING_GRUNNLAG g ON ob.oppgitt_barn_id = g.oppgitt_barn_id
             INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
             INNER JOIN SAK s ON b.SAK_ID = s.ID
-            WHERE s.SAKSNUMMER = ?
+            WHERE s.SAKSNUMMER = ? AND ob.ident is not null
             UNION 
             SELECT bv.IDENT as IDENT, '${IdentPåSak.Opprinnelse.BARN}' AS OPPRINNELSE
             FROM BARN_VURDERING bv
             INNER JOIN BARNOPPLYSNING_GRUNNLAG g ON bv.barn_vurderinger_id = g.vurderte_barn_id
             INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
             INNER JOIN SAK s ON b.SAK_ID = s.ID
-            WHERE s.SAKSNUMMER = ?
+            WHERE s.SAKSNUMMER = ? and bv.ident is not null
         """.trimIndent()
         ) {
             setParams {
@@ -71,13 +71,15 @@ class PipRepositoryImpl(private val connection: DBConnection) : PipRepository {
             INNER JOIN BEHANDLING bRef ON s.id = bRef.sak_id
             WHERE bRef.referanse = ?
             UNION
-            SELECT bo.IDENT as IDENT, '${IdentPåSak.Opprinnelse.BARN}' AS OPPRINNELSE
-            FROM BARNOPPLYSNING bo
-            INNER JOIN BARNOPPLYSNING_GRUNNLAG g ON bo.bgb_id = g.register_barn_id
-            INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
-            INNER JOIN BEHANDLING bRef ON b.SAK_ID = bRef.SAK_ID
-            WHERE bRef.referanse = ?
-            UNION 
+            SELECT pi.ident AS IDENT, '${IdentPåSak.Opprinnelse.BARN}' AS OPPRINNELSE
+            FROM barnopplysning bo
+                     join person p on bo.person_id = p.id
+                     join person_ident pi on p.id = pi.person_id
+                     join barnopplysning_grunnlag bg on bg.register_barn_id = bo.id
+                     join behandling b on bg.behandling_id = b.id
+                     join behandling bRef on b.sak_id = bRef.sak_id
+            WHERE bRef.referanse = ? and aktiv = true
+            UNION
             SELECT ob.IDENT as IDENT, '${IdentPåSak.Opprinnelse.BARN}' AS OPPRINNELSE
             FROM OPPGITT_BARN ob
             INNER JOIN BARNOPPLYSNING_GRUNNLAG g ON ob.oppgitt_barn_id = g.oppgitt_barn_id

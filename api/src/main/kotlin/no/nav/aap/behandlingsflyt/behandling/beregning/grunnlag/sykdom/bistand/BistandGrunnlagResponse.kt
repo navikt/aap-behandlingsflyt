@@ -8,5 +8,5 @@ data class BistandGrunnlagResponse(
     val gjeldendeVedtatteVurderinger: List<BistandVurderingResponse>,
     val historiskeVurderinger: List<BistandVurderingResponse>,
     val gjeldendeSykdsomsvurderinger: List<SykdomsvurderingResponse>,
-    val harOppfylt11_5: Boolean
+    val harOppfylt11_5: Boolean?
 )

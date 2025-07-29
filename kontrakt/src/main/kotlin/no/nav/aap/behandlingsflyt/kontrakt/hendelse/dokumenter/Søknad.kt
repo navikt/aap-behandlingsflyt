@@ -58,6 +58,9 @@ public data class UtenlandsPeriodeDto(
     val fraDatoLocalDate: LocalDate?
 )
 
+/**
+ * Oppgitte barn i søknaden. Ikke til intern bruk i resten av kodebasen.
+ */
 public data class OppgitteBarn(
     @Deprecated("Erstattes av 'barn' siden ident i en rekke tilfeller vil kunne mangle")
     public val identer: Set<Ident>,
@@ -65,11 +68,12 @@ public data class OppgitteBarn(
 )
 
 public data class ManueltOppgittBarn(
-    public val navn: String? = null,
-    public val fødselsdato: LocalDate? = null,
+    public val navn: String,
+    public val fødselsdato: LocalDate,
     public val ident: Ident? = null,
-    public val relasjon: Relasjon? = null,
+    public val relasjon: Relasjon,
 ) {
+
     public enum class Relasjon {
         FORELDER,
         FOSTERFORELDER,

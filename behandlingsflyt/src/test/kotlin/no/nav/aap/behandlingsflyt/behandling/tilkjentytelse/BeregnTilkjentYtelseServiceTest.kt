@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
@@ -124,7 +124,7 @@ class BeregnTilkjentYtelseServiceTest {
             1L, listOf(
                 BarnetilleggPeriode(
                     Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1).plusYears(18)),
-                    setOf(Ident("12345678910"))
+                    setOf(BarnIdentifikator.BarnIdent("12345678910"))
                 )
             )
         )
@@ -180,10 +180,10 @@ class BeregnTilkjentYtelseServiceTest {
             1L, listOf(
                 BarnetilleggPeriode(
                     Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1).plusYears(18)),
-                    setOf(Ident("12345678910"))
+                    setOf(BarnIdentifikator.BarnIdent("12345678910"))
                 ), BarnetilleggPeriode(
                     Periode(LocalDate.of(2023, 12, 30).minusYears(18), LocalDate.of(2023, 12, 31)),
-                    setOf(Ident("12345678911"))
+                    setOf(BarnIdentifikator.BarnIdent("12345678911"))
                 )
             )
         )
