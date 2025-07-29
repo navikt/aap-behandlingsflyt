@@ -184,6 +184,7 @@ class StatistikkJobbUtførerTest {
             hendelsesTidspunkt = hendelseTidspunkt,
             versjon = "123",
             årsakerTilBehandling = listOf(Vurderingsbehov.SØKNAD.name),
+            vurderingsbehov = listOf(Vurderingsbehov.SØKNAD.name),
             mottattDokumenter = listOf()
         )
 
@@ -373,6 +374,7 @@ class StatistikkJobbUtførerTest {
             hendelsesTidspunkt = hendelseTidspunkt,
             versjon = "123",
             årsakerTilBehandling = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
+            vurderingsbehov = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
             reserverTil = "meg",
             mottattDokumenter = listOf()
         )
@@ -613,6 +615,7 @@ class StatistikkJobbUtførerTest {
             hendelsesTidspunkt = hendelsesTidspunkt,
             versjon = ApplikasjonsVersjon.versjon,
             årsakerTilBehandling = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
+            vurderingsbehov = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
             mottattDokumenter = listOf(),
             reserverTil = "meg",
         )
