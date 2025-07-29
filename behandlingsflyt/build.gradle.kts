@@ -1,3 +1,5 @@
+val jacksonVersjon = "2.19.2"
+
 plugins {
     id("behandlingsflyt.conventions")
 }
@@ -7,6 +9,7 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus:1.15.2")
     implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersjon")
 
     api(libs.tilgangPlugin)
     api(libs.tilgangKontrakt)
