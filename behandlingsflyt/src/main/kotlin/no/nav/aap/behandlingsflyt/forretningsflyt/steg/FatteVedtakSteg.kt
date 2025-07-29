@@ -92,12 +92,12 @@ class FatteVedtakSteg(
             }
 
             val person = personRepository.hent(personId)
-            val aktivIdent = person.aktivIdent()
+            val aktivIdent = person.identer().find { it.aktivIdent }
 
             navKontorList.forEach { navKontor ->
                 log.info("Oppretter Gosysoppgave for $navKontor")
                 gosysService.opprettOppgaveHvisIkkeEksisterer(
-                    aktivIdent,
+                    aktivIdent!!,
                     kontekst.behandlingId.toString(),
                     kontekst.behandlingId,
                     navKontor
