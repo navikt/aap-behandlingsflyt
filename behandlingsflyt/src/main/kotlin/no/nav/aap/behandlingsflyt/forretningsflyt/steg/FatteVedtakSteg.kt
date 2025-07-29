@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -91,13 +92,13 @@ class FatteVedtakSteg(
                 return Fullført
             }
 
-            val person = personRepository.hent(personId)
-            val aktivIdent = person.identer().find { it.aktivIdent }
+            val person = personRepository.hent(PersonId(personId))
+            val aktivIdent = person.aktivIdent()
 
             navKontorList.forEach { navKontor ->
                 log.info("Oppretter Gosysoppgave for $navKontor")
                 gosysService.opprettOppgaveHvisIkkeEksisterer(
-                    aktivIdent!!,
+                    aktivIdent,
                     kontekst.behandlingId.toString(),
                     kontekst.behandlingId,
                     navKontor
