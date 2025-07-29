@@ -5,9 +5,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.IBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -19,7 +18,6 @@ import org.slf4j.LoggerFactory
 class BarnetilleggService(
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val barnRepository: BarnRepository,
-    private val personopplysningRepository: PersonopplysningRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -27,7 +25,6 @@ class BarnetilleggService(
     constructor(repositoryProvider: RepositoryProvider) : this(
         sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
         barnRepository = repositoryProvider.provide(),
-        personopplysningRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
     )
 
@@ -41,14 +38,9 @@ class BarnetilleggService(
             return resultat
         }
 
-        val personopplysningerGrunnlag = requireNotNull(personopplysningRepository.hentHvisEksisterer(behandlingId))
-
         val barnGrunnlag = barnRepository.hent(behandlingId)
         val folkeregisterBarn =
-            barnGrunnlag.registerbarn?.identer.orEmpty()
-                .mapNotNull { ident -> mapTilBarn(ident, personopplysningerGrunnlag) }
-                // Sortere for å gjøre testene deterministiske
-                .sortedBy { it.ident.identifikator }
+            barnGrunnlag.registerbarn?.barn.orEmpty()
         val folkeregisterBarnTidslinje = tilTidslinje(folkeregisterBarn)
 
         resultat =
@@ -60,22 +52,14 @@ class BarnetilleggService(
                 Segment(periode, venstreVerdi)
             })
 
-        val vurderteBarn = barnGrunnlag.vurderteBarn?.barn ?: emptyList()
+        val vurderteBarn = barnGrunnlag.vurderteBarn?.barn.orEmpty()
         val vurderteBarnIdenter = vurderteBarn.map { it.ident }
-        val oppgittBarn =
-            barnGrunnlag.oppgitteBarn?.oppgitteBarn?.map { oppgittBarn ->
-                oppgittBarn.ident.also {
-                    if (it == null) {
-                        log.info("Ignorerer oppgitt barn uten ident.")
-                    }
-                }
-            }
-                ?.mapNotNull { it }
-                ?.mapNotNull { ident -> mapTilBarn(ident, personopplysningerGrunnlag) }
-                ?.filterNot { vurderteBarnIdenter.contains(it.ident) }
+        val oppgittBarnSomIkkeErVurdert =
+            barnGrunnlag.oppgitteBarn?.oppgitteBarn
+                ?.filterNot { vurderteBarnIdenter.contains(it.identifikator()) }
                 .orEmpty()
 
-        val oppgittBarnTidslinje = tilTidslinje(oppgittBarn)
+        val oppgittBarnTidslinje = tilTidslinje(oppgittBarnSomIkkeErVurdert)
         resultat =
             resultat.kombiner(oppgittBarnTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
                 val venstreVerdi = venstreSegment.verdi.copy()
@@ -88,6 +72,7 @@ class BarnetilleggService(
         for (barn in vurderteBarn) {
             resultat = resultat.kombiner(
                 barn.tilTidslinje(),
+                // Outer join siden vurderte barn kan ha prioritet
                 JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
                     val høyreVerdi = høyreSegment?.verdi
                     val nyVenstreVerdi = venstreSegment?.verdi?.copy() ?: RettTilBarnetillegg()
@@ -114,25 +99,14 @@ class BarnetilleggService(
         return !(sykdomsvilkåret.harPerioderSomErOppfylt() && bistandsvilkåret.harPerioderSomErOppfylt())
     }
 
-    private fun mapTilBarn(ident: Ident, personopplysningerGrunnlag: PersonopplysningGrunnlag): Barn? {
-        val personopplysning =
-            personopplysningerGrunnlag.relatertePersonopplysninger?.personopplysninger?.singleOrNull {
-                it.gjelderForIdent(ident)
-            }
-        if (personopplysning == null) {
-            return null
-        }
-        return Barn(personopplysning.ident(), personopplysning.fødselsdato, personopplysning.dødsdato)
-    }
-
-    private fun tilTidslinje(barna: List<Barn>): Tidslinje<Set<Ident>> {
+    private fun tilTidslinje(barna: List<IBarn>): Tidslinje<Set<BarnIdentifikator>> {
         return barna
             .map { barnet ->
                 Tidslinje(
                     listOf(
                         Segment(
-                            Barn.periodeMedRettTil(barnet.fødselsdato),
-                            barnet.ident
+                            Barn.periodeMedRettTil(barnet.fødselsdato()),
+                            barnet.identifikator()
                         )
                     )
                 )

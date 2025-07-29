@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
@@ -8,14 +7,12 @@ import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.ident
-import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -25,6 +22,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import java.io.Closeable
 import java.time.LocalDate
 
 class PersonopplysningRepositoryImplTest {
@@ -49,47 +47,10 @@ class PersonopplysningRepositoryImplTest {
 
         val personopplysningGrunnlag = dataSource.transaction { connection ->
             PersonopplysningRepositoryImpl(
-                connection,
-                PersonRepositoryImpl(connection)
+                connection
             ).hentHvisEksisterer(behandling.id)
         }
         assertThat(personopplysningGrunnlag).isNull()
-    }
-
-    @Test
-    fun `lagre og hente barn`() {
-        val behandling = dataSource.transaction { connection ->
-            val sak = sak(connection)
-            finnEllerOpprettBehandling(connection, sak)
-        }
-
-        val barn1 = Barn(
-            ident = Ident("1234"),
-            fødselsdato = Fødselsdato(1 januar 2022),
-        )
-        val barn2 = Barn(
-            ident = Ident("5431"),
-            fødselsdato = Fødselsdato(1 januar 2020),
-        )
-        dataSource.transaction { connection ->
-            val personRepository = PersonRepositoryImpl(connection)
-            listOf(barn1, barn2).forEach { personRepository.finnEllerOpprett(listOf(it.ident)) }
-
-            val personopplysningRepositoryImpl = PersonopplysningRepositoryImpl(
-                connection,
-                personRepository
-            )
-
-            personopplysningRepositoryImpl.lagre(
-                behandling.id, Personopplysning(
-                    Fødselsdato(17 mars 1992), statsborgerskap = listOf(
-                        Statsborgerskap("NOR")
-                    ), status = PersonStatus.bosatt
-                )
-            )
-
-            personopplysningRepositoryImpl.lagre(behandling.id, setOf(barn1, barn2))
-        }
     }
 
     @Test
@@ -101,8 +62,7 @@ class PersonopplysningRepositoryImplTest {
 
         dataSource.transaction { connection ->
             val personopplysningRepository = PersonopplysningRepositoryImpl(
-                connection,
-                PersonRepositoryImpl(connection)
+                connection
             )
             personopplysningRepository.lagre(
                 behandling.id, Personopplysning(
@@ -114,8 +74,7 @@ class PersonopplysningRepositoryImplTest {
         }
         val personopplysningGrunnlag = dataSource.transaction { connection ->
             val personopplysningRepository = PersonopplysningRepositoryImpl(
-                connection,
-                PersonRepositoryImpl(connection)
+                connection
             )
             personopplysningRepository.hentHvisEksisterer(behandling.id)
         }
@@ -135,8 +94,7 @@ class PersonopplysningRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val personopplysningRepository = PersonopplysningRepositoryImpl(
-                connection,
-                PersonRepositoryImpl(connection)
+                connection
             )
             personopplysningRepository.lagre(
                 behandling.id,
@@ -190,8 +148,7 @@ class PersonopplysningRepositoryImplTest {
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val personopplysningRepository = PersonopplysningRepositoryImpl(
-                connection,
-                PersonRepositoryImpl(connection)
+                connection
             )
             personopplysningRepository.lagre(
                 behandling1.id,
@@ -223,8 +180,7 @@ class PersonopplysningRepositoryImplTest {
     fun `Kopiering av personopplysninger fra en behandling uten opplysningene skal ikke føre til feil`() {
         dataSource.transaction { connection ->
             val personopplysningRepository = PersonopplysningRepositoryImpl(
-                connection,
-                PersonRepositoryImpl(connection)
+                connection
             )
             assertDoesNotThrow {
                 personopplysningRepository.kopier(BehandlingId(Long.MAX_VALUE - 1), BehandlingId(Long.MAX_VALUE))
@@ -238,8 +194,7 @@ class PersonopplysningRepositoryImplTest {
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val personopplysningRepository = PersonopplysningRepositoryImpl(
-                connection,
-                PersonRepositoryImpl(connection)
+                connection
             )
             personopplysningRepository.lagre(
                 behandling1.id,
@@ -282,8 +237,7 @@ class PersonopplysningRepositoryImplTest {
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val personopplysningRepository = PersonopplysningRepositoryImpl(
-                connection,
-                PersonRepositoryImpl(connection)
+                connection
             )
 
             personopplysningRepository.lagre(
@@ -358,8 +312,7 @@ class PersonopplysningRepositoryImplTest {
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val personopplysningRepository = PersonopplysningRepositoryImpl(
-                connection,
-                PersonRepositoryImpl(connection)
+                connection
             )
             personopplysningRepository.lagre(
                 behandling1.id,
