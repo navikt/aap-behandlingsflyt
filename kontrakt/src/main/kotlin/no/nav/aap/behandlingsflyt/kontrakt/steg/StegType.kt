@@ -63,6 +63,10 @@ public enum class StegType(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
+    SYKDOMSVURDERING_BREV(
+        gruppe = StegGruppe.SYKDOM,
+        status = Status.UTREDES
+    ),
     KVALITETSSIKRING(
         gruppe = StegGruppe.KVALITETSSIKRING,
         status = Status.UTREDES,
