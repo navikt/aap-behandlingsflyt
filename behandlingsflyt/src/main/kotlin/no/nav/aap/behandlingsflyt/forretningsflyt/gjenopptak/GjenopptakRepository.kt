@@ -8,11 +8,11 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.repository.Repository
 import no.nav.aap.komponenter.repository.RepositoryFactory
 
-interface GjenopptakRepository: Repository {
+interface GjenopptakRepository : Repository {
     fun finnBehandlingerForGjennopptak(): List<SakOgBehandling>
 }
 
-class GjenopptakRepositoryImpl(private val connection: DBConnection): GjenopptakRepository {
+class GjenopptakRepositoryImpl(private val connection: DBConnection) : GjenopptakRepository {
     override fun finnBehandlingerForGjennopptak(): List<SakOgBehandling> {
         val query = """
             SELECT b.id, b.sak_id 
@@ -23,7 +23,7 @@ class GjenopptakRepositoryImpl(private val connection: DBConnection): Gjenopptak
                 FROM AVKLARINGSBEHOV_ENDRING
                 ORDER BY AVKLARINGSBEHOV_ID, OPPRETTET_TID DESC
              ) ae ON ae.AVKLARINGSBEHOV_ID = a.id
-            WHERE b.STATUS = '${Status.UTREDES.name}' 
+            WHERE b.STATUS in ('${Status.UTREDES.name}', '${Status.OPPRETTET.name}')
             AND ae.status = ?
             AND ae.frist <= CURRENT_DATE
         """.trimIndent()
@@ -38,7 +38,7 @@ class GjenopptakRepositoryImpl(private val connection: DBConnection): Gjenopptak
         }
     }
 
-    companion object: RepositoryFactory<GjenopptakRepository> {
+    companion object : RepositoryFactory<GjenopptakRepository> {
         override fun konstruer(connection: DBConnection) = GjenopptakRepositoryImpl(connection)
     }
 }
