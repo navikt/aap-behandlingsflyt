@@ -44,12 +44,12 @@ spec:
     path: /actuator/live
     initialDelay: 3
     periodSeconds: 3
-    failureThreshold: 600
+    failureThreshold: 700
   readiness:
     path: /actuator/ready
     initialDelay: 3
     periodSeconds: 3
-    failureThreshold: 600
+    failureThreshold: 700
   prometheus:
     enabled: true
     path: /actuator/metrics
