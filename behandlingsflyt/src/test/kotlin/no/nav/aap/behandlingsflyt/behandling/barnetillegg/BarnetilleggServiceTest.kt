@@ -142,7 +142,7 @@ class BarnetilleggServiceTest {
         )
         val behandling = InMemoryBehandlingRepository.opprettBehandling(
             sakId = sak.id,
-            årsaker = listOf(),
+            vurderingsbehov = listOf(),
             typeBehandling = TypeBehandling.Førstegangsbehandling,
             forrigeBehandlingId = null
         )

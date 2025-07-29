@@ -65,7 +65,7 @@ class OmgjøringSteg private constructor(
         }
         val hjemler = klageresultat.hjemlerSomSkalOmgjøres()
         val beskrivelse = konstruerBegrunnelse(hjemler)
-        val årsaker = hjemler.map { it.tilÅrsak() }
+        val årsaker = hjemler.map { it.tilVurderingsbehov() }
 
         return ManuellRevurderingV0(
             årsakerTilBehandling = årsaker,

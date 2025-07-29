@@ -16,8 +16,8 @@ import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.ident
@@ -118,7 +118,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
                 TypeBehandling.Revurdering,
                 sak.id,
                 revurdering.id,
-                listOf(Årsak(ÅrsakTilBehandling.REVURDER_MEDLEMSKAP)),
+                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_MEDLEMSKAP)),
                 null
             )
 
@@ -179,7 +179,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
         typeBehandling: TypeBehandling,
         sakId: SakId,
         forrigeBehandlingId: BehandlingId?,
-        årsaker: List<Årsak>,
+        årsaker: List<VurderingsbehovMedPeriode>,
         utenlandsOppholdData: UtenlandsOppholdData?
     )
             : Behandling {

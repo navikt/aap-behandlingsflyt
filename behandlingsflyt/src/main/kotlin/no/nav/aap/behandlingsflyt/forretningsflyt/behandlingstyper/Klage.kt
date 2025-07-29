@@ -17,7 +17,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.OmgjøringSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.OpprettholdelseSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.PåklagetBehandlingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.TrekkKlageSteg
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 
 object Klage : BehandlingType {
     override fun flyt(): BehandlingFlyt {
@@ -25,7 +25,7 @@ object Klage : BehandlingType {
         return BehandlingFlytBuilder()
             .medSteg(
                 steg = TrekkKlageSteg,
-                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.KLAGE_TRUKKET),
+                årsakRelevanteForSteg = listOf(Vurderingsbehov.KLAGE_TRUKKET),
                 informasjonskrav = listOf(TrekkKlageInformasjonskravService)
             )
             .medSteg(steg = PåklagetBehandlingSteg)

@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -62,7 +62,7 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest() {
                 AvklarOppfølgingNAYLøsning(
                     OppfølgingsoppgaveGrunnlagDto(
                         konsekvensAvOppfølging = KonsekvensAvOppfølging.OPPRETT_VURDERINGSBEHOV,
-                        opplysningerTilRevurdering = listOf(ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+                        opplysningerTilRevurdering = listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
                         årsak = "dddd"
                     )
                 )

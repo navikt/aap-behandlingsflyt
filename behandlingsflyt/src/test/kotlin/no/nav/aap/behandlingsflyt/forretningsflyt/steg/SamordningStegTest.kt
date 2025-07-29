@@ -15,10 +15,10 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
@@ -69,7 +69,7 @@ class SamordningStegTest {
                 forrigeBehandlingId = behandling.forrigeBehandlingId,
                 behandlingType = behandling.typeBehandling(),
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
                 rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
             )
         )
@@ -104,7 +104,7 @@ class SamordningStegTest {
                 forrigeBehandlingId = behandling.forrigeBehandlingId,
                 behandlingType = behandling.typeBehandling(),
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
                 rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
             )
         )
@@ -126,7 +126,7 @@ class SamordningStegTest {
                 forrigeBehandlingId = behandling.forrigeBehandlingId,
                 behandlingType = behandling.typeBehandling(),
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
                 rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
             )
         )
@@ -185,7 +185,7 @@ class SamordningStegTest {
                 forrigeBehandlingId = behandling.forrigeBehandlingId,
                 behandlingType = behandling.typeBehandling(),
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
                 rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
             )
         )
@@ -232,7 +232,7 @@ class SamordningStegTest {
                 forrigeBehandlingId = behandling.forrigeBehandlingId,
                 behandlingType = behandling.typeBehandling(),
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
                 rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
             )
         )
@@ -260,7 +260,7 @@ class SamordningStegTest {
             forrigeBehandlingId = behandling.forrigeBehandlingId,
             behandlingType = behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
             rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
         )
 
@@ -341,7 +341,7 @@ class SamordningStegTest {
             forrigeBehandlingId = behandling.forrigeBehandlingId,
             behandlingType = behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
         )
 
@@ -397,7 +397,7 @@ class SamordningStegTest {
             forrigeBehandlingId = behandling.forrigeBehandlingId,
             behandlingType = behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
         )
 
@@ -465,6 +465,6 @@ class SamordningStegTest {
 
     private fun opprettBehandling(sak: Sak): Behandling {
         return InMemorySakOgBehandlingService
-            .finnEllerOpprettBehandling(sak.saksnummer, listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD)))
+            .finnEllerOpprettBehandling(sak.saksnummer, listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)))
     }
 }

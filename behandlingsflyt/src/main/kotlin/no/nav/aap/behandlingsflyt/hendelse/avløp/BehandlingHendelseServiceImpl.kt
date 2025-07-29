@@ -45,8 +45,8 @@ import no.nav.aap.behandlingsflyt.prosessering.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
@@ -77,8 +77,8 @@ class BehandlingHendelseServiceImpl(
     ) {
         val sak = sakService.hent(behandling.sakId)
         val erPåVent = avklaringsbehovene.hentÅpneVentebehov().isNotEmpty()
-        val årsaker = behandling.årsaker()
-        val mottattDokumenter = hentMottattDokumenter(årsaker, behandling)
+        val vurderingsbehov = behandling.vurderingsbehov()
+        val mottattDokumenter = hentMottattDokumenter(vurderingsbehov, behandling)
 
         val hendelse = BehandlingFlytStoppetHendelse(
             personIdent = sak.person.aktivIdent().identifikator,
@@ -87,7 +87,8 @@ class BehandlingHendelseServiceImpl(
             behandlingType = behandling.typeBehandling(),
             aktivtSteg = behandling.aktivtSteg(),
             status = behandling.status(),
-            årsakerTilBehandling = årsaker.map { it.type.name },
+            årsakerTilBehandling = vurderingsbehov.map { it.type.name },
+            vurderingsbehov = vurderingsbehov.map { it.type.name },
             avklaringsbehov = avklaringsbehovene.alle().map { avklaringsbehov ->
                 val brevbestilling = if (avklaringsbehov.definisjon == Definisjon.SKRIV_BREV) {
                     brevbestillingRepository.hent(behandling.id)
@@ -157,17 +158,17 @@ class BehandlingHendelseServiceImpl(
     }
 
     private fun hentMottattDokumenter(
-        årsaker: List<Årsak>,
+        vurderingsbehov: List<VurderingsbehovMedPeriode>,
         behandling: Behandling
     ): List<MottattDokumentDto> {
         // Sender kun med dokumenter ved følgende behandlingsårsaker
         val gyldigeÅrsaker = listOf(
-            ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING,
-            ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING,
-            ÅrsakTilBehandling.MOTTATT_DIALOGMELDING
+            Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+            Vurderingsbehov.MOTTATT_AVVIST_LEGEERKLÆRING,
+            Vurderingsbehov.MOTTATT_DIALOGMELDING
         )
 
-        return if (årsaker.any { it.type in gyldigeÅrsaker }) {
+        return if (vurderingsbehov.any { it.type in gyldigeÅrsaker }) {
             val gyldigeDokumenter = listOf(
                 InnsendingType.LEGEERKLÆRING,
                 InnsendingType.LEGEERKLÆRING_AVVIST,

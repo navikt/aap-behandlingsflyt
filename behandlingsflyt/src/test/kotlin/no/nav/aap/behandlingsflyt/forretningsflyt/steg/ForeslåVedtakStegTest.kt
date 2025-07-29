@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
@@ -43,7 +43,7 @@ class ForeslåVedtakStegTest {
         val kontekstMedPerioder = FlytKontekstMedPerioder(
             sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         )
 
@@ -69,7 +69,7 @@ class ForeslåVedtakStegTest {
         val kontekstMedPerioder = FlytKontekstMedPerioder(
             sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         )
 
@@ -95,7 +95,7 @@ class ForeslåVedtakStegTest {
         val kontekstMedPerioder = FlytKontekstMedPerioder(
             sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         )
 
@@ -126,7 +126,7 @@ class ForeslåVedtakStegTest {
         val kontekstMedPerioder = FlytKontekstMedPerioder(
             sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         )
 

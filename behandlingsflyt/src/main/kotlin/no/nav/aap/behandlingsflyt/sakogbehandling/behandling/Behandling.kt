@@ -18,7 +18,7 @@ class Behandling(
     val sakId: SakId,
     private val typeBehandling: TypeBehandling,
     private var status: Status = Status.OPPRETTET,
-    private var årsaker: List<Årsak> = mutableListOf(),
+    private var vurderingsbehov: List<VurderingsbehovMedPeriode> = mutableListOf(),
     private var stegTilstand: StegTilstand? = null,
     val opprettetTidspunkt: LocalDateTime = LocalDateTime.now(),
     val versjon: Long
@@ -49,8 +49,8 @@ class Behandling(
         status = nyStegTilstand.steg().status
     }
 
-    fun årsaker(): List<Årsak> {
-        return årsaker.toList()
+    fun vurderingsbehov(): List<VurderingsbehovMedPeriode> {
+        return vurderingsbehov.toList()
     }
 
     fun status(): Status = status

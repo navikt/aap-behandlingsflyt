@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -31,7 +31,7 @@ enum class KonsekvensAvOppfølging {
  */
 data class OppfølgingsoppgaveGrunnlagResponse(
     val konsekvensAvOppfølging: KonsekvensAvOppfølging,
-    val opplysningerTilRevurdering: List<ÅrsakTilBehandling>,
+    val opplysningerTilRevurdering: List<Vurderingsbehov>,
     val årsak: String?,
     val vurdertAv: String
 )

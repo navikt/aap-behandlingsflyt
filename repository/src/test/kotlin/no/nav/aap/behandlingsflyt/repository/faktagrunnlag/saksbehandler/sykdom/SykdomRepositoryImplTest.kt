@@ -191,7 +191,7 @@ internal class SykdomRepositoryImplTest {
     private fun revurdering(connection: DBConnection, behandling: Behandling): Behandling {
         return BehandlingRepositoryImpl(connection).opprettBehandling(
             behandling.sakId,
-            årsaker = listOf(),
+            vurderingsbehov = listOf(),
             typeBehandling = TypeBehandling.Revurdering,
             forrigeBehandlingId = behandling.id,
         )

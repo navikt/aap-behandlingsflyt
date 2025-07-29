@@ -14,8 +14,8 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -90,7 +90,7 @@ class PipTest {
             val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, periode)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sak.id,
-                listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD, periode)),
+                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD, periode)),
                 TypeBehandling.Førstegangsbehandling, null
             )
 
@@ -146,7 +146,7 @@ class PipTest {
             val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, periode)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sak.id,
-                listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD, periode)),
+                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD, periode)),
                 TypeBehandling.Førstegangsbehandling, null
             )
 
@@ -172,7 +172,7 @@ class PipTest {
             val periode2 = Periode(LocalDate.now().minusYears(5), LocalDate.now().minusYears(5))
             val behandling2 = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sak.id,
-                listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD, periode2)),
+                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD, periode2)),
                 TypeBehandling.Førstegangsbehandling, null
             )
 

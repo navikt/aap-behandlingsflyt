@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
@@ -83,9 +83,9 @@ class TrukketSøknadRepositoryImplTest {
             val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, Periode(1 januar 2025, 1 januar 2028))
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sakId = sak.id,
-                årsaker = listOf(
-                    Årsak(
-                        type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling.MOTTATT_SØKNAD,
+                vurderingsbehov = listOf(
+                    VurderingsbehovMedPeriode(
+                        type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD,
                         periode = Periode(1 januar 2025, 1 januar 2028),
                     )
                 ),

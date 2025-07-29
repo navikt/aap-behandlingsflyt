@@ -10,10 +10,10 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -42,9 +42,9 @@ class OpprettRevurderingSteg(
                 logger.info("Oppretter revurdering. SakID: ${kontekst.sakId}")
                 val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
                     sakId = kontekst.sakId,
-                    årsaker = listOf(
-                        Årsak(
-                            type = ÅrsakTilBehandling.REVURDER_SAMORDNING,
+                    vurderingsbehov = listOf(
+                        VurderingsbehovMedPeriode(
+                            type = Vurderingsbehov.REVURDER_SAMORDNING,
                         )
                     )
                 )

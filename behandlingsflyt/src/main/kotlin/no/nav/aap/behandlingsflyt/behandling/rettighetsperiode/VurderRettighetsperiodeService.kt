@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderRettighetsperiodeService(
@@ -25,7 +25,7 @@ class VurderRettighetsperiodeService(
 
     override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE in kontekst.årsakerTilBehandling
+        return Vurderingsbehov.VURDER_RETTIGHETSPERIODE in kontekst.vurderingsbehov
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {

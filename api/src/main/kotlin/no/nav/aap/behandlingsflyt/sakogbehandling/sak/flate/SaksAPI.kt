@@ -19,7 +19,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
@@ -274,11 +274,13 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
                                     søknadErTrukket =
                                         resultatUtleder.utledResultatFørstegangsBehandling(behandling) == Resultat.TRUKKET
                                 }
+                                val vurderingsbehov = behandling.vurderingsbehov().map(VurderingsbehovMedPeriode::type)
                                 BehandlinginfoDTO(
                                     referanse = behandling.referanse.referanse,
                                     type = behandling.typeBehandling().identifikator(),
                                     status = behandling.status(),
-                                    årsaker = behandling.årsaker().map(Årsak::type),
+                                    årsaker = vurderingsbehov,
+                                    vurderingsbehov = vurderingsbehov,
                                     opprettet = behandling.opprettetTidspunkt
                                 )
                             }

@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -46,7 +46,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
     fun `Løser behov når det finnes avvist dokument` () {
         val behandling = dataSource.transaction { connection ->
             val sak = opprettSak(connection)
-            finnEllerOpprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING)
+            finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTTATT_AVVIST_LEGEERKLÆRING)
         }
 
         dataSource.transaction { connection ->
@@ -72,7 +72,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
     fun `løser behov når det finnes mottatt legeerklæring` () {
         val behandling = dataSource.transaction { connection ->
             val sak = opprettSak(connection)
-            finnEllerOpprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING)
+            finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTTATT_LEGEERKLÆRING)
         }
 
         dataSource.transaction { connection ->
@@ -98,7 +98,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
     fun `løser behov når det finnes mottatt dialogmelding`() {
         val behandling = dataSource.transaction { connection ->
             val sak = opprettSak(connection)
-            finnEllerOpprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_DIALOGMELDING)
+            finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTTATT_DIALOGMELDING)
         }
 
         dataSource.transaction { connection ->
@@ -124,7 +124,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
     fun `løser ikke behov når legeerklæring er eldre enn bestilling`() {
         val behandling = dataSource.transaction { connection ->
             val sak = opprettSak(connection)
-            finnEllerOpprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_SØKNAD)
+            finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTTATT_SØKNAD)
         }
 
         dataSource.transaction { connection ->
@@ -149,7 +149,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
     fun `løser ikke behov når ikke det finnes avvist dokument` () {
         val behandling = dataSource.transaction { connection ->
             val sak = opprettSak(connection)
-            finnEllerOpprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_SØKNAD)
+            finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTTATT_SØKNAD)
         }
 
         dataSource.transaction { connection ->

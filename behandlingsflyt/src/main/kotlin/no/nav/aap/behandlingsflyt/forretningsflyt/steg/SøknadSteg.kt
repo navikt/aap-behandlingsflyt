@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling.SØKNAD_TRUKKET
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.SØKNAD_TRUKKET
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -60,7 +60,7 @@ class SøknadSteg(
 
     private fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
         return (kontekst.behandlingType == TypeBehandling.Førstegangsbehandling)
-                && (SØKNAD_TRUKKET in kontekst.årsakerTilBehandling)
+                && (SØKNAD_TRUKKET in kontekst.vurderingsbehov)
     }
 
     companion object : FlytSteg {

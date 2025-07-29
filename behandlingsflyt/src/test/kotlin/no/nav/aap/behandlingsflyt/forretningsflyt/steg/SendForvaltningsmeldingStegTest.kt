@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
@@ -71,7 +71,7 @@ class SendForvaltningsmeldingStegTest {
     @EnumSource(TypeBehandling::class, mode = Mode.INCLUDE, names = ["Førstegangsbehandling", "Revurdering"])
     fun `sender en og kun en forvaltningsmelding for en behandling som har årsak MOTTATT_SØKNAD`(typeBehandling: TypeBehandling) {
         val behandling = opprettSakOgbehandling(typeBehandling)
-        val flytkontekst = flytkontekstForBehandling(behandling, ÅrsakTilBehandling.MOTTATT_SØKNAD)
+        val flytkontekst = flytkontekstForBehandling(behandling, Vurderingsbehov.MOTTATT_SØKNAD)
 
         sendForvaltningsmeldingSteg.utfør(flytkontekst)
         sendForvaltningsmeldingSteg.utfør(flytkontekst)
@@ -82,10 +82,10 @@ class SendForvaltningsmeldingStegTest {
     }
 
     @ParameterizedTest
-    @EnumSource(ÅrsakTilBehandling::class, mode = Mode.EXCLUDE, names = ["MOTTATT_SØKNAD"])
-    fun `sender ikke forvaltningsmelding for en behandling som ikke har årsak MOTTATT_SØKNAD`(årsakTilBehandling: ÅrsakTilBehandling) {
+    @EnumSource(Vurderingsbehov::class, mode = Mode.EXCLUDE, names = ["MOTTATT_SØKNAD"])
+    fun `sender ikke forvaltningsmelding for en behandling som ikke har årsak MOTTATT_SØKNAD`(vurderingsbehov: Vurderingsbehov) {
         val behandling = opprettSakOgbehandling(TypeBehandling.Førstegangsbehandling)
-        val flytkontekst = flytkontekstForBehandling(behandling, årsakTilBehandling)
+        val flytkontekst = flytkontekstForBehandling(behandling, vurderingsbehov)
 
         sendForvaltningsmeldingSteg.utfør(flytkontekst)
 
@@ -99,7 +99,7 @@ class SendForvaltningsmeldingStegTest {
         typeBehandling: TypeBehandling
     ) {
         val behandling = opprettSakOgbehandling(typeBehandling)
-        val flytkontekst = flytkontekstForBehandling(behandling, ÅrsakTilBehandling.MOTTATT_SØKNAD)
+        val flytkontekst = flytkontekstForBehandling(behandling, Vurderingsbehov.MOTTATT_SØKNAD)
 
         sendForvaltningsmeldingSteg.utfør(flytkontekst)
 
@@ -133,7 +133,7 @@ class SendForvaltningsmeldingStegTest {
 
     private fun flytkontekstForBehandling(
         behandling: Behandling,
-        årsakTilBehandling: ÅrsakTilBehandling
+        vurderingsbehov: Vurderingsbehov
     ): FlytKontekstMedPerioder {
         return FlytKontekstMedPerioder(
             sakId = behandling.sakId,
@@ -141,7 +141,7 @@ class SendForvaltningsmeldingStegTest {
             forrigeBehandlingId = behandling.forrigeBehandlingId,
             behandlingType = behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            årsakerTilBehandling = setOf(årsakTilBehandling),
+            vurderingsbehov = setOf(vurderingsbehov),
             rettighetsperiode = periode,
         )
     }

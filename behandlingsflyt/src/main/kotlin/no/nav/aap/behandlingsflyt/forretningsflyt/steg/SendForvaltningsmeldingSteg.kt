@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -31,7 +31,7 @@ class SendForvaltningsmeldingSteg(
             TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> {
                 val behandlingId = kontekst.behandlingId
                 val behandling = behandlingRepository.hent(behandlingId)
-                if (erBehandlingForMottattSøknad(kontekst.årsakerTilBehandling) &&
+                if (erBehandlingForMottattSøknad(kontekst.vurderingsbehov) &&
                     !harAlleredeBestiltForvaltningsmeldingForBehandling(behandling)
                 ) {
                     val typeBrev = TypeBrev.FORVALTNINGSMELDING
@@ -55,8 +55,8 @@ class SendForvaltningsmeldingSteg(
             .any { it.typeBrev == TypeBrev.FORVALTNINGSMELDING }
     }
 
-    private fun erBehandlingForMottattSøknad(årsakerTilBehandling: Set<ÅrsakTilBehandling>): Boolean {
-        return ÅrsakTilBehandling.MOTTATT_SØKNAD in årsakerTilBehandling
+    private fun erBehandlingForMottattSøknad(årsakerTilBehandling: Set<Vurderingsbehov>): Boolean {
+        return Vurderingsbehov.MOTTATT_SØKNAD in årsakerTilBehandling
     }
 
     companion object : FlytSteg {

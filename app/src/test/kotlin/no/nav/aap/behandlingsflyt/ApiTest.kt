@@ -35,8 +35,8 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.FinnEllerOpprettSakDTO
@@ -166,7 +166,7 @@ class ApiTest {
                 personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
             val behandling = behandlingRepo.opprettBehandling(
                 sak.id,
-                listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
+                listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
                 TypeBehandling.Førstegangsbehandling, null
             )
             val medlRepo = postgresRepositoryRegistry.provider(connection).provide<MedlemskapRepository>()
@@ -216,7 +216,7 @@ class ApiTest {
                 personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
             val behandling = behandlingRepo.opprettBehandling(
                 sak.id,
-                listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
+                listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
                 TypeBehandling.Førstegangsbehandling, null
             )
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
@@ -450,8 +450,8 @@ class ApiTest {
         }
 
         assertThat(behandlinger).hasSize(1)
-        assertThat(behandlinger!!.first().årsaker().map { it.type }).contains(
-            ÅrsakTilBehandling.MOTTATT_AKTIVITETSMELDING
+        assertThat(behandlinger!!.first().vurderingsbehov().map { it.type }).contains(
+            Vurderingsbehov.MOTTATT_AKTIVITETSMELDING
         )
 
     }
