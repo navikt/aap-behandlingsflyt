@@ -15,6 +15,8 @@
       <env name="INTEGRASJON_SAF_SCOPE" value="api://dev-fss.teamdokumenthandtering.saf/.default" />
       <env name="INTEGRASJON_YRKESSKADE_URL" value="https://yrkesskade-saker.intern.dev.nav.no/api/v1/saker/" />
       <env name="INTEGRASJON_YRKESSKADE_SCOPE" value="api://dev-gcp.yrkesskade.yrkesskade-saker/.default" />
+      <env name="INTEGRASJON_GOSYS_URL" value="https://oppgave.dev-fss-pub.nais.io" />
+      <env name="INTEGRASJON_GOSYS_SCOPE" value="api://dev-fss.oppgavehandtering.oppgave/.default" />
       <env name="INTEGRASJON_INSTITUSJONSOPPHOLD_URL" value="https://inst2-q2.dev-fss-pub.nais.io/api/v1/person/institusjonsopphold" />
       <env name="INTEGRASJON_INSTITUSJONSOPPHOLD_SCOPE" value="api://dev-fss.team-rocket.inst2-q2/.default" />
       <env name="INTEGRASJON_INNTEKT_URL" value="https://pensjon-popp-q2.dev-fss-pub.nais.io/popp/api/inntekt/sumPi" />
