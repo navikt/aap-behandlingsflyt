@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt
 
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.papsign.ktor.openapigen.model.info.InfoModel
 import com.papsign.ktor.openapigen.route.apiRouting
 import com.zaxxer.hikari.HikariConfig
@@ -77,6 +79,7 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
+import no.nav.aap.behandlingsflyt.integrasjon.oppgave.GosysGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
@@ -260,6 +263,7 @@ private fun registerGateways() {
         .register<NorgGateway>()
         .register<KabalGateway>()
         .register<InstitusjonsoppholdGatewayImpl>()
+        .register<GosysGateway>()
         .status()
 }
 

@@ -2,7 +2,6 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val opentelemetryVersion = "2.18.1-alpha"
 
-
 plugins {
     id("behandlingsflyt.conventions")
     alias(libs.plugins.ktor)
