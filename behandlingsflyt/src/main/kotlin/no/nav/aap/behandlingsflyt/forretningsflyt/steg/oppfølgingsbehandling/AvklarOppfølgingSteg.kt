@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -51,11 +51,11 @@ class AvklarOppfølgingSteg(
             }
 
             KonsekvensAvOppfølging.OPPRETT_VURDERINGSBEHOV -> {
-                val årsaker = grunnlag.opplysningerTilRevurdering
-                log.info("Oppretter ny behandling med årsaker $årsaker for sak ${kontekst.sakId}.")
+                val vurderingsbehov = grunnlag.opplysningerTilRevurdering
+                log.info("Oppretter ny behandling med vurderingsbehov $vurderingsbehov for sak ${kontekst.sakId}.")
                 val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
                     sakId = kontekst.sakId,
-                    årsaker = årsaker.map { Årsak(it) }
+                    vurderingsbehov = vurderingsbehov.map { VurderingsbehovMedPeriode(it) }
                 )
 
                 val behandlingSkrivelås =

@@ -22,7 +22,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -144,7 +144,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         val erSpesifiktTriggetRevurderMedlemskap =
-            kontekst.årsakerTilBehandling.any { it == ÅrsakTilBehandling.REVURDER_MEDLEMSKAP || it == ÅrsakTilBehandling.FORUTGAENDE_MEDLEMSKAP }
+            kontekst.vurderingsbehov.any { it == Vurderingsbehov.REVURDER_MEDLEMSKAP || it == Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP }
         return erSpesifiktTriggetRevurderMedlemskap && erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene)
     }
 

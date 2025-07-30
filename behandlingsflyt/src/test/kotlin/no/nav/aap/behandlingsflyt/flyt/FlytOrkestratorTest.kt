@@ -136,9 +136,9 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRep
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.ident
@@ -857,7 +857,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         var behandling = sendInnSøknad(ident, periode, TestSøknader.STANDARD_SØKNAD)
 
         løsSykdom(behandling)
-        leggTilÅrsakForBehandling(behandling, listOf(Årsak(ÅrsakTilBehandling.SØKNAD_TRUKKET)))
+        leggTilÅrsakForBehandling(behandling, listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SØKNAD_TRUKKET)))
         assertThat(hentAlleAvklaringsbehov(behandling)).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erÅpent() && avklaringsbehov.definisjon == Definisjon.VURDER_TREKK_AV_SØKNAD).isTrue() }
 
         behandling = løsAvklaringsBehov(
@@ -1153,7 +1153,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 innsendingType = InnsendingType.MANUELL_REVURDERING,
                 strukturertDokument = StrukturertDokument(
                     ManuellRevurderingV0(
-                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
                         beskrivelse = "..."
                     )
                 ),
@@ -2012,7 +2012,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 strukturertDokument = StrukturertDokument(
                     ManuellRevurderingV0(
-                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.FORUTGAENDE_MEDLEMSKAP), ""
+                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP), ""
                     ),
                 ),
                 innsendingType = InnsendingType.MANUELL_REVURDERING,
@@ -2103,7 +2103,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         assertTrue(vilkårsResultat.all { it.erOppfylt() })
 
         // Teste å trekke søknad
-        leggTilÅrsakForBehandling(behandling, listOf(Årsak(ÅrsakTilBehandling.SØKNAD_TRUKKET)))
+        leggTilÅrsakForBehandling(behandling, listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SØKNAD_TRUKKET)))
     }
 
     @Test
@@ -2786,7 +2786,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         }
 
         val revurdering = hentNyesteBehandlingForSak(klagebehandling.sakId, listOf(TypeBehandling.Revurdering))
-        assertThat(revurdering.årsaker()).containsExactly(Årsak(ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
+        assertThat(revurdering.vurderingsbehov()).containsExactly(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
 
         // OpprettholdelseSteg
         val steghistorikk = hentStegHistorikk(klagebehandling.id)
@@ -3280,7 +3280,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 innsendingType = InnsendingType.NY_ÅRSAK_TIL_BEHANDLING,
                 strukturertDokument = StrukturertDokument(
                     NyÅrsakTilBehandlingV0(
-                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.KLAGE_TRUKKET)
+                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.KLAGE_TRUKKET)
                     ),
                 ),
                 periode = periode
@@ -3290,7 +3290,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         // Sjekk at Klagen nå har fått "KLAGE_TRUKKET" som årsak til behandling (og derfor er i riktig tilstand)
         util.ventPåSvar()
         assertThat(trekkKlageBehandling.id).isEqualTo(klagebehandling.id)
-        assertThat(trekkKlageBehandling.årsaker().map { it.type }).contains(ÅrsakTilBehandling.KLAGE_TRUKKET)
+        assertThat(trekkKlageBehandling.vurderingsbehov().map { it.type }).contains(Vurderingsbehov.KLAGE_TRUKKET)
 
         // Løs avklaringsbehovet som trekker klagen og trigger sletting - skal og sette klagen til avsluttet
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(trekkKlageBehandling.id)
@@ -3411,7 +3411,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         val revurdering = hentNyesteBehandlingForSak(svarFraAndreinstansBehandling.sakId)
         assertThat(revurdering).isNotNull
         assertThat(revurdering.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-        assertThat(revurdering.årsaker().map { it.type }).contains(ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+        assertThat(revurdering.vurderingsbehov().map { it.type }).contains(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
     }
 
     @Test

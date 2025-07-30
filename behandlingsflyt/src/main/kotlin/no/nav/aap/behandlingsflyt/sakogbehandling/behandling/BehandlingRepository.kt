@@ -12,7 +12,7 @@ interface BehandlingRepository : Repository {
 
     fun opprettBehandling(
         sakId: SakId,
-        årsaker: List<Årsak>,
+        vurderingsbehov: List<VurderingsbehovMedPeriode>,
         typeBehandling: TypeBehandling,
         forrigeBehandlingId: BehandlingId?
     ): Behandling
@@ -37,7 +37,7 @@ interface BehandlingRepository : Repository {
 
     fun hentBehandlingType(behandlingId: BehandlingId): TypeBehandling
 
-    fun oppdaterÅrsaker(behandling: Behandling, årsaker: List<Årsak>)
+    fun oppdaterVurderingsbehov(behandling: Behandling, vurderingsbehov: List<VurderingsbehovMedPeriode>)
 
     fun hentSakId(referanse: BehandlingReferanse): SakId
 

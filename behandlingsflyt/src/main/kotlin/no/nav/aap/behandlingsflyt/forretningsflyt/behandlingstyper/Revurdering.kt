@@ -59,7 +59,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderStudentSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeSteg
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 
 object Revurdering : BehandlingType {
     override fun flyt(): BehandlingFlyt {
@@ -67,31 +67,31 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = StartBehandlingSteg,
                 informasjonskrav = listOf(SøknadService),
-                årsakRelevanteForSteg = ÅrsakTilBehandling.alle()
+                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle()
             )
             .medSteg(
                 steg = SendForvaltningsmeldingSteg,
-                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTTATT_SØKNAD),
                 informasjonskrav = emptyList()
             )
             .medSteg(
                 steg = SøknadSteg,
-                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.SØKNAD_TRUKKET),
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.SØKNAD_TRUKKET),
                 informasjonskrav = listOf(TrukketSøknadService),
             )
             .medSteg(
                 steg = RettighetsperiodeSteg,
                 informasjonskrav = listOf(VurderRettighetsperiodeService),
-                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE)
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
             )
             .medSteg(
                 steg = VurderLovvalgSteg,
                 informasjonskrav = listOf(PersonopplysningService, LovvalgService),
-                årsakRelevanteForSteg = listOf(
-                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.REVURDER_LOVVALG,
-                    ÅrsakTilBehandling.LOVVALG_OG_MEDLEMSKAP,
-                    ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE,
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.REVURDER_LOVVALG,
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
+                    Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                 )
             )
             .medSteg(steg = FastsettMeldeperiodeSteg)
@@ -101,122 +101,122 @@ object Revurdering : BehandlingType {
                 steg = VurderSykdomSteg,
                 // UføreService trengs her for å trigge ytterligere nedsatt arbeidsevne-vurdering
                 informasjonskrav = listOf(YrkesskadeService, LegeerklæringService, UføreService),
-                årsakRelevanteForSteg = listOf(
-                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
-                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING,
-                    ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                    Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
                 )
             )
             .medSteg(
-                steg = FritakMeldepliktSteg, årsakRelevanteForSteg = listOf(
-                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
-                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING,
-                    ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+                steg = FritakMeldepliktSteg, vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                    Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
                 )
             )
             .medSteg(
-                steg = FastsettArbeidsevneSteg, årsakRelevanteForSteg = listOf(
-                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
-                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING,
-                    ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+                steg = FastsettArbeidsevneSteg, vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                    Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
                 )
             )
             .medSteg(
-                steg = VurderBistandsbehovSteg, årsakRelevanteForSteg = listOf(
-                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
-                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING,
-                    ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
-                    ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE,
+                steg = VurderBistandsbehovSteg, vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                    Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                 )
             )
             .medSteg(
-                steg = RefusjonkravSteg, årsakRelevanteForSteg = listOf(
-                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING
+                steg = RefusjonkravSteg, vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MOTTATT_DIALOGMELDING
                 )
             )
             .medSteg(steg = KvalitetssikringsSteg)
             .medSteg(
-                steg = VurderYrkesskadeSteg, årsakRelevanteForSteg = listOf(
-                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
-                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING,
-                    ÅrsakTilBehandling.REVURDER_YRKESSKADE,
-                    ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+                steg = VurderYrkesskadeSteg, vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                    Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+                    Vurderingsbehov.REVURDER_YRKESSKADE,
+                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
                 )
             )
             .medSteg(
-                steg = VurderSykepengeErstatningSteg, årsakRelevanteForSteg = listOf(
-                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
-                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING,
-                    ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+                steg = VurderSykepengeErstatningSteg, vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                    Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
                 )
             )
             .medSteg(steg = FastsettSykdomsvilkåretSteg)
             .medSteg(
-                steg = BeregningAvklarFaktaSteg, årsakRelevanteForSteg = listOf(
-                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.REVURDER_BEREGNING,
+                steg = BeregningAvklarFaktaSteg, vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.REVURDER_BEREGNING,
                 )
             )
             .medSteg(steg = VisGrunnlagSteg)
             .medSteg(
                 steg = ManglendeLigningGrunnlagSteg,
                 informasjonskrav = listOf(InntektService),
-                årsakRelevanteForSteg = listOf(
-                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.REVURDER_BEREGNING,
-                    ÅrsakTilBehandling.REVURDER_YRKESSKADE,
-                    ÅrsakTilBehandling.REVURDER_MANUELL_INNTEKT
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.REVURDER_BEREGNING,
+                    Vurderingsbehov.REVURDER_YRKESSKADE,
+                    Vurderingsbehov.REVURDER_MANUELL_INNTEKT
                 )
             )
             .medSteg(
-                steg = FastsettGrunnlagSteg, årsakRelevanteForSteg = listOf(
-                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.REVURDER_BEREGNING,
-                    ÅrsakTilBehandling.REVURDER_YRKESSKADE,
-                    ÅrsakTilBehandling.REVURDER_MANUELL_INNTEKT
+                steg = FastsettGrunnlagSteg, vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.REVURDER_BEREGNING,
+                    Vurderingsbehov.REVURDER_YRKESSKADE,
+                    Vurderingsbehov.REVURDER_MANUELL_INNTEKT
                 )
             )
             .medSteg(
                 steg = VurderForutgåendeMedlemskapSteg,
                 informasjonskrav = listOf(PersonopplysningForutgåendeService, ForutgåendeMedlemskapService),
-                årsakRelevanteForSteg = listOf(
-                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.REVURDER_MEDLEMSKAP,
-                    ÅrsakTilBehandling.FORUTGAENDE_MEDLEMSKAP,
-                    ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT,
-                    ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE,
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.REVURDER_MEDLEMSKAP,
+                    Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP,
+                    Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT,
+                    Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                 )
             )
             .medSteg(
                 steg = BarnetilleggSteg,
                 informasjonskrav = listOf(BarnService),
-                årsakRelevanteForSteg = listOf(
-                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.BARNETILLEGG,
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.BARNETILLEGG,
                 )
             )
             .medSteg(
                 steg = EtAnnetStedSteg,
                 informasjonskrav = listOf(InstitusjonsoppholdService),
-                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.INSTITUSJONSOPPHOLD)
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.INSTITUSJONSOPPHOLD)
             )
             .medSteg(
                 steg = SamordningSteg,
                 informasjonskrav = listOf(SamordningYtelseVurderingService),
-                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING, ÅrsakTilBehandling.REVURDER_SAMORDNING),
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.SAMORDNING_OG_AVREGNING, Vurderingsbehov.REVURDER_SAMORDNING),
             )
             .medSteg(steg = SamordningUføreSteg, informasjonskrav = listOf(UføreService))
             .medSteg(steg = TjenestepensjonRefusjonskravSteg, informasjonskrav = listOf(TjenestePensjonService))
             .medSteg(
                 steg = SamordningAndreStatligeYtelserSteg,
-                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING, ÅrsakTilBehandling.REVURDER_SAMORDNING)
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.SAMORDNING_OG_AVREGNING, Vurderingsbehov.REVURDER_SAMORDNING)
             )
             .medSteg(
                 steg = SamordningArbeidsgiverSteg,
@@ -226,22 +226,22 @@ object Revurdering : BehandlingType {
             .medSteg(steg = Effektuer11_7Steg)
             .medSteg(
                 steg = BeregnTilkjentYtelseSteg,
-                årsakRelevanteForSteg = ÅrsakTilBehandling.alleInklusivGRegulering()
+                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering()
             )
-            .medSteg(steg = SimulerUtbetalingSteg, årsakRelevanteForSteg = ÅrsakTilBehandling.alleInklusivGRegulering())
+            .medSteg(steg = SimulerUtbetalingSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering())
             .medSteg(
                 steg = ForeslåVedtakSteg,
-                årsakRelevanteForSteg = ÅrsakTilBehandling.alleInklusivGRegulering()
+                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering()
             ) // en-trinn
             .sluttÅOppdatereFaktagrunnlag()
             .medSteg(
                 steg = FatteVedtakSteg,
-                årsakRelevanteForSteg = ÅrsakTilBehandling.alleInklusivGRegulering()
+                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering()
             ) // to-trinn
-            .medSteg(steg = IverksettVedtakSteg, årsakRelevanteForSteg = ÅrsakTilBehandling.alleInklusivGRegulering())
+            .medSteg(steg = IverksettVedtakSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering())
             .medSteg(
                 steg = MeldingOmVedtakBrevSteg,
-                årsakRelevanteForSteg = ÅrsakTilBehandling.alleInklusivGRegulering()
+                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering()
             )
             .medSteg(
                 steg = OpprettRevurderingSteg

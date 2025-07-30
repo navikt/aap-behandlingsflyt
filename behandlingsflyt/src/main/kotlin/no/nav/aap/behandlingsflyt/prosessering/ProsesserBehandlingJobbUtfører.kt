@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -25,7 +25,7 @@ class ProsesserBehandlingJobbUtfører(
         val behandlingId = BehandlingId(input.behandlingId())
         val skrivelås = låsRepository.lås(sakId, behandlingId)
         val triggere =
-            input.optionalParameter("trigger")?.let { DefaultJsonMapper.fromJson<List<ÅrsakTilBehandling>>(it) }
+            input.optionalParameter("trigger")?.let { DefaultJsonMapper.fromJson<List<Vurderingsbehov>>(it) }
                 .orEmpty()
         val kontekst = kontroller.opprettKontekst(sakId, behandlingId)
 

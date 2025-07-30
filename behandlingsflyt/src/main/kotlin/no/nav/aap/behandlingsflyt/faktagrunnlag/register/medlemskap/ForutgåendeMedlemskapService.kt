@@ -20,7 +20,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.adapter.Enhetsregi
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -45,7 +45,7 @@ class ForutgåendeMedlemskapService private constructor(
     override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
             && (oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
-                || kontekst.årsakerTilBehandling.contains(ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE))
+                || kontekst.vurderingsbehov.contains(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))
             && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
     }
 

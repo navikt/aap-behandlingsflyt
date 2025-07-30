@@ -80,7 +80,7 @@ class IverksettKonsekvensSteg private constructor(
         }
         val hjemler = vurdering.vilkårSomOmgjøres
         val beskrivelse = konstruerBegrunnelse(hjemler)
-        val årsaker = hjemler.map { it.tilÅrsak() }
+        val årsaker = hjemler.map { it.tilVurderingsbehov() }
 
         return ManuellRevurderingV0(
             årsakerTilBehandling = årsaker,

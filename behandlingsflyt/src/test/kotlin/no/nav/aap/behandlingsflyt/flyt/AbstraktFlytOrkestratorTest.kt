@@ -87,7 +87,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -487,7 +487,7 @@ open class AbstraktFlytOrkestratorTest {
 
     protected fun opprettBehandling(
         sakId: SakId,
-        årsaker: List<Årsak>,
+        årsaker: List<VurderingsbehovMedPeriode>,
         typeBehandling: TypeBehandling,
         forrigeBehandlingId: BehandlingId?
     ): Behandling {
@@ -496,7 +496,7 @@ open class AbstraktFlytOrkestratorTest {
                 forrigeBehandlingId = forrigeBehandlingId,
                 sakId = sakId,
                 typeBehandling = typeBehandling,
-                årsaker = årsaker
+                vurderingsbehov = årsaker
             )
         }
     }
@@ -837,7 +837,7 @@ open class AbstraktFlytOrkestratorTest {
         return this.løsAvklaringsBehov(vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
     }
 
-    protected fun leggTilÅrsakForBehandling(behandling: Behandling, årsaker: List<Årsak>) {
+    protected fun leggTilÅrsakForBehandling(behandling: Behandling, årsaker: List<VurderingsbehovMedPeriode>) {
         dataSource.transaction { connection ->
             SakOgBehandlingService(postgresRepositoryRegistry.provider(connection))
                 .finnEllerOpprettBehandling(behandling.sakId, årsaker)

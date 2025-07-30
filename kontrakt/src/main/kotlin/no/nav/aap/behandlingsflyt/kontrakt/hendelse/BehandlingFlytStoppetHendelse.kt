@@ -18,7 +18,9 @@ public data class BehandlingFlytStoppetHendelse(
     val saksnummer: Saksnummer,
     val referanse: BehandlingReferanse,
     val behandlingType: TypeBehandling,
+    @Deprecated("Kan fjernes når oppgave har byttet til å bruke vurderingsbehov")
     val årsakerTilBehandling: List<String>,
+    val vurderingsbehov: List<String>,
     val status: Status,
     val aktivtSteg: StegType? = null,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,

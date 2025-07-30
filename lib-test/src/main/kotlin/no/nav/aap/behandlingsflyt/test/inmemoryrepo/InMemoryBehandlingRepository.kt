@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import org.slf4j.LoggerFactory
@@ -25,7 +25,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
 
     override fun opprettBehandling(
         sakId: SakId,
-        årsaker: List<Årsak>,
+        vurderingsbehov: List<VurderingsbehovMedPeriode>,
         typeBehandling: TypeBehandling,
         forrigeBehandlingId: BehandlingId?
     ): Behandling {
@@ -43,7 +43,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
                 sakId = sakId,
                 typeBehandling = typeBehandling,
                 versjon = 1,
-                årsaker = årsaker
+                vurderingsbehov = vurderingsbehov
             )
             memory[id] = behandling
 
@@ -93,9 +93,9 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
-    override fun oppdaterÅrsaker(
+    override fun oppdaterVurderingsbehov(
         behandling: Behandling,
-        årsaker: List<Årsak>
+        vurderingsbehov: List<VurderingsbehovMedPeriode>
     ) {
 
     }
@@ -164,7 +164,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
                 sakId = behandling.sakId,
                 typeBehandling = behandling.typeBehandling(),
                 status = behandling.status(),
-                årsaker = behandling.årsaker(),
+                vurderingsbehov = behandling.vurderingsbehov(),
                 stegTilstand = behandling.aktivtStegTilstand(),
                 opprettetTidspunkt = behandling.opprettetTidspunkt,
                 versjon = behandling.versjon,

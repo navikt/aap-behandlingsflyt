@@ -24,7 +24,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.httpklient.auth.Bruker
@@ -104,13 +104,13 @@ class FlytOrkestrator(
 
     fun forberedOgProsesserBehandling(
         kontekst: FlytKontekst,
-        triggere: List<ÅrsakTilBehandling> = emptyList()
+        triggere: List<Vurderingsbehov> = emptyList()
     ) {
         this.forberedBehandling(kontekst, triggere)
         this.prosesserBehandling(kontekst)
     }
 
-    private fun forberedBehandling(kontekst: FlytKontekst, triggere: List<ÅrsakTilBehandling>?) {
+    private fun forberedBehandling(kontekst: FlytKontekst, triggere: List<Vurderingsbehov>?) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 

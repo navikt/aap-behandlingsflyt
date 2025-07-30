@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.repository.behandling.oppfølgingsbehandling
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepository
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsoppgaveGrunnlag
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
 
@@ -62,7 +62,7 @@ class OppfølgingsBehandlingRepositoryImpl(private val connection: DBConnection)
                 OppfølgingsoppgaveGrunnlag(
                     konsekvensAvOppfølging = it.getEnum("konsekvens_av_oppfolging"),
                     opplysningerTilRevurdering = it.getArray("opplysninger_til_revurdering", String::class).map(
-                        ÅrsakTilBehandling::valueOf
+                        Vurderingsbehov::valueOf
                     ),
                     årsak = it.getStringOrNull("aarsak_til_revurdering"),
                     vurdertAv = it.getString("vurdert_av"),

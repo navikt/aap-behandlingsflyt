@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.svarfraanadreinstans.SvarFraAndreinstansRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
@@ -27,8 +27,8 @@ class SvarFraAndreinstansRepositoryImplTest {
         dataSource.transaction { connection ->
             val sak = sak(connection)
             finnEllerOpprettBehandling(connection, sak)
-            finnEllerOpprettBehandling(connection, sak, ÅrsakTilBehandling.MOTATT_KLAGE)
-            val behandling = finnEllerOpprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_KABAL_HENDELSE)
+            finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
+            val behandling = finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTTATT_KABAL_HENDELSE)
 
             val repository = SvarFraAndreinstansRepositoryImpl(connection)
             val vurdering = SvarFraAndreinstansVurdering(

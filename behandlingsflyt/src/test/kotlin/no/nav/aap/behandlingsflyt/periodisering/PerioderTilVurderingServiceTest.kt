@@ -2,9 +2,9 @@ package no.nav.aap.behandlingsflyt.periodisering
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
@@ -32,7 +32,7 @@ class PerioderTilVurderingServiceTest {
         )
 
         val behandling = InMemoryBehandlingRepository.opprettBehandling(
-            sak.id, listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD)),
+            sak.id, listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
             TypeBehandling.Førstegangsbehandling, null
         )
 
@@ -55,7 +55,7 @@ class PerioderTilVurderingServiceTest {
         )
 
         assertThat(res).isNotNull
-        assertThat(res.årsakerTilBehandling.first()).isEqualTo(ÅrsakTilBehandling.MOTTATT_SØKNAD)
+        assertThat(res.vurderingsbehov.first()).isEqualTo(Vurderingsbehov.MOTTATT_SØKNAD)
         assertThat(res.rettighetsperiode).isEqualTo(periode)
     }
 

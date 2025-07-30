@@ -21,7 +21,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
@@ -58,7 +58,7 @@ class FatteVedtakStegTest {
             forrigeBehandlingId = null,
             vurderingType = VurderingType.IKKE_RELEVANT,
             rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTATT_KLAGE)
+            vurderingsbehov = setOf(Vurderingsbehov.MOTATT_KLAGE)
         )
 
         every { klageresultatUtleder.utledKlagebehandlingResultat(BehandlingId(1L)) } returns DelvisOmgjøres(
@@ -106,7 +106,7 @@ class FatteVedtakStegTest {
             behandlingType = TypeBehandling.Klage,
             vurderingType = VurderingType.IKKE_RELEVANT,
             rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTATT_KLAGE),
+            vurderingsbehov = setOf(Vurderingsbehov.MOTATT_KLAGE),
             forrigeBehandlingId = null,
         )
 
@@ -153,7 +153,7 @@ class FatteVedtakStegTest {
             behandlingType = TypeBehandling.Klage,
             vurderingType = VurderingType.IKKE_RELEVANT,
             rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTATT_KLAGE),
+            vurderingsbehov = setOf(Vurderingsbehov.MOTATT_KLAGE),
             forrigeBehandlingId = null,
         )
 

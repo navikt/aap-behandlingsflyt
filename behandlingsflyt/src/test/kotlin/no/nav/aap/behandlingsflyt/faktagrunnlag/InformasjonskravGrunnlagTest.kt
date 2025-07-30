@@ -37,7 +37,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import no.nav.aap.behandlingsflyt.test.FakePersoner
@@ -247,7 +247,7 @@ class InformasjonskravGrunnlagTest {
             val (ident, kontekst) = klargjør(
                 connection,
                 VurderingType.REVURDERING,
-                setOf(ÅrsakTilBehandling.BARNETILLEGG)
+                setOf(Vurderingsbehov.BARNETILLEGG)
             )
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                 InformasjonskravRepositoryImpl(connection),
@@ -275,7 +275,7 @@ class InformasjonskravGrunnlagTest {
             val (ident, kontekst) = klargjør(
                 connection,
                 VurderingType.REVURDERING,
-                setOf(ÅrsakTilBehandling.REVURDER_MEDLEMSKAP)
+                setOf(Vurderingsbehov.REVURDER_MEDLEMSKAP)
             )
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                 InformasjonskravRepositoryImpl(connection),
@@ -294,7 +294,7 @@ class InformasjonskravGrunnlagTest {
     private fun klargjør(
         connection: DBConnection,
         vurderingType: VurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-        årsakerTilBehandling: Set<ÅrsakTilBehandling> = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD)
+        årsakerTilBehandling: Set<Vurderingsbehov> = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
 
     ): Pair<Ident, FlytKontekstMedPerioder> {
         val ident = ident()
@@ -321,7 +321,7 @@ class InformasjonskravGrunnlagTest {
             flytKontekst.forrigeBehandlingId,
             behandling.typeBehandling(),
             vurderingType = vurderingType,
-            årsakerTilBehandling = årsakerTilBehandling,
+            vurderingsbehov = årsakerTilBehandling,
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now()),
         )
     }

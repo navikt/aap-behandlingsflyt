@@ -36,7 +36,7 @@ open class BaseApiTest : BeforeAllCallback {
     fun opprettBehandling(sak: Sak, typeBehandling: TypeBehandling) =
         InMemoryBehandlingRepository.opprettBehandling(
             sak.id,
-            årsaker = listOf(),
+            vurderingsbehov = listOf(),
             typeBehandling = typeBehandling,
             forrigeBehandlingId = null,
         )

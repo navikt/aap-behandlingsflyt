@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -42,10 +42,10 @@ class StartBehandlingSteg private constructor(
         }
 
         if (kontekst.behandlingType == TypeBehandling.Revurdering) {
-            if (kontekst.årsakerTilBehandling.contains(ÅrsakTilBehandling.REVURDER_SAMORDNING)) {
+            if (kontekst.vurderingsbehov.contains(Vurderingsbehov.REVURDER_SAMORDNING)) {
                 val ventTil =
                     requireNotNull(samordningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId))
-                    { "Forventet å finne samordningvurdering ved revurdering med årsak ${ÅrsakTilBehandling.REVURDER_SAMORDNING}" }
+                    { "Forventet å finne samordningvurdering ved revurdering med årsak ${Vurderingsbehov.REVURDER_SAMORDNING}" }
                 logger.info("Fant samordningdato, setter på vent.")
                 return FantVentebehov(
                     Ventebehov(

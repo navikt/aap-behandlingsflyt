@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import java.util.*
 
 
@@ -15,7 +15,7 @@ import java.util.*
  */
 class BehandlingFlyt private constructor(
     private val flyt: List<Behandlingsflytsteg>,
-    private val årsaker: Map<ÅrsakTilBehandling, List<StegType>>,
+    private val vurderingsbehov: Map<Vurderingsbehov, List<StegType>>,
     private val parent: BehandlingFlyt?
 ) {
     private var aktivtSteg: Behandlingsflytsteg? = flyt.firstOrNull()
@@ -33,15 +33,15 @@ class BehandlingFlyt private constructor(
         }
     }
 
-    constructor(flyt: List<Behandlingsflytsteg>, årsaker: Map<ÅrsakTilBehandling, List<StegType>>) : this(
+    constructor(flyt: List<Behandlingsflytsteg>, vurderingsbehov: Map<Vurderingsbehov, List<StegType>>) : this(
         flyt = flyt,
-        årsaker = årsaker,
+        vurderingsbehov = vurderingsbehov,
         parent = null
     )
 
     constructor(flyt: List<Behandlingsflytsteg>) : this(
         flyt = flyt,
-        årsaker = emptyMap(),
+        vurderingsbehov = emptyMap(),
         parent = null
     )
 
@@ -167,10 +167,10 @@ class BehandlingFlyt private constructor(
 
     fun tilbakeflytEtterEndringer(
         oppdaterteGrunnlagstype: List<Informasjonskravkonstruktør>,
-        nyeÅrsakerTilBehandling: List<ÅrsakTilBehandling>? = null
+        nyeVurderingsbehov: List<Vurderingsbehov>? = null
     ): BehandlingFlyt {
-        val tidligsteStegForÅrsak =
-            nyeÅrsakerTilBehandling?.flatMap { årsaker[it] ?: emptyList() }
+        val tidligsteStegForVurderingsbehov =
+            nyeVurderingsbehov?.flatMap { vurderingsbehov[it] ?: emptyList() }
                 // Skal ikke kunne flyttes tilbake til steg med status OPPRETTET
                 ?.minus(StegType.entries.filter { it.status == Status.OPPRETTET })
                 ?.minWithOrNull(compareable())
@@ -181,7 +181,7 @@ class BehandlingFlyt private constructor(
                 .minus(StegType.entries.filter { it.status == Status.OPPRETTET })
                 .minWithOrNull(compareable())
 
-        val tidligsteSteg = listOfNotNull(tidligsteStegForÅrsak, skalTilSteg).minWithOrNull(compareable())
+        val tidligsteSteg = listOfNotNull(tidligsteStegForVurderingsbehov, skalTilSteg).minWithOrNull(compareable())
 
         return utledTilbakeflytTilSteg(tidligsteSteg)
     }
@@ -199,7 +199,7 @@ class BehandlingFlyt private constructor(
 
         return BehandlingFlyt(
             flyt = returflyt.reversed(),
-            årsaker = emptyMap(),
+            vurderingsbehov = emptyMap(),
             parent = this
         )
     }
@@ -226,17 +226,17 @@ class BehandlingFlyt private constructor(
     }
 
     /**
-     * Lager en kopi av flyten uten årsaker knyttet til steg.
+     * Lager en kopi av flyten uten vurderingsbehov knyttet til steg.
      */
-    fun utenÅrsaker(): BehandlingFlyt {
+    fun utenVurderingsbehov(): BehandlingFlyt {
         return BehandlingFlyt(flyt = flyt)
     }
 
-    fun årsakerRelevantForSteg(stegType: StegType): Set<ÅrsakTilBehandling> {
+    fun vurderingsbehovRelevantForSteg(stegType: StegType): Set<Vurderingsbehov> {
         return if (steg(stegType).oppdaterFaktagrunnlag) {
-            årsaker.filter { entry -> entry.value.contains(stegType) }.keys
+            vurderingsbehov.filter { entry -> entry.value.contains(stegType) }.keys
         } else {
-            ÅrsakTilBehandling.entries.toSet()
+            Vurderingsbehov.entries.toSet()
         }
     }
 
@@ -245,7 +245,7 @@ class BehandlingFlyt private constructor(
     }
 
     override fun toString(): String {
-        return "BehandlingFlyt(aktivtSteg=$aktivtSteg, flyt=$flyt, årsaker=$årsaker, parent=$parent)"
+        return "BehandlingFlyt(aktivtSteg=$aktivtSteg, flyt=$flyt, vurderingsbehov=$vurderingsbehov, parent=$parent)"
     }
 
     fun alleInformasjonskravForÅpneSteg(): List<Informasjonskravkonstruktør> {
@@ -269,13 +269,13 @@ class StegComparator(private var flyt: List<BehandlingFlyt.Behandlingsflytsteg>)
 
 class BehandlingFlytBuilder {
     private val flyt: MutableList<BehandlingFlyt.Behandlingsflytsteg> = mutableListOf()
-    private val endringTilSteg: MutableMap<ÅrsakTilBehandling, MutableList<StegType>> = mutableMapOf()
+    private val endringTilSteg: MutableMap<Vurderingsbehov, MutableList<StegType>> = mutableMapOf()
     private var oppdaterFaktagrunnlag = true
     private var buildt = false
 
     fun medSteg(
         steg: FlytSteg,
-        årsakRelevanteForSteg: List<ÅrsakTilBehandling> = ÅrsakTilBehandling.alle(),
+        vurderingsbehovRelevanteForSteg: List<Vurderingsbehov> = Vurderingsbehov.alle(),
         informasjonskrav: List<Informasjonskravkonstruktør> = emptyList()
     ): BehandlingFlytBuilder {
         if (buildt) {
@@ -285,7 +285,7 @@ class BehandlingFlytBuilder {
             throw IllegalStateException("[Utviklerfeil] StegType UDEFINERT er ugyldig å legge til i flyten")
         }
         this.flyt.add(BehandlingFlyt.Behandlingsflytsteg(steg, informasjonskrav, oppdaterFaktagrunnlag))
-        årsakRelevanteForSteg.forEach { endring ->
+        vurderingsbehovRelevanteForSteg.forEach { endring ->
             val stegene = this.endringTilSteg[endring] ?: mutableListOf()
             stegene.add(steg.type())
             this.endringTilSteg[endring] = stegene
@@ -306,7 +306,7 @@ class BehandlingFlytBuilder {
 
         return BehandlingFlyt(
             flyt = Collections.unmodifiableList(flyt),
-            årsaker = Collections.unmodifiableMap(endringTilSteg),
+            vurderingsbehov = Collections.unmodifiableMap(endringTilSteg),
         )
     }
 }

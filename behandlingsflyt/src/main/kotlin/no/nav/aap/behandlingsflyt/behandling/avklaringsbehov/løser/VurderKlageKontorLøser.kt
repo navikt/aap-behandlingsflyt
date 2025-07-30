@@ -37,7 +37,7 @@ class VurderKlageKontorLøser(
     private fun valider(løsning: VurderKlageKontorLøsning): Validation<VurderKlageKontorLøsning> {
         val ugyldigeHjemler = løsning.klagevurderingKontor.vilkårSomOmgjøres.filter {
             try {
-                it.tilÅrsak()
+                it.tilVurderingsbehov()
                 false
             } catch (e: IllegalStateException) {
                 true

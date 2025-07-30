@@ -19,9 +19,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehand
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.tilÅrsakTilBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.tilVurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -138,53 +138,53 @@ class HåndterMottattDokumentService(
         val behandling = sakOgBehandlingService.finnBehandling(behandlingsreferanse)
 
         låsRepository.withLåstBehandling(behandling.id) {
-            val årsaker = melding.årsakerTilBehandling.map { Årsak(it.tilÅrsakTilBehandling()) }
-            sakOgBehandlingService.oppdaterÅrsakerTilBehandling(behandling, årsaker)
+            val vurderingsbehov = melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
+            sakOgBehandlingService.oppdaterVurderingsbehovTilBehandling(behandling, vurderingsbehov)
 
             prosesserBehandling.triggProsesserBehandling(
                 sakId,
                 behandling.id,
-                listOf("trigger" to DefaultJsonMapper.toJson(årsaker.map { it.type }))
+                listOf("trigger" to DefaultJsonMapper.toJson(vurderingsbehov.map { it.type }))
             )
         }
     }
 
 
-    private fun utledÅrsaker(brevkategori: InnsendingType, melding: Melding?, periode: Periode?): List<Årsak> {
+    private fun utledÅrsaker(brevkategori: InnsendingType, melding: Melding?, periode: Periode?): List<VurderingsbehovMedPeriode> {
         return when (brevkategori) {
-            InnsendingType.SØKNAD -> listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
+            InnsendingType.SØKNAD -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD))
             InnsendingType.MANUELL_REVURDERING -> when (melding) {
-                is ManuellRevurderingV0 -> melding.årsakerTilBehandling.map { Årsak(it.tilÅrsakTilBehandling()) }
+                is ManuellRevurderingV0 -> melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
                 else -> error("Melding må være ManuellRevurderingV0")
             }
 
             InnsendingType.MELDEKORT ->
                 listOf(
-                    Årsak(
-                        ÅrsakTilBehandling.MOTTATT_MELDEKORT,
-                        periode
+                    VurderingsbehovMedPeriode(
+                        type = Vurderingsbehov.MOTTATT_MELDEKORT,
+                        periode = periode
                     )
                 )
 
-            InnsendingType.AKTIVITETSKORT -> listOf(Årsak(ÅrsakTilBehandling.MOTTATT_AKTIVITETSMELDING, periode))
-            InnsendingType.LEGEERKLÆRING_AVVIST -> listOf(Årsak(ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING))
-            InnsendingType.LEGEERKLÆRING -> listOf(Årsak(ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING))
-            InnsendingType.DIALOGMELDING -> listOf(Årsak(ÅrsakTilBehandling.MOTTATT_DIALOGMELDING))
+            InnsendingType.AKTIVITETSKORT -> listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_AKTIVITETSMELDING, periode = periode))
+            InnsendingType.LEGEERKLÆRING_AVVIST -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_AVVIST_LEGEERKLÆRING))
+            InnsendingType.LEGEERKLÆRING -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_LEGEERKLÆRING))
+            InnsendingType.DIALOGMELDING -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_DIALOGMELDING))
             InnsendingType.ANNET_RELEVANT_DOKUMENT ->
                 when (melding) {
-                    is AnnetRelevantDokumentV0 -> melding.årsakerTilBehandling.map { Årsak(it.tilÅrsakTilBehandling()) }
+                    is AnnetRelevantDokumentV0 -> melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
                     else -> error("Melding må være AnnetRelevantDokumentV0")
                 }
 
-            InnsendingType.KLAGE -> listOf(Årsak(ÅrsakTilBehandling.MOTATT_KLAGE))
+            InnsendingType.KLAGE -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTATT_KLAGE))
             InnsendingType.NY_ÅRSAK_TIL_BEHANDLING ->
                 when (melding) {
-                    is NyÅrsakTilBehandlingV0 -> melding.årsakerTilBehandling.map { Årsak(it.tilÅrsakTilBehandling()) }
+                    is NyÅrsakTilBehandlingV0 -> melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
                     else -> error("Melding må være NyÅrsakTilBehandlingV0")
                 }
 
-            InnsendingType.KABAL_HENDELSE -> listOf(Årsak(ÅrsakTilBehandling.MOTTATT_KABAL_HENDELSE))
-            InnsendingType.OPPFØLGINGSOPPGAVE -> listOf(Årsak(ÅrsakTilBehandling.OPPFØLGINGSOPPGAVE))
+            InnsendingType.KABAL_HENDELSE -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_KABAL_HENDELSE))
+            InnsendingType.OPPFØLGINGSOPPGAVE -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.OPPFØLGINGSOPPGAVE))
         }
     }
 

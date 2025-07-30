@@ -20,10 +20,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.februar
@@ -61,7 +61,7 @@ class AvklarOppfølgingStegTest {
         sakId = SakId(1),
         typeBehandling = TypeBehandling.Førstegangsbehandling,
         status = Status.UTREDES,
-        årsaker = listOf(),
+        vurderingsbehov = listOf(),
         versjon = 0
     )
 
@@ -81,7 +81,7 @@ class AvklarOppfølgingStegTest {
     fun `om konsevens av oppfølging er OPPRETT_VURDERINGSBEHOV, så opprettes behandling med riktig årsak`() {
         val grunnlag = OppfølgingsoppgaveGrunnlag(
             konsekvensAvOppfølging = KonsekvensAvOppfølging.OPPRETT_VURDERINGSBEHOV,
-            opplysningerTilRevurdering = listOf(ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+            opplysningerTilRevurdering = listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
             årsak = "...",
             vurdertAv = "ff"
         )
@@ -95,7 +95,7 @@ class AvklarOppfølgingStegTest {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
             sakOgBehandlingService.finnEllerOpprettBehandling(
                 behandling.sakId,
-                listOf(Årsak(ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
+                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
             )
         }
     }
@@ -118,7 +118,7 @@ class AvklarOppfølgingStegTest {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
             sakOgBehandlingService.finnEllerOpprettBehandling(
                 behandling.sakId,
-                listOf(Årsak(ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
+                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
             )
         }
     }
@@ -135,7 +135,7 @@ class AvklarOppfølgingStegTest {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
             sakOgBehandlingService.finnEllerOpprettBehandling(
                 behandling.sakId,
-                listOf(Årsak(ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
+                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
             )
         }
     }
@@ -160,7 +160,7 @@ class AvklarOppfølgingStegTest {
             behandlingType = behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
             rettighetsperiode = Periode(13 februar 1989, 13 mars 2025),
-            årsakerTilBehandling = ÅrsakTilBehandling.alle().toSet()
+            vurderingsbehov = Vurderingsbehov.alle().toSet()
         )
         return Pair(steg, kontekst)
     }
