@@ -13,14 +13,14 @@ class GosysService(private val oppgaveGateway: OppgaveGateway, private val unlea
         unleashGateway = gatewayProvider.provide()
     )
 
-    fun opprettOppgaveHvisIkkeEksisterer(
+    fun opprettOppgave(
         aktivIdent: Ident,
         bestillingReferanse: String,
         behandlingId: BehandlingId,
         navKontor: String
     ) {
         if (unleashGateway.isEnabled(BehandlingsflytFeature.SosialHjelpFlereKontorer)) {
-            oppgaveGateway.opprettOppgaveHvisIkkeEksisterer(aktivIdent, bestillingReferanse, behandlingId, navKontor)
+            oppgaveGateway.opprettOppgave(aktivIdent, bestillingReferanse, behandlingId, navKontor)
         }
 
     }

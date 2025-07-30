@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.integrasjon.oppgave
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OppgaveGateway
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OpprettOppgaveRequest
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.Prioritet
-import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.finnStandardOppgavefrist
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
@@ -38,7 +37,7 @@ class GosysGateway : OppgaveGateway {
         tokenProvider = ClientCredentialsTokenProvider,
     )
 
-    override fun opprettOppgaveHvisIkkeEksisterer(aktivIdent: Ident, bestillingReferanse: String, behandlingId: BehandlingId, navKontor: String) {
+    override fun opprettOppgave(aktivIdent: Ident, bestillingReferanse: String, behandlingId: BehandlingId, navKontor: String) {
 
          val oppgaveRequest = OpprettOppgaveRequest(
             oppgavetype = OppgaveType.FORDELING.verdi,
@@ -50,7 +49,7 @@ class GosysGateway : OppgaveGateway {
             beskrivelse = "Krav om refusjon av sosialhjelp for bruker av AAP",
             behandlingstema = "AAP",
             behandlingstype = "AAP",
-            fristFerdigstillelse = null,
+            fristFerdigstillelse = LocalDate.now().plusDays(7),
         )
 
         val path = baseUri.resolve("/api/v1/oppgaver")

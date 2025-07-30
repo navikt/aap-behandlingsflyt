@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeføresFraBeslutter
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
@@ -74,8 +75,7 @@ class FatteVedtakSteg(
         if (avklaringsbehov.harHattAvklaringsbehovSomHarKrevdToTrinn()) {
             return FantAvklaringsbehov(Definisjon.FATTE_VEDTAK)
         }
-
-
+        
         val navkontorSosialRefusjon = refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId)
         if (navkontorSosialRefusjon == null) return Fullført
 
@@ -84,8 +84,9 @@ class FatteVedtakSteg(
             .mapNotNull { navKontorEnhetsNummer(it.navKontor) }
 
         if (navKontorList.isNotEmpty()) {
-            val personopplysninger = personOpplysningerRepository.hentHvisEksisterer(kontekst.behandlingId)
-            val personId = personopplysninger?.brukerPersonopplysning?.id
+            val personopplysninger =
+                personOpplysningerRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)
+            val personId = personopplysninger?.id
 
             if (personId == null) {
                 log.error("Fant ikke personopplysninger for brukeren med behandlingsid ${kontekst.behandlingId}")
@@ -95,15 +96,7 @@ class FatteVedtakSteg(
             val person = personRepository.hent(PersonId(personId))
             val aktivIdent = person.aktivIdent()
 
-            navKontorList.forEach { navKontor ->
-                log.info("Oppretter Gosysoppgave for $navKontor")
-                gosysService.opprettOppgaveHvisIkkeEksisterer(
-                    aktivIdent,
-                    kontekst.behandlingId.toString(),
-                    kontekst.behandlingId,
-                    navKontor
-                )
-            }
+            opprettOppgave(navKontorList, aktivIdent, kontekst)
         }
         return Fullført
     }
@@ -111,6 +104,22 @@ class FatteVedtakSteg(
 
     fun navKontorEnhetsNummer(input: String?): String? {
         return input?.substringAfterLast(" - ")
+    }
+
+    private fun opprettOppgave(
+        navKontorList: List<String>,
+        aktivIdent: Ident,
+        kontekst: FlytKontekstMedPerioder
+    ) {
+        navKontorList.forEach { navKontor ->
+            log.info("Oppretter Gosysoppgave for $navKontor")
+            gosysService.opprettOppgave(
+                aktivIdent,
+                kontekst.behandlingId.toString(),
+                kontekst.behandlingId,
+                navKontor
+            )
+        }
     }
 
     companion object : FlytSteg {

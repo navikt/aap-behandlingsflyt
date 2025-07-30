@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 
 interface OppgaveGateway : Gateway {
 
-    fun opprettOppgaveHvisIkkeEksisterer(
+    fun opprettOppgave(
         aktivIdent: Ident,
         bestillingReferanse: String,
         behandlingId: BehandlingId,
