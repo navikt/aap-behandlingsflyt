@@ -20,7 +20,7 @@ class SkrivBrevLøser(
     ): LøsningsResultat {
         return skrivBrevAvklaringsbehovLøser.løs(
             kontekst,
-            SkrivBrevAvklaringsbehovLøsning(løsning.brevbestillingReferanse, løsning.handling)
+            SkrivBrevAvklaringsbehovLøsning(løsning.brevbestillingReferanse, løsning.handling, løsning.mottakere)
         )
     }
 

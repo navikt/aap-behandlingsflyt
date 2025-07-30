@@ -19,6 +19,7 @@ import no.nav.aap.brev.kontrakt.FerdigstillBrevRequest
 import no.nav.aap.brev.kontrakt.ForhandsvisBrevRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerResponse
+import no.nav.aap.brev.kontrakt.MottakerDto
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.brev.kontrakt.Språk
@@ -106,12 +107,13 @@ class BrevGateway : BrevbestillingGateway {
 
     override fun ferdigstill(
         referanse: BrevbestillingReferanse,
-        signaturer: List<SignaturGrunnlag>
+        signaturer: List<SignaturGrunnlag>,
+        mottakere: List<MottakerDto>
     ): Boolean {
         val url = baseUri.resolve("/api/ferdigstill")
 
         val request = PostRequest(
-            body = FerdigstillBrevRequest(referanse.brevbestillingReferanse, signaturer),
+            body = FerdigstillBrevRequest(referanse.brevbestillingReferanse, signaturer, mottakere),
             additionalHeaders = listOf(
                 Header("Accept", "application/json")
             )
