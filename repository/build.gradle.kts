@@ -1,4 +1,3 @@
-val jacksonVersjon = "2.19.2"
 
 plugins {
     id("behandlingsflyt.conventions")
@@ -16,7 +15,6 @@ dependencies {
     implementation(libs.tidslinje)
     implementation("org.flywaydb:flyway-database-postgresql:11.10.4")
     implementation("io.getunleash:unleash-client-java:11.0.2")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersjon")
     runtimeOnly("org.postgresql:postgresql:42.7.7")
 
     testImplementation(project(":lib-test"))

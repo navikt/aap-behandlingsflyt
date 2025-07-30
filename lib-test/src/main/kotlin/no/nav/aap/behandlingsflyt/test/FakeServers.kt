@@ -149,7 +149,7 @@ object FakeServers : AutoCloseable {
     private val kabal = embeddedServer(Netty, port = 0, module = { kabalFake() })
     private val ereg = embeddedServer(Netty, port = 0, module = { eregFake() })
     private val sam = embeddedServer(Netty, port = 0, module = { sam() })
-    private val gosys = embeddedServer(Netty, port = 0, module = { gosys() })
+    private val gosys = embeddedServer(Netty, port = 0, module = { gosysFake() })
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
@@ -327,13 +327,15 @@ object FakeServers : AutoCloseable {
         }
     }
 
-    private fun Application.gosys() {
+    private fun Application.gosysFake() {
         install(ContentNegotiation) {
-            jackson()
+            jackson {
+                registerModule(JavaTimeModule())
+            }
         }
         install(StatusPages) {
             exception<Throwable> { call, cause ->
-                this@gosys.log.info("Inntekt :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                this@gosysFake.log.info("Inntekt :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
                 call.respond(
                     status = HttpStatusCode.InternalServerError,
                     message = ErrorRespons(cause.message)

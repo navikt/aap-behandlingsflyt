@@ -1,4 +1,3 @@
-val jacksonVersjon = "2.19.2"
 
 plugins {
     id("behandlingsflyt.conventions")
@@ -16,7 +15,6 @@ dependencies {
     implementation(libs.motorApi)
     implementation(libs.verdityper)
     implementation(libs.tidslinje)
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersjon")
     implementation("org.apache.kafka:kafka-clients:${kafkaVersion}")
     api(libs.tilgangPlugin)
     api(libs.tilgangKontrakt)
