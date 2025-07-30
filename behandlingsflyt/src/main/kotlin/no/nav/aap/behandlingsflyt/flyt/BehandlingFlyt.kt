@@ -226,7 +226,7 @@ class BehandlingFlyt private constructor(
     }
 
     /**
-     * Lager en kopi av flyten uten årsaker knyttet til steg.
+     * Lager en kopi av flyten uten vurderingsbehov knyttet til steg.
      */
     fun utenVurderingsbehov(): BehandlingFlyt {
         return BehandlingFlyt(flyt = flyt)
@@ -245,7 +245,7 @@ class BehandlingFlyt private constructor(
     }
 
     override fun toString(): String {
-        return "BehandlingFlyt(aktivtSteg=$aktivtSteg, flyt=$flyt, årsaker=$vurderingsbehov, parent=$parent)"
+        return "BehandlingFlyt(aktivtSteg=$aktivtSteg, flyt=$flyt, vurderingsbehov=$vurderingsbehov, parent=$parent)"
     }
 
     fun alleInformasjonskravForÅpneSteg(): List<Informasjonskravkonstruktør> {
@@ -275,7 +275,7 @@ class BehandlingFlytBuilder {
 
     fun medSteg(
         steg: FlytSteg,
-        årsakRelevanteForSteg: List<Vurderingsbehov> = Vurderingsbehov.alle(),
+        vurderingsbehovRelevanteForSteg: List<Vurderingsbehov> = Vurderingsbehov.alle(),
         informasjonskrav: List<Informasjonskravkonstruktør> = emptyList()
     ): BehandlingFlytBuilder {
         if (buildt) {
@@ -285,7 +285,7 @@ class BehandlingFlytBuilder {
             throw IllegalStateException("[Utviklerfeil] StegType UDEFINERT er ugyldig å legge til i flyten")
         }
         this.flyt.add(BehandlingFlyt.Behandlingsflytsteg(steg, informasjonskrav, oppdaterFaktagrunnlag))
-        årsakRelevanteForSteg.forEach { endring ->
+        vurderingsbehovRelevanteForSteg.forEach { endring ->
             val stegene = this.endringTilSteg[endring] ?: mutableListOf()
             stegene.add(steg.type())
             this.endringTilSteg[endring] = stegene

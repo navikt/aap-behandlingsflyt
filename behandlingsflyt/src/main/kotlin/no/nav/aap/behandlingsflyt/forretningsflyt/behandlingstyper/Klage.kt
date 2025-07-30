@@ -25,7 +25,7 @@ object Klage : BehandlingType {
         return BehandlingFlytBuilder()
             .medSteg(
                 steg = TrekkKlageSteg,
-                årsakRelevanteForSteg = listOf(Vurderingsbehov.KLAGE_TRUKKET),
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.KLAGE_TRUKKET),
                 informasjonskrav = listOf(TrekkKlageInformasjonskravService)
             )
             .medSteg(steg = PåklagetBehandlingSteg)

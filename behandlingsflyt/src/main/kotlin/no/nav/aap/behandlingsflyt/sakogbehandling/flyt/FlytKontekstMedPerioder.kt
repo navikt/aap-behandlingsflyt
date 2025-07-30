@@ -30,8 +30,8 @@ data class FlytKontekstMedPerioder(
         return vurderingType == VurderingType.FØRSTEGANGSBEHANDLING
     }
 
-    fun erRevurderingMedVurderingsbehov(årsak: Vurderingsbehov): Boolean {
+    fun erRevurderingMedVurderingsbehov(behov: Vurderingsbehov): Boolean {
         return vurderingType == VurderingType.REVURDERING
-                && vurderingsbehov.contains(årsak)
+                && vurderingsbehov.contains(behov)
     }
 }
