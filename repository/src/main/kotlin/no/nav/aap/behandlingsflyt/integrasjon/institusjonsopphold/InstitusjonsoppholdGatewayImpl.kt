@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter
+package no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -60,7 +60,7 @@ data class InstitusjonsoppholdJSON(
     private val avdelingsnavn: String? = null,
 )
 
-object InstitusjonsoppholdGateway : InstitusjonsoppholdGateway {
+object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
     private val url =
         URI.create(requiredConfigForKey("integrasjon.institusjonsopphold.url") + "?Med-Institusjonsinformasjon=true")
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.institusjonsopphold.scope"))
