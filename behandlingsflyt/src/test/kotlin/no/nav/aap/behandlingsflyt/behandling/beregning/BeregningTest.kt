@@ -117,6 +117,8 @@ class BeregningTest {
                     listOf(
                         Yrkesskade(
                             ref = "yrkesskadesaken",
+                            saksnummer = 123,
+                            kildesystem = "INFOTRYGD",
                             skadedato = LocalDate.of(2019, 1, 1)
                         )
                     )
@@ -172,6 +174,8 @@ class BeregningTest {
                     listOf(
                         Yrkesskade(
                             ref = "yrkesskadesaken",
+                            saksnummer = 123,
+                            kildesystem = "INFOTRYGD",
                             skadedato = LocalDate.of(2021, 1, 1)
                         )
                     )
