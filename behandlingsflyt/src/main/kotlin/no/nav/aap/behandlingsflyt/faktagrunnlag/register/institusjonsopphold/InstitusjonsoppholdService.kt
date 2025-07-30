@@ -9,12 +9,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway as IInstitusjonsoppholdGateway
@@ -27,7 +27,11 @@ class InstitusjonsoppholdService private constructor(
 ) : Informasjonskrav {
     override val navn = Companion.navn
 
-    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+    override fun erRelevant(
+        kontekst: FlytKontekstMedPerioder,
+        steg: StegType,
+        oppdatert: InformasjonskravOppdatert?
+    ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
                 oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
@@ -68,7 +72,7 @@ class InstitusjonsoppholdService private constructor(
             return InstitusjonsoppholdService(
                 SakService(sakRepository),
                 repositoryProvider.provide(),
-                InstitusjonsoppholdGateway,
+                GatewayProvider.provide(),
                 TidligereVurderingerImpl(repositoryProvider),
             )
         }
