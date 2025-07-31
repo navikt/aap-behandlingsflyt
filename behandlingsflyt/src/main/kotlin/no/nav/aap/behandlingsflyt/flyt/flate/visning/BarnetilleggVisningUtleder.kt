@@ -10,18 +10,18 @@ class BarnetilleggVisningUtleder(
     private val barnRepository: BarnRepository,
 ) : StegGruppeVisningUtleder {
 
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         barnRepository = repositoryProvider.provide()
     )
 
 
     override fun skalVises(behandlingId: BehandlingId): Boolean {
-        val harRegsiterBarn =
-            barnRepository.hentHvisEksisterer(behandlingId)?.registerbarn?.identer?.isNotEmpty() == true
-        if (harRegsiterBarn) {
+        val harRegisterBarn =
+            barnRepository.hentHvisEksisterer(behandlingId)?.registerbarn?.barn.orEmpty().isNotEmpty()
+        if (harRegisterBarn) {
             return true
         }
-        return barnRepository.hentHvisEksisterer(behandlingId)?.oppgitteBarn?.identer?.isNotEmpty() == true
+        return barnRepository.hentHvisEksisterer(behandlingId)?.oppgitteBarn?.oppgitteBarn.orEmpty().isNotEmpty()
     }
 
     override fun gruppe(): StegGruppe {

@@ -29,7 +29,9 @@ public data class StoppetBehandling(
     val soknadsFormat: Kanal = Kanal.DIGITAL,
     val ident: String,
     val versjon: String,
-    val årsakTilBehandling: List<ÅrsakTilBehandling>,
+    @Deprecated("Kan fjernes etter at statistikk har byttet til å bruke vurderingsbehov")
+    val årsakTilBehandling: List<Vurderingsbehov>,
+    val vurderingsbehov: List<Vurderingsbehov>,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
     val hendelsesTidspunkt: LocalDateTime,
     val avsluttetBehandling: AvsluttetBehandlingDTO? = null,
@@ -48,7 +50,7 @@ public data class StoppetBehandling(
 /**
  * Eksponert versjon av [no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling] til kontrakt.
  */
-public enum class ÅrsakTilBehandling {
+public enum class Vurderingsbehov {
     SØKNAD,
     AKTIVITETSMELDING,
     MELDEKORT,

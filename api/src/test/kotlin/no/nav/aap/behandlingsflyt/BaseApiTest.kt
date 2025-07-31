@@ -36,14 +36,13 @@ open class BaseApiTest : BeforeAllCallback {
     fun opprettBehandling(sak: Sak, typeBehandling: TypeBehandling) =
         InMemoryBehandlingRepository.opprettBehandling(
             sak.id,
-            årsaker = listOf(),
+            vurderingsbehov = listOf(),
             typeBehandling = typeBehandling,
             forrigeBehandlingId = null,
         )
 
     fun nySak() = InMemorySakRepository.finnEllerOpprett(
         person = Person(
-            id = 0,
             identifikator = UUID.randomUUID(),
             identer = listOf(Ident("0".repeat(11)))
         ),

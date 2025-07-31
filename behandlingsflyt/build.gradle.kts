@@ -1,3 +1,4 @@
+
 plugins {
     id("behandlingsflyt.conventions")
 }
@@ -10,7 +11,7 @@ dependencies {
 
     api(libs.tilgangPlugin)
     api(libs.tilgangKontrakt)
-    api("no.nav.aap.brev:kontrakt:0.0.132")
+    api("no.nav.aap.brev:kontrakt:0.0.133")
     api("no.nav.aap.meldekort:kontrakt:0.0.85")
     api(libs.motor)
     api(libs.gateway)
@@ -35,7 +36,7 @@ dependencies {
 
     testImplementation("org.testcontainers:postgresql:1.21.3")
     constraints {
-        implementation("org.apache.commons:commons-compress:1.27.1") {
+        implementation("org.apache.commons:commons-compress:1.28.0") {
             because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")
         }
     }

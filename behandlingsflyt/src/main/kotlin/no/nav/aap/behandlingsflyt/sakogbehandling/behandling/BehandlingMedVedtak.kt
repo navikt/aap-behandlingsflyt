@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -17,5 +17,5 @@ data class BehandlingMedVedtak(
     val opprettetTidspunkt: LocalDateTime,
     val vedtakstidspunkt: LocalDateTime,
     val virkningstidspunkt: LocalDate?,
-    val årsaker: Set<ÅrsakTilBehandling>
+    val vurderingsbehov: Set<Vurderingsbehov>
 )

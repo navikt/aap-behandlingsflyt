@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 
 enum class KonsekvensAvOppfølging {
     INGEN,
@@ -12,7 +12,7 @@ enum class KonsekvensAvOppfølging {
  */
 data class OppfølgingsoppgaveGrunnlagDto(
     val konsekvensAvOppfølging: KonsekvensAvOppfølging,
-    val opplysningerTilRevurdering: List<ÅrsakTilBehandling>? = emptyList(),
+    val opplysningerTilRevurdering: List<Vurderingsbehov>? = emptyList(),
     val årsak: String? = null,
 ) {
     fun tilOppfølgingsoppgaveGrunnlag(vurdertAv: String): OppfølgingsoppgaveGrunnlag {
@@ -27,7 +27,7 @@ data class OppfølgingsoppgaveGrunnlagDto(
 
 data class OppfølgingsoppgaveGrunnlag(
     val konsekvensAvOppfølging: KonsekvensAvOppfølging,
-    val opplysningerTilRevurdering: List<ÅrsakTilBehandling>,
+    val opplysningerTilRevurdering: List<Vurderingsbehov>,
     val årsak: String?,
     val vurdertAv: String
 ) {

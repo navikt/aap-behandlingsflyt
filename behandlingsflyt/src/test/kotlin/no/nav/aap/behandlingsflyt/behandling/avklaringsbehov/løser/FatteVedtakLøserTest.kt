@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.MockDataSource
@@ -108,14 +109,18 @@ class FatteVedtakLøserTest {
 
     private fun opprettPersonBehandlingOgSak(): Pair<Sak, Behandling> {
         val person =
-            Person(Random().nextLong(), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
+            Person(
+                PersonId(Random().nextLong()),
+                UUID.randomUUID(),
+                listOf(genererIdent(LocalDate.now().minusYears(23)))
+            )
         val sak = InMemorySakRepository.finnEllerOpprett(
             person,
             periode = Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
         )
         val behandling = InMemoryBehandlingRepository.opprettBehandling(
             sakId = sak.id,
-            årsaker = listOf(),
+            vurderingsbehov = listOf(),
             typeBehandling = TypeBehandling.Førstegangsbehandling,
             forrigeBehandlingId = null
         )

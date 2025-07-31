@@ -15,7 +15,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -67,7 +67,7 @@ class RettighetsperiodeSteg private constructor(
     }
 
     private fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-        return (ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE in kontekst.årsakerTilBehandling)
+        return (Vurderingsbehov.VURDER_RETTIGHETSPERIODE in kontekst.vurderingsbehov)
     }
 
     private fun oppdaterVilkårsresultatForNyPeriode(kontekst: FlytKontekstMedPerioder) {

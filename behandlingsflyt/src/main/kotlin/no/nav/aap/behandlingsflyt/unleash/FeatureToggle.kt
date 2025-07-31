@@ -15,7 +15,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     InnhentEnhetsregisterData,
     Samvarsling,
     SendForvaltningsmelding,
-    AvrundingInntekt,
+    SosialHjelpFlereKontorer,
     ;
 
     override fun key(): String = name

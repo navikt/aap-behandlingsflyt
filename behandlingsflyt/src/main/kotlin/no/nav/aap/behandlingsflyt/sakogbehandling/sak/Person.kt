@@ -3,14 +3,19 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import java.util.*
 
-class Person(val id: Long, val identifikator: UUID, private var identer: List<Ident>) {
+@JvmInline
+value class PersonId(val id: Long)
+
+class Person(val id: PersonId, val identifikator: UUID, private var identer: List<Ident>) {
+
+    constructor(identifikator: UUID, identer: List<Ident>) : this(PersonId(-0), identifikator, identer)
 
     fun er(ident: Ident): Boolean {
         return identer.any { it == ident }
     }
 
     fun aktivIdent(): Ident {
-        return identer().first { it.aktivIdent}
+        return identer().first { it.aktivIdent }
     }
 
     fun identer(): List<Ident> {

@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Faktagrunnlag
+import no.nav.aap.brev.kontrakt.MottakerDto
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.brev.kontrakt.Vedlegg
@@ -25,7 +26,7 @@ interface BrevbestillingGateway : Gateway {
         ferdigstillAutomatisk: Boolean,
     ): BrevbestillingReferanse
 
-    fun ferdigstill(referanse: BrevbestillingReferanse, signaturer: List<SignaturGrunnlag>): Boolean
+    fun ferdigstill(referanse: BrevbestillingReferanse, signaturer: List<SignaturGrunnlag>, mottakere: List<MottakerDto> =  emptyList()): Boolean
 
     fun hent(bestillingReferanse: BrevbestillingReferanse): BrevbestillingResponse
 

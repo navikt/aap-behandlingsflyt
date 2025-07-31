@@ -37,7 +37,7 @@ class VurderKlageNayLøser(
     private fun valider(løsning: VurderKlageNayLøsning): Validation<VurderKlageNayLøsning> {
         val ugyldigeHjemler = løsning.klagevurderingNay.vilkårSomOmgjøres.filter {
             try {
-                it.tilÅrsak()
+                it.tilVurderingsbehov()
                 false
             } catch (e: IllegalStateException) {
                 true

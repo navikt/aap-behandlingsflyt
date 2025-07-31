@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Faktagrunnlag
+import no.nav.aap.brev.kontrakt.MottakerDto
 import no.nav.aap.brev.kontrakt.Vedlegg
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.Bruker
@@ -87,14 +88,18 @@ class BrevbestillingService(
         brevbestillingRepository.oppdaterStatus(behandlingId, referanse, status)
     }
 
+    /**
+     * @param mottakere Dersom tom settes brukeren brevet gjelder automatisk som mottaker
+     */
     fun ferdigstill(
         behandlingId: BehandlingId,
         brevbestillingReferanse: BrevbestillingReferanse,
-        bruker: Bruker
+        bruker: Bruker,
+        mottakere: List<MottakerDto> = emptyList()
     ) {
         val brevbestilling = brevbestillingRepository.hent(brevbestillingReferanse)
         val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, bruker)
-        val ferdigstilt = brevbestillingGateway.ferdigstill(brevbestillingReferanse, signaturer)
+        val ferdigstilt = brevbestillingGateway.ferdigstill(brevbestillingReferanse, signaturer, mottakere)
         if (!ferdigstilt) {
             throw IllegalArgumentException("Brevet er ikke gyldig ferdigstilt, fullfør brevet og prøv på nytt.")
         } else {

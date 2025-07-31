@@ -3,8 +3,8 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -33,7 +33,7 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
 
         val behandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id) ?: return
 
-        if (behandling.status().erÅpen() && ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT in behandling.årsaker()
+        if (behandling.status().erÅpen() && Vurderingsbehov.FASTSATT_PERIODE_PASSERT in behandling.vurderingsbehov()
                 .map { it.type }
         ) {
             log.info("Det finnes allerede en kjørende jobb av årsak FASTSATT_PERIODE_PASSERT. Avbryter.")
@@ -67,7 +67,7 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
 
         val fastsattPeriodePassertBehandling = sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(
             sak.id,
-            listOf(Årsak(type = ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT))
+            listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.FASTSATT_PERIODE_PASSERT))
         )
 
         prosesserBehandlingService.triggProsesserBehandling(fastsattPeriodePassertBehandling)

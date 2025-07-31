@@ -19,7 +19,7 @@ class SkrivForhåndsvarselBruddAktivitetspliktBrevLøser(private val skrivBrevAv
     ): LøsningsResultat {
         return skrivBrevAvklaringsbehovLøser.løs(
             kontekst,
-            SkrivBrevAvklaringsbehovLøsning(løsning.brevbestillingReferanse, løsning.handling)
+            SkrivBrevAvklaringsbehovLøsning(løsning.brevbestillingReferanse, løsning.handling, løsning.mottakere)
         )
     }
 

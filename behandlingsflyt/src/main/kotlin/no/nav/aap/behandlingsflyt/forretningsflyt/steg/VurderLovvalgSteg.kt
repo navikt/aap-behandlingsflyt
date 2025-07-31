@@ -25,7 +25,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderLovvalgSteg private constructor(
@@ -132,7 +132,7 @@ class VurderLovvalgSteg private constructor(
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         val erSpesifiktTriggetRevurderLovvalg =
-            kontekst.årsakerTilBehandling.any { it == ÅrsakTilBehandling.REVURDER_LOVVALG || it == ÅrsakTilBehandling.LOVVALG_OG_MEDLEMSKAP }
+            kontekst.vurderingsbehov.any { it == Vurderingsbehov.REVURDER_LOVVALG || it == Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP }
         return erSpesifiktTriggetRevurderLovvalg && erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene)
     }
 

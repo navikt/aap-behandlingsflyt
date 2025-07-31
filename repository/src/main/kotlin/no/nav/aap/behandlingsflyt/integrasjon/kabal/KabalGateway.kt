@@ -163,7 +163,7 @@ data class OversendtAdresseV4(
 )
 
 internal fun IdentMedType.tilOversendtPartId(): OversendtPartId? {
-    return if (type == IdentType.UTL_ORGNR) {
+    return if (type == IdentType.UTL_ORG) {
         return null
     } else {
         OversendtPartId(
@@ -177,7 +177,7 @@ internal fun IdentType.tilOversendtPartIdType(): OversendtPartIdType {
     return when (this) {
         IdentType.FNR_DNR -> OversendtPartIdType.PERSON
         IdentType.ORGNR -> OversendtPartIdType.VIRKSOMHET
-        IdentType.UTL_ORGNR -> throw IllegalStateException("Kabal støtter ikke utenlandsk orgnr")
+        IdentType.UTL_ORG -> throw IllegalStateException("Kabal støtter ikke utenlandsk orgnr")
     }
 }
 

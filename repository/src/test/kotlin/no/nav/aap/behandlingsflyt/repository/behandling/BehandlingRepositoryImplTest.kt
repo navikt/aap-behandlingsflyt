@@ -46,8 +46,8 @@ import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
@@ -89,7 +89,7 @@ internal class BehandlingRepositoryImplTest {
             // Opprett
             repo.opprettBehandling(
                 sakId = sak.id,
-                årsaker = listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null
             )
@@ -102,8 +102,8 @@ internal class BehandlingRepositoryImplTest {
             val hententMedReferanse = repo.hent(skapt.referanse)
 
             assertThat(hententMedReferanse.referanse).isEqualTo(skapt.referanse)
-            assertThat(hententMedReferanse.årsaker()).containsExactlyElementsOf(skapt.årsaker())
-            assertThat(hententMedReferanse.årsaker()).containsExactlyElementsOf(listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)))
+            assertThat(hententMedReferanse.vurderingsbehov()).containsExactlyElementsOf(skapt.vurderingsbehov())
+            assertThat(hententMedReferanse.vurderingsbehov()).containsExactlyElementsOf(listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)))
             assertThat(hententMedReferanse.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
         }
     }
@@ -124,7 +124,7 @@ internal class BehandlingRepositoryImplTest {
             // Opprett
             repo.opprettBehandling(
                 sakId = sak.id,
-                årsaker = listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null
             )
@@ -156,14 +156,14 @@ internal class BehandlingRepositoryImplTest {
             // Opprett
             val førstegang = repo.opprettBehandling(
                 sakId = sak.id,
-                årsaker = listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null
             )
 
             val klage = repo.opprettBehandling(
                 sakId = sak.id,
-                årsaker = listOf(Årsak(type = ÅrsakTilBehandling.MOTATT_KLAGE)),
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTATT_KLAGE)),
                 typeBehandling = TypeBehandling.Klage,
                 forrigeBehandlingId = null
             )
@@ -208,7 +208,7 @@ internal class BehandlingRepositoryImplTest {
             // Opprett
             val førstegang = repo.opprettBehandling(
                 sakId = sak.id,
-                årsaker = listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null
             )
@@ -221,7 +221,7 @@ internal class BehandlingRepositoryImplTest {
 
             val klage = repo.opprettBehandling(
                 sakId = sak.id,
-                årsaker = listOf(Årsak(type = ÅrsakTilBehandling.MOTATT_KLAGE)),
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTATT_KLAGE)),
                 typeBehandling = TypeBehandling.Klage,
                 forrigeBehandlingId = null
             )
@@ -241,7 +241,7 @@ internal class BehandlingRepositoryImplTest {
             assertThat(alleFørstegang[0].referanse).isEqualTo(førstegang.referanse)
             assertThat(alleFørstegang[0].vedtakstidspunkt).isEqualToIgnoringNanos(vedtakstidspunkt)
             assertThat(alleFørstegang[0].virkningstidspunkt).isEqualTo(virkningstidspunkt)
-            assertThat(alleFørstegang[0].årsaker).isEqualTo(setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD))
+            assertThat(alleFørstegang[0].vurderingsbehov).isEqualTo(setOf(Vurderingsbehov.MOTTATT_SØKNAD))
         }
     }
 
@@ -296,7 +296,7 @@ fun main() {
         MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection).slett(BehandlingId(1L))
         MedlemskapArbeidInntektRepositoryImpl(connection).slett(BehandlingId(1L))
         PersonopplysningForutgåendeRepositoryImpl(connection).slett(BehandlingId(1L))
-        PersonopplysningRepositoryImpl(connection, PersonRepositoryImpl(connection)).slett(BehandlingId(1L))
+        PersonopplysningRepositoryImpl(connection).slett(BehandlingId(1L))
         BarnRepositoryImpl(connection).slett(BehandlingId(1L))
         InntektGrunnlagRepositoryImpl(connection).slett(BehandlingId(1L))
         InstitusjonsoppholdRepositoryImpl(connection).slett(BehandlingId(1L))

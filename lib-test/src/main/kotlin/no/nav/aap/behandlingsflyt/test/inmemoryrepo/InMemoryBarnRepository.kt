@@ -1,20 +1,21 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.RegisterBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.VurderteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 
 object InMemoryBarnRepository : BarnRepository {
     private val barn = ConcurrentHashMap<BehandlingId, List<String>>()
     private val oppgitteBarn = ConcurrentHashMap<BehandlingId, OppgitteBarn>()
-    private val registerBarn = ConcurrentHashMap<BehandlingId, List<Ident>>()
+    private val registerBarn = ConcurrentHashMap<BehandlingId, List<Barn>>()
     private val vurdertBarn = ConcurrentHashMap<BehandlingId, List<VurdertBarn>>()
     private val lock = Object()
 
@@ -28,7 +29,7 @@ object InMemoryBarnRepository : BarnRepository {
                     registerbarn = registerBarn[behandlingId]?.let {
                         RegisterBarn(
                             id = 0,
-                            identer = it.toList()
+                            barn = it
                         )
                     },
                     vurderteBarn = vurdertBarn[behandlingId]?.let {
@@ -46,6 +47,10 @@ object InMemoryBarnRepository : BarnRepository {
         }
     }
 
+    override fun hentVurderteBarnHvisEksisterer(behandlingId: BehandlingId): VurderteBarn? {
+        TODO("Not yet implemented")
+    }
+
     override fun hent(behandlingId: BehandlingId): BarnGrunnlag {
         return hentHvisEksisterer(behandlingId)
             ?: BarnGrunnlag(null, null, null)
@@ -53,24 +58,20 @@ object InMemoryBarnRepository : BarnRepository {
 
     override fun lagreOppgitteBarn(
         behandlingId: BehandlingId,
-        oppgitteBarn: OppgitteBarn?
+        oppgitteBarn: OppgitteBarn
     ) {
         synchronized(lock) {
-            if (oppgitteBarn != null) {
-                this.oppgitteBarn[behandlingId] = oppgitteBarn
-            } else {
-                this.oppgitteBarn.remove(behandlingId)
-            }
+            this.oppgitteBarn[behandlingId] = oppgitteBarn
         }
     }
 
     override fun lagreRegisterBarn(
         behandlingId: BehandlingId,
-        barn: List<Ident>
+        barn: List<Pair<Barn, PersonId>>
     ) {
         synchronized(lock) {
             if (barn.isNotEmpty()) {
-                registerBarn[behandlingId] = barn
+                registerBarn[behandlingId] = barn.map { it.first }
             } else {
                 registerBarn.remove(behandlingId)
             }

@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.klage
 
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 
 // TODO: Hjemler her som er markert som TODO er ting som kan klages på
 // men det er ikke implementert noen revurdering på de, så det vil feile
@@ -54,9 +54,9 @@ enum class Hjemmel(val hjemmel: String) {
         }
     }
 
-    fun tilÅrsak(): ÅrsakTilBehandling {
+    fun tilVurderingsbehov(): Vurderingsbehov {
         return when (this) {
-            FOLKETRYGDLOVEN_11_2 -> ÅrsakTilBehandling.FORUTGAENDE_MEDLEMSKAP
+            FOLKETRYGDLOVEN_11_2 -> Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP
 
             FOLKETRYGDLOVEN_11_5,
             FOLKETRYGDLOVEN_11_6,
@@ -65,20 +65,20 @@ enum class Hjemmel(val hjemmel: String) {
             FOLKETRYGDLOVEN_11_17,
             FOLKETRYGDLOVEN_11_18,
             FOLKETRYGDLOVEN_11_23_UUTNYTTET_ARB_EVNE
-                -> ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+                -> Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
 
-            FOLKETRYGDLOVEN_11_19 -> ÅrsakTilBehandling.REVURDER_BEREGNING
+            FOLKETRYGDLOVEN_11_19 -> Vurderingsbehov.REVURDER_BEREGNING
 
-            FOLKETRYGDLOVEN_11_20 -> ÅrsakTilBehandling.BARNETILLEGG
+            FOLKETRYGDLOVEN_11_20 -> Vurderingsbehov.BARNETILLEGG
 
-            FOLKETRYGDLOVEN_11_22 -> ÅrsakTilBehandling.REVURDER_YRKESSKADE
+            FOLKETRYGDLOVEN_11_22 -> Vurderingsbehov.REVURDER_YRKESSKADE
 
             FOLKETRYGDLOVEN_11_25,
-            FOLKETRYGDLOVEN_11_26 -> ÅrsakTilBehandling.INSTITUSJONSOPPHOLD
+            FOLKETRYGDLOVEN_11_26 -> Vurderingsbehov.INSTITUSJONSOPPHOLD
 
             FOLKETRYGDLOVEN_11_24,
             FOLKETRYGDLOVEN_11_27,
-            FOLKETRYGDLOVEN_11_28 -> ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING
+            FOLKETRYGDLOVEN_11_28 -> Vurderingsbehov.SAMORDNING_OG_AVREGNING
 
             FOLKETRYGDLOVEN_11_3,
             FOLKETRYGDLOVEN_11_4,

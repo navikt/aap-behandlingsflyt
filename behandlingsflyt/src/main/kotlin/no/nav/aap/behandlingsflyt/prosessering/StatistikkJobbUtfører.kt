@@ -44,7 +44,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype
 import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -104,6 +104,7 @@ class StatistikkJobbUtfører(
 
         val sak = sakService.hent(hendelse.saksnummer)
 
+        val vurderingsbehovForBehandling = utledVurderingsbehovForBehandling(behandling)
         val statistikkHendelse = StoppetBehandling(
             saksnummer = hendelse.saksnummer.toString(),
             behandlingType = hendelse.behandlingType,
@@ -120,42 +121,46 @@ class StatistikkJobbUtfører(
             hendelsesTidspunkt = hendelse.hendelsesTidspunkt,
             avsluttetBehandling = if (hendelse.status == AVSLUTTET) hentAvsluttetBehandlingDTO(hendelse) else null,
             identerForSak = hentIdenterPåSak(sak.saksnummer),
-            årsakTilBehandling = behandling.årsaker().map {
-                when (it.type) {
-                    ÅrsakTilBehandling.MOTTATT_SØKNAD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.SØKNAD
-                    ÅrsakTilBehandling.MOTTATT_AKTIVITETSMELDING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.AKTIVITETSMELDING
-                    ÅrsakTilBehandling.MOTTATT_MELDEKORT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.MELDEKORT
-                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.LEGEERKLÆRING
-                    ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.AVVIST_LEGEERKLÆRING
-                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.DIALOGMELDING
-                    ÅrsakTilBehandling.G_REGULERING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.G_REGULERING
-                    ÅrsakTilBehandling.REVURDER_MEDLEMSKAP -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REVURDER_MEDLEMSKAP
-                    ÅrsakTilBehandling.REVURDER_BEREGNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REVURDER_BEREGNING
-                    ÅrsakTilBehandling.REVURDER_YRKESSKADE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REVURDER_YRKESSKADE
-                    ÅrsakTilBehandling.REVURDER_LOVVALG -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REVURDER_LOVVALG
-                    ÅrsakTilBehandling.REVURDER_SAMORDNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REVURDER_SAMORDNING
-                    ÅrsakTilBehandling.MOTATT_KLAGE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.KLAGE
-                    ÅrsakTilBehandling.LOVVALG_OG_MEDLEMSKAP -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.LOVVALG_OG_MEDLEMSKAP
-                    ÅrsakTilBehandling.FORUTGAENDE_MEDLEMSKAP -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.FORUTGAENDE_MEDLEMSKAP
-                    ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
-                    ÅrsakTilBehandling.BARNETILLEGG -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.BARNETILLEGG
-                    ÅrsakTilBehandling.INSTITUSJONSOPPHOLD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.INSTITUSJONSOPPHOLD
-                    ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.SAMORDNING_OG_AVREGNING
-                    ÅrsakTilBehandling.REFUSJONSKRAV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REFUSJONSKRAV
-                    ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT
-                    ÅrsakTilBehandling.FASTSATT_PERIODE_PASSERT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.MELDEKORT /* TODO: mer spesifikk? er pga fravær av meldekort */
-                    ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE
-                    ÅrsakTilBehandling.SØKNAD_TRUKKET -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.SØKNAD_TRUKKET
-                    ÅrsakTilBehandling.KLAGE_TRUKKET -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.KLAGE_TRUKKET
-                    ÅrsakTilBehandling.REVURDER_MANUELL_INNTEKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REVURDER_MANUELL_INNTEKT
-                    ÅrsakTilBehandling.FRITAK_MELDEPLIKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.FRITAK_MELDEPLIKT
-                    ÅrsakTilBehandling.MOTTATT_KABAL_HENDELSE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.MOTTATT_KABAL_HENDELSE
-                    ÅrsakTilBehandling.OPPFØLGINGSOPPGAVE -> TODO()
-                }
-            }.distinct()
+            årsakTilBehandling = vurderingsbehovForBehandling,
+            vurderingsbehov = vurderingsbehovForBehandling
         )
         return statistikkHendelse
     }
+
+    private fun utledVurderingsbehovForBehandling(behandling: Behandling): List<no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov> =
+        behandling.vurderingsbehov().map {
+            when (it.type) {
+                Vurderingsbehov.MOTTATT_SØKNAD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD
+                Vurderingsbehov.MOTTATT_AKTIVITETSMELDING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.AKTIVITETSMELDING
+                Vurderingsbehov.MOTTATT_MELDEKORT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.MELDEKORT
+                Vurderingsbehov.MOTTATT_LEGEERKLÆRING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.LEGEERKLÆRING
+                Vurderingsbehov.MOTTATT_AVVIST_LEGEERKLÆRING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.AVVIST_LEGEERKLÆRING
+                Vurderingsbehov.MOTTATT_DIALOGMELDING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.DIALOGMELDING
+                Vurderingsbehov.G_REGULERING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.G_REGULERING
+                Vurderingsbehov.REVURDER_MEDLEMSKAP -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_MEDLEMSKAP
+                Vurderingsbehov.REVURDER_BEREGNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_BEREGNING
+                Vurderingsbehov.REVURDER_YRKESSKADE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_YRKESSKADE
+                Vurderingsbehov.REVURDER_LOVVALG -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_LOVVALG
+                Vurderingsbehov.REVURDER_SAMORDNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING
+                Vurderingsbehov.MOTATT_KLAGE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.KLAGE
+                Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP
+                Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP
+                Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+                Vurderingsbehov.BARNETILLEGG -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.BARNETILLEGG
+                Vurderingsbehov.INSTITUSJONSOPPHOLD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.INSTITUSJONSOPPHOLD
+                Vurderingsbehov.SAMORDNING_OG_AVREGNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING
+                Vurderingsbehov.REFUSJONSKRAV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REFUSJONSKRAV
+                Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT
+                Vurderingsbehov.FASTSATT_PERIODE_PASSERT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.MELDEKORT /* TODO: mer spesifikk? er pga fravær av meldekort */
+                Vurderingsbehov.VURDER_RETTIGHETSPERIODE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_RETTIGHETSPERIODE
+                Vurderingsbehov.SØKNAD_TRUKKET -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET
+                Vurderingsbehov.KLAGE_TRUKKET -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.KLAGE_TRUKKET
+                Vurderingsbehov.REVURDER_MANUELL_INNTEKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_MANUELL_INNTEKT
+                Vurderingsbehov.FRITAK_MELDEPLIKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FRITAK_MELDEPLIKT
+                Vurderingsbehov.MOTTATT_KABAL_HENDELSE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.MOTTATT_KABAL_HENDELSE
+                Vurderingsbehov.OPPFØLGINGSOPPGAVE -> TODO()
+            }
+        }.distinct()
 
     private fun hentIdenterPåSak(saksnummer: Saksnummer): List<String> {
         return pipRepository.finnIdenterPåSak(saksnummer).map { it.ident }

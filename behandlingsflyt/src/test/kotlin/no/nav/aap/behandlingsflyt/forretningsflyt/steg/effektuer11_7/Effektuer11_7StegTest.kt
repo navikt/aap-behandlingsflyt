@@ -28,7 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AdjustableClock
@@ -253,14 +253,13 @@ class Effektuer11_7StegTest {
     private fun opprettBehandling(sak: Sak, typeBehandling: TypeBehandling) =
         InMemoryBehandlingRepository.opprettBehandling(
             sak.id,
-            årsaker = listOf(),
+            vurderingsbehov = listOf(),
             typeBehandling = typeBehandling,
             forrigeBehandlingId = null,
         )
 
     private fun nySak() = InMemorySakRepository.finnEllerOpprett(
         person = Person(
-            id = 0,
             identifikator = UUID.randomUUID(),
             identer = listOf(Ident("0".repeat(11)))
         ),
@@ -322,7 +321,7 @@ class Effektuer11_7StegTest {
             behandlingType = typeBehandling,
             forrigeBehandlingId = null,
             vurderingType = vurderingType,
-            årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
             rettighetsperiode = sak.rettighetsperiode
         )
     }

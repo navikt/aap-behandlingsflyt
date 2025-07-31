@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsRes
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.SkrivForhåndsvarselBruddAktivitetspliktBrevLøser
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.SKRIV_FORHÅNDSVARSEL_AKTIVITETSPLIKT_BREV_KODE
+import no.nav.aap.brev.kontrakt.MottakerDto
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.util.*
 
@@ -14,6 +15,7 @@ import java.util.*
 class SkrivForhåndsvarselBruddAktivitetspliktBrevLøsning(
     @param:JsonProperty("brevbestillingReferanse", required = true) val brevbestillingReferanse: UUID,
     @param:JsonProperty("handling", required = true) val handling: SkrivBrevAvklaringsbehovLøsning.Handling,
+    @param:JsonProperty("mottakere") val mottakere: List<MottakerDto> = emptyList(),
     @param:JsonProperty("behovstype", required = true, defaultValue = SKRIV_FORHÅNDSVARSEL_AKTIVITETSPLIKT_BREV_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5052`
 ) : AvklaringsbehovLøsning {

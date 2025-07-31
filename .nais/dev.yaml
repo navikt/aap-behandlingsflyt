@@ -186,6 +186,10 @@ spec:
       value: http://meldekort-backend
     - name: INTEGRASJON_MELDEKORT_SCOPE
       value: api://dev-gcp.aap.meldekort-backend/.default
+    - name: INTEGRASJON_GOSYS_URL
+      value: https://oppgave.dev-fss-pub.nais.io
+    - name: INTEGRASJON_GOSYS_SCOPE
+      value: api://dev-fss.oppgavehandtering.oppgave/.default
     - name: INTEGRASJON_UTBETAL_URL
       value: http://utbetal
     - name: INTEGRASJON_UTBETAL_SCOPE

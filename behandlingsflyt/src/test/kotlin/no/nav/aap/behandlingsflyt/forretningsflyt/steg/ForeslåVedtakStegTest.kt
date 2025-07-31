@@ -7,8 +7,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -33,16 +34,17 @@ class ForeslåVedtakStegTest {
 
     @Test
     fun `hvis ingen avklaringsbehov skal det ikke gi foreslå vedtak`() {
-        val person = Person(random.nextLong(), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
+        val person =
+            Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
         val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         val behandling =
             behandlingRepository.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
         val kontekstMedPerioder = FlytKontekstMedPerioder(
             sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
-                vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
-                rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         )
 
         val resultat = steg.utfør(kontekstMedPerioder)
@@ -52,7 +54,8 @@ class ForeslåVedtakStegTest {
 
     @Test
     fun `hvis ingen avklaringsbehov løst av NAY skal foreslå vedtak hoppes over`() {
-        val person = Person(random.nextLong(), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
+        val person =
+            Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
         val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         val behandling =
@@ -65,9 +68,9 @@ class ForeslåVedtakStegTest {
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "ja", "TESTEN")
         val kontekstMedPerioder = FlytKontekstMedPerioder(
             sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
-                vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
-                rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         )
 
         val resultat = steg.utfør(kontekstMedPerioder)
@@ -77,7 +80,8 @@ class ForeslåVedtakStegTest {
 
     @Test
     fun `hvis avklaringsbehov løst av NAY, gå innom foreslå vedtak`() {
-        val person = Person(random.nextLong(), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
+        val person =
+            Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
         val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         val behandling =
@@ -91,7 +95,7 @@ class ForeslåVedtakStegTest {
         val kontekstMedPerioder = FlytKontekstMedPerioder(
             sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         )
 
@@ -102,7 +106,8 @@ class ForeslåVedtakStegTest {
 
     @Test
     fun `hvis NAY-avklaringsbehov skal foreslå vedtak åpnes også etter tilbakehopp`() {
-        val person = Person(random.nextLong(), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
+        val person =
+            Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
         val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         val behandling =
@@ -120,9 +125,9 @@ class ForeslåVedtakStegTest {
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.FORESLÅ_VEDTAK, "ja", "TESTEN")
         val kontekstMedPerioder = FlytKontekstMedPerioder(
             sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
-                vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
-                rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         )
 
         steg.vedTilbakeføring(kontekstMedPerioder)

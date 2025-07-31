@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.ÅrsakTilReturKode
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarLovvalgMedlemskapLøsning
@@ -77,9 +78,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.RegisterBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvarDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingerForBarnetillegg
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarnDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
@@ -132,9 +137,9 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRep
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.ident
@@ -461,7 +466,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             .ignoringCollectionOrder()
             .isEqualTo(
                 BarnGrunnlag(
-                    registerbarn = RegisterBarn(id = -1, identer = listOf(barnIdent)),
+                    registerbarn = RegisterBarn(id = -1, barn = listOf(Barn(barnIdent, Fødselsdato(barnfødseldato)))),
                     oppgitteBarn = null,
                     vurderteBarn = null
                 )
@@ -538,7 +543,9 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             .ignoringCollectionOrder()
             .ignoringFieldsMatchingRegexes("[a-zA-Z]+\\.id").isEqualTo(
                 BarnGrunnlag(
-                    registerbarn = RegisterBarn(id = -1, identer = person.barn.map { it.aktivIdent() }),
+                    registerbarn = RegisterBarn(
+                        id = -1,
+                        barn = person.barn.map { Barn(it.aktivIdent(), it.fødselsdato) }),
                     oppgitteBarn = null,
                     vurderteBarn = null
                 )
@@ -559,6 +566,73 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             assertThat(it.barnetillegg).isEqualTo(Beløp(37))
             assertThat(it.antallBarn).isEqualTo(1)
         })
+    }
+
+    @Test
+    fun `oppgir manuelle barn, avklarer dem`() {
+        val fom = LocalDate.now()
+        val periode = Periode(fom, fom.plusYears(3))
+
+        val person = TestPersoner.STANDARD_PERSON()
+        val ident = person.aktivIdent()
+
+        val barnNavn = "Gregor Gorgh"
+        val barnAlder = LocalDate.now().minusYears(17)
+        val søknad = TestSøknader.SØKNAD_MED_BARN(barnNavn, barnAlder)
+
+        sendInnSøknad(
+            ident, periode, søknad
+        )
+            .løsSykdom()
+            .løsBistand()
+            .løsRefusjonskrav()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_BARNETILLEGG)
+            }
+            .løsAvklaringsBehov(
+                AvklarBarnetilleggLøsning(
+                    vurderingerForBarnetillegg = VurderingerForBarnetillegg(
+                        vurderteBarn = listOf(
+                            VurdertBarnDto(
+                                ident = null,
+                                navn = barnNavn,
+                                fødselsdato = barnAlder,
+                                vurderinger = listOf(
+                                    VurderingAvForeldreAnsvarDto(
+                                        fraDato = periode.fom,
+                                        harForeldreAnsvar = true,
+                                        begrunnelse = "bra forelder"
+                                    )
+                                )
+                            )
+                        )
+                    ),
+                ),
+            )
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
+
+                val tilkjentYtelse =
+                    dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) }
+                        .orEmpty().map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
+
+                val periodeMedBarneTillegg =
+                    tilkjentYtelse.filter { it.verdi.barnetillegg.verdi.toDouble() > 0 }.helePerioden()
+                val periodeUtenBarneTillegg =
+                    tilkjentYtelse.filter { it.verdi.barnetillegg.verdi.toDouble() == 0.0 }.helePerioden()
+
+                // Barnet er 18 fram til periode.fom.plusYears(1).minusDays(1)
+                assertThat(periodeMedBarneTillegg).isEqualTo(
+                    Periode(
+                        periode.fom,
+                        periode.fom.plusYears(1).minusDays(1)
+                    )
+                )
+                assertThat(periodeUtenBarneTillegg).isEqualTo(Periode(periode.fom.plusYears(1), periode.tom))
+            }
     }
 
     @Test
@@ -789,7 +863,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         var behandling = sendInnSøknad(ident, periode, TestSøknader.STANDARD_SØKNAD)
 
         løsSykdom(behandling)
-        leggTilÅrsakForBehandling(behandling, listOf(Årsak(ÅrsakTilBehandling.SØKNAD_TRUKKET)))
+        leggTilÅrsakForBehandling(behandling, listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SØKNAD_TRUKKET)))
         assertThat(hentAlleAvklaringsbehov(behandling)).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erÅpent() && avklaringsbehov.definisjon == Definisjon.VURDER_TREKK_AV_SØKNAD).isTrue() }
 
         behandling = løsAvklaringsBehov(
@@ -1081,7 +1155,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             })
 
         // Verifisere at det går an å kun 1 mnd med sykepengeerstatning
-        var revurdering = sendInnDokument(
+        val revurdering = sendInnDokument(
             ident,
             DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("123123"),
@@ -1089,7 +1163,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 innsendingType = InnsendingType.MANUELL_REVURDERING,
                 strukturertDokument = StrukturertDokument(
                     ManuellRevurderingV0(
-                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
                         beskrivelse = "..."
                     )
                 ),
@@ -1955,7 +2029,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 strukturertDokument = StrukturertDokument(
                     ManuellRevurderingV0(
-                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.FORUTGAENDE_MEDLEMSKAP), ""
+                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP), ""
                     ),
                 ),
                 innsendingType = InnsendingType.MANUELL_REVURDERING,
@@ -2046,7 +2120,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         assertTrue(vilkårsResultat.all { it.erOppfylt() })
 
         // Teste å trekke søknad
-        leggTilÅrsakForBehandling(behandling, listOf(Årsak(ÅrsakTilBehandling.SØKNAD_TRUKKET)))
+        leggTilÅrsakForBehandling(behandling, listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SØKNAD_TRUKKET)))
     }
 
     @Test
@@ -2729,7 +2803,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         }
 
         val revurdering = hentNyesteBehandlingForSak(klagebehandling.sakId, listOf(TypeBehandling.Revurdering))
-        assertThat(revurdering.årsaker()).containsExactly(Årsak(ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
+        assertThat(revurdering.vurderingsbehov()).containsExactly(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
 
         // OpprettholdelseSteg
         val steghistorikk = hentStegHistorikk(klagebehandling.id)
@@ -3223,7 +3297,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 innsendingType = InnsendingType.NY_ÅRSAK_TIL_BEHANDLING,
                 strukturertDokument = StrukturertDokument(
                     NyÅrsakTilBehandlingV0(
-                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.KLAGE_TRUKKET)
+                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.KLAGE_TRUKKET)
                     ),
                 ),
                 periode = periode
@@ -3233,7 +3307,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         // Sjekk at Klagen nå har fått "KLAGE_TRUKKET" som årsak til behandling (og derfor er i riktig tilstand)
         util.ventPåSvar()
         assertThat(trekkKlageBehandling.id).isEqualTo(klagebehandling.id)
-        assertThat(trekkKlageBehandling.årsaker().map { it.type }).contains(ÅrsakTilBehandling.KLAGE_TRUKKET)
+        assertThat(trekkKlageBehandling.vurderingsbehov().map { it.type }).contains(Vurderingsbehov.KLAGE_TRUKKET)
 
         // Løs avklaringsbehovet som trekker klagen og trigger sletting - skal og sette klagen til avsluttet
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(trekkKlageBehandling.id)
@@ -3354,7 +3428,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         val revurdering = hentNyesteBehandlingForSak(svarFraAndreinstansBehandling.sakId)
         assertThat(revurdering).isNotNull
         assertThat(revurdering.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-        assertThat(revurdering.årsaker().map { it.type }).contains(ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+        assertThat(revurdering.vurderingsbehov().map { it.type }).contains(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
     }
 
     @Test

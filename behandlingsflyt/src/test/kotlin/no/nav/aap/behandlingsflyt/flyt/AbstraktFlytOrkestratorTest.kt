@@ -47,9 +47,11 @@ import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.inntekt.InntektGatewayImpl
+import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.integrasjon.meldekort.MeldekortGatewayImpl
+import no.nav.aap.behandlingsflyt.integrasjon.oppgave.GosysGateway
 import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
@@ -65,7 +67,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
@@ -84,7 +88,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -152,6 +156,7 @@ open class AbstraktFlytOrkestratorTest {
                 .register<StatistikkGatewayImpl>()
                 .register<InntektGatewayImpl>()
                 .register<BrevGateway>()
+                .register<InstitusjonsoppholdGatewayImpl>()
                 .register<OppgavestyringGatewayImpl>()
                 .register<UføreGateway>()
                 .register<YrkesskadeRegisterGatewayImpl>()
@@ -162,6 +167,7 @@ open class AbstraktFlytOrkestratorTest {
                 .register<NomInfoGateway>()
                 .register<KabalGateway>()
                 .register<NorgGateway>()
+                .register<GosysGateway>()
             motor.start()
 
 
@@ -215,6 +221,25 @@ open class AbstraktFlytOrkestratorTest {
             oppgitteBarn = null,
             medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
         )
+
+        val SØKNAD_MED_BARN: (String, LocalDate) -> SøknadV0 = { navn, fødseldato ->
+            SøknadV0(
+                student = null,
+                yrkesskade = "NEI",
+                oppgitteBarn = OppgitteBarn(
+                    identer = emptySet(),
+                    barn = listOf(
+                        ManueltOppgittBarn(
+                            navn = navn,
+                            fødselsdato = fødseldato,
+                            ident = null,
+                            relasjon = ManueltOppgittBarn.Relasjon.FOSTERFORELDER
+                        )
+                    )
+                ),
+                medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
+            )
+        }
     }
 
 
@@ -480,7 +505,7 @@ open class AbstraktFlytOrkestratorTest {
 
     protected fun opprettBehandling(
         sakId: SakId,
-        årsaker: List<Årsak>,
+        årsaker: List<VurderingsbehovMedPeriode>,
         typeBehandling: TypeBehandling,
         forrigeBehandlingId: BehandlingId?
     ): Behandling {
@@ -489,7 +514,7 @@ open class AbstraktFlytOrkestratorTest {
                 forrigeBehandlingId = forrigeBehandlingId,
                 sakId = sakId,
                 typeBehandling = typeBehandling,
-                årsaker = årsaker
+                vurderingsbehov = årsaker
             )
         }
     }
@@ -831,7 +856,7 @@ open class AbstraktFlytOrkestratorTest {
         return this.løsAvklaringsBehov(vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
     }
 
-    protected fun leggTilÅrsakForBehandling(behandling: Behandling, årsaker: List<Årsak>) {
+    protected fun leggTilÅrsakForBehandling(behandling: Behandling, årsaker: List<VurderingsbehovMedPeriode>) {
         dataSource.transaction { connection ->
             SakOgBehandlingService(postgresRepositoryRegistry.provider(connection))
                 .finnEllerOpprettBehandling(behandling.sakId, årsaker)

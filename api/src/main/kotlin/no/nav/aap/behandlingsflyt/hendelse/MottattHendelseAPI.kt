@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -73,7 +73,7 @@ fun validerHendelse(innsending: Innsending, bruker: Bruker) {
     if (innsending.type == InnsendingType.MANUELL_REVURDERING && innsending.melding is ManuellRevurdering) {
         val melding = innsending.melding as ManuellRevurderingV0
         val gjelderOverstyringAvStarttidspunkt =
-            melding.årsakerTilBehandling.contains(ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE)
+            melding.årsakerTilBehandling.contains(Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
         val unleashGateway = GatewayProvider.provide<UnleashGateway>()
         if (gjelderOverstyringAvStarttidspunkt && !unleashGateway.isEnabled(
                 BehandlingsflytFeature.OverstyrStarttidspunkt,

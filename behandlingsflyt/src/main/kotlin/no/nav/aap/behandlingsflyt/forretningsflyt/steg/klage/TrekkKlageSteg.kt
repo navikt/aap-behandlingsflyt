@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -49,7 +49,7 @@ class TrekkKlageSteg private constructor(
     }
 
     private fun erIkkeRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-        return ÅrsakTilBehandling.KLAGE_TRUKKET !in kontekst.årsakerTilBehandling
+        return Vurderingsbehov.KLAGE_TRUKKET !in kontekst.vurderingsbehov
     }
 
     private fun slettVurderingerOgRegisterdata(behandlingId: BehandlingId) {

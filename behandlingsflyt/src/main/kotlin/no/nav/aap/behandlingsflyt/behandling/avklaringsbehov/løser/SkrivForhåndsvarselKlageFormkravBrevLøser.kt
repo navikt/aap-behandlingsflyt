@@ -25,7 +25,7 @@ class SkrivForhåndsvarselKlageFormkravBrevLøser(
     ): LøsningsResultat {
         val generellLøsning = skrivBrevAvklaringsbehovLøser.løs(
             kontekst,
-            SkrivBrevAvklaringsbehovLøsning(løsning.brevbestillingReferanse, løsning.handling)
+            SkrivBrevAvklaringsbehovLøsning(løsning.brevbestillingReferanse, løsning.handling, løsning.mottakere)
         )
         when (løsning.handling) {
             SkrivBrevAvklaringsbehovLøsning.Handling.FERDIGSTILL -> {

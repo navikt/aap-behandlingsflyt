@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsRes
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.SkrivBrevLøser
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.SKRIV_BREV_KODE
+import no.nav.aap.brev.kontrakt.MottakerDto
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.util.UUID
 
@@ -14,6 +15,7 @@ import java.util.UUID
 class SkrivBrevLøsning(
     @param:JsonProperty("brevbestillingReferanse", required = true) val brevbestillingReferanse: UUID,
     @param:JsonProperty("handling", required = true) val handling: SkrivBrevAvklaringsbehovLøsning.Handling,
+    @param:JsonProperty("mottakere") val mottakere: List<MottakerDto> = emptyList(),
     @param:JsonProperty("behovstype", required = true, defaultValue = SKRIV_BREV_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5050`
 ) : AvklaringsbehovLøsning {

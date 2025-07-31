@@ -51,7 +51,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelseDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.pip.IdentPåSak
 import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -65,7 +65,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -143,14 +143,14 @@ class StatistikkJobbUtførerTest {
             val opprettetBehandling = behandlingRepository.opprettBehandling(
                 sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
-                årsaker = listOf(),
+                vurderingsbehov = listOf(),
                 forrigeBehandlingId = null
             )
 
             val revurdering = behandlingRepository.opprettBehandling(
                 sak.id,
                 typeBehandling = TypeBehandling.Revurdering,
-                årsaker = listOf(),
+                vurderingsbehov = listOf(),
                 forrigeBehandlingId = opprettetBehandling.id
             )
 
@@ -183,7 +183,8 @@ class StatistikkJobbUtførerTest {
             opprettetTidspunkt = opprettetTidspunkt!!,
             hendelsesTidspunkt = hendelseTidspunkt,
             versjon = "123",
-            årsakerTilBehandling = listOf(ÅrsakTilBehandling.SØKNAD.name),
+            årsakerTilBehandling = listOf(Vurderingsbehov.SØKNAD.name),
+            vurderingsbehov = listOf(Vurderingsbehov.SØKNAD.name),
             mottattDokumenter = listOf()
         )
 
@@ -259,7 +260,7 @@ class StatistikkJobbUtførerTest {
             val opprettetBehandling = behandlingRepository.opprettBehandling(
                 sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
-                årsaker = listOf(),
+                vurderingsbehov = listOf(),
                 forrigeBehandlingId = null
             )
             beregningsgrunnlagRepository.lagre(
@@ -372,7 +373,8 @@ class StatistikkJobbUtførerTest {
             opprettetTidspunkt = LocalDateTime.now(),
             hendelsesTidspunkt = hendelseTidspunkt,
             versjon = "123",
-            årsakerTilBehandling = listOf(ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE.name),
+            årsakerTilBehandling = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
+            vurderingsbehov = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
             reserverTil = "meg",
             mottattDokumenter = listOf()
         )
@@ -459,7 +461,6 @@ class StatistikkJobbUtførerTest {
 
         val sak = InMemorySakRepository.finnEllerOpprett(
             Person(
-                id = 1,
                 identifikator = UUID.randomUUID(),
                 identer = listOf(
                     Ident(
@@ -473,9 +474,9 @@ class StatistikkJobbUtførerTest {
         val sakId = sak.id
         val behandling = behandlingRepository.opprettBehandling(
             sakId = sakId,
-            årsaker = listOf(
-                Årsak(
-                    type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling.MOTTATT_SØKNAD,
+            vurderingsbehov = listOf(
+                VurderingsbehovMedPeriode(
+                    type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD,
                     periode = Periode(LocalDate.now(), LocalDate.now().plusDays(1))
                 )
             ),
@@ -613,7 +614,8 @@ class StatistikkJobbUtførerTest {
             erPåVent = false,
             hendelsesTidspunkt = hendelsesTidspunkt,
             versjon = ApplikasjonsVersjon.versjon,
-            årsakerTilBehandling = listOf(ÅrsakTilBehandling.VURDER_RETTIGHETSPERIODE.name),
+            årsakerTilBehandling = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
+            vurderingsbehov = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
             mottattDokumenter = listOf(),
             reserverTil = "meg",
         )
@@ -644,7 +646,8 @@ class StatistikkJobbUtførerTest {
                 sakStatus = UTREDES,
                 hendelsesTidspunkt = hendelsesTidspunkt,
                 identerForSak = listOf("123"),
-                årsakTilBehandling = listOf(ÅrsakTilBehandling.SØKNAD)
+                årsakTilBehandling = listOf(Vurderingsbehov.SØKNAD),
+                vurderingsbehov = listOf(Vurderingsbehov.SØKNAD)
             )
         )
     }

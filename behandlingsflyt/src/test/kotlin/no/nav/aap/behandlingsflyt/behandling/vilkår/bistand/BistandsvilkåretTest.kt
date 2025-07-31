@@ -25,7 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
@@ -222,7 +222,7 @@ class BistandsvilkåretTest {
                     forrigeBehandlingId = førstegangsbehandling.forrigeBehandlingId,
                     behandlingType = TypeBehandling.Førstegangsbehandling,
                     vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                    årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                    vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
                     rettighetsperiode = sak.rettighetsperiode,
                 )
             )
@@ -278,7 +278,7 @@ class BistandsvilkåretTest {
                     forrigeBehandlingId = revurdering.forrigeBehandlingId,
                     behandlingType = TypeBehandling.Revurdering,
                     vurderingType = VurderingType.REVURDERING,
-                    årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING),
+                    vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_LEGEERKLÆRING),
                     rettighetsperiode = sak.rettighetsperiode,
                 )
             )

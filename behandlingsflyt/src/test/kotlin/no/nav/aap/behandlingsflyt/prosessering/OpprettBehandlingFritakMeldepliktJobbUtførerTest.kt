@@ -21,10 +21,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -71,7 +72,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
         val sakOgBehandlingServiceMock = mockk<SakOgBehandlingService>()
         val utfører = mockAvhengigheterForOpprettBehandlingFritakMeldepliktJobbUtfører(
             sakOgBehandlingServiceMock,
-            årsakerPåTidligereBehandling = listOf(Årsak(ÅrsakTilBehandling.FRITAK_MELDEPLIKT))
+            årsakerPåTidligereBehandling = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.FRITAK_MELDEPLIKT))
         )
 
         utfører.utfør(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id))
@@ -82,7 +83,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
     private fun mockAvhengigheterForOpprettBehandlingFritakMeldepliktJobbUtfører(
         sakOgBehandlingServiceMock: SakOgBehandlingService,
         fritak: Boolean = true,
-        årsakerPåTidligereBehandling: List<Årsak> = emptyList(),
+        årsakerPåTidligereBehandling: List<VurderingsbehovMedPeriode> = emptyList(),
     ): OpprettBehandlingFritakMeldepliktJobbUtfører {
         val sakServiceMock = mockk<SakService>()
         val underveisRepositoryMock = mockk<UnderveisRepository>()
@@ -91,7 +92,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             id = sakId,
             saksnummer = Saksnummer("BLABLA"),
             person = Person(
-                id = 456L,
+                id = 456L.let(::PersonId),
                 identifikator = UUID.randomUUID(),
                 identer = listOf()
             ),
@@ -107,7 +108,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             sakId = sakId,
             typeBehandling = TypeBehandling.Revurdering,
             status = Status.OPPRETTET,
-            årsaker = årsakerPåTidligereBehandling,
+            vurderingsbehov = årsakerPåTidligereBehandling,
             stegTilstand = StegTilstand(
                 stegStatus = StegStatus.AVKLARINGSPUNKT,
                 stegType = StegType.FORESLÅ_VEDTAK,

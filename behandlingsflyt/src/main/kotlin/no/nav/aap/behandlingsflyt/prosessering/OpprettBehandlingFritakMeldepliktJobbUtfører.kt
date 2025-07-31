@@ -3,8 +3,8 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -27,7 +27,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
         if (skalHaFritakForPassertMeldeperiode(sak)) {
             val fritakMeldepliktBehandling = sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(
                 sak.id,
-                listOf(Årsak(type = ÅrsakTilBehandling.FRITAK_MELDEPLIKT))
+                listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.FRITAK_MELDEPLIKT))
             )
 
             prosesserBehandlingService.triggProsesserBehandling(fritakMeldepliktBehandling)
@@ -42,7 +42,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
 
         val behandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id) ?: return false
 
-        if (behandling.status().erÅpen() && ÅrsakTilBehandling.FRITAK_MELDEPLIKT in behandling.årsaker().map { it.type }) {
+        if (behandling.status().erÅpen() && Vurderingsbehov.FRITAK_MELDEPLIKT in behandling.vurderingsbehov().map { it.type }) {
             return false
         }
 

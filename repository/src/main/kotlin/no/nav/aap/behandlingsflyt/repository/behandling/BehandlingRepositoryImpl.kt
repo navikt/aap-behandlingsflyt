@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -27,7 +27,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun opprettBehandling(
         sakId: SakId,
-        årsaker: List<Årsak>,
+        vurderingsbehov: List<VurderingsbehovMedPeriode>,
         typeBehandling: TypeBehandling,
         forrigeBehandlingId: BehandlingId?
     ): Behandling {
@@ -48,12 +48,12 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             }
         }
 
-        val årsakQuery = """
+        val vurderingsbehovQuery = """
             INSERT INTO AARSAK_TIL_BEHANDLING (behandling_id, aarsak, periode)
             VALUES (?, ?, ?::daterange)
         """.trimIndent()
 
-        connection.executeBatch(årsakQuery, årsaker) {
+        connection.executeBatch(vurderingsbehovQuery, vurderingsbehov) {
             setParams {
                 setLong(1, behandlingId)
                 setEnumName(2, it.type)
@@ -103,7 +103,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             status = row.getEnum("status"),
             stegTilstand = hentAktivtSteg(behandlingId),
             versjon = row.getLong("versjon"),
-            årsaker = hentÅrsaker(behandlingId),
+            vurderingsbehov = hentVurderingsbehov(behandlingId),
             opprettetTidspunkt = row.getLocalDateTime("opprettet_tid"),
             forrigeBehandlingId = row.getLongOrNull("forrige_id")?.let { BehandlingId(it) }
         )
@@ -120,11 +120,11 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             opprettetTidspunkt = row.getLocalDateTime("opprettet_tid"),
             vedtakstidspunkt = row.getLocalDateTime("vedtakstidspunkt"),
             virkningstidspunkt = row.getLocalDateOrNull("virkningstidspunkt"),
-            årsaker = hentÅrsaker(behandlingId).map { it.type }.toSet()
+            vurderingsbehov = hentVurderingsbehov(behandlingId).map { it.type }.toSet()
         )
     }
 
-    private fun hentÅrsaker(behandlingId: BehandlingId): List<Årsak> {
+    private fun hentVurderingsbehov(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
         val query = """
             SELECT * FROM AARSAK_TIL_BEHANDLING WHERE behandling_id = ? ORDER BY opprettet_tid DESC
         """.trimIndent()
@@ -133,7 +133,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 setLong(1, behandlingId.id)
             }
             setRowMapper {
-                Årsak(it.getEnum("aarsak"), it.getPeriodeOrNull("periode"))
+                VurderingsbehovMedPeriode(it.getEnum("aarsak"), it.getPeriodeOrNull("periode"))
             }
         }
     }
@@ -286,7 +286,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
         return connection.queryList(query) {
             setParams {
-                setLong(1, person.id)
+                setLong(1, person.id.id)
                 setArray(2, behandlingstypeFilter.map { it.identifikator() })
             }
             setRowMapper {
@@ -340,13 +340,13 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
-    override fun oppdaterÅrsaker(behandling: Behandling, årsaker: List<Årsak>) {
-        val årsakQuery = """
+    override fun oppdaterVurderingsbehov(behandling: Behandling, vurderingsbehov: List<VurderingsbehovMedPeriode>) {
+        val vurderingsbehovQuery = """
             INSERT INTO AARSAK_TIL_BEHANDLING (behandling_id, aarsak, periode)
             VALUES (?, ?, ?::daterange)
         """.trimIndent()
 
-        connection.executeBatch(årsakQuery, årsaker.filter { !behandling.årsaker().contains(it) }) {
+        connection.executeBatch(vurderingsbehovQuery, vurderingsbehov.filter { !behandling.vurderingsbehov().contains(it) }) {
             setParams {
                 setLong(1, behandling.id.toLong())
                 setEnumName(2, it.type)

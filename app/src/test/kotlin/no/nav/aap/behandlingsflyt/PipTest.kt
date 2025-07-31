@@ -3,8 +3,11 @@ package no.nav.aap.behandlingsflyt
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import kotlinx.coroutines.runBlocking
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -14,8 +17,8 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -80,7 +83,8 @@ class PipTest {
 
         val saksnummer = dataSource.transaction { connection ->
             val periode = Periode(LocalDate.now(), LocalDate.now())
-            val person = PersonRepositoryImpl(connection).finnEllerOpprett(
+            val personRepository = PersonRepositoryImpl(connection)
+            val person = personRepository.finnEllerOpprett(
                 listOf(
                     Ident("ident", true),
                     Ident("gammelident", false),
@@ -90,20 +94,31 @@ class PipTest {
             val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, periode)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sak.id,
-                listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD, periode)),
+                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD, periode)),
                 TypeBehandling.Førstegangsbehandling, null
             )
 
             val barnRepository = postgresRepositoryRegistry.provider(connection).provide<BarnRepository>()
 
-            barnRepository.lagreRegisterBarn(behandling.id, listOf(Ident("regbarn")))
-            barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = listOf(Ident("oppgittbarn"))))
+            barnRepository.lagreRegisterBarn(
+                behandling.id,
+                listOf(Barn(ident = Ident("regbarn"), Fødselsdato(LocalDate.now()))).map {
+                    Pair(
+                        it,
+                        personRepository.finnEllerOpprett(listOf(it.ident)).id
+                    )
+                }
+            )
+            barnRepository.lagreOppgitteBarn(
+                behandling.id,
+                OppgitteBarn(oppgitteBarn = listOf(OppgitteBarn.OppgittBarn(Ident("oppgittbarn"), null)))
+            )
             barnRepository.lagreVurderinger(
                 behandling.id,
                 "ident",
                 listOf(
                     VurdertBarn(
-                        Ident("vurdertbarn"),
+                        BarnIdentifikator.BarnIdent("vurdertbarn"),
                         listOf(VurderingAvForeldreAnsvar(periode.fom, true, "fordi"))
                     )
                 )
@@ -133,7 +148,8 @@ class PipTest {
 
         val behandlingsreferanse = dataSource.transaction { connection ->
             val periode = Periode(LocalDate.now(), LocalDate.now())
-            val person = PersonRepositoryImpl(connection).finnEllerOpprett(
+            val personRepository = PersonRepositoryImpl(connection)
+            val person = personRepository.finnEllerOpprett(
                 listOf(
                     Ident("ident", true),
                     Ident("gammelident", false),
@@ -143,20 +159,31 @@ class PipTest {
             val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, periode)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sak.id,
-                listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD, periode)),
+                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD, periode)),
                 TypeBehandling.Førstegangsbehandling, null
             )
 
             val barnRepository = postgresRepositoryRegistry.provider(connection).provide<BarnRepository>()
 
-            barnRepository.lagreRegisterBarn(behandling.id, listOf(Ident("regbarn")))
-            barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = listOf(Ident("oppgittbarn"))))
+            barnRepository.lagreRegisterBarn(
+                behandling.id,
+                listOf(Barn(ident = Ident("regbarn"), Fødselsdato(LocalDate.now()))).map {
+                    Pair(
+                        it,
+                        personRepository.finnEllerOpprett(listOf(it.ident)).id
+                    )
+                }
+            )
+            barnRepository.lagreOppgitteBarn(
+                behandling.id,
+                OppgitteBarn(oppgitteBarn = listOf(OppgitteBarn.OppgittBarn(Ident("oppgittbarn"), null)))
+            )
             barnRepository.lagreVurderinger(
                 behandling.id,
                 "ident",
                 listOf(
                     VurdertBarn(
-                        Ident("vurdertbarn"),
+                        BarnIdentifikator.BarnIdent("vurdertbarn"),
                         listOf(VurderingAvForeldreAnsvar(periode.fom, true, "fordi"))
                     )
                 )
@@ -166,18 +193,27 @@ class PipTest {
             val periode2 = Periode(LocalDate.now().minusYears(5), LocalDate.now().minusYears(5))
             val behandling2 = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sak.id,
-                listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD, periode2)),
+                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD, periode2)),
                 TypeBehandling.Førstegangsbehandling, null
             )
 
-            barnRepository.lagreRegisterBarn(behandling2.id, listOf(Ident("regbar2")))
-            barnRepository.lagreOppgitteBarn(behandling2.id, OppgitteBarn(identer = listOf(Ident("oppgittbar2"))))
+            barnRepository.lagreRegisterBarn(
+                behandling2.id,
+                listOf(
+                    Barn(ident = Ident("regbar2"), Fødselsdato(LocalDate.now()))
+                ).map { Pair(it, personRepository.finnEllerOpprett(listOf(it.ident)).id) }
+            )
+            barnRepository.lagreOppgitteBarn(
+                behandling.id,
+                OppgitteBarn(oppgitteBarn = listOf(OppgitteBarn.OppgittBarn(Ident("oppgittbar2"), null)))
+            )
+
             barnRepository.lagreVurderinger(
                 behandling2.id,
                 "ident",
                 listOf(
                     VurdertBarn(
-                        Ident("vurdertbar2"),
+                        BarnIdentifikator.BarnIdent("vurdertbar2"),
                         listOf(VurderingAvForeldreAnsvar(periode.fom, true, "fordi"))
                     )
                 )
@@ -197,7 +233,6 @@ class PipTest {
             .hasSize(3)
             .contains("ident", "gammelident", "endaeldreident")
         Assertions.assertThat(pipIdenter?.barn)
-            .hasSize(6)
-            .contains("regbarn", "oppgittbarn", "vurdertbarn", "regbar2", "oppgittbar2", "vurdertbar2")
+            .containsExactlyInAnyOrder("regbarn", "oppgittbarn", "vurdertbarn", "regbar2", "oppgittbar2", "vurdertbar2")
     }
 }

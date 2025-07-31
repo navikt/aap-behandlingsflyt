@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import org.junit.jupiter.api.Test
@@ -22,7 +23,11 @@ class KabalGatewayTest {
 
     @Test
     fun kanOversendeTilKabal() {
-        val person = Person(random.nextLong(), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
+        val person = Person(
+            random.nextLong().let(::PersonId),
+            UUID.randomUUID(),
+            listOf(genererIdent(LocalDate.now().minusYears(23)))
+        )
 
         assertDoesNotThrow {
             KabalGateway().oversendTilAndreinstans(

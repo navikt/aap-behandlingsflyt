@@ -2,7 +2,6 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val opentelemetryVersion = "2.18.1-alpha"
 
-
 plugins {
     id("behandlingsflyt.conventions")
     alias(libs.plugins.ktor)
@@ -89,7 +88,7 @@ dependencies {
     implementation(project(":api"))
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
-    implementation("com.zaxxer:HikariCP:6.3.0")
+    implementation("com.zaxxer:HikariCP:7.0.0")
     implementation("org.flywaydb:flyway-database-postgresql:11.10.4")
     runtimeOnly("org.postgresql:postgresql:42.7.7")
     implementation("ch.qos.logback:logback-classic:1.5.18")
@@ -102,7 +101,7 @@ dependencies {
     testImplementation(libs.bundles.junit)
     testImplementation("org.testcontainers:postgresql:1.21.3")
     constraints {
-        implementation("org.apache.commons:commons-compress:1.27.1") {
+        implementation("org.apache.commons:commons-compress:1.28.0") {
             because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")
         }
     }
