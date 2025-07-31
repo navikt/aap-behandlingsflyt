@@ -586,6 +586,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             .løsSykdom()
             .løsBistand()
             .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
