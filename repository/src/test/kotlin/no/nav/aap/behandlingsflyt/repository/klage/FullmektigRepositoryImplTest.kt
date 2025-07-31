@@ -59,7 +59,7 @@ class FullmektigRepositoryImplTest {
 
             val navnOgAdresse = NavnOgAdresse(
                 navn = "Ola Nordmann", adresse = Adresse(
-                    adresselinje1 = "Gate 1", postnummer = "1188", poststed = "Oslo", landkode = "NOR"
+                    adresselinje1 = "Gate 1", postnummer = "1188", poststed = "Oslo", landkode = "NO"
                 )
             )
 

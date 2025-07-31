@@ -54,8 +54,8 @@ data class Adresse(
 ) {
     init {
         require(
-            (landkode == "NOR" && postnummer != null && poststed != null) ||
-                    (landkode != "NOR" && postnummer == null && poststed == null)
+            (landkode == "NO" && postnummer != null && poststed != null) ||
+                    (landkode != "NO" && postnummer == null && poststed == null)
         ) {
             "Postnummer og poststed må være satt for norsk adresse, men skal ikke være satt for utenlandsk adresse"
         }
