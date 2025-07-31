@@ -15,7 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
-class SykdomsurderingBrevSteg private constructor(
+class SykdomsurderingBrevSteg internal constructor(
     private val sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
