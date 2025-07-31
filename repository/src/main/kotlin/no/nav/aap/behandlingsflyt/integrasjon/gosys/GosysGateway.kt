@@ -49,7 +49,7 @@ class GosysGateway : OppgaveGateway {
             tema = "AAP",
             prioritet = Prioritet.NORM,
             aktivDato = LocalDate.now().toString(),
-            personident = aktivIdent.toString(),
+            personident = aktivIdent.toUncensoredString(),
             tildeltEnhetsnr = navKontor,
             opprettetAvEnhetsnr = navKontor,
             beskrivelse = "Krav om refusjon av sosialhjelp for bruker av AAP",
