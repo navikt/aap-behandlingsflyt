@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.svarfraandreinstans.SvarFraAndre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.svarfraandreinstans.SvarFraAndreinstansVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.HÅNDTER_SVAR_FRA_ANDREINSTANS_KODE
-import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.httpklient.exception.IkkeTillattException
 import no.nav.aap.lookup.repository.RepositoryProvider
 

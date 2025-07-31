@@ -29,8 +29,8 @@ import no.nav.aap.brev.kontrakt.Status
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.auth.Bruker
-import no.nav.aap.komponenter.httpklient.auth.bruker
+import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje

@@ -28,11 +28,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.server.auth.token
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig
@@ -135,14 +135,15 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
 
             }
             // Midlertidig fiks for ikke å brekke postmottak
-            if (token().isClientCredentials()) {
+            val token = token()
+            if (token.isClientCredentials()) {
                 respond(saker)
             } else {
                 val sakerMedTilgang =
                     saker.filter { sak ->
                         GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilSak(
                             Saksnummer(sak.saksnummer),
-                            token(),
+                            token,
                             Operasjon.SE
                         )
                     }
