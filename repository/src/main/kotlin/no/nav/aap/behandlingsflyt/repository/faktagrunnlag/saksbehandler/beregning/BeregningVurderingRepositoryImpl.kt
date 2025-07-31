@@ -6,10 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
@@ -303,12 +300,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
         return if (verdi.remainder(tusen) == BigDecimal.ZERO) {
             verdi
         } else {
-            val unleashGateway: UnleashGateway = GatewayProvider.provide()
-            if (unleashGateway.isEnabled(BehandlingsflytFeature.AvrundingInntekt)) {
-                verdi.divide(tusen, 0, RoundingMode.UP).multiply(tusen)
-            } else {
-                verdi
-            }
+            verdi.divide(tusen, 0, RoundingMode.UP).multiply(tusen)
         }
     }
 
