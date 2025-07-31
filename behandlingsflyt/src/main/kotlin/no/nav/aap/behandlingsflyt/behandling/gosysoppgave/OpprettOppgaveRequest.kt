@@ -14,7 +14,7 @@ data class OpprettOppgaveRequest(
     val personident: String? = null, // 11 - 13 tegn
     val orgnr: String? = null,
     val tildeltEnhetsnr: NavEnhet? = null, // 4 tegn
-    val opprettetAvEnhetsnr: NavEnhet? = "9999", // 4 tegn
+    val opprettetAvEnhetsnr: NavEnhet? = null, // 4 tegn
     val behandlesAvApplikasjon: String? = null,
     val tilordnetRessurs: String? = null, // navident
     val beskrivelse: String? = null,

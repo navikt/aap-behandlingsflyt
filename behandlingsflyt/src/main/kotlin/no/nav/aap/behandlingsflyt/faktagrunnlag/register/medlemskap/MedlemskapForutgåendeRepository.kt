@@ -152,7 +152,7 @@ class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection)
 
         val medlemskapForutgaaendeUnntakPersonIds = getMedlemskapForutgaaendeUnntakPersonIds(behandlingId)
 
-        connection.execute(
+        val deletedRows = connection.executeReturnUpdated(
             """
             delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG where behandling_id = ?; 
             delete from MEDLEMSKAP_FORUTGAAENDE_UNNTAK where medlemskap_forutgaaende_unntak_person_id = ANY(?::bigint[]);
@@ -167,6 +167,7 @@ class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection)
                 setLongArray(4, medlemskapForutgaaendeUnntakPersonIds)
             }
         }
+        log.info("Slettet $deletedRows rader fra MEDLEMSKAP_FORUTGAAENDE_UNNTAK")
     }
 
     private fun getMedlemskapForutgaaendeUnntakPersonIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

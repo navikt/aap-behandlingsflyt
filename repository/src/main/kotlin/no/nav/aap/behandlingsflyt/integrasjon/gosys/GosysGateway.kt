@@ -37,15 +37,21 @@ class GosysGateway : OppgaveGateway {
         tokenProvider = ClientCredentialsTokenProvider,
     )
 
-    override fun opprettOppgave(aktivIdent: Ident, bestillingReferanse: String, behandlingId: BehandlingId, navKontor: String) {
+    override fun opprettOppgave(
+        aktivIdent: Ident,
+        bestillingReferanse: String,
+        behandlingId: BehandlingId,
+        navKontor: String
+    ) {
 
-         val oppgaveRequest = OpprettOppgaveRequest(
+        val oppgaveRequest = OpprettOppgaveRequest(
             oppgavetype = OppgaveType.FORDELING.verdi,
             tema = "AAP",
             prioritet = Prioritet.NORM,
             aktivDato = LocalDate.now().toString(),
             personident = aktivIdent.toString(),
             tildeltEnhetsnr = navKontor,
+            opprettetAvEnhetsnr = navKontor,
             beskrivelse = "Krav om refusjon av sosialhjelp for bruker av AAP",
             behandlingstema = "AAP",
             behandlingstype = "AAP",
