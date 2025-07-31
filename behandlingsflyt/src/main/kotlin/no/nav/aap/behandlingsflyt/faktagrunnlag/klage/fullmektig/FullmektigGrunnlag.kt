@@ -35,7 +35,7 @@ data class IdentMedType(
 
 enum class IdentType {
     ORGNR,
-    UTL_ORGNR,
+    UTL_ORG,
     FNR_DNR,
 }
 
