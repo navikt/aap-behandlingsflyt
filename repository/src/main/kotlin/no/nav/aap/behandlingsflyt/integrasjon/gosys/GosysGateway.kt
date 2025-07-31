@@ -54,8 +54,9 @@ class GosysGateway : OppgaveGateway {
 
         val path = baseUri.resolve("/api/v1/oppgaver")
         val request = PostRequest(oppgaveRequest)
+        // Midlertidig logging for debugging i test
+        log.info("Kaller Gosysoppgave med request: ${oppgaveRequest}")
 
-        log.info("Kaller Gosysoppgave på path: $path")
         try {
             client.post(path, request) { _, _ -> }
         } catch (e: Exception) {
