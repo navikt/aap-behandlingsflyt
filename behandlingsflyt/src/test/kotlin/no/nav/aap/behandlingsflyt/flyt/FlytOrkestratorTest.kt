@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.HåndterSv
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivForhåndsvarselKlageFormkravBrevLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TrekkKlageLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TrekkSøknadLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentePåFristForhåndsvarselKlageFormkravLøsning
@@ -374,7 +375,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     skalVurdereAapIOvergangTilArbeid = null,
                     overgangBegrunnelse = null
                 ),
-            )).medKontekst {
+            ))
+            .medKontekst {
                 assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).describedAs {
                     "Revurdering av sykdom skal gå rett til beslutter når ingen avklaringsbehov trenger å løses av NAY"
                 }.containsExactly(Definisjon.FATTE_VEDTAK)
@@ -443,6 +445,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             .løsSykdom()
             .løsBistand()
             .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
@@ -520,6 +523,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             .løsSykdom()
             .løsBistand()
             .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
@@ -584,6 +588,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             .løsSykdom()
             .løsBistand()
             .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
 
         val sak = hentSak(ident, periode)
 
@@ -642,6 +647,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             .løsSykdom()
             .løsBistand()
             .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
             .løsAvklaringsBehov(
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
@@ -856,6 +862,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             )
         )
 
+        behandling = løsSykdomsvurderingBrev(behandling)
+
         behandling = kvalitetssikreOk(behandling)
 
         behandling = løsAvklaringsBehov(
@@ -998,6 +1006,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 )
             )
         )
+
+        behandling = løsSykdomsvurderingBrev(behandling)
 
         behandling = kvalitetssikreOk(behandling)
 
@@ -1162,6 +1172,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     ),
                 ),
             )
+            .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
@@ -1258,6 +1269,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             ),
         )
 
+        behandling = løsSykdomsvurderingBrev(behandling)
+
         behandling = kvalitetssikreOk(behandling)
 
         // Saken står til To-trinnskontroll hos beslutter
@@ -1350,7 +1363,9 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     overgangBegrunnelse = null
                 ),
             ),
-        ).løsRefusjonskrav()
+        )
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
             .medKontekst {
                 // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
                 assertThat(åpneAvklaringsbehov).isNotEmpty()
@@ -1509,6 +1524,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 )
             )
         )
+
+        behandling = løsSykdomsvurderingBrev(behandling)
 
         behandling = kvalitetssikreOk(behandling)
 

@@ -50,6 +50,7 @@ import no.nav.aap.behandlingsflyt.behandling.klage.klagebehandling.klagebehandli
 import no.nav.aap.behandlingsflyt.behandling.klage.påklagetbehandling.påklagetBehandlingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.arbeidsevne.arbeidsevneGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.bistand.bistandsgrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
 import no.nav.aap.behandlingsflyt.behandling.klage.fullmektig.fullmektigGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
@@ -184,6 +185,7 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
                 medlemskapsgrunnlagApi(dataSource, repositoryRegistry)
                 studentgrunnlagApi(dataSource, repositoryRegistry)
                 sykdomsgrunnlagApi(dataSource, repositoryRegistry)
+                sykdomsvurderingForBrevApi(dataSource, repositoryRegistry)
                 sykepengerGrunnlagApi(dataSource, repositoryRegistry)
                 institusjonAPI(dataSource, repositoryRegistry)
                 avklaringsbehovApi(dataSource, repositoryRegistry)

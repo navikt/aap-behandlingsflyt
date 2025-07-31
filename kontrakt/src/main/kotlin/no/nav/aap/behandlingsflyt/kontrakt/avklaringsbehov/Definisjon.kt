@@ -142,6 +142,15 @@ public enum class Definisjon(
         kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
+    SKRIV_SYKDOMSVURDERING_BREV(
+        kode = AvklaringsbehovKode.`5053`,
+        løsesISteg = StegType.SYKDOMSVURDERING_BREV,
+        kreverToTrinn = true,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_OPPFOLGING
+        )
+    ),
     FASTSETT_MANUELL_INNTEKT(
         kode = AvklaringsbehovKode.`7001`,
         type = BehovType.MANUELT_PÅKREVD,
