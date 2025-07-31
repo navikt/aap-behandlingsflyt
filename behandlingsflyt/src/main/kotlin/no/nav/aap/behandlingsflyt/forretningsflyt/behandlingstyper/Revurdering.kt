@@ -141,11 +141,11 @@ object Revurdering : BehandlingType {
                 )
             )
             .medSteg(
-                steg = SykdomsurderingBrevSteg, årsakRelevanteForSteg = listOf(
-                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
-                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING,
-                    ÅrsakTilBehandling.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+                steg = SykdomsurderingBrevSteg, vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                    Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
                 )
             )
             .medSteg(steg = KvalitetssikringsSteg)
