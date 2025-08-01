@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.Påkla
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -32,7 +33,8 @@ data class BehandlingMedVedtakDto(
     val virkningstidspunkt: LocalDate?,
     @Deprecated("Fjern etter å ha oppdatert frontend til å bruke vurderingsbehov")
     val årsaker: Set<Vurderingsbehov>,
-    val vurderingsbehov: Set<Vurderingsbehov>
+    val vurderingsbehov: Set<Vurderingsbehov>,
+    val årsakTilOpprettelse: ÅrsakTilOpprettelse?
 )
 
 internal fun BehandlingMedVedtak.tilBehandlingMedVedtakDto() =
@@ -45,6 +47,7 @@ internal fun BehandlingMedVedtak.tilBehandlingMedVedtakDto() =
         vedtakstidspunkt = vedtakstidspunkt,
         virkningstidspunkt = virkningstidspunkt,
         årsaker = vurderingsbehov,
-        vurderingsbehov = vurderingsbehov
+        vurderingsbehov = vurderingsbehov,
+        årsakTilOpprettelse = årsakTilOpprettelse
     )
 

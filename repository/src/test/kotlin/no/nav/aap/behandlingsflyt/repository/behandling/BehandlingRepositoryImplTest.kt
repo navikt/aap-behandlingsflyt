@@ -47,6 +47,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -91,7 +92,8 @@ internal class BehandlingRepositoryImplTest {
                 sakId = sak.id,
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
-                forrigeBehandlingId = null
+                forrigeBehandlingId = null,
+                årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
             )
         }
 
@@ -105,6 +107,7 @@ internal class BehandlingRepositoryImplTest {
             assertThat(hententMedReferanse.vurderingsbehov()).containsExactlyElementsOf(skapt.vurderingsbehov())
             assertThat(hententMedReferanse.vurderingsbehov()).containsExactlyElementsOf(listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)))
             assertThat(hententMedReferanse.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
+            assertThat(hententMedReferanse.årsakTilOpprettelse).isEqualTo(ÅrsakTilOpprettelse.SØKNAD)
         }
     }
 
@@ -126,7 +129,8 @@ internal class BehandlingRepositoryImplTest {
                 sakId = sak.id,
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
-                forrigeBehandlingId = null
+                forrigeBehandlingId = null,
+                årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
             )
         }
 
@@ -158,14 +162,16 @@ internal class BehandlingRepositoryImplTest {
                 sakId = sak.id,
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
-                forrigeBehandlingId = null
+                forrigeBehandlingId = null,
+                årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
             )
 
             val klage = repo.opprettBehandling(
                 sakId = sak.id,
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTATT_KLAGE)),
                 typeBehandling = TypeBehandling.Klage,
-                forrigeBehandlingId = null
+                forrigeBehandlingId = null,
+                årsakTilOpprettelse = ÅrsakTilOpprettelse.KLAGE
             )
             Triple(sak, førstegang, klage)
         }
@@ -210,7 +216,8 @@ internal class BehandlingRepositoryImplTest {
                 sakId = sak.id,
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
-                forrigeBehandlingId = null
+                forrigeBehandlingId = null,
+                årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
             )
 
             vedtakRepo.lagre(
@@ -223,7 +230,8 @@ internal class BehandlingRepositoryImplTest {
                 sakId = sak.id,
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTATT_KLAGE)),
                 typeBehandling = TypeBehandling.Klage,
-                forrigeBehandlingId = null
+                forrigeBehandlingId = null,
+                årsakTilOpprettelse = ÅrsakTilOpprettelse.KLAGE
             )
             Triple(sak, førstegang, klage)
         }
@@ -242,6 +250,7 @@ internal class BehandlingRepositoryImplTest {
             assertThat(alleFørstegang[0].vedtakstidspunkt).isEqualToIgnoringNanos(vedtakstidspunkt)
             assertThat(alleFørstegang[0].virkningstidspunkt).isEqualTo(virkningstidspunkt)
             assertThat(alleFørstegang[0].vurderingsbehov).isEqualTo(setOf(Vurderingsbehov.MOTTATT_SØKNAD))
+            assertThat(alleFørstegang[0].årsakTilOpprettelse).isEqualTo(ÅrsakTilOpprettelse.SØKNAD)
         }
     }
 

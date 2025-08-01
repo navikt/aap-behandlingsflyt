@@ -64,12 +64,12 @@ class HåndterMottattDokumentService(
             is KlageV0 -> {
                 val sak = sakService.hent(sakId)
                 val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
-                val årsaker = utledÅrsaker(brevkategori, melding, periode)
+                val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
 
                 val behandling = if(melding.behandlingReferanse!=null){
                     behandlingRepository.hent(BehandlingReferanse(UUID.fromString(melding.behandlingReferanse)))
                 } else {
-                    sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(sak.saksnummer, årsaker).åpenBehandling
+                    sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(sak.saksnummer, vurderingsbehov).åpenBehandling
                 }
 
                 val behandlingSkrivelås = behandling?.let {
@@ -82,7 +82,7 @@ class HåndterMottattDokumentService(
 
                 prosesserBehandling.triggProsesserBehandling(
                     behandling,
-                    listOf("trigger" to DefaultJsonMapper.toJson(årsaker.map { it.type }))
+                    listOf("trigger" to DefaultJsonMapper.toJson(vurderingsbehov.map { it.type }))
                 )
 
                 if (behandlingSkrivelås != null) {
@@ -103,9 +103,9 @@ class HåndterMottattDokumentService(
         log.info("Mottok dokument på sak-id $sakId, og referanse $referanse, med brevkategori $brevkategori.")
         val sak = sakService.hent(sakId)
         val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
-        val årsaker = utledÅrsaker(brevkategori, melding, periode)
+        val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
 
-        val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(sak.saksnummer, årsaker)
+        val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(sak.saksnummer, vurderingsbehov)
 
         val behandlingSkrivelås = opprettetBehandling.åpenBehandling?.let {
             låsRepository.låsBehandling(it.id)
@@ -122,7 +122,7 @@ class HåndterMottattDokumentService(
 
         prosesserBehandling.triggProsesserBehandling(
             opprettetBehandling,
-            listOf("trigger" to DefaultJsonMapper.toJson(årsaker.map { it.type }))
+            listOf("trigger" to DefaultJsonMapper.toJson(vurderingsbehov.map { it.type }))
         )
 
         if (behandlingSkrivelås != null) {
@@ -150,7 +150,7 @@ class HåndterMottattDokumentService(
     }
 
 
-    private fun utledÅrsaker(brevkategori: InnsendingType, melding: Melding?, periode: Periode?): List<VurderingsbehovMedPeriode> {
+    private fun utledVurderingsbehov(brevkategori: InnsendingType, melding: Melding?, periode: Periode?): List<VurderingsbehovMedPeriode> {
         return when (brevkategori) {
             InnsendingType.SØKNAD -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD))
             InnsendingType.MANUELL_REVURDERING -> when (melding) {
