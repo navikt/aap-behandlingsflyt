@@ -2044,6 +2044,7 @@ object FakeServers : AutoCloseable {
         System.setProperty("integrasjon.dokumentinnhenting.azp", UUID.randomUUID().toString())
         System.setProperty("integrasjon.postmottak.azp", UUID.randomUUID().toString())
         System.setProperty("integrasjon.saksbehandling.azp", UUID.randomUUID().toString())
+        System.setProperty("integrasjon.azure.token.generator.azp", UUID.randomUUID().toString())
 
         // Norg
         System.setProperty("integrasjon.norg.url", "http://localhost:${norg.port()}")
