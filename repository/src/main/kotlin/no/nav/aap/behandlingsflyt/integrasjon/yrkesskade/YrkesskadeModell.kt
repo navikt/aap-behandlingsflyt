@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter
+package no.nav.aap.behandlingsflyt.integrasjon.yrkesskade
 
 import java.time.LocalDate
 

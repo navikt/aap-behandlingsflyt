@@ -10,7 +10,6 @@ dependencies {
     api(project(":behandlingsflyt"))
     implementation(libs.dbconnect)
     implementation(libs.infrastructure)
-    implementation(libs.httpklient)
     implementation(libs.server)
     implementation(libs.motorApi)
     implementation(libs.verdityper)
@@ -20,6 +19,7 @@ dependencies {
     api(libs.tilgangKontrakt)
     compileOnly(libs.ktorHttpJvm)
 
+    testImplementation(libs.httpklient)
     testImplementation(libs.bundles.junit)
     testImplementation(libs.ktorServerTestHost)
     constraints {

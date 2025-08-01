@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.adapter
+package no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold
 
 import java.time.LocalDate
 

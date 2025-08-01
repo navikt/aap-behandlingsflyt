@@ -12,11 +12,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.adapter.ArbeidsforholdRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.EnhetsregisteretGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.adapter.EnhetsregisterOrganisasjonRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.Organisasjonsnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -42,18 +42,25 @@ class ForutgåendeMedlemskapService private constructor(
 
     override val navn = Companion.navn
 
-    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+    override fun erRelevant(
+        kontekst: FlytKontekstMedPerioder,
+        steg: StegType,
+        oppdatert: InformasjonskravOppdatert?
+    ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
-            && (oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
+                && (oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
                 || kontekst.vurderingsbehov.contains(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))
-            && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
+                && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
     }
 
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
 
-        val medlemskapPerioder = medlemskapGateway.innhent(sak.person, Periode(sak.rettighetsperiode.fom.minusYears(5), sak.rettighetsperiode.fom))
+        val medlemskapPerioder = medlemskapGateway.innhent(
+            sak.person,
+            Periode(sak.rettighetsperiode.fom.minusYears(5), sak.rettighetsperiode.fom)
+        )
         val arbeidGrunnlag = innhentAARegisterGrunnlag5år(sak)
         val inntektGrunnlag = innhentAInntektGrunnlag5år(sak)
         val enhetGrunnlag = innhentEREGGrunnlag(inntektGrunnlag)
@@ -74,7 +81,7 @@ class ForutgåendeMedlemskapService private constructor(
     }
 
     private fun innhentAInntektGrunnlag5år(sak: Sak): List<ArbeidsInntektMaaned> {
-        val inntektskomponentGateway = InntektkomponentenGateway()
+        val inntektskomponentGateway = GatewayProvider.provide<InntektkomponentenGateway>()
         return inntektskomponentGateway.hentAInntekt(
             sak.person.aktivIdent().identifikator,
             YearMonth.from(sak.rettighetsperiode.fom.minusYears(5)),
@@ -86,8 +93,8 @@ class ForutgåendeMedlemskapService private constructor(
         if (inntektGrunnlag.isEmpty()) return emptyList()
 
         val orgnumre = inntektGrunnlag.flatMap {
-            it.arbeidsInntektInformasjon.inntektListe.map {
-                    inntekt -> inntekt.virksomhet.identifikator
+            it.arbeidsInntektInformasjon.inntektListe.map { inntekt ->
+                inntekt.virksomhet.identifikator
             }
         }.toSet()
         val gateway = GatewayProvider.provide<EnhetsregisteretGateway>()
@@ -96,7 +103,7 @@ class ForutgåendeMedlemskapService private constructor(
         val executor = Executors.newVirtualThreadPerTaskExecutor()
         val futures = orgnumre.map { orgnummer ->
             CompletableFuture.supplyAsync({
-                val response = gateway.hentEREGData(EnhetsregisterOrganisasjonRequest(orgnummer))
+                val response = gateway.hentEREGData(Organisasjonsnummer(orgnummer))
                 response?.let {
                     EnhetGrunnlag(
                         orgnummer = it.organisasjonsnummer,
@@ -115,8 +122,17 @@ class ForutgåendeMedlemskapService private constructor(
         inntektGrunnlag: List<ArbeidsInntektMaaned>,
         enhetGrunnlag: List<EnhetGrunnlag>
     ) {
-        val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapForutgåendeRepository.lagreUnntakMedlemskap(behandlingId, medlemskapGrunnlag) else null
-        grunnlagRepository.lagreArbeidsforholdOgInntektINorge(behandlingId, arbeidGrunnlag, inntektGrunnlag, medlId, enhetGrunnlag)
+        val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapForutgåendeRepository.lagreUnntakMedlemskap(
+            behandlingId,
+            medlemskapGrunnlag
+        ) else null
+        grunnlagRepository.lagreArbeidsforholdOgInntektINorge(
+            behandlingId,
+            arbeidGrunnlag,
+            inntektGrunnlag,
+            medlId,
+            enhetGrunnlag
+        )
     }
 
     companion object : Informasjonskravkonstruktør {

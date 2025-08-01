@@ -1,7 +1,6 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter
+package no.nav.aap.behandlingsflyt.integrasjon.pdl
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFoedsel
 import java.time.Year
 
 object PdlParser {
@@ -13,7 +12,7 @@ object PdlParser {
             return null
         }
         if (fødsel.foedselsdato != null) {
-            return Fødselsdato.parse(fødsel.foedselsdato!!)
+            return Fødselsdato.parse(fødsel.foedselsdato)
         }
 
         val foedselAar = fødsel.foedselAar

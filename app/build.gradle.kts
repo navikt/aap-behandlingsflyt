@@ -75,7 +75,6 @@ dependencies {
     implementation(libs.dbconnect)
     implementation(libs.dbmigrering)
     implementation(libs.motorApi)
-    implementation(libs.httpklient)
     implementation(libs.json)
     implementation(libs.infrastructure)
     implementation(libs.server)
