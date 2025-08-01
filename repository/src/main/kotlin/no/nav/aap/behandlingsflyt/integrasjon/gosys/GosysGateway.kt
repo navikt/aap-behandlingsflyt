@@ -52,8 +52,8 @@ class GosysGateway : OppgaveGateway {
             opprettetAvEnhetsnr = navKontor,
             beskrivelse = "Krav om refusjon av sosialhjelp for bruker av AAP",
             behandlingstema = Behandlingstema.AAP.kode,
-            behandlingstype = "AAP",
-            fristFerdigstillelse = LocalDate.now().plusDays(7),
+            behandlingstype = Behandlingstype.GEN.kode,
+            fristFerdigstillelse = LocalDate.now().plusDays(21),
         )
 
         val path = baseUri.resolve("/api/v1/oppgaver")
@@ -74,6 +74,13 @@ class GosysGateway : OppgaveGateway {
     enum class Behandlingstema(val kode: String) {
         AAP("ab0014");
     }
+
+
+    enum class Behandlingstype(val kode: String) {
+        GEN("ae0225");
+    }
+
+
 
 
 }
