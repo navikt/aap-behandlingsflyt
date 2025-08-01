@@ -38,7 +38,7 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
     override fun hentHvisEksisterer(behandlingId: BehandlingId): YrkesskadeGrunnlag? {
         return connection.queryList(
             """
-            SELECT y.ID AS YRKESSKADE_ID, p.REFERANSE, p.YSK_SAKSNUMMER, p.KILDESYSTEM, p.SKADEDATO
+            SELECT y.ID AS YRKESSKADE_ID, p.REFERANSE, p.YRKESSKADE_SAKSNUMMER, p.KILDESYSTEM, p.SKADEDATO
             FROM YRKESSKADE_GRUNNLAG g
             INNER JOIN YRKESSKADE y ON g.YRKESSKADE_ID = y.ID
             INNER JOIN YRKESSKADE_DATO p ON y.ID = p.YRKESSKADE_ID
@@ -52,8 +52,8 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
                 YrkesskadeInternal(
                     id = row.getLong("YRKESSKADE_ID"),
                     ref = row.getString("REFERANSE"),
-                    saksnummer = row.getIntOrNull("YSK_SAKSNUMMER"),
-                    kildesystem = row.getStringOrNull("KILDESYSTEM"),
+                    saksnummer = row.getIntOrNull("YRKESSKADE_SAKSNUMMER"),
+                    kildesystem = row.getStringOrNull("KILDESYSTEM") ?: "UKJENT",
                     skadedato = row.getLocalDate("SKADEDATO")
                 )
             }
@@ -65,7 +65,7 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
         val id: Long,
         val ref: String,
         val saksnummer: Int?,
-        val kildesystem: String?,
+        val kildesystem: String,
         val skadedato: LocalDate
     )
 
@@ -111,7 +111,7 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
         }
 
         yrkesskader.yrkesskader.forEach { yrkesskade ->
-            connection.execute("INSERT INTO YRKESSKADE_DATO (YRKESSKADE_ID, REFERANSE, YSK_SAKSNUMMER, KILDESYSTEM, SKADEDATO) VALUES (?, ?, ?, ?, ?)") {
+            connection.execute("INSERT INTO YRKESSKADE_DATO (YRKESSKADE_ID, REFERANSE, YRKESSKADE_SAKSNUMMER, KILDESYSTEM, SKADEDATO) VALUES (?, ?, ?, ?, ?)") {
                 setParams {
                     setLong(1, yrkesskadeId)
                     setString(2, yrkesskade.ref)

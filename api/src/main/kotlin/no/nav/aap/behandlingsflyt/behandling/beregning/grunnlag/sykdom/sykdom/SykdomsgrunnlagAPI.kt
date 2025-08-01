@@ -43,7 +43,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource, repositoryRegi
                     val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId = behandling.id)
 
                     val innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader.orEmpty()
-                        .map { yrkesskade -> RegistrertYrkesskade(yrkesskade, "Yrkesskaderegisteret") }
+                        .map { yrkesskade -> RegistrertYrkesskade(yrkesskade) }
 
                     val nåTilstand = sykdomGrunnlag?.sykdomsvurderinger.orEmpty()
 
@@ -102,7 +102,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource, repositoryRegi
                     yrkesskadeGrunnlag to sykdomGrunnlag
 
                     val innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader.orEmpty()
-                        .map { yrkesskade -> RegistrertYrkesskade(yrkesskade, "Yrkesskaderegisteret") }
+                        .map { yrkesskade -> RegistrertYrkesskade(yrkesskade) }
 
                     YrkesskadeVurderingGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),

@@ -110,8 +110,8 @@ class YrkesskadeService private constructor(
 
         return Yrkesskade(
             ref = "YRK",
-            saksnummer = 0, //TODO: hva kan vi bruke her
-            kildesystem = "", //TODO: Bør denne være Kelvin
+            saksnummer = null,
+            kildesystem = "SØKNAD",
             skadedato = periode.fom.minusDays(60),
         )
     }

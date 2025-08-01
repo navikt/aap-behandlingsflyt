@@ -1,3 +1,3 @@
 ALTER TABLE YRKESSKADE_DATO
-    ADD COLUMN ysk_saksnummer  INT,
+    ADD COLUMN yrkesskade_saksnummer  INT,
     ADD COLUMN kildesystem VARCHAR(50);

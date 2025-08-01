@@ -15,10 +15,11 @@ data class InnhentetSykdomsOpplysninger(
 
 data class RegistrertYrkesskade(
     val ref: String,
+    val yrkesskadeSaksnummer: Int?,
     val skadedato: LocalDate,
     val kilde: String,
 ) {
-    constructor(yrkesskade: Yrkesskade, kilde: String) : this(yrkesskade.ref, yrkesskade.skadedato, kilde)
+    constructor(yrkesskade: Yrkesskade) : this(yrkesskade.ref, yrkesskade.saksnummer, yrkesskade.skadedato, yrkesskade.kildesystem)
 }
 
 data class SykdomsvurderingLøsningDto(
