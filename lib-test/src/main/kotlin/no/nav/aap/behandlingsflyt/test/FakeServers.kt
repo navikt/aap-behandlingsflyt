@@ -38,13 +38,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.Meld
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.SumPi
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
+import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY_HISTORIKK
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeModell
-import no.nav.aap.behandlingsflyt.integrasjon.barn.BARN_RELASJON_QUERY
-import no.nav.aap.behandlingsflyt.integrasjon.barn.PERSON_BOLK_QUERY
+import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeModell
 import no.nav.aap.behandlingsflyt.integrasjon.ident.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomData
@@ -52,6 +48,34 @@ import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomDataRessurs
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgEnhet
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.OrgEnhet
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.OrgTilknytning
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.BARN_RELASJON_QUERY
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.HentPerson
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.HentPersonBolkResult
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PDLDødsfall
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PERSON_BOLK_QUERY
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PERSON_QUERY
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PERSON_QUERY_HISTORIKK
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlFoedsel
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlFolkeregisterPersonStatus
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlGruppe
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlIdent
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlIdenter
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlIdenterData
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlIdenterDataResponse
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlNavn
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlNavnData
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlNavnDataBolk
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonBolk
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonNavnDataResponse
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersoninfo
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersoninfoData
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersoninfoDataResponse
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRelasjon
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRelasjonData
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRelasjonDataResponse
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRequest
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlStatsborgerskap
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PersonStatus
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreHistorikkRespons
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UførePeriode
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRequest
@@ -62,30 +86,6 @@ import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.HentPerson
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.HentPersonBolkResult
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PDLDødsfall
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFoedsel
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFolkeregisterPersonStatus
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlGruppe
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdent
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdenter
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdenterData
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdenterDataResponse
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlNavn
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlNavnData
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlNavnDataBolk
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersonBolk
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersonNavnDataResponse
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfo
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoData
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoDataResponse
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRelasjon
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRelasjonData
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRelasjonDataResponse
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRequest
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlStatsborgerskap
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import no.nav.aap.behandlingsflyt.test.modell.MockUnleashFeature
 import no.nav.aap.behandlingsflyt.test.modell.MockUnleashFeatures
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -481,7 +481,8 @@ object FakeServers : AutoCloseable {
                     TilgangResponse(
                         true,
                         tilgangIKontekst = mapOf(Operasjon.SAKSBEHANDLE to true)
-                    ))
+                    )
+                )
             }
         }
         routing {

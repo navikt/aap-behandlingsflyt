@@ -1,5 +1,6 @@
-package no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters
+package no.nav.aap.behandlingsflyt.integrasjon.pdl
 
+import no.nav.aap.behandlingsflyt.integrasjon.util.GraphQLError
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -81,8 +82,8 @@ data class PdlPersoninfo(
     val forelderBarnRelasjon: List<PdlRelasjon>? = null,
     val foedselsdato: List<PdlFoedsel>? = null,
     val doedsfall: Set<PDLDødsfall>? = null,
-    val statsborgerskap: Set<PdlStatsborgerskap> ? = null,
-    val folkeregisterpersonstatus: Set<PdlFolkeregisterPersonStatus> ? = null,
+    val statsborgerskap: Set<PdlStatsborgerskap>? = null,
+    val folkeregisterpersonstatus: Set<PdlFolkeregisterPersonStatus>? = null,
     val bostedsadresse: List<BostedsAdresse>? = null,
     val oppholdsadresse: List<OppholdsAdresse>? = null,
     val kontaktadresse: List<KontaktAdresse>? = null
@@ -117,14 +118,14 @@ data class OppholdsAdresse(
     val utenlandskAdresse: UtenlandskAdresse?
 )
 
-data class UtenlandskAdresse (
+data class UtenlandskAdresse(
     val adressenavnNummer: String?,
     val postkode: String?,
     val bySted: String?,
     val landkode: String?
 )
 
-data class UtenlandskadresseIFrittFormat (
+data class UtenlandskadresseIFrittFormat(
     val adresselinje1: String?,
     val adresselinje2: String?,
     val adresselinje3: String?,
@@ -188,3 +189,32 @@ enum class PersonStatus {
     midlertidig,
     inaktiv
 }
+
+data class GraphQLExtensions(
+    val warnings: List<GraphQLWarning>?
+)
+
+//data class aGraphQLError(
+//    val message: String,
+//    val locations: List<GraphQLErrorLocation>,
+//    val path: List<String>?,
+//    val extensions: GraphQLErrorExtension
+//)
+//
+//data class GraphQLErrorExtension(
+//    val code: String?,
+//    val classification: String
+//)
+//
+//data class GraphQLErrorLocation(
+//    val line: Int?,
+//    val column: Int?
+//)
+//
+class GraphQLWarning(
+    val query: String?,
+    val id: String?,
+    val code: String?,
+    val message: String?,
+    val details: String?,
+)

@@ -36,9 +36,9 @@ import no.nav.aap.behandlingsflyt.flyt.AbstraktFlytOrkestratorTest.Companion.uti
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.NyÅrsakTilBehandlingHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
+import no.nav.aap.behandlingsflyt.integrasjon.aordning.InntektkomponentenGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
-import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.integrasjon.brev.BrevGateway
 import no.nav.aap.behandlingsflyt.integrasjon.datadeling.SamGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.dokumentinnhenting.DokumentinnhentingGatewayImpl
@@ -54,6 +54,12 @@ import no.nav.aap.behandlingsflyt.integrasjon.oppgave.GosysGateway
 import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlBarnGateway
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlFolkeregisterPersonStatus
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlFolkeregistermetadata
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonopplysningGateway
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlStatsborgerskap
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PersonStatus
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.TjenestePensjonGatewayImpl
@@ -91,10 +97,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFolkeregisterPersonStatus
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFolkeregistermetadata
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlStatsborgerskap
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
@@ -144,6 +146,7 @@ open class AbstraktFlytOrkestratorTest {
                 .register<PdlIdentGateway>()
                 .register<PdlPersoninfoBulkGateway>()
                 .register<PdlPersoninfoGateway>()
+                .register<PdlPersonopplysningGateway>()
                 .register<AbakusSykepengerGateway>()
                 .register<AbakusForeldrepengerGateway>()
                 .register<DokumentinnhentingGatewayImpl>()
@@ -154,8 +157,9 @@ open class AbstraktFlytOrkestratorTest {
                 .register<EREGGateway>()
                 .register<StatistikkGatewayImpl>()
                 .register<InntektGatewayImpl>()
-                .register<BrevGateway>()
                 .register<InstitusjonsoppholdGatewayImpl>()
+                .register<InntektkomponentenGatewayImpl>()
+                .register<BrevGateway>()
                 .register<OppgavestyringGatewayImpl>()
                 .register<UføreGateway>()
                 .register<YrkesskadeRegisterGatewayImpl>()

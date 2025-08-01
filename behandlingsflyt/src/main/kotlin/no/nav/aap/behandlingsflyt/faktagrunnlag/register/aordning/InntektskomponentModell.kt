@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning
 import java.time.LocalDate
 import java.time.YearMonth
 
+// TODO: her burde respons fra eksternt API og hva som lagres i db være forskjellige klasser
+
 data class InntektskomponentResponse(
     val arbeidsInntektMaaned: List<ArbeidsInntektMaaned> = listOf()
 )
@@ -32,17 +34,4 @@ data class Inntekt(
 
 data class Virksomhet(
     val identifikator: String,
-)
-
-data class InntektskomponentRequest(
-    val maanedFom: YearMonth,
-    val maanedTom: YearMonth,
-    val ident: Ident,
-    val formaal: String = "Arbeidsavklaringspenger",
-    val ainntektsfilter: String = "ArbeidsavklaringspengerA-inntekt"
-)
-
-data class Ident(
-    val identifikator: String,
-    val aktoerType: String = "NATURLIG_IDENT"
 )
