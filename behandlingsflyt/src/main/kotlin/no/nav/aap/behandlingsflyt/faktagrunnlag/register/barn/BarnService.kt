@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.BARNETILLEGG
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
@@ -64,15 +63,16 @@ class BarnService private constructor(
 
         val manglerBarnGrunnlagEllerFantNyeBarnFraRegister =
             manglerBarnGrunnlagEllerFantNyeBarnFraRegister(
-                registerBarn.map { it.ident },
-                barnGrunnlag?.registerbarn
+                registerBarn,
+                barnGrunnlag?.registerbarn?.barn
             )
-        val personopplysningerForBarnErOppdatert =
-            personopplysningerForBarnErOppdatert(barn.alleBarn().toSet(), barnGrunnlag?.registerbarn?.barn)
 
-        if (manglerBarnGrunnlagEllerFantNyeBarnFraRegister || personopplysningerForBarnErOppdatert) {
+        if (manglerBarnGrunnlagEllerFantNyeBarnFraRegister) {
             val barnMedPersonId = oppdaterPersonIdenter(barn.alleBarn())
-            barnRepository.lagreRegisterBarn(behandlingId, barnMedPersonId)
+
+            val registerBarnMedFolkeregisterRelasjon =
+                barnMedPersonId.filterKeys { barn -> barn.ident in registerBarn.map { it.ident } }
+            barnRepository.lagreRegisterBarn(behandlingId, registerBarnMedFolkeregisterRelasjon)
             return ENDRET
         }
         return IKKE_ENDRET
@@ -89,23 +89,11 @@ class BarnService private constructor(
         }
     }
 
-    private fun personopplysningerForBarnErOppdatert(
-        barn: Set<Barn>,
+    private fun manglerBarnGrunnlagEllerFantNyeBarnFraRegister(
+        barnIdenter: List<Barn>,
         eksisterendeRegisterBarn: List<Barn>?
     ): Boolean {
-        if (barn.isNotEmpty() && eksisterendeRegisterBarn.isNullOrEmpty()) {
-            return true
-        }
-        val eksisterendeData = eksisterendeRegisterBarn.orEmpty().toSet()
-
-        return barn.toSet() != eksisterendeData
-    }
-
-    private fun manglerBarnGrunnlagEllerFantNyeBarnFraRegister(
-        barnIdenter: List<Ident>,
-        registerbarn: RegisterBarn?
-    ): Boolean {
-        return barnIdenter.toSet() != registerbarn?.barn?.map { it.ident }?.toSet()
+        return barnIdenter.map { it.ident }.toSet() != eksisterendeRegisterBarn?.map { it.ident }?.toSet()
     }
 
     companion object : Informasjonskravkonstruktør {

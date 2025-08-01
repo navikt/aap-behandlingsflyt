@@ -71,8 +71,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagevurderingKontorLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagevurderingNayLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
@@ -141,6 +141,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakePersoner
+import no.nav.aap.behandlingsflyt.test.PersonNavn
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
@@ -366,7 +367,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         val behandling = revurdereFramTilOgMedSykdom(
             sak = sak,
             gjelderFra = sak.rettighetsperiode.fom,
-            vissVarighet = true)
+            vissVarighet = true
+        )
 
         behandling.løsAvklaringsBehov(
             AvklarBistandsbehovLøsning(
@@ -572,9 +574,27 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         val person = TestPersoner.STANDARD_PERSON()
         val ident = person.aktivIdent()
 
+        val manueltBarnIPDL = TestPerson(
+            navn = PersonNavn("Yousef", "Yosso"),
+            fødselsdato = Fødselsdato(LocalDate.now().minusYears(12))
+        )
+        // Dette gjør at flyten finner barnet i PDL (via FakeServers)
+        FakePersoner.leggTil(manueltBarnIPDL)
+
         val barnNavn = "Gregor Gorgh"
         val barnAlder = LocalDate.now().minusYears(17)
-        val søknad = TestSøknader.SØKNAD_MED_BARN(barnNavn, barnAlder)
+        val søknad = TestSøknader.SØKNAD_MED_BARN(
+            listOf(
+                Pair(
+                    manueltBarnIPDL.navn.toString(),
+                    manueltBarnIPDL.fødselsdato.toLocalDate()
+                ),
+                Pair(
+                    barnNavn,
+                    barnAlder
+                ),
+            )
+        )
 
         sendInnSøknad(
             ident, periode, søknad
@@ -609,25 +629,72 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 ),
             )
             .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).describedAs("Vi avklarte bare ett barn, behovet skal fortsatt være åpent")
+                    .containsExactly(Definisjon.AVKLAR_BARNETILLEGG)
+
+            }
+            .løsAvklaringsBehov(
+                AvklarBarnetilleggLøsning(
+                    vurderingerForBarnetillegg = VurderingerForBarnetillegg(
+                        vurderteBarn = listOf(
+                            VurdertBarnDto(
+                                ident = null,
+                                navn = barnNavn,
+                                fødselsdato = barnAlder,
+                                vurderinger = listOf(
+                                    VurderingAvForeldreAnsvarDto(
+                                        fraDato = periode.fom,
+                                        harForeldreAnsvar = true,
+                                        begrunnelse = "bra forelder"
+                                    )
+                                )
+                            ),
+                            VurdertBarnDto(
+                                ident = null,
+                                navn = manueltBarnIPDL.navn.toString(),
+                                fødselsdato = manueltBarnIPDL.fødselsdato.toLocalDate(),
+                                vurderinger = listOf(
+                                    VurderingAvForeldreAnsvarDto(
+                                        fraDato = periode.fom,
+                                        harForeldreAnsvar = true,
+                                        begrunnelse = "bra forelder"
+                                    )
+                                )
+                            )
+                        )
+                    ),
+                ),
+            )
+            .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
 
                 val tilkjentYtelse =
                     dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) }
                         .orEmpty().map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
 
-                val periodeMedBarneTillegg =
-                    tilkjentYtelse.filter { it.verdi.barnetillegg.verdi.toDouble() > 0 }.helePerioden()
-                val periodeUtenBarneTillegg =
-                    tilkjentYtelse.filter { it.verdi.barnetillegg.verdi.toDouble() == 0.0 }.helePerioden()
+                val periodeMedBarneTilleggForToBarn =
+                    tilkjentYtelse.filter { it.verdi.barnetillegg.verdi.toDouble() > 70 }.helePerioden()
+                val periodeMedBarneTilleggForEttBarn =
+                    tilkjentYtelse.filter { it.verdi.barnetillegg.verdi.toDouble() < 40 }.helePerioden()
 
                 // Barnet er 18 fram til periode.fom.plusYears(1).minusDays(1)
-                assertThat(periodeMedBarneTillegg).isEqualTo(
+                assertThat(periodeMedBarneTilleggForToBarn).isEqualTo(
                     Periode(
                         periode.fom,
                         periode.fom.plusYears(1).minusDays(1)
                     )
                 )
-                assertThat(periodeUtenBarneTillegg).isEqualTo(Periode(periode.fom.plusYears(1), periode.tom))
+                assertThat(periodeMedBarneTilleggForEttBarn).isEqualTo(Periode(periode.fom.plusYears(1), periode.tom))
+
+                println(tilkjentYtelse)
+                assertTidslinje(
+                    tilkjentYtelse,
+                    periodeMedBarneTilleggForToBarn to {
+                        assertThat(it.antallBarn).isEqualTo(2)
+                    },
+                    periodeMedBarneTilleggForEttBarn to {
+                        assertThat(it.antallBarn).isEqualTo(1)
+                    })
             }
     }
 

@@ -59,7 +59,6 @@ class PdlIdentGateway : IdentGateway {
     }
 }
 
-@Suppress("GraphQLUnresolvedReference")
 @Language("GraphQL")
 val IDENT_QUERY = $$"""
     query($ident: ID!) {

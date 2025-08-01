@@ -1,5 +1,3 @@
-@file:Suppress("GraphQLUnresolvedReference")
-
 package no.nav.aap.behandlingsflyt.integrasjon.barn
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
