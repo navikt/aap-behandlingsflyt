@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
+import no.nav.aap.behandlingsflyt.medAzureTokenGen
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -306,7 +307,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
             authorizedPost<SaksnummerParameter, List<BehandlingAvTypeDTO>, TypeBehandling>(
                 routeConfig = AuthorizationMachineToMachineConfig(
                     authorizedAzps = listOf(Azp.Postmottak.uuid)
-                )
+                ).medAzureTokenGen()
             ) { saksnummer, body ->
                 val behandlinger = dataSource.transaction { connection ->
                     val sakRepository = repositoryRegistry.provider(connection).provide<SakRepository>()
@@ -361,4 +362,3 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
         }
     }
 }
-
