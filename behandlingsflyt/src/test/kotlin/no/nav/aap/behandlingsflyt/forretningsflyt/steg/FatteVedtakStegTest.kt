@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepos
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonopplysningRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryRefusjonKravRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -83,7 +84,7 @@ class FatteVedtakStegTest {
 
         val steg = FatteVedtakSteg(
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            personOpplysningerRepository = InMemoryPersonopplysningRepository,
+            sakRepository = InMemorySakRepository,
             refusjonkravRepository = InMemoryRefusjonKravRepository,
             personRepository = InMemoryPersonRepository,
             tidligereVurderinger = tidligereVurderinger,
@@ -131,7 +132,7 @@ class FatteVedtakStegTest {
 
         val steg = FatteVedtakSteg(
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            personOpplysningerRepository = InMemoryPersonopplysningRepository,
+            sakRepository = InMemorySakRepository,
             refusjonkravRepository = InMemoryRefusjonKravRepository,
             personRepository = InMemoryPersonRepository,
             tidligereVurderinger = tidligereVurderinger,
@@ -178,7 +179,7 @@ class FatteVedtakStegTest {
 
         val steg = FatteVedtakSteg(
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            personOpplysningerRepository = InMemoryPersonopplysningRepository,
+            sakRepository = InMemorySakRepository,
             refusjonkravRepository = InMemoryRefusjonKravRepository,
             personRepository = InMemoryPersonRepository,
             tidligereVurderinger = tidligereVurderinger,

@@ -40,7 +40,7 @@ class SkrivBrevAvklaringsbehovLøser(
         val brevbestillingReferanse = BrevbestillingReferanse(løsning.brevbestillingReferanse)
         return when (løsning.handling) {
             SkrivBrevAvklaringsbehovLøsning.Handling.FERDIGSTILL -> {
-                brevbestillingService.ferdigstill(kontekst.behandlingId(), brevbestillingReferanse, kontekst.bruker)
+                brevbestillingService.ferdigstill(kontekst.behandlingId(), brevbestillingReferanse, kontekst.bruker, løsning.mottakere)
                 LøsningsResultat("Brev ferdig")
             }
 

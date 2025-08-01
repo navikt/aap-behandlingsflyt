@@ -216,6 +216,8 @@ spec:
       value: api://dev-fss.pensjonsamhandling.tp-q2/.default
     - name: INTEGRASJON_BREV_AZP
       value: d1c38f80-8965-4e41-8831-8a81052ac1e9
+    - name: INTEGRASJON_AZURE_TOKEN_GENERATOR_AZP
+      value: a11e4cc6-1383-42c7-a714-30be1309cd6f
     - name: INTEGRASJON_TILGANG_AZP
       value: 0612f13d-08fb-44ff-a5ac-1233e2fec0fc
     - name: INTEGRASJON_POSTMOTTAK_AZP

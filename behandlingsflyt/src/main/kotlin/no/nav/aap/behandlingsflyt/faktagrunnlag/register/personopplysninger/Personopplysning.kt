@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 
 class Personopplysning(
     val fødselsdato: Fødselsdato,

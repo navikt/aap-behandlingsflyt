@@ -1,9 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 data class PersonopplysningMedHistorikk(
     val fødselsdato: Fødselsdato,
@@ -19,6 +17,18 @@ data class FolkeregisterStatus(
     val gyldighetstidspunkt: LocalDate?,
     val opphoerstidspunkt: LocalDate?
 )
+
+enum class PersonStatus {
+    bosatt,
+    utflyttet,
+    forsvunnet,
+    doed,
+    opphort,
+    foedselsregistrert,
+    ikkeBosatt,
+    midlertidig,
+    inaktiv
+}
 
 data class Statsborgerskap(
     val land: String,

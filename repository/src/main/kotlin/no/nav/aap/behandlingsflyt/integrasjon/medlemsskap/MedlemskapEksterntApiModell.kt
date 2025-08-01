@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter
+package no.nav.aap.behandlingsflyt.integrasjon.medlemsskap
 
 import no.nav.aap.komponenter.type.Periode
 

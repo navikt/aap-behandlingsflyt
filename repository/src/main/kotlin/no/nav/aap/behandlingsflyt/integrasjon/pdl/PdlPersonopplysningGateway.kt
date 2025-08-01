@@ -1,54 +1,29 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter
+package no.nav.aap.behandlingsflyt.integrasjon.pdl
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.AdresseType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.FolkeregisterStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus.bosatt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus.doed
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus.foedselsregistrert
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus.forsvunnet
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus.ikkeBosatt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus.inaktiv
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus.midlertidig
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus.opphort
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus.utflyttet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.UtenlandsAdresse
-import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IdentVariables
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfo
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoDataResponse
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRequest
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlResponseHandler
-import no.nav.aap.komponenter.config.requiredConfigForKey
-import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
-import no.nav.aap.komponenter.httpklient.httpclient.Header
-import no.nav.aap.komponenter.httpklient.httpclient.RestClient
-import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.intellij.lang.annotations.Language
-import java.net.URI
 
 object PdlPersonopplysningGateway : PersonopplysningGateway {
-
-    private val url = URI.create(requiredConfigForKey("integrasjon.pdl.url"))
-    val config = ClientConfig(
-        scope = requiredConfigForKey("integrasjon.pdl.scope"),
-        additionalHeaders = listOf(Header("Behandlingsnummer", "B287"))
-    )
-    private val client = RestClient(
-        config = config,
-        tokenProvider = ClientCredentialsTokenProvider,
-        responseHandler = PdlResponseHandler(),
-        prometheus = prometheus
-    )
-
-    private fun query(request: PdlRequest): PdlPersoninfoDataResponse {
-        val httpRequest = PostRequest(body = request)
-        return requireNotNull(client.post(uri = url, request = httpRequest, mapper = { body, _ ->
-            DefaultJsonMapper.fromJson(body)
-        }))
-    }
-
     override fun innhent(person: Person): Personopplysning? {
         val request = PdlRequest(PERSON_QUERY, IdentVariables(person.aktivIdent().identifikator))
-        val response: PdlPersoninfoDataResponse = query(request)
+        val response: PdlPersoninfoDataResponse = PdlGateway.query(request)
 
         val foedselsdato = PdlParser.utledFødselsdato(response.data?.hentPerson?.foedselsdato)
             ?: return null
@@ -68,21 +43,34 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
             fødselsdato = foedselsdato,
             dødsdato = response.data.hentPerson.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) },
             statsborgerskap = statsborgerskap,
-            status = status,
+            status = pdlStatusTilDomene(status),
             utenlandsAddresser = mapUtenlandsAdresser(response.data.hentPerson)
         )
     }
 
+    private fun pdlStatusTilDomene(status: PersonStatus): no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus =
+        when (status) {
+            PersonStatus.bosatt -> bosatt
+            PersonStatus.utflyttet -> utflyttet
+            PersonStatus.forsvunnet -> forsvunnet
+            PersonStatus.doed -> doed
+            PersonStatus.opphort -> opphort
+            PersonStatus.foedselsregistrert -> foedselsregistrert
+            PersonStatus.ikkeBosatt -> ikkeBosatt
+            PersonStatus.midlertidig -> midlertidig
+            PersonStatus.inaktiv -> inaktiv
+        }
+
     override fun innhentMedHistorikk(person: Person): PersonopplysningMedHistorikk? {
         val request = PdlRequest(PERSON_QUERY_HISTORIKK, IdentVariables(person.aktivIdent().identifikator))
-        val response: PdlPersoninfoDataResponse = query(request)
+        val response: PdlPersoninfoDataResponse = PdlGateway.query(request)
 
         val foedselsdato = PdlParser.utledFødselsdato(response.data?.hentPerson?.foedselsdato)
             ?: return null
 
         val folkeregisterStatuser = requireNotNull(response.data?.hentPerson?.folkeregisterpersonstatus?.map {
             FolkeregisterStatus(
-                it.status,
+                pdlStatusTilDomene(it.status),
                 it.folkeregistermetadata?.gyldighetstidspunkt?.toLocalDate(),
                 it.folkeregistermetadata?.opphoerstidspunkt?.toLocalDate()
             )

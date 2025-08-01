@@ -36,7 +36,10 @@ class KvalitetssikrerLøser(
             løsning.vurderinger.filter { Definisjon.forKode(it.definisjon).kvalitetssikres }
         relevanteVurderinger.all { it.valider() }
 
-        validerAvklaringsbehovOppMotBruker(avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }, kontekst.bruker)
+        validerAvklaringsbehovOppMotBruker(
+            avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() },
+            kontekst.bruker
+        )
 
         if (skalSendesTilbake(relevanteVurderinger)) {
             val flyt = behandling.flyt()
@@ -114,7 +117,11 @@ class KvalitetssikrerLøser(
 
     private fun validerAvklaringsbehovOppMotBruker(avklaringsbehovene: List<Avklaringsbehov>, bruker: Bruker) {
         val unleashGateway = GatewayProvider.provide<UnleashGateway>()
-        if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident) && avklaringsbehovene.any { it.brukere().contains(bruker.ident) }) {
+        if (!unleashGateway.isEnabled(
+                BehandlingsflytFeature.IngenValidering,
+                bruker.ident
+            ) && avklaringsbehovene.any { it.brukere().contains(bruker.ident) }
+        ) {
             throw KanIkkeVurdereEgneVurderingerException()
         }
     }

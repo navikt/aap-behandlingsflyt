@@ -1,5 +1,6 @@
-package no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters
+package no.nav.aap.behandlingsflyt.integrasjon.pdl
 
+import no.nav.aap.behandlingsflyt.integrasjon.util.GraphQLError
 import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
 import no.nav.aap.komponenter.httpklient.httpclient.error.RestResponseHandler
 import java.io.InputStream

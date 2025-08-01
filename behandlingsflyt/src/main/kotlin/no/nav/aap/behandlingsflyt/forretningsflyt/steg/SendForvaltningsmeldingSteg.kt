@@ -36,9 +36,9 @@ class SendForvaltningsmeldingSteg(
                 ) {
                     val typeBrev = TypeBrev.FORVALTNINGSMELDING
                     brevbestillingService.bestillV2(
-                        behandlingId,
-                        typeBrev,
-                        "typeBrev-${behandlingId.id}",
+                        behandlingId = behandlingId,
+                        typeBrev = typeBrev,
+                        unikReferanse = "$typeBrev-${behandlingId.id}",
                         ferdigstillAutomatisk = true
                     )
                 }

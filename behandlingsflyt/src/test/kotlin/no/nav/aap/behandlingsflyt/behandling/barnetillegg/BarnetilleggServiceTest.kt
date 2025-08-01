@@ -176,7 +176,7 @@ class BarnetilleggServiceTest {
     ) {
         InMemoryBarnRepository.lagreRegisterBarn(
             behandling.id,
-            barn.map { Pair(it, InMemoryPersonRepository.finnEllerOpprett(listOf(it.ident)).id) }
+            barn.associateWith { InMemoryPersonRepository.finnEllerOpprett(listOf(it.ident)).id }
         )
         opprettVilkårsresultat(behandling, sak.rettighetsperiode)
     }

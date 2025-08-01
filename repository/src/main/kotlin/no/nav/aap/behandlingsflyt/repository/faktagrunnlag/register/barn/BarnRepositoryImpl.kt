@@ -235,7 +235,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         }
     }
 
-    override fun lagreRegisterBarn(behandlingId: BehandlingId, barn: List<Pair<Barn, PersonId>>) {
+    override fun lagreRegisterBarn(behandlingId: BehandlingId, barn: Map<Barn, PersonId>) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
         if (eksisterendeGrunnlag != null) {
@@ -248,7 +248,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             """
                 INSERT INTO BARNOPPLYSNING (IDENT, BGB_ID, fodselsdato, dodsdato, person_id) VALUES (?, ?, ?, ?, ?)
             """.trimIndent(),
-            barn
+            barn.entries
         ) {
             setParams { barnet ->
                 val (barn, personId) = barnet

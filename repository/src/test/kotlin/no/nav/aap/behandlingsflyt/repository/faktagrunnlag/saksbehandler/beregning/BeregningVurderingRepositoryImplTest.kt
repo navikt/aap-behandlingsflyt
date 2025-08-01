@@ -3,12 +3,6 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.AARegisterGateway
-import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
-import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
-import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
-import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
-import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl

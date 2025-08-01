@@ -49,7 +49,7 @@ class KabalGatewayTest {
                             adresselinje1 = "Gateveien 1",
                             postnummer = "1234",
                             poststed = "Oslo",
-                            landkode = "NOR"
+                            landkode = "NO"
                         )
                     ),
                     vurdertAv = "Saksbehandler",

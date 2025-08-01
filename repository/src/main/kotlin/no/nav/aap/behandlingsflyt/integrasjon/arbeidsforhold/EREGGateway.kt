@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.EnhetsregisteretGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.adapter.EnhetsregisterOrganisasjonRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.Organisasjonsnummer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.adapter.EnhetsregisterOrganisasjonResponse
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -48,9 +48,9 @@ class EREGGateway : EnhetsregisteretGateway {
         return response
     }
 
-    override fun hentEREGData(request: EnhetsregisterOrganisasjonRequest): EnhetsregisterOrganisasjonResponse? {
+    override fun hentEREGData(organisasjonsnummer: Organisasjonsnummer): EnhetsregisterOrganisasjonResponse? {
         return try {
-            query(request)
+            query(EnhetsregisterOrganisasjonRequest(organisasjonsnummer.value))
         } catch (e: IkkeFunnetException) {
             log.warn("Fant ikke organisasjon i EREG. Fortsetter uten verdi.", e)
             null

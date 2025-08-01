@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.BARNETILLEGG
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
@@ -44,7 +43,8 @@ class BarnService private constructor(
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
         // Kun gjøre oppslag mot register ved førstegangsbehandling og revurdering av barnetillegg (Se AAP-933).
-        val gyldigBehandling = kontekst.erFørstegangsbehandling() || kontekst.erRevurderingMedVurderingsbehov(BARNETILLEGG)
+        val gyldigBehandling =
+            kontekst.erFørstegangsbehandling() || kontekst.erRevurderingMedVurderingsbehov(BARNETILLEGG)
         return gyldigBehandling &&
                 oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
@@ -63,48 +63,37 @@ class BarnService private constructor(
 
         val manglerBarnGrunnlagEllerFantNyeBarnFraRegister =
             manglerBarnGrunnlagEllerFantNyeBarnFraRegister(
-                registerBarn.map { it.ident },
-                barnGrunnlag?.registerbarn
+                registerBarn,
+                barnGrunnlag?.registerbarn?.barn
             )
-        val personopplysningerForBarnErOppdatert =
-            personopplysningerForBarnErOppdatert(barn.alleBarn().toSet(), barnGrunnlag?.registerbarn?.barn)
 
-        if (manglerBarnGrunnlagEllerFantNyeBarnFraRegister || personopplysningerForBarnErOppdatert) {
+        if (manglerBarnGrunnlagEllerFantNyeBarnFraRegister) {
             val barnMedPersonId = oppdaterPersonIdenter(barn.alleBarn())
-            barnRepository.lagreRegisterBarn(behandlingId, barnMedPersonId)
+
+            val registerBarnMedFolkeregisterRelasjon =
+                barnMedPersonId.filterKeys { barn -> barn.ident in registerBarn.map { it.ident } }
+            barnRepository.lagreRegisterBarn(behandlingId, registerBarnMedFolkeregisterRelasjon)
             return ENDRET
         }
         return IKKE_ENDRET
     }
 
-    private fun oppdaterPersonIdenter(barn: List<Barn>): List<Pair<Barn, PersonId>> {
-        return barn.map { barn ->
+    private fun oppdaterPersonIdenter(barn: List<Barn>): Map<Barn, PersonId> {
+        return barn.associateWith { barn ->
             val identliste = identGateway.hentAlleIdenterForPerson(barn.ident)
             if (identliste.isEmpty()) {
                 throw IllegalStateException("Fikk ingen treff på ident i PDL.")
             }
 
-            Pair(barn, personRepository.finnEllerOpprett(identliste).id)
+            personRepository.finnEllerOpprett(identliste).id
         }
-    }
-
-    private fun personopplysningerForBarnErOppdatert(
-        barn: Set<Barn>,
-        eksisterendeRegisterBarn: List<Barn>?
-    ): Boolean {
-        if (barn.isNotEmpty() && eksisterendeRegisterBarn.isNullOrEmpty()) {
-            return true
-        }
-        val eksisterendeData = eksisterendeRegisterBarn.orEmpty().toSet()
-
-        return barn.toSet() != eksisterendeData
     }
 
     private fun manglerBarnGrunnlagEllerFantNyeBarnFraRegister(
-        barnIdenter: List<Ident>,
-        registerbarn: RegisterBarn?
+        barnIdenter: List<Barn>,
+        eksisterendeRegisterBarn: List<Barn>?
     ): Boolean {
-        return barnIdenter.toSet() != registerbarn?.barn?.map { it.ident }?.toSet()
+        return barnIdenter.map { it.ident }.toSet() != eksisterendeRegisterBarn?.map { it.ident }?.toSet()
     }
 
     companion object : Informasjonskravkonstruktør {
