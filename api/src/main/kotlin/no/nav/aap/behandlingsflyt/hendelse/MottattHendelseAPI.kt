@@ -21,6 +21,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -35,7 +36,10 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource, repositoryRegi
             authorizedPost<Unit, String, Innsending>(
                 modules = arrayOf(TagModule(listOf(Tags.Sak))),
                 routeConfig = AuthorizationMachineToMachineConfig(
-                    authorizedAzps = listOf(Azp.Postmottak.uuid, Azp.Dokumentinnhenting.uuid)
+                    authorizedAzps = mutableListOf(
+                        Azp.Postmottak.uuid,
+                        Azp.Dokumentinnhenting.uuid
+                    ).apply { if (Miljø.erDev()) plus(Azp.AzureTokenGen.uuid) }
                 )
             ) { _, dto ->
                 MDC.putCloseable("saksnummer", dto.saksnummer.toString()).use {
