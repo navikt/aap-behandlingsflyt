@@ -221,20 +221,20 @@ open class AbstraktFlytOrkestratorTest {
             medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
         )
 
-        val SØKNAD_MED_BARN: (String, LocalDate) -> SøknadV0 = { navn, fødseldato ->
+        val SØKNAD_MED_BARN: (List<Pair<String, LocalDate>>) -> SøknadV0 = { barn ->
             SøknadV0(
                 student = null,
                 yrkesskade = "NEI",
                 oppgitteBarn = OppgitteBarn(
                     identer = emptySet(),
-                    barn = listOf(
+                    barn = barn.map { (navn, fødseldato) ->
                         ManueltOppgittBarn(
                             navn = navn,
                             fødselsdato = fødseldato,
                             ident = null,
                             relasjon = ManueltOppgittBarn.Relasjon.FOSTERFORELDER
                         )
-                    )
+                    }
                 ),
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
             )
