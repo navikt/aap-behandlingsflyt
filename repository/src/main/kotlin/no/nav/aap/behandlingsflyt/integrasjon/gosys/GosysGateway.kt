@@ -51,7 +51,7 @@ class GosysGateway : OppgaveGateway {
             tildeltEnhetsnr = navKontor,
             opprettetAvEnhetsnr = navKontor,
             beskrivelse = "Krav om refusjon av sosialhjelp for bruker av AAP",
-            behandlingstema = "AAP",
+            behandlingstema = Behandlingstema.AAP.kode,
             behandlingstype = "AAP",
             fristFerdigstillelse = LocalDate.now().plusDays(7),
         )
@@ -69,6 +69,12 @@ class GosysGateway : OppgaveGateway {
         }
 
     }
+
+
+    enum class Behandlingstema(val kode: String) {
+        AAP("ab0014");
+    }
+
 
 }
 
