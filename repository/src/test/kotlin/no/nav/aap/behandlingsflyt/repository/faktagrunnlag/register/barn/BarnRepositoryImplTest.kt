@@ -94,7 +94,7 @@ internal class BarnRepositoryImplTest {
 
             barnRepository.lagreRegisterBarn(
                 behandling.id,
-                barnListe.map { Pair(it, PersonRepositoryImpl(connection).finnEllerOpprett(listOf(it.ident)).id) }
+                barnListe.associateWith { PersonRepositoryImpl(connection).finnEllerOpprett(listOf(it.ident)).id }
             )
             barnRepository.lagreOppgitteBarn(
                 behandling.id,
@@ -134,7 +134,7 @@ internal class BarnRepositoryImplTest {
         dataSource.transaction { connection ->
             BarnRepositoryImpl(connection).lagreRegisterBarn(
                 behandling.id,
-                barnListe.map { Pair(it, PersonRepositoryImpl(connection).finnEllerOpprett(listOf(it.ident)).id) }
+                barnListe.associateWith { PersonRepositoryImpl(connection).finnEllerOpprett(listOf(it.ident)).id }
             )
         }
 

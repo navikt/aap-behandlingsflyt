@@ -18,7 +18,7 @@ interface BarnRepository : Repository {
     /**
      * Lagre registerbarn. Dette er barn som vi også finner i PDL (enten automatisk, eller oppgitt). Se [no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnService].
      */
-    fun lagreRegisterBarn(behandlingId: BehandlingId, barn: List<Pair<Barn, PersonId>>)
+    fun lagreRegisterBarn(behandlingId: BehandlingId, barn: Map<Barn, PersonId>)
 
     /**
      * Lagre vurderinger på barn. Gjøres i løseren, [no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarBarnetilleggLøser].

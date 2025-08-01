@@ -1,23 +1,21 @@
 package no.nav.aap.behandlingsflyt.integrasjon.oppgave
 
+
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OppgaveGateway
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OpprettOppgaveRequest
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.Prioritet
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.gateway.Gateway
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
-
-
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.LocalDate
-import kotlin.jvm.javaClass
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 
 class GosysGateway : OppgaveGateway {
 
@@ -49,7 +47,7 @@ class GosysGateway : OppgaveGateway {
             tema = "AAP",
             prioritet = Prioritet.NORM,
             aktivDato = LocalDate.now().toString(),
-            personident = aktivIdent.toUncensoredString(),
+            personident = aktivIdent.identifikator,
             tildeltEnhetsnr = navKontor,
             opprettetAvEnhetsnr = navKontor,
             beskrivelse = "Krav om refusjon av sosialhjelp for bruker av AAP",

@@ -102,12 +102,12 @@ class PipTest {
 
             barnRepository.lagreRegisterBarn(
                 behandling.id,
-                listOf(Barn(ident = Ident("regbarn"), Fødselsdato(LocalDate.now()))).map {
-                    Pair(
-                        it,
-                        personRepository.finnEllerOpprett(listOf(it.ident)).id
+                listOf(
+                    Barn(
+                        ident = Ident("regbarn"),
+                        Fødselsdato(LocalDate.now())
                     )
-                }
+                ).associateWith { personRepository.finnEllerOpprett(listOf(it.ident)).id }
             )
             barnRepository.lagreOppgitteBarn(
                 behandling.id,
@@ -167,12 +167,13 @@ class PipTest {
 
             barnRepository.lagreRegisterBarn(
                 behandling.id,
-                listOf(Barn(ident = Ident("regbarn"), Fødselsdato(LocalDate.now()))).map {
-                    Pair(
-                        it,
-                        personRepository.finnEllerOpprett(listOf(it.ident)).id
+                listOf(
+                    Barn(
+                        ident = Ident("regbarn"),
+                        Fødselsdato(LocalDate.now())
                     )
-                }
+                ).associateWith { personRepository.finnEllerOpprett(listOf(it.ident)).id }
+
             )
             barnRepository.lagreOppgitteBarn(
                 behandling.id,
@@ -201,7 +202,7 @@ class PipTest {
                 behandling2.id,
                 listOf(
                     Barn(ident = Ident("regbar2"), Fødselsdato(LocalDate.now()))
-                ).map { Pair(it, personRepository.finnEllerOpprett(listOf(it.ident)).id) }
+                ).associateWith { personRepository.finnEllerOpprett(listOf(it.ident)).id }
             )
             barnRepository.lagreOppgitteBarn(
                 behandling.id,

@@ -58,7 +58,7 @@ class InMemoryBarnRepositoryTest {
 
         barnRepository.lagreRegisterBarn(
             behandling.id,
-            barnListe.map { Pair(it, InMemoryPersonRepository.finnEllerOpprett(listOf(it.ident)).id) })
+            barnListe.associateWith { InMemoryPersonRepository.finnEllerOpprett(listOf(it.ident)).id })
         barnRepository.lagreOppgitteBarn(
             behandling.id,
             OppgitteBarn(oppgitteBarn = listOf(OppgitteBarn.OppgittBarn(Ident("1"))))

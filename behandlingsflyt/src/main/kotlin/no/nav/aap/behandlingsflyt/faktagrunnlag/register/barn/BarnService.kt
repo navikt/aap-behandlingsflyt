@@ -44,7 +44,8 @@ class BarnService private constructor(
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
         // Kun gjøre oppslag mot register ved førstegangsbehandling og revurdering av barnetillegg (Se AAP-933).
-        val gyldigBehandling = kontekst.erFørstegangsbehandling() || kontekst.erRevurderingMedVurderingsbehov(BARNETILLEGG)
+        val gyldigBehandling =
+            kontekst.erFørstegangsbehandling() || kontekst.erRevurderingMedVurderingsbehov(BARNETILLEGG)
         return gyldigBehandling &&
                 oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
@@ -77,14 +78,14 @@ class BarnService private constructor(
         return IKKE_ENDRET
     }
 
-    private fun oppdaterPersonIdenter(barn: List<Barn>): List<Pair<Barn, PersonId>> {
-        return barn.map { barn ->
+    private fun oppdaterPersonIdenter(barn: List<Barn>): Map<Barn, PersonId> {
+        return barn.associateWith { barn ->
             val identliste = identGateway.hentAlleIdenterForPerson(barn.ident)
             if (identliste.isEmpty()) {
                 throw IllegalStateException("Fikk ingen treff på ident i PDL.")
             }
 
-            Pair(barn, personRepository.finnEllerOpprett(identliste).id)
+            personRepository.finnEllerOpprett(identliste).id
         }
     }
 
