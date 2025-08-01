@@ -86,9 +86,9 @@ class FatteVedtakSteg(
             .mapNotNull { navKontorEnhetsNummer(it.navKontor) }
 
         if (navKontorList.isNotEmpty()) {
-            val personId = sakRepository.hent(kontekst.sakId).person.aktivIdent()
+            val aktivIdent = sakRepository.hent(kontekst.sakId).person.aktivIdent()
 
-            opprettOppgave(navKontorList,personId, kontekst)
+            opprettOppgave(navKontorList, aktivIdent, kontekst)
         }
         return Fullført
     }
