@@ -730,7 +730,7 @@ open class AbstraktFlytOrkestratorTest {
         val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         return løsAvklaringsBehov(
             behandling,
-            KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() }.map { behov ->
+            KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }.map { behov ->
                 TotrinnsVurdering(
                     behov.definisjon.kode, true, "begrunnelse", emptyList()
                 )
