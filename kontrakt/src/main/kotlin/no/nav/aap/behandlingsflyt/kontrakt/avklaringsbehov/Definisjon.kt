@@ -239,7 +239,8 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5030`,
         type = BehovType.MANUELT_FRIVILLIG,
         løsesISteg = StegType.SAMORDNING_ARBEIDSGIVER,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = true
     ),
 
     @Deprecated("Ikke i bruk")
