@@ -16,6 +16,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurdering
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -156,6 +158,10 @@ class HåndterMottattDokumentService(
             InnsendingType.MANUELL_REVURDERING -> when (melding) {
                 is ManuellRevurderingV0 -> melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
                 else -> error("Melding må være ManuellRevurderingV0")
+            }
+            InnsendingType.OMGJØRING_KLAGE_REVURDERING -> when (melding) {
+                is OmgjøringKlageRevurderingV0 -> melding.vurderingsbehov.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
+                else -> error("Melding må være OmgjøringKlageRevurderingV0")
             }
 
             InnsendingType.MELDEKORT ->

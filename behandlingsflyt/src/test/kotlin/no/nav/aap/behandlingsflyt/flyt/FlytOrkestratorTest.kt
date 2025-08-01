@@ -120,6 +120,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlagebehandlingAv
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
@@ -2839,16 +2840,16 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         dataSource.transaction { connection ->
             val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
 
-            val manuellRevurdering = mottattDokumentRepository.hentDokumenterAvType(
+            val omgjøringKlageRevurdering = mottattDokumentRepository.hentDokumenterAvType(
                 klagebehandling.sakId,
-                InnsendingType.MANUELL_REVURDERING
+                InnsendingType.OMGJØRING_KLAGE_REVURDERING
             )
 
-            assertThat(manuellRevurdering).hasSize(1).first()
+            assertThat(omgjøringKlageRevurdering).hasSize(1).first()
                 .extracting(MottattDokument::strukturertDokument)
                 .isNotNull
             assertThat(
-                manuellRevurdering.first().strukturerteData<ManuellRevurderingV0>()?.data?.beskrivelse
+                omgjøringKlageRevurdering.first().strukturerteData<OmgjøringKlageRevurderingV0>()?.data?.beskrivelse
             ).isEqualTo("Revurdering etter klage som tas til følge. Følgende vilkår omgjøres: § 11-5")
         }
 
