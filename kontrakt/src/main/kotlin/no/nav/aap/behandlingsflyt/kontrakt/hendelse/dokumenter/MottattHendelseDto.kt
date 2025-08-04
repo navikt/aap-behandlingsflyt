@@ -67,6 +67,11 @@ public class Innsending(
                 requireNotNull(melding)
                 require(melding is ManuellRevurdering)
             }
+            InnsendingType.OMGJØRING_KLAGE_REVURDERING -> {
+                require(referanse.type == InnsendingReferanse.Type.REVURDERING_ID)
+                requireNotNull(melding)
+                require(melding is OmgjøringKlageRevurdering)
+            }
 
             InnsendingType.KLAGE -> {
                 require(referanse.type == InnsendingReferanse.Type.JOURNALPOST || referanse.type == InnsendingReferanse.Type.MANUELL_OPPRETTELSE)
@@ -111,6 +116,7 @@ public fun Melding.innsendingType(): InnsendingType = when (this) {
     is NyÅrsakTilBehandling -> InnsendingType.NY_ÅRSAK_TIL_BEHANDLING
     is KabalHendelse -> InnsendingType.KABAL_HENDELSE
     is Oppfølgingsoppgave -> InnsendingType.OPPFØLGINGSOPPGAVE
+    is OmgjøringKlageRevurdering -> InnsendingType.OMGJØRING_KLAGE_REVURDERING
 }
 
 /**
@@ -143,5 +149,6 @@ private fun example(innsending: Innsending) {
 
         null -> TODO()
         is OppfølgingsoppgaveV0 -> TODO()
+        is OmgjøringKlageRevurdering -> TODO()
     }
 }
