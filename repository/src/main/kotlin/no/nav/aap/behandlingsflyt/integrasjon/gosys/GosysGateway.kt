@@ -47,7 +47,7 @@ class GosysGateway : OppgaveGateway {
     ) {
 
         val oppgaveRequest = OpprettOppgaveRequest(
-            oppgavetype = OppgaveType.VVURDER_KONSEKVENS_FOR_YTELSE.verdi,
+            oppgavetype = OppgaveType.VURDER_KONSEKVENS_FOR_YTELSE.verdi,
             tema = "AAP",
             prioritet = Prioritet.HOY,
             aktivDato = LocalDate.now().toString(),
@@ -68,7 +68,7 @@ class GosysGateway : OppgaveGateway {
         try {
             client.post(path, request) { _, _ -> }
         } catch (e: Exception) {
-            log.error("Feil mot oppgaveApi under opprettelse av oppgave: ${e.message}", e)
+            log.warn("Feil mot oppgaveApi under opprettelse av oppgave: ${e.message}", e)
             throw e
         }
 
@@ -103,7 +103,7 @@ data class FinnOppgaverResponse(
 )
 
 enum class OppgaveType(val verdi: String) {
-    VVURDER_KONSEKVENS_FOR_YTELSE("VUR_KONS_YTE"),
+    VURDER_KONSEKVENS_FOR_YTELSE("VUR_KONS_YTE"),
 }
 
 enum class Statuskategori {
