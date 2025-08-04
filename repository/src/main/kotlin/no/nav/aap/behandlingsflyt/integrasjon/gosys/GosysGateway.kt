@@ -48,7 +48,7 @@ class GosysGateway : OppgaveGateway {
 
         val oppgaveRequest = OpprettOppgaveRequest(
             oppgavetype = OppgaveType.VVURDER_KONSEKVENS_FOR_YTELSE.verdi,
-            tema = "Arbeidsavklaringspenger",
+            tema = "AAP",
             prioritet = Prioritet.HOY,
             aktivDato = LocalDate.now().toString(),
             personident = aktivIdent.identifikator,
