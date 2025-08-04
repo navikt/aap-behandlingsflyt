@@ -17,8 +17,6 @@ interface MedlemskapForutgåendeRepository : Repository {
 }
 
 class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection) : MedlemskapForutgåendeRepository {
-    private val log = LoggerFactory.getLogger(javaClass)
-
     override fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapDataIntern>): Long {
         if (hentHvisEksisterer(behandlingId) != null) {
             deaktiverEksisterendeGrunnlag(behandlingId)
