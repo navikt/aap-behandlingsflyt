@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.Barnet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -25,7 +27,8 @@ class BeregnTilkjentYtelseService(
     private val underveisgrunnlag: UnderveisGrunnlag,
     private val barnetilleggGrunnlag: BarnetilleggGrunnlag,
     private val samordningGrunnlag: SamordningGrunnlag,
-    private val samordningUføre: SamordningUføreGrunnlag?
+    private val samordningUføre: SamordningUføreGrunnlag?,
+    private val samordningArbeidsgiver: SamordningArbeidsgiverGrunnlag?,
 ) {
 
     internal companion object {
@@ -58,6 +61,7 @@ class BeregnTilkjentYtelseService(
 
         val samordningTidslinje = samordningGrunnlag.samordningPerioder.map { Segment(it.periode, it) }.let(::Tidslinje)
         val samordningUføreTidslinje = samordningUføre?.vurdering?.tilTidslinje()
+        val samordningArbeidsgiverTidslinje = samordningArbeidsgiver?.vurdering?.tilTidslinje()
 
         val gradertÅrligYtelseTidslinje = underveisTidslinje.kombiner(
             årligYtelseTidslinje, JoinStyle.INNER_JOIN { periode, venstre, høyre ->
@@ -83,7 +87,8 @@ class BeregnTilkjentYtelseService(
                             arbeidGradering = venstre.verdi.arbeidsgradering.gradering,
                             institusjonGradering = venstre.verdi.institusjonsoppholdReduksjon,
                             samordningGradering = Prosent.`0_PROSENT`,
-                            samordningUføregradering = Prosent.`0_PROSENT`
+                            samordningUføregradering = Prosent.`0_PROSENT`,
+                            samordningArbeidsgiverGradering = Prosent.`0_PROSENT`
                         ),
                         utbetalingsdato = utbetalingsdato
                     )
@@ -137,7 +142,30 @@ class BeregnTilkjentYtelseService(
                 })
 
 
-        val gradertÅrligTilkjentYtelseBeløp = gradertÅrligYtelseTidslinjeMedSamordning.kombiner(
+        val gradertÅrligYtelseTidslinjeMedArbeidgiver =
+            gradertÅrligYtelseTidslinjeMedSamordning.kombiner(
+                samordningArbeidsgiverTidslinje ?: Tidslinje(),
+                JoinStyle.LEFT_JOIN { periode, venstre, høyre ->
+                    if (høyre == null) {
+                        venstre
+                    } else {
+                        val tilkjentGUnit = venstre.verdi
+                        val nyGradering =
+                            tilkjentGUnit.copy(
+                                gradering = tilkjentGUnit.gradering.copy(
+                                    endeligGradering = tilkjentGUnit.gradering.endeligGradering.minus(
+                                        Prosent.`0_PROSENT`,
+                                        Prosent.`0_PROSENT`
+                                    ),
+                                    samordningGradering = Prosent.`0_PROSENT`,
+                                )
+                            )
+                        Segment(periode, nyGradering)
+                    }
+                })
+
+
+        val gradertÅrligTilkjentYtelseBeløp = gradertÅrligYtelseTidslinjeMedArbeidgiver.kombiner(
             Grunnbeløp.tilTidslinje(), JoinStyle.INNER_JOIN { periode, venstre, grunnbeløp ->
                 val dagsats = grunnbeløp.verdi.multiplisert(venstre.verdi.dagsats)
                 val redusertUtbetalingsgrad = reduserUtbetalingsgradVedInstitusjonsopphold(venstre.verdi.gradering)
@@ -152,6 +180,7 @@ class BeregnTilkjentYtelseService(
                         utbetalingsdato = venstre.verdi.utbetalingsdato,
                         samordningGradering = venstre.verdi.gradering.samordningGradering,
                         samordningUføreGradering = venstre.verdi.gradering.samordningUføregradering,
+                        samordningArbeidsgiverGradering = venstre.verdi.gradering.samordningArbeidsgiverGradering,
                         arbeidsGradering = venstre.verdi.gradering.arbeidGradering,
                         institusjonGradering = venstre.verdi.gradering.institusjonGradering
                     )
@@ -179,6 +208,7 @@ class BeregnTilkjentYtelseService(
                     institusjonGradering = venstre.verdi.institusjonGradering,
                     arbeidGradering = venstre.verdi.arbeidsGradering,
                     endeligGradering = venstre.verdi.gradering,
+                    samordningArbeidsgiverGradering = venstre.verdi.samordningArbeidsgiverGradering,
                     samordningUføregradering = venstre.verdi.samordningUføreGradering
                 )
                 Segment(
@@ -211,6 +241,7 @@ class BeregnTilkjentYtelseService(
         val utbetalingsdato: LocalDate,
         val samordningGradering: Prosent?,
         val samordningUføreGradering: Prosent?,
+        val samordningArbeidsgiverGradering: Prosent?,
         val arbeidsGradering: Prosent?,
         val institusjonGradering: Prosent?
     )

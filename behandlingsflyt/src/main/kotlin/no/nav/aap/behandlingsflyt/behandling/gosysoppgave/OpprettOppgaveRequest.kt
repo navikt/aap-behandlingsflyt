@@ -23,13 +23,6 @@ data class OpprettOppgaveRequest(
     val fristFerdigstillelse: LocalDate? = null
 )
 
-fun finnStandardOppgavefrist(nå: LocalDateTime = now()): LocalDate {
-    return with(nå) {
-        now().atZone(systemDefault()).toLocalDate()
-    }
-}
-
-
 typealias NavEnhet = String
 
 enum class Prioritet {
