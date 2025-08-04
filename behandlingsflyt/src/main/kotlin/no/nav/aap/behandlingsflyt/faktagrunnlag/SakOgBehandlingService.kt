@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -88,7 +89,7 @@ class SakOgBehandlingService(
         Vurderingsbehov.FASTSATT_PERIODE_PASSERT
     )
 
-    fun finnEllerOpprettBehandlingFasttrack(sakId: SakId, vurderingsbehov: List<VurderingsbehovMedPeriode>): OpprettetBehandling {
+    fun finnEllerOpprettBehandlingFasttrack(sakId: SakId, vurderingsbehov: List<VurderingsbehovMedPeriode>, årsakTilOpprettelse: ÅrsakTilOpprettelse): OpprettetBehandling {
         val sisteYtelsesbehandling = finnSisteYtelsesbehandlingFor(sakId)
         val fasttrackkandidat = vurderingsbehov.isNotEmpty()
                 && vurderingsbehov.all { it.type in fasttrackKandidater }
@@ -99,20 +100,20 @@ class SakOgBehandlingService(
         val mottokOppfølgingsOppgave = vurderingsbehov.any { it.type == Vurderingsbehov.OPPFØLGINGSOPPGAVE }
 
         return when {
-            mottokKlage -> Ordinær(opprettKlagebehandling(sisteYtelsesbehandling, vurderingsbehov))
-            mottokKabalHendelse -> Ordinær(opprettSvarFraKlageenhetBehandling(sisteYtelsesbehandling, vurderingsbehov))
-            mottokOppfølgingsOppgave -> Ordinær(opprettOppfølgingsbehandling(sisteYtelsesbehandling!!))
+            mottokKlage -> Ordinær(opprettKlagebehandling(sisteYtelsesbehandling, vurderingsbehov, årsakTilOpprettelse))
+            mottokKabalHendelse -> Ordinær(opprettSvarFraKlageenhetBehandling(sisteYtelsesbehandling, vurderingsbehov, årsakTilOpprettelse))
+            mottokOppfølgingsOppgave -> Ordinær(opprettOppfølgingsbehandling(sisteYtelsesbehandling!!, årsakTilOpprettelse))
 
             /* Tilbakekreving kommer kanskje som et case her ... */
 
             sisteYtelsesbehandling == null ->
-                Ordinær(opprettFørstegangsbehandling(sakId, vurderingsbehov))
+                Ordinær(opprettFørstegangsbehandling(sakId, vurderingsbehov, årsakTilOpprettelse))
 
             sisteYtelsesbehandling.status().erAvsluttet() ->
                 if (fasttrackkandidat)
-                    MåBehandlesAtomært(opprettRevurdering(sisteYtelsesbehandling, vurderingsbehov), null)
+                    MåBehandlesAtomært(opprettRevurdering(sisteYtelsesbehandling, vurderingsbehov, årsakTilOpprettelse), null)
                 else
-                    Ordinær(opprettRevurdering(sisteYtelsesbehandling, vurderingsbehov))
+                    Ordinær(opprettRevurdering(sisteYtelsesbehandling, vurderingsbehov, årsakTilOpprettelse))
 
 
             sisteYtelsesbehandling.status().erÅpen() ->
@@ -129,8 +130,8 @@ class SakOgBehandlingService(
         }
     }
 
-    fun finnEllerOpprettBehandling(sakId: SakId, vurderingsbehov: List<VurderingsbehovMedPeriode>): Behandling {
-        return when (val b = finnEllerOpprettBehandlingFasttrack(sakId, vurderingsbehov)) {
+    fun finnEllerOpprettBehandling(sakId: SakId, vurderingsbehov: List<VurderingsbehovMedPeriode>, årsakTilOpprettelse: ÅrsakTilOpprettelse): Behandling {
+        return when (val b = finnEllerOpprettBehandlingFasttrack(sakId, vurderingsbehov, årsakTilOpprettelse)) {
             is MåBehandlesAtomært -> error("skal ikke føre til atmoær behandling")
             is Ordinær -> b.åpenBehandling
         }
@@ -138,7 +139,8 @@ class SakOgBehandlingService(
 
     private fun opprettKlagebehandling(
         sisteYtelsesbehandling: Behandling?,
-        vurderingsbehov: List<VurderingsbehovMedPeriode>
+        vurderingsbehov: List<VurderingsbehovMedPeriode>,
+        årsakTilOpprettelse: ÅrsakTilOpprettelse
     ): Behandling {
         requireNotNull(sisteYtelsesbehandling) {
             "Mottok klage, men det finnes ingen eksisterende behandling"
@@ -150,11 +152,12 @@ class SakOgBehandlingService(
             vurderingsbehov = vurderingsbehov,
             typeBehandling = TypeBehandling.Klage,
             forrigeBehandlingId = null,
+            årsakTilOpprettelse = årsakTilOpprettelse
         )
         //else koble på eksisterende behandling?
     }
 
-    private fun opprettOppfølgingsbehandling(sisteYtelsesbehandling: Behandling): Behandling {
+    private fun opprettOppfølgingsbehandling(sisteYtelsesbehandling: Behandling, årsakTilOpprettelse: ÅrsakTilOpprettelse): Behandling {
         requireNotNull(sisteYtelsesbehandling) {
             "Mottok oppfølgingsbehandling, men det finnes ingen eksisterende behandling. Behandling-ID: ${sisteYtelsesbehandling.id}"
         }
@@ -163,13 +166,15 @@ class SakOgBehandlingService(
             sisteYtelsesbehandling.sakId,
             vurderingsbehov = listOf(),
             typeBehandling = TypeBehandling.OppfølgingsBehandling,
-            forrigeBehandlingId = null
+            forrigeBehandlingId = null,
+            årsakTilOpprettelse = årsakTilOpprettelse
         )
     }
 
     private fun opprettSvarFraKlageenhetBehandling(
         sisteYtelsesbehandling: Behandling?,
-        vurderingsbehov: List<VurderingsbehovMedPeriode>
+        vurderingsbehov: List<VurderingsbehovMedPeriode>,
+        årsakTilOpprettelse: ÅrsakTilOpprettelse
     ): Behandling {
         // Kan vurdere en bedre sjekk her, men vi validerer allerede ved mottak at en tilhørende klagebehandling eksisterer
         requireNotNull(sisteYtelsesbehandling) {
@@ -180,22 +185,26 @@ class SakOgBehandlingService(
             vurderingsbehov = vurderingsbehov,
             typeBehandling = TypeBehandling.SvarFraAndreinstans,
             forrigeBehandlingId = null,
+            årsakTilOpprettelse = årsakTilOpprettelse
         )
     }
 
     private fun opprettFørstegangsbehandling(
         sakId: SakId,
-        vurderingsbehov: List<VurderingsbehovMedPeriode>
+        vurderingsbehov: List<VurderingsbehovMedPeriode>,
+        årsakTilOpprettelse: ÅrsakTilOpprettelse
     ): Behandling = behandlingRepository.opprettBehandling(
         sakId = sakId,
         vurderingsbehov = vurderingsbehov,
         typeBehandling = TypeBehandling.Førstegangsbehandling,
         forrigeBehandlingId = null,
+        årsakTilOpprettelse = årsakTilOpprettelse
     )
 
     private fun opprettRevurdering(
         sisteYtelsesbehandling: Behandling,
-        vurderingsbehov: List<VurderingsbehovMedPeriode>
+        vurderingsbehov: List<VurderingsbehovMedPeriode>,
+        årsakTilOpprettelse: ÅrsakTilOpprettelse
     ): Behandling {
         check(!trukketSøknadService.søknadErTrukket(sisteYtelsesbehandling.id)) {
             "ikke lov å opprette ny behandling for trukket søknad ${sisteYtelsesbehandling.sakId}"
@@ -205,6 +214,7 @@ class SakOgBehandlingService(
             vurderingsbehov = vurderingsbehov,
             typeBehandling = TypeBehandling.Revurdering,
             forrigeBehandlingId = sisteYtelsesbehandling.id,
+            årsakTilOpprettelse = årsakTilOpprettelse
         ).also { behandling ->
             grunnlagKopierer.overfør(sisteYtelsesbehandling.id, behandling.id)
         }
@@ -246,16 +256,16 @@ class SakOgBehandlingService(
         return sisteYtelsesbehandling
     }
 
-    fun finnEllerOpprettBehandling(saksnummer: Saksnummer, vurderingsbehov: List<VurderingsbehovMedPeriode>): Behandling {
+    fun finnEllerOpprettBehandling(saksnummer: Saksnummer, vurderingsbehov: List<VurderingsbehovMedPeriode>, årsakTilOpprettelse: ÅrsakTilOpprettelse): Behandling {
         val sak = sakRepository.hent(saksnummer)
 
-        return finnEllerOpprettBehandling(sak.id, vurderingsbehov)
+        return finnEllerOpprettBehandling(sak.id, vurderingsbehov, årsakTilOpprettelse)
     }
 
-    fun finnEllerOpprettBehandlingFasttrack(saksnummer: Saksnummer, vurderingsbehov: List<VurderingsbehovMedPeriode>): OpprettetBehandling {
+    fun finnEllerOpprettBehandlingFasttrack(saksnummer: Saksnummer, vurderingsbehov: List<VurderingsbehovMedPeriode>, årsakTilOpprettelse: ÅrsakTilOpprettelse): OpprettetBehandling {
         val sak = sakRepository.hent(saksnummer)
 
-        return finnEllerOpprettBehandlingFasttrack(sak.id, vurderingsbehov)
+        return finnEllerOpprettBehandlingFasttrack(sak.id, vurderingsbehov, årsakTilOpprettelse)
     }
 
     fun lukkBehandling(behandlingId: BehandlingId) {

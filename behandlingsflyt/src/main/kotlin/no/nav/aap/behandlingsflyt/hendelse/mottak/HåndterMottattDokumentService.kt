@@ -20,8 +20,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppga
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.tilVurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.tilVurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -30,7 +31,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 class HåndterMottattDokumentService(
     private val sakService: SakService,
@@ -51,7 +52,7 @@ class HåndterMottattDokumentService(
         mottaDokumentService = MottaDokumentService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
 
-    )
+        )
 
     fun håndterMottatteKlage(
         sakId: SakId,
@@ -59,17 +60,20 @@ class HåndterMottattDokumentService(
         mottattTidspunkt: LocalDateTime,
         brevkategori: InnsendingType,
         melding: Klage,
-    ){
+    ) {
         when (melding) {
             is KlageV0 -> {
                 val sak = sakService.hent(sakId)
                 val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
                 val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
 
-                val behandling = if(melding.behandlingReferanse!=null){
+                val behandling = if (melding.behandlingReferanse != null) {
                     behandlingRepository.hent(BehandlingReferanse(UUID.fromString(melding.behandlingReferanse)))
                 } else {
-                    sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(sak.saksnummer, vurderingsbehov).åpenBehandling
+                    sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(
+                        sak.saksnummer, vurderingsbehov,
+                        ÅrsakTilOpprettelse.KLAGE
+                    ).åpenBehandling
                 }
 
                 val behandlingSkrivelås = behandling?.let {
@@ -104,8 +108,13 @@ class HåndterMottattDokumentService(
         val sak = sakService.hent(sakId)
         val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
         val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
+        val årsakTilOpprettelse = utledÅrsakTilOpprettelse(brevkategori)
 
-        val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(sak.saksnummer, vurderingsbehov)
+        val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(
+            sak.saksnummer,
+            vurderingsbehov,
+            årsakTilOpprettelse
+        )
 
         val behandlingSkrivelås = opprettetBehandling.åpenBehandling?.let {
             låsRepository.låsBehandling(it.id)
@@ -138,7 +147,8 @@ class HåndterMottattDokumentService(
         val behandling = sakOgBehandlingService.finnBehandling(behandlingsreferanse)
 
         låsRepository.withLåstBehandling(behandling.id) {
-            val vurderingsbehov = melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
+            val vurderingsbehov =
+                melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
             sakOgBehandlingService.oppdaterVurderingsbehovTilBehandling(behandling, vurderingsbehov)
 
             prosesserBehandling.triggProsesserBehandling(
@@ -150,7 +160,28 @@ class HåndterMottattDokumentService(
     }
 
 
-    private fun utledVurderingsbehov(brevkategori: InnsendingType, melding: Melding?, periode: Periode?): List<VurderingsbehovMedPeriode> {
+    private fun utledÅrsakTilOpprettelse(brevkategori: InnsendingType): ÅrsakTilOpprettelse {
+        return when (brevkategori) {
+            InnsendingType.SØKNAD -> ÅrsakTilOpprettelse.SØKNAD
+            InnsendingType.AKTIVITETSKORT -> ÅrsakTilOpprettelse.AKTIVITETSMELDING
+            InnsendingType.MELDEKORT -> ÅrsakTilOpprettelse.MELDEKORT
+            InnsendingType.LEGEERKLÆRING -> ÅrsakTilOpprettelse.HELSEOPPLYSNINGER
+            InnsendingType.LEGEERKLÆRING_AVVIST -> ÅrsakTilOpprettelse.HELSEOPPLYSNINGER
+            InnsendingType.DIALOGMELDING -> ÅrsakTilOpprettelse.HELSEOPPLYSNINGER
+            InnsendingType.KLAGE -> ÅrsakTilOpprettelse.KLAGE
+            InnsendingType.ANNET_RELEVANT_DOKUMENT -> ÅrsakTilOpprettelse.ANNET_RELEVANT_DOKUMENT
+            InnsendingType.MANUELL_REVURDERING -> ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+            InnsendingType.NY_ÅRSAK_TIL_BEHANDLING -> ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+            InnsendingType.KABAL_HENDELSE -> ÅrsakTilOpprettelse.SVAR_FRA_KLAGEINSTANS
+            InnsendingType.OPPFØLGINGSOPPGAVE -> ÅrsakTilOpprettelse.OPPFØLGINGSOPPGAVE
+        }
+    }
+
+    private fun utledVurderingsbehov(
+        brevkategori: InnsendingType,
+        melding: Melding?,
+        periode: Periode?
+    ): List<VurderingsbehovMedPeriode> {
         return when (brevkategori) {
             InnsendingType.SØKNAD -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD))
             InnsendingType.MANUELL_REVURDERING -> when (melding) {
@@ -166,7 +197,13 @@ class HåndterMottattDokumentService(
                     )
                 )
 
-            InnsendingType.AKTIVITETSKORT -> listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_AKTIVITETSMELDING, periode = periode))
+            InnsendingType.AKTIVITETSKORT -> listOf(
+                VurderingsbehovMedPeriode(
+                    type = Vurderingsbehov.MOTTATT_AKTIVITETSMELDING,
+                    periode = periode
+                )
+            )
+
             InnsendingType.LEGEERKLÆRING_AVVIST -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_AVVIST_LEGEERKLÆRING))
             InnsendingType.LEGEERKLÆRING -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_LEGEERKLÆRING))
             InnsendingType.DIALOGMELDING -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_DIALOGMELDING))
