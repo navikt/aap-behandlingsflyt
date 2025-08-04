@@ -54,8 +54,8 @@ class GosysGateway : OppgaveGateway {
             personident = aktivIdent.identifikator,
             tildeltEnhetsnr = navKontor,
             opprettetAvEnhetsnr = navKontor,
-            beskrivelse = "Refusjonskrav. Brukeren er innvilget etterbetaling av (ytelse) fra (dato) til (dato). (dagsats/månedssats). Dere må sende refusjonskrav til NØS.",
-            behandlingstema = Behandlingstema.AAP.kode,
+            beskrivelse = "Refusjonskrav. Brukeren er innvilget etterbetaling av (ytelse) fra (dato) til (dato). Dere må sende refusjonskrav til NØS.",
+            behandlingstema = Behandlingstema.REFUSJON.kode,
             behandlingstype = null,
             fristFerdigstillelse = finnStandardOppgavefrist(),
         )
@@ -76,7 +76,7 @@ class GosysGateway : OppgaveGateway {
 
 
     enum class Behandlingstema(val kode: String) {
-        AAP("ab0014");
+        REFUSJON("ab0504");
     }
 
 }
