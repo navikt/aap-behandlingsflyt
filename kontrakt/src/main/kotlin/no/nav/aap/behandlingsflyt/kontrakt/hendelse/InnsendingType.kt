@@ -15,6 +15,7 @@ public enum class InnsendingType {
     KLAGE,
     ANNET_RELEVANT_DOKUMENT,
     MANUELL_REVURDERING,
+    OMGJØRING_KLAGE_REVURDERING,
 
     /**
      * Legger til ny årsak på en behandling, men oppretter ikke ny behandling.

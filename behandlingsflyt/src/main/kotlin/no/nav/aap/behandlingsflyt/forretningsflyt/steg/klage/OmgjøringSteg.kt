@@ -15,6 +15,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurdering
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurderingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringsKilde
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -36,8 +39,6 @@ class OmgjøringSteg private constructor(
 
         val resultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
 
-        // / TODO: Opprett egen innsendingstype for klageomgjøring
-
         return when (resultat) {
             is Omgjøres, is DelvisOmgjøres -> {
                 flytJobbRepository.leggTil(
@@ -46,7 +47,7 @@ class OmgjøringSteg private constructor(
                         dokumentReferanse = InnsendingReferanse(
                             InnsendingId(UUID.randomUUID())
                         ),
-                        brevkategori = InnsendingType.MANUELL_REVURDERING,
+                        brevkategori = InnsendingType.OMGJØRING_KLAGE_REVURDERING,
                         kanal = Kanal.DIGITAL,
                         melding = konstruerMelding(resultat),
                         mottattTidspunkt = LocalDateTime.now()
@@ -59,17 +60,18 @@ class OmgjøringSteg private constructor(
         }
     }
 
-    private fun konstruerMelding(klageresultat: KlageResultat): ManuellRevurdering {
+    private fun konstruerMelding(klageresultat: KlageResultat): OmgjøringKlageRevurdering {
         require(klageresultat is DelvisOmgjøres || klageresultat is Omgjøres) {
             "Klagebehandlingresultat skal være Omgjøres eller DelvisOmgjøres"
         }
         val hjemler = klageresultat.hjemlerSomSkalOmgjøres()
         val beskrivelse = konstruerBegrunnelse(hjemler)
-        val årsaker = hjemler.map { it.tilVurderingsbehov() }
+        val vurderingsbehov = hjemler.map { it.tilVurderingsbehov() }
 
-        return ManuellRevurderingV0(
-            årsakerTilBehandling = årsaker,
+        return OmgjøringKlageRevurderingV0(
+            vurderingsbehov = vurderingsbehov,
             beskrivelse = beskrivelse,
+            kilde = OmgjøringsKilde.KELVIN
         )
     }
 
