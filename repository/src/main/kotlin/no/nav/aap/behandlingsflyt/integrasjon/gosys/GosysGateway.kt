@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.integrasjon.oppgave
 
-
+import no.bekk.bekkopen.date.NorwegianDateUtil.addWorkingDaysToDate
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OppgaveGateway
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OpprettOppgaveRequest
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.Prioritet
@@ -16,6 +16,10 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.Client
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalDateTime.now
+import java.time.ZoneId.systemDefault
+import java.util.Date
 
 class GosysGateway : OppgaveGateway {
 
@@ -43,17 +47,17 @@ class GosysGateway : OppgaveGateway {
     ) {
 
         val oppgaveRequest = OpprettOppgaveRequest(
-            oppgavetype = OppgaveType.FORDELING.verdi,
-            tema = "AAP",
-            prioritet = Prioritet.NORM,
+            oppgavetype = OppgaveType.VVURDER_KONSEKVENS_FOR_YTELSE.verdi,
+            tema = "Arbeidsavklaringspenger",
+            prioritet = Prioritet.HOY,
             aktivDato = LocalDate.now().toString(),
             personident = aktivIdent.identifikator,
             tildeltEnhetsnr = navKontor,
             opprettetAvEnhetsnr = navKontor,
-            beskrivelse = "Krav om refusjon av sosialhjelp for bruker av AAP",
+            beskrivelse = "Refusjonskrav. Brukeren er innvilget etterbetaling av (ytelse) fra (dato) til (dato). (dagsats/månedssats). Dere må sende refusjonskrav til NØS.",
             behandlingstema = Behandlingstema.AAP.kode,
-            behandlingstype = Behandlingstype.REFUSJON.kode,
-            fristFerdigstillelse = LocalDate.now().plusDays(21),
+            behandlingstype = null,
+            fristFerdigstillelse = finnStandardOppgavefrist(),
         )
 
         val path = baseUri.resolve("/api/v1/oppgaver")
@@ -75,16 +79,20 @@ class GosysGateway : OppgaveGateway {
         AAP("ab0014");
     }
 
-
-    enum class Behandlingstype(val kode: String) {
-        REFUSJON("ae0121");
-    }
-
-
-
-
 }
 
+fun finnStandardOppgavefrist(nå: LocalDateTime = now()): LocalDate {
+    val SISTE_ARBEIDSTIME = 12
+    fun Int.dagerTilFrist() = if (this < SISTE_ARBEIDSTIME) 1 else 2
+    return with(nå)
+    {
+        addWorkingDaysToDate(
+            Date.from(toLocalDate().atStartOfDay(systemDefault()).toInstant()),
+            hour.dagerTilFrist()
+        ).toInstant()
+            .atZone(systemDefault()).toLocalDate()
+    }
+}
 
 data class Oppgave(
     val id: Long,
@@ -95,8 +103,7 @@ data class FinnOppgaverResponse(
 )
 
 enum class OppgaveType(val verdi: String) {
-    JOURNALFØRING("JFR"),
-    FORDELING("FDR")
+    VVURDER_KONSEKVENS_FOR_YTELSE("VUR_KONS_YTE"),
 }
 
 enum class Statuskategori {
