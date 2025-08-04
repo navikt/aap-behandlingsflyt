@@ -127,6 +127,10 @@ public enum class StegType(
         gruppe = StegGruppe.SAMORDNING,
         status = Status.UTREDES
     ),
+    IKKE_OPPFYLT_MELDEPLIKT(
+        gruppe = StegGruppe.UNDERVEIS,
+        status = Status.UTREDES
+    ),
     FASTSETT_UTTAK(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES

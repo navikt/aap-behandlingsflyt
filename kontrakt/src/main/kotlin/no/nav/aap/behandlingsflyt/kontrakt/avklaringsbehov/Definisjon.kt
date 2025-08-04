@@ -107,6 +107,13 @@ public enum class Definisjon(
         kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
+    OVERSTYR_IKKE_OPPFYLT_MELDEPLIKT(
+        kode = AvklaringsbehovKode.`5002`,
+        type = BehovType.OVERSTYR,
+        løsesISteg = StegType.FRITAK_MELDEPLIKT,
+        kreverToTrinn = true,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
+    ),
     AVKLAR_SYKDOM(
         kode = AvklaringsbehovKode.`5003`,
         type = BehovType.MANUELT_PÅKREVD,
