@@ -85,7 +85,7 @@ class PipRepositoryImpl(private val connection: DBConnection) : PipRepository {
             INNER JOIN BARNOPPLYSNING_GRUNNLAG g ON ob.oppgitt_barn_id = g.oppgitt_barn_id
             INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
             INNER JOIN BEHANDLING bRef ON b.SAK_ID = bRef.SAK_ID
-            WHERE bRef.referanse = ?
+            WHERE bRef.referanse = ? and ob.ident is not null
             UNION 
             SELECT bv.IDENT as IDENT, '${IdentPåSak.Opprinnelse.BARN}' AS OPPRINNELSE
             FROM BARN_VURDERING bv
