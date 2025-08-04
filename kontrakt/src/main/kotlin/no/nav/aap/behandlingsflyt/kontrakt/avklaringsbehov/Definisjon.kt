@@ -35,6 +35,7 @@ public enum class Definisjon(
             Rolle.SAKSBEHANDLER_NASJONAL
         )
     ),
+    @Deprecated("Ikke i bruk lenger")
     BESTILL_BREV(
         kode = AvklaringsbehovKode.`9002`,
         løsesISteg = StegType.UDEFINERT,
@@ -497,6 +498,7 @@ public enum class Definisjon(
          * Brevpunkter
          */
         BREV(Definisjon::validerBrevpunkt),
+        @Deprecated("Ikke i bruk lenger")
         BREV_VENTEPUNKT(Definisjon::validerBrevVentepunkt),
 
         /**
