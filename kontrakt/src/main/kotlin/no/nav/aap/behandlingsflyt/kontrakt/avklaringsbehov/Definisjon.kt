@@ -110,7 +110,7 @@ public enum class Definisjon(
     OVERSTYR_IKKE_OPPFYLT_MELDEPLIKT(
         kode = AvklaringsbehovKode.`5002`,
         type = BehovType.OVERSTYR,
-        løsesISteg = StegType.FRITAK_MELDEPLIKT,
+        løsesISteg = StegType.IKKE_OPPFYLT_MELDEPLIKT,
         kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
     ),

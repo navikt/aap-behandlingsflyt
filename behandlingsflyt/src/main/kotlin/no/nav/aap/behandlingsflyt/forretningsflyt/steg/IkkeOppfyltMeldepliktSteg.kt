@@ -10,8 +10,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class IkkeOppfyltMeldepliktSteg private constructor() : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        // TODO: Trigg behov dersom det finnes perioder som ikke er oppfylt
-        
         return Fullført
     }
 
