@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType.BISTANDSBEHOV
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRimeligGrunnGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.RimeligGrunnVurdering
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
@@ -1042,6 +1044,64 @@ class MeldepliktRegelTest {
         )
     }
 
+    /*
+      April                      May                       June
+Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
+       1  2  3  4  5                   1  2  3       1  2  3  4  5  6  7
+ 6  7  8  9 10 11 12       4  5  6  7  8  9 10       8  9 10 11 12 13 14
+13 14 15 16 17 18 19      11 12 13 14 15 16 17      15 16 17 18 19 20 21
+20 21 22 23 24 25 26      18 19 20 21 22 23 24      22 23 24 25 26 27 28
+27 28 29 30               25 26 27 28 29 30 31      29 30
+*/
+    @Test
+    fun `får oppfylt på rimelig grunn etter meldefrist uten å ha meldt seg`() {
+        val rettighetsperiode = Periode(
+            20 april 2020,
+            17 mai 2020,
+        )
+        val input = tomUnderveisInput(
+            rettighetsperiode = rettighetsperiode,
+            meldepliktRimeligGrunnGrunnlag = MeldepliktRimeligGrunnGrunnlag(
+                listOf(
+                    RimeligGrunnVurdering(
+                        harRimeligGrunn = true,
+                        fraDato = 14 mai 2020,
+                        begrunnelse = "kan ikke",
+                        vurdertAv = "saksbehandler",
+                        opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+                    ),
+                    RimeligGrunnVurdering(
+                        harRimeligGrunn = false,
+                        fraDato = 15 mai 2020,
+                        begrunnelse = "kan",
+                        vurdertAv = "saksbehandler",
+                        opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+                    )
+                )
+            )
+        )
+
+        val vurdertTidslinje = vurder(input, nå = rettighetsperiode.tom.plusDays(1))
+
+        assertVurdering(
+            vurdertTidslinje, rettighetsperiode,
+            Forventer(
+                fom = rettighetsperiode.fom,
+                tom = rettighetsperiode.fom.plusDays(13),
+                vurdering = MeldepliktVurdering.FørVedtak,
+            ),
+            Forventer(
+                fom = 4 mai 2020,
+                tom = 13 mai 2020,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
+            ),
+            Forventer(
+                fom = 14 mai 2020,
+                tom = 17 mai 2020,
+                vurdering = MeldepliktVurdering.RimeligGrunn,
+            )
+        )
+    }
 
     private fun vurder(
         input: UnderveisInput,
