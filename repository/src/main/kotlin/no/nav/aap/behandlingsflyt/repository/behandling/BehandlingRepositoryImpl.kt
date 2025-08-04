@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -29,12 +30,13 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         sakId: SakId,
         vurderingsbehov: List<VurderingsbehovMedPeriode>,
         typeBehandling: TypeBehandling,
-        forrigeBehandlingId: BehandlingId?
+        forrigeBehandlingId: BehandlingId?,
+        årsakTilOpprettelse: ÅrsakTilOpprettelse?
     ): Behandling {
 
         val query = """
-            INSERT INTO BEHANDLING (sak_id, referanse, status, type, forrige_id)
-                 VALUES (?, ?, ?, ?, ?)
+            INSERT INTO BEHANDLING (sak_id, referanse, status, type, forrige_id, aarsak_til_opprettelse)
+                 VALUES (?, ?, ?, ?, ?, ?)
             """.trimIndent()
         val behandlingsreferanse = BehandlingReferanse()
 
@@ -45,11 +47,12 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 setEnumName(3, Status.OPPRETTET)
                 setString(4, typeBehandling.identifikator())
                 setLong(5, forrigeBehandlingId?.toLong())
+                setEnumName(6, årsakTilOpprettelse)
             }
         }
 
         val vurderingsbehovQuery = """
-            INSERT INTO AARSAK_TIL_BEHANDLING (behandling_id, aarsak, periode)
+            INSERT INTO vurderingsbehov (behandling_id, aarsak, periode)
             VALUES (?, ?, ?::daterange)
         """.trimIndent()
 
@@ -105,6 +108,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             versjon = row.getLong("versjon"),
             vurderingsbehov = hentVurderingsbehov(behandlingId),
             opprettetTidspunkt = row.getLocalDateTime("opprettet_tid"),
+            årsakTilOpprettelse = row.getEnumOrNull("aarsak_til_opprettelse"),
             forrigeBehandlingId = row.getLongOrNull("forrige_id")?.let { BehandlingId(it) }
         )
     }
@@ -120,13 +124,14 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             opprettetTidspunkt = row.getLocalDateTime("opprettet_tid"),
             vedtakstidspunkt = row.getLocalDateTime("vedtakstidspunkt"),
             virkningstidspunkt = row.getLocalDateOrNull("virkningstidspunkt"),
-            vurderingsbehov = hentVurderingsbehov(behandlingId).map { it.type }.toSet()
+            vurderingsbehov = hentVurderingsbehov(behandlingId).map { it.type }.toSet(),
+            årsakTilOpprettelse = row.getEnumOrNull("aarsak_til_opprettelse"),
         )
     }
 
     private fun hentVurderingsbehov(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
         val query = """
-            SELECT * FROM AARSAK_TIL_BEHANDLING WHERE behandling_id = ? ORDER BY opprettet_tid DESC
+            SELECT * FROM vurderingsbehov WHERE behandling_id = ? ORDER BY opprettet_tid DESC
         """.trimIndent()
         return connection.queryList(query) {
             setParams {
@@ -270,6 +275,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 B.TYPE,
                 B.STATUS,
                 B.OPPRETTET_TID,
+                B.AARSAK_TIL_OPPRETTELSE,
                 V.VEDTAKSTIDSPUNKT,
                 V.VIRKNINGSTIDSPUNKT
             FROM
@@ -342,7 +348,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun oppdaterVurderingsbehov(behandling: Behandling, vurderingsbehov: List<VurderingsbehovMedPeriode>) {
         val vurderingsbehovQuery = """
-            INSERT INTO AARSAK_TIL_BEHANDLING (behandling_id, aarsak, periode)
+            INSERT INTO vurderingsbehov (behandling_id, aarsak, periode)
             VALUES (?, ?, ?::daterange)
         """.trimIndent()
 

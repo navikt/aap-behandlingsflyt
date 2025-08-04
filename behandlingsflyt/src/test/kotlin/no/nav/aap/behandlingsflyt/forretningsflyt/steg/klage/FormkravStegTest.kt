@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -428,6 +429,7 @@ class FormkravStegTest {
         behandlingId,
         sakId = SakId(1),
         typeBehandling = TypeBehandling.Førstegangsbehandling,
+        årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
         forrigeBehandlingId = null,
         versjon = 1
     )

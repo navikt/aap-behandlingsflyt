@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -108,6 +109,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             sakId = sakId,
             typeBehandling = TypeBehandling.Revurdering,
             status = Status.OPPRETTET,
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
             vurderingsbehov = årsakerPåTidligereBehandling,
             stegTilstand = StegTilstand(
                 stegStatus = StegStatus.AVKLARINGSPUNKT,

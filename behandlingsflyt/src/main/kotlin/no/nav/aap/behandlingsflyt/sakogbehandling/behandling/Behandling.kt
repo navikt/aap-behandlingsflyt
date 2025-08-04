@@ -20,6 +20,7 @@ class Behandling(
     private var status: Status = Status.OPPRETTET,
     private var vurderingsbehov: List<VurderingsbehovMedPeriode> = mutableListOf(),
     private var stegTilstand: StegTilstand? = null,
+    val årsakTilOpprettelse: ÅrsakTilOpprettelse?,
     val opprettetTidspunkt: LocalDateTime = LocalDateTime.now(),
     val versjon: Long
 ) : Comparable<Behandling> {
