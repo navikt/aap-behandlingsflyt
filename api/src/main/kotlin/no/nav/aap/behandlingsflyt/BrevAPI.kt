@@ -4,15 +4,10 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.BREV_SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BrevbestillingLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag.Brev.Mottaker
-import no.nav.aap.behandlingsflyt.behandling.brev.FaktagrunnlagService
 import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.behandling.brev.VarselOmBrevbestillingDto
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
@@ -24,13 +19,9 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.SKRIV_BREV_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.FaktagrunnlagDto
-import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.HentFaktaGrunnlagRequest
-import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
 import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -41,11 +32,11 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.komponenter.server.auth.bruker
-import no.nav.aap.komponenter.server.auth.token
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.server.auth.bruker
+import no.nav.aap.komponenter.server.auth.token
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -54,7 +45,6 @@ import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.authorizedPut
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import java.util.*
 import javax.sql.DataSource
 
@@ -178,7 +168,6 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                                 brevtype = brevbestillingResponse.brevtype,
                                 språk = brevbestillingResponse.språk,
                                 status = when (brevbestillingResponse.status) {
-                                    no.nav.aap.brev.kontrakt.Status.REGISTRERT -> Status.SENDT
                                     no.nav.aap.brev.kontrakt.Status.UNDER_ARBEID -> Status.FORHÅNDSVISNING_KLAR
                                     no.nav.aap.brev.kontrakt.Status.FERDIGSTILT -> Status.FULLFØRT
                                     no.nav.aap.brev.kontrakt.Status.AVBRUTT -> Status.AVBRUTT
@@ -266,65 +255,6 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                         )
                     }
                     respond(DokumentResponsDTO(pdf))
-                }
-            }
-            route("/los-bestilling") {
-                authorizedPost<Unit, String, LøsBrevbestillingDto>(
-                    AuthorizationBodyPathConfig(
-                        operasjon = Operasjon.SAKSBEHANDLE,
-                        applicationRole = "brev",
-                        applicationsOnly = true
-                    )
-                ) { _, request ->
-                    dataSource.transaction { connection ->
-                        val repositoryProvider = repositoryRegistry.provider(connection)
-                        val taSkriveLåsRepository =
-                            repositoryProvider.provide<TaSkriveLåsRepository>()
-
-                        val lås = taSkriveLåsRepository.lås(request.behandlingReferanse)
-
-                        val behandlingRepository =
-                            repositoryProvider.provide<BehandlingRepository>()
-
-                        MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
-                            MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString())
-                                .use {
-                                    val behandling =
-                                        behandlingRepository.hent(lås.behandlingSkrivelås.id)
-
-                                    AvklaringsbehovHendelseHåndterer(repositoryProvider).håndtere(
-                                        key = lås.behandlingSkrivelås.id,
-                                        hendelse = LøsAvklaringsbehovHendelse(
-                                            løsning = BrevbestillingLøsning(request),
-                                            behandlingVersjon = behandling.versjon,
-                                            bruker = BREV_SYSTEMBRUKER,
-                                        )
-                                    )
-
-                                    taSkriveLåsRepository.verifiserSkrivelås(lås)
-                                }
-                        }
-                    }
-                    respond("{}", HttpStatusCode.Accepted)
-                }
-            }
-            route("/faktagrunnlag") {
-                authorizedPost<Unit, FaktagrunnlagDto, HentFaktaGrunnlagRequest>(
-                    AuthorizationBodyPathConfig(
-                        operasjon = Operasjon.SAKSBEHANDLE,
-                        applicationRole = "brev",
-                        applicationsOnly = true
-                    )
-                ) { _, request ->
-                    val faktagrunnlag = dataSource.transaction { connection ->
-                        val repositoryProvider = repositoryRegistry.provider(connection)
-                        FaktagrunnlagService.konstruer(repositoryProvider)
-                            .finnFaktagrunnlag(
-                                behandlingReferanse = request.behandlingReferanse,
-                                faktagrunnlag = request.faktagrunnlag
-                            )
-                    }
-                    respond(FaktagrunnlagDto(faktagrunnlag))
                 }
             }
         }

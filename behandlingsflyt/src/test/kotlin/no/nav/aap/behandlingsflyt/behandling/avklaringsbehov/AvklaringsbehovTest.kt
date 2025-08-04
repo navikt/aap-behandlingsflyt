@@ -37,7 +37,7 @@ class AvklaringsbehovTest {
     fun `Skal ikke kunne gjenåpne et allerede åpnet behov`() {
         val ab = Avklaringsbehov(
             id = 1,
-            definisjon = Definisjon.BESTILL_BREV,
+            definisjon = Definisjon.SKRIV_VEDTAKSBREV,
             funnetISteg = StegType.BREV,
             kreverToTrinn = false
         )
