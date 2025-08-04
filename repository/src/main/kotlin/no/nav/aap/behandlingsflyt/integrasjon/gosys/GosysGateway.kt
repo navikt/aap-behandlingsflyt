@@ -64,11 +64,11 @@ class GosysGateway : OppgaveGateway {
         val request = PostRequest(oppgaveRequest)
         // Midlertidig logging for debugging i test
         log.info("Kaller Gosysoppgave med request: ${oppgaveRequest}")
-
+        log.info("Kaller Gosysoppgave med rå request: ${request.body()}")
         try {
             client.post(path, request) { _, _ -> }
         } catch (e: Exception) {
-            log.warn("Feil mot oppgaveApi under opprettelse av oppgave: ${e.message}", e)
+            log.error("Feil mot oppgaveApi under opprettelse av oppgave: ${e.message}", e)
             throw e
         }
 
