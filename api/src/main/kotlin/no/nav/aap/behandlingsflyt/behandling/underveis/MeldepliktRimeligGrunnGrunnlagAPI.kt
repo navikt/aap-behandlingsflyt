@@ -4,7 +4,10 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRimeligGrunnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.RimeligGrunnVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -33,7 +36,9 @@ fun NormalOpenAPIRoute.meldepliktRimeligGrunnGrunnlagApi(
                 dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val meldepliktRimeligGrunnRepository = repositoryProvider.provide<MeldepliktRimeligGrunnRepository>()
+                    val meldepliktRimeligGrunnRepository =
+                        repositoryProvider.provide<MeldepliktRimeligGrunnRepository>()
+                    val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
@@ -46,9 +51,16 @@ fun NormalOpenAPIRoute.meldepliktRimeligGrunnGrunnlagApi(
                     val historikk =
                         meldepliktRimeligGrunnRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
 
-                    // TODO: Legg til meldeperioder som ikke er oppfylt i grunnlaget
+                    // Grunnlaget vil være tomt til underveis har kjørt, 
+                    // men siden det er frivillig overstyring der steget automatisk returnerer Fullført, er dette greit
+                    val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
+
                     MeldepliktRimeligGrunnGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        perioderIkkeMeldt = underveisGrunnlag?.perioder
+                            ?.filter { it.meldepliktStatus == MeldepliktStatus.IKKE_MELDT_SEG }
+                            ?.map { it.meldePeriode }
+                            ?: emptyList(),
                         historikk =
                             historikk
                                 .map { tilResponse(it) }

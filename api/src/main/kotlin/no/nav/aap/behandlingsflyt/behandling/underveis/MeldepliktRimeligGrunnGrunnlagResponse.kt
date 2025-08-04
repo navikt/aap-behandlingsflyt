@@ -1,11 +1,13 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class MeldepliktRimeligGrunnGrunnlagResponse(
     val harTilgangTilÅSaksbehandle: Boolean,
+    val perioderIkkeMeldt: List<Periode>,
     val historikk: Set<MeldepliktRimeligGrunnVurderingResponse>,
     val gjeldendeVedtatteVurderinger: List<MeldepliktRimeligGrunnVurderingResponse>,
     val vurderinger: List<MeldepliktRimeligGrunnVurderingResponse>,
