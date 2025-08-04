@@ -3661,7 +3661,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
     fun `barn lagres i pip i starten av behandlingen`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val manueltBarnIdent = genererIdent(LocalDate.now().minusYears(3))
-        val person = TestPersoner.STANDARD_PERSON().medBarn(listOf(TestPersoner.PERSON_FOR_UNG()))
+        val person = TestPersoner.STANDARD_PERSON()
 
         // Oppretter søknad med manuelt barn
         val behandling = sendInnSøknad(
@@ -3685,12 +3685,11 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             val pipRepository = PipRepositoryImpl(connection)
             val pipIdenter = pipRepository.finnIdenterPåBehandling(behandling.referanse)
 
-            // Manuelle og register-barn finnes i pip umiddelbart etter at søknad er sendt inn.
-            assertThat(pipIdenter.map { it.ident }.containsAll(listOf(
-                    person.aktivIdent(),
+            // Manuelt barn finnes i pip umiddelbart etter at søknad er innsendt
+            assertThat(pipIdenter.map { it.ident }).containsExactlyInAnyOrder(
+                    person.aktivIdent().identifikator,
                     manueltBarnIdent.identifikator,
-                    TestPersoner.PERSON_FOR_UNG().aktivIdent()
-            )))
+            )
         }
     }
 }
