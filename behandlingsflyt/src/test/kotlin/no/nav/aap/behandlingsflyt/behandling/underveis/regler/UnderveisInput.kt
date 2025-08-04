@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRimeligGrunnGrunnlag
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettMeldeperiodeSteg
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -40,6 +41,7 @@ fun tomUnderveisInput(
     etAnnetSted: List<EtAnnetSted> = listOf(),
     arbeidsevneGrunnlag: ArbeidsevneGrunnlag = ArbeidsevneGrunnlag(emptyList()),
     meldepliktGrunnlag: MeldepliktGrunnlag = MeldepliktGrunnlag(emptyList()),
+    meldepliktRimeligGrunnGrunnlag: MeldepliktRimeligGrunnGrunnlag = MeldepliktRimeligGrunnGrunnlag(emptyList()),
     meldeperioder: List<Periode> = FastsettMeldeperiodeSteg.utledMeldeperiode(listOf(), rettighetsperiode),
     vedtaksdatoFørstegangsbehandling: LocalDate? = rettighetsperiode.fom,
 ): UnderveisInput {
@@ -54,6 +56,7 @@ fun tomUnderveisInput(
         etAnnetSted = etAnnetSted,
         arbeidsevneGrunnlag = arbeidsevneGrunnlag,
         meldepliktGrunnlag = meldepliktGrunnlag,
+        meldepliktRimeligGrunnGrunnlag = meldepliktRimeligGrunnGrunnlag,
         meldeperioder = meldeperioder,
         vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling,
     )

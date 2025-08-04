@@ -21,6 +21,7 @@ enum class MeldepliktStatus {
     IKKE_MELDT_SEG,
     FREMTIDIG_IKKE_OPPFYLT,
     FREMTIDIG_OPPFYLT,
+    RIMELIG_GRUNN
 }
 
 interface MeldepliktVurdering {
@@ -76,5 +77,11 @@ interface MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
         override val årsak = null
         override val status = FREMTIDIG_OPPFYLT
+    }
+    
+    data object RimeligGrunn: MeldepliktVurdering {
+        override val utfall = Utfall.OPPFYLT
+        override val årsak = null
+        override val status = MeldepliktStatus.RIMELIG_GRUNN
     }
 }
