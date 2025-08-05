@@ -109,7 +109,7 @@ class YrkesskadeService private constructor(
         check(!Miljø.erProd())
 
         return Yrkesskade(
-            ref = "",
+            ref = "YRK",
             saksnummer = null,
             kildesystem = "KELVIN",
             skadedato = periode.fom.minusDays(60),
