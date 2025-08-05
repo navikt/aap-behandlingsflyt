@@ -32,6 +32,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettSykdomsvilkåretS
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FatteVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ForeslåVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FritakMeldepliktSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.IkkeOppfyltMeldepliktSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.IverksettVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ManglendeLigningGrunnlagSteg
@@ -210,25 +211,38 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = SamordningSteg,
                 informasjonskrav = listOf(SamordningYtelseVurderingService),
-                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.SAMORDNING_OG_AVREGNING, Vurderingsbehov.REVURDER_SAMORDNING),
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.SAMORDNING_OG_AVREGNING,
+                    Vurderingsbehov.REVURDER_SAMORDNING
+                ),
             )
             .medSteg(steg = SamordningUføreSteg, informasjonskrav = listOf(UføreService))
             .medSteg(steg = TjenestepensjonRefusjonskravSteg, informasjonskrav = listOf(TjenestePensjonService))
             .medSteg(
                 steg = SamordningAndreStatligeYtelserSteg,
-                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.SAMORDNING_OG_AVREGNING, Vurderingsbehov.REVURDER_SAMORDNING)
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.SAMORDNING_OG_AVREGNING,
+                    Vurderingsbehov.REVURDER_SAMORDNING
+                )
             )
             .medSteg(
                 steg = SamordningArbeidsgiverSteg,
             )
             .medSteg(steg = SamordningAvslagSteg)
-            .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(MeldekortService, AktivitetspliktInformasjonskrav))
+            .medSteg(
+                steg = IkkeOppfyltMeldepliktSteg,
+                informasjonskrav = listOf(MeldekortService, AktivitetspliktInformasjonskrav)
+            )
+            .medSteg(steg = UnderveisSteg)
             .medSteg(steg = Effektuer11_7Steg)
             .medSteg(
                 steg = BeregnTilkjentYtelseSteg,
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering()
             )
-            .medSteg(steg = SimulerUtbetalingSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering())
+            .medSteg(
+                steg = SimulerUtbetalingSteg,
+                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering()
+            )
             .medSteg(
                 steg = ForeslåVedtakSteg,
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering()
@@ -238,7 +252,10 @@ object Revurdering : BehandlingType {
                 steg = FatteVedtakSteg,
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering()
             ) // to-trinn
-            .medSteg(steg = IverksettVedtakSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering())
+            .medSteg(
+                steg = IverksettVedtakSteg,
+                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering()
+            )
             .medSteg(
                 steg = MeldingOmVedtakBrevSteg,
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering()

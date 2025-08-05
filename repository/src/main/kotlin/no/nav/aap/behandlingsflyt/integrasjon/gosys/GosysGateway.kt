@@ -47,15 +47,15 @@ class GosysGateway : OppgaveGateway {
     ) {
 
         val oppgaveRequest = OpprettOppgaveRequest(
-            oppgavetype = OppgaveType.VVURDER_KONSEKVENS_FOR_YTELSE.verdi,
+            oppgavetype = OppgaveType.VURDER_KONSEKVENS_FOR_YTELSE.verdi,
             tema = "AAP",
             prioritet = Prioritet.HOY,
             aktivDato = LocalDate.now().toString(),
             personident = aktivIdent.identifikator,
             tildeltEnhetsnr = navKontor,
             opprettetAvEnhetsnr = navKontor,
-            beskrivelse = "Refusjonskrav. Brukeren er innvilget etterbetaling av (ytelse) fra (dato) til (dato). (dagsats/månedssats). Dere må sende refusjonskrav til NØS.",
-            behandlingstema = Behandlingstema.AAP.kode,
+            beskrivelse = "Refusjonskrav. Brukeren er innvilget etterbetaling av (ytelse) fra (dato) til (dato). Dere må sende refusjonskrav til NØS.",
+            behandlingstema = Behandlingstema.REFUSJON.kode,
             behandlingstype = null,
             fristFerdigstillelse = finnStandardOppgavefrist(),
         )
@@ -64,7 +64,7 @@ class GosysGateway : OppgaveGateway {
         val request = PostRequest(oppgaveRequest)
         // Midlertidig logging for debugging i test
         log.info("Kaller Gosysoppgave med request: ${oppgaveRequest}")
-
+        log.info("Kaller Gosysoppgave med rå request: ${request.body()}")
         try {
             client.post(path, request) { _, _ -> }
         } catch (e: Exception) {
@@ -76,7 +76,7 @@ class GosysGateway : OppgaveGateway {
 
 
     enum class Behandlingstema(val kode: String) {
-        AAP("ab0014");
+        REFUSJON("ab0504");
     }
 
 }
@@ -103,7 +103,7 @@ data class FinnOppgaverResponse(
 )
 
 enum class OppgaveType(val verdi: String) {
-    VVURDER_KONSEKVENS_FOR_YTELSE("VUR_KONS_YTE"),
+    VURDER_KONSEKVENS_FOR_YTELSE("VUR_KONS_YTE"),
 }
 
 enum class Statuskategori {
