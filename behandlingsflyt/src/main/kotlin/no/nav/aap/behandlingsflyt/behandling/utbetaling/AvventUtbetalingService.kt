@@ -23,7 +23,7 @@ class AvventUtbetalingService(
         val avventUtbetalingPgaSosialRefusjonskrav = overlapperMedSosialRefusjonskrav(behandlingId, vedtakstidspunkt, tilkjentYtelseHelePerioden)
         val avventUtbetalingPgaTjenestepensjonRefusjon = overlapperMedTjenestepensjonRefusjon(behandlingId, vedtakstidspunkt, tilkjentYtelseHelePerioden)
         val avventUtbetalingPgaSamordningAndreStatligeYtelser = overlapperMedSamordningAndreStatligeYtelser(behandlingId)
-        val avventUtbetalingPgaSamordningArbeidgiver = overlapperMedSamordningAndreStatligeYtelser(behandlingId)
+        val avventUtbetalingPgaSamordningArbeidgiver = overlapperMedSamordningArbeidsgiver(behandlingId)
 
         return avventUtbetalingPgaSosialRefusjonskrav
             ?: (avventUtbetalingPgaTjenestepensjonRefusjon
