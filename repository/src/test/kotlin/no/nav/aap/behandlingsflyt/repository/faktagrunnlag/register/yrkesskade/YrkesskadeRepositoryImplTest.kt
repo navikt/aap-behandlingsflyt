@@ -55,11 +55,11 @@ class YrkesskadeRepositoryImplTest {
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 juni 2019)))
+                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
             )
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
             assertThat(yrkesskadeGrunnlag?.yrkesskader).isEqualTo(
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 juni 2019)))
+                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
             )
         }
     }
@@ -73,15 +73,15 @@ class YrkesskadeRepositoryImplTest {
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 juni 2019)))
+                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
             )
             yrkesskadeRepository.lagre(
                 behandling.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 mai 2019)))
+                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019)))
             )
             yrkesskadeRepository.lagre(
                 behandling.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 mai 2019)))
+                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019)))
             )
 
             val opplysninger =
@@ -114,7 +114,7 @@ class YrkesskadeRepositoryImplTest {
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling1.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 juni 2019)))
+                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
             )
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
@@ -125,7 +125,7 @@ class YrkesskadeRepositoryImplTest {
 
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling2.id)
             assertThat(yrkesskadeGrunnlag?.yrkesskader).isEqualTo(
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 juni 2019)))
+                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
             )
         }
     }
@@ -148,11 +148,11 @@ class YrkesskadeRepositoryImplTest {
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling1.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 juni 2019)))
+                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
             )
             yrkesskadeRepository.lagre(
                 behandling1.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 mai 2019)))
+                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019)))
             )
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
@@ -163,7 +163,7 @@ class YrkesskadeRepositoryImplTest {
 
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling2.id)
             assertThat(yrkesskadeGrunnlag?.yrkesskader).isEqualTo(
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 mai 2019)))
+                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019)))
             )
         }
     }
@@ -176,15 +176,15 @@ class YrkesskadeRepositoryImplTest {
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 juni 2019)))
+                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
             )
 
             yrkesskadeRepository.lagre(
                 behandling.id,
                 Yrkesskader(
                     listOf(
-                        Yrkesskade(ref = "rexxf", skadedato = 5 juni 2019),
-                        Yrkesskade(ref = "rxef", skadedato = 8 mai 2019)
+                        Yrkesskade(ref = "rexxf", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 5 juni 2019),
+                        Yrkesskade(ref = "rxef", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 8 mai 2019)
                     )
                 )
             )
@@ -202,20 +202,20 @@ class YrkesskadeRepositoryImplTest {
 
             yrkesskadeRepository.lagre(
                 behandling.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 juni 2019)))
+                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
             )
             val orginaltGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
             assertThat(orginaltGrunnlag?.yrkesskader).isEqualTo(
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 juni 2019)))
+                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
             )
 
             yrkesskadeRepository.lagre(
                 behandling.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 mai 2019)))
+                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019)))
             )
             val oppdatertGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
             assertThat(oppdatertGrunnlag?.yrkesskader).isEqualTo(
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 mai 2019)))
+                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019)))
             )
 
             data class Opplysning(val behandlingId: Long, val aktiv: Boolean, val ref: String, val skadedato: LocalDate)
@@ -260,11 +260,11 @@ class YrkesskadeRepositoryImplTest {
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling1.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 juni 2019)))
+                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
             )
             yrkesskadeRepository.lagre(
                 behandling1.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 mai 2019)))
+                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019)))
             )
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
