@@ -69,7 +69,7 @@ class AvklarOppfølgingStegTest {
 
     @BeforeEach
     fun setup() {
-        every { sakOgBehandlingService.finnEllerOpprettBehandling(any<SakId>(), any()) } returns behandling
+        every { sakOgBehandlingService.finnEllerOpprettBehandling(any<SakId>(), any(), any()) } returns behandling
 
         every { mottaDokumentService.hentOppfølgingsBehandlingDokument(any())} returns BehandletOppfølgingsOppgave(
             datoForOppfølging = LocalDate.now(),
@@ -97,7 +97,8 @@ class AvklarOppfølgingStegTest {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
             sakOgBehandlingService.finnEllerOpprettBehandling(
                 behandling.sakId,
-                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
+                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
+                ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
             )
         }
     }
@@ -120,7 +121,8 @@ class AvklarOppfølgingStegTest {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
             sakOgBehandlingService.finnEllerOpprettBehandling(
                 behandling.sakId,
-                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
+                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
+                ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
             )
         }
     }
@@ -137,7 +139,8 @@ class AvklarOppfølgingStegTest {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
             sakOgBehandlingService.finnEllerOpprettBehandling(
                 behandling.sakId,
-                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
+                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
+                ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
             )
         }
     }
