@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver
 
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -21,3 +23,8 @@ data class SamordningArbeidsgiverVurderingDTO(
     val fom: LocalDate,
     val tom: LocalDate,
 )
+
+fun SamordningArbeidsgiverVurdering.tilTidslinje(): Tidslinje<SamordningArbeidsgiverVurdering> {
+    val periode = Periode(fom, tom)
+    return Tidslinje(periode, this)
+}

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.utbetaling
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -14,6 +15,7 @@ class AvventUtbetalingService(
     private val refusjonskravRepository: RefusjonkravRepository,
     private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository,
     private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
+    private val samordningArbeidsgiverYtelserRepository: SamordningArbeidsgiverRepository
 ) {
 
     fun finnEventuellAvventUtbetaling(behandlingId: BehandlingId, vedtakstidspunkt: LocalDateTime, tilkjentYtelseHelePerioden: Periode): TilkjentYtelseAvventDto? {
@@ -21,10 +23,12 @@ class AvventUtbetalingService(
         val avventUtbetalingPgaSosialRefusjonskrav = overlapperMedSosialRefusjonskrav(behandlingId, vedtakstidspunkt, tilkjentYtelseHelePerioden)
         val avventUtbetalingPgaTjenestepensjonRefusjon = overlapperMedTjenestepensjonRefusjon(behandlingId, vedtakstidspunkt, tilkjentYtelseHelePerioden)
         val avventUtbetalingPgaSamordningAndreStatligeYtelser = overlapperMedSamordningAndreStatligeYtelser(behandlingId)
+        val avventUtbetalingPgaSamordningArbeidgiver = overlapperMedSamordningAndreStatligeYtelser(behandlingId)
 
         return avventUtbetalingPgaSosialRefusjonskrav
             ?: (avventUtbetalingPgaTjenestepensjonRefusjon
-                ?: (avventUtbetalingPgaSamordningAndreStatligeYtelser))
+                ?: avventUtbetalingPgaSamordningAndreStatligeYtelser
+                ?: avventUtbetalingPgaSamordningArbeidgiver)
     }
 
     private fun overlapperMedSosialRefusjonskrav(behandlingId: BehandlingId, vedtakstidspunkt: LocalDateTime, tilkjentYtelseHelePerioden: Periode): TilkjentYtelseAvventDto? {
@@ -86,6 +90,21 @@ class AvventUtbetalingService(
             fom = fom,
             tom = tom,
             overføres = tom.plusDays(42),
+            årsak = AvventÅrsak.AVVENT_AVREGNING,
+            feilregistrering = false
+        )
+    }
+
+    private fun overlapperMedSamordningArbeidsgiver(behandlingId: BehandlingId): TilkjentYtelseAvventDto? {
+        val samordningArbeidsgiverYtelser = samordningArbeidsgiverYtelserRepository.hentHvisEksisterer(behandlingId)
+        if (samordningArbeidsgiverYtelser?.vurdering == null) {
+            return null
+        }
+
+        return TilkjentYtelseAvventDto(
+            fom = samordningArbeidsgiverYtelser.vurdering.fom,
+            tom = samordningArbeidsgiverYtelser.vurdering.tom,
+            overføres = samordningArbeidsgiverYtelser.vurdering.tom.plusDays(42),
             årsak = AvventÅrsak.AVVENT_AVREGNING,
             feilregistrering = false
         )

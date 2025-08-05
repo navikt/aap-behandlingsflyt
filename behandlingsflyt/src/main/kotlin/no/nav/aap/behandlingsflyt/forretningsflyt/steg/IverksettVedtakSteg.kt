@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -90,6 +91,8 @@ class IverksettVedtakSteg private constructor(
             val vedtakRepository = repositoryProvider.provide<VedtakRepository>()
             val samordningAndreStatligeYtelserRepository =
                 repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>()
+            val samordningArbeidsgiverRepository =
+                repositoryProvider.provide<SamordningArbeidsgiverRepository>()
             val utbetalingGateway = GatewayProvider.provide<UtbetalingGateway>()
             val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
             val virkningstidspunktUtlederService = VirkningstidspunktUtleder(
@@ -108,6 +111,7 @@ class IverksettVedtakSteg private constructor(
                     refusjonskravRepository = refusjonskravRepository,
                     tjenestepensjonRefusjonsKravVurderingRepository = tjenestepensjonRefusjonsKravVurderingRepository,
                     samordningAndreStatligeYtelserRepository = samordningAndreStatligeYtelserRepository,
+                    samordningArbeidsgiverRepository = samordningArbeidsgiverRepository
                 ),
                 vedtakService = VedtakService(vedtakRepository, behandlingRepository),
                 utbetalingGateway = utbetalingGateway,
