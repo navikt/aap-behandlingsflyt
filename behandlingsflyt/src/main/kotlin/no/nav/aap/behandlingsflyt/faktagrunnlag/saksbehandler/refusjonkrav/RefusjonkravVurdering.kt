@@ -18,3 +18,9 @@ data class RefusjonkravVurderingDto(
     val fom: LocalDate?,
     val tom: LocalDate?,
 )
+
+data class NavKontorPeriodeDto(
+    val enhetsNummer: String,
+    val fom: LocalDate?,
+    val tom: LocalDate?,
+)

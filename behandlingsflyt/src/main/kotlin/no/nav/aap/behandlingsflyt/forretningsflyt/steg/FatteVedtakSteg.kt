@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Omgjøres
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKontorPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
@@ -77,7 +78,13 @@ class FatteVedtakSteg(
 
         val navKontorList = navkontorSosialRefusjon
             .filter { it.harKrav && it.navKontor != null }
-            .mapNotNull { navKontorEnhetsNummer(it.navKontor) }
+            .map {
+                NavKontorPeriodeDto(
+                    enhetsNummer = navKontorEnhetsNummer (it.navKontor)!!,
+                    fom = it.fom,
+                    tom = it.tom
+                )
+            }
 
         if (navKontorList.isNotEmpty()) {
             val aktivIdent = sakRepository.hent(kontekst.sakId).person.aktivIdent()
@@ -93,12 +100,12 @@ class FatteVedtakSteg(
     }
 
     private fun opprettOppgave(
-        navKontorList: List<String>,
+        navKontorList: List<NavKontorPeriodeDto>,
         aktivIdent: Ident,
         kontekst: FlytKontekstMedPerioder
     ) {
         navKontorList.forEach { navKontor ->
-            log.info("Oppretter Gosysoppgave for $navKontor for ${aktivIdent}")
+            log.info("Oppretter Gosysoppgave for $navKontor")
             gosysService.opprettOppgave(
                 aktivIdent,
                 kontekst.behandlingId.toString(),
@@ -107,6 +114,8 @@ class FatteVedtakSteg(
             )
         }
     }
+
+
 
     companion object : FlytSteg {
         override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {

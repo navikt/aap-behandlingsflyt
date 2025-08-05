@@ -4,6 +4,7 @@ import no.bekk.bekkopen.date.NorwegianDateUtil.addWorkingDaysToDate
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OppgaveGateway
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OpprettOppgaveRequest
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.Prioritet
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKontorPeriodeDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -19,6 +20,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 import java.time.ZoneId.systemDefault
+import java.time.format.DateTimeFormatter
 import java.util.Date
 
 class GosysGateway : OppgaveGateway {
@@ -43,8 +45,21 @@ class GosysGateway : OppgaveGateway {
         aktivIdent: Ident,
         bestillingReferanse: String,
         behandlingId: BehandlingId,
-        navKontor: String
+        navKontor: NavKontorPeriodeDto
     ) {
+
+        val beskrivelse =
+            if (navKontor.fom != null && navKontor.tom != null) {
+                val fom = requireNotNull(navKontor.fom)
+                val tom = requireNotNull(navKontor.tom)
+                "Refusjonskrav. Brukeren er innvilget etterbetaling av AAP fra ${
+                    formatDateToSaksbehandlerVennlig(fom)
+                } til ${
+                    formatDateToSaksbehandlerVennlig(tom)
+                }. Dere må sende refusjonskrav til NØS."
+            } else {
+                "Refusjonskrav. Brukeren er innvilget etterbetaling av AAP til ${navKontor.enhetsNummer}. Dere må sende refusjonskrav til NØS."
+            }
 
         val oppgaveRequest = OpprettOppgaveRequest(
             oppgavetype = OppgaveType.VURDER_KONSEKVENS_FOR_YTELSE.verdi,
@@ -52,9 +67,9 @@ class GosysGateway : OppgaveGateway {
             prioritet = Prioritet.HOY,
             aktivDato = LocalDate.now().toString(),
             personident = aktivIdent.identifikator,
-            tildeltEnhetsnr = navKontor,
-            opprettetAvEnhetsnr = navKontor,
-            beskrivelse = "Refusjonskrav. Brukeren er innvilget etterbetaling av (ytelse) fra (dato) til (dato). Dere må sende refusjonskrav til NØS.",
+            tildeltEnhetsnr = navKontor.enhetsNummer,
+            opprettetAvEnhetsnr = navKontor.enhetsNummer,
+            beskrivelse = beskrivelse,
             behandlingstema = Behandlingstema.REFUSJON.kode,
             behandlingstype = null,
             fristFerdigstillelse = finnStandardOppgavefrist(),
@@ -62,13 +77,9 @@ class GosysGateway : OppgaveGateway {
 
         val path = baseUri.resolve("/api/v1/oppgaver")
         val request = PostRequest(oppgaveRequest)
-        // Midlertidig logging for debugging i test
-        log.info("Kaller Gosysoppgave med request: ${oppgaveRequest}")
-        log.info("Before wrapping: tildeltEnhetsnr = ${oppgaveRequest.tildeltEnhetsnr}")
-        log.info("Kaller Gosysoppgave med rå request: ${request.body()}")
-        log.info("After wrapping: tildeltEnhetsnr = ${(request.body() as OpprettOppgaveRequest).tildeltEnhetsnr}")
         try {
             client.post(path, request) { _, _ -> }
+            log.info("Opprettet refusjonsoppgave mot Gosys: ${oppgaveRequest} ")
         } catch (e: Exception) {
             log.warn("Feil mot oppgaveApi under opprettelse av oppgave: ${e.message}", e)
             throw e
@@ -96,18 +107,11 @@ fun finnStandardOppgavefrist(nå: LocalDateTime = now()): LocalDate {
     }
 }
 
-data class Oppgave(
-    val id: Long,
-)
-
-data class FinnOppgaverResponse(
-    val oppgaver: List<Oppgave>
-)
+fun formatDateToSaksbehandlerVennlig(date: LocalDate): String {
+    val outputFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+    return date.format(outputFormatter)
+}
 
 enum class OppgaveType(val verdi: String) {
     VURDER_KONSEKVENS_FOR_YTELSE("VUR_KONS_YTE"),
-}
-
-enum class Statuskategori {
-    AAPEN, AVSLUTTET
 }
