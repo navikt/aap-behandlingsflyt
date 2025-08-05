@@ -145,7 +145,8 @@ fun beregnForInput(input: Input, fødselsdato: Fødselsdato): Triple<Year, GUnit
             perioder = listOf()
         ),
         samordningGrunnlag = SamordningGrunnlag(0L, listOf()),
-        samordningUføre = null
+        samordningUføre = null,
+        samordningArbeidsgiver = null
     )
 
     val dagsats = tilkjent.beregnTilkjentYtelse().mapValue { it.dagsats }.komprimer().first().verdi.verdi

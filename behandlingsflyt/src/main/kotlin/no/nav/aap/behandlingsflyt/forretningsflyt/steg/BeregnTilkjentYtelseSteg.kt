@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.Barnet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
@@ -31,6 +32,7 @@ class BeregnTilkjentYtelseSteg private constructor(
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val samordningRepository: SamordningRepository,
     private val samordningUføreRepository: SamordningUføreRepository,
+    private val samordningArbeidsgiverRepository: SamordningArbeidsgiverRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
 
@@ -42,6 +44,7 @@ class BeregnTilkjentYtelseSteg private constructor(
         tilkjentYtelseRepository = repositoryProvider.provide(),
         samordningRepository = repositoryProvider.provide(),
         samordningUføreRepository = repositoryProvider.provide(),
+        samordningArbeidsgiverRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
     )
 
@@ -67,6 +70,7 @@ class BeregnTilkjentYtelseSteg private constructor(
             samordningPerioder = listOf()
         )
         val samordningUføre = samordningUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val samordningArbeidsgiver = samordningArbeidsgiverRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         val beregnetTilkjentYtelse = BeregnTilkjentYtelseService(
             fødselsdato,
@@ -74,7 +78,8 @@ class BeregnTilkjentYtelseSteg private constructor(
             underveisgrunnlag,
             barnetilleggGrunnlag,
             samordningGrunnlag,
-            samordningUføre
+            samordningUføre,
+            samordningArbeidsgiver
         ).beregnTilkjentYtelse()
         tilkjentYtelseRepository.lagre(
             behandlingId = kontekst.behandlingId,

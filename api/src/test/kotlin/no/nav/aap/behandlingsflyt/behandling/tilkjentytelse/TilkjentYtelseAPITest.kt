@@ -45,7 +45,7 @@ class TilkjentYtelseAPITest : BaseApiTest() {
                     ),
                     tilkjent = Tilkjent(
                         dagsats = Beløp(500),
-                        gradering = TilkjentGradering(Prosent(50), Prosent(50), Prosent(50), Prosent(50), Prosent(30)),
+                        gradering = TilkjentGradering(Prosent(50), Prosent(50), Prosent(50), Prosent(50), Prosent(30), Prosent(0)),
                         grunnlag = Beløp(10000),
                         grunnlagsfaktor = GUnit("1.5"),
                         grunnbeløp = Beløp(106399),
