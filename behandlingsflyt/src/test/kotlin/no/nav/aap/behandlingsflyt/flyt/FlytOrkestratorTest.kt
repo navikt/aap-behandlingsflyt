@@ -441,7 +441,6 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 ),
             )
         )
-        person.barn.forEach { FakePersoner.leggTil(it) }
 
         val ident = person.aktivIdent()
 
@@ -518,7 +517,6 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 ),
             )
         )
-        person.barn.forEach { FakePersoner.leggTil(it) }
 
         val ident = person.aktivIdent()
 
