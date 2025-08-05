@@ -16,8 +16,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurderingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Omgjøringskilde
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -110,7 +110,7 @@ class HåndterMottattDokumentService(
         val sak = sakService.hent(sakId)
         val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
         val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
-        val årsakTilOpprettelse = utledÅrsakTilOpprettelse(brevkategori)
+        val årsakTilOpprettelse = utledÅrsakTilOpprettelse(brevkategori, melding)
 
         val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(
             sak.saksnummer,
@@ -162,7 +162,7 @@ class HåndterMottattDokumentService(
     }
 
 
-    private fun utledÅrsakTilOpprettelse(brevkategori: InnsendingType): ÅrsakTilOpprettelse {
+    private fun utledÅrsakTilOpprettelse(brevkategori: InnsendingType, melding: Melding?): ÅrsakTilOpprettelse {
         return when (brevkategori) {
             InnsendingType.SØKNAD -> ÅrsakTilOpprettelse.SØKNAD
             InnsendingType.AKTIVITETSKORT -> ÅrsakTilOpprettelse.AKTIVITETSMELDING
@@ -176,7 +176,17 @@ class HåndterMottattDokumentService(
             InnsendingType.NY_ÅRSAK_TIL_BEHANDLING -> ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
             InnsendingType.KABAL_HENDELSE -> ÅrsakTilOpprettelse.SVAR_FRA_KLAGEINSTANS
             InnsendingType.OPPFØLGINGSOPPGAVE -> ÅrsakTilOpprettelse.OPPFØLGINGSOPPGAVE
+            InnsendingType.OMGJØRING_KLAGE_REVURDERING -> utledÅrsakEtterOmgjøringAvKlage(melding)
         }
+    }
+
+    private fun utledÅrsakEtterOmgjøringAvKlage(melding: Melding?): ÅrsakTilOpprettelse = when (melding) {
+        is OmgjøringKlageRevurderingV0 -> when (melding.kilde) {
+            Omgjøringskilde.KLAGEINSTANS -> ÅrsakTilOpprettelse.OMGJØRING_ETTER_SVAR_FRA_KLAGEINSTANS
+            Omgjøringskilde.KELVIN -> ÅrsakTilOpprettelse.OMGJØRING_ETTER_KLAGE
+        }
+
+        else -> error("Melding må være OmgjøringKlageRevurderingV0")
     }
 
     private fun utledVurderingsbehov(
@@ -190,6 +200,7 @@ class HåndterMottattDokumentService(
                 is ManuellRevurderingV0 -> melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
                 else -> error("Melding må være ManuellRevurderingV0")
             }
+
             InnsendingType.OMGJØRING_KLAGE_REVURDERING -> when (melding) {
                 is OmgjøringKlageRevurderingV0 -> melding.vurderingsbehov.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
                 else -> error("Melding må være OmgjøringKlageRevurderingV0")

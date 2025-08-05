@@ -9,10 +9,10 @@ public sealed interface OmgjøringKlageRevurdering : Melding
 public data class OmgjøringKlageRevurderingV0(
     public val vurderingsbehov: List<Vurderingsbehov>,
     public val beskrivelse: String,
-    public val kilde: OmgjøringsKilde
+    public val kilde: Omgjøringskilde
 ) : OmgjøringKlageRevurdering
 
-public enum class OmgjøringsKilde {
+public enum class Omgjøringskilde {
     KLAGEINSTANS,
     KELVIN
 }
