@@ -760,6 +760,63 @@ class BeregnTilkjentYtelseServiceTest {
     }
 
     @Test
+    fun `sluttpakke reduserer tilkjent endelig utbetalingsgrad`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = object : Grunnlag {
+            override fun grunnlaget(): GUnit {
+                return GUnit(BigDecimal(4))
+            }
+        }
+        val periode = Periode(1 juni 2023, 1 august 2023)
+
+        val underveisgrunnlag = underveisgrunnlag(periode, gradering = Prosent.`70_PROSENT`)
+        val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
+        val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
+        val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList(), "ident"))
+
+        val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
+            vurdering = SamordningArbeidsgiverVurdering(
+                "Har fått sluttpakke",
+                LocalDate.of(2023, 6, 1), LocalDate.of(2023, 8, 1), vurdertAv = "ident"
+            )
+        )
+
+        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+            fødselsdato,
+            beregningsgrunnlag,
+            underveisgrunnlag,
+            barnetilleggGrunnlag,
+            samordningsgrunnlag,
+            samordningUføre,
+            samordningArbeidsgiver
+        ).beregnTilkjentYtelse()
+
+        assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
+            Segment(
+                periode = Periode(1 juni 2023, 1 august 2023),
+                verdi = Tilkjent(
+                    dagsats = Beløp("1204.45"), //4*0.66*111477/260
+                    gradering = TilkjentGradering(
+                        Prosent.`100_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                        Prosent.`70_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                        Prosent.`100_PROSENT`
+                    ),
+                    grunnlag = Beløp("1204.45"),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("118620"),
+                    antallBarn = 0,
+                    barnetilleggsats = Beløp("0"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(9)
+                )
+            )
+        )
+    }
+
+    @Test
     fun `arbeidsgrad og samordning reduserer tilkjent endelig utbetalingsgrad`() {
         val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
         val beregningsgrunnlag = object : Grunnlag {
