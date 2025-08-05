@@ -3,8 +3,8 @@ package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicLong
 
 object InMemorySykdomsvurderingForBrrevRepository : SykdomsvurderingForBrevRepository {
     private val grunnlag = ConcurrentHashMap<BehandlingId, SykdomsvurderingForBrev>()
@@ -18,6 +18,10 @@ object InMemorySykdomsvurderingForBrrevRepository : SykdomsvurderingForBrevRepos
 
     override fun hent(behandlingId: BehandlingId): SykdomsvurderingForBrev? {
         return grunnlag[behandlingId]
+    }
+
+    override fun hent(sakId: SakId): List<SykdomsvurderingForBrev> {
+        TODO("Not yet implemented")
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {

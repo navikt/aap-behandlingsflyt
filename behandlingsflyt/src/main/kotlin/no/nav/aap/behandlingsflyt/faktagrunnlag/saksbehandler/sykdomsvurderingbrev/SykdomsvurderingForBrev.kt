@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 
 data class SykdomsvurderingForBrev(
     val behandlingId: BehandlingId,
-    val vurdering: String,
+    val vurdering: String?,
     val vurdertAv: String,
     val vurdertTidspunkt: LocalDateTime? = null,
 )

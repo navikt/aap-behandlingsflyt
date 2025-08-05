@@ -24,25 +24,43 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(dataSource: DataSource, reposi
             avklaringsbehovKode = Definisjon.SKRIV_SYKDOMSVURDERING_BREV.kode.toString()
 
         ) { behandlingReferanse ->
-            val sykdomsvurderingForBrev = hentSykdomsvurderingForBrev(dataSource, behandlingReferanse, repositoryRegistry)
-            respond(SykdomsvurderingForBrevDto(sykdomsvurderingForBrev?.toDto(), kanSaksbehandle()))
+            val grunnlag = dataSource.transaction { connection ->
+                val repositoryProvider = repositoryRegistry.provider(connection)
+                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                val sykdomsvurderingForBrevRepository = repositoryProvider.provide<SykdomsvurderingForBrevRepository>()
+
+                val sykdomsvurderingForBrev = hentSykdomsvurderingForBrev(behandlingReferanse, behandlingRepository, sykdomsvurderingForBrevRepository)
+                val historiskeSykdomsvurderingerForBrev = hentHistoriskeSykdomsvurderingerForBrev(behandlingReferanse, behandlingRepository, sykdomsvurderingForBrevRepository)
+
+                SykdomsvurderingForBrevDto(
+                    vurdering = sykdomsvurderingForBrev?.toDto(),
+                    historiskeVurderinger = historiskeSykdomsvurderingerForBrev.map { it.toDto() },
+                    kanSaksbehandle = kanSaksbehandle()
+                )
+
+            }
+            respond(grunnlag)
         }
     }
 }
 
 private fun hentSykdomsvurderingForBrev(
-    dataSource: DataSource,
     behandlingReferanse: BehandlingReferanse,
-    repositoryRegistry: RepositoryRegistry
+    behandlingRepository: BehandlingRepository,
+    sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository
 ): SykdomsvurderingForBrev? {
-    return dataSource.transaction { connection ->
-        val repositoryProvider = repositoryRegistry.provider(connection)
-        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-        val sykdomsvurderingForBrevRepository = repositoryProvider.provide<SykdomsvurderingForBrevRepository>()
+    val behandling = behandlingRepository.hent(behandlingReferanse)
+    return sykdomsvurderingForBrevRepository.hent(behandling.id)
+}
 
-        val behandling = behandlingRepository.hent(behandlingReferanse)
-        sykdomsvurderingForBrevRepository.hent(behandling.id)
-    }
+private fun hentHistoriskeSykdomsvurderingerForBrev(
+    behandlingReferanse: BehandlingReferanse,
+    behandlingRepository: BehandlingRepository,
+    sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository
+): List<SykdomsvurderingForBrev> {
+    val behandling = behandlingRepository.hent(behandlingReferanse)
+    return sykdomsvurderingForBrevRepository.hent(behandling.sakId)
+        .filterNot { it.behandlingId == behandling.id }
 }
 
 private fun SykdomsvurderingForBrev.toDto(): SykdomsvurderingForBrevVurderingDto {

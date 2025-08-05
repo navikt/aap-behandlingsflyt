@@ -3,7 +3,9 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 
 class SykdomsvurderingForBrevRepositoryImpl(private val connection: DBConnection) : SykdomsvurderingForBrevRepository {
@@ -41,25 +43,40 @@ class SykdomsvurderingForBrevRepositoryImpl(private val connection: DBConnection
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper { row ->
-                SykdomsvurderingForBrev(
-                    behandlingId = BehandlingId(row.getLong("BEHANDLING_ID")),
-                    vurdering = row.getString("VURDERING"),
-                    vurdertAv = row.getString("VURDERT_AV"),
-                    vurdertTidspunkt = row.getLocalDateTime("OPPRETTET_TID")
-                )
+                toSykdomsvurderingForBrev(row)
             }
         }
     }
+
+    override fun hent(sakId: SakId): List<SykdomsvurderingForBrev> {
+        val query = """
+            SELECT * FROM SYKDOM_VURDERING_BREV s 
+            JOIN BEHANDLING b ON s.behandling_id = b.id 
+            WHERE sak_id = ?
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, sakId.toLong())
+            }
+            setRowMapper { row ->
+                toSykdomsvurderingForBrev(row)
+            }
+        }
+    }
+
+    private fun toSykdomsvurderingForBrev(row: Row): SykdomsvurderingForBrev = SykdomsvurderingForBrev(
+        behandlingId = BehandlingId(row.getLong("BEHANDLING_ID")),
+        vurdering = row.getStringOrNull("VURDERING"),
+        vurdertAv = row.getString("VURDERT_AV"),
+        vurdertTidspunkt = row.getLocalDateTime("OPPRETTET_TID")
+    )
 
     override fun kopier(
         fraBehandling: BehandlingId,
         tilBehandling: BehandlingId
     ) {
-        val sykdomsvurderingForBrevForrigeBehandling = hent(behandlingId = fraBehandling)
-        if (sykdomsvurderingForBrevForrigeBehandling != null) {
-            val sykdomsvurderingForBrevNyBehandling = sykdomsvurderingForBrevForrigeBehandling.copy(behandlingId = tilBehandling)
-            lagre(tilBehandling, sykdomsvurderingForBrevNyBehandling,)
-        }
+        // Skal ikke kopieres ved revurdering
     }
 
     override fun slett(behandlingId: BehandlingId) {

@@ -189,7 +189,9 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     overgangBegrunnelse = null
                 ),
             )
-        ).medKontekst {
+        )
+            .løsSykdomsvurderingBrev()
+            .medKontekst {
             assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                 .describedAs("Siden vurderingenGjelderFra er lik kravdato (rettighetsperiode.fom), så kan man revurdere 11-13")
                 .containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
@@ -240,7 +242,9 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     overgangBegrunnelse = null
                 ),
             )
-        ).medKontekst {
+        )
+            .løsSykdomsvurderingBrev()
+            .medKontekst {
             assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                 .describedAs("Siden vurderingenGjelderFra er lik kravdato (rettighetsperiode.fom), så kan man revurdere 11-13")
                 .containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
@@ -294,7 +298,9 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                         overgangBegrunnelse = null
                     ),
                 )
-            ).medKontekst {
+            )
+            .løsSykdomsvurderingBrev()
+            .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .describedAs("Siden vurderingenGjelderFra ikke er lik kravdato (rettighetsperiode.fom), så skal man ikke vurdere 11-13")
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)  // ingen avklaringsbehov løst av NAY, gå rett til fatte vedtak
@@ -354,7 +360,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                         )
                     )
                 ),
-            ).medKontekst {
+            )
+            .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.AVKLAR_BISTANDSBEHOV)
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
@@ -383,6 +390,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     overgangBegrunnelse = null
                 ),
             ))
+            .løsSykdomsvurderingBrev()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).describedAs {
                     "Revurdering av sykdom skal gå rett til beslutter når ingen avklaringsbehov trenger å løses av NAY"
@@ -410,7 +418,9 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     skalVurdereAapIOvergangTilArbeid = null,
                     overgangBegrunnelse = null
                 ),
-            )).løsAvklaringsBehov(
+            ))
+            .løsSykdomsvurderingBrev()
+            .løsAvklaringsBehov(
             AvklarSykepengerErstatningLøsning(
                 sykepengeerstatningVurdering = SykepengerVurderingDto(
                     begrunnelse = "test",
@@ -1256,6 +1266,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     )
                 )
             )
+            .løsSykdomsvurderingBrev()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
 

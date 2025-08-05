@@ -13,7 +13,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class SykdomsvurderingForBrevLøsning(
     @param:JsonProperty("behovstype", required = true, defaultValue = SKRIV_SYKDOMSVURDERING_BREV_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5053`,
-    @param:JsonProperty("vurdering", required = true) val vurdering: String,
+    @param:JsonProperty("vurdering") val vurdering: String?,
 ) : AvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
         return SykdomsvurderingForBrevLøser(repositoryProvider).løs(kontekst, this)
