@@ -64,7 +64,9 @@ class GosysGateway : OppgaveGateway {
         val request = PostRequest(oppgaveRequest)
         // Midlertidig logging for debugging i test
         log.info("Kaller Gosysoppgave med request: ${oppgaveRequest}")
+        log.info("Before wrapping: tildeltEnhetsnr = ${oppgaveRequest.tildeltEnhetsnr}")
         log.info("Kaller Gosysoppgave med rå request: ${request.body()}")
+        log.info("After wrapping: tildeltEnhetsnr = ${(request.body() as OpprettOppgaveRequest).tildeltEnhetsnr}")
         try {
             client.post(path, request) { _, _ -> }
         } catch (e: Exception) {
