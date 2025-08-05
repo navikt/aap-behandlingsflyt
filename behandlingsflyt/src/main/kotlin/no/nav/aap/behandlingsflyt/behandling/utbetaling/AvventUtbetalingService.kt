@@ -23,12 +23,12 @@ class AvventUtbetalingService(
         val avventUtbetalingPgaSosialRefusjonskrav = overlapperMedSosialRefusjonskrav(behandlingId, vedtakstidspunkt, tilkjentYtelseHelePerioden)
         val avventUtbetalingPgaTjenestepensjonRefusjon = overlapperMedTjenestepensjonRefusjon(behandlingId, vedtakstidspunkt, tilkjentYtelseHelePerioden)
         val avventUtbetalingPgaSamordningAndreStatligeYtelser = overlapperMedSamordningAndreStatligeYtelser(behandlingId)
-        val avventUtbetalingPgaSamordningArbeidgiver = overlapperMedSamordningArbeidsgiver(behandlingId)
+        val avventUtbetalingPgaSamordningArbeidsgiver = overlapperMedSamordningArbeidsgiver(behandlingId)
 
         return avventUtbetalingPgaSosialRefusjonskrav
             ?: (avventUtbetalingPgaTjenestepensjonRefusjon
                 ?: avventUtbetalingPgaSamordningAndreStatligeYtelser
-                ?: avventUtbetalingPgaSamordningArbeidgiver)
+                ?: avventUtbetalingPgaSamordningArbeidsgiver)
     }
 
     private fun overlapperMedSosialRefusjonskrav(behandlingId: BehandlingId, vedtakstidspunkt: LocalDateTime, tilkjentYtelseHelePerioden: Periode): TilkjentYtelseAvventDto? {
