@@ -154,7 +154,7 @@ class BeregnTilkjentYtelseService(
                                 gradering = tilkjentGUnit.gradering.copy(
                                     endeligGradering = tilkjentGUnit.gradering.endeligGradering.minus(
                                         Prosent.`100_PROSENT`,
-                                        Prosent.`100_PROSENT`
+                                        Prosent.`0_PROSENT`
                                     ),
                                     samordningArbeidsgiverGradering = Prosent.`100_PROSENT`,
                                 )

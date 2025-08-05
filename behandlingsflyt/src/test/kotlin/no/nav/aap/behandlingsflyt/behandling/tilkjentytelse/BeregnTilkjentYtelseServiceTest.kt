@@ -896,7 +896,7 @@ class BeregnTilkjentYtelseServiceTest {
                 verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*111477/260
                     gradering = TilkjentGradering(
-                        Prosent.`100_PROSENT`,
+                        Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`,
                         Prosent.`70_PROSENT`,
