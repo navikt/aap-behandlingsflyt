@@ -9,6 +9,7 @@ public const val BESTILL_LEGEERKLÆRING_KODE: String = "9003"
 public const val OPPRETT_HENDELSE_PÅ_SAK_KODE: String = "9004"
 public const val VURDER_RETTIGHETSPERIODE_KODE: String = "5029"
 public const val AVKLAR_STUDENT_KODE: String = "5001"
+public const val OVERSTYR_IKKE_OPPFYKT_MELDEPLIKT_KODE: String = "5002"
 public const val AVKLAR_SYKDOM_KODE: String = "5003"
 public const val FASTSETT_ARBEIDSEVNE_KODE: String = "5004"
 public const val FRITAK_MELDEPLIKT_KODE: String = "5005"
@@ -92,6 +93,11 @@ public enum class AvklaringsbehovKode {
      * [AVKLAR_STUDENT_KODE]
      */
     `5001`,
+
+    /**
+     * [OVERSTYR_IKKE_OPPFYLT_MELDEPLIKT_KODE]
+     */
+    `5002`,
 
     /**
      * [AVKLAR_SYKDOM_KODE]
