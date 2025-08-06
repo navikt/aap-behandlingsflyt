@@ -69,7 +69,7 @@ private fun SykdomsvurderingForBrev.toDto(): SykdomsvurderingForBrevVurderingDto
         vurdering = vurdering,
         vurdertAv = VurdertAvResponse(
             ident = vurdertAv,
-            dato = requireNotNull(vurdertTidspunkt?.toLocalDate()) { "Fant ikke vurdert tidspunkt for sykdomsvurdering for brev" },
+            dato = vurdertTidspunkt.toLocalDate(),
             ansattnavn = ansattNavnOgEnhet?.navn,
             enhetsnavn = ansattNavnOgEnhet?.enhet
         )

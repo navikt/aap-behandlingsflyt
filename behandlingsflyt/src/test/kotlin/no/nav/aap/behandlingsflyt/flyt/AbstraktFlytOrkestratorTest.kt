@@ -248,12 +248,11 @@ open class AbstraktFlytOrkestratorTest {
     }
 
 
-    fun happyCaseFørstegangsbehandling(): Sak {
+    fun happyCaseFørstegangsbehandling(person: TestPerson = TestPersoner.STANDARD_PERSON()): Sak {
         val fom = LocalDate.now().minusMonths(3)
         val periode = Periode(fom, fom.plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
-        val person = TestPersoner.STANDARD_PERSON()
         val ident = person.aktivIdent()
 
         // Sender inn en søknad
@@ -855,8 +854,8 @@ open class AbstraktFlytOrkestratorTest {
         )
     }
 
-    protected fun Behandling.løsVedtaksbrev(): Behandling {
-        val brevbestilling = hentBrevAvType(this, TypeBrev.VEDTAK_INNVILGELSE)
+    protected fun Behandling.løsVedtaksbrev(typeBrev: TypeBrev = TypeBrev.VEDTAK_INNVILGELSE): Behandling {
+        val brevbestilling = hentBrevAvType(this, typeBrev)
 
         return this.løsAvklaringsBehov(vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
     }

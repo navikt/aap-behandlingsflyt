@@ -18,20 +18,23 @@ import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 internal class SykdomsvurderingForBrevRepositoryImplTest {
 
     private val dataSource = InitTestDatabase.freshDatabase()
 
     @Test
-    fun `skal lagre, hente ut og oppdatere vurdering`() {
+    fun `skal lagre og hente ut vurdering`() {
         val behandling = dataSource.transaction { connection ->
             finnEllerOpprettBehandling(connection, sak(connection))
         }
+
         val vurdering = SykdomsvurderingForBrev(
             behandlingId = behandling.id,
             vurdering = "en vurdering",
-            vurdertAv = "saksbehandler"
+            vurdertAv = "saksbehandler",
+            vurdertTidspunkt = LocalDateTime.now(),
         )
 
         dataSource.transaction { connection ->
@@ -52,20 +55,47 @@ internal class SykdomsvurderingForBrevRepositoryImplTest {
             vurdertAv = "annen saksbehandler"
         )
 
-        dataSource.transaction { connection ->
+        val oppdatertLagretVurdering = dataSource.transaction { connection ->
             SykdomsvurderingForBrevRepositoryImpl(connection).lagre(behandling.id, oppdatertVurdering)
         }
 
-        val oppdatertLagretVurdering = dataSource.transaction {
-            SykdomsvurderingForBrevRepositoryImpl(it).hent(behandling.id)
-        }
-
-        assertThat(oppdatertLagretVurdering?.vurdering).isEqualTo(oppdatertVurdering.vurdering)
-        assertThat(oppdatertLagretVurdering?.vurdertAv).isEqualTo(oppdatertVurdering.vurdertAv)
+        assertThat(oppdatertLagretVurdering.vurdering).isEqualTo(oppdatertVurdering.vurdering)
+        assertThat(oppdatertLagretVurdering.vurdertAv).isEqualTo(oppdatertVurdering.vurdertAv)
     }
 
     @Test
-    fun `skal lagre og hente ut vurderinger`() {
+    fun `skal oppdatere vurdering`() {
+        val behandling = dataSource.transaction { connection ->
+            finnEllerOpprettBehandling(connection, sak(connection))
+        }
+
+        val vurdering = SykdomsvurderingForBrev(
+            behandlingId = behandling.id,
+            vurdering = "en vurdering",
+            vurdertAv = "saksbehandler",
+            vurdertTidspunkt = LocalDateTime.now(),
+        )
+
+        dataSource.transaction { connection ->
+            SykdomsvurderingForBrevRepositoryImpl(connection).lagre(behandling.id, vurdering)
+        }
+
+        val oppdatertVurdering = vurdering.copy(
+            vurdering = "oppdatert vurdering",
+            vurdertAv = "annen saksbehandler",
+            vurdertTidspunkt = LocalDateTime.now(),
+        )
+
+        val oppdatertLagretVurdering = dataSource.transaction { connection ->
+            SykdomsvurderingForBrevRepositoryImpl(connection).lagre(behandling.id, oppdatertVurdering)
+        }
+
+        assertThat(oppdatertLagretVurdering.vurdering).isEqualTo(oppdatertVurdering.vurdering)
+        assertThat(oppdatertLagretVurdering.vurdertAv).isEqualTo(oppdatertVurdering.vurdertAv)
+    }
+
+    @Test
+    fun `skal hente ut vurderinger for sak`() {
         val sak = dataSource.transaction { connection -> sak(connection) }
         val behandling = dataSource.transaction { connection ->
             finnEllerOpprettBehandling(connection, sak)

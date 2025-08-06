@@ -34,7 +34,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.HåndterSv
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivForhåndsvarselKlageFormkravBrevLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TrekkKlageLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TrekkSøknadLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentePåFristForhåndsvarselKlageFormkravLøsning
@@ -1456,6 +1455,70 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         // Saken er avsluttet, så det skal ikke være flere åpne avklaringsbehov
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
         assertThat(åpneAvklaringsbehov).isEmpty()
+    }
+
+    @Test
+    fun `ved førstegangsbehandling i steget for sykdom skal sykdomsvurdering for brev vises etter refusjonskrav er løst og før kvalitetsvurdering`() {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val person = TestPersoner.STANDARD_PERSON()
+        val ident = person.aktivIdent()
+
+        val førstegangsbehandling = sendInnSøknad(ident, periode, TestSøknader.STANDARD_SØKNAD)
+            .medKontekst {
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .løsSykdom()
+            .løsBistand()
+            .løsRefusjonskrav()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).anySatisfy {
+                    assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
+                }
+            }
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtakEllerSendRetur()
+            .løsVedtaksbrev()
+
+        assertThat(førstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
+    fun `ved revurdering i steget for sykdom skal sykdomsvurdering for brev vises etter refusjonskrav`() {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val person = TestPersoner.STANDARD_PERSON()
+        val sak = happyCaseFørstegangsbehandling(person)
+
+        val revurdering = sendInnDokument(
+            sak.person.aktivIdent(), DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("12344932122"),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+                strukturertDokument = StrukturertDokument(
+                    ManuellRevurderingV0(
+                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND), ""
+                    ),
+                ),
+                innsendingType = InnsendingType.MANUELL_REVURDERING,
+                periode = periode
+            )
+        )
+            .medKontekst {
+                assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .løsSykdom()
+            .løsBistand()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV) }
+            }
+            .løsSykdomsvurderingBrev() // Krever ikke kvalitetskontroll i revurdering
+            .fattVedtakEllerSendRetur()
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
+
+        assertThat(revurdering.status()).isEqualTo(Status.AVSLUTTET)
     }
 
     @Test
