@@ -37,12 +37,7 @@ class SykdomsurderingBrevSteg internal constructor(
                 return vurder(kontekst)
             }
             VurderingType.REVURDERING -> {
-                val aktuelleBehov = setOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, Vurderingsbehov.MOTTATT_SØKNAD)
-                return if (kontekst.vurderingsbehov.any { it in aktuelleBehov}) {
-                    vurder(kontekst)
-                } else {
-                    Fullført
-                }
+                return vurder(kontekst)
             }
             VurderingType.MELDEKORT,
             VurderingType.IKKE_RELEVANT -> {

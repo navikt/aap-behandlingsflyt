@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
@@ -14,7 +13,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykdomsvurderingForBrrevRepository
@@ -64,6 +62,18 @@ class SykdomsvurderingBrevStegTest {
         assertThat(resultat).isEqualTo(Fullført)
     }
 
+    @Test
+    fun `skal opprette avklaringsbehov ved revurdering`() {
+        val person = person()
+        val sak = sak(person)
+        val behandling = behandling(sak, typeBehandling = TypeBehandling.Revurdering)
+        val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.REVURDERING, setOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
+
+        val resultat = steg.utfør(kontekstMedPerioder)
+
+        assertThat(resultat).isEqualTo(FantAvklaringsbehov(avklaringsbehov = listOf(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)))
+    }
+
     private fun flytKontekstMedPerioder(
         sak: Sak,
         behandling: Behandling,
@@ -75,35 +85,6 @@ class SykdomsvurderingBrevStegTest {
         vurderingsbehov = vurderingsbehov,
         rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
     )
-
-    @Test
-    fun `skal opprette avklaringsbehov ved revurdering dersom vurderingsbehov er sykdom`() {
-        val person = person()
-        val sak = sak(person)
-        val behandling = behandling(sak, typeBehandling = TypeBehandling.Revurdering)
-        val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.REVURDERING, setOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
-
-        val resultat = steg.utfør(kontekstMedPerioder)
-
-        assertThat(resultat).isEqualTo(FantAvklaringsbehov(avklaringsbehov = listOf(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)))
-    }
-
-    @Test
-    fun `skal ikke opprette avklaringsbehov ved revurdering dersom vurderingsbehov er noe annet enn sykdom og mottatt søknad`() {
-        val person = person()
-        val sak = sak(person)
-        val behandling = behandling(sak, typeBehandling = TypeBehandling.Revurdering)
-        val kontekstMedPerioder = flytKontekstMedPerioder(
-            sak = sak,
-            behandling = behandling,
-            vurderingType = VurderingType.REVURDERING,
-            vurderingsbehov = Vurderingsbehov.entries.toSet() - setOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, Vurderingsbehov.MOTTATT_SØKNAD)
-        )
-
-        val resultat = steg.utfør(kontekstMedPerioder)
-
-        assertThat(resultat).isEqualTo(Fullført)
-    }
 
     private fun behandling(sak: Sak, typeBehandling: TypeBehandling): Behandling =
         behandlingRepository.opprettBehandling(sak.id, listOf(), typeBehandling, null)
