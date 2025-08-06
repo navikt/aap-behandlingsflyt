@@ -169,6 +169,10 @@ class Avklaringsbehov(
     fun erForeslåttVedtak(): Boolean {
         return definisjon == Definisjon.FORESLÅ_VEDTAK
     }
+    
+    fun erForeslåttUttak(): Boolean {
+        return definisjon == Definisjon.FORESLÅ_UTTAK
+    }
 
     fun harVærtSendtTilbakeFraBeslutterTidligere(): Boolean {
         return historikk.any { it.status == Status.SENDT_TILBAKE_FRA_BESLUTTER }
