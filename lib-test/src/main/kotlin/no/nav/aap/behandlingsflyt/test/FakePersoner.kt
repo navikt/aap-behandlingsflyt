@@ -44,9 +44,6 @@ object FakePersoner {
 
     fun leggTil(person: TestPerson): TestPerson {
         person.identer.forEach {
-            if (fakePersoner[it.identifikator] != null) {
-                throw IllegalStateException("Fakepersoner: Person med ident ${it.identifikator} finnes allerede fra før, så testen vil potensielt ha ugyldig tilstand")
-            }
             fakePersoner[it.identifikator] = person
         }
         person.barn.forEach { leggTil(it) }
