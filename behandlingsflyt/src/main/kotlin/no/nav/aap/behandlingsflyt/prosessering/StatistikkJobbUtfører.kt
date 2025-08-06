@@ -160,6 +160,7 @@ class StatistikkJobbUtfører(
                 Vurderingsbehov.MOTTATT_KABAL_HENDELSE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.MOTTATT_KABAL_HENDELSE
                 Vurderingsbehov.HELHETLIG_VURDERING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.HELHETLIG_VURDERING
                 Vurderingsbehov.OPPFØLGINGSOPPGAVE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OPPFØLGINGSOPPGAVE
+                Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN
             }
         }.distinct()
 
