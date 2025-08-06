@@ -16,6 +16,7 @@ data class Felter(
     val arbeidGradering: Int?,
     val samordningGradering: Int?,
     val institusjonGradering: Int?,
+    val arbeidsgiverGradering: Int?,
     val totalReduksjon: Int?,
     val effektivDagsats: Double,
 )

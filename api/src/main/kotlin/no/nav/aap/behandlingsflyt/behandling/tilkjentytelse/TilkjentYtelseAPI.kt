@@ -142,6 +142,7 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                                                             ?: 0
                                                     ),
                                                 institusjonGradering = it.tilkjent.gradering.institusjonGradering?.prosentverdi(),
+                                                arbeidsgiverGradering = it.tilkjent.gradering.samordningArbeidsgiverGradering?.prosentverdi(),
                                                 totalReduksjon = 100.minus(it.tilkjent.gradering.endeligGradering.prosentverdi()),
                                                 effektivDagsats = it.tilkjent.redusertDagsats().verdi().toDouble()
                                             )
