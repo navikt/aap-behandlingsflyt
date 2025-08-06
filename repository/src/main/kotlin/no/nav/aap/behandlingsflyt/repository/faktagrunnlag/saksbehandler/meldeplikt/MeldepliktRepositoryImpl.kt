@@ -147,7 +147,7 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
                 setBoolean(3, it.harFritak)
                 setLocalDate(4, it.fraDato)
                 setString(5, it.vurdertAv)
-                setLocalDateTime(5, it.opprettetTid)
+                setLocalDateTime(6, it.opprettetTid)
             }
         }
     }
