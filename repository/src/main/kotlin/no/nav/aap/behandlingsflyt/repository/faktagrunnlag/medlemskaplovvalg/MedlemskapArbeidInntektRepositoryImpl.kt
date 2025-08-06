@@ -620,7 +620,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         """
                     SELECT arbeider_id
                     FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
-                    WHERE behandling_id = ? 
+                    WHERE behandling_id = ? AND arbeider_id is not null
                  
                 """.trimIndent()
     ) {
