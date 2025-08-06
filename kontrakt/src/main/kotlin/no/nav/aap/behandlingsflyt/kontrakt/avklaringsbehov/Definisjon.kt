@@ -35,6 +35,7 @@ public enum class Definisjon(
             Rolle.SAKSBEHANDLER_NASJONAL
         )
     ),
+    @Deprecated("Ikke i bruk lenger")
     BESTILL_BREV(
         kode = AvklaringsbehovKode.`9002`,
         løsesISteg = StegType.UDEFINERT,
@@ -105,6 +106,13 @@ public enum class Definisjon(
         løsesISteg = StegType.AVKLAR_STUDENT,
         kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
+    OVERSTYR_IKKE_OPPFYLT_MELDEPLIKT(
+        kode = AvklaringsbehovKode.`5002`,
+        type = BehovType.OVERSTYR,
+        løsesISteg = StegType.IKKE_OPPFYLT_MELDEPLIKT,
+        kreverToTrinn = true,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
     ),
     AVKLAR_SYKDOM(
         kode = AvklaringsbehovKode.`5003`,
@@ -241,7 +249,8 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5030`,
         type = BehovType.MANUELT_FRIVILLIG,
         løsesISteg = StegType.SAMORDNING_ARBEIDSGIVER,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = true
     ),
 
     @Deprecated("Ikke i bruk")
@@ -498,6 +507,7 @@ public enum class Definisjon(
          * Brevpunkter
          */
         BREV(Definisjon::validerBrevpunkt),
+        @Deprecated("Ikke i bruk lenger")
         BREV_VENTEPUNKT(Definisjon::validerBrevVentepunkt),
 
         /**

@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -67,7 +68,8 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
 
         val fastsattPeriodePassertBehandling = sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(
             sak.id,
-            listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.FASTSATT_PERIODE_PASSERT))
+            listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.FASTSATT_PERIODE_PASSERT)),
+            ÅrsakTilOpprettelse.FASTSATT_PERIODE_PASSERT
         )
 
         prosesserBehandlingService.triggProsesserBehandling(fastsattPeriodePassertBehandling)

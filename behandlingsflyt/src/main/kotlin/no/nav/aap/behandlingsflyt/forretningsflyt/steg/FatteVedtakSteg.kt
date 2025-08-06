@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Omgjøres
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKontorPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
@@ -17,13 +17,10 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeføresFraBeslutter
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -32,7 +29,6 @@ class FatteVedtakSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val sakRepository: SakRepository,
     private val refusjonkravRepository: RefusjonkravRepository,
-    private val personRepository: PersonRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val klageresultatUtleder: KlageresultatUtleder,
     private val trekkKlageService: TrekkKlageService,
@@ -41,7 +37,6 @@ class FatteVedtakSteg(
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
-        personRepository = repositoryProvider.provide(),
         refusjonkravRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
@@ -83,7 +78,13 @@ class FatteVedtakSteg(
 
         val navKontorList = navkontorSosialRefusjon
             .filter { it.harKrav && it.navKontor != null }
-            .mapNotNull { navKontorEnhetsNummer(it.navKontor) }
+            .map {
+                NavKontorPeriodeDto(
+                    enhetsNummer = navKontorEnhetsNummer (it.navKontor)!!,
+                    fom = it.fom,
+                    tom = it.tom
+                )
+            }
 
         if (navKontorList.isNotEmpty()) {
             val aktivIdent = sakRepository.hent(kontekst.sakId).person.aktivIdent()
@@ -99,7 +100,7 @@ class FatteVedtakSteg(
     }
 
     private fun opprettOppgave(
-        navKontorList: List<String>,
+        navKontorList: List<NavKontorPeriodeDto>,
         aktivIdent: Ident,
         kontekst: FlytKontekstMedPerioder
     ) {
@@ -113,6 +114,8 @@ class FatteVedtakSteg(
             )
         }
     }
+
+
 
     companion object : FlytSteg {
         override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {

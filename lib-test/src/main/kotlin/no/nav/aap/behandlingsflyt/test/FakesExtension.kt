@@ -26,6 +26,7 @@ internal class FakesExtension() : BeforeAllCallback, ParameterResolver,
     override fun beforeEach(context: ExtensionContext?) {
         FakeServers.statistikkHendelser.clear()
         FakeServers.legeerklæringStatuser.clear()
+        FakePersoner.nullstillPersoner()
     }
 
     override fun supportsParameter(

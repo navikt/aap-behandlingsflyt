@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -293,6 +294,85 @@ class FormkravStegTest {
     }
 
     @Test
+    fun `FormkravSteg-utfører skal gi avklaringsbehov SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV om det allerede er bestilt brev men brevet er ikke sendt`() {
+        every { brevbestillingServiceMock.hentBestillinger(any(), any()) } returns listOf(
+            Brevbestilling(
+                id = 1L,
+                behandlingId = BehandlingId(1L),
+                typeBrev = TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV,
+                referanse = BrevbestillingReferanse(UUID.randomUUID()),
+                status = Status.FORHÅNDSVISNING_KLAR,
+                opprettet = LocalDateTime.now(),
+            )
+        )
+
+        every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(
+            vurdering = FormkravVurdering(
+                begrunnelse = "begrunnelse",
+                erKonkret = false,
+                erBrukerPart = true,
+                erSignert = false,
+                erFristOverholdt = true,
+                likevelBehandles = null,
+                vurdertAv = "indent",
+                opprettet = Instant.now(),
+            ),
+            varsel = FormkravVarsel(
+                varselId = BrevbestillingReferanse(UUID.randomUUID()),
+                sendtDato = null,
+                svarfrist = null,
+            )
+        )
+
+        val kontekst = FlytKontekstMedPerioder(
+            sakId = SakId(1L),
+            behandlingId = BehandlingId(1L),
+            behandlingType = TypeBehandling.Klage,
+            forrigeBehandlingId = null,
+            vurderingType = VurderingType.IKKE_RELEVANT,
+            rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
+            vurderingsbehov = setOf(Vurderingsbehov.MOTATT_KLAGE)
+        )
+
+        InMemoryAvklaringsbehovRepository.opprett(
+            BehandlingId(1),
+            definisjon = Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV,
+            funnetISteg = StegType.FORMKRAV,
+            frist = LocalDate.now().plusDays(1),
+            begrunnelse = "Begrunnelse",
+            endretAv = "Ident",
+        )
+
+        InMemoryAvklaringsbehovRepository.opprett(
+            BehandlingId(1),
+            definisjon = Definisjon.VURDER_FORMKRAV,
+            funnetISteg = StegType.FORMKRAV,
+            frist = LocalDate.now().plusDays(1),
+            begrunnelse = "Begrunnelse",
+            endretAv = "Ident",
+        )
+
+        val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1L))
+        avklaringsbehov.løsAvklaringsbehov(
+            definisjon = Definisjon.VURDER_FORMKRAV,
+            begrunnelse = "Vurdert ok",
+            endretAv = "Ident"
+        )
+
+        val steg = FormkravSteg(
+            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            formkravRepository = formkravRepositoryMock,
+            behandlingRepository = behandlingRepositoryMock,
+            brevbestillingService = brevbestillingServiceMock,
+            trekkKlageService = trekkKlageServiceMock
+        )
+
+        val resultat = steg.utfør(kontekst)
+
+        assertThat(resultat).isEqualTo(FantAvklaringsbehov(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV))
+    }
+
+    @Test
     fun `FormkravSteg-utfører skal gi ventebehov om brev er sendt og formkravet ikke er oppfyllt`() {
         val kontekst = FlytKontekstMedPerioder(
             sakId = SakId(1L),
@@ -428,6 +508,7 @@ class FormkravStegTest {
         behandlingId,
         sakId = SakId(1),
         typeBehandling = TypeBehandling.Førstegangsbehandling,
+        årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
         forrigeBehandlingId = null,
         versjon = 1
     )

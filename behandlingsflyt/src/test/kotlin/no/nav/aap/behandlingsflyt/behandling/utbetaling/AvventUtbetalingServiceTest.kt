@@ -8,6 +8,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andresta
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
@@ -33,13 +36,16 @@ class AvventUtbetalingServiceTest {
         val tjenestepensjonRefusjonsKravVurderingRepositoryMock =
             mockk<TjenestepensjonRefusjonsKravVurderingRepository>()
         val samordningAndreStatligeYtelserRepositoryMock = mockk<SamordningAndreStatligeYtelserRepository>()
+        val samordningArbeidsgiverRepositoryMock = mockk<SamordningArbeidsgiverRepository>()
         every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { samordningAndreStatligeYtelserRepositoryMock.hentHvisEksisterer(any()) } returns null
+        every { samordningArbeidsgiverRepositoryMock.hentHvisEksisterer(any()) } returns null
         val service = AvventUtbetalingService(
             refusjonkravRepositoryMock,
             tjenestepensjonRefusjonsKravVurderingRepositoryMock,
-            samordningAndreStatligeYtelserRepositoryMock
+            samordningAndreStatligeYtelserRepositoryMock,
+            samordningArbeidsgiverRepositoryMock
         )
 
         val avventUtbetaling = service.finnEventuellAvventUtbetaling(
@@ -52,11 +58,12 @@ class AvventUtbetalingServiceTest {
     }
 
     @Test
-    fun `Refusjonskrav utenfor ytelsesperiodenmskal føre til ingen avvent utbetaling`() {
+    fun `Refusjonskrav utenfor ytelsesperioden skal føre til ingen avvent utbetaling`() {
         val refusjonkravRepositoryMock = mockk<RefusjonkravRepository>()
         val tjenestepensjonRefusjonsKravVurderingRepositoryMock =
             mockk<TjenestepensjonRefusjonsKravVurderingRepository>()
         val samordningAndreStatligeYtelserRepositoryMock = mockk<SamordningAndreStatligeYtelserRepository>()
+        val samordningArbeidsgiverRepositoryMock = mockk<SamordningArbeidsgiverRepository>()
         every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns listOf(
             RefusjonkravVurdering(
                 true,
@@ -68,10 +75,12 @@ class AvventUtbetalingServiceTest {
         )
         every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { samordningAndreStatligeYtelserRepositoryMock.hentHvisEksisterer(any()) } returns null
+        every { samordningArbeidsgiverRepositoryMock.hentHvisEksisterer(any()) } returns null
         val service = AvventUtbetalingService(
             refusjonkravRepositoryMock,
             tjenestepensjonRefusjonsKravVurderingRepositoryMock,
-            samordningAndreStatligeYtelserRepositoryMock
+            samordningAndreStatligeYtelserRepositoryMock,
+            samordningArbeidsgiverRepositoryMock
         )
 
         val avventUtbetaling = service.finnEventuellAvventUtbetaling(
@@ -89,14 +98,17 @@ class AvventUtbetalingServiceTest {
         val tjenestepensjonRefusjonsKravVurderingRepositoryMock =
             mockk<TjenestepensjonRefusjonsKravVurderingRepository>()
         val samordningAndreStatligeYtelserRepositoryMock = mockk<SamordningAndreStatligeYtelserRepository>()
+        val samordningArbeidsgiverRepositoryMock = mockk<SamordningArbeidsgiverRepository>()
         every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns
                 listOf(RefusjonkravVurdering(true, LocalDate.parse("2025-01-10"), null, "Nav Løten", "saksbehandler"))
         every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { samordningAndreStatligeYtelserRepositoryMock.hentHvisEksisterer(any()) } returns null
+        every { samordningArbeidsgiverRepositoryMock.hentHvisEksisterer(any()) } returns null
         val service = AvventUtbetalingService(
             refusjonkravRepositoryMock,
             tjenestepensjonRefusjonsKravVurderingRepositoryMock,
-            samordningAndreStatligeYtelserRepositoryMock
+            samordningAndreStatligeYtelserRepositoryMock,
+            samordningArbeidsgiverRepositoryMock
         )
 
         val avventUtbetaling = service.finnEventuellAvventUtbetaling(
@@ -119,6 +131,7 @@ class AvventUtbetalingServiceTest {
         val tjenestepensjonRefusjonsKravVurderingRepositoryMock =
             mockk<TjenestepensjonRefusjonsKravVurderingRepository>()
         val samordningAndreStatligeYtelserRepositoryMock = mockk<SamordningAndreStatligeYtelserRepository>()
+        val samordningArbeidsgiverRepositoryMock = mockk<SamordningArbeidsgiverRepository>()
         every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns
                 TjenestepensjonRefusjonskravVurdering(
@@ -128,10 +141,12 @@ class AvventUtbetalingServiceTest {
                     "bla bla"
                 )
         every { samordningAndreStatligeYtelserRepositoryMock.hentHvisEksisterer(any()) } returns null
+        every { samordningArbeidsgiverRepositoryMock.hentHvisEksisterer(any()) } returns null
         val service = AvventUtbetalingService(
             refusjonkravRepositoryMock,
             tjenestepensjonRefusjonsKravVurderingRepositoryMock,
-            samordningAndreStatligeYtelserRepositoryMock
+            samordningAndreStatligeYtelserRepositoryMock,
+            samordningArbeidsgiverRepositoryMock
         )
 
         val avventUtbetaling = service.finnEventuellAvventUtbetaling(
@@ -154,6 +169,7 @@ class AvventUtbetalingServiceTest {
         val tjenestepensjonRefusjonsKravVurderingRepositoryMock =
             mockk<TjenestepensjonRefusjonsKravVurderingRepository>()
         val samordningAndreStatligeYtelserRepositoryMock = mockk<SamordningAndreStatligeYtelserRepository>()
+        val samordningArbeidsgiverRepositoryMock = mockk<SamordningArbeidsgiverRepository>()
         every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { samordningAndreStatligeYtelserRepositoryMock.hentHvisEksisterer(any()) } returns
@@ -169,10 +185,12 @@ class AvventUtbetalingServiceTest {
                         ),
                     )
                 )
+        every { samordningArbeidsgiverRepositoryMock.hentHvisEksisterer(any()) } returns null
         val service = AvventUtbetalingService(
             refusjonkravRepositoryMock,
             tjenestepensjonRefusjonsKravVurderingRepositoryMock,
-            samordningAndreStatligeYtelserRepositoryMock
+            samordningAndreStatligeYtelserRepositoryMock,
+            samordningArbeidsgiverRepositoryMock
         )
 
         val avventUtbetaling = service.finnEventuellAvventUtbetaling(
@@ -188,5 +206,44 @@ class AvventUtbetalingServiceTest {
         assertThat(avventUtbetaling?.årsak).isEqualTo(AvventÅrsak.AVVENT_AVREGNING)
         assertThat(avventUtbetaling?.feilregistrering).isFalse()
     }
+
+    @Test
+    fun `Samordning med sluttpakke fra arbeidsgiver overlapper med tilkjent ytelse skal føre til avvent utbetaling`() {
+        val refusjonkravRepositoryMock = mockk<RefusjonkravRepository>()
+        val tjenestepensjonRefusjonsKravVurderingRepositoryMock =
+            mockk<TjenestepensjonRefusjonsKravVurderingRepository>()
+        val samordningAndreStatligeYtelserRepositoryMock = mockk<SamordningAndreStatligeYtelserRepository>()
+        val samordningArbeidsgiverRepositoryMock = mockk<SamordningArbeidsgiverRepository>()
+        every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns null
+        every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns null
+        every { samordningAndreStatligeYtelserRepositoryMock.hentHvisEksisterer(any()) } returns null
+        every { samordningArbeidsgiverRepositoryMock.hentHvisEksisterer(any()) } returns
+                SamordningArbeidsgiverGrunnlag(
+                    vurdering = SamordningArbeidsgiverVurdering(
+                        "Har fått sluttpakke",
+                        LocalDate.of(2025, 1, 4), LocalDate.of(2025, 1, 12), vurdertAv = "ident"
+                    )
+                )
+        val service = AvventUtbetalingService(
+            refusjonkravRepositoryMock,
+            tjenestepensjonRefusjonsKravVurderingRepositoryMock,
+            samordningAndreStatligeYtelserRepositoryMock,
+            samordningArbeidsgiverRepositoryMock
+        )
+
+        val avventUtbetaling = service.finnEventuellAvventUtbetaling(
+            behandlingId = BehandlingId(123L),
+            vedtakstidspunkt = LocalDateTime.parse("2025-01-15T00:00:00.000"),
+            tilkjentYtelseHelePerioden = Periode(LocalDate.parse("2025-01-01"), LocalDate.parse("2025-01-31"))
+        )
+
+        assertNotNull(avventUtbetaling)
+        assertThat(avventUtbetaling?.fom).isEqualTo(LocalDate.parse("2025-01-04"))
+        assertThat(avventUtbetaling?.tom).isEqualTo(LocalDate.parse("2025-01-12"))
+        assertThat(avventUtbetaling?.overføres).isEqualTo(LocalDate.parse("2025-01-12").plusDays(42))
+        assertThat(avventUtbetaling?.årsak).isEqualTo(AvventÅrsak.AVVENT_AVREGNING)
+        assertThat(avventUtbetaling?.feilregistrering).isFalse()
+    }
+
 
 }

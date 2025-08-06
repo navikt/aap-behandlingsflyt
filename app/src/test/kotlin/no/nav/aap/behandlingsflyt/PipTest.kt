@@ -173,11 +173,18 @@ class PipTest {
                         Fødselsdato(LocalDate.now())
                     )
                 ).associateWith { personRepository.finnEllerOpprett(listOf(it.ident)).id }
-
             )
+            // Lagrer ett oppgitt barn med ident og ett uten
             barnRepository.lagreOppgitteBarn(
                 behandling.id,
-                OppgitteBarn(oppgitteBarn = listOf(OppgitteBarn.OppgittBarn(Ident("oppgittbarn"), null)))
+                OppgitteBarn(
+                    oppgitteBarn = listOf(
+                        OppgitteBarn.OppgittBarn(Ident("oppgittbarn"), null), OppgitteBarn.OppgittBarn(
+                            null, "Foffo Fjong",
+                            Fødselsdato(LocalDate.now().minusYears(10))
+                        )
+                    )
+                )
             )
             barnRepository.lagreVurderinger(
                 behandling.id,

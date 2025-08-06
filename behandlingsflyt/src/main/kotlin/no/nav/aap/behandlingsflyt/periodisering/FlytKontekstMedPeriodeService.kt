@@ -76,6 +76,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.MOTTATT_SØKNAD ->
                 FØRSTEGANGSBEHANDLING
 
+            Vurderingsbehov.HELHETLIG_VURDERING,
             Vurderingsbehov.MOTTATT_AKTIVITETSMELDING,
             Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
             Vurderingsbehov.MOTTATT_AVVIST_LEGEERKLÆRING,

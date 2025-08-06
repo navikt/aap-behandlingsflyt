@@ -121,6 +121,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlagebehandlingAv
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
@@ -147,7 +148,7 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -452,7 +453,6 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 ),
             )
         )
-        person.barn.forEach { FakePersoner.leggTil(it) }
 
         val ident = person.aktivIdent()
 
@@ -530,7 +530,6 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 ),
             )
         )
-        person.barn.forEach { FakePersoner.leggTil(it) }
 
         val ident = person.aktivIdent()
 
@@ -2868,16 +2867,16 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         dataSource.transaction { connection ->
             val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
 
-            val manuellRevurdering = mottattDokumentRepository.hentDokumenterAvType(
+            val omgjøringKlageRevurdering = mottattDokumentRepository.hentDokumenterAvType(
                 klagebehandling.sakId,
-                InnsendingType.MANUELL_REVURDERING
+                InnsendingType.OMGJØRING_KLAGE_REVURDERING
             )
 
-            assertThat(manuellRevurdering).hasSize(1).first()
+            assertThat(omgjøringKlageRevurdering).hasSize(1).first()
                 .extracting(MottattDokument::strukturertDokument)
                 .isNotNull
             assertThat(
-                manuellRevurdering.first().strukturerteData<ManuellRevurderingV0>()?.data?.beskrivelse
+                omgjøringKlageRevurdering.first().strukturerteData<OmgjøringKlageRevurderingV0>()?.data?.beskrivelse
             ).isEqualTo("Revurdering etter klage som tas til følge. Følgende vilkår omgjøres: § 11-5")
         }
 

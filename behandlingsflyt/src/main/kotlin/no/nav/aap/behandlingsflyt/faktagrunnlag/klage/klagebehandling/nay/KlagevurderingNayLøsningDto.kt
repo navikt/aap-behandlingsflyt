@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
-import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 
 data class KlagevurderingNayLøsningDto(

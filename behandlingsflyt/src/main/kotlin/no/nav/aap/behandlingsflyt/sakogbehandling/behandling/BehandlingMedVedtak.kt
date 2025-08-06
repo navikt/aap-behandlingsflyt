@@ -17,5 +17,6 @@ data class BehandlingMedVedtak(
     val opprettetTidspunkt: LocalDateTime,
     val vedtakstidspunkt: LocalDateTime,
     val virkningstidspunkt: LocalDate?,
-    val vurderingsbehov: Set<Vurderingsbehov>
+    val vurderingsbehov: Set<Vurderingsbehov>,
+    val årsakTilOpprettelse: ÅrsakTilOpprettelse?
 )

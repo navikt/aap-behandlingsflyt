@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -60,6 +61,7 @@ class BehandlingHendelseServiceTest {
             BehandlingId(0),
             sakId = SakId(1),
             typeBehandling = TypeBehandling.Førstegangsbehandling,
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
             forrigeBehandlingId = null,
             versjon = 1
         )

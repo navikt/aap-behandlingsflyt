@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import org.slf4j.LoggerFactory
@@ -27,7 +28,8 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         sakId: SakId,
         vurderingsbehov: List<VurderingsbehovMedPeriode>,
         typeBehandling: TypeBehandling,
-        forrigeBehandlingId: BehandlingId?
+        forrigeBehandlingId: BehandlingId?,
+        årsakTilOpprettelse: ÅrsakTilOpprettelse?
     ): Behandling {
         synchronized(lock) {
             val id = BehandlingId(idSeq.andIncrement)
@@ -43,7 +45,8 @@ object InMemoryBehandlingRepository : BehandlingRepository {
                 sakId = sakId,
                 typeBehandling = typeBehandling,
                 versjon = 1,
-                vurderingsbehov = vurderingsbehov
+                vurderingsbehov = vurderingsbehov,
+                årsakTilOpprettelse = årsakTilOpprettelse,
             )
             memory[id] = behandling
 
@@ -167,6 +170,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
                 vurderingsbehov = behandling.vurderingsbehov(),
                 stegTilstand = behandling.aktivtStegTilstand(),
                 opprettetTidspunkt = behandling.opprettetTidspunkt,
+                årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
                 versjon = behandling.versjon,
             )
         }

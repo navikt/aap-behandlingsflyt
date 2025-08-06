@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.gosysoppgave
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKontorPeriodeDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -17,7 +18,7 @@ class GosysService(private val oppgaveGateway: OppgaveGateway, private val unlea
         aktivIdent: Ident,
         bestillingReferanse: String,
         behandlingId: BehandlingId,
-        navKontor: String
+        navKontor: NavKontorPeriodeDto
     ) {
         if (unleashGateway.isEnabled(BehandlingsflytFeature.SosialHjelpFlereKontorer)) {
             oppgaveGateway.opprettOppgave(aktivIdent, bestillingReferanse, behandlingId, navKontor)

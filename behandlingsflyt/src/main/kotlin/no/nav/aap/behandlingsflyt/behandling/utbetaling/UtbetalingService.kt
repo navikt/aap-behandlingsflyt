@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriod
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -28,6 +29,7 @@ class UtbetalingService(
     private val refusjonskravRepository: RefusjonkravRepository,
     private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository,
     private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
+    private val samordningArbeidsgiverRepository: SamordningArbeidsgiverRepository,
 ) {
 
     fun lagTilkjentYtelseForUtbetaling(sakId: SakId, behandlingId: BehandlingId, simulering: Boolean = false): TilkjentYtelseDto? {
@@ -58,7 +60,7 @@ class UtbetalingService(
                 vedtakRepository.hent(behandlingId)?.vedtakstidspunkt ?: error("Fant ikke vedtak")
             }
             val avventUtbetaling = if (tilkjentYtelse.isNotEmpty()) {
-                AvventUtbetalingService(refusjonskravRepository, tjenestepensjonRefusjonsKravVurderingRepository, samordningAndreStatligeYtelserRepository).
+                AvventUtbetalingService(refusjonskravRepository, tjenestepensjonRefusjonsKravVurderingRepository, samordningAndreStatligeYtelserRepository, samordningArbeidsgiverRepository).
                     finnEventuellAvventUtbetaling(behandlingId, vedtakstidspunkt, tilkjentYtelse.finnHelePerioden())
             } else {
                 null

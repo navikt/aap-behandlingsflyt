@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
+import no.nav.aap.behandlingsflyt.medAzureTokenGen
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -28,11 +29,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.server.auth.token
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig
@@ -135,14 +136,15 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
 
             }
             // Midlertidig fiks for ikke å brekke postmottak
-            if (token().isClientCredentials()) {
+            val token = token()
+            if (token.isClientCredentials()) {
                 respond(saker)
             } else {
                 val sakerMedTilgang =
                     saker.filter { sak ->
                         GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilSak(
                             Saksnummer(sak.saksnummer),
-                            token(),
+                            token,
                             Operasjon.SE
                         )
                     }
@@ -281,6 +283,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
                                     status = behandling.status(),
                                     årsaker = vurderingsbehov,
                                     vurderingsbehov = vurderingsbehov,
+                                    årsakTilOpprettelse = behandling.årsakTilOpprettelse,
                                     opprettet = behandling.opprettetTidspunkt
                                 )
                             }
@@ -306,7 +309,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
             authorizedPost<SaksnummerParameter, List<BehandlingAvTypeDTO>, TypeBehandling>(
                 routeConfig = AuthorizationMachineToMachineConfig(
                     authorizedAzps = listOf(Azp.Postmottak.uuid)
-                )
+                ).medAzureTokenGen()
             ) { saksnummer, body ->
                 val behandlinger = dataSource.transaction { connection ->
                     val sakRepository = repositoryRegistry.provider(connection).provide<SakRepository>()
@@ -361,4 +364,3 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
         }
     }
 }
-

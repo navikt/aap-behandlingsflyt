@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet
 
-import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.verdityper.Bruker
 
 data class BehandlendeEnhetLøsningDto(
     val skalBehandlesAvNay: Boolean,

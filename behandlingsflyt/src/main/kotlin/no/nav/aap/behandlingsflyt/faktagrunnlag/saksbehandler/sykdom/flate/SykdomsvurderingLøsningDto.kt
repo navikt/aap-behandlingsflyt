@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
-import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant
 import java.time.LocalDate
@@ -15,10 +15,11 @@ data class InnhentetSykdomsOpplysninger(
 
 data class RegistrertYrkesskade(
     val ref: String,
+    val yrkesskadeSaksnummer: Int?,
     val skadedato: LocalDate,
     val kilde: String,
 ) {
-    constructor(yrkesskade: Yrkesskade, kilde: String) : this(yrkesskade.ref, yrkesskade.skadedato, kilde)
+    constructor(yrkesskade: Yrkesskade) : this(yrkesskade.ref, yrkesskade.saksnummer, yrkesskade.skadedato, yrkesskade.kildesystem)
 }
 
 data class SykdomsvurderingLøsningDto(

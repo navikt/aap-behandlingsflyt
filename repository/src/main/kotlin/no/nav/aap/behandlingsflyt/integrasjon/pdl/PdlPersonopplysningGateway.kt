@@ -21,12 +21,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import org.intellij.lang.annotations.Language
 
 object PdlPersonopplysningGateway : PersonopplysningGateway {
-    override fun innhent(person: Person): Personopplysning? {
+    override fun innhent(person: Person): Personopplysning {
         val request = PdlRequest(PERSON_QUERY, IdentVariables(person.aktivIdent().identifikator))
         val response: PdlPersoninfoDataResponse = PdlGateway.query(request)
 
         val foedselsdato = PdlParser.utledFødselsdato(response.data?.hentPerson?.foedselsdato)
-            ?: return null
+            ?: error("fødselsdato skal alltid eksistere i PDL")
 
         val status = requireNotNull(response.data?.hentPerson?.folkeregisterpersonstatus?.firstOrNull()?.status)
 
@@ -61,12 +61,12 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
             PersonStatus.inaktiv -> inaktiv
         }
 
-    override fun innhentMedHistorikk(person: Person): PersonopplysningMedHistorikk? {
+    override fun innhentMedHistorikk(person: Person): PersonopplysningMedHistorikk {
         val request = PdlRequest(PERSON_QUERY_HISTORIKK, IdentVariables(person.aktivIdent().identifikator))
         val response: PdlPersoninfoDataResponse = PdlGateway.query(request)
 
         val foedselsdato = PdlParser.utledFødselsdato(response.data?.hentPerson?.foedselsdato)
-            ?: return null
+            ?: error("fødselsdato skal alltid eksistere i PDL")
 
         val folkeregisterStatuser = requireNotNull(response.data?.hentPerson?.folkeregisterpersonstatus?.map {
             FolkeregisterStatus(

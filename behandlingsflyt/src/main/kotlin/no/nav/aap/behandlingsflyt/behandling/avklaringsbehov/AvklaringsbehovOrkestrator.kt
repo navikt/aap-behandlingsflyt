@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
@@ -13,7 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
-import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -153,24 +152,6 @@ class AvklaringsbehovOrkestrator(
         avklaringsbehovene.validateTilstand(behandling = behandling)
         avklaringsbehovene.validerPlassering(behandling = behandling)
 
-        behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
-    }
-
-    fun opprettSkrivBrevAvklaringsbehov(behandlingId: BehandlingId, typeBrev: TypeBrev) {
-        val behandling = behandlingRepository.hent(behandlingId)
-
-        val avklaringsbehovene =
-            avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = behandlingId)
-        val definisjon = if (typeBrev.erVedtak()) {
-            Definisjon.SKRIV_VEDTAKSBREV
-        } else if (typeBrev == TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT) {
-            Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV
-        } else if (typeBrev == TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV) {
-            Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV
-        } else {
-            Definisjon.SKRIV_BREV
-        }
-        avklaringsbehovene.leggTil(listOf(definisjon), behandling.aktivtSteg())
         behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
     }
 }

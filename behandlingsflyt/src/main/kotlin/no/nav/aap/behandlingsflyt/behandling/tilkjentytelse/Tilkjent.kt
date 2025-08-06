@@ -73,7 +73,8 @@ data class TilkjentGradering(
     val samordningGradering: Prosent?,
     val institusjonGradering: Prosent?,
     val arbeidGradering: Prosent?,
-    val samordningUføregradering: Prosent?
+    val samordningUføregradering: Prosent?,
+    val samordningArbeidsgiverGradering: Prosent?
 )
 
 data class TilkjentGUnit(val dagsats: GUnit, val gradering: TilkjentGradering, val utbetalingsdato: LocalDate) {

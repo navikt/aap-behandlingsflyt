@@ -48,6 +48,7 @@ class TilkjentYtelseRepositoryImplTest {
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`
                             ),
                             barnetillegg = Beløp(999),
@@ -68,6 +69,7 @@ class TilkjentYtelseRepositoryImplTest {
                             dagsats = Beløp(1000),
                             gradering = TilkjentGradering(
                                 Prosent.`50_PROSENT`,
+                                Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
@@ -126,6 +128,7 @@ class TilkjentYtelseRepositoryImplTest {
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`
                             ),
                             barnetillegg = Beløp(999),
@@ -146,6 +149,7 @@ class TilkjentYtelseRepositoryImplTest {
                             dagsats = Beløp(1000),
                             gradering = TilkjentGradering(
                                 Prosent.`50_PROSENT`,
+                                Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
@@ -177,6 +181,7 @@ class TilkjentYtelseRepositoryImplTest {
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`
                             ),
                             barnetillegg = Beløp(999),
@@ -197,6 +202,7 @@ class TilkjentYtelseRepositoryImplTest {
                             dagsats = Beløp(1000),
                             gradering = TilkjentGradering(
                                 Prosent.`50_PROSENT`,
+                                Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,

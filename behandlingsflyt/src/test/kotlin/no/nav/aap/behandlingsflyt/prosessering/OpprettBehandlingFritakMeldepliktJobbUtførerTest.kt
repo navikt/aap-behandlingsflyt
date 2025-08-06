@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -53,7 +54,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
         utfører.utfør(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id))
 
-        verify { sakOgBehandlingServiceMock.finnEllerOpprettBehandlingFasttrack(any<SakId>(), any()) }
+        verify { sakOgBehandlingServiceMock.finnEllerOpprettBehandlingFasttrack(any<SakId>(), any(), any()) }
     }
 
     @Test
@@ -64,7 +65,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
         utfører.utfør(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id))
 
-        verify(exactly = 0) { sakOgBehandlingServiceMock.finnEllerOpprettBehandlingFasttrack(any<SakId>(), any()) }
+        verify(exactly = 0) { sakOgBehandlingServiceMock.finnEllerOpprettBehandlingFasttrack(any<SakId>(), any(), any()) }
     }
 
     @Test
@@ -77,7 +78,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
         utfører.utfør(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id))
 
-        verify(exactly = 0) { sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any()) }
+        verify(exactly = 0) { sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any(), any()) }
     }
 
     private fun mockAvhengigheterForOpprettBehandlingFritakMeldepliktJobbUtfører(
@@ -108,6 +109,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             sakId = sakId,
             typeBehandling = TypeBehandling.Revurdering,
             status = Status.OPPRETTET,
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
             vurderingsbehov = årsakerPåTidligereBehandling,
             stegTilstand = StegTilstand(
                 stegStatus = StegStatus.AVKLARINGSPUNKT,
@@ -122,6 +124,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
         every {
             sakOgBehandlingServiceMock.finnEllerOpprettBehandlingFasttrack(
                 sakId,
+                any(),
                 any()
             )
         } returns SakOgBehandlingService.Ordinær(fakeBehandling)
@@ -153,7 +156,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             )
         )
 
-        every { sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any()) } returns fakeBehandling
+        every { sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any(), any()) } returns fakeBehandling
 
         return OpprettBehandlingFritakMeldepliktJobbUtfører(
             sakService = sakServiceMock,

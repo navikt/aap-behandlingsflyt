@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -46,7 +47,8 @@ class OpprettRevurderingSteg(
                         VurderingsbehovMedPeriode(
                             type = Vurderingsbehov.REVURDER_SAMORDNING,
                         )
-                    )
+                    ),
+                    årsakTilOpprettelse = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
                 )
 
                 val behandlingSkrivelås =

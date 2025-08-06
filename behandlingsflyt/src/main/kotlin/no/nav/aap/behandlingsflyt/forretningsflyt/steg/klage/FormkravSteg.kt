@@ -46,7 +46,7 @@ class FormkravSteg (
             return Fullført
         }
 
-        // Om vi ikke har lagret en vurdering eller definisjonen iokke er løst må vi be brukeren gjøre en første vurdering
+        // Om vi ikke har lagret en vurdering eller definisjonen ikke er løst må vi be brukeren gjøre en første vurdering
         val grunnlag = formkravRepository.hentHvisEksisterer(kontekst.behandlingId)
         if (avklaringsbehov.harIkkeBlittLøst(Definisjon.VURDER_FORMKRAV) || grunnlag == null) {
             return FantAvklaringsbehov(Definisjon.VURDER_FORMKRAV)
@@ -63,6 +63,12 @@ class FormkravSteg (
         if (brevbestilling == null) {
             val brevReferanse = bestillFårhåndsvarselBrev(kontekst.behandlingId)
             formkravRepository.lagreVarsel(kontekst.behandlingId, brevReferanse)
+            return FantAvklaringsbehov(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
+        }
+
+        // Vi har bestilt et brev, men det er ikke sendt. Dette kan oppstå om man lagrer grunnlaget på nytt og det fortsatt
+        // ikke er gyldig, eller man har endret i et tidligere steg
+        if (brevbestilling.status == Status.FORHÅNDSVISNING_KLAR) {
             return FantAvklaringsbehov(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
         }
 

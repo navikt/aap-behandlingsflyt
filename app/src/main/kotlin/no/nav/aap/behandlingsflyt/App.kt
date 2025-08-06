@@ -53,6 +53,7 @@ import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseAPI
+import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktRimeligGrunnGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerAPI
 import no.nav.aap.behandlingsflyt.drift.driftAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
@@ -185,6 +186,7 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
                 kvalitetssikringApi(dataSource, repositoryRegistry)
                 bistandsgrunnlagApi(dataSource, repositoryRegistry)
                 meldepliktsgrunnlagApi(dataSource, repositoryRegistry)
+                meldepliktRimeligGrunnGrunnlagApi(dataSource, repositoryRegistry)
                 arbeidsevneGrunnlagApi(dataSource, repositoryRegistry)
                 medlemskapsgrunnlagApi(dataSource, repositoryRegistry)
                 studentgrunnlagApi(dataSource, repositoryRegistry)

@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageRepository
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 
 class TrekkKlageRepositoryImpl(

@@ -11,8 +11,9 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurdering
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurdering
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurderingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Omgjøringskilde
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -62,7 +63,7 @@ class IverksettKonsekvensSteg private constructor(
                 dokumentReferanse = InnsendingReferanse(
                     InnsendingId(UUID.randomUUID())
                 ),
-                brevkategori = InnsendingType.MANUELL_REVURDERING,
+                brevkategori = InnsendingType.OMGJØRING_KLAGE_REVURDERING,
                 kanal = Kanal.DIGITAL,
                 melding = konstruerMelding(vurdering),
                 mottattTidspunkt = LocalDateTime.now()
@@ -74,17 +75,18 @@ class IverksettKonsekvensSteg private constructor(
         TODO("Ikke implementert enda")
     }
 
-    private fun konstruerMelding(vurdering: SvarFraAndreinstansVurdering): ManuellRevurdering {
+    private fun konstruerMelding(vurdering: SvarFraAndreinstansVurdering): OmgjøringKlageRevurdering {
         require(vurdering.vilkårSomOmgjøres.isNotEmpty()) {
             "For å opprette en ManuellRevurdering må det være minst ett vilkår som skal omgjøres"
         }
         val hjemler = vurdering.vilkårSomOmgjøres
         val beskrivelse = konstruerBegrunnelse(hjemler)
-        val årsaker = hjemler.map { it.tilVurderingsbehov() }
+        val vurderingsbehov = hjemler.map { it.tilVurderingsbehov() }
 
-        return ManuellRevurderingV0(
-            årsakerTilBehandling = årsaker,
+        return OmgjøringKlageRevurderingV0(
+            vurderingsbehov = vurderingsbehov,
             beskrivelse = beskrivelse,
+            kilde = Omgjøringskilde.KLAGEINSTANS
         )
     }
 

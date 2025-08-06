@@ -16,13 +16,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderin
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.auth.Bruker
-import no.nav.aap.komponenter.httpklient.auth.bruker
+import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
-import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -40,7 +38,7 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource, repositoryRegi
                     authorizedAzps = mutableListOf(
                         Azp.Postmottak.uuid,
                         Azp.Dokumentinnhenting.uuid
-                    ).apply { if (Miljø.erDev()) plus(requiredConfigForKey("integrasjon.azure.token.generator.azp")) }
+                    )
                 )
             ) { _, dto ->
                 MDC.putCloseable("saksnummer", dto.saksnummer.toString()).use {
