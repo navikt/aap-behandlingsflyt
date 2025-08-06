@@ -3498,17 +3498,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
             .isEqualTo(Definisjon.AVKLAR_SYKDOM)
-        løsAvklaringsBehov(
-            behandling = behandling,
-            avklaringsBehovLøsning = VurderRettighetsperiodeLøsning(
-                rettighetsperiodeVurdering = RettighetsperiodeVurderingDTO(
-                    startDato = nyStartDato,
-                    begrunnelse = "En begrunnelse",
-                    harRettUtoverSøknadsdato = true,
-                    harKravPåRenter = false,
-                )
-            )
-        )
+        behandling.løsRettighetsperiode(nyStartDato)
 
         assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
             .isEqualTo(Definisjon.AVKLAR_SYKDOM)
@@ -3520,6 +3510,104 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             Periode(
                 nyStartDato,
                 nyStartDato.plusYears(1).minusDays(1)
+            )
+        )
+    }
+
+    @Test
+    fun `Skal kunne overstyre rettighetsperioden på en revurdering - øke perioden`() {
+        val sak = happyCaseFørstegangsbehandling(LocalDate.now())
+        val ident = sak.person.aktivIdent()
+        val nyStartDato = sak.rettighetsperiode.fom.minusDays(7)
+        var revurdering = sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("12344932123"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    ManuellRevurderingV0(
+                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.HELHETLIG_VURDERING), ""
+                    ),
+                ),
+                innsendingType = InnsendingType.MANUELL_REVURDERING,
+                periode = sak.rettighetsperiode
+            )
+        ).medKontekst {
+            assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+            assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+        }
+
+        revurdering = revurdering
+            .løsRettighetsperiode(nyStartDato)
+            .løsSykdom()
+            .løsBistand()
+            .løsBeregningstidspunkt(nyStartDato)
+            .løsFastsettManuellInntekt()
+            .løsUtenSamordning()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtakEllerSendRetur()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
+
+        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(revurdering.id)
+        assertThat(åpneAvklaringsbehov).isEmpty()
+
+        val oppdatertSak = hentSak(ident, sak.rettighetsperiode)
+
+        assertThat(oppdatertSak.rettighetsperiode).isNotEqualTo(sak.rettighetsperiode)
+        assertThat(oppdatertSak.rettighetsperiode).isEqualTo(
+            Periode(
+                nyStartDato,
+                sak.rettighetsperiode.tom
+            )
+        )
+    }
+
+    @Test
+    fun `Skal kunne overstyre rettighetsperioden på en revurdering - innskrenke perioden`() {
+        val sak = happyCaseFørstegangsbehandling(LocalDate.now())
+        val ident = sak.person.aktivIdent()
+        val nyStartDato = sak.rettighetsperiode.fom.plusDays(7)
+        var revurdering = sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("12344932123"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    ManuellRevurderingV0(
+                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.HELHETLIG_VURDERING), ""
+                    ),
+                ),
+                innsendingType = InnsendingType.MANUELL_REVURDERING,
+                periode = sak.rettighetsperiode
+            )
+        ).medKontekst {
+            assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+            assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+        }
+
+        revurdering = revurdering
+            .løsRettighetsperiode(nyStartDato)
+            .løsSykdom()
+            .løsBistand()
+            .løsBeregningstidspunkt(LocalDate.now())
+            .løsFastsettManuellInntekt()
+            .løsUtenSamordning()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtakEllerSendRetur()
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.SKRIV_VEDTAKSBREV) }
+            }
+            .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
+
+        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(revurdering.id)
+        assertThat(åpneAvklaringsbehov).isEmpty()
+
+        val oppdatertSak = hentSak(ident, sak.rettighetsperiode)
+
+        assertThat(oppdatertSak.rettighetsperiode).isNotEqualTo(sak.rettighetsperiode)
+        assertThat(oppdatertSak.rettighetsperiode).isEqualTo(
+            Periode(
+                nyStartDato,
+                sak.rettighetsperiode.tom
             )
         )
     }
