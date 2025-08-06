@@ -42,6 +42,7 @@ import no.nav.aap.behandlingsflyt.behandling.klage.påklagetbehandling.påklaget
 import no.nav.aap.behandlingsflyt.behandling.klage.resultat.klageresultatApi
 import no.nav.aap.behandlingsflyt.behandling.klage.trekk.trekkKlageGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringApi
+import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringTilgangAPI
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.forutgåendeMedlemskapAPI
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.lovvalgMedlemskapGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskapAPI
@@ -183,6 +184,7 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
                 flytApi(dataSource, repositoryRegistry)
                 fatteVedtakGrunnlagApi(dataSource, repositoryRegistry)
                 kvalitetssikringApi(dataSource, repositoryRegistry)
+                kvalitetssikringTilgangAPI(dataSource, repositoryRegistry)
                 bistandsgrunnlagApi(dataSource, repositoryRegistry)
                 meldepliktsgrunnlagApi(dataSource, repositoryRegistry)
                 meldepliktRimeligGrunnGrunnlagApi(dataSource, repositoryRegistry)
