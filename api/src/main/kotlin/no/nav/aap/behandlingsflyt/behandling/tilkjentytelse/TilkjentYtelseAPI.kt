@@ -77,48 +77,52 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                         repositoryFactory.provide<TilkjentYtelseRepository>()
                     val meldekortRepository = repositoryFactory.provide<MeldekortRepository>()
                     val meldeperiodeRepository = repositoryFactory.provide<MeldeperiodeRepository>()
+
                     val behandling = behandlingRepository.hent(req)
                     val meldeperioder = meldeperiodeRepository.hent(behandling.id)
-
+                    val meldekortGrunnlag = meldekortRepository.hentHvisEksisterer(behandling.id)
 
                     val tilkjentYtelse = TilkjentYtelseService(
                         behandlingRepository,
                         tilkjentYtelseRepository
                     ).hentTilkjentYtelse(req)
 
+                    // Disse er sortert stigende via Meldekort::meldekort
+                    val meldekortene = meldekortGrunnlag?.meldekort().orEmpty()
 
-                    val meldekortene =
-                        meldekortRepository.hentHvisEksisterer(behandling.id)?.meldekort()?.sortedByDescending {
-                            it.mottattTidspunkt
-                        }
+                    val meldekortene2 = meldekortGrunnlag?.meldekort().orEmpty().map { it.somTidslinje() }
 
-                    tilkjentYtelse.groupBy { utledAktuellMeldeperiode(meldeperioder, it.periode) }
+                    tilkjentYtelse
+                        .groupBy { utledAktuellMeldeperiode(meldeperioder, it.periode) }
                         .map { (meldeperiode, vurdertePerioder) ->
                             val førsteAktuelleMeldekort =
-                                meldekortene?.firstOrNull {
-                                    it.timerArbeidPerPeriode.any {
+                                meldekortene.firstOrNull { arbeidIPeriode ->
+                                    arbeidIPeriode.timerArbeidPerPeriode.any {
                                         it.periode.overlapper(
                                             meldeperiode
                                         )
                                     }
                                 }
 
-                            val sisteAktuelleMeldekort = meldekortene?.lastOrNull {
-                                it.timerArbeidPerPeriode.any {
+                            val sisteAktuelleMeldekort = meldekortene.lastOrNull { meldekort ->
+                                meldekort.timerArbeidPerPeriode.any {
                                     it.periode.overlapper(
                                         meldeperiode
                                     )
                                 }
                             }
 
+                            println(meldekortene)
+
                             TilkjentYtelsePeriode2Dto(
                                 meldeperiode = meldeperiode,
-                                levertMeldekortDato = førsteAktuelleMeldekort?.mottattTidspunkt,
-                                sisteLeverteMeldekort = sisteAktuelleMeldekort?.let {
+                                levertMeldekortDato = førsteAktuelleMeldekort?.mottattTidspunkt?.toLocalDate(),
+                                sisteLeverteMeldekort = sisteAktuelleMeldekort?.let { meldekort ->
                                     MeldekortDto(
-                                        timerArbeidPerPeriode = ArbeidIPeriodeDto(
-                                            timerArbeid = it.timerArbeidPerPeriode.sumOf { it.timerArbeid.antallTimer.toDouble() }),
-                                        mottattTidspunkt = it.mottattTidspunkt,
+                                        timerArbeidPerPeriode = ArbeidIPeriodeDto(meldekort.timerArbeidPerPeriode.sumOf {
+                                            it.timerArbeid.antallTimer.toDouble()
+                                        }),
+                                        mottattTidspunkt = meldekort.mottattTidspunkt,
                                     )
                                 },
                                 meldekortStatus = null,
@@ -127,8 +131,8 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                                         VurdertPeriode(
                                             periode = it.periode,
                                             felter = Felter(
-                                                dagsats = it.tilkjent.dagsats.verdi,
-                                                barneTilleggsats = it.tilkjent.barnetillegg.verdi,
+                                                dagsats = it.tilkjent.dagsats.verdi.toDouble(),
+                                                barneTilleggsats = it.tilkjent.barnetillegg.verdi.toDouble(),
                                                 arbeidGradering = 100.minus(
                                                     it.tilkjent.gradering.arbeidGradering?.prosentverdi() ?: 0
                                                 ),
@@ -145,8 +149,7 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                                     }
                                     .komprimerLikeFelter())
                         }
-
-
+                        .sortedBy { it.meldeperiode.fom }
                 }
                 respond(TilkjentYtelse2Dto(perioder = tilkjentYtelsePerioder))
             }
@@ -158,5 +161,5 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
 
 private fun utledAktuellMeldeperiode(meldeperioder: List<Periode>, periode: Periode): Periode {
     return meldeperioder.find { it.inneholder(periode) }
-        ?: throw IllegalArgumentException("Fant ingen matchende meldeperiode for perioden $periode")
+        ?: throw IllegalArgumentException("Fant ingen matchende meldeperiode for perioden $periode. Perioder: $meldeperioder")
 }

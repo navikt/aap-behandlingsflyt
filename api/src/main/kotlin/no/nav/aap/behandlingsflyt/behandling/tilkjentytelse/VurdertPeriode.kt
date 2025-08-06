@@ -11,8 +11,8 @@ data class VurdertPeriode(
 )
 
 data class Felter(
-    val dagsats: BigDecimal,
-    val barneTilleggsats: BigDecimal,
+    val dagsats: Double,
+    val barneTilleggsats: Double,
     val arbeidGradering: Int?,
     val samordningGradering: Int?,
     val institusjonGradering: Int?,
@@ -22,7 +22,6 @@ data class Felter(
 
 fun List<VurdertPeriode>.komprimerLikeFelter(): List<VurdertPeriode> {
     return this
-        .sortedBy { it.periode.fom }
         .groupBy { it.felter }
         .flatMap { (_, perioderMedLikeFelter) ->
             perioderMedLikeFelter.map { Segment(it.periode, it.felter) }
@@ -30,4 +29,5 @@ fun List<VurdertPeriode>.komprimerLikeFelter(): List<VurdertPeriode> {
                 .toList()
                 .map { VurdertPeriode(it.periode, it.verdi) }
         }
+        .sortedBy { it.periode.fom }
 }

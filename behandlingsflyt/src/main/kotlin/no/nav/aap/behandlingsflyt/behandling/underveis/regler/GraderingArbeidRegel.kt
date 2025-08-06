@@ -137,13 +137,14 @@ class GraderingArbeidRegel : UnderveisRegel {
             return@mapValue sisteFrist < dagensDato
         }
 
-        val manglerOpplysninger = skalHaOpplysningerTidslinje.outerJoin(opplysningerTidslinje) { skalHaOpplysninger, opplysninger ->
-            if (skalHaOpplysninger == true) {
-                return@outerJoin opplysninger?.timerArbeid == null
-            } else {
-                return@outerJoin false
+        val manglerOpplysninger =
+            skalHaOpplysningerTidslinje.outerJoin(opplysningerTidslinje) { skalHaOpplysninger, opplysninger ->
+                if (skalHaOpplysninger == true) {
+                    return@outerJoin opplysninger?.timerArbeid == null
+                } else {
+                    return@outerJoin false
+                }
             }
-        }
 
         return manglerOpplysninger.none { it.verdi }
     }
@@ -175,8 +176,8 @@ class GraderingArbeidRegel : UnderveisRegel {
         var tidslinje = Tidslinje<OpplysningerOmArbeid>()
 
         for (meldekort in input.meldekort.sortedBy { it.mottattTidspunkt }) {
-            tidslinje = tidslinje.outerJoin(meldekort.somTidslinje()) { tidligereOpplysnigner, meldekortopplysninger ->
-                /* opplsysninger fra nyeste meldekort, opplysningerMottat fra eldste meldekort */
+            tidslinje = tidslinje.outerJoin(meldekort.somTidslinje()) { tidligereOpplysninger, meldekortopplysninger ->
+                /* Opplysninger fra nyeste meldekort, opplysningerMottatt fra eldste meldekort */
                 val timerArbeidetOpplysninger = OpplysningerOmArbeid(
                     timerArbeid = meldekortopplysninger?.let { (timerArbeidet, antallDager) ->
                         TimerArbeid(
@@ -190,7 +191,7 @@ class GraderingArbeidRegel : UnderveisRegel {
                     opplysningerFørstMottatt = meldekort.mottattTidspunkt.toLocalDate(),
                 )
 
-                OpplysningerOmArbeid.mergePrioriterHøyre(tidligereOpplysnigner, timerArbeidetOpplysninger)
+                OpplysningerOmArbeid.mergePrioriterHøyre(tidligereOpplysninger, timerArbeidetOpplysninger)
             }
         }
 
