@@ -1949,6 +1949,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun setProperties() {
+        System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
         System.setProperty("nais.app.name", "behandlingsflyt")
 
         // Brev
