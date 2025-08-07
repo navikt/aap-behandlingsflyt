@@ -3,7 +3,9 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -116,11 +118,7 @@ class YrkesskadeRepositoryImplTest {
                 behandling1.id,
                 Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
             )
-            connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
-                setParams {
-                    setLong(1, behandling1.id.toLong())
-                }
-            }
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling2.id)
@@ -154,11 +152,7 @@ class YrkesskadeRepositoryImplTest {
                 behandling1.id,
                 Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019)))
             )
-            connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
-                setParams {
-                    setLong(1, behandling1.id.toLong())
-                }
-            }
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling2.id)
@@ -266,11 +260,7 @@ class YrkesskadeRepositoryImplTest {
                 behandling1.id,
                 Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019)))
             )
-            connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
-                setParams {
-                    setLong(1, behandling1.id.toLong())
-                }
-            }
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             data class Opplysning(val behandlingId: Long, val aktiv: Boolean, val ref: String, val skadedato: LocalDate)
