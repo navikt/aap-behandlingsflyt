@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.RimeligGrunnVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -72,11 +74,7 @@ class MeldepliktRimeligGrunnRepositoryImplTest {
             )
             val behandling1Grunnlag =
                 meldepliktRimeligGrunnRepository.hentHvisEksisterer(behandling1.id)?.vurderinger ?: emptyList()
-            connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
-                setParams {
-                    setLong(1, behandling1.id.toLong())
-                }
-            }
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val meldepliktRimeligGrunnGrunnlag = meldepliktRimeligGrunnRepository.hentHvisEksisterer(behandling2.id)?.vurderinger ?: emptyList()
@@ -112,11 +110,7 @@ class MeldepliktRimeligGrunnRepositoryImplTest {
                 behandling1.id,
                 listOf(rimeligGrunnVurdering.copy(begrunnelse = "annen begrunnelse"))
             )
-            connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
-                setParams {
-                    setLong(1, behandling1.id.toLong())
-                }
-            }
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
             behandling1
         }
         dataSource.transaction { connection ->
@@ -238,11 +232,7 @@ class MeldepliktRimeligGrunnRepositoryImplTest {
                 behandling1.id,
                 listOf(rimeligGrunnVurdering.copy(begrunnelse = "annen begrunnelse"))
             )
-            connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
-                setParams {
-                    setLong(1, behandling1.id.toLong())
-                }
-            }
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             data class Opplysning(
