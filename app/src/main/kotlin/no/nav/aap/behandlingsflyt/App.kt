@@ -322,6 +322,7 @@ fun Application.startKabalKonsument(
         }.start()
     }
     monitor.subscribe(ApplicationStopped) {
+        log.info("Applikasjonen er stoppet, lukker KabalKafkaKonsument.")
         konsument.lukk()
     }
 
