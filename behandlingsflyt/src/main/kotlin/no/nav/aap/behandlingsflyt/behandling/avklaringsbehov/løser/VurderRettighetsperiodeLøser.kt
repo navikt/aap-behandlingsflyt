@@ -3,7 +3,9 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
+import no.nav.aap.behandlingsflyt.behandling.søknad.DatoFraDokumentUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -11,6 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -25,6 +28,7 @@ class VurderRettighetsperiodeLøser(
     private val sakRepository: SakRepository,
     private val rettighetsperiodeRepository: VurderRettighetsperiodeRepository,
     private val sakOgBehandlingService: SakOgBehandlingService,
+    private val mottattDokumentRepository: MottattDokumentRepository,
 ) : AvklaringsbehovsLøser<VurderRettighetsperiodeLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
@@ -33,6 +37,7 @@ class VurderRettighetsperiodeLøser(
         sakRepository = repositoryProvider.provide(),
         rettighetsperiodeRepository = repositoryProvider.provide(),
         sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
+        mottattDokumentRepository = repositoryProvider.provide(),
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: VurderRettighetsperiodeLøsning): LøsningsResultat {
@@ -48,6 +53,9 @@ class VurderRettighetsperiodeLøser(
         }
         if (sak.status() == Status.AVSLUTTET) {
             throw UgyldigForespørselException("Kan ikke oppdatere rettighetsperioden etter at saken er avsluttet")
+        }
+        if(innskrenkerTilEtterSøknadstidspunkt(løsning.rettighetsperiodeVurdering.startDato, sak.id)) {
+            throw UgyldigForespørselException("Kan ikke endre starttidspunkt til å gjelde ETTER søknadstidspunkt")
         }
 
         rettighetsperiodeRepository.lagreVurdering(
@@ -73,6 +81,11 @@ class VurderRettighetsperiodeLøser(
         }
 
         return LøsningsResultat("Vurdert rettighetsperiode")
+    }
+
+    private fun innskrenkerTilEtterSøknadstidspunkt(startDato: LocalDate?, sakId: SakId): Boolean {
+        val søknadsdato = DatoFraDokumentUtleder(mottattDokumentRepository).utledSøknadsdatoForSak(sakId)?.toLocalDate()
+        return startDato != null && søknadsdato != null && startDato.isAfter(søknadsdato)
     }
 
     private fun utledNySluttdato(
