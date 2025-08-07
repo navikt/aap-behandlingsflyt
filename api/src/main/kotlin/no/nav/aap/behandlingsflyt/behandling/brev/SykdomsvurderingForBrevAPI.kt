@@ -61,6 +61,7 @@ private fun hentHistoriskeSykdomsvurderingerForBrev(
     val behandling = behandlingRepository.hent(behandlingReferanse)
     return sykdomsvurderingForBrevRepository.hent(behandling.sakId)
         .filter { it.behandlingId != behandling.id }
+        .sortedByDescending { it.vurdertTidspunkt }
 }
 
 private fun SykdomsvurderingForBrev.toDto(): SykdomsvurderingForBrevVurderingDto {
