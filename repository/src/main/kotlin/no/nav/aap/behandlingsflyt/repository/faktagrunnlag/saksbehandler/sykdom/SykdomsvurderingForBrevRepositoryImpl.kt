@@ -14,14 +14,14 @@ class SykdomsvurderingForBrevRepositoryImpl(private val connection: DBConnection
         behandlingId: BehandlingId,
         vurdering: SykdomsvurderingForBrev
     ): SykdomsvurderingForBrev {
+        val eksisterende = hent(behandlingId)
+        if (eksisterende != null) {
+            deaktiverEksisterende(behandlingId)
+        }
+
         val query = """
-            INSERT INTO SYKDOM_VURDERING_BREV (BEHANDLING_ID, VURDERING, VURDERT_AV, VURDERT_TID) 
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT (BEHANDLING_ID)
-            DO UPDATE SET
-              VURDERING = EXCLUDED.VURDERING,
-              VURDERT_AV = EXCLUDED.VURDERT_AV,
-              VURDERT_TID = EXCLUDED.VURDERT_TID;
+            INSERT INTO SYKDOM_VURDERING_BREV (behandling_id, vurdering, vurdert_av, opprettet_tid, aktiv) 
+            VALUES (?, ?, ?, ?, true);
         """.trimIndent()
 
         connection.execute(query) {
@@ -31,14 +31,27 @@ class SykdomsvurderingForBrevRepositoryImpl(private val connection: DBConnection
                 setString(3, vurdering.vurdertAv)
                 setLocalDateTime(4, vurdering.vurdertTidspunkt)
             }
-            setResultValidator { require(it == 1) }
+            setResultValidator { rowsUpdated ->
+                require(rowsUpdated == 1)
+            }
         }
         return requireNotNull(hent(behandlingId)) { "Fant ikke forventet SykdomsvurderingForBrev" }
     }
 
+    private fun deaktiverEksisterende(behandlingId: BehandlingId) {
+        connection.execute("UPDATE SYKDOM_VURDERING_BREV SET aktiv = false WHERE behandling_id = ? AND aktiv = true") {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setResultValidator { rowsUpdated ->
+                require(rowsUpdated == 1)
+            }
+        }
+    }
+
     override fun hent(behandlingId: BehandlingId): SykdomsvurderingForBrev? {
         val query = """
-            SELECT * FROM SYKDOM_VURDERING_BREV WHERE behandling_id = ?
+            SELECT * FROM SYKDOM_VURDERING_BREV WHERE behandling_id = ? AND aktiv = true;
         """.trimIndent()
 
         return connection.queryFirstOrNull(query) {
@@ -56,6 +69,7 @@ class SykdomsvurderingForBrevRepositoryImpl(private val connection: DBConnection
             SELECT * FROM SYKDOM_VURDERING_BREV s 
             JOIN BEHANDLING b ON s.behandling_id = b.id 
             WHERE sak_id = ?
+            AND s.aktiv = true
         """.trimIndent()
 
         return connection.queryList(query) {
@@ -72,7 +86,7 @@ class SykdomsvurderingForBrevRepositoryImpl(private val connection: DBConnection
         behandlingId = BehandlingId(row.getLong("BEHANDLING_ID")),
         vurdering = row.getStringOrNull("VURDERING"),
         vurdertAv = row.getString("VURDERT_AV"),
-        vurdertTidspunkt = row.getLocalDateTime("VURDERT_TID")
+        vurdertTidspunkt = row.getLocalDateTime("OPPRETTET_TID"),
     )
 
     override fun kopier(
