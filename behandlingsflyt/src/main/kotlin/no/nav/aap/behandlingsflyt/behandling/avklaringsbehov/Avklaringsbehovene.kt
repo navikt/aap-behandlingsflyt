@@ -235,6 +235,12 @@ class Avklaringsbehovene(
             .none { it.status() == Status.AVSLUTTET }
     }
 
+    fun harIkkeForeslåttUttak(): Boolean {
+        return alle()
+            .filter { avklaringsbehov -> avklaringsbehov.erForeslåttUttak() }
+            .none { it.status() == Status.AVSLUTTET }
+    }
+
     fun harVærtSendtTilbakeFraBeslutterTidligere(): Boolean {
         return alle().any { avklaringsbehov -> avklaringsbehov.harVærtSendtTilbakeFraBeslutterTidligere() }
     }

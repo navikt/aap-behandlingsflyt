@@ -36,10 +36,12 @@ enum class KabalHjemmel {
     TRRL_9_FVL_31,
     FVL_35,
     TRRL_27,
+    FTRL_KAPITTEL_2,
 }
 
 fun Hjemmel.tilKabalHjemmel(): KabalHjemmel {
     return when (this) {
+        Hjemmel.FOLKETRYGDLOVEN_KAPITTEL_2 -> KabalHjemmel.FTRL_KAPITTEL_2
         Hjemmel.FOLKETRYGDLOVEN_11_2 -> KabalHjemmel.FTRL_11_2
         Hjemmel.FOLKETRYGDLOVEN_11_3 -> KabalHjemmel.FTRL_11_3
         Hjemmel.FOLKETRYGDLOVEN_11_4 -> KabalHjemmel.FTRL_11_4

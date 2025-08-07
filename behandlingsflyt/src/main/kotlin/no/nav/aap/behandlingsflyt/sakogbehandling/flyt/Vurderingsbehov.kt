@@ -19,6 +19,7 @@ enum class Vurderingsbehov {
     REVURDER_BEREGNING,         // Beregningstidspunkt
     REVURDER_YRKESSKADE,        // Yrkesskade
     REVURDER_MANUELL_INNTEKT,   // Manuell inntekt
+    REVURDER_MELDEPLIKT_RIMELIG_GRUNN,
     G_REGULERING,
     LOVVALG_OG_MEDLEMSKAP,      // Lovvalg og medlemskap
     FORUTGAENDE_MEDLEMSKAP,     // Forutgående medlemskap
@@ -86,4 +87,5 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.MOTTATT_KABAL_HENDELSE -> Vurderingsbehov.MOTTATT_KABAL_HENDELSE
         EksponertÅrsak.OPPFØLGINGSOPPGAVE -> Vurderingsbehov.OPPFØLGINGSOPPGAVE
         EksponertÅrsak.HELHETLIG_VURDERING -> Vurderingsbehov.HELHETLIG_VURDERING
+        EksponertÅrsak.REVURDER_MELDEPLIKT_RIMELIG_GRUNN -> Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN
     }

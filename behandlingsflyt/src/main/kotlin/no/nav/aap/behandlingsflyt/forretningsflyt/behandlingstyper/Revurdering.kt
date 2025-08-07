@@ -261,6 +261,7 @@ object Revurdering : BehandlingType {
             .medSteg(steg = SamordningAvslagSteg)
             .medSteg(
                 steg = IkkeOppfyltMeldepliktSteg,
+                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering(),
                 informasjonskrav = listOf(MeldekortService, AktivitetspliktInformasjonskrav)
             )
             .medSteg(steg = UnderveisSteg)

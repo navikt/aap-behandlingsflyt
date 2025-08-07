@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 // TODO: Hjemler her som er markert som TODO er ting som kan klages på
 // men det er ikke implementert noen revurdering på de, så det vil feile
 enum class Hjemmel(val hjemmel: String) {
+    FOLKETRYGDLOVEN_KAPITTEL_2("Kapittel 2"),
     FOLKETRYGDLOVEN_11_2("§ 11-2"),
 
     FOLKETRYGDLOVEN_11_3("§ 11-3"), // TODO: Mangler steg
@@ -80,6 +81,7 @@ enum class Hjemmel(val hjemmel: String) {
             FOLKETRYGDLOVEN_11_27,
             FOLKETRYGDLOVEN_11_28 -> Vurderingsbehov.SAMORDNING_OG_AVREGNING
 
+            FOLKETRYGDLOVEN_KAPITTEL_2,
             FOLKETRYGDLOVEN_11_3,
             FOLKETRYGDLOVEN_11_4,
             FOLKETRYGDLOVEN_11_7,

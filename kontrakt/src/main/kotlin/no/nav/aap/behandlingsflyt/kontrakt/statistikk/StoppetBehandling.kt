@@ -79,7 +79,8 @@ public enum class Vurderingsbehov {
     REVURDER_MANUELL_INNTEKT,   // Manuell inntekt
     MOTTATT_KABAL_HENDELSE, // Hendelser fra klage andreinstans
     OPPFØLGINGSOPPGAVE,
-    HELHETLIG_VURDERING
+    HELHETLIG_VURDERING,
+    REVURDER_MELDEPLIKT_RIMELIG_GRUNN
 }
 
 /**

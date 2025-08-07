@@ -289,6 +289,16 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
         kreverToTrinn = true,
     ),
+
+    /**
+     * Brukes til å stoppe i underveis for saksbehandler oppfølging
+     */
+    FORESLÅ_UTTAK(
+        kode = AvklaringsbehovKode.`5096`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.FASTSETT_UTTAK,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
+    ),
     FORESLÅ_VEDTAK(
         kode = AvklaringsbehovKode.`5098`,
         type = BehovType.MANUELT_PÅKREVD,

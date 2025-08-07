@@ -120,7 +120,7 @@ class AvventUtbetalingServiceTest {
         assertNotNull(avventUtbetaling)
         assertThat(avventUtbetaling?.fom).isEqualTo(LocalDate.parse("2025-01-10"))
         assertThat(avventUtbetaling?.tom).isEqualTo(LocalDate.parse("2025-01-14"))
-        assertThat(avventUtbetaling?.overføres).isEqualTo(LocalDate.parse("2025-01-14").plusDays(21))
+        assertThat(avventUtbetaling?.overføres).isEqualTo(LocalDate.parse("2025-01-15").plusDays(21))
         assertThat(avventUtbetaling?.årsak).isEqualTo(AvventÅrsak.AVVENT_REFUSJONSKRAV)
         assertThat(avventUtbetaling?.feilregistrering).isFalse()
     }
@@ -158,7 +158,7 @@ class AvventUtbetalingServiceTest {
         assertNotNull(avventUtbetaling)
         assertThat(avventUtbetaling?.fom).isEqualTo(LocalDate.parse("2025-01-04"))
         assertThat(avventUtbetaling?.tom).isEqualTo(LocalDate.parse("2025-01-12"))
-        assertThat(avventUtbetaling?.overføres).isEqualTo(LocalDate.parse("2025-01-12").plusDays(42))
+        assertThat(avventUtbetaling?.overføres).isEqualTo(LocalDate.parse("2025-01-15").plusDays(42))
         assertThat(avventUtbetaling?.årsak).isEqualTo(AvventÅrsak.AVVENT_REFUSJONSKRAV)
         assertThat(avventUtbetaling?.feilregistrering).isFalse()
     }
@@ -202,7 +202,7 @@ class AvventUtbetalingServiceTest {
         assertNotNull(avventUtbetaling)
         assertThat(avventUtbetaling?.fom).isEqualTo(LocalDate.parse("2025-01-04"))
         assertThat(avventUtbetaling?.tom).isEqualTo(LocalDate.parse("2025-01-12"))
-        assertThat(avventUtbetaling?.overføres).isEqualTo(LocalDate.parse("2025-01-12").plusDays(42))
+        assertThat(avventUtbetaling?.overføres).isEqualTo(LocalDate.parse("2025-01-15").plusDays(42))
         assertThat(avventUtbetaling?.årsak).isEqualTo(AvventÅrsak.AVVENT_AVREGNING)
         assertThat(avventUtbetaling?.feilregistrering).isFalse()
     }
@@ -240,7 +240,7 @@ class AvventUtbetalingServiceTest {
         assertNotNull(avventUtbetaling)
         assertThat(avventUtbetaling?.fom).isEqualTo(LocalDate.parse("2025-01-04"))
         assertThat(avventUtbetaling?.tom).isEqualTo(LocalDate.parse("2025-01-12"))
-        assertThat(avventUtbetaling?.overføres).isEqualTo(LocalDate.parse("2025-01-12").plusDays(42))
+        assertThat(avventUtbetaling?.overføres).isEqualTo(LocalDate.parse("2025-01-15").plusDays(42))
         assertThat(avventUtbetaling?.årsak).isEqualTo(AvventÅrsak.AVVENT_AVREGNING)
         assertThat(avventUtbetaling?.feilregistrering).isFalse()
     }

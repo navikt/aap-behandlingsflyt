@@ -20,6 +20,7 @@ import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class MeldepliktRepositoryImplTest {
     companion object {
@@ -49,7 +50,7 @@ class MeldepliktRepositoryImplTest {
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
             val fritaksvurderinger = listOf(
                 Fritaksvurdering(true, 13 august 2023, "en begrunnelse", "saksbehandler", null),
-                Fritaksvurdering(false, 26 august 2023, "annen begrunnelse", "saksbehandler", null)
+                Fritaksvurdering(false, 26 august 2023, "annen begrunnelse", "saksbehandler", LocalDateTime.now())
             )
             meldepliktRepository.lagre(behandling.id, fritaksvurderinger)
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)

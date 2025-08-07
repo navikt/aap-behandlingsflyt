@@ -1,24 +1,30 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class UnderveisSteg(
     private val underveisService: UnderveisService,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         underveisService = UnderveisService(repositoryProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        avklaringsbehovRepository = repositoryProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -30,7 +36,15 @@ class UnderveisSteg(
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.REVURDERING,
+            VurderingType.REVURDERING -> {
+                underveisService.vurder(kontekst.sakId, kontekst.behandlingId)
+
+                val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+                if (kontekst.vurderingsbehov.contains(Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN) && avklaringsbehov.harIkkeForeslåttUttak()) {
+                    return FantAvklaringsbehov(Definisjon.FORESLÅ_UTTAK)
+                }
+            }
+
             VurderingType.MELDEKORT -> {
                 underveisService.vurder(kontekst.sakId, kontekst.behandlingId)
             }

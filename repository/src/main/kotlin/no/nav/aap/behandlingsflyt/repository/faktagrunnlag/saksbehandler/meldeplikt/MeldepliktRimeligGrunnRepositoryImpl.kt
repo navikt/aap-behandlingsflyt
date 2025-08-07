@@ -147,7 +147,7 @@ class MeldepliktRimeligGrunnRepositoryImpl(private val connection: DBConnection)
                 setBoolean(3, it.harRimeligGrunn)
                 setLocalDate(4, it.fraDato)
                 setString(5, it.vurdertAv)
-                setLocalDateTime(5, it.opprettetTid)
+                setLocalDateTime(6, it.opprettetTid)
             }
         }
     }
