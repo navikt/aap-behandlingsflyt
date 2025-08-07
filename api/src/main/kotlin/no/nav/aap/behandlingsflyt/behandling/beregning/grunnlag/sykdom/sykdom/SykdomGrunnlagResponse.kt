@@ -15,6 +15,7 @@ data class SykdomGrunnlagResponse(
 )
 
 data class SykdomsvurderingResponse(
+    val id: Long? = null,
     val begrunnelse: String,
 
     /** Hvis null, så gjelder den fra starten. */
