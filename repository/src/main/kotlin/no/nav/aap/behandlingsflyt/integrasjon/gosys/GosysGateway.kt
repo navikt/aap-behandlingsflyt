@@ -81,7 +81,7 @@ class GosysGateway : OppgaveGateway {
             client.post(path, request) { _, _ -> }
             log.info("Opprettet refusjonsoppgave mot Gosys: ${oppgaveRequest} ")
         } catch (e: Exception) {
-            log.warn("Feil mot oppgaveApi under opprettelse av oppgave: ${e.message}", e)
+            log.error("Feil mot oppgaveApi under opprettelse av oppgave: ${e.message}", e)
             throw e
         }
 

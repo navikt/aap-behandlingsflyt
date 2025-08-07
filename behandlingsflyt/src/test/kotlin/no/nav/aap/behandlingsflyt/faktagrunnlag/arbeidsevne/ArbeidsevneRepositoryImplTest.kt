@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -71,11 +73,7 @@ class ArbeidsevneRepositoryImplTest {
             val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, "vurdertAv")
 
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
-            connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
-                setParams {
-                    setLong(1, behandling1.id.toLong())
-                }
-            }
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
 
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
@@ -106,11 +104,7 @@ class ArbeidsevneRepositoryImplTest {
 
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne2))
-            connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
-                setParams {
-                    setLong(1, behandling1.id.toLong())
-                }
-            }
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
 
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
@@ -194,11 +188,8 @@ class ArbeidsevneRepositoryImplTest {
 
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne2))
-            connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
-                setParams {
-                    setLong(1, behandling1.id.toLong())
-                }
-            }
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
+
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             data class Opplysning(

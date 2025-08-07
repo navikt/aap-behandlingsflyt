@@ -72,7 +72,7 @@ class FatteVedtakSteg(
         if (avklaringsbehov.harHattAvklaringsbehovSomHarKrevdToTrinn()) {
             return FantAvklaringsbehov(Definisjon.FATTE_VEDTAK)
         }
-        
+
         val navkontorSosialRefusjon = refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId)
         if (navkontorSosialRefusjon == null) return Fullført
 
@@ -80,7 +80,7 @@ class FatteVedtakSteg(
             .filter { it.harKrav && it.navKontor != null }
             .map {
                 NavKontorPeriodeDto(
-                    enhetsNummer = navKontorEnhetsNummer (it.navKontor)!!,
+                    enhetsNummer = navKontorEnhetsNummer(it.navKontor)!!,
                     fom = it.fom,
                     tom = it.tom
                 )
@@ -106,15 +106,17 @@ class FatteVedtakSteg(
     ) {
         navKontorList.forEach { navKontor ->
             log.info("Oppretter Gosysoppgave for $navKontor")
-            gosysService.opprettOppgave(
-                aktivIdent,
-                kontekst.behandlingId.toString(),
-                kontekst.behandlingId,
-                navKontor
-            )
+            // Dersom det er oppgitt et enhetsnummer en oppgave skal opprettes til
+            if (navKontor.enhetsNummer.isNotEmpty()) {
+                gosysService.opprettOppgave(
+                    aktivIdent,
+                    kontekst.behandlingId.toString(),
+                    kontekst.behandlingId,
+                    navKontor
+                )
+            }
         }
     }
-
 
 
     companion object : FlytSteg {

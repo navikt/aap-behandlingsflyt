@@ -8,6 +8,7 @@ import java.time.LocalDateTime
 data class MeldepliktRimeligGrunnGrunnlagResponse(
     val harTilgangTilÅSaksbehandle: Boolean,
     val perioderIkkeMeldt: List<Periode>,
+    val perioderRimeligGrunn: List<Periode>,
     val historikk: Set<MeldepliktRimeligGrunnVurderingResponse>,
     val gjeldendeVedtatteVurderinger: List<MeldepliktRimeligGrunnVurderingResponse>,
     val vurderinger: List<MeldepliktRimeligGrunnVurderingResponse>,
