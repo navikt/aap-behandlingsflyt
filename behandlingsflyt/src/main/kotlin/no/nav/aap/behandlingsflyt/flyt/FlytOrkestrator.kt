@@ -30,6 +30,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 
 
 /**
@@ -106,6 +107,7 @@ class FlytOrkestrator(
         kontekst: FlytKontekst,
         triggere: List<ÅrsakTilBehandling> = emptyList()
     ) {
+        log.info("XXX kjører flytorkestrator ${kontekst.behandlingId} {} {} {}",  MDC.get("jobbid"), Thread.currentThread(), årsak())
         this.forberedBehandling(kontekst, triggere)
         this.prosesserBehandling(kontekst)
     }
@@ -347,4 +349,10 @@ class FlytOrkestrator(
             throw IllegalStateException("Har uhåndterte behov som skulle vært håndtert før nåværende steg = '$nesteSteg'. Behov: ${uhåndterteBehov.map { it.definisjon }}")
         }
     }
+}
+
+fun årsak(): String {
+    val stackTrace = Exception().stackTrace.map { it.methodName }
+    return stackTrace.firstOrNull { it in listOf("håndterMottatteDokumenter", "løsAvklaringsbehovOgFortsettProsessering") }
+        ?: "ukjent årsak (${Exception().stackTrace.joinToString { it.className + "#" + it.methodName}}"
 }

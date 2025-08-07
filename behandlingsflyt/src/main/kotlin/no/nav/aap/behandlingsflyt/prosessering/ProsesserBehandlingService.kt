@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
+import no.nav.aap.behandlingsflyt.flyt.årsak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -53,6 +54,7 @@ class ProsesserBehandlingService(
         behandlingId: BehandlingId,
         parameters: List<Pair<String, String>> = emptyList()
     ) {
+        log.info("XXX tiggProsesserBehandling {}", årsak())
         val eksisterendeJobber = flytJobbRepository
             .hentJobberForBehandling(behandlingId.toLong())
             .filter { it.type() == ProsesserBehandlingJobbUtfører.type }
@@ -89,7 +91,7 @@ class ProsesserBehandlingService(
         // TODO: Hva trenger vi denne til? 
         // Forårsaker at iverksett_vedtak kjøres på nytt og kræsjer fordi den prøver å lagre ned vedtaket på nytt
         // Kommenterer ut enn så lenge
-        //triggProsesserBehandling(behandling.sakId, behandling.id)
+        triggProsesserBehandling(behandling.sakId, behandling.id)
         log.info("Prosessererte behandling ${behandling.referanse} atomært")
 
         val åpenBehandling = opprettetBehandling.åpenBehandling

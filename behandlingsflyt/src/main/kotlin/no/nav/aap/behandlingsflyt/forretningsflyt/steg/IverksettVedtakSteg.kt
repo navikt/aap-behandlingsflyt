@@ -30,6 +30,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 
 class IverksettVedtakSteg private constructor(
     private val behandlingRepository: BehandlingRepository,
@@ -60,6 +61,7 @@ class IverksettVedtakSteg private constructor(
         val virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId)
         
         // Denne gir duplicate key
+        log.info("XXX lagrer vedtak behandling ${kontekst.behandlingId} jobb=${MDC.get("jobbid")}")
         vedtakService.lagreVedtak(kontekst.behandlingId, vedtakstidspunkt, virkningstidspunkt)
 
         val tilkjentYtelseDto = utbetalingService.lagTilkjentYtelseForUtbetaling(kontekst.sakId, kontekst.behandlingId)
