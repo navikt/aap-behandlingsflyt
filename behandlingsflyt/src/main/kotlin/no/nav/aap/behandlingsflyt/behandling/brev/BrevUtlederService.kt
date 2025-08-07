@@ -64,7 +64,7 @@ class BrevUtlederService(
         }
     }
 
-    private fun brevBehovInnvilgelse(behandling: Behandling): BrevBehov {
+    private fun brevBehovInnvilgelse(behandling: Behandling): Innvilgelse {
         val vedtak = checkNotNull(vedtakRepository.hent(behandling.id)) {
             "Fant ikke vedtak for behandling med innvilgelse"
         }
