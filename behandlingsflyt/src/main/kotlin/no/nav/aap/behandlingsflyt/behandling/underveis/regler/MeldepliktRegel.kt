@@ -144,7 +144,10 @@ class MeldepliktRegel(
         val meldepliktFraOgMed = meldepliktFraOgMed(input)
         return if (meldepliktFraOgMed == null) {
             Tidslinje(input.rettighetsperiode, MeldepliktData(førVedtak = true))
-        } else {
+        } else if (meldepliktFraOgMed <= input.rettighetsperiode.fom) {
+            Tidslinje(input.rettighetsperiode, MeldepliktData(førVedtak = false))
+        }
+        else {
             Tidslinje(
                 listOf(
                     Segment(
