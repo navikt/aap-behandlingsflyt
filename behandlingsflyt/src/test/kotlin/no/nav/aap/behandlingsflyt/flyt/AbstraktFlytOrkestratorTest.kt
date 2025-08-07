@@ -77,7 +77,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
@@ -85,6 +87,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -615,6 +618,20 @@ open class AbstraktFlytOrkestratorTest {
                 periode = periode
             )
         )
+    }
+
+    protected fun opprettManuellRevurdering(sak: Sak, vurderingsbehov: List<Vurderingsbehov>): Behandling {
+        return sendInnDokument(sak.person.aktivIdent(), DokumentMottattPersonHendelse(
+            journalpost = JournalpostId(Random().nextInt(1000000).toString()),
+            mottattTidspunkt = LocalDateTime.now(),
+            innsendingType = InnsendingType.MANUELL_REVURDERING,
+            periode = sak.rettighetsperiode,
+            strukturertDokument = StrukturertDokument(
+                ManuellRevurderingV0(
+                    årsakerTilBehandling = vurderingsbehov, ""
+                ),
+            ),
+        ))
     }
 
     protected fun sendInnDokument(

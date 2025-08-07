@@ -40,7 +40,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentePåFr
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderFormkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKlageKontorLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKlageNayLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
@@ -90,7 +89,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
@@ -147,12 +145,12 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -382,10 +380,11 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     skalVurdereAapIOvergangTilArbeid = null,
                     overgangBegrunnelse = null
                 ),
-            )).medKontekst {
-                assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).describedAs {
-                    "Revurdering av sykdom skal gå rett til beslutter når ingen avklaringsbehov trenger å løses av NAY"
-                }.containsExactly(Definisjon.FATTE_VEDTAK)
+            )
+        ).medKontekst {
+            assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).describedAs {
+                "Revurdering av sykdom skal gå rett til beslutter når ingen avklaringsbehov trenger å løses av NAY"
+            }.containsExactly(Definisjon.FATTE_VEDTAK)
         }
     }
 
@@ -396,7 +395,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         val behandling = revurdereFramTilOgMedSykdom(
             sak = sak,
             gjelderFra = sak.rettighetsperiode.fom,
-            vissVarighet = false)
+            vissVarighet = false
+        )
 
         behandling.løsAvklaringsBehov(
             AvklarBistandsbehovLøsning(
@@ -409,7 +409,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     skalVurdereAapIOvergangTilArbeid = null,
                     overgangBegrunnelse = null
                 ),
-            )).løsAvklaringsBehov(
+            )
+        ).løsAvklaringsBehov(
             AvklarSykepengerErstatningLøsning(
                 sykepengeerstatningVurdering = SykepengerVurderingDto(
                     begrunnelse = "test",
@@ -418,7 +419,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR
                 ),
                 behovstype = Definisjon.AVKLAR_SYKEPENGEERSTATNING.kode
-            )).medKontekst {
+            )
+        ).medKontekst {
             assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).describedAs {
                 "Revurdering av sykdom skal innom foreslå vedtak-steg når vurdering av sykepengeerstatning er gjort av NAY"
             }.containsExactly(Definisjon.FORESLÅ_VEDTAK)
@@ -2078,7 +2080,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 strukturertDokument = StrukturertDokument(
                     ManuellRevurderingV0(
-                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP), ""
+                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP),
+                        ""
                     ),
                 ),
                 innsendingType = InnsendingType.MANUELL_REVURDERING,
@@ -2119,7 +2122,10 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             behandling,
             AvklarForutgåendeMedlemskapLøsning(
                 manuellVurderingForForutgåendeMedlemskap = ManuellVurderingForForutgåendeMedlemskapDto(
-                    "begrunnelseforutgående", false, varMedlemMedNedsattArbeidsevne = false, medlemMedUnntakAvMaksFemAar = null
+                    "begrunnelseforutgående",
+                    false,
+                    varMedlemMedNedsattArbeidsevne = false,
+                    medlemMedUnntakAvMaksFemAar = null
                 )
             )
         )
@@ -3477,7 +3483,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         val revurdering = hentNyesteBehandlingForSak(svarFraAndreinstansBehandling.sakId)
         assertThat(revurdering).isNotNull
         assertThat(revurdering.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-        assertThat(revurdering.vurderingsbehov().map { it.type }).contains(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+        assertThat(
+            revurdering.vurderingsbehov().map { it.type }).contains(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
     }
 
     @Test
@@ -3525,7 +3532,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     ManuellRevurderingV0(
-                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.HELHETLIG_VURDERING), ""
+                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.HELHETLIG_VURDERING),
+                        ""
                     ),
                 ),
                 innsendingType = InnsendingType.MANUELL_REVURDERING,
@@ -3565,26 +3573,44 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
     fun `Skal kunne overstyre rettighetsperioden på en revurdering - innskrenke perioden`() {
         val sak = happyCaseFørstegangsbehandling(LocalDate.now())
         val ident = sak.person.aktivIdent()
-        val nyStartDato = sak.rettighetsperiode.fom.plusDays(7)
-        var revurdering = sendInnDokument(
-            ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId("12344932123"),
-                mottattTidspunkt = LocalDateTime.now(),
-                strukturertDokument = StrukturertDokument(
-                    ManuellRevurderingV0(
-                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.HELHETLIG_VURDERING), ""
-                    ),
-                ),
-                innsendingType = InnsendingType.MANUELL_REVURDERING,
-                periode = sak.rettighetsperiode
-            )
-        ).medKontekst {
-            assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-            assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-        }
+        val førsteOverstyring = sak.rettighetsperiode.fom.minusMonths(2)
+        val andreOverstyring = sak.rettighetsperiode.fom.minusMonths(1)
 
-        revurdering = revurdering
-            .løsRettighetsperiode(nyStartDato)
+        /**
+         * Utvid rettighetsperioden
+         */
+        val avklaringsbehovManuellRevurdering = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.HELHETLIG_VURDERING)
+        opprettManuellRevurdering(sak,avklaringsbehovManuellRevurdering)
+            .medKontekst {
+                assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            } .løsRettighetsperiode(førsteOverstyring)
+            .løsSykdom()
+            .løsBistand()
+            .løsBeregningstidspunkt(LocalDate.now())
+            .løsFastsettManuellInntekt()
+            .løsUtenSamordning()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtakEllerSendRetur()
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.SKRIV_VEDTAKSBREV) }
+            }
+            .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
+            .medKontekst {
+                val oppdatertRettighetsperiode = hentSak(ident, sak.rettighetsperiode).rettighetsperiode
+                assertThat(oppdatertRettighetsperiode.fom).isEqualTo(førsteOverstyring)
+            }
+
+        /**
+         * Innskrenke rettighetsperioden, men ikke etter søknadsdato
+         */
+        val revurderingInnskrenking = opprettManuellRevurdering(sak, avklaringsbehovManuellRevurdering)
+            .medKontekst {
+                assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .løsRettighetsperiode(andreOverstyring)
             .løsSykdom()
             .løsBistand()
             .løsBeregningstidspunkt(LocalDate.now())
@@ -3598,7 +3624,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             }
             .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
 
-        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(revurdering.id)
+        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(revurderingInnskrenking.id)
         assertThat(åpneAvklaringsbehov).isEmpty()
 
         val oppdatertSak = hentSak(ident, sak.rettighetsperiode)
@@ -3606,9 +3632,25 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         assertThat(oppdatertSak.rettighetsperiode).isNotEqualTo(sak.rettighetsperiode)
         assertThat(oppdatertSak.rettighetsperiode).isEqualTo(
             Periode(
-                nyStartDato,
+                andreOverstyring,
                 sak.rettighetsperiode.tom
             )
         )
+    }
+
+    @Test
+    fun `Skal ikke kunne overstyre rettighetsperioden på en revurdering ved å innskrenke fra søknadsdato`() {
+        val sak = happyCaseFørstegangsbehandling(LocalDate.now())
+        val nyStartDato = sak.rettighetsperiode.fom.plusDays(7)
+        val revurdering = opprettManuellRevurdering(
+            sak,
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.HELHETLIG_VURDERING)
+        )
+
+        val feil = assertThrows<UgyldigForespørselException> {
+            revurdering.løsRettighetsperiode(nyStartDato)
+        }
+        assertThat(feil.message).contains("Kan ikke endre starttidspunkt til å gjelde ETTER søknadstidspunkt")
+
     }
 }
