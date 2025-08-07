@@ -1492,7 +1492,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
     fun `ved revurdering i steget for sykdom skal sykdomsvurdering for brev vises etter refusjonskrav`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val person = TestPersoner.STANDARD_PERSON()
-        val sak = happyCaseFørstegangsbehandling(person)
+        val sak = happyCaseFørstegangsbehandling(periode.fom, person)
 
         val revurdering = sendInnDokument(
             sak.person.aktivIdent(), DokumentMottattPersonHendelse(
