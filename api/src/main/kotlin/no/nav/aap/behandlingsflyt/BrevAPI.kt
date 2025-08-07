@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag.Brev.Mottaker
 import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
+import no.nav.aap.behandlingsflyt.behandling.brev.VarselOmBestilling
 import no.nav.aap.behandlingsflyt.behandling.brev.VarselOmBrevbestillingDto
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
@@ -222,7 +223,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
 
                             brevbestillingService.bestillV2(
                                 behandlingId = behandling.id,
-                                typeBrev = TypeBrev.VARSEL_OM_BESTILLING,
+                                brevBehov = VarselOmBestilling,
                                 unikReferanse = req.dialogmeldingUuid.toString(),
                                 ferdigstillAutomatisk = true,
                                 vedlegg = req.vedlegg
