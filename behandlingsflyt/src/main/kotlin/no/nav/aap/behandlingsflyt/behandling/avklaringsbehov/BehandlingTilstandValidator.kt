@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.exception.BehandlingUnderProsesseringException
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.motor.FlytJobbRepository
 import org.slf4j.LoggerFactory
@@ -18,6 +19,8 @@ class BehandlingTilstandValidator(
         ValiderBehandlingTilstand.validerTilstandBehandling(behandling, behandlingVersjon)
 
         val jobberForBehandling = flytJobbRepository.hentJobberForBehandling(behandling.id.toLong())
+            .filter { it.type() == ProsesserBehandlingJobbUtfører.type }
+
         if (jobberForBehandling.isNotEmpty()) {
             val typer = jobberForBehandling.map { it.type() }
             throw BehandlingUnderProsesseringException(typer)

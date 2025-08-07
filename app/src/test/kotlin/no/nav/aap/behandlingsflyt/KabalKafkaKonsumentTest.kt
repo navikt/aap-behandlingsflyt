@@ -43,6 +43,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.kafka.KafkaContainer
 import org.testcontainers.utility.DockerImageName
 import java.time.Duration
@@ -64,7 +65,10 @@ class KabalKafkaKonsumentTest {
                 repositoryRegistry = repositoryRegistry
             )
         val kafka = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.0.0"))
-            .withReuse(true).withStartupTimeout(Duration.ofSeconds(60))
+            .withReuse(true)
+            .waitingFor(Wait.forListeningPort())
+            .withStartupTimeout(Duration.ofSeconds(60))
+
         private val util =
             TestUtil(dataSource, listOf(HendelseMottattHåndteringJobbUtfører.type))
 
