@@ -7,6 +7,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
@@ -18,6 +20,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Refusjonkr
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
@@ -29,8 +32,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurderingDTO
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.flyt.AbstraktFlytOrkestratorTest.Companion.util
@@ -72,7 +78,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
@@ -80,6 +88,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -118,6 +127,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -248,11 +258,11 @@ open class AbstraktFlytOrkestratorTest {
     }
 
 
-    fun happyCaseFørstegangsbehandling(person: TestPerson = TestPersoner.STANDARD_PERSON()): Sak {
-        val fom = LocalDate.now().minusMonths(3)
+    fun happyCaseFørstegangsbehandling(fom: LocalDate = LocalDate.now().minusMonths(3), person: TestPerson = TestPersoner.STANDARD_PERSON()): Sak {
         val periode = Periode(fom, fom.plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
+        val person = TestPersoner.STANDARD_PERSON()
         val ident = person.aktivIdent()
 
         // Sender inn en søknad
@@ -276,8 +286,7 @@ open class AbstraktFlytOrkestratorTest {
                         overgangBegrunnelse = null
                     ),
                 )
-            )
-            .løsAvklaringsBehov(
+            ).løsAvklaringsBehov(
                 RefusjonkravLøsning(
                     listOf(
                         RefusjonkravVurderingDto(
@@ -473,6 +482,37 @@ open class AbstraktFlytOrkestratorTest {
             )
         )
     }
+    protected fun Behandling.løsRettighetsperiode(dato: LocalDate): Behandling {
+        return this.løsAvklaringsBehov(
+            avklaringsBehovLøsning = VurderRettighetsperiodeLøsning(
+                rettighetsperiodeVurdering = RettighetsperiodeVurderingDTO(
+                    startDato = dato,
+                    begrunnelse = "En begrunnelse",
+                    harRettUtoverSøknadsdato = true,
+                    harKravPåRenter = false,
+                )
+            )
+        )
+    }
+
+    protected fun Behandling.løsFastsettManuellInntekt(): Behandling {
+        return this.løsAvklaringsBehov(
+            AvklarManuellInntektVurderingLøsning(
+                manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
+                    begrunnelse = "Mangler ligning",
+                    belop = BigDecimal(300000),
+                )
+            )
+        )
+    }
+
+    protected fun Behandling.løsUtenSamordning(): Behandling {
+        return this.løsAvklaringsBehov(
+            AvklarSamordningGraderingLøsning(
+                vurderingerForSamordning = VurderingerForSamordning("", true, null, emptyList())
+            )
+        )
+    }
 
     protected fun løsSykdomsvurderingBrev(behandling: Behandling): Behandling {
         return løsAvklaringsBehov(
@@ -597,6 +637,20 @@ open class AbstraktFlytOrkestratorTest {
         )
     }
 
+    protected fun opprettManuellRevurdering(sak: Sak, vurderingsbehov: List<Vurderingsbehov>): Behandling {
+        return sendInnDokument(sak.person.aktivIdent(), DokumentMottattPersonHendelse(
+            journalpost = JournalpostId(Random().nextInt(1000000).toString()),
+            mottattTidspunkt = LocalDateTime.now(),
+            innsendingType = InnsendingType.MANUELL_REVURDERING,
+            periode = sak.rettighetsperiode,
+            strukturertDokument = StrukturertDokument(
+                ManuellRevurderingV0(
+                    årsakerTilBehandling = vurderingsbehov, ""
+                ),
+            ),
+        ))
+    }
+
     protected fun sendInnDokument(
         ident: Ident,
         dokumentMottattPersonHendelse: DokumentMottattPersonHendelse
@@ -712,13 +766,13 @@ open class AbstraktFlytOrkestratorTest {
         )
     }
 
-    protected fun Behandling.løsBeregningstidspunkt(): Behandling {
+    protected fun Behandling.løsBeregningstidspunkt(dato: LocalDate = LocalDate.now()): Behandling {
         return løsAvklaringsBehov(
             this,
             FastsettBeregningstidspunktLøsning(
                 beregningVurdering = BeregningstidspunktVurderingDto(
                     begrunnelse = "Trenger hjelp fra Nav",
-                    nedsattArbeidsevneDato = LocalDate.now(),
+                    nedsattArbeidsevneDato = dato,
                     ytterligereNedsattArbeidsevneDato = null,
                     ytterligereNedsattBegrunnelse = null
                 ),

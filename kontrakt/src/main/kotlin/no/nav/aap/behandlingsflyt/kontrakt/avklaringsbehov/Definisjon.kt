@@ -243,7 +243,8 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5027`,
         type = BehovType.MANUELT_FRIVILLIG,
         løsesISteg = StegType.SAMORDNING_ANDRE_STATLIGE_YTELSER,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = true
     ),
     SAMORDNING_ARBEIDSGIVER(
         kode = AvklaringsbehovKode.`5030`,

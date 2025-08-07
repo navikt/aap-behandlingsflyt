@@ -50,7 +50,7 @@ class AvventUtbetalingServiceTest {
 
         val avventUtbetaling = service.finnEventuellAvventUtbetaling(
             behandlingId = BehandlingId(123L),
-            vedtakstidspunkt = LocalDateTime.parse("2025-01-15T00:00:00.000"),
+            førsteVedtaksdato = LocalDate.parse("2025-01-15"),
             tilkjentYtelseHelePerioden = Periode(LocalDate.parse("2025-01-01"), LocalDate.parse("2025-01-31"))
         )
 
@@ -85,7 +85,7 @@ class AvventUtbetalingServiceTest {
 
         val avventUtbetaling = service.finnEventuellAvventUtbetaling(
             behandlingId = BehandlingId(123L),
-            vedtakstidspunkt = LocalDateTime.parse("2025-01-15T00:00:00.000"),
+            førsteVedtaksdato = LocalDate.parse("2025-01-15"),
             tilkjentYtelseHelePerioden = Periode(LocalDate.parse("2025-01-01"), LocalDate.parse("2025-01-31"))
         )
 
@@ -113,7 +113,7 @@ class AvventUtbetalingServiceTest {
 
         val avventUtbetaling = service.finnEventuellAvventUtbetaling(
             behandlingId = BehandlingId(123L),
-            vedtakstidspunkt = LocalDateTime.parse("2025-01-15T00:00:00.000"),
+            førsteVedtaksdato = LocalDate.parse("2025-01-15"),
             tilkjentYtelseHelePerioden = Periode(LocalDate.parse("2025-01-01"), LocalDate.parse("2025-01-31"))
         )
 
@@ -151,7 +151,7 @@ class AvventUtbetalingServiceTest {
 
         val avventUtbetaling = service.finnEventuellAvventUtbetaling(
             behandlingId = BehandlingId(123L),
-            vedtakstidspunkt = LocalDateTime.parse("2025-01-15T00:00:00.000"),
+            førsteVedtaksdato = LocalDate.parse("2025-01-15"),
             tilkjentYtelseHelePerioden = Periode(LocalDate.parse("2025-01-01"), LocalDate.parse("2025-01-31"))
         )
 
@@ -195,7 +195,7 @@ class AvventUtbetalingServiceTest {
 
         val avventUtbetaling = service.finnEventuellAvventUtbetaling(
             behandlingId = BehandlingId(123L),
-            vedtakstidspunkt = LocalDateTime.parse("2025-01-15T00:00:00.000"),
+            førsteVedtaksdato = LocalDate.parse("2025-01-15"),
             tilkjentYtelseHelePerioden = Periode(LocalDate.parse("2025-01-01"), LocalDate.parse("2025-01-31"))
         )
 
@@ -233,7 +233,7 @@ class AvventUtbetalingServiceTest {
 
         val avventUtbetaling = service.finnEventuellAvventUtbetaling(
             behandlingId = BehandlingId(123L),
-            vedtakstidspunkt = LocalDateTime.parse("2025-01-15T00:00:00.000"),
+            førsteVedtaksdato = LocalDate.parse("2025-01-15"),
             tilkjentYtelseHelePerioden = Periode(LocalDate.parse("2025-01-01"), LocalDate.parse("2025-01-31"))
         )
 
