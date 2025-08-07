@@ -6,6 +6,8 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseReposi
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -18,6 +20,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDetaljerDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelsePeriodeDto
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class UtbetalingService(
@@ -30,6 +33,7 @@ class UtbetalingService(
     private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository,
     private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
     private val samordningArbeidsgiverRepository: SamordningArbeidsgiverRepository,
+    private val underveisRepository: UnderveisRepository,
 ) {
 
     fun lagTilkjentYtelseForUtbetaling(sakId: SakId, behandlingId: BehandlingId, simulering: Boolean = false): TilkjentYtelseDto? {
@@ -60,8 +64,9 @@ class UtbetalingService(
                 vedtakRepository.hent(behandlingId)?.vedtakstidspunkt ?: error("Fant ikke vedtak")
             }
             val avventUtbetaling = if (tilkjentYtelse.isNotEmpty()) {
+                val førsteVedtaksdato = finnFørsteVedtaksdato(sakId) ?: LocalDate.now()
                 AvventUtbetalingService(refusjonskravRepository, tjenestepensjonRefusjonsKravVurderingRepository, samordningAndreStatligeYtelserRepository, samordningArbeidsgiverRepository).
-                    finnEventuellAvventUtbetaling(behandlingId, vedtakstidspunkt, tilkjentYtelse.finnHelePerioden())
+                    finnEventuellAvventUtbetaling(behandlingId, førsteVedtaksdato, tilkjentYtelse.finnHelePerioden())
             } else {
                 null
             }
@@ -80,6 +85,28 @@ class UtbetalingService(
         } else {
             null
         }
+    }
+
+    private fun finnFørsteVedtaksdato(sakId: SakId): LocalDate? {
+        val behandlinger = behandlingRepository.hentAlleFor(sakId)
+            .sortedBy { it.opprettetTidspunkt }
+
+        val avsluttedeBehandlinger = behandlinger.filter {it.status().erAvsluttet()}
+
+        for (avsluttedeBehandling in avsluttedeBehandlinger) {
+            val harOppfyltPeriode = underveisRepository.hentHvisEksisterer(avsluttedeBehandling.id)
+                ?.perioder
+                .orEmpty()
+                .any { it.utfall == Utfall.OPPFYLT }
+
+            if (harOppfyltPeriode) {
+                val vedtak = vedtakRepository.hent(avsluttedeBehandling.id)
+                if (vedtak != null) {
+                    return vedtak.vedtakstidspunkt.toLocalDate()
+                }
+            }
+        }
+        return null
     }
 
     private fun List<TilkjentYtelsePeriode>.finnHelePerioden() =

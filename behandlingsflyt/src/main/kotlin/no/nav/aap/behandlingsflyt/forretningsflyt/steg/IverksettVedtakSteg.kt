@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -100,6 +101,7 @@ class IverksettVedtakSteg private constructor(
             )
             val tjenestepensjonRefusjonsKravVurderingRepository =
                 repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>()
+            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
             return IverksettVedtakSteg(
                 behandlingRepository = behandlingRepository,
                 utbetalingService = UtbetalingService(
@@ -111,7 +113,8 @@ class IverksettVedtakSteg private constructor(
                     refusjonskravRepository = refusjonskravRepository,
                     tjenestepensjonRefusjonsKravVurderingRepository = tjenestepensjonRefusjonsKravVurderingRepository,
                     samordningAndreStatligeYtelserRepository = samordningAndreStatligeYtelserRepository,
-                    samordningArbeidsgiverRepository = samordningArbeidsgiverRepository
+                    samordningArbeidsgiverRepository = samordningArbeidsgiverRepository,
+                    underveisRepository = underveisRepository,
                 ),
                 vedtakService = VedtakService(vedtakRepository, behandlingRepository),
                 utbetalingGateway = utbetalingGateway,
