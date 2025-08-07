@@ -168,7 +168,7 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
     val motor = startMotor(dataSource, repositoryRegistry)
     registerGateways()
 
-    if (Miljø.erDev()) {
+    if (!Miljø.erLokal()) {
         startKabalKonsument(dataSource, repositoryRegistry)
     }
 
