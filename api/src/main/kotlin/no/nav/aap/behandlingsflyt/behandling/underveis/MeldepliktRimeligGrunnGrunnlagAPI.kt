@@ -61,6 +61,10 @@ fun NormalOpenAPIRoute.meldepliktRimeligGrunnGrunnlagApi(
                             ?.filter { it.meldepliktStatus == MeldepliktStatus.IKKE_MELDT_SEG }
                             ?.map { it.meldePeriode }
                             ?: emptyList(),
+                        perioderRimeligGrunn = underveisGrunnlag?.perioder
+                            ?.filter { it.meldepliktStatus == MeldepliktStatus.RIMELIG_GRUNN }
+                            ?.map { it.meldePeriode }
+                            ?: emptyList(),
                         historikk =
                             historikk
                                 .map { tilResponse(it) }
