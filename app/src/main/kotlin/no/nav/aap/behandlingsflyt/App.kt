@@ -43,6 +43,7 @@ import no.nav.aap.behandlingsflyt.behandling.klage.påklagetbehandling.påklaget
 import no.nav.aap.behandlingsflyt.behandling.klage.resultat.klageresultatApi
 import no.nav.aap.behandlingsflyt.behandling.klage.trekk.trekkKlageGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringApi
+import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringTilgangAPI
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.forutgåendeMedlemskapAPI
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.lovvalgMedlemskapGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskapAPI
@@ -99,6 +100,7 @@ import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
+import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.gateway.GatewayRegistry
@@ -169,7 +171,7 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
     val motor = startMotor(dataSource, repositoryRegistry)
     registerGateways()
 
-    if (Miljø.erDev()) {
+    if (!Miljø.erLokal()) {
         startKabalKonsument(dataSource, repositoryRegistry)
     }
 
@@ -184,6 +186,7 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
                 flytApi(dataSource, repositoryRegistry)
                 fatteVedtakGrunnlagApi(dataSource, repositoryRegistry)
                 kvalitetssikringApi(dataSource, repositoryRegistry)
+                kvalitetssikringTilgangAPI(dataSource, repositoryRegistry)
                 bistandsgrunnlagApi(dataSource, repositoryRegistry)
                 meldepliktsgrunnlagApi(dataSource, repositoryRegistry)
                 meldepliktRimeligGrunnGrunnlagApi(dataSource, repositoryRegistry)
@@ -232,6 +235,11 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
                 forutgåendeMedlemskapAPI(dataSource, repositoryRegistry)
                 driftAPI(dataSource, repositoryRegistry)
                 simuleringAPI(dataSource, repositoryRegistry)
+
+                // Endepunkter kun tilgjengelig lokalt og i test
+                if (!Miljø.erProd()) {
+                    opprettDummySakApi(dataSource, repositoryRegistry)
+                }
             }
         }
         actuator(prometheus, motor)
@@ -322,6 +330,7 @@ fun Application.startKabalKonsument(
         }.start()
     }
     monitor.subscribe(ApplicationStopped) {
+        log.info("Applikasjonen er stoppet, lukker KabalKafkaKonsument.")
         konsument.lukk()
     }
 

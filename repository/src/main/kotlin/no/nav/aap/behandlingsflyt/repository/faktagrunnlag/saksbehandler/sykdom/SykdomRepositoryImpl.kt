@@ -421,7 +421,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
 
     override fun hentHistoriskeSykdomsvurderinger(sakId: SakId, behandlingId: BehandlingId): List<Sykdomsvurdering> {
         val query = """
-            SELECT vurdering.*
+            SELECT DISTINCT on(vurdering.opprettet_tid) vurdering.*
             FROM SYKDOM_GRUNNLAG grunnlag
             INNER JOIN SYKDOM_VURDERINGER vurderinger ON grunnlag.SYKDOM_VURDERINGER_ID = vurderinger.ID
             INNER JOIN SYKDOM_VURDERING vurdering ON vurdering.SYKDOM_VURDERINGER_ID = vurderinger.ID

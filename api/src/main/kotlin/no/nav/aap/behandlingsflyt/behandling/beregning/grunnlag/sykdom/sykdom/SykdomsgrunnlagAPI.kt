@@ -69,7 +69,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource, repositoryRegi
                         historikkSykdomsvurderinger = historikkSykdomsvurderinger
                             .sortedBy { it.opprettet }
                             .mapIndexed { index, vurdering ->
-                                vurdering.toDto(erGjeldende = index == historikkSykdomsvurderinger.lastIndex)
+                                vurdering.toDto()
                             },
                         gjeldendeVedtatteSykdomsvurderinger = vedtatteSykdomsvurderinger
                             .sortedBy { it.vurderingenGjelderFra ?: LocalDate.MIN }
@@ -136,7 +136,7 @@ private fun Yrkesskadevurdering.toResponse(): YrkesskadevurderingResponse {
     )
 }
 
-private fun Sykdomsvurdering.toDto(erGjeldende: Boolean? = null): SykdomsvurderingResponse {
+private fun Sykdomsvurdering.toDto(): SykdomsvurderingResponse {
     val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv.ident)
     return SykdomsvurderingResponse(
         begrunnelse = begrunnelse,
@@ -157,8 +157,7 @@ private fun Sykdomsvurdering.toDto(erGjeldende: Boolean? = null): Sykdomsvurderi
             dato = opprettet.atZone(ZoneId.of("Europe/Oslo")).toLocalDate(),
             ansattnavn = navnOgEnhet?.navn,
             enhetsnavn = navnOgEnhet?.enhet,
-        ),
-        erGjeldende = erGjeldende,
+        )
     )
 }
 

@@ -1,12 +1,12 @@
 package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
+import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
-import no.nav.aap.brev.kontrakt.Faktagrunnlag
 import no.nav.aap.brev.kontrakt.MottakerDto
 import no.nav.aap.brev.kontrakt.Vedlegg
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -40,23 +40,20 @@ class BrevbestillingService(
 
     fun bestillV2(
         behandlingId: BehandlingId,
-        typeBrev: TypeBrev,
+        brevBehov: BrevBehov,
         unikReferanse: String,
         ferdigstillAutomatisk: Boolean,
-        faktagrunnlag: Set<Faktagrunnlag> = emptySet(),
         vedlegg: Vedlegg? = null
     ): UUID {
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
-
         val bestillingReferanse = brevbestillingGateway.bestillBrevV2(
             saksnummer = sak.saksnummer,
             brukerIdent = sak.person.aktivIdent(),
             behandlingReferanse = behandling.referanse,
             unikReferanse = unikReferanse,
-            typeBrev = typeBrev,
+            brevBehov = brevBehov,
             vedlegg = vedlegg,
-            faktagrunnlag = faktagrunnlag,
             ferdigstillAutomatisk = ferdigstillAutomatisk,
         )
 
@@ -68,7 +65,7 @@ class BrevbestillingService(
 
         brevbestillingRepository.lagre(
             behandlingId = behandlingId,
-            typeBrev = typeBrev,
+            typeBrev = brevBehov.typeBrev,
             bestillingReferanse = bestillingReferanse,
             status = status,
         )

@@ -123,7 +123,6 @@ private fun Sykdomsvurdering.tilResponse(): SykdomsvurderingResponse {
             dato = opprettet.atZone(ZoneId.of("Europe/Oslo")).toLocalDate(),
             ansattnavn = navnOgEnhet?.navn,
             enhetsnavn = navnOgEnhet?.enhet,
-        ),
-        erGjeldende = null
+        )
     )
 }

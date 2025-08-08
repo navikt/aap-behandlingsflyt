@@ -30,6 +30,5 @@ data class SykdomsvurderingResponse(
     val kodeverk: String? = null,
     val hoveddiagnose: String? = null,
     val bidiagnoser: List<String>? = emptyList(),
-    val vurdertAv: VurdertAvResponse,
-    val erGjeldende: Boolean?
+    val vurdertAv: VurdertAvResponse
 )

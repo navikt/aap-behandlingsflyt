@@ -3,7 +3,9 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistan
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -111,7 +113,7 @@ internal class BistandRepositoryImplTest {
                     BistandVurdering(
                         begrunnelse = "begrunnelse",
                         erBehovForAktivBehandling = true,
-                        erBehovForArbeidsrettetTiltak =true,
+                        erBehovForArbeidsrettetTiltak = true,
                         erBehovForAnnenOppfølging = true,
                         vurderingenGjelderFra = null,
                         vurdertAv = "Z022222",
@@ -224,11 +226,7 @@ internal class BistandRepositoryImplTest {
                     )
                 )
             )
-            connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
-                setParams {
-                    setLong(1, behandling1.id.toLong())
-                }
-            }
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
 
             val behandling2 = behandling(connection, sak)
 
@@ -299,11 +297,7 @@ internal class BistandRepositoryImplTest {
                     )
                 )
             )
-            connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
-                setParams {
-                    setLong(1, behandling1.id.toLong())
-                }
-            }
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
 
             val behandling2 = behandling(connection, sak)
 
@@ -472,11 +466,8 @@ internal class BistandRepositoryImplTest {
                     )
                 )
             )
-            connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
-                setParams {
-                    setLong(1, behandling1.id.toLong())
-                }
-            }
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
+
             val behandling2 = behandling(connection, sak)
 
             data class Opplysning(
@@ -624,11 +615,7 @@ internal class BistandRepositoryImplTest {
     }
 
     private fun revurdering(connection: DBConnection, behandling: Behandling, sak: Sak): Behandling {
-        connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
-            setParams {
-                setLong(1, behandling.id.toLong())
-            }
-        }
+        BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
 
         return behandling(connection, sak)
     }

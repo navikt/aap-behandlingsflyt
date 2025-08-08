@@ -21,6 +21,7 @@ abstract class KafkaKonsument(
 
 
     fun lukk() {
+        log.info("Lukker konsument av $topic")
         lukket.set(true)
         konsument.wakeup() // Trigger en WakeupException for å avslutte polling
     }
@@ -37,6 +38,7 @@ abstract class KafkaKonsument(
             }
         } catch (e: WakeupException) {
             // Ignorerer exception hvis vi stenger ned
+            log.info("Konsument av $topic ble lukket med WakeupException")
             if (!lukket.get()) throw e
         } finally {
             log.info("Ferdig med å lese hendelser fra $${this.javaClass.name} - lukker konsument")

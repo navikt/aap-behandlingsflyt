@@ -58,6 +58,7 @@ private val log = LoggerFactory.getLogger("TestApp")
 
 // Kjøres opp for å få logback i console uten json
 fun main() {
+    System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
     val postgres = postgreSQLContainer()
 
     AzurePortHolder.setPort(8081)
@@ -79,7 +80,6 @@ fun main() {
         // jdbc URL contains the host and port and database name.
         println("jdbcUrl: ${postgres.jdbcUrl}. Password: ${postgres.password}. Username: ${postgres.username}.")
         server(dbConfig, postgresRepositoryRegistry)
-        System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
 
         val datasource = initDatasource(dbConfig)
         opprettTestKlage(datasource, alderIkkeOppfyltTestCase)
