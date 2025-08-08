@@ -281,7 +281,6 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
                                     referanse = behandling.referanse.referanse,
                                     type = behandling.typeBehandling().identifikator(),
                                     status = behandling.status(),
-                                    årsaker = vurderingsbehov,
                                     vurderingsbehov = vurderingsbehov,
                                     årsakTilOpprettelse = behandling.årsakTilOpprettelse,
                                     opprettet = behandling.opprettetTidspunkt

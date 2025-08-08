@@ -10,8 +10,6 @@ data class BehandlinginfoDTO(
     val referanse: UUID,
     val type: String,
     val status: Status,
-    @Deprecated("Fjern årsaker når frontend har byttet til vurderingsbehov")
-    val årsaker: List<Vurderingsbehov>,
     val vurderingsbehov: List<Vurderingsbehov>,
     val årsakTilOpprettelse: ÅrsakTilOpprettelse?,
     val opprettet: LocalDateTime

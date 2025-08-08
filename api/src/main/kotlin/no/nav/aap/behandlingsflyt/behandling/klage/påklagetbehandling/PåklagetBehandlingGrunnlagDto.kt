@@ -31,8 +31,6 @@ data class BehandlingMedVedtakDto(
     val opprettetTidspunkt: LocalDateTime,
     val vedtakstidspunkt: LocalDateTime,
     val virkningstidspunkt: LocalDate?,
-    @Deprecated("Fjern etter å ha oppdatert frontend til å bruke vurderingsbehov")
-    val årsaker: Set<Vurderingsbehov>,
     val vurderingsbehov: Set<Vurderingsbehov>,
     val årsakTilOpprettelse: ÅrsakTilOpprettelse?
 )
@@ -46,7 +44,6 @@ internal fun BehandlingMedVedtak.tilBehandlingMedVedtakDto() =
         opprettetTidspunkt = opprettetTidspunkt,
         vedtakstidspunkt = vedtakstidspunkt,
         virkningstidspunkt = virkningstidspunkt,
-        årsaker = vurderingsbehov,
         vurderingsbehov = vurderingsbehov,
         årsakTilOpprettelse = årsakTilOpprettelse
     )
