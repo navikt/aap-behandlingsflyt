@@ -5,9 +5,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.papsign.ktor.openapigen.OpenAPIGen
 import com.papsign.ktor.openapigen.route.apiRouting
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import io.ktor.serialization.jackson.jackson
-import io.ktor.server.application.install
-import io.ktor.server.testing.ApplicationTestBuilder
+import io.ktor.serialization.jackson.*
+import io.ktor.server.application.*
+import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -21,7 +21,7 @@ import no.nav.security.mock.oauth2.MockOAuth2Server
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import java.time.LocalDate
-import java.util.UUID
+import java.util.*
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
 
 open class BaseApiTest : BeforeAllCallback {
@@ -41,12 +41,12 @@ open class BaseApiTest : BeforeAllCallback {
             forrigeBehandlingId = null,
         )
 
-    fun nySak() = InMemorySakRepository.finnEllerOpprett(
+    fun nySak(søknadsDato: LocalDate = LocalDate.now()) = InMemorySakRepository.finnEllerOpprett(
         person = Person(
             identifikator = UUID.randomUUID(),
             identer = listOf(Ident("0".repeat(11)))
         ),
-        periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+        periode = Periode(søknadsDato, søknadsDato.plusYears(1)),
     )
 
     fun issueToken(scope: String) = server.issueToken(
