@@ -153,9 +153,11 @@ public enum class Definisjon(
     SKRIV_SYKDOMSVURDERING_BREV(
         kode = AvklaringsbehovKode.`5053`,
         løsesISteg = StegType.SYKDOMSVURDERING_BREV,
+        kvalitetssikres = true,
+        kreverToTrinn = false,
         type = BehovType.MANUELT_PÅKREVD,
         løsesAv = listOf(
-            Rolle.SAKSBEHANDLER_NASJONAL
+            Rolle.SAKSBEHANDLER_OPPFOLGING
         )
     ),
     FASTSETT_MANUELL_INNTEKT(
