@@ -1057,7 +1057,7 @@ Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
     fun `får oppfylt på rimelig grunn etter meldefrist uten å ha meldt seg`() {
         val rettighetsperiode = Periode(
             20 april 2020,
-            17 mai 2020,
+            14 juni 2020,
         )
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
@@ -1065,14 +1065,14 @@ Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
                 listOf(
                     RimeligGrunnVurdering(
                         harRimeligGrunn = true,
-                        fraDato = 14 mai 2020,
+                        fraDato = 4 mai 2020,
                         begrunnelse = "kan ikke",
                         vurdertAv = "saksbehandler",
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
                     ),
                     RimeligGrunnVurdering(
                         harRimeligGrunn = false,
-                        fraDato = 15 mai 2020,
+                        fraDato = 18 mai 2020,
                         begrunnelse = "kan",
                         vurdertAv = "saksbehandler",
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
@@ -1081,7 +1081,7 @@ Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
             )
         )
 
-        val vurdertTidslinje = vurder(input, nå = rettighetsperiode.tom.plusDays(1))
+        val vurdertTidslinje = vurder(input, nå = 2 juni 2020)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -1092,13 +1092,18 @@ Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
             ),
             Forventer(
                 fom = 4 mai 2020,
-                tom = 13 mai 2020,
+                tom = 17 mai 2020,
+                vurdering = MeldepliktVurdering.RimeligGrunn,
+            ),
+            Forventer(
+                fom = 18 mai 2020,
+                tom = 31 mai 2020,
                 vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
             Forventer(
-                fom = 14 mai 2020,
-                tom = 17 mai 2020,
-                vurdering = MeldepliktVurdering.RimeligGrunn,
+                fom = 1 juni 2020,
+                tom = 14 juni 2020,
+                vurdering = MeldepliktVurdering.FremtidigIkkeOppfylt,
             )
         )
     }
