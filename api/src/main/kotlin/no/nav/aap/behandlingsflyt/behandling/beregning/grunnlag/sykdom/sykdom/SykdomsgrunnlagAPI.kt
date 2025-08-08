@@ -68,9 +68,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource, repositoryRegi
                             .map { it.toDto() },
                         historikkSykdomsvurderinger = historikkSykdomsvurderinger
                             .sortedBy { it.opprettet }
-                            .mapIndexed { index, vurdering ->
-                                vurdering.toDto()
-                            },
+                            .map { it.toDto() },
                         gjeldendeVedtatteSykdomsvurderinger = vedtatteSykdomsvurderinger
                             .sortedBy { it.vurderingenGjelderFra ?: LocalDate.MIN }
                             .map { it.toDto() },
