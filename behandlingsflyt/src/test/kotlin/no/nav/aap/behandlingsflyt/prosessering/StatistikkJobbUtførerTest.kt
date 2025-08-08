@@ -185,7 +185,8 @@ class StatistikkJobbUtførerTest {
             versjon = "123",
             årsakerTilBehandling = listOf(Vurderingsbehov.SØKNAD.name),
             vurderingsbehov = listOf(Vurderingsbehov.SØKNAD.name),
-            mottattDokumenter = listOf()
+            mottattDokumenter = listOf(),
+            årsakTilOpprettelse = behandling.årsakTilOpprettelse?.name ?: "Ukjent",
         )
 
         val hendelse2 = DefaultJsonMapper.toJson(payload)
@@ -375,6 +376,7 @@ class StatistikkJobbUtførerTest {
             versjon = "123",
             årsakerTilBehandling = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
             vurderingsbehov = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
+            årsakTilOpprettelse = behandling.årsakTilOpprettelse?.name ?: "Ukjent",
             reserverTil = "meg",
             mottattDokumenter = listOf()
         )
@@ -616,6 +618,7 @@ class StatistikkJobbUtførerTest {
             versjon = ApplikasjonsVersjon.versjon,
             årsakerTilBehandling = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
             vurderingsbehov = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
+            årsakTilOpprettelse = behandling.årsakTilOpprettelse?.name ?: "Ukjent",
             mottattDokumenter = listOf(),
             reserverTil = "meg",
         )
