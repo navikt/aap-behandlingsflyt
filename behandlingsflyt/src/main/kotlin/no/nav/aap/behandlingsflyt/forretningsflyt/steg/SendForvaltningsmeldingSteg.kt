@@ -39,7 +39,7 @@ class SendForvaltningsmeldingSteg(
                     brevbestillingService.bestillV2(
                         behandlingId = behandlingId,
                         brevBehov = brevBehov,
-                        unikReferanse = "${brevBehov.typeBrev}-${behandlingId.id}",
+                        unikReferanse = "${behandling.referanse}-${brevBehov.typeBrev}",
                         ferdigstillAutomatisk = true
                     )
                 }
