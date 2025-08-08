@@ -60,9 +60,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
             erBehovForArbeidsrettetTiltak = row.getBoolean("BEHOV_FOR_ARBEIDSRETTET_TILTAK"),
             erBehovForAnnenOppfølging = row.getBooleanOrNull("BEHOV_FOR_ANNEN_OPPFOELGING"),
             vurderingenGjelderFra = row.getLocalDateOrNull("VURDERINGEN_GJELDER_FRA"),
-            skalVurdereAapIOvergangTilUføre = row.getBooleanOrNull("OVERGANG_TIL_UFOERE"),
             skalVurdereAapIOvergangTilArbeid = row.getBooleanOrNull("OVERGANG_TIL_ARBEID"),
-            overgangBegrunnelse = row.getStringOrNull("OVERGANG_BEGRUNNELSE"),
             vurdertAv = row.getString("VURDERT_AV"),
             opprettet = row.getInstant("OPPRETTET_TID")
         )
@@ -170,7 +168,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         val bistandvurderingerId = connection.executeReturnKey("""INSERT INTO BISTAND_VURDERINGER DEFAULT VALUES""")
 
         connection.executeBatch(
-            "INSERT INTO BISTAND (BEGRUNNELSE, BEHOV_FOR_AKTIV_BEHANDLING, BEHOV_FOR_ARBEIDSRETTET_TILTAK, BEHOV_FOR_ANNEN_OPPFOELGING, VURDERINGEN_GJELDER_FRA, VURDERT_AV, OVERGANG_BEGRUNNELSE, OVERGANG_TIL_UFOERE, OVERGANG_TIL_ARBEID, BISTAND_VURDERINGER_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO BISTAND (BEGRUNNELSE, BEHOV_FOR_AKTIV_BEHANDLING, BEHOV_FOR_ARBEIDSRETTET_TILTAK, BEHOV_FOR_ANNEN_OPPFOELGING, VURDERINGEN_GJELDER_FRA, VURDERT_AV, OVERGANG_TIL_ARBEID, BISTAND_VURDERINGER_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             vurderinger
         ) {
             setParams { vurdering ->
@@ -180,10 +178,8 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 setBoolean(4, vurdering.erBehovForAnnenOppfølging)
                 setLocalDate(5, vurdering.vurderingenGjelderFra)
                 setString(6, vurdering.vurdertAv)
-                setString(7, vurdering.overgangBegrunnelse)
-                setBoolean(8, vurdering.skalVurdereAapIOvergangTilUføre)
-                setBoolean(9, vurdering.skalVurdereAapIOvergangTilArbeid)
-                setLong(10, bistandvurderingerId)
+                setBoolean(7, vurdering.skalVurdereAapIOvergangTilArbeid)
+                setLong(8, bistandvurderingerId)
             }
         }
 

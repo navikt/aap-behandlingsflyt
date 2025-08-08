@@ -54,9 +54,7 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = null,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
                     )
                 )
             )
@@ -70,9 +68,7 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = null,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
                     )
                 )
             )
@@ -95,9 +91,7 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = null,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
                     )
                 )
             )
@@ -111,9 +105,7 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = true,
                         vurderingenGjelderFra = null,
                         vurdertAv = "Z022222",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
                     )
                 )
             )
@@ -138,9 +130,7 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = null,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
                     )
                 )
             )
@@ -154,9 +144,7 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = null,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
                     )
                 )
             )
@@ -170,9 +158,7 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = null,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
                     )
                 )
             )
@@ -214,9 +200,7 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = null,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
                     )
                 )
             )
@@ -234,9 +218,7 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = null,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
                     )
                 )
             )
@@ -269,9 +251,7 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = null,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
                     )
                 )
             )
@@ -285,9 +265,7 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = null,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
                     )
                 )
             )
@@ -305,9 +283,7 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = null,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
                     )
                 )
             )
@@ -331,9 +307,7 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = null,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
                     )
                 )
             )
@@ -347,9 +321,7 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = null,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
                     )
                 )
             )
@@ -364,9 +336,7 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = null,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
                     )
                 )
             )
@@ -380,9 +350,7 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = null,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
                     )
                 )
             )
@@ -438,9 +406,7 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = null,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
                     )
                 )
             )
@@ -454,9 +420,7 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = null,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
                     )
                 )
             )
@@ -530,9 +494,7 @@ internal class BistandRepositoryImplTest {
             erBehovForAnnenOppfølging = false,
             vurderingenGjelderFra = null,
             vurdertAv = "Z00000",
-            skalVurdereAapIOvergangTilUføre = null,
             skalVurdereAapIOvergangTilArbeid = null,
-            overgangBegrunnelse = null,
         )
         val bistandsvurdering2 = BistandVurdering(
             begrunnelse = "Ny begrunnelse",
@@ -541,9 +503,7 @@ internal class BistandRepositoryImplTest {
             erBehovForAnnenOppfølging = false,
             vurderingenGjelderFra = null,
             vurdertAv = "Z00000",
-            skalVurdereAapIOvergangTilUføre = null,
             skalVurdereAapIOvergangTilArbeid = null,
-            overgangBegrunnelse = null,
         )
 
         val (førstegangsbehandling, sak) = dataSource.transaction { connection ->
@@ -574,9 +534,7 @@ internal class BistandRepositoryImplTest {
                 erBehovForAnnenOppfølging = false,
                 vurderingenGjelderFra = null,
                 vurdertAv = "Z00000",
-                skalVurdereAapIOvergangTilUføre = null,
                 skalVurdereAapIOvergangTilArbeid = null,
-                overgangBegrunnelse = null,
             )
             repo.lagre(revurdering.id, listOf(bistandsvurdering3))
             val historikk = repo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id)
