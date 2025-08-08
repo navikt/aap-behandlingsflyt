@@ -127,6 +127,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -135,6 +136,24 @@ import java.util.*
 
 @Fakes
 open class AbstraktFlytOrkestratorTest {
+
+    @BeforeEach
+    fun beforeEachClearDatabase() {
+        dataSource.connection.use { conn ->
+            conn.prepareStatement("""
+                DO $$
+                DECLARE
+                    r RECORD;
+                BEGIN
+                    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename NOT LIKE 'flyway_%') LOOP
+                        EXECUTE 'TRUNCATE TABLE public.' || quote_ident(r.tablename) || ' RESTART IDENTITY CASCADE';
+                    END LOOP;
+                END;
+                $$;
+            """.trimIndent()).use { it.execute() }
+        }
+    }
+
     companion object {
         @JvmStatic
         protected val dataSource = InitTestDatabase.freshDatabase()
