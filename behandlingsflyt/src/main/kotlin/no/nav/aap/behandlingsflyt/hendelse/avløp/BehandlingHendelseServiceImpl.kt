@@ -89,6 +89,7 @@ class BehandlingHendelseServiceImpl(
             status = behandling.status(),
             årsakerTilBehandling = vurderingsbehov.map { it.type.name },
             vurderingsbehov = vurderingsbehov.map { it.type.name },
+            årsakTilOpprettelse = behandling.årsakTilOpprettelse?.name ?: "Ukjent årsak",
             avklaringsbehov = avklaringsbehovene.alle().map { avklaringsbehov ->
                 val brevbestilling = if (avklaringsbehov.definisjon == Definisjon.SKRIV_BREV) {
                     brevbestillingRepository.hent(behandling.id)
