@@ -8,6 +8,7 @@ import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.BaseApiTest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettMeldeperiodeSteg
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
@@ -52,12 +53,19 @@ class TilkjentYtelseAPITest : BaseApiTest() {
                     ),
                     tilkjent = Tilkjent(
                         dagsats = Beløp(500),
-                        gradering = TilkjentGradering(Prosent(50), Prosent(50), Prosent(50), Prosent(50), Prosent(30), Prosent(0)),
+                        gradering = TilkjentGradering(
+                            Prosent(50),
+                            Prosent(50),
+                            Prosent(50),
+                            Prosent(50),
+                            Prosent(30),
+                            Prosent(0)
+                        ),
                         grunnlag = Beløp(10000),
                         grunnlagsfaktor = GUnit("1.5"),
                         grunnbeløp = Beløp(106399),
                         antallBarn = 2,
-                        barnetilleggsats = Beløp(150),
+                        barnetilleggsats = Beløp(37),
                         barnetillegg = Beløp(300),
                         utbetalingsdato = LocalDate.parse("2025-03-08"),
                     )
@@ -104,93 +112,92 @@ class TilkjentYtelseAPITest : BaseApiTest() {
     @Test
     fun `teste v2`() {
         val ds = MockDataSource()
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
-
-        val tilkjentYtelseVerdi = Tilkjent(
-            dagsats = Beløp(500),
-            gradering = TilkjentGradering(
-                endeligGradering = Prosent(50),
-                samordningGradering = Prosent(50),
-                institusjonGradering = Prosent(50),
-                arbeidGradering = Prosent(50),
-                samordningUføregradering = Prosent(30),
-                samordningArbeidsgiverGradering = null,
-            ),
-            grunnlag = Beløp(10000),
-            grunnlagsfaktor = GUnit("1.5"),
-            grunnbeløp = Beløp(106399),
-            antallBarn = 2,
-            barnetilleggsats = Beløp(150),
-            barnetillegg = Beløp(300),
-            utbetalingsdato = LocalDate.parse("2025-03-08"),
-        )
-        InMemoryTilkjentYtelseRepository.lagre(
-            behandling.id, tilkjent = listOf(
-                TilkjentYtelsePeriode(
-                    Periode(
-                        fom = LocalDate.parse("2025-03-07"),
-                        tom = LocalDate.parse("2025-03-21"),
-                    ),
-                    tilkjent = tilkjentYtelseVerdi
-                ),
-                TilkjentYtelsePeriode(
-                    Periode(
-                        fom = LocalDate.parse("2025-03-26"),
-                        tom = LocalDate.parse("2025-04-10"),
-                    ),
-                    tilkjent = tilkjentYtelseVerdi.copy(dagsats = Beløp(400))
-                ),
-                TilkjentYtelsePeriode(
-                    Periode(
-                        fom = LocalDate.parse("2025-03-22"),
-                        tom = LocalDate.parse("2025-03-25"),
-                    ),
-                    tilkjent = tilkjentYtelseVerdi.copy(dagsats = Beløp(300))
-                )
-            )
-        )
-
-        InMemoryMeldeperiodeRepository.lagre(
-            behandling.id,
-            listOf(
-                Periode(LocalDate.parse("2025-03-07"), LocalDate.parse("2025-03-21")),
-                Periode(LocalDate.parse("2025-03-22"), LocalDate.parse("2025-04-10"))
-            )
-        )
-
-        InMemoryMeldekortRepository.lagre(
-            behandling.id, setOf(
-                Meldekort(
-                    journalpostId = JournalpostId("123456789"),
-                    timerArbeidPerPeriode = setOf(
-                        ArbeidIPeriode(
-                            Periode(
-                                LocalDate.parse("2025-03-07"),
-                                LocalDate.parse("2025-03-21")
-                            ), TimerArbeid(BigDecimal("10.0"))
-                        )
-                    ),
-                    mottattTidspunkt = LocalDate.parse("2025-03-07").atTime(9, 0)
-                ),
-                Meldekort(
-                    journalpostId = JournalpostId("1234567810"),
-                    timerArbeidPerPeriode = setOf(
-                        ArbeidIPeriode(
-                            Periode(
-                                LocalDate.parse("2025-03-07"),
-                                LocalDate.parse("2025-03-21")
-                            ), TimerArbeid(BigDecimal("11.0"))
-                        )
-                    ),
-                    mottattTidspunkt = LocalDate.parse("2025-03-07").atTime(10, 0)
-                )
-            )
-        )
+        val sak = nySak(LocalDate.parse("2025-08-06"))
+        val behandling = opprettBehandling(sak, TypeBehandling.Revurdering)
 
         testApplication {
             installApplication {
                 tilkjentYtelseAPI(ds, repositoryRegistry)
             }
+            val rettighetsperiode = sak.rettighetsperiode
+
+            val perioder = FastsettMeldeperiodeSteg.utledMeldeperiode(
+                listOf(),
+                rettighetsperiode
+            ).take(3)
+
+            InMemoryMeldeperiodeRepository.lagre(
+                behandling.id,
+                perioder
+            )
+
+            println("PERIODER $perioder")
+
+            val tilkjentYtelseVerdi = Tilkjent(
+                dagsats = Beløp(500),
+                gradering = TilkjentGradering(
+                    endeligGradering = Prosent(50),
+                    samordningGradering = Prosent(50),
+                    institusjonGradering = Prosent(50),
+                    arbeidGradering = Prosent(50),
+                    samordningUføregradering = Prosent(30),
+                    samordningArbeidsgiverGradering = Prosent(50),
+                ),
+                grunnlag = Beløp(10000),
+                grunnlagsfaktor = GUnit("1.5"),
+                grunnbeløp = Beløp(106399),
+                antallBarn = 2,
+                barnetilleggsats = Beløp(36),
+                barnetillegg = Beløp(72),
+                utbetalingsdato = rettighetsperiode.fom
+            )
+
+            val xx = perioder.mapIndexed { index, periode ->
+                TilkjentYtelsePeriode(
+                    Periode(
+                        // TODO, begrens til rettighetsperioden
+                        fom = periode.fom,
+                        tom = periode.tom,
+                    ),
+                    tilkjent = tilkjentYtelseVerdi.copy(dagsats = Beløp(400 + index * 100.00.toLong()))
+                )
+            }
+
+            InMemoryTilkjentYtelseRepository.lagre(
+                behandling.id, tilkjent = xx
+            )
+
+            InMemoryMeldekortRepository.lagre(
+                behandling.id, setOf(
+                    Meldekort(
+                        journalpostId = JournalpostId("123456789"),
+                        timerArbeidPerPeriode = setOf(
+                            ArbeidIPeriode(
+                                Periode(
+                                    rettighetsperiode.fom,
+                                    rettighetsperiode.fom.plusWeeks(2),
+                                ),
+                                TimerArbeid(BigDecimal("10.0"))
+                            )
+                        ),
+                        mottattTidspunkt = LocalDate.parse("2025-08-07").atTime(9, 0)
+                    ),
+                    Meldekort(
+                        journalpostId = JournalpostId("1234567810"),
+                        timerArbeidPerPeriode = setOf(
+                            ArbeidIPeriode(
+                                Periode(
+                                    rettighetsperiode.fom,
+                                    rettighetsperiode.fom.plusWeeks(2),
+                                ),
+                                TimerArbeid(BigDecimal("11.0"))
+                            )
+                        ),
+                        mottattTidspunkt = LocalDate.parse("2025-08-07").atTime(10, 0)
+                    ),
+                )
+            )
+
             val response =
                 sendGetRequest(
                     behandling.id,
@@ -198,65 +205,98 @@ class TilkjentYtelseAPITest : BaseApiTest() {
                 )
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
 
-            assertThat(response.body<TilkjentYtelse2Dto>()).usingRecursiveComparison().isEqualTo(
+            val actual = response.body<TilkjentYtelse2Dto>()
+            assertThat(actual).usingRecursiveComparison().isEqualTo(
                 TilkjentYtelse2Dto(
                     perioder = listOf(
                         TilkjentYtelsePeriode2Dto(
-                            meldeperiode = Periode(LocalDate.parse("2025-03-07"), LocalDate.parse("2025-03-21")),
-                            levertMeldekortDato = LocalDate.parse("2025-03-07"),
+                            meldeperiode = Periode(
+                                rettighetsperiode.fom.minusDays(2),
+                                rettighetsperiode.fom.plusWeeks(2).minusDays(3)
+                            ),
+                            levertMeldekortDato = LocalDate.parse("2025-08-07"),
                             sisteLeverteMeldekort = MeldekortDto(
                                 timerArbeidPerPeriode = ArbeidIPeriodeDto(11.0),
-                                mottattTidspunkt = LocalDate.parse("2025-03-07").atTime(10, 0),
+                                mottattTidspunkt = LocalDate.parse("2025-08-07").atTime(10, 0),
                             ),
                             meldekortStatus = null,
                             vurdertePerioder = listOf(
                                 VurdertPeriode(
-                                    periode = Periode(LocalDate.parse("2025-03-07"), LocalDate.parse("2025-03-21")),
+                                    periode = Periode(
+                                        rettighetsperiode.fom.minusDays(2),
+                                        rettighetsperiode.fom.plusWeeks(2).minusDays(3)
+                                    ),
                                     felter = Felter(
-                                        dagsats = 500.0,
-                                        barneTilleggsats = 300.00,
+                                        dagsats = 400.0,
+                                        barneTilleggsats = 36.00,
                                         arbeidGradering = 50,
                                         samordningGradering = 80,
                                         institusjonGradering = 50,
                                         totalReduksjon = 50,
-                                        effektivDagsats = 400.0
+                                        effektivDagsats = 236.0,
+                                        arbeidsgiverGradering = 50
                                     )
                                 )
                             ),
                         ),
                         TilkjentYtelsePeriode2Dto(
-                            meldeperiode = Periode(LocalDate.parse("2025-03-22"), LocalDate.parse("2025-04-10")),
+                            meldeperiode =  Periode(
+                                rettighetsperiode.fom.plusWeeks(2).minusDays(2),
+                                rettighetsperiode.fom.plusWeeks(4).minusDays(3)
+                            ),
+                            levertMeldekortDato = rettighetsperiode.fom.plusDays(1),
+                            sisteLeverteMeldekort = MeldekortDto(
+                                timerArbeidPerPeriode = ArbeidIPeriodeDto(11.0),
+                                mottattTidspunkt = rettighetsperiode.fom.plusDays(1).atTime(10, 0),
+                            ),
+                            meldekortStatus = null,
+                            vurdertePerioder = listOf(
+                                VurdertPeriode(
+                                    periode = Periode(
+                                        rettighetsperiode.fom.plusWeeks(2).minusDays(2),
+                                        rettighetsperiode.fom.plusWeeks(4).minusDays(3)
+                                    ),
+                                    felter = Felter(
+                                        dagsats = 500.0,
+                                        barneTilleggsats = 36.00,
+                                        arbeidGradering = 50,
+                                        samordningGradering = 80,
+                                        institusjonGradering = 50,
+                                        totalReduksjon = 50,
+                                        effektivDagsats = 286.0,
+                                        arbeidsgiverGradering = 50
+                                    )
+                                )
+                            ),
+                        ),
+                        TilkjentYtelsePeriode2Dto(
+                            meldeperiode =  Periode(
+                                rettighetsperiode.fom.plusWeeks(4).minusDays(2),
+                                rettighetsperiode.fom.plusWeeks(6).minusDays(3)
+                            ),
                             levertMeldekortDato = null,
                             sisteLeverteMeldekort = null,
                             meldekortStatus = null,
                             vurdertePerioder = listOf(
                                 VurdertPeriode(
-                                    periode = Periode(LocalDate.parse("2025-03-22"), LocalDate.parse("2025-03-25")),
+                                    periode = Periode(
+                                        rettighetsperiode.fom.plusWeeks(4).minusDays(2),
+                                        rettighetsperiode.fom.plusWeeks(6).minusDays(3)
+                                    ),
                                     felter = Felter(
-                                        dagsats = 300.0,
-                                        barneTilleggsats = 300.00,
+                                        dagsats = 600.0,
+                                        barneTilleggsats = 36.00,
                                         arbeidGradering = 50,
                                         samordningGradering = 80,
                                         institusjonGradering = 50,
                                         totalReduksjon = 50,
-                                        effektivDagsats = 300.0
-                                    )
-                                ),
-                                VurdertPeriode(
-                                    periode = Periode(LocalDate.parse("2025-03-26"), LocalDate.parse("2025-04-10")),
-                                    felter = Felter(
-                                        dagsats = 400.0,
-                                        barneTilleggsats = 300.00,
-                                        arbeidGradering = 50,
-                                        samordningGradering = 80,
-                                        institusjonGradering = 50,
-                                        totalReduksjon = 50,
-                                        effektivDagsats = 350.0
+                                        effektivDagsats = 336.0,
+                                        arbeidsgiverGradering = 50
                                     )
                                 )
                             ),
-                        )
-                    ),
+                        ),
+                    )
                 )
             )
         }
