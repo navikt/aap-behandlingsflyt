@@ -42,6 +42,11 @@ class TestSakService(
             throw RuntimeException("Man kan ikke opprette testtsaker i produskjon")
         }
 
+        val identer = identGateway.hentAlleIdenterForPerson(ident)
+        if(identer.isEmpty()) {
+            throw RuntimeException("Fant ikke ident i PDL. Har man brukt en gyldig bruker fra Dolly?")
+        }
+
         val sakService = PersonOgSakService(
             identGateway,
             personRepository,
