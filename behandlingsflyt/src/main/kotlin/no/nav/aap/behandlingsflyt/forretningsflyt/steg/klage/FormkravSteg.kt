@@ -5,11 +5,11 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
+import no.nav.aap.behandlingsflyt.behandling.brev.ForhåndsvarselKlageFormkrav
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -35,7 +35,7 @@ class FormkravSteg (
     private val trekkKlageService: TrekkKlageService,
     private val brevbestillingService: BrevbestillingService,
 ): BehandlingSteg {
-    private val typeBrev = TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV
+    private val brevBehov = ForhåndsvarselKlageFormkrav
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
@@ -107,12 +107,12 @@ class FormkravSteg (
     }
 
     private fun hentBrevbestilling(behandlingId: BehandlingId): Brevbestilling? {
-        return brevbestillingService.hentBestillinger(behandlingId, typeBrev)
+        return brevbestillingService.hentBestillinger(behandlingId, brevBehov.typeBrev)
             .maxByOrNull { it.opprettet }
     }
 
     private fun slettForhåndsvarselbrevSomIkkeErSendt(behandlingId: BehandlingId) {
-        brevbestillingService.hentBestillinger(behandlingId, typeBrev)
+        brevbestillingService.hentBestillinger(behandlingId, brevBehov.typeBrev)
             .filter { it.status == Status.FORHÅNDSVISNING_KLAR }
             .map { brevbestillingService.avbryt(behandlingId, it.referanse) }
 
@@ -128,11 +128,11 @@ class FormkravSteg (
 
     private fun bestillFårhåndsvarselBrev(behandlingId: BehandlingId): BrevbestillingReferanse {
         val behandling = behandlingRepository.hent(behandlingId)
-        val vårReferanse = "${behandling.referanse}-$typeBrev"
+        val vårReferanse = "${behandling.referanse}-${brevBehov.typeBrev}"
 
         val brevReferanse = brevbestillingService.bestillV2(
             behandlingId,
-            typeBrev = typeBrev,
+            brevBehov = brevBehov,
             unikReferanse = vårReferanse,
             ferdigstillAutomatisk = false
         )
