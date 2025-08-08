@@ -3,10 +3,10 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
+import no.nav.aap.behandlingsflyt.behandling.brev.ForhåndsvarselBruddAktivitetsplikt
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Forhåndsvarsel
@@ -50,7 +50,7 @@ class Effektuer11_7Steg(
     private val tidligereVurderinger: TidligereVurderinger,
     private val clock: Clock = Clock.systemDefaultZone(),
 ) : BehandlingSteg {
-    private val typeBrev = TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT
+    private val brevBehov = ForhåndsvarselBruddAktivitetsplikt
 
     constructor(
         repositoryProvider: RepositoryProvider,
@@ -87,7 +87,7 @@ class Effektuer11_7Steg(
             return Fullført
         }
 
-        val eksisterendeBrevBestilling = brevbestillingService.hentBestillinger(kontekst.behandlingId, typeBrev)
+        val eksisterendeBrevBestilling = brevbestillingService.hentBestillinger(kontekst.behandlingId, brevBehov.typeBrev)
             .maxByOrNull { it.opprettet }
 
         val effektuer117grunnlag = effektuer117repository.hentHvisEksisterer(behandling.id)
@@ -97,13 +97,13 @@ class Effektuer11_7Steg(
             )
         ) {
 
-            val vårReferanse = "${behandling.referanse}-$typeBrev-${effektuer117grunnlag?.varslinger?.size ?: 0}"
+            val vårReferanse = "${behandling.referanse}-${brevBehov.typeBrev}-${effektuer117grunnlag?.varslinger?.size ?: 0}"
 
             // TODO: skulle gjerne "avbrutt" tidligere bestilling av brev, det er mulig i dag.
             //       PS: brev kommer ikke til å sendes fra behandlingsflyt lenger i ny løsning
             val brevReferanse = brevbestillingService.bestillV2(
                 behandlingId = kontekst.behandlingId,
-                typeBrev = typeBrev,
+                brevBehov = brevBehov,
                 unikReferanse = vårReferanse,
                 ferdigstillAutomatisk = false,
             )

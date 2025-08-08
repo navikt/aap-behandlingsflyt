@@ -38,20 +38,18 @@ class MeldingOmVedtakBrevSteg private constructor(
         }
 
         val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
-        if (brevBehov.harBehovForBrev()) {
-            val typeBrev = brevBehov.typeBrev!!
+        if (brevBehov != null) {
             val bestillingFinnes =
                 brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)
             if (!bestillingFinnes) {
                 val behandling = behandlingRepository.hent(kontekst.behandlingId)
                 log.info("Bestiller brev for sak ${kontekst.sakId}.")
-                val unikReferanse = "${behandling.referanse}-$typeBrev"
+                val unikReferanse = "${behandling.referanse}-${brevBehov.typeBrev}"
                 brevbestillingService.bestillV2(
                     behandlingId = kontekst.behandlingId,
-                    typeBrev = typeBrev,
+                    brevBehov = brevBehov,
                     unikReferanse = unikReferanse,
                     ferdigstillAutomatisk = false,
-                    faktagrunnlag = emptySet()
                 )
                 return FantAvklaringsbehov(Definisjon.SKRIV_VEDTAKSBREV)
             }

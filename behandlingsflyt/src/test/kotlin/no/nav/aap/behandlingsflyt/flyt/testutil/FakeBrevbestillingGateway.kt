@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt.testutil
 
+import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
@@ -9,7 +10,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
-import no.nav.aap.brev.kontrakt.Faktagrunnlag
 import no.nav.aap.brev.kontrakt.MottakerDto
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
@@ -29,9 +29,8 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
         brukerIdent: Ident,
         behandlingReferanse: BehandlingReferanse,
         unikReferanse: String,
-        typeBrev: TypeBrev,
+        brevBehov: BrevBehov,
         vedlegg: Vedlegg?,
-        faktagrunnlag: Set<Faktagrunnlag>,
         ferdigstillAutomatisk: Boolean
     ): BrevbestillingReferanse {
         return BrevbestillingReferanse(UUID.randomUUID())

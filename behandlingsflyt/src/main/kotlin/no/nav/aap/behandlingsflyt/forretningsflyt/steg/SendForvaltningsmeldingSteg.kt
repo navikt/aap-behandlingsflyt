@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.brev.Forvaltningsmelding
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -34,11 +35,11 @@ class SendForvaltningsmeldingSteg(
                 if (erBehandlingForMottattSøknad(kontekst.vurderingsbehov) &&
                     !harAlleredeBestiltForvaltningsmeldingForBehandling(behandling)
                 ) {
-                    val typeBrev = TypeBrev.FORVALTNINGSMELDING
+                    val brevBehov = Forvaltningsmelding
                     brevbestillingService.bestillV2(
                         behandlingId = behandlingId,
-                        typeBrev = typeBrev,
-                        unikReferanse = "$typeBrev-${behandlingId.id}",
+                        brevBehov = brevBehov,
+                        unikReferanse = "${brevBehov.typeBrev}-${behandlingId.id}",
                         ferdigstillAutomatisk = true
                     )
                 }

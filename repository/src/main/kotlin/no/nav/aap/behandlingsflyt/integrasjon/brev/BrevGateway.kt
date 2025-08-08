@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.brev
 
+import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
+import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.HåndterConflictResponseHandler
@@ -68,19 +70,18 @@ class BrevGateway : BrevbestillingGateway {
         brukerIdent: Ident,
         behandlingReferanse: BehandlingReferanse,
         unikReferanse: String,
-        typeBrev: TypeBrev,
+        brevBehov: BrevBehov,
         vedlegg: Vedlegg?,
-        faktagrunnlag: Set<Faktagrunnlag>,
         ferdigstillAutomatisk: Boolean,
     ): BrevbestillingReferanse {
         val request = BestillBrevV2Request(
             saksnummer = saksnummer.toString(),
             brukerIdent = brukerIdent.identifikator,
             behandlingReferanse = behandlingReferanse.referanse,
-            brevtype = mapTypeBrev(typeBrev),
+            brevtype = mapTypeBrev(brevBehov.typeBrev),
             unikReferanse = unikReferanse,
             sprak = Språk.NB, // TODO språk
-            faktagrunnlag = faktagrunnlag,
+            faktagrunnlag = mapFaktagrunnlag(brevBehov),
             ferdigstillAutomatisk = ferdigstillAutomatisk,
             vedlegg = vedlegg?.let { setOf(it) } ?: setOf()
         )
@@ -230,5 +231,12 @@ class BrevGateway : BrevbestillingGateway {
         TypeBrev.KLAGE_TRUKKET -> Brevtype.KLAGE_TRUKKET
         TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV -> Brevtype.FORHÅNDSVARSEL_KLAGE_FORMKRAV
         TypeBrev.FORVALTNINGSMELDING -> Brevtype.FORVALTNINGSMELDING
+    }
+
+    private fun mapFaktagrunnlag(brevBehov: BrevBehov): Set<Faktagrunnlag> {
+        return when (brevBehov) {
+            is Innvilgelse -> setOf(Faktagrunnlag.AapFomDato(brevBehov.virkningstidspunkt))
+            else -> emptySet()
+        }
     }
 }

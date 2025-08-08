@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
+import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
-import no.nav.aap.brev.kontrakt.Faktagrunnlag
 import no.nav.aap.brev.kontrakt.MottakerDto
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
@@ -20,9 +20,8 @@ interface BrevbestillingGateway : Gateway {
         brukerIdent: Ident,
         behandlingReferanse: BehandlingReferanse,
         unikReferanse: String,
-        typeBrev: TypeBrev,
+        brevBehov: BrevBehov,
         vedlegg: Vedlegg?,
-        faktagrunnlag: Set<Faktagrunnlag>,
         ferdigstillAutomatisk: Boolean,
     ): BrevbestillingReferanse
 
