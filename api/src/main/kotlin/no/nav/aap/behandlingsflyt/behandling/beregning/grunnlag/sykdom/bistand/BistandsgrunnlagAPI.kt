@@ -65,10 +65,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource, repositoryReg
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = vurdering?.tilResponse(),
                         gjeldendeVedtatteVurderinger = vedtatteBistandsvurderinger.map { it.tilResponse() },
-                        historiskeVurderinger = historiskeVurderinger
-                            .mapIndexed { index, vurdering ->
-                                vurdering.tilResponse(erGjeldende = index == historiskeVurderinger.lastIndex)
-                            },
+                        historiskeVurderinger = historiskeVurderinger.map { it.tilResponse() },
                         gjeldendeSykdsomsvurderinger = gjeldendeSykdomsvurderinger.map { it.tilResponse() },
                         harOppfylt11_5 = erOppfylt11_5
                     )
