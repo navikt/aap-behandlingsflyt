@@ -38,6 +38,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ManglendeLigningGrunnlagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OpprettRevurderingSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OvergangUforeSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RefusjonkravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RettighetsperiodeSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningAndreStatligeYtelserSteg
@@ -128,6 +129,15 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.HELHETLIG_VURDERING,
+                )
+            )
+            .medSteg(
+                steg = OvergangUforeSteg, vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                    Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+                    Vurderingsbehov.OVERGANG_UFORE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 )
             )

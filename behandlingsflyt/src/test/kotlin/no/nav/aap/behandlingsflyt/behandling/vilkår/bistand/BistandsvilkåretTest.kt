@@ -192,9 +192,7 @@ class BistandsvilkåretTest {
             erBehovForAnnenOppfølging = false,
             vurderingenGjelderFra = null,
             vurdertAv = "Z00000",
-            skalVurdereAapIOvergangTilUføre = null,
             skalVurdereAapIOvergangTilArbeid = null,
-            overgangBegrunnelse = null,
         )
 
         val (førstegangsbehandling, sak) = dataSource.transaction { connection ->
@@ -328,8 +326,6 @@ class BistandsvilkåretTest {
         erBehovForAktivBehandling = erBehovForAktivBehandling,
         erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
         erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
-        overgangBegrunnelse = overgangBegrunnelse,
-        skalVurdereAapIOvergangTilUføre = skalVurdereAapIOvergangTilUføre,
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
         vurdertAv = vurdertAv,
         vurderingenGjelderFra = vurderingenGjelderFra

@@ -161,6 +161,7 @@ class StatistikkJobbUtfører(
                 Vurderingsbehov.HELHETLIG_VURDERING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.HELHETLIG_VURDERING
                 Vurderingsbehov.OPPFØLGINGSOPPGAVE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OPPFØLGINGSOPPGAVE
                 Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN
+                Vurderingsbehov.OVERGANG_UFORE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_UFORE
             }
         }.distinct()
 
