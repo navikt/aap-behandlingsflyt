@@ -93,7 +93,7 @@ class SykdomsvurderingForBrevRepositoryImpl(private val connection: DBConnection
         fraBehandling: BehandlingId,
         tilBehandling: BehandlingId
     ) {
-        // Skal ikke kopieres ved revurdering
+        // Skal ikke kopieres ved revurdering da en vurdering for brev er spesifikk for en behandling
     }
 
     override fun slett(behandlingId: BehandlingId) {

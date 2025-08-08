@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import java.util.concurrent.ConcurrentHashMap
 
-object InMemorySykdomsvurderingForBrrevRepository : SykdomsvurderingForBrevRepository {
+object InMemorySykdomsvurderingForBrevRepository : SykdomsvurderingForBrevRepository {
     private val grunnlag = ConcurrentHashMap<BehandlingId, SykdomsvurderingForBrev>()
 
     override fun lagre(

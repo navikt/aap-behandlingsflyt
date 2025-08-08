@@ -15,7 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykdomsvurderingForBrrevRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -27,7 +27,7 @@ class SykdomsvurderingBrevStegTest {
 
     private val random = Random(1235123)
 
-    private val steg = SykdomsurderingBrevSteg(InMemorySykdomsvurderingForBrrevRepository, FakeTidligereVurderinger())
+    private val steg = SykdomsurderingBrevSteg(InMemorySykdomsvurderingForBrevRepository, FakeTidligereVurderinger())
     private val sakRepository = InMemorySakRepository
     private val behandlingRepository = InMemoryBehandlingRepository
 
@@ -51,7 +51,7 @@ class SykdomsvurderingBrevStegTest {
         val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.FØRSTEGANGSBEHANDLING)
 
 
-        InMemorySykdomsvurderingForBrrevRepository.lagre(behandling.id, SykdomsvurderingForBrev(
+        InMemorySykdomsvurderingForBrevRepository.lagre(behandling.id, SykdomsvurderingForBrev(
             behandlingId = behandling.id,
             vurdering = "En vurdering",
             vurdertAv = "ident",
