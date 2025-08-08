@@ -105,7 +105,6 @@ private fun BistandVurdering.tilResponse(erGjeldende: Boolean? = false): Bistand
 private fun Sykdomsvurdering.tilResponse(): SykdomsvurderingResponse {
     val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv.ident)
     return SykdomsvurderingResponse(
-        id = id,
         begrunnelse = begrunnelse,
         vurderingenGjelderFra = vurderingenGjelderFra,
         dokumenterBruktIVurdering = dokumenterBruktIVurdering,

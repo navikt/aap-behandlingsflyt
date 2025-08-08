@@ -139,7 +139,6 @@ private fun Yrkesskadevurdering.toResponse(): YrkesskadevurderingResponse {
 private fun Sykdomsvurdering.toDto(): SykdomsvurderingResponse {
     val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv.ident)
     return SykdomsvurderingResponse(
-        id = id,
         begrunnelse = begrunnelse,
         vurderingenGjelderFra = vurderingenGjelderFra,
         dokumenterBruktIVurdering = dokumenterBruktIVurdering,
