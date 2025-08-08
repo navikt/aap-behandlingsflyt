@@ -20,4 +20,15 @@ class PersonOgSakService(
 
         return sakRepository.finnEllerOpprett(person, periode)
     }
+
+    fun finnSakerFor(ident: Ident): List<Sak> {
+        val identliste = pdlGateway.hentAlleIdenterForPerson(ident)
+        if (identliste.isEmpty()) {
+            throw IllegalStateException("Fikk ingen treff på ident i PDL")
+        }
+
+        val person = personRepository.finnEllerOpprett(identliste)
+
+        return sakRepository.finnSakerFor(person)
+    }
 }

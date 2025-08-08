@@ -58,6 +58,10 @@ class TestSakService(
             LocalDate.now().plusYears(1).minusDays(1)
         )
 
+        if(sakService.finnSakerFor(ident).isNotEmpty()) {
+            throw RuntimeException("Det finnes allerede en eller flere saker for bruker $ident. Vennligst bruk en annen testbruker eller gjenbruk den åpne saken.")
+        }
+
         val sak = sakService.finnEllerOpprett(ident, periode)
 
         val melding = SøknadV0(
