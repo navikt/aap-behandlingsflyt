@@ -26,7 +26,6 @@ class AvklarBistandsbehovLøsning(
 ) : AvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         if (this.bistandsVurdering.skalVurdereAapIOvergangTilArbeid == true
-            || this.bistandsVurdering.skalVurdereAapIOvergangTilUføre == true
         ) {
             TODO("Implementer støtte for oppfylt 11-17 og 11-18 og kvote")
         }

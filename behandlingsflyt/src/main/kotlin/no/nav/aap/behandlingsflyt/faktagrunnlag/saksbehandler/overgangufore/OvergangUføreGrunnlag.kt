@@ -5,19 +5,16 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
-class OvergangUforeGrunnlag(
+class OvergangUføreGrunnlag(
     val id: Long?,
-    val vurderinger: List<OvergangUforeVurdering>,
+    val vurderinger: List<OvergangUføreVurdering>,
 ) {
-    fun harVurdertPeriode(periode: Periode): Boolean {
-        return true
-    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as OvergangUforeGrunnlag
+        other as OvergangUføreGrunnlag
 
         return vurderinger == other.vurderinger
     }
@@ -26,7 +23,7 @@ class OvergangUforeGrunnlag(
         return vurderinger.hashCode()
     }
     
-    fun somOvergangUforevurderingstidslinje(startDato: LocalDate): Tidslinje<OvergangUforeVurdering> {
+    fun somOvergangUforevurderingstidslinje(startDato: LocalDate): Tidslinje<OvergangUføreVurdering> {
         return vurderinger
             .sortedBy { it.vurderingenGjelderFra ?: startDato }
             .fold(Tidslinje()) { tidslinje, vurdering ->

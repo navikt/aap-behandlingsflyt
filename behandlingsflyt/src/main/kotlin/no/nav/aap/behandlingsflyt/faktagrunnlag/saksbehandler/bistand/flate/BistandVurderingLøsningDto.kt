@@ -11,7 +11,6 @@ data class BistandVurderingLøsningDto(
     val erBehovForArbeidsrettetTiltak: Boolean,
     val erBehovForAnnenOppfølging: Boolean?,
     val overgangBegrunnelse: String?,
-    val skalVurdereAapIOvergangTilUføre: Boolean?,
     val skalVurdereAapIOvergangTilArbeid: Boolean?,
 ) {
     fun tilBistandVurdering(bruker: Bruker, vurderingenGjelderFra: LocalDate?) = BistandVurdering(
@@ -32,13 +31,5 @@ data class BistandVurderingLøsningDto(
             "erBehovForAnnenOppfølging kan bare bli besvart hvis erBehovForAktivBehandling og erBehovForArbeidsrettetTiltak er besvart med nei"
         )
 
-        val harOppfølgingsbehov =
-            (erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak || erBehovForAnnenOppfølging == true)
-        val erGydlig = (harOppfølgingsbehov) xor (skalVurdereAapIOvergangTilUføre != null)
-        if (!erGydlig) {
-            throw UgyldigForespørselException(
-                "skalVurdereAapIOvergangTilUføre skal besvares hvis og bare hvis oppfølgingsbehov er vurdert til nei"
-            )
-        }
     }
 }

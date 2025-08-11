@@ -208,7 +208,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilUføre = null,
                     skalVurdereAapIOvergangTilArbeid = null,
                     overgangBegrunnelse = null
                 ),
@@ -261,7 +260,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilUføre = null,
                     skalVurdereAapIOvergangTilArbeid = null,
                     overgangBegrunnelse = null
                 ),
@@ -317,7 +315,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         erBehovForAktivBehandling = true,
                         erBehovForArbeidsrettetTiltak = false,
                         erBehovForAnnenOppfølging = null,
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null
                     ),
@@ -360,7 +357,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilUføre = null,
                     skalVurdereAapIOvergangTilArbeid = null,
                     overgangBegrunnelse = null
                 ),
@@ -390,7 +386,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilUføre = null,
                     skalVurdereAapIOvergangTilArbeid = null,
                     overgangBegrunnelse = null
                 ),
@@ -972,7 +967,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilUføre = null,
                     skalVurdereAapIOvergangTilArbeid = null,
                     overgangBegrunnelse = null
                 ),
@@ -1298,7 +1292,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
                         erBehovForAnnenOppfølging = false,
-                        skalVurdereAapIOvergangTilUføre = false,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = "Nope"
                     ),
@@ -1554,7 +1547,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilUføre = null,
                     skalVurdereAapIOvergangTilArbeid = null,
                     overgangBegrunnelse = null
                 ),
@@ -1700,7 +1692,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilUføre = null,
                     skalVurdereAapIOvergangTilArbeid = null,
                     overgangBegrunnelse = null
                 ),

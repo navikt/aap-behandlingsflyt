@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class OvergangUforeSteg private constructor(
+class OvergangUføreSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val sykdomRepository: SykdomRepository,
@@ -78,17 +78,24 @@ class OvergangUforeSteg private constructor(
     ): Boolean {
         val aldersvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET)
 
-        val aldersVilkåretErOppfylt = aldersvilkåret.harPerioderSomErOppfylt()
+        val nedsattVissVarighet = sykdomsvurderinger.any { it.erNedsettelseIArbeidsevneAvEnVissVarighet == true }
+
+        val aldersvilkåretErOppfyltEllerIkkeVissVarighet = if (!nedsattVissVarighet) {
+            true
+        } else {
+            aldersvilkåret.harPerioderSomErOppfylt()
+        }
+
 
         return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()
              && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
              && sykdomsvurderinger.any { it.erOppfyltSettBortIfraVissVarighet() }
-             && aldersVilkåretErOppfylt
+             && aldersvilkåretErOppfyltEllerIkkeVissVarighet
     }
 
     companion object : FlytSteg {
         override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
-            return OvergangUforeSteg(repositoryProvider)
+            return OvergangUføreSteg(repositoryProvider)
         }
 
         override fun type(): StegType {

@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore
 import java.time.Instant
 import java.time.LocalDate
 
-class OvergangUforeVurdering(
+class OvergangUføreVurdering(
     val begrunnelse: String,
     val brukerSoktUforetrygd: Boolean,
     val brukerVedtakUforetrygd: String,
@@ -18,7 +18,7 @@ class OvergangUforeVurdering(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as OvergangUforeVurdering
+        other as OvergangUføreVurdering
 
         if (brukerSoktUforetrygd != other.brukerSoktUforetrygd) return false
         if (brukerVedtakUforetrygd != other.brukerVedtakUforetrygd) return false
