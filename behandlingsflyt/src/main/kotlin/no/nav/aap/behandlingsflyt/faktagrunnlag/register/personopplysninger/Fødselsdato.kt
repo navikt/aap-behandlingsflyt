@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger
 
+import com.fasterxml.jackson.annotation.JsonValue
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -24,6 +25,11 @@ data class Fødselsdato(private val dato: LocalDate) {
 
     fun toFormattedString(): String {
         return dato.format(DateTimeFormatter.ISO_LOCAL_DATE)
+    }
+
+    @JsonValue
+    fun jsonValue(): LocalDate {
+        return dato
     }
 
     companion object {

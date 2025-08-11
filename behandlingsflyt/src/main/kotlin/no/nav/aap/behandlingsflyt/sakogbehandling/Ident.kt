@@ -1,8 +1,9 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling
 
+import com.fasterxml.jackson.annotation.JsonValue
 import kotlin.math.min
 
-data class Ident(val identifikator: String, val aktivIdent: Boolean = true) {
+data class Ident(@get:JsonValue val identifikator: String, val aktivIdent: Boolean = true) {
 
     fun er(ident: Ident): Boolean {
         return identifikator == ident.identifikator
@@ -13,6 +14,6 @@ data class Ident(val identifikator: String, val aktivIdent: Boolean = true) {
     }
 
     fun getMasked(): String =
-        "${identifikator.substring(0, min(identifikator.length, 6))}*****"
+        "${identifikator.take(min(identifikator.length, 6))}*****"
 
 }

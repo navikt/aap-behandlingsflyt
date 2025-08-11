@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.annotation.JsonValue
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -8,8 +10,9 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 
+@JsonTypeInfo(use = JsonTypeInfo.Id.SIMPLE_NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 sealed class BarnIdentifikator : Comparable<BarnIdentifikator> {
-    data class BarnIdent(val ident: Ident) : BarnIdentifikator() {
+    data class BarnIdent(@get:JsonValue val ident: Ident) : BarnIdentifikator() {
         constructor(ident: String) : this(Ident(ident))
 
         override fun compareTo(other: BarnIdentifikator): Int {
@@ -17,6 +20,10 @@ sealed class BarnIdentifikator : Comparable<BarnIdentifikator> {
                 is BarnIdent -> other.ident.identifikator.compareTo(ident.identifikator)
                 is NavnOgFødselsdato -> other.compareTo(this)
             }
+        }
+
+        override fun toString(): String {
+            return ident.identifikator
         }
     }
 
