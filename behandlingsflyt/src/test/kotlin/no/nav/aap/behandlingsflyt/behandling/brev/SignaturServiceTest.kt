@@ -58,14 +58,15 @@ class SignaturServiceTest {
         leggTilEndring(Definisjon.AVKLAR_SYKDOM, endretAv = kvalitetssikrerIdent, AvklaringsbehovStatus.KVALITETSSIKRET)
         leggTilEndring(Definisjon.AVKLAR_SYKDOM, endretAv = beslutterIdent, AvklaringsbehovStatus.TOTRINNS_VURDERT)
 
+        // KVALITETSSIKRER
+        leggTilEndring(Definisjon.KVALITETSSIKRING, endretAv = kvalitetssikrerIdent, AvklaringsbehovStatus.AVSLUTTET)
+
         // SAKSBEHANDLER_NASJONAL
         leggTilEndring(Definisjon.AVKLAR_STUDENT, endretAv = saksbehandlerIdent, AvklaringsbehovStatus.AVSLUTTET)
         leggTilEndring(
             Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT, endretAv = saksbehandlerIdent, AvklaringsbehovStatus.AVSLUTTET
         )
-
-        // KVALITETSSIKRER
-        leggTilEndring(Definisjon.KVALITETSSIKRING, endretAv = kvalitetssikrerIdent, AvklaringsbehovStatus.AVSLUTTET)
+        leggTilEndring(Definisjon.MANUELT_SATT_PÅ_VENT, endretAv = saksbehandlerIdent, AvklaringsbehovStatus.AVSLUTTET)
 
         // BESLUTTER
         leggTilEndring(Definisjon.FATTE_VEDTAK, endretAv = beslutterIdent, AvklaringsbehovStatus.AVSLUTTET)
@@ -156,7 +157,7 @@ class SignaturServiceTest {
         ).also {
             avklaringsbehovene.add(it)
         }
-        val tidsstempel = avklaringsbehov.historikk.maxOrNull()?.tidsstempel?.plusMinutes(1) ?: LocalDateTime.now()
+        val tidsstempel = avklaringsbehovene.flatMap { it.historikk }.maxOrNull()?.tidsstempel?.plusMinutes(1) ?: LocalDateTime.now()
         avklaringsbehov.historikk.add(
             Endring(
                 status = status,

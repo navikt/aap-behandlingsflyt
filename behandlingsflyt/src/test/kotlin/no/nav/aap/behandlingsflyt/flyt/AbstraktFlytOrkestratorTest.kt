@@ -19,7 +19,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Kvalitetss
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
@@ -137,23 +136,6 @@ import java.util.*
 @Fakes
 open class AbstraktFlytOrkestratorTest {
 
-    @BeforeEach
-    fun beforeEachClearDatabase() {
-        dataSource.connection.use { conn ->
-            conn.prepareStatement("""
-                DO $$
-                DECLARE
-                    r RECORD;
-                BEGIN
-                    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename NOT LIKE 'flyway_%') LOOP
-                        EXECUTE 'TRUNCATE TABLE public.' || quote_ident(r.tablename) || ' RESTART IDENTITY CASCADE';
-                    END LOOP;
-                END;
-                $$;
-            """.trimIndent()).use { it.execute() }
-        }
-    }
-
     companion object {
         @JvmStatic
         protected val dataSource = InitTestDatabase.freshDatabase()
@@ -211,6 +193,23 @@ open class AbstraktFlytOrkestratorTest {
         @JvmStatic
         internal fun afterAll() {
 //            motor.stop()
+        }
+    }
+
+    @BeforeEach
+    fun beforeEachClearDatabase() {
+        dataSource.connection.use { conn ->
+            conn.prepareStatement("""
+                DO $$
+                DECLARE
+                    r RECORD;
+                BEGIN
+                    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename NOT LIKE 'flyway_%') LOOP
+                        EXECUTE 'TRUNCATE TABLE public.' || quote_ident(r.tablename) || ' RESTART IDENTITY CASCADE';
+                    END LOOP;
+                END;
+                $$;
+            """.trimIndent()).use { it.execute() }
         }
     }
 

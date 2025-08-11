@@ -20,8 +20,8 @@ open class VurdertBarnDto(
 ) {
     init {
         if (ident == null) {
-            requireNotNull(navn)
-            requireNotNull(fødselsdato)
+            requireNotNull(navn) { "Om ident er null, krever navn. Fødselsdato: $fødselsdato." }
+            requireNotNull(fødselsdato) { "Om ident er null, kreves fødselsdato. Navn: $navn." }
         }
     }
 

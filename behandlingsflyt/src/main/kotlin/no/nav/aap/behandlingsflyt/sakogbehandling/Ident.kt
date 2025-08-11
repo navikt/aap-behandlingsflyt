@@ -12,4 +12,7 @@ data class Ident(val identifikator: String, val aktivIdent: Boolean = true) {
         return "Ident(identifikator='${identifikator.substring(0, min(identifikator.length, 6))}*****')"
     }
 
+    fun getMasked(): String =
+        "${identifikator.substring(0, min(identifikator.length, 6))}*****"
+
 }

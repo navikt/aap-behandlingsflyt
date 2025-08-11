@@ -44,7 +44,7 @@ class TestSakService(
 
         val identer = identGateway.hentAlleIdenterForPerson(ident)
         if(identer.isEmpty()) {
-            throw RuntimeException("Fant ikke ident i PDL. Har man brukt en gyldig bruker fra Dolly?")
+            throw OpprettTestSakException("Fant ikke ident i PDL. Har man brukt en gyldig bruker fra Dolly?")
         }
 
         val sakService = PersonOgSakService(
@@ -58,8 +58,9 @@ class TestSakService(
             LocalDate.now().plusYears(1).minusDays(1)
         )
 
-        if(sakService.finnSakerFor(ident).isNotEmpty()) {
-            throw RuntimeException("Det finnes allerede en eller flere saker for bruker $ident. Vennligst bruk en annen testbruker eller gjenbruk den åpne saken.")
+        val eksisterendeSaker = sakService.finnSakerFor(ident)
+        if(eksisterendeSaker.isNotEmpty()) {
+            throw OpprettTestSakException("Det finnes allerede en eller flere saker for bruker ${ident.getMasked()}. Fant sak med saksnummer: ${eksisterendeSaker.first().saksnummer}. Vennligst bruk en annen testbruker eller gjenbruk den åpne saken.")
         }
 
         val sak = sakService.finnEllerOpprett(ident, periode)
@@ -93,3 +94,5 @@ class TestSakService(
 
     private fun Boolean.toJaNei() = if (this) "JA" else "NEI"
 }
+
+class OpprettTestSakException(message: String) : RuntimeException(message)

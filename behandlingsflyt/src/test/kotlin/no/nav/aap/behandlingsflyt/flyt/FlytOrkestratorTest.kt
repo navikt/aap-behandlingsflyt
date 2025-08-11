@@ -116,9 +116,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageUtfall
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlagebehandlingAvsluttetDetaljer
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurderingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
@@ -132,6 +134,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.undervei
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FormkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -3744,5 +3747,41 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         }
         assertThat(feil.message).contains("Kan ikke endre starttidspunkt til å gjelde ETTER søknadstidspunkt")
 
+    }
+
+    @Test
+    fun `barn lagres i pip i starten av behandlingen`() {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val manueltBarnIdent = genererIdent(LocalDate.now().minusYears(3))
+        val person = TestPersoner.STANDARD_PERSON()
+
+        // Oppretter søknad med manuelt barn
+        val behandling = sendInnSøknad(
+            person.aktivIdent(), periode, SøknadV0(
+                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = OppgitteBarn(
+                    barn = listOf(
+                        ManueltOppgittBarn(
+                            navn = "manuelt barn",
+                            fødselsdato = LocalDate.now().minusYears(3),
+                            ident = no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident(manueltBarnIdent.identifikator),
+                            relasjon = ManueltOppgittBarn.Relasjon.FORELDER
+                        )
+                    ),
+                    identer = emptySet()
+                ),
+                medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
+            )
+        )
+
+        dataSource.transaction { connection ->
+            val pipRepository = PipRepositoryImpl(connection)
+            val pipIdenter = pipRepository.finnIdenterPåBehandling(behandling.referanse)
+
+            // Manuelt barn finnes i pip umiddelbart etter at søknad er innsendt
+            assertThat(pipIdenter.map { it.ident }).containsExactlyInAnyOrder(
+                    person.aktivIdent().identifikator,
+                    manueltBarnIdent.identifikator,
+            )
+        }
     }
 }

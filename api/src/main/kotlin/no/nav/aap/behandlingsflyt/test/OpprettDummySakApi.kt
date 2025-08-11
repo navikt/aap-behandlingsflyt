@@ -8,6 +8,7 @@ import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.exception.ApiException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import javax.sql.DataSource
@@ -15,22 +16,25 @@ import javax.sql.DataSource
 fun NormalOpenAPIRoute.opprettDummySakApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/test/opprettDummySak") {
         @Suppress("UnauthorizedPost") // bare tilgjengelig i DEV og lokalt
-        post<Unit, String, OpprettDummySakDto> { _, req ->
+        post<Unit, Map<String, String>, OpprettDummySakDto> { _, req ->
             if (Miljø.erProd()) {
                 respondWithStatus(HttpStatusCode.Unauthorized)
             }
 
-            dataSource.transaction(readOnly = false) { connection ->
-                val sakService = TestSakService(repositoryRegistry.provider(connection), GatewayProvider)
-                sakService.opprettTestSak(
-                    ident = Ident(req.ident),
-                    erStudent = req.erStudent,
-                    harYrkesskade =  req.harYrkesskade,
-                    harMedlemskap = req.harMedlemskap
-                )
+            try {
+                dataSource.transaction(readOnly = false) { connection ->
+                    val sakService = TestSakService(repositoryRegistry.provider(connection), GatewayProvider)
+                    sakService.opprettTestSak(
+                        ident = Ident(req.ident),
+                        erStudent = req.erStudent,
+                        harYrkesskade = req.harYrkesskade,
+                        harMedlemskap = req.harMedlemskap
+                    )
+                }
+                respondWithStatus(HttpStatusCode.Accepted)
+            } catch (e: OpprettTestSakException) {
+                throw ApiException(status = HttpStatusCode.BadRequest, message = e.message ?: "Ukjent feil")
             }
-
-            respondWithStatus(HttpStatusCode.Accepted)
         }
     }
 }
