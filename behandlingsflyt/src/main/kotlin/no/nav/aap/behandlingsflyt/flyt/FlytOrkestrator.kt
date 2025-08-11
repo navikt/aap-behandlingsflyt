@@ -168,11 +168,10 @@ class FlytOrkestrator(
         avklaringsbehovene.validateTilstand(behandling = behandling)
 
         val behandlingFlyt = behandling.flyt()
-
-        var gjeldendeSteg = behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
+        var gjeldendeSteg = finnGjeldendeSteg(behandling, behandlingFlyt)
 
         while (true) {
-            if (behandling.status() in stoppNårStatus) {
+            if (gjeldendeSteg.type().status in stoppNårStatus) {
                 loggStopp(behandling, avklaringsbehovene)
                 val oppdatertBehandling = behandlingRepository.hent(behandling.id)
                 behandlingHendelseService.stoppet(oppdatertBehandling, avklaringsbehovene)
@@ -225,6 +224,20 @@ class FlytOrkestrator(
             }
             gjeldendeSteg = neste
         }
+    }
+
+    private fun finnGjeldendeSteg(
+        behandling: Behandling,
+        behandlingFlyt: BehandlingFlyt
+    ): FlytSteg {
+        var sisteStegType = behandling.aktivtSteg()
+
+        if (behandling.aktivtStegTilstand().status() == StegStatus.AVSLUTTER) {
+            behandlingFlyt.forberedFlyt(sisteStegType)
+            sisteStegType = behandlingFlyt.neste()?.type() ?: sisteStegType
+        }
+
+        return behandlingFlyt.forberedFlyt(sisteStegType)
     }
 
     private fun validerAtAvklaringsBehovErLukkede(avklaringsbehovene: Avklaringsbehovene) {

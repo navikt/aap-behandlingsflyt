@@ -153,12 +153,12 @@ class StegOrkestrator(
         )
 
         val transisjon = when (gjeldendeStegStatus) {
+            StegStatus.START -> Fortsett
             StegStatus.UTFØRER -> behandleSteg(aktivtSteg, behandlingSteg, kontekst)
             StegStatus.OPPDATER_FAKTAGRUNNLAG -> oppdaterFaktagrunnlag(kontekst, faktagrunnlagForGjeldendeSteg)
             StegStatus.AVKLARINGSPUNKT -> harAvklaringspunkt(aktivtSteg, kontekst.behandlingId)
             StegStatus.AVSLUTTER -> Fortsett
             StegStatus.TILBAKEFØRT -> behandleStegBakover(behandlingSteg, kontekst)
-            else -> Fortsett
         }
 
         val nyStegTilstand = StegTilstand(stegType = aktivtSteg.type(), stegStatus = gjeldendeStegStatus, aktiv = true)
