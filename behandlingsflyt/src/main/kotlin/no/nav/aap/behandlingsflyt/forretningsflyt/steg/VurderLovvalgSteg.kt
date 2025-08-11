@@ -132,7 +132,7 @@ class VurderLovvalgSteg private constructor(
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         val erSpesifiktTriggetRevurderLovvalg =
-            kontekst.vurderingsbehov.any { it == Vurderingsbehov.REVURDER_LOVVALG || it == Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP }
+            kontekst.vurderingsbehovRelevanteForSteg.any { it == Vurderingsbehov.REVURDER_LOVVALG || it == Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP }
         return erSpesifiktTriggetRevurderLovvalg && erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene)
     }
 

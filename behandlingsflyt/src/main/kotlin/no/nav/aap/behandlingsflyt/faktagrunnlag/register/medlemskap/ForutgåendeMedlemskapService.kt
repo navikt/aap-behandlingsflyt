@@ -49,7 +49,7 @@ class ForutgåendeMedlemskapService private constructor(
     ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
                 && (oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
-                || kontekst.vurderingsbehov.contains(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))
+                || kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))
                 && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
     }
 

@@ -29,7 +29,7 @@ class TrekkKlageInformasjonskravService (
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return Vurderingsbehov.KLAGE_TRUKKET in kontekst.vurderingsbehov
+        return Vurderingsbehov.KLAGE_TRUKKET in kontekst.vurderingsbehovRelevanteForSteg
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {

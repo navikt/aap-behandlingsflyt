@@ -70,7 +70,7 @@ class SamordningStegTest {
                 forrigeBehandlingId = behandling.forrigeBehandlingId,
                 behandlingType = behandling.typeBehandling(),
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+                vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
                 rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
             )
         )
@@ -105,7 +105,7 @@ class SamordningStegTest {
                 forrigeBehandlingId = behandling.forrigeBehandlingId,
                 behandlingType = behandling.typeBehandling(),
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+                vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
                 rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
             )
         )
@@ -127,7 +127,7 @@ class SamordningStegTest {
                 forrigeBehandlingId = behandling.forrigeBehandlingId,
                 behandlingType = behandling.typeBehandling(),
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+                vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
                 rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
             )
         )
@@ -186,7 +186,7 @@ class SamordningStegTest {
                 forrigeBehandlingId = behandling.forrigeBehandlingId,
                 behandlingType = behandling.typeBehandling(),
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+                vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
                 rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
             )
         )
@@ -233,7 +233,7 @@ class SamordningStegTest {
                 forrigeBehandlingId = behandling.forrigeBehandlingId,
                 behandlingType = behandling.typeBehandling(),
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+                vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
                 rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
             )
         )
@@ -261,7 +261,7 @@ class SamordningStegTest {
             forrigeBehandlingId = behandling.forrigeBehandlingId,
             behandlingType = behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
             rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
         )
 
@@ -342,7 +342,7 @@ class SamordningStegTest {
             forrigeBehandlingId = behandling.forrigeBehandlingId,
             behandlingType = behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
         )
 
@@ -398,7 +398,7 @@ class SamordningStegTest {
             forrigeBehandlingId = behandling.forrigeBehandlingId,
             behandlingType = behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
         )
 

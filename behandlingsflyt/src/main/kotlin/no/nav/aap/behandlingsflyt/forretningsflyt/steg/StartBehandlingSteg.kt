@@ -42,7 +42,7 @@ class StartBehandlingSteg private constructor(
         }
 
         if (kontekst.behandlingType == TypeBehandling.Revurdering) {
-            if (kontekst.vurderingsbehov.contains(Vurderingsbehov.REVURDER_SAMORDNING)) {
+            if (kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.REVURDER_SAMORDNING)) {
                 val ventTil =
                     requireNotNull(samordningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId))
                     { "Forventet å finne samordningvurdering ved revurdering med årsak ${Vurderingsbehov.REVURDER_SAMORDNING}" }

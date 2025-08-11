@@ -40,15 +40,15 @@ class FlytKontekstMedPeriodeService(
                 behandlingType = kontekst.behandlingType,
                 vurderingType = FØRSTEGANGSBEHANDLING,
                 rettighetsperiode = sak.rettighetsperiode,
-                vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet()
+                vurderingsbehovRelevanteForSteg = behandling.vurderingsbehov().map { it.type }.toSet()
             )
         }
         val flyt = behandling.flyt()
-        val vurderingsbehovRelevantForSteg = flyt.vurderingsbehovRelevantForSteg(stegType)
+        val vurderingsbehovRelevanteForSteg = flyt.vurderingsbehovRelevantForSteg(stegType)
 
         val relevanteVurderingsbehov = behandling.vurderingsbehov()
             .map { vurderingsbehov -> vurderingsbehov.type }
-            .filter { vurderingsbehov -> vurderingsbehovRelevantForSteg.contains(vurderingsbehov) }
+            .filter { vurderingsbehov -> vurderingsbehovRelevanteForSteg.contains(vurderingsbehov) }
             .toSet()
 
         return FlytKontekstMedPerioder(
@@ -58,7 +58,7 @@ class FlytKontekstMedPeriodeService(
             behandlingType = kontekst.behandlingType,
             vurderingType = prioritertType(relevanteVurderingsbehov.map { vurderingsbehovTilType(it) }.toSet()),
             rettighetsperiode = sak.rettighetsperiode,
-            vurderingsbehov = relevanteVurderingsbehov
+            vurderingsbehovRelevanteForSteg = relevanteVurderingsbehov
         )
     }
 

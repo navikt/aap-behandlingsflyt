@@ -321,7 +321,7 @@ class Effektuer11_7StegTest {
             behandlingType = typeBehandling,
             forrigeBehandlingId = null,
             vurderingType = vurderingType,
-            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
             rettighetsperiode = sak.rettighetsperiode
         )
     }

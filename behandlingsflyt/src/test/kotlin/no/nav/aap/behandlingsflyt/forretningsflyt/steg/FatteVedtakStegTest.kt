@@ -11,8 +11,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Omgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -25,8 +23,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonopplysningRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryRefusjonKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.komponenter.type.Periode
@@ -59,7 +55,7 @@ class FatteVedtakStegTest {
             forrigeBehandlingId = null,
             vurderingType = VurderingType.IKKE_RELEVANT,
             rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            vurderingsbehov = setOf(Vurderingsbehov.MOTATT_KLAGE)
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
         )
 
         every { klageresultatUtleder.utledKlagebehandlingResultat(BehandlingId(1L)) } returns DelvisOmgjøres(
@@ -106,7 +102,7 @@ class FatteVedtakStegTest {
             behandlingType = TypeBehandling.Klage,
             vurderingType = VurderingType.IKKE_RELEVANT,
             rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            vurderingsbehov = setOf(Vurderingsbehov.MOTATT_KLAGE),
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE),
             forrigeBehandlingId = null,
         )
 
@@ -152,7 +148,7 @@ class FatteVedtakStegTest {
             behandlingType = TypeBehandling.Klage,
             vurderingType = VurderingType.IKKE_RELEVANT,
             rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            vurderingsbehov = setOf(Vurderingsbehov.MOTATT_KLAGE),
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE),
             forrigeBehandlingId = null,
         )
 

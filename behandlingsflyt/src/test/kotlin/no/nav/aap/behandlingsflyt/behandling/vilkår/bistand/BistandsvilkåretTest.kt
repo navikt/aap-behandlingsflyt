@@ -224,7 +224,7 @@ class BistandsvilkåretTest {
                     forrigeBehandlingId = førstegangsbehandling.forrigeBehandlingId,
                     behandlingType = TypeBehandling.Førstegangsbehandling,
                     vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                    vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+                    vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
                     rettighetsperiode = sak.rettighetsperiode,
                 )
             )
@@ -280,7 +280,7 @@ class BistandsvilkåretTest {
                     forrigeBehandlingId = revurdering.forrigeBehandlingId,
                     behandlingType = TypeBehandling.Revurdering,
                     vurderingType = VurderingType.REVURDERING,
-                    vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_LEGEERKLÆRING),
+                    vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_LEGEERKLÆRING),
                     rettighetsperiode = sak.rettighetsperiode,
                 )
             )

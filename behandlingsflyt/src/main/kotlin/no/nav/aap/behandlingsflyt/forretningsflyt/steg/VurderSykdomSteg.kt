@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -68,7 +67,7 @@ class VurderSykdomSteg private constructor(
 
             VurderingType.REVURDERING -> {
                 val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
-                if (kontekst.vurderingsbehov.isNotEmpty()) {
+                if (kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()) {
                     return if (avklaringsbehov == null) {
                         FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
                     } else {

@@ -82,7 +82,7 @@ class SykdomsvurderingBrevStegTest {
     ): FlytKontekstMedPerioder = FlytKontekstMedPerioder(
         sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
         vurderingType = vurderingType,
-        vurderingsbehov = vurderingsbehov,
+        vurderingsbehovRelevanteForSteg = vurderingsbehov,
         rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
     )
 

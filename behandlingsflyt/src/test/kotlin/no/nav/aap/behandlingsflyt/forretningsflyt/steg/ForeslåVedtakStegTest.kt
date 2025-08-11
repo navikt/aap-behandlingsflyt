@@ -43,7 +43,7 @@ class ForeslåVedtakStegTest {
         val kontekstMedPerioder = FlytKontekstMedPerioder(
             sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         )
 
@@ -69,7 +69,7 @@ class ForeslåVedtakStegTest {
         val kontekstMedPerioder = FlytKontekstMedPerioder(
             sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         )
 
@@ -95,7 +95,7 @@ class ForeslåVedtakStegTest {
         val kontekstMedPerioder = FlytKontekstMedPerioder(
             sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         )
 
@@ -126,7 +126,7 @@ class ForeslåVedtakStegTest {
         val kontekstMedPerioder = FlytKontekstMedPerioder(
             sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         )
 

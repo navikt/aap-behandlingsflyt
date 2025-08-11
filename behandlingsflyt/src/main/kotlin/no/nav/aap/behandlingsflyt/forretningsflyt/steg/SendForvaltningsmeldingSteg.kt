@@ -32,7 +32,7 @@ class SendForvaltningsmeldingSteg(
             TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> {
                 val behandlingId = kontekst.behandlingId
                 val behandling = behandlingRepository.hent(behandlingId)
-                if (erBehandlingForMottattSøknad(kontekst.vurderingsbehov) &&
+                if (erBehandlingForMottattSøknad(kontekst.vurderingsbehovRelevanteForSteg) &&
                     !harAlleredeBestiltForvaltningsmeldingForBehandling(behandling)
                 ) {
                     val brevBehov = Forvaltningsmelding

@@ -49,7 +49,7 @@ class TrekkKlageSteg private constructor(
     }
 
     private fun erIkkeRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-        return Vurderingsbehov.KLAGE_TRUKKET !in kontekst.vurderingsbehov
+        return Vurderingsbehov.KLAGE_TRUKKET !in kontekst.vurderingsbehovRelevanteForSteg
     }
 
     private fun slettVurderingerOgRegisterdata(behandlingId: BehandlingId) {

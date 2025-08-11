@@ -111,7 +111,7 @@ class AktivitetspliktInformasjonskravTest {
             forrigeBehandlingId = behandling.forrigeBehandlingId,
             behandlingType = TypeBehandling.Førstegangsbehandling,
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         )
 }

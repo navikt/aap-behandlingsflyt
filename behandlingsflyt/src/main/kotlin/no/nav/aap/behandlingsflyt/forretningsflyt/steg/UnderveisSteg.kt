@@ -40,7 +40,7 @@ class UnderveisSteg(
                 underveisService.vurder(kontekst.sakId, kontekst.behandlingId)
 
                 val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-                if (kontekst.vurderingsbehov.contains(Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN) && avklaringsbehov.harIkkeForeslåttUttak()) {
+                if (kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN) && avklaringsbehov.harIkkeForeslåttUttak()) {
                     return FantAvklaringsbehov(Definisjon.FORESLÅ_UTTAK)
                 }
             }

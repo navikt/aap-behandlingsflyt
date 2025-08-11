@@ -323,7 +323,7 @@ class InformasjonskravGrunnlagTest {
             flytKontekst.forrigeBehandlingId,
             behandling.typeBehandling(),
             vurderingType = vurderingType,
-            vurderingsbehov = årsakerTilBehandling,
+            vurderingsbehovRelevanteForSteg = årsakerTilBehandling,
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now()),
         )
     }

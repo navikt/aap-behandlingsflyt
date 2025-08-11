@@ -34,7 +34,7 @@ class TrukketSøknadService(
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return Vurderingsbehov.SØKNAD_TRUKKET in kontekst.vurderingsbehov
+        return Vurderingsbehov.SØKNAD_TRUKKET in kontekst.vurderingsbehovRelevanteForSteg
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
