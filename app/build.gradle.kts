@@ -88,7 +88,7 @@ dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation("com.zaxxer:HikariCP:7.0.1")
-    implementation("org.flywaydb:flyway-database-postgresql:11.10.5")
+    implementation("org.flywaydb:flyway-database-postgresql:11.11.0")
     runtimeOnly("org.postgresql:postgresql:42.7.7")
     implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:${opentelemetryVersion}")
