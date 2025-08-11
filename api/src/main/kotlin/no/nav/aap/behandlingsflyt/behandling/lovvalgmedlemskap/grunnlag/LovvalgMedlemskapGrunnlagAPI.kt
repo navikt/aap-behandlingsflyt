@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
@@ -39,7 +40,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(
                             lovvalgMedlemskapRepository.hentHvisEksisterer(behandling.id)?.manuellVurdering
                         val historiskeManuelleVurderinger =
                             lovvalgMedlemskapRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
-                        val ansattNavnOgEnhet = gjeldendeManuellVurdering?.let { AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv)}
+                        val ansattNavnOgEnhet = gjeldendeManuellVurdering?.let { AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(it.vurdertAv)}
                         
                         LovvalgMedlemskapGrunnlagResponse(
                             kanSaksbehandle(),

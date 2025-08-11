@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -73,7 +74,7 @@ private fun arbeidsevneGrunnlag(
             vurderinger =
                 nåTilstand
                     ?.filterNot { vedtatteVerdier.contains(it) }
-                    ?.map { it.toDto(AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv)) }
+                    ?.map { it.toDto(AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(it.vurdertAv)) }
                     ?.sortedBy { it.fraDato } ?: emptyList(),
             gjeldendeVedtatteVurderinger =
                 vedtatteVerdier

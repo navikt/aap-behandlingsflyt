@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
@@ -65,7 +66,7 @@ private fun hentHistoriskeSykdomsvurderingerForBrev(
 }
 
 private fun SykdomsvurderingForBrev.toDto(): SykdomsvurderingForBrevVurderingDto {
-    val ansattNavnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv)
+    val ansattNavnOgEnhet = AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(vurdertAv)
     return SykdomsvurderingForBrevVurderingDto(
         vurdering = vurdering,
         vurdertAv = VurdertAvResponse(

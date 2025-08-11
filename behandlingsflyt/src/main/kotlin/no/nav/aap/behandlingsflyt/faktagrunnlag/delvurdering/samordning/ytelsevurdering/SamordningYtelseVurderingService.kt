@@ -32,9 +32,9 @@ class SamordningYtelseVurderingService(
     private val samordningYtelseRepository: SamordningYtelseRepository,
     private val sakService: SakService,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val fpGateway: ForeldrepengerGateway,
+    private val spGateway: SykepengerGateway
 ) : Informasjonskrav {
-    private val fpGateway = GatewayProvider.provide<ForeldrepengerGateway>()
-    private val spGateway = GatewayProvider.provide<SykepengerGateway>()
     private val log = LoggerFactory.getLogger(javaClass)
 
     override val navn = Companion.navn
@@ -154,12 +154,14 @@ class SamordningYtelseVurderingService(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.SAMORDNING_YTELSE
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): SamordningYtelseVurderingService {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): SamordningYtelseVurderingService {
             val sakRepository = repositoryProvider.provide<SakRepository>()
             return SamordningYtelseVurderingService(
                 repositoryProvider.provide(),
                 SakService(sakRepository),
                 TidligereVurderingerImpl(repositoryProvider),
+                gatewayProvider.provide(),
+                gatewayProvider.provide()
             )
         }
     }

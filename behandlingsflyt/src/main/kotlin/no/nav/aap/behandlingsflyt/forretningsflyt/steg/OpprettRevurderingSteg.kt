@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -71,13 +72,13 @@ class OpprettRevurderingSteg(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
 
             return OpprettRevurderingSteg(
                 SakOgBehandlingService(repositoryProvider),
                 samordningYtelseVurderingRepository = repositoryProvider.provide(),
                 låsRepository = repositoryProvider.provide(),
-                prosesserBehandling = ProsesserBehandlingService(repositoryProvider),
+                prosesserBehandling = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
             )
         }

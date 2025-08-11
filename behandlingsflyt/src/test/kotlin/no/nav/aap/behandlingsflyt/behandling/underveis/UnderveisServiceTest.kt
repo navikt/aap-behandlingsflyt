@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -33,7 +34,7 @@ class UnderveisServiceTest {
     @Test
     fun `skal vurdere alle reglene`() {
         dataSource.transaction { connection ->
-            val underveisService = UnderveisService(postgresRepositoryRegistry.provider(connection))
+            val underveisService = UnderveisService(postgresRepositoryRegistry.provider(connection), GatewayProvider)
             val søknadsdato = LocalDate.now().minusDays(29)
             val periode = Periode(søknadsdato, søknadsdato.plusYears(3))
             val aldersVilkåret =

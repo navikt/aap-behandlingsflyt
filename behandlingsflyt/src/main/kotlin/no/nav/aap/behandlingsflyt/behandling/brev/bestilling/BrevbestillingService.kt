@@ -21,9 +21,9 @@ class BrevbestillingService(
     private val behandlingRepository: BehandlingRepository,
     private val sakRepository: SakRepository,
 ) {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         signaturService = SignaturService(repositoryProvider),
-        brevbestillingGateway = GatewayProvider.provide(),
+        brevbestillingGateway = gatewayProvider.provide(),
         brevbestillingRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),

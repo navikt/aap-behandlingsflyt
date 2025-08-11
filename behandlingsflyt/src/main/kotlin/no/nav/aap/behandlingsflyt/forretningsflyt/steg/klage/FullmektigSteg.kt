@@ -11,6 +11,8 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 class FullmektigSteg private constructor(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
@@ -30,7 +32,7 @@ class FullmektigSteg private constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: no.nav.aap.lookup.repository.RepositoryProvider): BehandlingSteg {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
             return FullmektigSteg(
                 repositoryProvider.provide(),
                 TrekkKlageService(repositoryProvider)

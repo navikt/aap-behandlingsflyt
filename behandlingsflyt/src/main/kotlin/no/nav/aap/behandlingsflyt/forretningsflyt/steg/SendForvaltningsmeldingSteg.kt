@@ -61,9 +61,9 @@ class SendForvaltningsmeldingSteg(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
             return SendForvaltningsmeldingSteg(
-                brevbestillingService = BrevbestillingService(repositoryProvider),
+                brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider),
                 behandlingRepository = repositoryProvider.provide(),
                 unleashGateway = GatewayProvider.provide(),
             )

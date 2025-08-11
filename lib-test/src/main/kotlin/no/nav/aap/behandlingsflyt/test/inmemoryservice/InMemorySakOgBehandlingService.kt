@@ -21,5 +21,5 @@ val InMemorySakOgBehandlingService = SakOgBehandlingService(
         InMemoryAvklaringsbehovRepository,
         InMemoryTrukketSøknadRepository
     ),
-    unleashGateway = FakeUnleash,
+    FakeUnleash,
 )

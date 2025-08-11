@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
@@ -51,7 +52,7 @@ fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(dataSource: DataSource, repo
                 val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
                 val vurdering = rettighetsperiodeRepository.hentVurdering(behandling.id)
 
-                val ansattNavnOgEnhet = vurdering?.let { AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv) }
+                val ansattNavnOgEnhet = vurdering?.let { AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(it.vurdertAv) }
 
                 RettighetsperiodeGrunnlagResponse(
                     vurdering =

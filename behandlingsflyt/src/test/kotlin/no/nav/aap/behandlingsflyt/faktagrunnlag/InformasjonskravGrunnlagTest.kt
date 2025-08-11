@@ -50,6 +50,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
@@ -112,7 +113,7 @@ class InformasjonskravGrunnlagTest {
         dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection)
+                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection), GatewayProvider
             )
 
             FakePersoner.leggTil(
@@ -146,7 +147,7 @@ class InformasjonskravGrunnlagTest {
         dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection)
+                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection), GatewayProvider
             )
 
             FakePersoner.leggTil(
@@ -173,7 +174,7 @@ class InformasjonskravGrunnlagTest {
         dataSource.transaction { connection ->
             val (_, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection)
+                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection), GatewayProvider
             )
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
@@ -190,7 +191,7 @@ class InformasjonskravGrunnlagTest {
         dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection)
+                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection), GatewayProvider
             )
 
             FakePersoner.leggTil(
@@ -225,7 +226,8 @@ class InformasjonskravGrunnlagTest {
             val (ident, kontekst) = klargjør(connection, VurderingType.FØRSTEGANGSBEHANDLING)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                 InformasjonskravRepositoryImpl(connection),
-                repositoryRegistry.provider(connection)
+                repositoryRegistry.provider(connection),
+                GatewayProvider
             )
             val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnService)
 
@@ -253,7 +255,8 @@ class InformasjonskravGrunnlagTest {
             )
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                 InformasjonskravRepositoryImpl(connection),
-                repositoryRegistry.provider(connection)
+                repositoryRegistry.provider(connection),
+                GatewayProvider
             )
             val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnService)
 
@@ -281,7 +284,8 @@ class InformasjonskravGrunnlagTest {
             )
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                 InformasjonskravRepositoryImpl(connection),
-                repositoryRegistry.provider(connection)
+                repositoryRegistry.provider(connection),
+                GatewayProvider
             )
             val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnService)
 

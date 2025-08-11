@@ -55,7 +55,7 @@ class EnklereFlytOrkestratorTest {
         flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(
             sakService = sakService,
             behandlingRepository = behandlingRepository,
-            unleashGateway = FakeUnleash,
+            FakeUnleash,
         ),
         sakOgBehandlingService = InMemorySakOgBehandlingService,
         informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
@@ -76,7 +76,7 @@ class EnklereFlytOrkestratorTest {
         flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(
             sakService = sakService,
             behandlingRepository = behandlingRepository,
-            unleashGateway = FakeUnleash,
+            FakeUnleash,
         ),
         sakOgBehandlingService = InMemorySakOgBehandlingService,
         informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
@@ -208,7 +208,7 @@ class EnklereFlytOrkestratorTest {
             flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(
                 sakService = sakService,
                 behandlingRepository = behandlingRepository,
-                unleashGateway = FakeUnleash,
+                FakeUnleash,
             ),
             informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
             behandlingRepository = behandlingRepository,

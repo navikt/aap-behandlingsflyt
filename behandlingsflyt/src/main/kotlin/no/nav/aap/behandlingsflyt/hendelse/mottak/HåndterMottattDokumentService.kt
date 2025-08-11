@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.tilVurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -46,11 +47,11 @@ class HåndterMottattDokumentService(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider),
         sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
         låsRepository = repositoryProvider.provide(),
-        prosesserBehandling = ProsesserBehandlingService(repositoryProvider),
+        prosesserBehandling = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
         mottaDokumentService = MottaDokumentService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
 

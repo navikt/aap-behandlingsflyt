@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDateTime
@@ -36,14 +37,14 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
 
     fun håndtere(key: BehandlingId, hendelse: BehandlingSattPåVent) {
         dataSource.transaction { connection ->
-            AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(connection))
+            AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(connection), GatewayProvider)
                 .settBehandlingPåVent(key, hendelse)
         }
     }
 
     fun bestillLegeerklæring(key: BehandlingId) {
         dataSource.transaction { connection ->
-            AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(connection))
+            AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(connection), GatewayProvider)
                 .settPåVentMensVentePåMedisinskeOpplysninger(key, SYSTEMBRUKER)
         }
     }

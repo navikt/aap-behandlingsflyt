@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -26,13 +27,13 @@ class AvklaringsbehovOrkestrator(
     private val behandlingRepository: BehandlingRepository,
     private val prosesserBehandling: ProsesserBehandlingService,
 ) {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): this(
         repositoryProvider = repositoryProvider,
         behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider),
-        flytOrkestrator = FlytOrkestrator(repositoryProvider),
+        flytOrkestrator = FlytOrkestrator(repositoryProvider, gatewayProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
-        prosesserBehandling = ProsesserBehandlingService(repositoryProvider),
+        prosesserBehandling = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)

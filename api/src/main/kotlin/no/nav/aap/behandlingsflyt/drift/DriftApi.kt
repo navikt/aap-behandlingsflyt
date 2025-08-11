@@ -7,6 +7,7 @@ import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -35,7 +36,7 @@ fun NormalOpenAPIRoute.driftAPI(dataSource: DataSource, repositoryRegistry: Repo
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
 
-                    Driftfunksjoner(repositoryProvider).flyttBehandlingTilStart(behandling.id, connection)
+                    Driftfunksjoner(repositoryProvider, GatewayProvider).flyttBehandlingTilStart(behandling.id, connection)
                 }
                 respondWithStatus(HttpStatusCode.Accepted)
             }

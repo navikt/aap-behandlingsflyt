@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.vurdering
 
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -15,7 +16,7 @@ data class VurdertAvResponse(
         fun fraIdent(ident: String?, dato: LocalDate?): VurdertAvResponse? {
             if (ident == null || dato == null) return null
 
-            val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(ident)
+            val navnOgEnhet = AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(ident)
             return VurdertAvResponse(
                 ident = ident,
                 dato = dato,

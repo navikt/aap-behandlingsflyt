@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
@@ -48,7 +49,7 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(dataSource: DataSource, repositoryR
 }
 
 private fun SykepengerVurdering.tilResponse(): SykepengerVurderingResponse {
-    val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv)
+    val navnOgEnhet = AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(vurdertAv)
     return SykepengerVurderingResponse(
         begrunnelse = begrunnelse,
         dokumenterBruktIVurdering = dokumenterBruktIVurdering,
