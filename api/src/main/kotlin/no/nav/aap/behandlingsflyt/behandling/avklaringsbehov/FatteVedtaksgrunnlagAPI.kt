@@ -60,7 +60,7 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource, repository
                         .filter { it.aksjon == Aksjon.FATTET_VEDTAK }
                         .maxByOrNull { it.tidspunkt }
                         ?.let { historikkInnlslag ->
-                            AnsattInfoService().hentAnsattNavnOgEnhet(historikkInnlslag.avIdent)?.let {
+                            AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(historikkInnlslag.avIdent)?.let {
                                 BeslutterDto(
                                     navn = it.navn,
                                     kontor = it.enhet,

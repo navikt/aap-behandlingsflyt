@@ -67,12 +67,12 @@ class InstitusjonsoppholdService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.INSTITUSJONSOPPHOLD
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): InstitusjonsoppholdService {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): InstitusjonsoppholdService {
             val sakRepository = repositoryProvider.provide<SakRepository>()
             return InstitusjonsoppholdService(
                 SakService(sakRepository),
                 repositoryProvider.provide(),
-                GatewayProvider.provide(),
+                gatewayProvider.provide(),
                 TidligereVurderingerImpl(repositoryProvider),
             )
         }

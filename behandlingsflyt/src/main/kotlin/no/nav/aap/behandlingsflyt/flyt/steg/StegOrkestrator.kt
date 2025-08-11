@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -43,12 +44,13 @@ class StegOrkestrator(
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider,
         markSavepointAt: Set<StegStatus>? = null,
     ) : this(
-        informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(repositoryProvider),
+        informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(repositoryProvider, gatewayProvider),
         behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
-        stegKonstruktør = StegKonstruktørImpl(repositoryProvider),
+        stegKonstruktør = StegKonstruktørImpl(repositoryProvider, gatewayProvider),
         markSavepointAt = markSavepointAt,
     )
 

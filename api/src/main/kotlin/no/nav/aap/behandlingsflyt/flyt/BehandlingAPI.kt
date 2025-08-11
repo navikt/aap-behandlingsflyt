@@ -153,7 +153,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                     if (!behandling.status().erAvsluttet()
                         && behandling.harIkkeVærtAktivitetIDetSiste()
                     ) {
-                        ProsesserBehandlingService(repositoryProvider).triggProsesserBehandling(
+                        ProsesserBehandlingService(repositoryProvider, GatewayProvider).triggProsesserBehandling(
                             behandling.sakId,
                             behandling.id
                         )

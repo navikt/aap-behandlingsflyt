@@ -233,7 +233,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource, repositoryRegistry: Repos
                             body.behandlingVersjon
                         )
 
-                        AvklaringsbehovOrkestrator(repositoryProvider)
+                        AvklaringsbehovOrkestrator(repositoryProvider, GatewayProvider)
                             .settBehandlingPåVent(
                                 lås.behandlingSkrivelås.id, BehandlingSattPåVent(
                                     frist = body.frist,

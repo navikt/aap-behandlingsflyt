@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
@@ -129,7 +130,7 @@ class HendelseMottattHåndteringJobbUtfører(
         override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
             return HendelseMottattHåndteringJobbUtfører(
                 låsRepository = repositoryProvider.provide(),
-                håndterMottattDokumentService = HåndterMottattDokumentService(repositoryProvider),
+                håndterMottattDokumentService = HåndterMottattDokumentService(repositoryProvider, GatewayProvider),
                 mottaDokumentService = MottaDokumentService(repositoryProvider),
                 mottattDokumentRepository = repositoryProvider.provide()
             )

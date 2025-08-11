@@ -117,7 +117,7 @@ class InntektService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.INNTEKT
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): InntektService {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): InntektService {
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
 
@@ -129,7 +129,7 @@ class InntektService private constructor(
                 studentRepository = repositoryProvider.provide(),
                 beregningVurderingRepository = beregningVurderingRepository,
                 yrkesskadeRepository = repositoryProvider.provide(),
-                inntektRegisterGateway = GatewayProvider.provide(),
+                inntektRegisterGateway = gatewayProvider.provide(),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
             )
         }

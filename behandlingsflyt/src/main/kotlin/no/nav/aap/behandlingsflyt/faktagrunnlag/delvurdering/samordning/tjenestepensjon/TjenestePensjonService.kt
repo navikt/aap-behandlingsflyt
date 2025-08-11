@@ -22,14 +22,14 @@ class TjenestePensjonService(
     private val tjenestePensjonRepository: TjenestePensjonRepository,
     private val sakService: SakService,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val tpGateway: TjenestePensjonGateway
 ) : Informasjonskrav {
-    private val tpGateway = GatewayProvider.provide<TjenestePensjonGateway>()
     private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.SAMORDNING_TJENESTEPENSJON
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): Informasjonskrav {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): Informasjonskrav {
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
 
@@ -37,6 +37,7 @@ class TjenestePensjonService(
                 tjenestePensjonRepository = tjenestePensjonRepository,
                 sakService = SakService(sakRepository),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+                gatewayProvider.provide()
             )
         }
     }

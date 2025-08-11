@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
@@ -57,7 +58,7 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(
 }
 
 private fun StudentVurdering.tilResponse(): StudentVurderingResponse {
-    val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(this.vurdertAv)
+    val navnOgEnhet = AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(this.vurdertAv)
     return StudentVurderingResponse(
         id = this.id,
         begrunnelse = this.begrunnelse,

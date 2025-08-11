@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.motor.FlytJobbRepository
@@ -48,7 +49,7 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource, repositoryRegi
                             BehandlingReferanse(request.referanse), request.behandlingVersjon
                         )
 
-                        AvklaringsbehovHendelseHåndterer(repositoryProvider).håndtere(
+                        AvklaringsbehovHendelseHåndterer(repositoryProvider, GatewayProvider).håndtere(
                             key = lås.behandlingSkrivelås.id, hendelse = LøsAvklaringsbehovHendelse(
                                 request.behov,
                                 request.ingenEndringIGruppe == true,

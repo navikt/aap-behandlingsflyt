@@ -120,8 +120,8 @@ class FatteVedtakSteg(
 
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
-            return FatteVedtakSteg(repositoryProvider, GatewayProvider)
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+            return FatteVedtakSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {

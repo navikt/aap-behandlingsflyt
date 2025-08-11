@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 /* Burde flytorkestratoren oppdage at det har kommet en ny årsak til behandling,
@@ -54,7 +55,7 @@ class TrukketSøknadService(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.TRUKKET_SØKNAD
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): Informasjonskrav {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): Informasjonskrav {
             return TrukketSøknadService(repositoryProvider)
         }
     }

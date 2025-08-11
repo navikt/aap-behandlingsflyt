@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class UnderveisSteg(
@@ -21,8 +22,8 @@ class UnderveisSteg(
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovRepository: AvklaringsbehovRepository
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider) : this(
-        underveisService = UnderveisService(repositoryProvider),
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        underveisService = UnderveisService(repositoryProvider, gatewayProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovRepository = repositoryProvider.provide()
     )
@@ -56,8 +57,8 @@ class UnderveisSteg(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
-            return UnderveisSteg(repositoryProvider)
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+            return UnderveisSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {

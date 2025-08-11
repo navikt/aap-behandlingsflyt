@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadService
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Instant
 import java.util.concurrent.CompletableFuture
@@ -14,10 +15,12 @@ import java.util.concurrent.Executors
 class InformasjonskravGrunnlagImpl(
     private val informasjonskravRepository: InformasjonkskravRepository,
     private val repositoryProvider: RepositoryProvider,
+    private val gatewayProvider: GatewayProvider,
 ) : InformasjonskravGrunnlag {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         informasjonskravRepository = repositoryProvider.provide(),
         repositoryProvider = repositoryProvider,
+        gatewayProvider
     )
 
     private val tracer = GlobalOpenTelemetry.getTracer("informasjonskrav")
@@ -29,7 +32,7 @@ class InformasjonskravGrunnlagImpl(
         val informasjonskravene = kravkonstruktører.map { (steg, konstruktør) ->
             Triple(
                 konstruktør,
-                konstruktør.konstruer(repositoryProvider),
+                konstruktør.konstruer(repositoryProvider, gatewayProvider),
                 steg,
             )
         }
@@ -109,7 +112,7 @@ class InformasjonskravGrunnlagImpl(
         informasjonskravkonstruktørere: List<Informasjonskravkonstruktør>
     ): List<Informasjonskravkonstruktør> {
         return informasjonskravkonstruktørere.filter {
-            it.konstruer(repositoryProvider)
+            it.konstruer(repositoryProvider, gatewayProvider)
                 .flettOpplysningerFraAtomærBehandling(kontekst) == Informasjonskrav.Endret.ENDRET
         }
     }

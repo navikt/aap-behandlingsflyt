@@ -38,7 +38,7 @@ class SakOgBehandlingService(
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
-        unleashGateway = unleashGateway,
+        unleashGateway = unleashGateway
     )
 
     fun finnBehandling(behandlingReferanse: BehandlingReferanse): Behandling {

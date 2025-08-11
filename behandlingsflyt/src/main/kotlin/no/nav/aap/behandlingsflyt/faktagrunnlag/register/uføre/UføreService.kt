@@ -28,11 +28,11 @@ class UføreService(
     private val uføreRegisterGateway: UføreRegisterGateway,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): this(
         sakService = SakService(repositoryProvider),
         uføreRepository = repositoryProvider.provide(),
         samordningUføreRepository = repositoryProvider.provide(),
-        uføreRegisterGateway = GatewayProvider.provide(),
+        uføreRegisterGateway = gatewayProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
     )
 
@@ -84,8 +84,8 @@ class UføreService(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.UFØRE
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): UføreService {
-            return UføreService(repositoryProvider)
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): UføreService {
+            return UføreService(repositoryProvider, gatewayProvider)
         }
     }
 }

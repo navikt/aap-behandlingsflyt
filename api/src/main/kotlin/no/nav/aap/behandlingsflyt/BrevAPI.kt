@@ -219,7 +219,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                             val behandling =
                                 behandlingRepository.hent(req.behandlingsReferanse)
 
-                            val brevbestillingService = BrevbestillingService(repositoryProvider)
+                            val brevbestillingService = BrevbestillingService(repositoryProvider, GatewayProvider)
 
                             brevbestillingService.bestillV2(
                                 behandlingId = behandling.id,

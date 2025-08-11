@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.forretningsflyt.gjenopptak.GjenopptakRepository
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
@@ -29,7 +30,7 @@ class GjenopptaBehandlingJobbUtfører(
         override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
             return GjenopptaBehandlingJobbUtfører(
                 gjenopptakRepository = repositoryProvider.provide(),
-                prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider),
+                prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, GatewayProvider),
             )
         }
     }

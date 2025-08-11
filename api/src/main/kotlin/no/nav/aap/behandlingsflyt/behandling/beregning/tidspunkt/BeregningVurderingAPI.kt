@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -107,7 +108,7 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource, repositoryR
 }
 
 private fun BeregningstidspunktVurdering.tilResponse(): BeregningstidspunktVurderingResponse {
-    val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv)
+    val navnOgEnhet = AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(vurdertAv)
     return BeregningstidspunktVurderingResponse(
         begrunnelse = begrunnelse,
         nedsattArbeidsevneDato = nedsattArbeidsevneDato,
@@ -124,7 +125,7 @@ private fun BeregningstidspunktVurdering.tilResponse(): BeregningstidspunktVurde
 
 
 private fun YrkesskadeBeløpVurdering.toResponse(): YrkesskadeBeløpVurderingResponse {
-    val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv)
+    val navnOgEnhet = AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(vurdertAv)
     return YrkesskadeBeløpVurderingResponse(
         antattÅrligInntekt = antattÅrligInntekt,
         referanse = referanse,

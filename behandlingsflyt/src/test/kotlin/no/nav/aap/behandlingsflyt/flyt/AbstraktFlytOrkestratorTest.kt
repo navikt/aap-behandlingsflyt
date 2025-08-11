@@ -118,6 +118,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.type.Periode
@@ -393,7 +394,7 @@ open class AbstraktFlytOrkestratorTest {
     ): Behandling {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(
-                AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(it)),
+                AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(it), GatewayProvider),
                 AvklaringsbehovRepositoryImpl(it),
                 BehandlingRepositoryImpl(it),
             ).håndtere(
@@ -944,7 +945,7 @@ open class AbstraktFlytOrkestratorTest {
 
     protected fun prosesserBehandling(behandling: Behandling): Behandling {
         dataSource.transaction { connection ->
-            FlytOrkestrator(postgresRepositoryRegistry.provider(connection)).forberedOgProsesserBehandling(
+            FlytOrkestrator(postgresRepositoryRegistry.provider(connection), GatewayProvider).forberedOgProsesserBehandling(
                 FlytKontekst(
                     sakId = behandling.sakId,
                     behandlingId = behandling.id,

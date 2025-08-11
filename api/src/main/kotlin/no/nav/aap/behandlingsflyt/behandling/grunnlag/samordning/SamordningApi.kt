@@ -30,6 +30,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -248,7 +249,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     }
 
                 val ansattNavnOgEnhet =
-                    samordning?.let { AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv) }
+                    samordning?.let { AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(it.vurdertAv) }
 
                 respond(
                     SamordningYtelseVurderingGrunnlagDTO(
@@ -319,7 +320,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     }
 
                 val navnOgEnhet = samordningAndreStatligeYtelserVurdering?.let {
-                    AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv)
+                    AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(it.vurdertAv)
                 }
 
                 respond(
@@ -378,7 +379,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     }
 
                 val navnOgEnhet = samordningArbeidsgiverVurdering?.let {
-                    AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv)
+                    AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(it.vurdertAv)
                 }
 
                 val vurdering = samordningArbeidsgiverVurdering?.let { vurdering ->
@@ -410,7 +411,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
 
 private fun mapSamordningUføreVurdering(vurdering: SamordningUføreVurdering?): SamordningUføreVurderingDTO? =
     vurdering?.let {
-        val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv)
+        val navnOgEnhet = AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(it.vurdertAv)
 
         return SamordningUføreVurderingDTO(
             begrunnelse = it.begrunnelse,

@@ -52,14 +52,14 @@ class PersonopplysningService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.PERSONOPPLYSNING
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): PersonopplysningService {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): PersonopplysningService {
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val personopplysningRepository =
                 repositoryProvider.provide<PersonopplysningRepository>()
             return PersonopplysningService(
                 SakService(sakRepository),
                 personopplysningRepository,
-                GatewayProvider.provide(),
+                gatewayProvider.provide(),
                 TidligereVurderingerImpl(repositoryProvider),
             )
         }

@@ -37,8 +37,10 @@ class ForutgåendeMedlemskapService private constructor(
     private val medlemskapForutgåendeRepository: MedlemskapForutgåendeRepository,
     private val grunnlagRepository: MedlemskapArbeidInntektForutgåendeRepository,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val medlemskapGateway: MedlemskapGateway,
+    private val arbeidsforholdGateway: ArbeidsforholdGateway,
+    private val inntektkomponentenGateway: InntektkomponentenGateway
 ) : Informasjonskrav {
-    private val medlemskapGateway = GatewayProvider.provide<MedlemskapGateway>()
 
     override val navn = Companion.navn
 
@@ -77,12 +79,11 @@ class ForutgåendeMedlemskapService private constructor(
             arbeidstakerId = sak.person.aktivIdent().identifikator,
             historikk = true
         )
-        return GatewayProvider.provide<ArbeidsforholdGateway>().hentAARegisterData(request)
+        return arbeidsforholdGateway.hentAARegisterData(request)
     }
 
     private fun innhentAInntektGrunnlag5år(sak: Sak): List<ArbeidsInntektMaaned> {
-        val inntektskomponentGateway = GatewayProvider.provide<InntektkomponentenGateway>()
-        return inntektskomponentGateway.hentAInntekt(
+        return inntektkomponentenGateway.hentAInntekt(
             sak.person.aktivIdent().identifikator,
             YearMonth.from(sak.rettighetsperiode.fom.minusYears(5)),
             YearMonth.from(sak.rettighetsperiode.fom)
@@ -138,7 +139,7 @@ class ForutgåendeMedlemskapService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.FORUTGÅENDE_MEDLEMSKAP
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): ForutgåendeMedlemskapService {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): ForutgåendeMedlemskapService {
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val grunnlagRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
             return ForutgåendeMedlemskapService(
@@ -146,6 +147,9 @@ class ForutgåendeMedlemskapService private constructor(
                 repositoryProvider.provide(),
                 grunnlagRepository,
                 TidligereVurderingerImpl(repositoryProvider),
+                gatewayProvider.provide(),
+                gatewayProvider.provide(),
+                gatewayProvider.provide()
             )
         }
     }

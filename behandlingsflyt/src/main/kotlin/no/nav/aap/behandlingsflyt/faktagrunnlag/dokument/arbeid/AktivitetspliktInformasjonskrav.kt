@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AktivitetspliktInformasjonskrav (
@@ -23,7 +24,7 @@ class AktivitetspliktInformasjonskrav (
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.AKTIVITETSPLIKT
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): AktivitetspliktInformasjonskrav {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): AktivitetspliktInformasjonskrav {
             val mottattDokumentRepository =
                 repositoryProvider.provide<MottattDokumentRepository>()
 

@@ -40,7 +40,8 @@ class IverksettVedtakSteg private constructor(
     private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
     private val utbetalingGateway: UtbetalingGateway,
     private val trukketSøknadService: TrukketSøknadService,
-    private val flytJobbRepository: FlytJobbRepository
+    private val flytJobbRepository: FlytJobbRepository,
+    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -68,7 +69,7 @@ class IverksettVedtakSteg private constructor(
         } else {
             log.info("Fant ikke tilkjent ytelse for behandingsref ${kontekst.behandlingId}. Virkningstidspunkt: $virkningstidspunkt.")
         }
-        if (GatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.Samvarsling)) {
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.Samvarsling)) {
             flytJobbRepository.leggTil(
                 jobbInput = JobbInput(jobb = VarsleVedtakJobbUtfører).medPayload(kontekst.behandlingId)
             )
@@ -83,7 +84,7 @@ class IverksettVedtakSteg private constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val refusjonskravRepository = repositoryProvider.provide<RefusjonkravRepository>()
@@ -94,7 +95,7 @@ class IverksettVedtakSteg private constructor(
                 repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>()
             val samordningArbeidsgiverRepository =
                 repositoryProvider.provide<SamordningArbeidsgiverRepository>()
-            val utbetalingGateway = GatewayProvider.provide<UtbetalingGateway>()
+            val utbetalingGateway = gatewayProvider.provide<UtbetalingGateway>()
             val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
             val virkningstidspunktUtlederService = VirkningstidspunktUtleder(
                 vilkårsresultatRepository = repositoryProvider.provide(),
@@ -121,6 +122,7 @@ class IverksettVedtakSteg private constructor(
                 virkningstidspunktUtleder = virkningstidspunktUtlederService,
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
                 flytJobbRepository = flytJobbRepository,
+                unleashGateway = gatewayProvider.provide(),
             )
         }
 

@@ -64,14 +64,14 @@ class PersonopplysningForutgåendeService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.PERSONOPPLYSNING_FORUTGÅENDE
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): PersonopplysningForutgåendeService {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): PersonopplysningForutgåendeService {
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val personopplysningRepository = repositoryProvider.provide<PersonopplysningForutgåendeRepository>()
             val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
             return PersonopplysningForutgåendeService(
                 SakService(sakRepository),
                 personopplysningRepository,
-                GatewayProvider.provide(),
+                gatewayProvider.provide(),
                 vilkårsresultatRepository,
                 TidligereVurderingerImpl(repositoryProvider),
             )

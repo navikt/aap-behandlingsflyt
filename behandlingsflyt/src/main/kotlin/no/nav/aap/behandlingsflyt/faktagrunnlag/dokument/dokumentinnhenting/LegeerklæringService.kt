@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
 
@@ -23,7 +24,7 @@ class LegeerklæringService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.LEGEERKLÆRING
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): LegeerklæringService {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): LegeerklæringService {
             return LegeerklæringService(
                 MottaDokumentService(repositoryProvider),
                 TidligereVurderingerImpl(repositoryProvider)
