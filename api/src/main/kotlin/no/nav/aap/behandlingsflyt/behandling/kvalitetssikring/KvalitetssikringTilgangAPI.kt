@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -16,6 +17,7 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
+import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
@@ -23,6 +25,8 @@ fun NormalOpenAPIRoute.kvalitetssikringTilgangAPI(dataSource: DataSource, reposi
     route("/api/behandling/{referanse}/kvalitetssikring-tilgang").tag(Tags.Behandling) {
         authorizedGet<BehandlingReferanse, KvalitetssikringTilgangDto>(
             AuthorizationParamPathConfig(
+                operasjonerIKontekst = listOf(Operasjon.SAKSBEHANDLE),
+                avklaringsbehovKode = Definisjon.KVALITETSSIKRING.kode.toString(),
                 behandlingPathParam = BehandlingPathParam(
                     "referanse"
                 )
