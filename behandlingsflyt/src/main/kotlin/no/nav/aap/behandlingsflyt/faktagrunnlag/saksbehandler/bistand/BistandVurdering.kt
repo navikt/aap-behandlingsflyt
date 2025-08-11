@@ -8,6 +8,7 @@ class BistandVurdering(
     val erBehovForAktivBehandling: Boolean,
     val erBehovForArbeidsrettetTiltak: Boolean,
     val erBehovForAnnenOppfølging: Boolean?,
+    val overgangBegrunnelse: String?,
     val skalVurdereAapIOvergangTilArbeid: Boolean?,
     val vurdertAv: String,
     val vurderingenGjelderFra: LocalDate?,

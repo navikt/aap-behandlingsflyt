@@ -134,7 +134,6 @@ class BistandsvilkåretTest {
                         erBehovForAnnenOppfølging = false,
                         erBehovForArbeidsrettetTiltak = false,
                         skalVurdereAapIOvergangTilArbeid = true,
-                        skalVurdereAapIOvergangTilUføre = false
                     )
                 ),
                 studentvurdering = null
@@ -165,8 +164,7 @@ class BistandsvilkåretTest {
                         erBehovForAktivBehandling = false,
                         erBehovForAnnenOppfølging = false,
                         erBehovForArbeidsrettetTiltak = false,
-                        skalVurdereAapIOvergangTilArbeid = false,
-                        skalVurdereAapIOvergangTilUføre = true
+                        skalVurdereAapIOvergangTilArbeid = true,
                     )
                 ),
                 studentvurdering = null
@@ -179,7 +177,7 @@ class BistandsvilkåretTest {
         assertThat(vilkår.vilkårsperioder()).allMatch { it.utfall == Utfall.OPPFYLT }
         assertThat(
             vilkår.vilkårsperioder().last().innvilgelsesårsak
-        ).isEqualTo(Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD)
+        ).isEqualTo(Innvilgelsesårsak.ARBEIDSSØKER)
         assertThat(vilkår.vilkårsperioder().last().periode.fom).isEqualTo(iDag.plusDays(10))
     }
 
@@ -192,6 +190,7 @@ class BistandsvilkåretTest {
             erBehovForAnnenOppfølging = false,
             vurderingenGjelderFra = null,
             vurdertAv = "Z00000",
+            overgangBegrunnelse = null,
             skalVurdereAapIOvergangTilArbeid = null,
         )
 
@@ -315,8 +314,6 @@ class BistandsvilkåretTest {
         erBehovForAktivBehandling: Boolean = true,
         erBehovForArbeidsrettetTiltak: Boolean = true,
         erBehovForAnnenOppfølging: Boolean = true,
-        overgangBegrunnelse: String? = null,
-        skalVurdereAapIOvergangTilUføre: Boolean? = null,
         skalVurdereAapIOvergangTilArbeid: Boolean? = null,
         vurdertAv: String = "Z00000",
         vurderingenGjelderFra: LocalDate = LocalDate.now()
@@ -328,6 +325,7 @@ class BistandsvilkåretTest {
         erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
         vurdertAv = vurdertAv,
+        overgangBegrunnelse = null,
         vurderingenGjelderFra = vurderingenGjelderFra
     )
 
