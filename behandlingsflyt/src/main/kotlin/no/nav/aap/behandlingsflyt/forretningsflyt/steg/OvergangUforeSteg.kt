@@ -6,11 +6,9 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -39,8 +37,8 @@ class OvergangUforeSteg private constructor(
 
         if (!erIkkeAvslagPåVilkårTidligere(vilkårsresultat, sykdomsvurderinger)) {
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-            val refusjonBehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.OVERGANG_UFORE)
-            if (refusjonBehov != null && refusjonBehov.erÅpent()) {
+            val overgangUforeBehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.OVERGANG_UFORE)
+            if (overgangUforeBehov != null && overgangUforeBehov.erÅpent()) {
                 avklaringsbehovene.avbryt(Definisjon.OVERGANG_UFORE)
             }
             return Fullført
@@ -78,19 +76,14 @@ class OvergangUforeSteg private constructor(
     private fun erIkkeAvslagPåVilkårTidligere(
         vilkårsresultat: Vilkårsresultat, sykdomsvurderinger: List<Sykdomsvurdering>
     ): Boolean {
-        val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-        val nedsattVissVarighet = sykdomsvurderinger.any { it.erNedsettelseIArbeidsevneAvEnVissVarighet == true }
+        val aldersvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET)
 
-        val bistandsvilkåretErOppfyltEllerIkkeVissVarighet = if (!nedsattVissVarighet) {
-            true
-        } else {
-            bistandsvilkåret.harPerioderSomErOppfylt()
-        }
+        val aldersVilkåretErOppfylt = aldersvilkåret.harPerioderSomErOppfylt()
 
         return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()
              && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
              && sykdomsvurderinger.any { it.erOppfyltSettBortIfraVissVarighet() }
-             && bistandsvilkåretErOppfyltEllerIkkeVissVarighet
+             && aldersVilkåretErOppfylt
     }
 
     companion object : FlytSteg {
