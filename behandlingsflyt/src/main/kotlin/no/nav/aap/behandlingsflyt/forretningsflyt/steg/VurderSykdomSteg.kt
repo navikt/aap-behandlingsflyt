@@ -68,8 +68,7 @@ class VurderSykdomSteg private constructor(
 
             VurderingType.REVURDERING -> {
                 val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
-                if (Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND in kontekst.vurderingsbehov) {
-
+                if (kontekst.vurderingsbehov.isNotEmpty()) {
                     return if (avklaringsbehov == null) {
                         FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
                     } else {
