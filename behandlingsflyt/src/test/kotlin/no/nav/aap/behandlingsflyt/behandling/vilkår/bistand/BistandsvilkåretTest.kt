@@ -256,7 +256,6 @@ class BistandsvilkåretTest {
                 erBehovForAktivBehandling = false,
                 erBehovForArbeidsrettetTiltak = false,
                 erBehovForAnnenOppfølging = false,
-                skalVurdereAapIOvergangTilUføre = false,
                 skalVurdereAapIOvergangTilArbeid = false,
                 overgangBegrunnelse = null,
             )

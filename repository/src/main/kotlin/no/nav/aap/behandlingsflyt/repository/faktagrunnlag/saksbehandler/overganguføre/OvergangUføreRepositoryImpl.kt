@@ -1,8 +1,8 @@
-package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.overgangufore
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.overganguføre
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUforeGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUforeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUforeVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -10,17 +10,17 @@ import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
-class OvergangUforeRepositoryImpl(private val connection: DBConnection) : OvergangUforeRepository {
+class OvergangUføreRepositoryImpl(private val connection: DBConnection) : OvergangUføreRepository {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    companion object : Factory<OvergangUforeRepositoryImpl> {
-        override fun konstruer(connection: DBConnection): OvergangUforeRepositoryImpl {
-            return OvergangUforeRepositoryImpl(connection)
+    companion object : Factory<OvergangUføreRepositoryImpl> {
+        override fun konstruer(connection: DBConnection): OvergangUføreRepositoryImpl {
+            return OvergangUføreRepositoryImpl(connection)
         }
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): OvergangUforeGrunnlag? {
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): OvergangUføreGrunnlag? {
         return connection.queryFirstOrNull(
             """
             SELECT ID, VURDERINGER_ID
@@ -32,7 +32,7 @@ class OvergangUforeRepositoryImpl(private val connection: DBConnection) : Overga
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper { row ->
-                OvergangUforeGrunnlag(
+                OvergangUføreGrunnlag(
                     id = row.getLong("ID"),
                     vurderinger = mapOvergangUforevurderinger(row.getLongOrNull("BISTAND_VURDERINGER_ID"))
                 )
@@ -40,7 +40,7 @@ class OvergangUforeRepositoryImpl(private val connection: DBConnection) : Overga
         }
     }
 
-    private fun mapOvergangUforevurderinger(overgangUforevurderingerId: Long?): List<OvergangUforeVurdering> {
+    private fun mapOvergangUforevurderinger(overgangUforevurderingerId: Long?): List<OvergangUføreVurdering> {
         return connection.queryList(
             """
                 SELECT * FROM OVERGANG_UFORE_VURDERING WHERE OVERGANG_UFORE_VURDERINGER_ID = ?
@@ -53,8 +53,8 @@ class OvergangUforeRepositoryImpl(private val connection: DBConnection) : Overga
         }
     }
 
-    private fun overgangUforevurderingRowMapper(row: Row): OvergangUforeVurdering {
-        return OvergangUforeVurdering(
+    private fun overgangUforevurderingRowMapper(row: Row): OvergangUføreVurdering {
+        return OvergangUføreVurdering(
             begrunnelse = row.getString("BEGRUNNELSE"),
             brukerSoktUforetrygd = row.getBoolean("BRUKER_SOKT_UFORETRYGD"),
             brukerVedtakUforetrygd = row.getString("BRUKER_VEDTAK_UFORETRYGD"),
@@ -66,7 +66,7 @@ class OvergangUforeRepositoryImpl(private val connection: DBConnection) : Overga
         )
     }
 
-    override fun hentHistoriskeOvergangUforeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<OvergangUforeVurdering> {
+    override fun hentHistoriskeOvergangUforeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<OvergangUføreVurdering> {
         val query = """
             SELECT DISTINCT overgang_ufore_vurdering.*
             FROM overgang_ufore_grunnlag grunnlag
@@ -87,10 +87,10 @@ class OvergangUforeRepositoryImpl(private val connection: DBConnection) : Overga
         }
     }
 
-    override fun lagre(behandlingId: BehandlingId, overganguforevurderinger: List<OvergangUforeVurdering>) {
+    override fun lagre(behandlingId: BehandlingId, overganguforevurderinger: List<OvergangUføreVurdering>) {
         val overgangUforeGrunnlag = hentHvisEksisterer(behandlingId)
 
-        val nyttGrunnlag = OvergangUforeGrunnlag(
+        val nyttGrunnlag = OvergangUføreGrunnlag(
             id = null,
             vurderinger = overganguforevurderinger
         )
@@ -136,7 +136,7 @@ class OvergangUforeRepositoryImpl(private val connection: DBConnection) : Overga
         }
     }
 
-    private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: OvergangUforeGrunnlag) {
+    private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: OvergangUføreGrunnlag) {
         val overgangUforevurderingerId = lagreOvergangUforevurderinger(nyttGrunnlag.vurderinger)
 
         connection.execute("INSERT INTO OVERGANG_UFORE_GRUNNLAG (BEHANDLING_ID, VURDERINGER_ID) VALUES (?, ?)") {
@@ -147,7 +147,7 @@ class OvergangUforeRepositoryImpl(private val connection: DBConnection) : Overga
         }
     }
 
-    private fun lagreOvergangUforevurderinger(vurderinger: List<OvergangUforeVurdering>): Long {
+    private fun lagreOvergangUforevurderinger(vurderinger: List<OvergangUføreVurdering>): Long {
         val overganguforevurderingerId = connection.executeReturnKey("""INSERT INTO OVERGANG_UFORE_VURDERINGER DEFAULT VALUES""")
 
         connection.executeBatch(
