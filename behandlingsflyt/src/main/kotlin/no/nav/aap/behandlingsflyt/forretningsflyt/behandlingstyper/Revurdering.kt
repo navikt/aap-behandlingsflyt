@@ -208,6 +208,7 @@ object Revurdering : BehandlingType {
                 )
             )
             .medSteg(
+                // TODO: Midlertidig duplikat av BarnService, skal på sikt kun være i StartBehandlingSteg
                 informasjonskrav = listOf(BarnService),
                 steg = BarnetilleggSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
