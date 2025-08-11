@@ -168,6 +168,7 @@ internal fun Application.server(
                 meldepliktsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 meldepliktRimeligGrunnGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 arbeidsevneGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                overgangUforeGrunnlagApi(dataSource, repositoryRegistry)
                 medlemskapsgrunnlagApi(dataSource, repositoryRegistry)
                 studentgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykdomsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
