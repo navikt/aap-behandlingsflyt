@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Kvalitetss
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
@@ -276,7 +277,7 @@ open class AbstraktFlytOrkestratorTest {
     }
 
 
-    fun happyCaseFørstegangsbehandling(fom: LocalDate = LocalDate.now().minusMonths(3)): Sak {
+    fun happyCaseFørstegangsbehandling(fom: LocalDate = LocalDate.now().minusMonths(3), person: TestPerson = TestPersoner.STANDARD_PERSON()): Sak {
         val periode = Periode(fom, fom.plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
@@ -316,6 +317,7 @@ open class AbstraktFlytOrkestratorTest {
                     )
                 )
             )
+            .løsSykdomsvurderingBrev()
             // Sender inn en søknad
             .sendInnDokument(
                 DokumentMottattPersonHendelse(
@@ -456,6 +458,9 @@ open class AbstraktFlytOrkestratorTest {
                 )
             )
         )
+
+        behandling = løsSykdomsvurderingBrev(behandling)
+
         kvalitetssikreOk(behandling)
     }
 
@@ -528,6 +533,19 @@ open class AbstraktFlytOrkestratorTest {
         )
     }
 
+    protected fun løsSykdomsvurderingBrev(behandling: Behandling): Behandling {
+        return løsAvklaringsBehov(
+            behandling = behandling,
+            avklaringsBehovLøsning = SykdomsvurderingForBrevLøsning(
+                vurdering = "Denne vurderingen skal vises i brev"
+            )
+        )
+    }
+
+    @JvmName("løsSykdomsvurderingBrevExt")
+    protected fun Behandling.løsSykdomsvurderingBrev(): Behandling {
+        return løsSykdomsvurderingBrev(this)
+    }
 
     @JvmName("løsSykdomExt")
     protected fun Behandling.løsSykdom(): Behandling {
@@ -738,6 +756,7 @@ open class AbstraktFlytOrkestratorTest {
                     )
                 )
             )
+            .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
 
         if (harYrkesskade) {
@@ -789,7 +808,7 @@ open class AbstraktFlytOrkestratorTest {
         val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         return løsAvklaringsBehov(
             behandling,
-            KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() }.map { behov ->
+            KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }.map { behov ->
                 TotrinnsVurdering(
                     behov.definisjon.kode, true, "begrunnelse", emptyList()
                 )

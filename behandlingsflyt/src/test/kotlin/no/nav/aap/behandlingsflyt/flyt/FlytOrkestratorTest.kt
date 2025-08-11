@@ -190,7 +190,9 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     overgangBegrunnelse = null
                 ),
             )
-        ).medKontekst {
+        )
+            .løsSykdomsvurderingBrev()
+            .medKontekst {
             assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                 .describedAs("Siden vurderingenGjelderFra er lik kravdato (rettighetsperiode.fom), så kan man revurdere 11-13")
                 .containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
@@ -241,7 +243,9 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     overgangBegrunnelse = null
                 ),
             )
-        ).medKontekst {
+        )
+            .løsSykdomsvurderingBrev()
+            .medKontekst {
             assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                 .describedAs("Siden vurderingenGjelderFra er lik kravdato (rettighetsperiode.fom), så kan man revurdere 11-13")
                 .containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
@@ -295,7 +299,9 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                         overgangBegrunnelse = null
                     ),
                 )
-            ).medKontekst {
+            )
+            .løsSykdomsvurderingBrev()
+            .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .describedAs("Siden vurderingenGjelderFra ikke er lik kravdato (rettighetsperiode.fom), så skal man ikke vurdere 11-13")
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)  // ingen avklaringsbehov løst av NAY, gå rett til fatte vedtak
@@ -355,7 +361,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                         )
                     )
                 ),
-            ).medKontekst {
+            )
+            .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.AVKLAR_BISTANDSBEHOV)
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
@@ -384,7 +391,9 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     overgangBegrunnelse = null
                 ),
             )
-        ).medKontekst {
+        )
+            .løsSykdomsvurderingBrev()
+            .medKontekst {
             assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).describedAs {
                 "Revurdering av sykdom skal gå rett til beslutter når ingen avklaringsbehov trenger å løses av NAY"
             }.containsExactly(Definisjon.FATTE_VEDTAK)
@@ -413,7 +422,9 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     overgangBegrunnelse = null
                 ),
             )
-        ).løsAvklaringsBehov(
+        )
+            .løsSykdomsvurderingBrev()
+            .løsAvklaringsBehov(
             AvklarSykepengerErstatningLøsning(
                 sykepengeerstatningVurdering = SykepengerVurderingDto(
                     begrunnelse = "test",
@@ -455,6 +466,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             .løsSykdom()
             .løsBistand()
             .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
@@ -531,6 +543,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             .løsSykdom()
             .løsBistand()
             .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
@@ -606,6 +619,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             .løsSykdom()
             .løsBistand()
             .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
@@ -729,6 +743,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             .løsSykdom()
             .løsBistand()
             .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
 
         val sak = hentSak(ident, periode)
 
@@ -787,6 +802,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             .løsSykdom()
             .løsBistand()
             .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
             .løsAvklaringsBehov(
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
@@ -1001,6 +1017,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             )
         )
 
+        behandling = løsSykdomsvurderingBrev(behandling)
+
         behandling = kvalitetssikreOk(behandling)
 
         behandling = løsAvklaringsBehov(
@@ -1144,6 +1162,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             )
         )
 
+        behandling = løsSykdomsvurderingBrev(behandling)
+
         behandling = kvalitetssikreOk(behandling)
 
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -1249,6 +1269,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     )
                 )
             )
+            .løsSykdomsvurderingBrev()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
 
@@ -1307,6 +1328,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     ),
                 ),
             )
+            .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
@@ -1403,6 +1425,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             ),
         )
 
+        behandling = løsSykdomsvurderingBrev(behandling)
+
         behandling = kvalitetssikreOk(behandling)
 
         // Saken står til To-trinnskontroll hos beslutter
@@ -1436,6 +1460,70 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         // Saken er avsluttet, så det skal ikke være flere åpne avklaringsbehov
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
         assertThat(åpneAvklaringsbehov).isEmpty()
+    }
+
+    @Test
+    fun `ved førstegangsbehandling i steget for sykdom skal sykdomsvurdering for brev vises etter refusjonskrav er løst og før kvalitetsvurdering`() {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val person = TestPersoner.STANDARD_PERSON()
+        val ident = person.aktivIdent()
+
+        val førstegangsbehandling = sendInnSøknad(ident, periode, TestSøknader.STANDARD_SØKNAD)
+            .medKontekst {
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .løsSykdom()
+            .løsBistand()
+            .løsRefusjonskrav()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).anySatisfy {
+                    assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
+                }
+            }
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtakEllerSendRetur()
+            .løsVedtaksbrev()
+
+        assertThat(førstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
+    fun `ved revurdering i steget for sykdom skal sykdomsvurdering for brev vises etter refusjonskrav`() {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val person = TestPersoner.STANDARD_PERSON()
+        val sak = happyCaseFørstegangsbehandling(periode.fom, person)
+
+        val revurdering = sendInnDokument(
+            sak.person.aktivIdent(), DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("12344932122"),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+                strukturertDokument = StrukturertDokument(
+                    ManuellRevurderingV0(
+                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND), ""
+                    ),
+                ),
+                innsendingType = InnsendingType.MANUELL_REVURDERING,
+                periode = periode
+            )
+        )
+            .medKontekst {
+                assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .løsSykdom()
+            .løsBistand()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV) }
+            }
+            .løsSykdomsvurderingBrev() // Krever ikke kvalitetskontroll i revurdering
+            .fattVedtakEllerSendRetur()
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
+
+        assertThat(revurdering.status()).isEqualTo(Status.AVSLUTTET)
     }
 
     @Test
@@ -1495,7 +1583,9 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     overgangBegrunnelse = null
                 ),
             ),
-        ).løsRefusjonskrav()
+        )
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
             .medKontekst {
                 // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
                 assertThat(åpneAvklaringsbehov).isNotEmpty()
@@ -1654,6 +1744,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 )
             )
         )
+
+        behandling = løsSykdomsvurderingBrev(behandling)
 
         behandling = kvalitetssikreOk(behandling)
 

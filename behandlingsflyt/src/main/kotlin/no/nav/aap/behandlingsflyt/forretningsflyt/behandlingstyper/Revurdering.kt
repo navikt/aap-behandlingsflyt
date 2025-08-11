@@ -48,6 +48,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningUføreSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SendForvaltningsmeldingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SimulerUtbetalingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SykdomsurderingBrevSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SøknadSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.TjenestepensjonRefusjonskravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.UnderveisSteg
@@ -61,6 +62,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeSteg
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.komponenter.miljo.Miljø
 
 object Revurdering : BehandlingType {
     override fun flyt(): BehandlingFlyt {
@@ -146,6 +148,19 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 )
             )
+            .apply {
+                // TODO legges kun ut i dev i første runde
+                if (Miljø.erDev() || Miljø.erLokal()) {
+                    medSteg(
+                        steg = SykdomsurderingBrevSteg, vurderingsbehovRelevanteForSteg = listOf(
+                            Vurderingsbehov.MOTTATT_SØKNAD,
+                            Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                            Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+                            Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+                        )
+                    )
+                }
+            }
             .medSteg(steg = KvalitetssikringsSteg)
             .medSteg(
                 steg = VurderYrkesskadeSteg, vurderingsbehovRelevanteForSteg = listOf(

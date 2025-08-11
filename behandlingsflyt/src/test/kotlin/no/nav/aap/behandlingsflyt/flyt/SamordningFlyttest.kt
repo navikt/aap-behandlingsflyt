@@ -104,6 +104,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest() {
                     ),
                 ),
             )
+            .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
@@ -432,7 +433,9 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest() {
                     )
                 ),
             ),
-        ).kvalitetssikreOk()
+        )
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
                     beregningVurdering = BeregningstidspunktVurderingDto(
