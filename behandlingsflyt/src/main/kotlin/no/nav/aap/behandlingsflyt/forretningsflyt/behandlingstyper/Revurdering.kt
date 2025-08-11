@@ -67,7 +67,7 @@ object Revurdering : BehandlingType {
         return BehandlingFlytBuilder()
             .medSteg(
                 steg = StartBehandlingSteg,
-                informasjonskrav = listOf(SøknadService),
+                informasjonskrav = listOf(SøknadService, BarnService),
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle()
             )
             .medSteg(
@@ -208,8 +208,9 @@ object Revurdering : BehandlingType {
                 )
             )
             .medSteg(
-                steg = BarnetilleggSteg,
+                // TODO: Midlertidig duplikat av BarnService, skal på sikt kun være i StartBehandlingSteg
                 informasjonskrav = listOf(BarnService),
+                steg = BarnetilleggSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.BARNETILLEGG,
