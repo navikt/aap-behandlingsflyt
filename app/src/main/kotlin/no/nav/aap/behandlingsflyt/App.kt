@@ -168,7 +168,10 @@ internal fun Application.server(
                 meldepliktsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 meldepliktRimeligGrunnGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 arbeidsevneGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+<<<<<<< HEAD
                 overgangUforeGrunnlagApi(dataSource, repositoryRegistry)
+=======
+>>>>>>> 933093e09 (Inject GatewayProvider i API)
                 medlemskapsgrunnlagApi(dataSource, repositoryRegistry)
                 studentgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykdomsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
