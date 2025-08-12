@@ -17,11 +17,13 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class FatteVedtakLøser(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val behandlingRepository: BehandlingRepository,
+    private val unleashGateway: UnleashGateway
 ) : AvklaringsbehovsLøser<FatteVedtakLøsning> {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
+        gatewayProvider.provide()
     )
 
     override fun løs(
@@ -59,23 +61,24 @@ class FatteVedtakLøser(
                 Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP.kode
             )
 
-            val vurderingerSomMåReåpnes = if (unntaksVurderinger.containsAll(vurderingerSomErSendtTilbake.map { it.definisjon })) {
-                listOf()
-            } else {
-                avklaringsbehovene.alleEkskludertVentebehov()
-                .filterNot { behov ->
-                    behov.definisjon in setOf(
-                        Definisjon.FORESLÅ_VEDTAK,
-                        Definisjon.FATTE_VEDTAK,
-                        Definisjon.KVALITETSSIKRING
-                    )
+            val vurderingerSomMåReåpnes =
+                if (unntaksVurderinger.containsAll(vurderingerSomErSendtTilbake.map { it.definisjon })) {
+                    listOf()
+                } else {
+                    avklaringsbehovene.alleEkskludertVentebehov()
+                        .filterNot { behov ->
+                            behov.definisjon in setOf(
+                                Definisjon.FORESLÅ_VEDTAK,
+                                Definisjon.FATTE_VEDTAK,
+                                Definisjon.KVALITETSSIKRING
+                            )
+                        }
+                        .filterNot { flyt.erStegFør(it.definisjon.løsesISteg, tidligsteStegMedRetur) }
+                        .filter { vurdering ->
+                            vurderingerSomErSendtTilbake.none { it.definisjon == vurdering.definisjon.kode } &&
+                                    vurderingerFørRetur.none { it.definisjon == vurdering.definisjon.kode }
+                        }
                 }
-                .filterNot { flyt.erStegFør(it.definisjon.løsesISteg, tidligsteStegMedRetur) }
-                .filter { vurdering ->
-                    vurderingerSomErSendtTilbake.none { it.definisjon == vurdering.definisjon.kode } &&
-                    vurderingerFørRetur.none { it.definisjon == vurdering.definisjon.kode }
-                }
-            }
 
             vurderingerFørRetur.forEach { vurdering ->
                 avklaringsbehovene.vurderTotrinn(
@@ -115,8 +118,11 @@ class FatteVedtakLøser(
     }
 
     private fun validerAvklaringsbehovOppMotBruker(avklaringsbehovene: List<Avklaringsbehov>, bruker: Bruker) {
-        val unleashGateway = GatewayProvider.provide<UnleashGateway>()
-        if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident) && avklaringsbehovene.any { it.brukere().contains(bruker.ident) }) {
+        if (!unleashGateway.isEnabled(
+                BehandlingsflytFeature.IngenValidering,
+                bruker.ident
+            ) && avklaringsbehovene.any { it.brukere().contains(bruker.ident) }
+        ) {
             throw KanIkkeVurdereEgneVurderingerException()
         }
     }

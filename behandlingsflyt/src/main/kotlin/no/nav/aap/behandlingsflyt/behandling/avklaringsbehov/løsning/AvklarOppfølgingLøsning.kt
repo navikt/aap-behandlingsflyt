@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.Oppfølgings
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_OPPFØLGINGSBEHOV_LOKALKONTOR
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_OPPFØLGINGSBEHOV_NAY
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -27,7 +28,7 @@ class AvklarOppfølgingLokalkontorLøsning(
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`8001`
 ) :
     AvklaringsbehovLøsning {
-    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarOppfølgingLokalkontorLøser(repositoryProvider).løs(kontekst, this)
     }
 }
@@ -46,7 +47,7 @@ class AvklarOppfølgingNAYLøsning(
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`8002`
 ) :
     AvklaringsbehovLøsning {
-    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarOppfølgingNAYLøser(repositoryProvider).løs(kontekst, this)
     }
 }

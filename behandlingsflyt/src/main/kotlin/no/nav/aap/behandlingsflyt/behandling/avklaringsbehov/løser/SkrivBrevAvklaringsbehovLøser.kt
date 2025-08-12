@@ -18,12 +18,14 @@ class SkrivBrevAvklaringsbehovLøser(
     private val sakRepository: SakRepository,
     private val brevbestillingRepository: BrevbestillingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val brevbestillingGateway: BrevbestillingGateway
 ) {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
         brevbestillingRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
+        brevbestillingGateway = gatewayProvider.provide()
     )
 
     fun løs(
@@ -32,7 +34,7 @@ class SkrivBrevAvklaringsbehovLøser(
     ): LøsningsResultat {
         val brevbestillingService = BrevbestillingService(
             signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository),
-            brevbestillingGateway = GatewayProvider.provide<BrevbestillingGateway>(),
+            brevbestillingGateway = brevbestillingGateway,
             brevbestillingRepository = brevbestillingRepository,
             behandlingRepository = behandlingRepository,
             sakRepository = sakRepository

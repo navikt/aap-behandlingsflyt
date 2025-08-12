@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.SkrivBrevLø
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.SKRIV_BREV_KODE
 import no.nav.aap.brev.kontrakt.MottakerDto
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.util.UUID
 
@@ -19,7 +20,7 @@ class SkrivBrevLøsning(
     @param:JsonProperty("behovstype", required = true, defaultValue = SKRIV_BREV_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5050`
 ) : AvklaringsbehovLøsning {
-    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
-        return SkrivBrevLøser(repositoryProvider).løs(kontekst, this)
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
+        return SkrivBrevLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }
 }

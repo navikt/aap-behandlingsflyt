@@ -17,11 +17,13 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class KvalitetssikrerLøser(
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val unleashGateway: UnleashGateway
 ) : AvklaringsbehovsLøser<KvalitetssikringLøsning> {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
+        unleashGateway = gatewayProvider.provide()
     )
 
     override fun løs(
@@ -116,7 +118,6 @@ class KvalitetssikrerLøser(
     }
 
     private fun validerAvklaringsbehovOppMotBruker(avklaringsbehovene: List<Avklaringsbehov>, bruker: Bruker) {
-        val unleashGateway = GatewayProvider.provide<UnleashGateway>()
         if (!unleashGateway.isEnabled(
                 BehandlingsflytFeature.IngenValidering,
                 bruker.ident

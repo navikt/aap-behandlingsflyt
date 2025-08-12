@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -72,7 +73,7 @@ class FatteVedtakLøserTest {
         )
 
         val fatteVedtakLøser = MockDataSource().transaction {
-            FatteVedtakLøser(repositoryRegistry.provider(it))
+            FatteVedtakLøser(repositoryRegistry.provider(it), GatewayProvider)
         }
 
         // Totrinnsvurdering ikke godkjent.
