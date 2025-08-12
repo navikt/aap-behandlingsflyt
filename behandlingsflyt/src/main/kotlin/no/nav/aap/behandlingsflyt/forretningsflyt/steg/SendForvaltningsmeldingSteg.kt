@@ -65,7 +65,7 @@ class SendForvaltningsmeldingSteg(
             return SendForvaltningsmeldingSteg(
                 brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider),
                 behandlingRepository = repositoryProvider.provide(),
-                unleashGateway = GatewayProvider.provide(),
+                unleashGateway = gatewayProvider.provide(),
             )
         }
 

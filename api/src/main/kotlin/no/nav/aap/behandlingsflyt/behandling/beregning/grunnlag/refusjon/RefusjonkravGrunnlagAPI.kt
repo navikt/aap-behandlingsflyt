@@ -71,7 +71,7 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
                 )
             ) { req, body ->
                 val response =
-                    NavKontorService().hentNavEnheter()?.filter { enhet ->
+                    NavKontorService(GatewayProvider).hentNavEnheter()?.filter { enhet ->
                         enhet.navn.contains(
                             body.navn,
                             ignoreCase = true
