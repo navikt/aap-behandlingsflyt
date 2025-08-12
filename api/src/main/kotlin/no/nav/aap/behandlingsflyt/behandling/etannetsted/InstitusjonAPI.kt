@@ -24,7 +24,13 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.institusjonAPI(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
+
     route("/api/behandling") {
         route("/{referanse}/grunnlag/institusjon/soning") {
             getGrunnlag<BehandlingReferanse, SoningsGrunnlagDto>(
@@ -75,7 +81,7 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource, repositoryRegistry
                             }
 
                     val ansattNavnOgEnhet =
-                        grunnlag?.soningsVurderinger?.let { AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(it.vurdertAv) }
+                        grunnlag?.soningsVurderinger?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv) }
 
 
                     SoningsGrunnlagDto(
@@ -148,7 +154,7 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource, repositoryRegistry
 
                     val ansattNavnOgEnhet =
                         grunnlag?.helseoppholdvurderinger?.let {
-                            AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(
+                            ansattInfoService.hentAnsattNavnOgEnhet(
                                 it.vurdertAv
                             )
                         }

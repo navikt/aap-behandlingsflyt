@@ -39,6 +39,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.motor.FlytJobbRepository
@@ -79,7 +80,7 @@ fun main() {
         // Useful for connecting to the test database locally
         // jdbc URL contains the host and port and database name.
         println("jdbcUrl: ${postgres.jdbcUrl}. Password: ${postgres.password}. Username: ${postgres.username}.")
-        server(dbConfig, postgresRepositoryRegistry)
+        server(dbConfig, postgresRepositoryRegistry, GatewayProvider)
 
         val datasource = initDatasource(dbConfig)
         opprettTestKlage(datasource, alderIkkeOppfyltTestCase)

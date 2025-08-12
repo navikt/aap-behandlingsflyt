@@ -45,7 +45,12 @@ import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.aktivitetspliktApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val brevGateway = gatewayProvider.provide<BrevbestillingGateway>()
     route("/api").tag(Tags.Aktivitetsplikt) {
         route("/behandling/{referanse}/aktivitetsplikt/effektuer")
             .getGrunnlag<BehandlingReferanse, Effektuer11_7Dto>(
@@ -56,7 +61,6 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource, repositoryRegi
                     val repositoryProvider = repositoryRegistry.provider(conn)
                     val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val brevGateway = GatewayProvider.provide<BrevbestillingGateway>()
                     val aktivitetspliktRepository =
                         repositoryProvider.provide<AktivitetspliktRepository>()
                     val effektuer117Repository =

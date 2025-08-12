@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.klage.formkrav
 
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurdering
@@ -22,20 +23,23 @@ data class FormkravVurderingDto(
     val vurdertAv: VurdertAvResponse?
 )
 
-internal fun FormkravVurdering.tilDto() =
+internal fun FormkravVurdering.tilDto(ansattInfoService: AnsattInfoService) =
     FormkravVurderingDto(
         begrunnelse = begrunnelse,
         erBrukerPart = erBrukerPart,
         erFristOverholdt = erFristOverholdt,
         erKonkret = erKonkret,
         erSignert = erSignert,
-        vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet),
+        vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet, ansattInfoService),
         likevelBehandles = likevelBehandles
     )
 
-internal fun FormkravGrunnlag.tilDto(harTilgangTilÅSaksbehandle: Boolean) =
+internal fun FormkravGrunnlag.tilDto(
+    harTilgangTilÅSaksbehandle: Boolean,
+    ansattInfoService: AnsattInfoService
+) =
     FormkravGrunnlagDto(
-        vurdering = vurdering.tilDto(),
+        vurdering = vurdering.tilDto(ansattInfoService),
         varselSendtDato = varsel?.sendtDato,
         varselSvarfrist = varsel?.svarfrist,
         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle

@@ -24,8 +24,12 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
     dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
 ) {
+    val navKontorService = NavKontorService(gatewayProvider)
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
+
     route("/api/behandling") {
         route("/{referanse}/grunnlag/refusjon") {
             getGrunnlag<BehandlingReferanse, RefusjonkravGrunnlagResponse>(
@@ -41,15 +45,16 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
                         val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
 
                         //TODO: Skal fikses etter prodsetting slik at det bare er gjeldendeVurderinger man skal forholde seg til
-                        val gjeldendeVurderinger =
-                            refusjonkravRepository.hentHvisEksisterer(behandling.id)?.map { it.tilResponse() }
+                        val gjeldendeVurderinger = refusjonkravRepository.hentHvisEksisterer(behandling.id)?.map {
+                                it.tilResponse(ansattInfoService)
+                            }
                         val gjeldendeVurdering =
                             gjeldendeVurderinger?.firstOrNull()
                         val historiskeVurderinger =
                             refusjonkravRepository
                                 .hentAlleVurderingerPåSak(
                                     behandling.sakId
-                                ).map { it.tilResponse() }
+                                ).map { it.tilResponse(ansattInfoService) }
 
                         RefusjonkravGrunnlagResponse(
                             harTilgangTilÅSaksbehandle = kanSaksbehandle(),
@@ -70,16 +75,15 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
             ) { req, body ->
-                val response =
-                    NavKontorService(GatewayProvider).hentNavEnheter()?.filter { enhet ->
-                        enhet.navn.contains(
-                            body.navn,
-                            ignoreCase = true
-                        ) || enhet.enhetsNummer.contains(body.navn, ignoreCase = true)
-                    }
-                        ?.map { enhet ->
-                            NavEnheterResponse(navn = enhet.navn, enhetsnummer = enhet.enhetsNummer)
-                        } ?: emptyList()
+                val response = navKontorService.hentNavEnheter()?.filter { enhet ->
+                    enhet.navn.contains(
+                        body.navn,
+                        ignoreCase = true
+                    ) || enhet.enhetsNummer.contains(body.navn, ignoreCase = true)
+                }
+                    ?.map { enhet ->
+                        NavEnheterResponse(navn = enhet.navn, enhetsnummer = enhet.enhetsNummer)
+                    } ?: emptyList()
                 respond(response)
             }
         }
@@ -87,8 +91,8 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
 }
 
 
-private fun RefusjonkravVurdering.tilResponse(): RefusjonkravVurderingResponse {
-    val navnOgEnhet = AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(vurdertAv)
+private fun RefusjonkravVurdering.tilResponse(ansattInfoService: AnsattInfoService): RefusjonkravVurderingResponse {
+    val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv)
     return RefusjonkravVurderingResponse(
         harKrav = harKrav,
         navKontor = navKontor,

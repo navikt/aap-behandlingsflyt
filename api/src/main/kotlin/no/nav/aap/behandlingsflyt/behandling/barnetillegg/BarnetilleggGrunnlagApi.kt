@@ -28,7 +28,12 @@ import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("barnetilleggApi")
 
-fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.barnetilleggApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("/api/barnetillegg") {
         route("/grunnlag/{referanse}") {
             getGrunnlag<BehandlingReferanse, BarnetilleggDto>(
@@ -60,7 +65,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource, repositoryRegistr
                     val barnGrunnlag = barnRepository.hentHvisEksisterer(behandling.id)
 
                     val ansattNavnOgEnhet =
-                        vurderteBarn?.let { AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(it.vurdertAv) }
+                        vurderteBarn?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv) }
 
                     BarnetilleggDto(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),

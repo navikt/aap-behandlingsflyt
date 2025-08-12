@@ -19,8 +19,10 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(
     dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
 ) {
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("/api/behandling") {
         route("/{referanse}/grunnlag/lovvalgmedlemskap") {
             getGrunnlag<BehandlingReferanse, LovvalgMedlemskapGrunnlagResponse>(
@@ -40,7 +42,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(
                             lovvalgMedlemskapRepository.hentHvisEksisterer(behandling.id)?.manuellVurdering
                         val historiskeManuelleVurderinger =
                             lovvalgMedlemskapRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
-                        val ansattNavnOgEnhet = gjeldendeManuellVurdering?.let { AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(it.vurdertAv)}
+                        val ansattNavnOgEnhet = gjeldendeManuellVurdering?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)}
                         
                         LovvalgMedlemskapGrunnlagResponse(
                             kanSaksbehandle(),

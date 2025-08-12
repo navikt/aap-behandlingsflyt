@@ -26,7 +26,13 @@ import java.time.LocalDate
 import java.time.ZoneId
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
+
     route("/api/behandling") {
         route("/{referanse}/grunnlag/sykdom/sykdom") {
             getGrunnlag<BehandlingReferanse, SykdomGrunnlagResponse>(
@@ -66,13 +72,13 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource, repositoryRegi
                         skalVurdereYrkesskade = innhentedeYrkesskader.isNotEmpty(),
                         sykdomsvurderinger = sykdomsvurderinger
                             .sortedBy { it.vurderingenGjelderFra ?: LocalDate.MIN }
-                            .map { it.toDto() },
+                            .map { it.toDto(ansattInfoService) },
                         historikkSykdomsvurderinger = historikkSykdomsvurderinger
                             .sortedBy { it.opprettet }
-                            .map { it.toDto() },
+                            .map { it.toDto(ansattInfoService) },
                         gjeldendeVedtatteSykdomsvurderinger = vedtatteSykdomsvurderinger
                             .sortedBy { it.vurderingenGjelderFra ?: LocalDate.MIN }
-                            .map { it.toDto() },
+                            .map { it.toDto(ansattInfoService) },
                         harTilgangTilÅSaksbehandle = kanSaksbehandle()
                     )
                 }
@@ -109,7 +115,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource, repositoryRegi
                             oppgittYrkesskadeISøknad = false,
                             innhentedeYrkesskader = innhentedeYrkesskader,
                         ),
-                        yrkesskadeVurdering = sykdomGrunnlag?.yrkesskadevurdering?.toResponse(),
+                        yrkesskadeVurdering = sykdomGrunnlag?.yrkesskadevurdering?.toResponse(ansattInfoService),
                     )
                 }
 
@@ -119,8 +125,8 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource, repositoryRegi
     }
 }
 
-private fun Yrkesskadevurdering.toResponse(): YrkesskadevurderingResponse {
-    val navnOgEnhet = AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(vurdertAv)
+private fun Yrkesskadevurdering.toResponse(ansattInfoService: AnsattInfoService): YrkesskadevurderingResponse {
+    val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv)
     return YrkesskadevurderingResponse(
         begrunnelse = begrunnelse,
         relevanteSaker = relevanteSaker,
@@ -135,8 +141,8 @@ private fun Yrkesskadevurdering.toResponse(): YrkesskadevurderingResponse {
     )
 }
 
-private fun Sykdomsvurdering.toDto(): SykdomsvurderingResponse {
-    val navnOgEnhet = AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(vurdertAv.ident)
+private fun Sykdomsvurdering.toDto(ansattInfoService: AnsattInfoService): SykdomsvurderingResponse {
+    val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv.ident)
     return SykdomsvurderingResponse(
         begrunnelse = begrunnelse,
         vurderingenGjelderFra = vurderingenGjelderFra,

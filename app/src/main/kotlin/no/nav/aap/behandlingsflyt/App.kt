@@ -103,6 +103,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -140,10 +141,14 @@ fun main() {
         connector {
             port = 8080
         }
-    }) { server(DbConfig(), postgresRepositoryRegistry) }.start(wait = true)
+    }) { server(DbConfig(), postgresRepositoryRegistry, GatewayProvider) }.start(wait = true)
 }
 
-internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: RepositoryRegistry) {
+internal fun Application.server(
+    dbConfig: DbConfig,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
     DefaultJsonMapper.objectMapper()
         .registerSubtypes(utledSubtypesTilAvklaringsbehovLøsning() + utledSubtypesTilMottattHendelseDTO())
 
@@ -181,43 +186,43 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
 
             apiRouting {
                 configApi()
-                saksApi(dataSource, repositoryRegistry)
-                behandlingApi(dataSource, repositoryRegistry)
-                flytApi(dataSource, repositoryRegistry)
-                fatteVedtakGrunnlagApi(dataSource, repositoryRegistry)
-                kvalitetssikringApi(dataSource, repositoryRegistry)
+                saksApi(dataSource, repositoryRegistry, gatewayProvider)
+                behandlingApi(dataSource, repositoryRegistry, gatewayProvider)
+                flytApi(dataSource, repositoryRegistry, gatewayProvider)
+                fatteVedtakGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                kvalitetssikringApi(dataSource, repositoryRegistry, gatewayProvider)
                 kvalitetssikringTilgangAPI(dataSource, repositoryRegistry)
-                bistandsgrunnlagApi(dataSource, repositoryRegistry)
-                meldepliktsgrunnlagApi(dataSource, repositoryRegistry)
-                meldepliktRimeligGrunnGrunnlagApi(dataSource, repositoryRegistry)
-                arbeidsevneGrunnlagApi(dataSource, repositoryRegistry)
+                bistandsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                meldepliktsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                meldepliktRimeligGrunnGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                arbeidsevneGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 medlemskapsgrunnlagApi(dataSource, repositoryRegistry)
-                studentgrunnlagApi(dataSource, repositoryRegistry)
-                sykdomsgrunnlagApi(dataSource, repositoryRegistry)
-                sykdomsvurderingForBrevApi(dataSource, repositoryRegistry)
-                sykepengerGrunnlagApi(dataSource, repositoryRegistry)
-                institusjonAPI(dataSource, repositoryRegistry)
-                avklaringsbehovApi(dataSource, repositoryRegistry)
+                studentgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                sykdomsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                sykdomsvurderingForBrevApi(dataSource, repositoryRegistry, gatewayProvider)
+                sykepengerGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                institusjonAPI(dataSource, repositoryRegistry, gatewayProvider)
+                avklaringsbehovApi(dataSource, repositoryRegistry, gatewayProvider)
                 tilkjentYtelseAPI(dataSource, repositoryRegistry)
                 trukketSøknadGrunnlagAPI(dataSource, repositoryRegistry)
-                rettighetsperiodeGrunnlagAPI(dataSource, repositoryRegistry)
-                beregningVurderingAPI(dataSource, repositoryRegistry)
+                rettighetsperiodeGrunnlagAPI(dataSource, repositoryRegistry, gatewayProvider)
+                beregningVurderingAPI(dataSource, repositoryRegistry, gatewayProvider)
                 beregningsGrunnlagApi(dataSource, repositoryRegistry)
                 aldersGrunnlagApi(dataSource, repositoryRegistry)
-                barnetilleggApi(dataSource, repositoryRegistry)
+                barnetilleggApi(dataSource, repositoryRegistry, gatewayProvider)
                 motorApi(dataSource)
                 behandlingsflytPip(dataSource, repositoryRegistry)
-                aktivitetspliktApi(dataSource, repositoryRegistry)
+                aktivitetspliktApi(dataSource, repositoryRegistry, gatewayProvider)
                 auditlogApi(dataSource, repositoryRegistry)
-                refusjonGrunnlagAPI(dataSource, repositoryRegistry)
+                refusjonGrunnlagAPI(dataSource, repositoryRegistry, gatewayProvider)
                 manglendeGrunnlagApi(dataSource, repositoryRegistry)
                 // Klage
-                påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry)
-                fullmektigGrunnlagApi(dataSource, repositoryRegistry)
-                formkravGrunnlagApi(dataSource, repositoryRegistry)
-                behandlendeEnhetGrunnlagApi(dataSource, repositoryRegistry)
-                klagebehandlingKontorGrunnlagApi(dataSource, repositoryRegistry)
-                klagebehandlingNayGrunnlagApi(dataSource, repositoryRegistry)
+                påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                fullmektigGrunnlagApi(dataSource, repositoryRegistry, GatewayProvider)
+                formkravGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                behandlendeEnhetGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                klagebehandlingKontorGrunnlagApi(dataSource, repositoryRegistry, GatewayProvider)
+                klagebehandlingNayGrunnlagApi(dataSource, repositoryRegistry, GatewayProvider)
                 klageresultatApi(dataSource, repositoryRegistry)
                 trekkKlageGrunnlagAPI(dataSource, repositoryRegistry)
                 // Svar fra kabal
@@ -225,20 +230,20 @@ internal fun Application.server(dbConfig: DbConfig, repositoryRegistry: Reposito
                 // Oppfølgingsbehandling
                 avklarOppfolgingsoppgaveGrunnlag(dataSource, repositoryRegistry)
                 // Flytt
-                brevApi(dataSource, repositoryRegistry)
-                dokumentinnhentingAPI(dataSource, repositoryRegistry)
-                mottattHendelseApi(dataSource, repositoryRegistry)
+                brevApi(dataSource, repositoryRegistry, gatewayProvider)
+                dokumentinnhentingAPI(dataSource, repositoryRegistry, gatewayProvider)
+                mottattHendelseApi(dataSource, repositoryRegistry, gatewayProvider)
                 underveisVurderingerAPI(dataSource, repositoryRegistry)
                 lovvalgMedlemskapAPI(dataSource, repositoryRegistry)
-                lovvalgMedlemskapGrunnlagAPI(dataSource, repositoryRegistry)
-                samordningGrunnlag(dataSource, repositoryRegistry)
-                forutgåendeMedlemskapAPI(dataSource, repositoryRegistry)
-                driftAPI(dataSource, repositoryRegistry)
-                simuleringAPI(dataSource, repositoryRegistry)
+                lovvalgMedlemskapGrunnlagAPI(dataSource, repositoryRegistry, gatewayProvider)
+                samordningGrunnlag(dataSource, repositoryRegistry, gatewayProvider)
+                forutgåendeMedlemskapAPI(dataSource, repositoryRegistry, gatewayProvider)
+                driftAPI(dataSource, repositoryRegistry, gatewayProvider)
+                simuleringAPI(dataSource, repositoryRegistry, gatewayProvider)
 
                 // Endepunkter kun tilgjengelig lokalt og i test
                 if (!Miljø.erProd()) {
-                    opprettDummySakApi(dataSource, repositoryRegistry)
+                    opprettDummySakApi(dataSource, repositoryRegistry, gatewayProvider)
                 }
             }
         }

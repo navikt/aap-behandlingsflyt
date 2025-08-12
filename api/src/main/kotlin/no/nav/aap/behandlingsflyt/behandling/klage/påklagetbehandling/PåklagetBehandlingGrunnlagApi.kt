@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.klage.påklagetbehandling
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurderingMedReferanse
@@ -14,12 +15,18 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("api/klage/{referanse}/grunnlag/påklaget-behandling") {
         getGrunnlag<BehandlingReferanse, PåklagetBehandlingGrunnlagDto>(
             behandlingPathParam = BehandlingPathParam("referanse"),
@@ -43,7 +50,8 @@ fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(dataSource: DataSource, re
                 mapTilPåklagetBehandlingGrunnlagDto(
                     gjeldendeVurdering,
                     behandlingerMedVedtak,
-                    kanSaksbehandle()
+                    kanSaksbehandle(),
+                    ansattInfoService
                 )
             }
 
@@ -55,7 +63,8 @@ fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(dataSource: DataSource, re
 fun mapTilPåklagetBehandlingGrunnlagDto(
     påklagetBehandlingVurderingMedReferanse: PåklagetBehandlingVurderingMedReferanse?,
     behandlingerMedVedtak: List<BehandlingMedVedtak>,
-    harTilgangTilÅSaksbehandle: Boolean
+    harTilgangTilÅSaksbehandle: Boolean,
+    ansattInfoService: AnsattInfoService
 ): PåklagetBehandlingGrunnlagDto {
     return PåklagetBehandlingGrunnlagDto(
         behandlinger = behandlingerMedVedtak
@@ -71,7 +80,8 @@ fun mapTilPåklagetBehandlingGrunnlagDto(
         vurdertAv = påklagetBehandlingVurderingMedReferanse?.let {
             VurdertAvResponse.fraIdent(
                 it.vurdertAv,
-                it.opprettet
+                it.opprettet,
+                ansattInfoService
             )
         }
     )

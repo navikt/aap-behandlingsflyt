@@ -32,7 +32,13 @@ import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
+
     route("/api/behandling").tag(Tags.Behandling) {
         route("/{referanse}/grunnlag/fatte-vedtak") {
             getGrunnlag<BehandlingReferanse, FatteVedtakGrunnlagDto>(
@@ -44,13 +50,10 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource, repository
 
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val avklaringsbehovRepository =
-                        repositoryProvider.provide<AvklaringsbehovRepository>()
+                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
 
-                    val behandling: Behandling =
-                        BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val avklaringsbehovene =
-                        avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                    val behandling: Behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val flyt = behandling.flyt()
 
                     val vurderinger = beslutterVurdering(avklaringsbehovene, flyt)
@@ -60,7 +63,7 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource, repository
                         .filter { it.aksjon == Aksjon.FATTET_VEDTAK }
                         .maxByOrNull { it.tidspunkt }
                         ?.let { historikkInnlslag ->
-                            AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(historikkInnlslag.avIdent)?.let {
+                            ansattInfoService.hentAnsattNavnOgEnhet(historikkInnlslag.avIdent)?.let {
                                 BeslutterDto(
                                     navn = it.navn,
                                     kontor = it.enhet,
@@ -74,7 +77,8 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource, repository
                         harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(
                             kanSaksbehandle(),
                             avklaringsbehovene,
-                            bruker()
+                            bruker(),
+                            gatewayProvider,
                         ),
                         vurderinger = vurderinger,
                         historikk = historikk,
@@ -90,9 +94,10 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource, repository
 private fun utledHarTilgangTilÅSaksbehandle(
     kanSaksbehandle: Boolean,
     avklaringsbehovene: Avklaringsbehovene,
-    bruker: Bruker
+    bruker: Bruker,
+    gatewayProvider: GatewayProvider
 ): Boolean {
-    val unleashGateway = GatewayProvider.provide<UnleashGateway>()
+    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
     if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
         val harIkkeGjortNoenVurderinger =
             avklaringsbehovene.alle().filter { it.erTotrinn() }.none { it.brukere().contains(bruker.ident) }

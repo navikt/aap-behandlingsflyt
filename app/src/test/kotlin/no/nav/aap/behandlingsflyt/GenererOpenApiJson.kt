@@ -6,6 +6,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
@@ -57,7 +58,7 @@ fun main() {
 //    System.setProperty("unleash.server.api.token", "xxxx")
     // Starter server
     val server = embeddedServer(Netty, port = 0) {
-        server(dbConfig = dbConfig, repositoryRegistry = postgresRepositoryRegistry)
+        server(dbConfig = dbConfig, repositoryRegistry = postgresRepositoryRegistry, gatewayProvider = GatewayProvider)
     }.start()
 
     port = runBlocking { server.engine.resolvedConnectors().first { it.type == ConnectorType.HTTP }.port }

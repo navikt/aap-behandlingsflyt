@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.klage.fullmektig
 
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigVurdering
@@ -20,20 +21,23 @@ data class FullmektigVurderingDto(
     val vurdertAv: VurdertAvResponse?
 )
 
-internal fun FullmektigGrunnlag.tilDto(harTilgangTilÅSaksbehandle: Boolean): FullmektigGrunnlagDto {
+internal fun FullmektigGrunnlag.tilDto(
+    harTilgangTilÅSaksbehandle: Boolean,
+    ansattInfoService: AnsattInfoService,
+): FullmektigGrunnlagDto {
     return FullmektigGrunnlagDto(
-        vurdering = this.vurdering.tilDto(),
+        vurdering = this.vurdering.tilDto(ansattInfoService),
         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle
     )
 }
 
-internal fun FullmektigVurdering.tilDto(): FullmektigVurderingDto {
+internal fun FullmektigVurdering.tilDto(ansattInfoService: AnsattInfoService): FullmektigVurderingDto {
     return FullmektigVurderingDto(
         harFullmektig = this.harFullmektig,
         fullmektigIdent = fullmektigIdent?.ident,
         fullmektigIdentMedType = this.fullmektigIdent,
         fullmektigNavnOgAdresse = this.fullmektigNavnOgAdresse,
-        vurdertAv = VurdertAvResponse.fraIdent(this.vurdertAv, this.opprettet)
+        vurdertAv = VurdertAvResponse.fraIdent(this.vurdertAv, this.opprettet, ansattInfoService)
     )
 }
 

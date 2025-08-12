@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.vurdering
 
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -13,10 +12,14 @@ data class VurdertAvResponse(
     val enhetsnavn: String? = null
 ) {
     companion object {
-        fun fraIdent(ident: String?, dato: LocalDate?): VurdertAvResponse? {
+        fun fraIdent(
+            ident: String?,
+            dato: LocalDate?,
+            ansattInfoService: AnsattInfoService
+        ): VurdertAvResponse? {
             if (ident == null || dato == null) return null
 
-            val navnOgEnhet = AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(ident)
+            val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(ident)
             return VurdertAvResponse(
                 ident = ident,
                 dato = dato,
@@ -25,11 +28,16 @@ data class VurdertAvResponse(
             )
         }
 
-        fun fraIdent(ident: String?, dato: Instant?): VurdertAvResponse? {
+        fun fraIdent(
+            ident: String?,
+            dato: Instant?,
+            ansattInfoService: AnsattInfoService,
+        ): VurdertAvResponse? {
             if (ident == null || dato == null) return null
             return fraIdent(
                 ident = ident,
-                dato = dato.atZone(ZoneId.of("Europe/Oslo")).toLocalDate()
+                dato = dato.atZone(ZoneId.of("Europe/Oslo")).toLocalDate(),
+                ansattInfoService = ansattInfoService
             )
         }
     }

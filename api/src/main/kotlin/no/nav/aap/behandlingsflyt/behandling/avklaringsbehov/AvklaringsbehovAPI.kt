@@ -23,7 +23,11 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedPost
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.avklaringsbehovApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
     route("/api/behandling").tag(Tags.Behandling) {
         route("/løs-behov") {
             authorizedPost<Unit, LøsAvklaringsbehovPåBehandling, LøsAvklaringsbehovPåBehandling>(
@@ -49,7 +53,7 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource, repositoryRegi
                             BehandlingReferanse(request.referanse), request.behandlingVersjon
                         )
 
-                        AvklaringsbehovHendelseHåndterer(repositoryProvider, GatewayProvider).håndtere(
+                        AvklaringsbehovHendelseHåndterer(repositoryProvider, gatewayProvider).håndtere(
                             key = lås.behandlingSkrivelås.id, hendelse = LøsAvklaringsbehovHendelse(
                                 request.behov,
                                 request.ingenEndringIGruppe == true,

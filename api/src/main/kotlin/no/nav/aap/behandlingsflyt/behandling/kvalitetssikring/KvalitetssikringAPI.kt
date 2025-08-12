@@ -33,7 +33,13 @@ import java.time.LocalDateTime
 import javax.sql.DataSource
 import kotlin.collections.any
 
-fun NormalOpenAPIRoute.kvalitetssikringApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.kvalitetssikringApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
+
     route("/api/behandling") {
         route("/{referanse}/grunnlag/kvalitetssikring") {
             getGrunnlag<BehandlingReferanse, KvalitetssikringGrunnlagDto>(
@@ -59,7 +65,8 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(dataSource: DataSource, repositoryReg
                         harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(
                             kanSaksbehandle(),
                             avklaringsbehovene,
-                            bruker()
+                            bruker(),
+                            unleashGateway
                         ),
                         vurderinger = vurderinger,
                         historikk = utledKvalitetssikringHistorikk(avklaringsbehovene)
@@ -74,9 +81,9 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(dataSource: DataSource, repositoryReg
 private fun utledHarTilgangTilÅSaksbehandle(
     kanSaksbehandle: Boolean,
     avklaringsbehovene: Avklaringsbehovene,
-    bruker: Bruker
+    bruker: Bruker,
+    unleashGateway: UnleashGateway
 ): Boolean {
-    val unleashGateway = GatewayProvider.provide<UnleashGateway>()
     if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
         val harIkkeGjortNoenVurderinger =
             avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }

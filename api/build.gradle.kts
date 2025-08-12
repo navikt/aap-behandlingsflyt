@@ -28,4 +28,5 @@ dependencies {
     testImplementation(libs.ktorClientContentNegotiation)
     testImplementation("no.nav.security:mock-oauth2-server:$mockOAuth2ServerVersion")
     testImplementation(project(":lib-test"))
+    testImplementation(project(":repository"))
 }

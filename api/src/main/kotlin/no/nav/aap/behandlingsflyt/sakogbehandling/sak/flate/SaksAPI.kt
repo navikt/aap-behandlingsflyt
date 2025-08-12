@@ -44,7 +44,15 @@ import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.saksApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
+    val identGateway = gatewayProvider.provide(IdentGateway::class)
+    val personinfoGateway = gatewayProvider.provide(PersoninfoGateway::class)
+
     route("/api/sak").tag(Tags.Sak) {
         route("/ekstern/finn").authorizedPost<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO>(
             AuthorizationMachineToMachineConfig(authorizedRoles = listOf("finn-sak"))
@@ -142,7 +150,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
             } else {
                 val sakerMedTilgang =
                     saker.filter { sak ->
-                        GatewayProvider.provide<TilgangGateway>().sjekkTilgangTilSak(
+                        tilgangGateway.sjekkTilgangTilSak(
                             Saksnummer(sak.saksnummer),
                             token,
                             Operasjon.SE
@@ -215,7 +223,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
                         dto.søknadsdato, dto.søknadsdato.plusYears(1).minusDays(1)
                     ) // Setter til fra og med dagens dato, til og med et år frem i tid minus en dag som er tilsvarende "vedtakslengde" i forskriften
                     val sak = PersonOgSakService(
-                        pdlGateway = GatewayProvider.provide(IdentGateway::class),
+                        pdlGateway = identGateway,
                         personRepository = repositoryProvider.provide<PersonRepository>(),
                         sakRepository = repositoryProvider.provide<SakRepository>()
                     ).finnEllerOpprett(ident = ident, periode = periode)
@@ -351,7 +359,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource, repositoryRegistry: Repos
                 }
 
                 val personinfo =
-                    GatewayProvider.provide(PersoninfoGateway::class).hentPersoninfoForIdent(ident, token())
+                    personinfoGateway.hentPersoninfoForIdent(ident, token())
 
                 respond(
                     SakPersoninfoDTO(

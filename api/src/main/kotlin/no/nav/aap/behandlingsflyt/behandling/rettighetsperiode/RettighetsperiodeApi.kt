@@ -35,7 +35,12 @@ data class RettighetsperiodeVurderingResponse(
 )
 
 
-fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("/api/behandling/{referanse}/grunnlag/rettighetsperiode")
         .getGrunnlag<BehandlingReferanse, RettighetsperiodeGrunnlagResponse>(
             behandlingPathParam = BehandlingPathParam("referanse"),
@@ -52,7 +57,7 @@ fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(dataSource: DataSource, repo
                 val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
                 val vurdering = rettighetsperiodeRepository.hentVurdering(behandling.id)
 
-                val ansattNavnOgEnhet = vurdering?.let { AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(it.vurdertAv) }
+                val ansattNavnOgEnhet = vurdering?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv) }
 
                 RettighetsperiodeGrunnlagResponse(
                     vurdering =

@@ -18,7 +18,12 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("/api/behandling/{referanse}/grunnlag/sykdomsvurdering-for-brev") {
         getGrunnlag<BehandlingReferanse, SykdomsvurderingForBrevDto>(
             behandlingPathParam = BehandlingPathParam("referanse"),
@@ -34,8 +39,8 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(dataSource: DataSource, reposi
                 val historiskeSykdomsvurderingerForBrev = hentHistoriskeSykdomsvurderingerForBrev(behandlingReferanse, behandlingRepository, sykdomsvurderingForBrevRepository)
 
                 SykdomsvurderingForBrevDto(
-                    vurdering = sykdomsvurderingForBrev?.toDto(),
-                    historiskeVurderinger = historiskeSykdomsvurderingerForBrev.map { it.toDto() },
+                    vurdering = sykdomsvurderingForBrev?.toDto(ansattInfoService),
+                    historiskeVurderinger = historiskeSykdomsvurderingerForBrev.map { it.toDto(ansattInfoService) },
                     kanSaksbehandle = kanSaksbehandle()
                 )
 
@@ -65,8 +70,8 @@ private fun hentHistoriskeSykdomsvurderingerForBrev(
         .sortedByDescending { it.vurdertTidspunkt }
 }
 
-private fun SykdomsvurderingForBrev.toDto(): SykdomsvurderingForBrevVurderingDto {
-    val ansattNavnOgEnhet = AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(vurdertAv)
+private fun SykdomsvurderingForBrev.toDto(ansattInfoService: AnsattInfoService): SykdomsvurderingForBrevVurderingDto {
+    val ansattNavnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv)
     return SykdomsvurderingForBrevVurderingDto(
         vurdering = vurdering,
         vurdertAv = VurdertAvResponse(
