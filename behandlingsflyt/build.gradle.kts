@@ -5,7 +5,7 @@ plugins {
 
 dependencies {
     api(project(":kontrakt"))
-    implementation("io.micrometer:micrometer-registry-prometheus:1.15.2")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.15.3")
     implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
 
