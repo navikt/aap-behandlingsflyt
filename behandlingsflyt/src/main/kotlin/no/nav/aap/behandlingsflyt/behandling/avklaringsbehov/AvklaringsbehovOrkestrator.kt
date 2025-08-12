@@ -26,6 +26,7 @@ class AvklaringsbehovOrkestrator(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val behandlingRepository: BehandlingRepository,
     private val prosesserBehandling: ProsesserBehandlingService,
+    private val gatewayProvider: GatewayProvider
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): this(
         repositoryProvider = repositoryProvider,
@@ -34,6 +35,7 @@ class AvklaringsbehovOrkestrator(
         avklaringsbehovRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         prosesserBehandling = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
+        gatewayProvider = gatewayProvider
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -107,7 +109,7 @@ class AvklaringsbehovOrkestrator(
         avklaringsbehovLøsning: AvklaringsbehovLøsning,
         bruker: Bruker
     ) {
-        val løsningsResultat = avklaringsbehovLøsning.løs(repositoryProvider, AvklaringsbehovKontekst(bruker, kontekst))
+        val løsningsResultat = avklaringsbehovLøsning.løs(repositoryProvider, AvklaringsbehovKontekst(bruker, kontekst), gatewayProvider)
 
         avklaringsbehovene.løsAvklaringsbehov(
             avklaringsbehovLøsning.definisjon(),

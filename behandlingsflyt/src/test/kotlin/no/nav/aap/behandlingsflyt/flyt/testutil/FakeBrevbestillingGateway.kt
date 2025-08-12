@@ -16,6 +16,7 @@ import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.brev.kontrakt.Språk
 import no.nav.aap.brev.kontrakt.Status
 import no.nav.aap.brev.kontrakt.Vedlegg
+import no.nav.aap.komponenter.gateway.Factory
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.time.LocalDateTime
@@ -78,5 +79,9 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
         signaturer: List<SignaturGrunnlag>
     ): InputStream {
         return ByteArrayInputStream("test".toByteArray())
+    }
+
+    companion object : Factory<BrevbestillingGateway> {
+        override fun konstruer(): BrevbestillingGateway = FakeBrevbestillingGateway()
     }
 }

@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.VurderRettig
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurderingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_RETTIGHETSPERIODE_KODE
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonTypeName(value = VURDER_RETTIGHETSPERIODE_KODE)
@@ -19,8 +20,8 @@ class VurderRettighetsperiodeLøsning(
     @param:JsonProperty("behovstype", required = true, defaultValue = VURDER_RETTIGHETSPERIODE_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5029`
 ) : AvklaringsbehovLøsning {
-    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
-        return VurderRettighetsperiodeLøser(repositoryProvider).løs(kontekst, this)
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
+        return VurderRettighetsperiodeLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }
 
 }

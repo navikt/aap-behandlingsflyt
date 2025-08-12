@@ -1940,7 +1940,7 @@ object FakeServers : AutoCloseable {
         started.set(true)
     }
 
-    private fun setAzureProperties() {
+    fun setAzureProperties() {
         System.setProperty("azure.openid.config.token.endpoint", "http://localhost:${azure.port()}/token/x12345")
         System.setProperty("azure.app.client.id", "behandlingsflyt")
         System.setProperty("azure.app.client.secret", "")
