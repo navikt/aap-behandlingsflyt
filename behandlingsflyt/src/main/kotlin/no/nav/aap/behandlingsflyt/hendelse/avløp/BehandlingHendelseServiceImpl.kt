@@ -38,6 +38,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattDokumentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilSettPåVent
+import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldePerioderJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingSakStatusJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJobbUtfører
@@ -61,12 +62,14 @@ class BehandlingHendelseServiceImpl(
     private val brevbestillingRepository: BrevbestillingRepository,
     private val sakService: SakService,
     private val dokumentRepository: MottattDokumentRepository,
+    private val pipRepository: PipRepository,
 ) : BehandlingHendelseService {
     constructor(repositoryProvider: RepositoryProvider) : this(
         flytJobbRepository = repositoryProvider.provide(),
         brevbestillingRepository = repositoryProvider.provide(),
         sakService = SakService(repositoryProvider),
         dokumentRepository = repositoryProvider.provide(),
+        pipRepository = repositoryProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -115,6 +118,7 @@ class BehandlingHendelseServiceImpl(
                     typeBrev = brevbestilling?.typeBrev?.oversettTilKontrakt()
                 )
             },
+            relevanteIdenterPåBehandling = pipRepository.finnIdenterPåBehandling(behandling.referanse).map { it.ident },
             erPåVent = erPåVent,
             mottattDokumenter = mottattDokumenter,
             reserverTil = hentReservertTil(behandling.id),
