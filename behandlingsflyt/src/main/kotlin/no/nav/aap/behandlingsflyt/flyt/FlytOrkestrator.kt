@@ -68,7 +68,7 @@ class FlytOrkestrator(
         avklaringsbehovRepository = repositoryProvider.provide(),
         informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(repositoryProvider, gatewayProvider),
         sakRepository = repositoryProvider.provide(),
-        flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(repositoryProvider),
+        flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(repositoryProvider, gatewayProvider),
         sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
         behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider),
         stegOrkestrator = StegOrkestrator(repositoryProvider, gatewayProvider, markSavepointAt),

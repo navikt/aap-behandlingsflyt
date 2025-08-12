@@ -22,10 +22,10 @@ class FlytKontekstMedPeriodeService(
     private val behandlingRepository: BehandlingRepository,
     private val unleashGateway: UnleashGateway,
 ) {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
-        unleashGateway = GatewayProvider.provide(),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     fun utled(kontekst: FlytKontekst, stegType: StegType): FlytKontekstMedPerioder {

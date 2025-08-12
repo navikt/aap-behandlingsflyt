@@ -39,7 +39,8 @@ class ForutgåendeMedlemskapService private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
     private val medlemskapGateway: MedlemskapGateway,
     private val arbeidsforholdGateway: ArbeidsforholdGateway,
-    private val inntektkomponentenGateway: InntektkomponentenGateway
+    private val inntektkomponentenGateway: InntektkomponentenGateway,
+    private val enhetsregisteretGateway: EnhetsregisteretGateway
 ) : Informasjonskrav {
 
     override val navn = Companion.navn
@@ -98,13 +99,11 @@ class ForutgåendeMedlemskapService private constructor(
                 inntekt.virksomhet.identifikator
             }
         }.toSet()
-        val gateway = GatewayProvider.provide<EnhetsregisteretGateway>()
-
         // EREG har ikke batch-oppslag
         val executor = Executors.newVirtualThreadPerTaskExecutor()
         val futures = orgnumre.map { orgnummer ->
             CompletableFuture.supplyAsync({
-                val response = gateway.hentEREGData(Organisasjonsnummer(orgnummer))
+                val response = enhetsregisteretGateway.hentEREGData(Organisasjonsnummer(orgnummer))
                 response?.let {
                     EnhetGrunnlag(
                         orgnummer = it.organisasjonsnummer,
@@ -139,7 +138,10 @@ class ForutgåendeMedlemskapService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.FORUTGÅENDE_MEDLEMSKAP
 
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): ForutgåendeMedlemskapService {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): ForutgåendeMedlemskapService {
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val grunnlagRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
             return ForutgåendeMedlemskapService(
@@ -147,6 +149,7 @@ class ForutgåendeMedlemskapService private constructor(
                 repositoryProvider.provide(),
                 grunnlagRepository,
                 TidligereVurderingerImpl(repositoryProvider),
+                gatewayProvider.provide(),
                 gatewayProvider.provide(),
                 gatewayProvider.provide(),
                 gatewayProvider.provide()
