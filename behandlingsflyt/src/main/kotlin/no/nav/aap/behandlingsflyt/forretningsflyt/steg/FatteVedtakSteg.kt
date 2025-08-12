@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Omgjøres
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKontorPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -60,7 +61,7 @@ class FatteVedtakSteg(
 
         if (kontekst.behandlingType == TypeBehandling.Klage) {
             val klageresultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
-            if (klageresultat is Omgjøres) {
+            if (klageresultat is Opprettholdes) {
                 avklaringsbehov.avbrytForSteg(type())
                 return Fullført
             }

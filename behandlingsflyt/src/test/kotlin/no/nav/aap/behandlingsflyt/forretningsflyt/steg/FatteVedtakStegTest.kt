@@ -47,7 +47,7 @@ class FatteVedtakStegTest {
     }
 
     @Test
-    fun `Klagevurderinger fra Nay skal kvalitetssikres`() {
+    fun `Klagevurderinger fra Nay skal kvalitetssikres hvis delevis omgjøring `() {
         val kontekst = FlytKontekstMedPerioder(
             sakId = SakId(1L),
             behandlingId = BehandlingId(1L),
@@ -95,7 +95,7 @@ class FatteVedtakStegTest {
 
 
     @Test
-    fun `Klagevurderinger fra kontor skal kvalitetssikres`() {
+    fun `Klagevurderinger fra kontor skal ikke til beslutter om det opprettholdes`() {
         val kontekst = FlytKontekstMedPerioder(
             sakId = SakId(1L),
             behandlingId = BehandlingId(1L),
@@ -137,11 +137,11 @@ class FatteVedtakStegTest {
 
         val resultat = steg.utfør(kontekst)
 
-        assertThat(resultat).isEqualTo(FantAvklaringsbehov(Definisjon.FATTE_VEDTAK))
+        assertThat(resultat).isEqualTo(Fullført)
     }
 
     @Test
-    fun `Klagevurderinger skal ikke kvalitetssikres hvis resultatet er Omgjør`() {
+    fun `Klagevurderinger skal kvalitetssikres hvis resultatet er Omgjør`() {
         val kontekst = FlytKontekstMedPerioder(
             sakId = SakId(1L),
             behandlingId = BehandlingId(1L),
@@ -183,6 +183,6 @@ class FatteVedtakStegTest {
 
         val resultat = steg.utfør(kontekst)
 
-        assertThat(resultat).isEqualTo(Fullført)
+        assertThat(resultat).isEqualTo(FantAvklaringsbehov(Definisjon.FATTE_VEDTAK))
     }
 }
