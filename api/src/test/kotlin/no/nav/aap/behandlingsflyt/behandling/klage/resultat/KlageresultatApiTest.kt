@@ -53,9 +53,8 @@ class KlageresultatApiTest : BaseApiTest() {
                 klageresultatApi(ds, repositoryRegistry)
             }
 
-            val jwt = issueToken("nav:aap:afpoffentlig.read")
             val response = createClient().get("/api/klage/${behandling.referanse.referanse}/kabal-resultat") {
-                header("Authorization", "Bearer ${jwt.serialize()}")
+                header("Authorization", "Bearer ${getToken().token()}")
             }
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val resultat = response.body<KabalKlageResultat>()
@@ -89,9 +88,8 @@ class KlageresultatApiTest : BaseApiTest() {
                 klageresultatApi(ds, repositoryRegistry)
             }
 
-            val jwt = issueToken("nav:aap:afpoffentlig.read")
             val response = createClient().get("/api/klage/${behandling.referanse.referanse}/kabal-resultat") {
-                header("Authorization", "Bearer ${jwt.serialize()}")
+                header("Authorization", "Bearer ${getToken().token()}")
             }
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val resultat = response.body<KabalKlageResultat>()
@@ -160,9 +158,8 @@ class KlageresultatApiTest : BaseApiTest() {
                 klageresultatApi(ds, repositoryRegistry)
             }
 
-            val jwt = issueToken("nav:aap:afpoffentlig.read")
             val response = createClient().get("/api/klage/${behandling.referanse.referanse}/kabal-resultat") {
-                header("Authorization", "Bearer ${jwt.serialize()}")
+                header("Authorization", "Bearer ${getToken().token()}")
             }
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val resultat = response.body<KabalKlageResultat>()
@@ -199,9 +196,8 @@ class KlageresultatApiTest : BaseApiTest() {
                 klageresultatApi(ds, repositoryRegistry)
             }
 
-            val jwt = issueToken("nav:aap:afpoffentlig.read")
             val response = createClient().get("/api/klage/${UUID.randomUUID()}/kabal-resultat") {
-                header("Authorization", "Bearer ${jwt.serialize()}")
+                header("Authorization", "Bearer ${getToken().token()}")
             }
             assertThat(response.status).isEqualTo(HttpStatusCode.InternalServerError)
         }

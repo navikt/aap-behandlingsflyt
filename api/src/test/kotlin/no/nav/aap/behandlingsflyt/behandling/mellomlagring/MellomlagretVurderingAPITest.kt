@@ -1,0 +1,153 @@
+package no.nav.aap.behandlingsflyt.behandling.mellomlagring
+
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.server.testing.*
+import no.nav.aap.behandlingsflyt.BaseApiTest
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.test.AzurePortHolder
+import no.nav.aap.behandlingsflyt.test.FakeServers
+import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.MockDataSource
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryContextRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMellomlagretVurderingRepository
+import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
+import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
+import no.nav.aap.komponenter.httpklient.httpclient.post
+import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
+import no.nav.aap.komponenter.repository.RepositoryRegistry
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import java.net.URI
+import java.time.LocalDateTime
+
+@Fakes
+@ExtendWith(BaseApiTest::class)
+class MellomlagretVurderingAPITest : BaseApiTest() {
+    private val repositoryRegistry = RepositoryRegistry()
+        .register<InMemoryMellomlagretVurderingRepository>()
+        .register<InMemoryBehandlingRepository>()
+        .register<InMemoryContextRepository>()
+
+
+    @Test
+    fun `hente ut mellomlagret vurdering fra API`() {
+        val ds = MockDataSource()
+        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+        val avklaringsbehovKode = "12345"
+
+        val mellomlagretVurdering = MellomlagretVurdering(
+            behandlingId = behandling.id,
+            avklaringsbehovKode = avklaringsbehovKode,
+            data = """
+                    {"element": "verdi", "tallElement": 1234, "boolskElement": true}
+                    """.trimIndent(),
+            vurdertAv = "A123456",
+            vurdertDato = LocalDateTime.now().withNano(0)
+        )
+        InMemoryMellomlagretVurderingRepository.lagre(mellomlagretVurdering)
+
+        testApplication {
+            installApplication {
+                mellomlagretVurderingApi(ds, repositoryRegistry)
+            }
+
+            val response =
+                createClient().get("/api/behandling/mellomlagret-vurdering/${behandling.referanse.referanse}/${avklaringsbehovKode}") {
+                    header("Authorization", "Bearer ${getToken().token()}")
+                }
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+
+            assertThat(response.body<MellomlagredeVurderingResponse>()).isEqualTo(
+                MellomlagredeVurderingResponse(
+                    harTilgangTilÅSaksbehandle = true,
+                    mellomlagretVurdering = MellomlagretVurderingDto(
+                        behandlingId = mellomlagretVurdering.behandlingId,
+                        avklaringsbehovkode = mellomlagretVurdering.avklaringsbehovKode,
+                        data = mellomlagretVurdering.data,
+                        vurdertAv = mellomlagretVurdering.vurdertAv,
+                        vurdertDato = mellomlagretVurdering.vurdertDato
+                    )
+                )
+            )
+        }
+    }
+
+
+    @Test
+    fun `skal overskrive ut mellomlagret vurdering fra API`() {
+        val ds = MockDataSource()
+        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+        val avklaringsbehovKode = "12345"
+
+        val mellomlagretVurdering = MellomlagretVurdering(
+            behandlingId = behandling.id,
+            avklaringsbehovKode = avklaringsbehovKode,
+            data = """
+                    {"element": "verdi", "tallElement": 1234, "boolskElement": true}
+                    """.trimIndent(),
+            vurdertAv = "A123456",
+            vurdertDato = LocalDateTime.now().withNano(0)
+        )
+        InMemoryMellomlagretVurderingRepository.lagre(mellomlagretVurdering)
+
+        testApplication {
+            installApplication {
+                mellomlagretVurderingApi(ds, repositoryRegistry)
+            }
+
+            val nyMellomlagretVurdering = MellomlagretVurderingRequest(
+                behandlingsReferanse = behandling.referanse.referanse,
+                avklaringsbehovkode = avklaringsbehovKode,
+                data = "{}",
+            )
+            val response =
+                createClient().post("/api/behandling/mellomlagret-vurdering") {
+                    header("Authorization", "Bearer ${getToken().token()}")
+                    contentType(ContentType.Application.Json)
+                    setBody(nyMellomlagretVurdering)
+                }
+            assertThat(response.status).isEqualTo(HttpStatusCode.Accepted)
+
+            val oppdatertVerdi =
+                InMemoryMellomlagretVurderingRepository.hentHvisEksisterer(behandling.id, avklaringsbehovKode)
+            assertThat(oppdatertVerdi).isNotNull
+            assertThat(oppdatertVerdi!!.data).isEqualTo(nyMellomlagretVurdering.data)
+        }
+    }
+
+
+    @Test
+    fun `hente få tom verdi dersom man prøver å hente ut uten at det finnes noe mellomlagret verdi`() {
+        val ds = MockDataSource()
+        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+        val avklaringsbehovKode = "12345"
+        testApplication {
+            installApplication {
+                mellomlagretVurderingApi(ds, repositoryRegistry)
+            }
+
+            val response =
+                createClient().get("/api/behandling/mellomlagret-vurdering/${behandling.referanse.referanse}/${avklaringsbehovKode}") {
+                    header("Authorization", "Bearer ${getToken().token()}")
+                }
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+
+            assertThat(response.body<MellomlagredeVurderingResponse>()).isEqualTo(
+                MellomlagredeVurderingResponse(
+                    harTilgangTilÅSaksbehandle = true,
+                    mellomlagretVurdering = null
+                )
+            )
+        }
+    }
+
+
+}

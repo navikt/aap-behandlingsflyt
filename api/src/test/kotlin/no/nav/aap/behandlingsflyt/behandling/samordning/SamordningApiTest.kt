@@ -64,9 +64,8 @@ class SamordningApiKtTest : BaseApiTest() {
                 samordningGrunnlag(ds, repositoryRegistry)
             }
 
-            val jwt = issueToken("nav:aap:afpoffentlig.read")
             val response = createClient().get("/api/behandling/${behandling.referanse.referanse}/grunnlag/samordning") {
-                header("Authorization", "Bearer ${jwt.serialize()}")
+                header("Authorization", "Bearer ${getToken().token()}")
             }
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
 
