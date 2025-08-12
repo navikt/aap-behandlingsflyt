@@ -35,6 +35,8 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -742,12 +744,12 @@ class BeregnTilkjentYtelseServiceTest {
                 verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*111477/260
                     gradering = TilkjentGradering(
-                        Prosent.`70_PROSENT`,
-                        Prosent.`0_PROSENT`,
-                        Prosent.`0_PROSENT`,
-                        Prosent.`70_PROSENT`,
-                        Prosent.`0_PROSENT`,
-                        Prosent.`0_PROSENT`
+                        endeligGradering = Prosent.`70_PROSENT`,
+                        samordningGradering = Prosent.`0_PROSENT`,
+                        institusjonGradering = Prosent.`0_PROSENT`,
+                        arbeidGradering = Prosent.`70_PROSENT`,
+                        samordningUføregradering = Prosent.`0_PROSENT`,
+                        samordningArbeidsgiverGradering = Prosent.`0_PROSENT`
                     ),
                     grunnlag = Beløp("1204.45"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
@@ -972,6 +974,98 @@ class BeregnTilkjentYtelseServiceTest {
                         institusjonGradering = Prosent.`50_PROSENT`,
                         arbeidGradering = Prosent.`100_PROSENT`,
                         samordningUføregradering = Prosent.`30_PROSENT`,
+                        samordningArbeidsgiverGradering = Prosent.`0_PROSENT`
+                    ),
+                    grunnlag = Beløp("1204.45"),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("118620"),
+                    antallBarn = 0,
+                    barnetilleggsats = Beløp("0"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                )
+            ),
+        )
+    }
+
+
+    // https://confluence.adeo.no/spaces/PAAP/pages/720916013/Utbetalingsgrad
+    @CsvSource(
+        useHeadersInDisplayName = true,
+        textBlock = """
+arbeidsgrad,	sykepengegrad,	uforegrad,	institusjon,	   effektivGradering
+25	               ,25	         ,25  	      ,0	                  ,25
+0	               ,50	         ,0  	      ,50	                  ,25
+10	               ,25	         ,25	      ,50	                  ,20
+50	               ,0	         ,0	          ,50	                  ,25
+0	               ,50	         ,50	      ,0	                  ,0
+0	               ,50	         ,50	      ,50	                  ,0
+50	               ,30	         ,0	          ,50	                  ,10
+0	               ,10	         ,30	      ,50	                  ,30
+"""
+    )
+    @ParameterizedTest
+    fun `mange test caser`(arbeidsgrad: Int, sykepengegrad: Int, uforegrad: Int, institusjon: Int, effektivGradering: Double) {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = object : Grunnlag {
+            override fun grunnlaget(): GUnit {
+                return GUnit(BigDecimal(4))
+            }
+        }
+        val periode = Periode(1 juni 2023, 1 august 2023)
+
+        val underveisgrunnlag = underveisgrunnlag(
+            periode,
+            institusjonsOppholdReduksjon = Prosent(institusjon),
+            // Komplement siden gradering = 100% - hvor mange prosent arbeid.
+            gradering = Prosent(arbeidsgrad).komplement(),
+        )
+
+        val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
+        val samordningsgrunnlag = SamordningGrunnlag(
+            0L, listOf(
+                SamordningPeriode(
+                    periode = periode, gradering = Prosent(sykepengegrad)
+                )
+            )
+        )
+
+        val samordningUføre = SamordningUføreGrunnlag(
+            vurdering = SamordningUføreVurdering(
+                "", listOf(
+                    SamordningUføreVurderingPeriode(virkningstidspunkt = periode.fom, Prosent(uforegrad))
+                ),
+                "ident"
+            )
+        )
+
+        val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
+            vurdering = SamordningArbeidsgiverVurdering(
+                "",
+                LocalDate.now(), LocalDate.now(), vurdertAv = "ident"
+            )
+        )
+
+        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+            fødselsdato,
+            beregningsgrunnlag,
+            underveisgrunnlag,
+            barnetilleggGrunnlag,
+            samordningsgrunnlag,
+            samordningUføre,
+            samordningArbeidsgiver
+        ).beregnTilkjentYtelse()
+
+        assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
+            Segment(
+                periode = Periode(1 juni 2023, 1 august 2023), verdi = Tilkjent(
+                    dagsats = Beløp("1204.45"), //4*0.66*111477/260
+                    gradering = TilkjentGradering(
+                        endeligGradering = Prosent(effektivGradering.toInt()),
+                        samordningGradering = Prosent(sykepengegrad),
+                        institusjonGradering = Prosent(institusjon),
+                        arbeidGradering = Prosent(arbeidsgrad).komplement(),
+                        samordningUføregradering = Prosent(uforegrad),
                         samordningArbeidsgiverGradering = Prosent.`0_PROSENT`
                     ),
                     grunnlag = Beløp("1204.45"),
