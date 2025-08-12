@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
+import no.nav.aap.behandlingsflyt.flyt.testutil.FakeBrevbestillingGateway
 import no.nav.aap.behandlingsflyt.integrasjon.brev.BrevGateway
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
@@ -15,18 +16,9 @@ internal class AvklaringsbehovsLøserTest {
 
     @BeforeEach
     fun setUp() {
-        System.setProperty("integrasjon.brev.url", "test")
-        System.setProperty("integrasjon.brev.scope", "test")
-        
-        System.setProperty("azure.openid.config.token.endpoint", "test")
-        System.setProperty("azure.app.client.id", "test")
-        System.setProperty("azure.app.client.secret", "test")
-        System.setProperty("azure.openid.config.jwks.uri", "test")
-        System.setProperty("azure.openid.config.issuer", "testt")
-        
         GatewayRegistry
             .register<FakeUnleash>()
-            .register<BrevGateway>()
+            .register<FakeBrevbestillingGateway>()
     }
 
     @Test
