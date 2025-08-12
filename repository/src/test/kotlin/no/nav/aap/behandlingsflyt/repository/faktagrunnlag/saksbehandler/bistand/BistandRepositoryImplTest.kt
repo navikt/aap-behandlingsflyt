@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -606,12 +605,12 @@ internal class BistandRepositoryImplTest {
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {
         return SakOgBehandlingService(
             postgresRepositoryRegistry.provider(connection),
-            unleashGateway = FakeUnleash,
+            GatewayProvider,
         )
             .finnEllerOpprettBehandling(
                 sak.saksnummer,
                 listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                ÅrsakTilOpprettelse.SØKNAD
+                ÅrsakTilOpprettelse.SØKNAD,
             )
     }
 

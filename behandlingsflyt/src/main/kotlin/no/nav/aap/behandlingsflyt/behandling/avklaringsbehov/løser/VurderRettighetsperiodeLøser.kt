@@ -36,7 +36,7 @@ class VurderRettighetsperiodeLøser(
         behandlingRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
         rettighetsperiodeRepository = repositoryProvider.provide(),
-        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
+        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
         mottattDokumentRepository = repositoryProvider.provide(),
     )
 

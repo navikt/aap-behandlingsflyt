@@ -75,7 +75,7 @@ class OpprettRevurderingSteg(
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
 
             return OpprettRevurderingSteg(
-                SakOgBehandlingService(repositoryProvider),
+                SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 samordningYtelseVurderingRepository = repositoryProvider.provide(),
                 låsRepository = repositoryProvider.provide(),
                 prosesserBehandling = ProsesserBehandlingService(repositoryProvider, gatewayProvider),

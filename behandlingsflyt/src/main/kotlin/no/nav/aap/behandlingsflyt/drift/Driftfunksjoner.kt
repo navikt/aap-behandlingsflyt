@@ -16,7 +16,7 @@ class Driftfunksjoner(
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
-        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
+        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
     )
 
     fun flyttBehandlingTilStart(behandlingId: BehandlingId, connection: DBConnection) {

@@ -81,7 +81,7 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
             return OpprettBehandlingFastsattPeriodePassertJobbUtfører(
                 sakService = SakService(repositoryProvider),
                 underveisRepository = repositoryProvider.provide(),
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
+                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, GatewayProvider),
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, GatewayProvider),
             )
         }

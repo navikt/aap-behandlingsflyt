@@ -70,7 +70,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
             return OpprettBehandlingFritakMeldepliktJobbUtfører(
                 sakService = SakService(repositoryProvider),
                 underveisRepository = repositoryProvider.provide(),
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
+                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, GatewayProvider),
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, GatewayProvider),
             )
         }

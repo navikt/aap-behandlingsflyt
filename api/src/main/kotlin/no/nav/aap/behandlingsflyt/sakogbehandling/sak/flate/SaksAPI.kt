@@ -179,7 +179,7 @@ fun NormalOpenAPIRoute.saksApi(
             { _, dto ->
                 val behandlinger: SakOgBehandlingDTO? = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
-                    val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider)
+                    val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
                     val ident = Ident(dto.ident)
                     val person = repositoryProvider.provide<PersonRepository>().finn(ident)
 

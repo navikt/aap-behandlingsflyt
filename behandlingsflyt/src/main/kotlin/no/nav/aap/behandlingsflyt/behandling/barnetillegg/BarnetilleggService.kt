@@ -24,7 +24,7 @@ class BarnetilleggService(
     private val log = LoggerFactory.getLogger(javaClass)
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
+        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
         barnRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
     )

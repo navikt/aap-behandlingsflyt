@@ -76,7 +76,7 @@ class AvklarOppfølgingSteg(
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
             return AvklarOppfølgingSteg(
                 repositoryProvider.provide(),
-                SakOgBehandlingService(repositoryProvider),
+                SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 repositoryProvider.provide(),
                 ProsesserBehandlingService(repositoryProvider, gatewayProvider),
                 MottaDokumentService(repositoryProvider.provide()),

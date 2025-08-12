@@ -49,7 +49,7 @@ class HåndterMottattDokumentService(
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider),
-        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
+        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
         låsRepository = repositoryProvider.provide(),
         prosesserBehandling = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
         mottaDokumentService = MottaDokumentService(repositoryProvider),

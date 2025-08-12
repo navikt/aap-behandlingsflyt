@@ -937,7 +937,7 @@ open class AbstraktFlytOrkestratorTest {
 
     protected fun leggTilÅrsakForBehandling(behandling: Behandling, årsaker: List<VurderingsbehovMedPeriode>) {
         dataSource.transaction { connection ->
-            SakOgBehandlingService(postgresRepositoryRegistry.provider(connection))
+            SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), GatewayProvider)
                 .finnEllerOpprettBehandling(behandling.sakId, årsaker, ÅrsakTilOpprettelse.SØKNAD)
         }
         prosesserBehandling(behandling)

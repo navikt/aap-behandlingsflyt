@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -119,7 +118,7 @@ class MeldepliktRepositoryImplTest {
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
             val sakOgBehandlingService = SakOgBehandlingService(
                 postgresRepositoryRegistry.provider(connection),
-                unleashGateway = FakeUnleash,
+                GatewayProvider,
             )
             val sak = sakOgBehandlingService.hentSakFor(behandling1.id)
             val behandling2 = finnEllerOpprettBehandling(connection, sak)

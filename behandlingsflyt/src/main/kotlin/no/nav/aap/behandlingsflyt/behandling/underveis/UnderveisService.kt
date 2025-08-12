@@ -50,7 +50,7 @@ class UnderveisService(
     private val vedtakService: VedtakService,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): this(
-        behandlingService = SakOgBehandlingService(repositoryProvider),
+        behandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
         meldekortRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),

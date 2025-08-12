@@ -50,7 +50,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                         BehandlingReferanseService(behandlingRepository).behandling(req)
                     val barnRepository = repositoryProvider.provide<BarnRepository>()
 
-                    val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider)
+                    val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
                     val barnetilleggService = BarnetilleggService(
                         sakOgBehandlingService,
                         barnRepository,

@@ -32,13 +32,13 @@ class SakOgBehandlingService(
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
-        unleashGateway: UnleashGateway = GatewayProvider.provide()
+        gatewayProvider: GatewayProvider,
     ) : this(
         grunnlagKopierer = GrunnlagKopiererImpl(repositoryProvider),
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
-        unleashGateway = unleashGateway
+        unleashGateway = gatewayProvider.provide(),
     )
 
     fun finnBehandling(behandlingReferanse: BehandlingReferanse): Behandling {
