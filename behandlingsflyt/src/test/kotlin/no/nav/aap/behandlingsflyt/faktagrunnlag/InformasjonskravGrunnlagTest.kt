@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.integrasjon.aordning.InntektkomponentenGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlBarnGateway
@@ -50,13 +51,10 @@ import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -95,17 +93,15 @@ class InformasjonskravGrunnlagTest {
             .register<BarnRepositoryImpl>()
             .register<ManuellInntektGrunnlagRepositoryImpl>()
 
-    @BeforeEach
-    fun setUp() {
-        GatewayRegistry
-            .register<MedlemskapGateway>()
-            .register<AARegisterGateway>()
-            .register<EREGGateway>()
-            .register<YrkesskadeRegisterGatewayImpl>()
-            .register<PdlBarnGateway>()
-            .register<PdlIdentGateway>()
-            .register<FakeUnleash>()
-            .register<InntektkomponentenGatewayImpl>()
+    private val gatewayProvider = createGatewayProvider {
+        register<MedlemskapGateway>()
+        register<AARegisterGateway>()
+        register<EREGGateway>()
+        register<YrkesskadeRegisterGatewayImpl>()
+        register<PdlBarnGateway>()
+        register<PdlIdentGateway>()
+        register<FakeUnleash>()
+        register<InntektkomponentenGatewayImpl>()
     }
 
     @Test
@@ -113,7 +109,7 @@ class InformasjonskravGrunnlagTest {
         dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection), GatewayProvider
+                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection), gatewayProvider
             )
 
             FakePersoner.leggTil(
@@ -147,7 +143,7 @@ class InformasjonskravGrunnlagTest {
         dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection), GatewayProvider
+                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection), gatewayProvider
             )
 
             FakePersoner.leggTil(
@@ -174,7 +170,7 @@ class InformasjonskravGrunnlagTest {
         dataSource.transaction { connection ->
             val (_, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection), GatewayProvider
+                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection), gatewayProvider
             )
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
@@ -191,7 +187,7 @@ class InformasjonskravGrunnlagTest {
         dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection), GatewayProvider
+                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection), gatewayProvider
             )
 
             FakePersoner.leggTil(
@@ -227,7 +223,7 @@ class InformasjonskravGrunnlagTest {
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                 InformasjonskravRepositoryImpl(connection),
                 repositoryRegistry.provider(connection),
-                GatewayProvider
+                gatewayProvider
             )
             val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnService)
 
@@ -256,7 +252,7 @@ class InformasjonskravGrunnlagTest {
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                 InformasjonskravRepositoryImpl(connection),
                 repositoryRegistry.provider(connection),
-                GatewayProvider
+                gatewayProvider
             )
             val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnService)
 
@@ -285,7 +281,7 @@ class InformasjonskravGrunnlagTest {
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                 InformasjonskravRepositoryImpl(connection),
                 repositoryRegistry.provider(connection),
-                GatewayProvider
+                gatewayProvider
             )
             val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnService)
 

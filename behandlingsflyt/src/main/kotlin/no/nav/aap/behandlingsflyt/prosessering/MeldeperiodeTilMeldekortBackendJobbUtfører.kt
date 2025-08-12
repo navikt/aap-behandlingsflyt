@@ -26,7 +26,7 @@ import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
 import no.nav.aap.meldekort.kontrakt.sak.SakStatus
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
-import no.nav.aap.motor.ProviderJobbSpesifikasjon
+import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 
 class MeldeperiodeTilMeldekortBackendJobbUtfører(
@@ -76,7 +76,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
         }
     }
 
-    companion object : ProviderJobbSpesifikasjon {
+    companion object : ProvidersJobbSpesifikasjon {
         override val navn = "MeldeperiodeTilMeldekortBackend"
         override val type = "flyt.meldeperiodeTilMeldekortBackend"
         override val beskrivelse = """
@@ -84,10 +84,10 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                 innsending av meldekort før vedtak er fattet.
                 """.trimIndent()
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return MeldeperiodeTilMeldekortBackendJobbUtfører(
                 sakService = SakService(repositoryProvider),
-                meldekortGateway = GatewayProvider.provide(),
+                meldekortGateway = gatewayProvider.provide(),
                 behandlingRepository = repositoryProvider.provide(),
                 meldeperiodeRepository = repositoryProvider.provide(),
                 underveisRepository = repositoryProvider.provide(),

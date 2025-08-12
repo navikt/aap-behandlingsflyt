@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -13,28 +14,22 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.gateway.GatewayRegistry
-import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Condition
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class AvklaringsbehovOrkestratorTest {
 
-    @BeforeEach
-    fun setUp() {
-        GatewayRegistry.register(FakeUnleash::class)
-    }
-
     @Test
     fun `behandlingHendelseService dot stoppet blir kalt når en behandling er satt på vent`() {
         val uthentedeJobber = InitTestDatabase.freshDatabase().transaction { connection ->
-            val avklaringsbehovOrkestrator = AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(connection),
-                GatewayProvider)
+            val avklaringsbehovOrkestrator = AvklaringsbehovOrkestrator(
+                postgresRepositoryRegistry.provider(connection),
+                createGatewayProvider { register<FakeUnleash>() },
+            )
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 

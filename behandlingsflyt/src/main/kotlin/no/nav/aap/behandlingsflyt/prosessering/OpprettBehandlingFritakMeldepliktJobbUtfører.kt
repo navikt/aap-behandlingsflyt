@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Årsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -14,7 +13,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
-import no.nav.aap.motor.ProviderJobbSpesifikasjon
+import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import java.time.LocalDate
 
 class OpprettBehandlingFritakMeldepliktJobbUtfører(
@@ -65,13 +64,13 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
     }
 
 
-    companion object : ProviderJobbSpesifikasjon {
-        override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
+    companion object : ProvidersJobbSpesifikasjon {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return OpprettBehandlingFritakMeldepliktJobbUtfører(
                 sakService = SakService(repositoryProvider),
                 underveisRepository = repositoryProvider.provide(),
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, GatewayProvider),
-                prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, GatewayProvider),
+                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
             )
         }
 

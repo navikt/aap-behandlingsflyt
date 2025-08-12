@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_7
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_AKTIVT_BIDRAG
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
@@ -21,7 +22,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.Kanal
@@ -50,8 +50,10 @@ class AktivitetspliktInformasjonskravTest {
                 TypeBehandling.Førstegangsbehandling,
                 null
             )
-            val aktivitetspliktInformasjonskrav =
-                AktivitetspliktInformasjonskrav.konstruer(repositoryRegistry.provider(connection), GatewayProvider)
+            val aktivitetspliktInformasjonskrav = AktivitetspliktInformasjonskrav.konstruer(
+                repositoryRegistry.provider(connection),
+                createGatewayProvider { },
+            )
             val flytKontekst = flytKontekstMedPerioder(behandling)
 
             nyeBrudd(

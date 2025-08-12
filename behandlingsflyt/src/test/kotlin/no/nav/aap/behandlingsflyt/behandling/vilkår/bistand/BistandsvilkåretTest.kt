@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -35,12 +36,9 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
@@ -48,11 +46,9 @@ import java.time.LocalDate
 class BistandsvilkåretTest {
     private val dataSource = InitTestDatabase.freshDatabase()
 
-    @BeforeEach
-    fun beforeEach() {
-        GatewayRegistry.register<FakeUnleash>()
+    private val gatewayProvider = createGatewayProvider {
+        register<FakeUnleash>()
     }
-
 
     @Test
     fun `nye vurderinger skal overskrive`() {
@@ -227,7 +223,7 @@ class BistandsvilkåretTest {
         }
 
         dataSource.transaction { connection ->
-            VurderBistandsbehovSteg.konstruer(postgresRepositoryRegistry.provider(connection), GatewayProvider).utfør(
+            VurderBistandsbehovSteg.konstruer(postgresRepositoryRegistry.provider(connection), gatewayProvider).utfør(
                 FlytKontekstMedPerioder(
                     sakId = sak.id,
                     behandlingId = førstegangsbehandling.id,
@@ -283,7 +279,7 @@ class BistandsvilkåretTest {
 
 
         dataSource.transaction { connection ->
-            VurderBistandsbehovSteg.konstruer(postgresRepositoryRegistry.provider(connection), GatewayProvider).utfør(
+            VurderBistandsbehovSteg.konstruer(postgresRepositoryRegistry.provider(connection), gatewayProvider).utfør(
                 FlytKontekstMedPerioder(
                     sakId = sak.id,
                     behandlingId = revurdering.id,

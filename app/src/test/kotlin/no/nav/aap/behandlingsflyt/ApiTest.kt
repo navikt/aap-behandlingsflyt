@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDa
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.flyt.VilkårDTO
+import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -134,7 +135,7 @@ class ApiTest {
             server(
                 dbConfig = dbConfig,
                 repositoryRegistry = postgresRepositoryRegistry,
-                gatewayProvider = GatewayProvider
+                gatewayProvider = defaultGatewayProvider(),
             )
         }
 

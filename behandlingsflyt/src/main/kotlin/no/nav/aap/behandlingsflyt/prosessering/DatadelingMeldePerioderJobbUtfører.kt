@@ -9,7 +9,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
-import no.nav.aap.motor.ProviderJobbSpesifikasjon
+import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 
 class DatadelingMeldePerioderJobbUtfører(
     private val apiInternGateway: ApiInternGateway,
@@ -28,14 +28,14 @@ class DatadelingMeldePerioderJobbUtfører(
 
     }
 
-    companion object : ProviderJobbSpesifikasjon {
+    companion object : ProvidersJobbSpesifikasjon {
         override val beskrivelse = "Sender meldekort perioder og vedtaksdata til api-intern."
         override val navn = "DatadelingMeldePerioderJobbUtfører"
         override val type = "flyt.DatadelingMeldePerioder"
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return DatadelingMeldePerioderJobbUtfører(
-                apiInternGateway = GatewayProvider.provide(),
+                apiInternGateway = gatewayProvider.provide(),
                 behandlingRepository = repositoryProvider.provide(),
                 sakRepository = repositoryProvider.provide(),
                 meldeperiodeRepository = repositoryProvider.provide()

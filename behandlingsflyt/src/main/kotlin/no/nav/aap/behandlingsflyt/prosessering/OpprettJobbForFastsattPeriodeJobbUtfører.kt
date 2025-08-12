@@ -1,11 +1,12 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
-import no.nav.aap.motor.ProviderJobbSpesifikasjon
+import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import no.nav.aap.motor.cron.CronExpression
 
 class OpprettJobbForFastsattPeriodeJobbUtfører(
@@ -21,8 +22,8 @@ class OpprettJobbForFastsattPeriodeJobbUtfører(
     }
 
 
-    companion object : ProviderJobbSpesifikasjon {
-        override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
+    companion object : ProvidersJobbSpesifikasjon {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return OpprettJobbForFastsattPeriodeJobbUtfører(
                 flytJobbRepository = repositoryProvider.provide(),
                 sakRepository = repositoryProvider.provide(),

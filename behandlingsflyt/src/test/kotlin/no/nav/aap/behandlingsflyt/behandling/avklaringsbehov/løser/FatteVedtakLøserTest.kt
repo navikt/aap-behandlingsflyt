@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -19,13 +20,10 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.gateway.GatewayRegistry
-import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.*
@@ -35,11 +33,6 @@ class FatteVedtakLøserTest {
         .register(InMemorySakRepository::class)
         .register(InMemoryAvklaringsbehovRepository::class)
         .register(InMemoryBehandlingRepository::class)
-
-    @BeforeEach
-    fun setUp() {
-        GatewayRegistry.register<FakeUnleash>()
-    }
 
     @Test
     fun `Skal ikke reåpne behov før det som det returneres til`() {
@@ -73,7 +66,7 @@ class FatteVedtakLøserTest {
         )
 
         val fatteVedtakLøser = MockDataSource().transaction {
-            FatteVedtakLøser(repositoryRegistry.provider(it), GatewayProvider)
+            FatteVedtakLøser(repositoryRegistry.provider(it), createGatewayProvider {register<FakeUnleash>() })
         }
 
         // Totrinnsvurdering ikke godkjent.

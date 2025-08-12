@@ -6,30 +6,17 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.BaseApiTest
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.test.AzurePortHolder
-import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryContextRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMellomlagretVurderingRepository
-import no.nav.aap.komponenter.config.requiredConfigForKey
-import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
-import no.nav.aap.komponenter.httpklient.httpclient.RestClient
-import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
-import no.nav.aap.komponenter.httpklient.httpclient.post
-import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import java.net.URI
 import java.time.LocalDateTime
 
 @Fakes
-@ExtendWith(BaseApiTest::class)
 class MellomlagretVurderingAPITest : BaseApiTest() {
     private val repositoryRegistry = RepositoryRegistry()
         .register<InMemoryMellomlagretVurderingRepository>()

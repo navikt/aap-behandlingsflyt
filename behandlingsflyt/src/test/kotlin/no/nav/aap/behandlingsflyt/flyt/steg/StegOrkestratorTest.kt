@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.InformasjonskravRepositoryImpl
 import no.nav.aap.behandlingsflyt.flyt.steg.internal.StegKonstruktørImpl
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
@@ -31,6 +32,8 @@ internal class StegOrkestratorTest {
         private val dataSource = InitTestDatabase.freshDatabase()
     }
 
+    private val gatewayProvider = createGatewayProvider {  }
+
     @Test
     fun `ved avklaringsbehov skal vi gå gjennom statusene START-UTFØRER-AVKARLINGSPUNKT`() {
         dataSource.transaction { connection ->
@@ -51,11 +54,11 @@ internal class StegOrkestratorTest {
                 informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                     InformasjonskravRepositoryImpl(connection),
                     postgresRepositoryRegistry.provider(connection),
-                    GatewayProvider
+                    gatewayProvider
                 ),
                 behandlingRepository = BehandlingRepositoryImpl(connection),
                 avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection),
-                stegKonstruktør = StegKonstruktørImpl(postgresRepositoryRegistry.provider(connection), GatewayProvider)
+                stegKonstruktør = StegKonstruktørImpl(postgresRepositoryRegistry.provider(connection), gatewayProvider)
             ).utfør(
                 TestFlytSteg,
                 FlytKontekstMedPeriodeService(

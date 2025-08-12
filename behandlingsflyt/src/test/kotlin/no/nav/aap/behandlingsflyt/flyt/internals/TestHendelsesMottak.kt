@@ -20,7 +20,7 @@ import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
-class TestHendelsesMottak(private val dataSource: DataSource) {
+class TestHendelsesMottak(private val dataSource: DataSource, private val gatewayProvider: GatewayProvider) {
 
     fun håndtere(key: Ident, hendelse: PersonHendelse) {
         val saksnummer: Saksnummer = dataSource.transaction { connection ->
@@ -37,14 +37,14 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
 
     fun håndtere(key: BehandlingId, hendelse: BehandlingSattPåVent) {
         dataSource.transaction { connection ->
-            AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(connection), GatewayProvider)
+            AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 .settBehandlingPåVent(key, hendelse)
         }
     }
 
     fun bestillLegeerklæring(key: BehandlingId) {
         dataSource.transaction { connection ->
-            AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(connection), GatewayProvider)
+            AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 .settPåVentMensVentePåMedisinskeOpplysninger(key, SYSTEMBRUKER)
         }
     }

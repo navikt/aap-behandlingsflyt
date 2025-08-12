@@ -47,6 +47,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.aordning.InntektkomponentenGateway
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
 import no.nav.aap.behandlingsflyt.integrasjon.brev.BrevGateway
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.datadeling.SamGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.dokumentinnhenting.DokumentinnhentingGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
@@ -118,8 +119,6 @@ import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.Motor
@@ -142,11 +141,49 @@ open class AbstraktFlytOrkestratorTest {
         @JvmStatic
         protected val dataSource = InitTestDatabase.freshDatabase()
 
+        @JvmStatic
+        protected val gatewayProvider = createGatewayProvider {
+            register<PdlBarnGateway>()
+            register<PdlIdentGateway>()
+            register<PdlPersoninfoBulkGateway>()
+            register<PdlPersoninfoGateway>()
+            register<PdlPersonopplysningGateway>()
+            register<AbakusSykepengerGateway>()
+            register<AbakusForeldrepengerGateway>()
+            register<DokumentinnhentingGatewayImpl>()
+            register<MedlemskapGateway>()
+            register<FakeApiInternGateway>()
+            register<UtbetalingGatewayImpl>()
+            register<AARegisterGateway>()
+            register<EREGGateway>()
+            register<StatistikkGatewayImpl>()
+            register<InntektGatewayImpl>()
+            register<InstitusjonsoppholdGatewayImpl>()
+            register<InntektkomponentenGatewayImpl>()
+            register<BrevGateway>()
+            register<OppgavestyringGatewayImpl>()
+            register<UføreGateway>()
+            register<YrkesskadeRegisterGatewayImpl>()
+            register<MeldekortGatewayImpl>()
+            register<TjenestePensjonGatewayImpl>()
+            register<FakeUnleash>()
+            register<SamGatewayImpl>()
+            register<NomInfoGateway>()
+            register<KabalGateway>()
+            register<NorgGateway>()
+            register<GosysGateway>()
+        }
+
         protected val motor =
-            Motor(dataSource, 8, jobber = ProsesseringsJobber.alle(), repositoryRegistry = postgresRepositoryRegistry)
+            Motor(
+                dataSource, 8,
+                jobber = ProsesseringsJobber.alle(),
+                repositoryRegistry = postgresRepositoryRegistry,
+                gatewayProvider = gatewayProvider
+            )
 
         @JvmStatic
-        protected val hendelsesMottak = TestHendelsesMottak(dataSource)
+        protected val hendelsesMottak = TestHendelsesMottak(dataSource, gatewayProvider)
 
         @JvmStatic
         protected val util =
@@ -156,39 +193,7 @@ open class AbstraktFlytOrkestratorTest {
         @JvmStatic
         internal fun beforeAll() {
             System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
-            GatewayRegistry
-                .register<PdlBarnGateway>()
-                .register<PdlIdentGateway>()
-                .register<PdlPersoninfoBulkGateway>()
-                .register<PdlPersoninfoGateway>()
-                .register<PdlPersonopplysningGateway>()
-                .register<AbakusSykepengerGateway>()
-                .register<AbakusForeldrepengerGateway>()
-                .register<DokumentinnhentingGatewayImpl>()
-                .register<MedlemskapGateway>()
-                .register<FakeApiInternGateway>()
-                .register<UtbetalingGatewayImpl>()
-                .register<AARegisterGateway>()
-                .register<EREGGateway>()
-                .register<StatistikkGatewayImpl>()
-                .register<InntektGatewayImpl>()
-                .register<InstitusjonsoppholdGatewayImpl>()
-                .register<InntektkomponentenGatewayImpl>()
-                .register<BrevGateway>()
-                .register<OppgavestyringGatewayImpl>()
-                .register<UføreGateway>()
-                .register<YrkesskadeRegisterGatewayImpl>()
-                .register<MeldekortGatewayImpl>()
-                .register<TjenestePensjonGatewayImpl>()
-                .register<FakeUnleash>()
-                .register<SamGatewayImpl>()
-                .register<NomInfoGateway>()
-                .register<KabalGateway>()
-                .register<NorgGateway>()
-                .register<GosysGateway>()
             motor.start()
-
-
         }
 
         @AfterAll
@@ -394,7 +399,7 @@ open class AbstraktFlytOrkestratorTest {
     ): Behandling {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(
-                AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(it), GatewayProvider),
+                AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(it), gatewayProvider),
                 AvklaringsbehovRepositoryImpl(it),
                 BehandlingRepositoryImpl(it),
             ).håndtere(
@@ -937,7 +942,7 @@ open class AbstraktFlytOrkestratorTest {
 
     protected fun leggTilÅrsakForBehandling(behandling: Behandling, årsaker: List<VurderingsbehovMedPeriode>) {
         dataSource.transaction { connection ->
-            SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), GatewayProvider)
+            SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 .finnEllerOpprettBehandling(behandling.sakId, årsaker, ÅrsakTilOpprettelse.SØKNAD)
         }
         prosesserBehandling(behandling)
@@ -945,7 +950,7 @@ open class AbstraktFlytOrkestratorTest {
 
     protected fun prosesserBehandling(behandling: Behandling): Behandling {
         dataSource.transaction { connection ->
-            FlytOrkestrator(postgresRepositoryRegistry.provider(connection), GatewayProvider).forberedOgProsesserBehandling(
+            FlytOrkestrator(postgresRepositoryRegistry.provider(connection), gatewayProvider).forberedOgProsesserBehandling(
                 FlytKontekst(
                     sakId = behandling.sakId,
                     behandlingId = behandling.id,

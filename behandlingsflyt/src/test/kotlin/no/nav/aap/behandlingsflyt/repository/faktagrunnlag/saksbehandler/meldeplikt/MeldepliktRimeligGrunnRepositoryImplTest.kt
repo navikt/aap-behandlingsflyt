@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.RimeligGrunnVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -12,12 +13,12 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -117,7 +118,7 @@ class MeldepliktRimeligGrunnRepositoryImplTest {
             val meldepliktRimeligGrunnRepository = MeldepliktRimeligGrunnRepositoryImpl(connection)
             val sakOgBehandlingService = SakOgBehandlingService(
                 postgresRepositoryRegistry.provider(connection),
-                GatewayProvider,
+                createGatewayProvider {  register<FakeUnleash>() },
             )
             val sak = sakOgBehandlingService.hentSakFor(behandling1.id)
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
