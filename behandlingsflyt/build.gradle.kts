@@ -5,14 +5,14 @@ plugins {
 
 dependencies {
     api(project(":kontrakt"))
-    implementation("io.micrometer:micrometer-registry-prometheus:1.15.2")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.15.3")
     implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
 
     api(libs.tilgangPlugin)
     api(libs.tilgangKontrakt)
-    api("no.nav.aap.brev:kontrakt:0.0.138")
-    api("no.nav.aap.meldekort:kontrakt:0.0.86")
+    api("no.nav.aap.brev:kontrakt:0.0.139")
+    api("no.nav.aap.meldekort:kontrakt:0.0.95")
     api(libs.motor)
     api(libs.gateway)
     api(libs.utbetalKontrakt)

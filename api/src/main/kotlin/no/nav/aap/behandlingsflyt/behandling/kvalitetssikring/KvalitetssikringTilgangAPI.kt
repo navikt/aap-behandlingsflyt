@@ -40,10 +40,10 @@ fun NormalOpenAPIRoute.kvalitetssikringTilgangAPI(dataSource: DataSource, reposi
                 val innloggetBruker = bruker()
 
                 val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = behandling.id)
-                val avklaringsbehovSomKreverToTrinn = avklaringsbehov.alle().filter { it.erTotrinn() }
+                val avklaringsbehovSomKreverKvalitetssikring = avklaringsbehov.alle().filter { it.kreverKvalitetssikring() }
 
                 KvalitetssikringTilgangDto(
-                    harTilgangTilÅKvalitetssikre = kanSaksbehandle() && !avklaringsbehovSomKreverToTrinn.any {
+                    harTilgangTilÅKvalitetssikre = kanSaksbehandle() && !avklaringsbehovSomKreverKvalitetssikring.any {
                         it.brukere().contains(innloggetBruker.ident)
                     }
                 )
