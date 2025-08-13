@@ -76,7 +76,6 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 b.behov_for_annen_oppfoelging,
                 b.vurderingen_gjelder_fra,
                 b.vurdert_av,
-                b.overgang_til_ufoere,
                 b.overgang_til_arbeid,
                 b.overgang_begrunnelse
                 )
