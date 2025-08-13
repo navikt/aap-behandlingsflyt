@@ -5,27 +5,17 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.BaseApiTest
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.test.AzurePortHolder
-import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryContextRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMellomlagretVurderingRepository
-import no.nav.aap.komponenter.config.requiredConfigForKey
-import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
-import no.nav.aap.komponenter.httpklient.httpclient.RestClient
-import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
-import no.nav.aap.komponenter.httpklient.httpclient.post
-import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import java.net.URI
 import java.time.LocalDateTime
 
 @Fakes
@@ -41,7 +31,7 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
     fun `hente ut mellomlagret vurdering fra API`() {
         val ds = MockDataSource()
         val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
-        val avklaringsbehovKode = "12345"
+        val avklaringsbehovKode = AvklaringsbehovKode.`5056`
 
         val mellomlagretVurdering = MellomlagretVurdering(
             behandlingId = behandling.id,
@@ -85,7 +75,7 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
     fun `skal overskrive ut mellomlagret vurdering fra API`() {
         val ds = MockDataSource()
         val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
-        val avklaringsbehovKode = "12345"
+        val avklaringsbehovKode = AvklaringsbehovKode.`5001`
 
         val mellomlagretVurdering = MellomlagretVurdering(
             behandlingId = behandling.id,
@@ -105,7 +95,7 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
 
             val nyMellomlagretVurdering = MellomlagretVurderingRequest(
                 behandlingsReferanse = behandling.referanse.referanse,
-                avklaringsbehovkode = avklaringsbehovKode,
+                avklaringsbehovkode = avklaringsbehovKode.name,
                 data = "{}",
             )
             val response =
@@ -125,10 +115,10 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
 
 
     @Test
-    fun `hente få tom verdi dersom man prøver å hente ut uten at det finnes noe mellomlagret verdi`() {
+    fun `skal få tom verdi dersom man prøver å hente ut uten at det finnes noe mellomlagret verdi`() {
         val ds = MockDataSource()
         val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
-        val avklaringsbehovKode = "12345"
+        val avklaringsbehovKode = AvklaringsbehovKode.`8001`
         testApplication {
             installApplication {
                 mellomlagretVurderingApi(ds, repositoryRegistry)

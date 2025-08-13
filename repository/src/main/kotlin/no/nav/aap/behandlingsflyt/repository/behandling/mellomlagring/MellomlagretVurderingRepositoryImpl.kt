@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.repository.behandling.mellomlagring
 
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurdering
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
@@ -15,7 +16,7 @@ class MellomlagretVurderingRepositoryImpl(private val connection: DBConnection) 
 
     override fun hentHvisEksisterer(
         behandlingId: BehandlingId,
-        avklaringsbehovKode: String
+        avklaringsbehovKode: AvklaringsbehovKode
     ): MellomlagretVurdering? {
         return connection.queryFirstOrNull(
             """
@@ -24,16 +25,32 @@ class MellomlagretVurderingRepositoryImpl(private val connection: DBConnection) 
         ) {
             setParams {
                 setLong(1, behandlingId.id)
-                setString(2, avklaringsbehovKode)
+                setEnumName(2, avklaringsbehovKode)
             }
             setRowMapper { row ->
                 MellomlagretVurdering(
                     behandlingId = BehandlingId(row.getLong("behandling_id")),
-                    avklaringsbehovKode = row.getString("avklaringsbehov_kode"),
+                    avklaringsbehovKode = row.getEnum("avklaringsbehov_kode"),
                     data = row.getString("data"),
                     vurdertAv = row.getString("vurdert_av"),
                     vurdertDato = row.getLocalDateTime("vurdert_dato"),
                 )
+            }
+        }
+    }
+
+    override fun slett(
+        behandlingId: BehandlingId,
+        avklaringsbehovKode: AvklaringsbehovKode
+    ) {
+        connection.executeReturnUpdated(
+            """
+            delete from MELLOMLAGRET_VURDERING where behandling_id = ? AND avklaringsbehov_kode = ?; 
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setEnumName(2, avklaringsbehovKode)
             }
         }
     }
@@ -47,7 +64,7 @@ class MellomlagretVurderingRepositoryImpl(private val connection: DBConnection) 
         ) {
             setParams {
                 setLong(1, mellomlagretVurdering.behandlingId.id)
-                setString(2, mellomlagretVurdering.avklaringsbehovKode)
+                setEnumName(2, mellomlagretVurdering.avklaringsbehovKode)
             }
         }
         connection.execute(
@@ -58,7 +75,7 @@ class MellomlagretVurderingRepositoryImpl(private val connection: DBConnection) 
         ) {
             setParams {
                 setLong(1, mellomlagretVurdering.behandlingId.id)
-                setString(2, mellomlagretVurdering.avklaringsbehovKode)
+                setEnumName(2, mellomlagretVurdering.avklaringsbehovKode)
                 setString(3, mellomlagretVurdering.data)
                 setString(4, mellomlagretVurdering.vurdertAv)
                 setLocalDateTime(5, mellomlagretVurdering.vurdertDato)

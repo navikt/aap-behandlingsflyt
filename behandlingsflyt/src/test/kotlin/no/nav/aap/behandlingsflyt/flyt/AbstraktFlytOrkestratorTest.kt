@@ -93,6 +93,7 @@ import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.behandling.mellomlagring.MellomlagretVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
@@ -397,6 +398,7 @@ open class AbstraktFlytOrkestratorTest {
                 AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(it), GatewayProvider),
                 AvklaringsbehovRepositoryImpl(it),
                 BehandlingRepositoryImpl(it),
+                MellomlagretVurderingRepositoryImpl(it),
             ).håndtere(
                 behandling.id, LøsAvklaringsbehovHendelse(
                     løsning = avklaringsBehovLøsning,
