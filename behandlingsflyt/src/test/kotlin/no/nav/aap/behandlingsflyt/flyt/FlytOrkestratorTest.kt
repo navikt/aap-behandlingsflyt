@@ -3248,9 +3248,9 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 klagevurderingNay = KlagevurderingNayLøsningDto(
                     begrunnelse = "Begrunnelse",
                     notat = null,
-                    innstilling = KlageInnstilling.OPPRETTHOLD,
-                    vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
-                    vilkårSomOmgjøres = emptyList()
+                    innstilling = KlageInnstilling.OMGJØR,
+                    vilkårSomOpprettholdes = listOf(),
+                    vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
                 )
             )
         )
