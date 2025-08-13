@@ -19,7 +19,7 @@ jobs:
             actions: write
             deployments: write
         steps:
-            -   uses: actions/checkout@v4
+            -   uses: actions/checkout@v5
             -   uses: actions/setup-java@v4.3.0
                 with:
                     java-version: 23
@@ -30,7 +30,7 @@ jobs:
                     gradle-version: wrapper
             -   name: Bygg & test
                 run: gradle genererOpenApiJson
-            -   uses: actions/checkout@v4
+            -   uses: actions/checkout@v5
                 with:
                     repository: navikt/aap-backend-typescript-types
                     path: ./aap-backend-typescript-types
