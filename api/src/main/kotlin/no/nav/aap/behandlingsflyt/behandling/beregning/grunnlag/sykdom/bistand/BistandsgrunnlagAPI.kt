@@ -115,7 +115,8 @@ private fun BistandVurdering.tilResponse(
             ansattnavn = navnOgEnhet?.navn,
             enhetsnavn = navnOgEnhet?.enhet,
         ),
-        erGjeldende = erGjeldende
+        erGjeldende = erGjeldende,
+        overgangBegrunnelse = overgangBegrunnelse,
     )
 }
 

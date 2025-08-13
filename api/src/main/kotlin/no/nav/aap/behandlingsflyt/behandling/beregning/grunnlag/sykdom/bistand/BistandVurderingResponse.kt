@@ -10,6 +10,7 @@ data class BistandVurderingResponse(
     val erBehovForAnnenOppfølging: Boolean?,
     val skalVurdereAapIOvergangTilArbeid: Boolean?,
     val vurderingenGjelderFra: LocalDate?,
+    val overgangBegrunnelse: String?,
     val vurdertAv: VurdertAvResponse,
     val erGjeldende: Boolean?
 )
