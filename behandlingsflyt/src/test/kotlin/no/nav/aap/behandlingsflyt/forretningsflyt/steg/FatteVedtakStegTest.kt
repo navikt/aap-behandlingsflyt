@@ -95,7 +95,7 @@ class FatteVedtakStegTest {
 
 
     @Test
-    fun `Klagevurderinger fra kontor skal ikke til beslutter om det opprettholdes`() {
+    fun `Klagevurderinger fra kontor skal ikke til beslutter om vedtaket opprettholdes`() {
         val kontekst = FlytKontekstMedPerioder(
             sakId = SakId(1L),
             behandlingId = BehandlingId(1L),
