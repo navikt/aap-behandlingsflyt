@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
@@ -21,8 +22,10 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.studentgrunnlagApi(
     dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
 ) {
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("/api/behandling") {
         route("/{referanse}/grunnlag/student") {
             getGrunnlag<BehandlingReferanse, StudentGrunnlagResponse>(
@@ -44,7 +47,7 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(
                     respond(
                         StudentGrunnlagResponse(
                             harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                            studentvurdering = studentGrunnlag.studentvurdering?.tilResponse(),
+                            studentvurdering = studentGrunnlag.studentvurdering?.tilResponse(ansattInfoService),
                             oppgittStudent = studentGrunnlag.oppgittStudent
                         )
                     )
@@ -56,8 +59,8 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(
     }
 }
 
-private fun StudentVurdering.tilResponse(): StudentVurderingResponse {
-    val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(this.vurdertAv)
+private fun StudentVurdering.tilResponse(ansattInfoService: AnsattInfoService): StudentVurderingResponse {
+    val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(this.vurdertAv)
     return StudentVurderingResponse(
         id = this.id,
         begrunnelse = this.begrunnelse,

@@ -32,6 +32,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -54,10 +55,11 @@ class Effektuer11_7Steg(
 
     constructor(
         repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider,
         clock: Clock = Clock.systemDefaultZone(),
     ) : this(
         underveisRepository = repositoryProvider.provide(),
-        brevbestillingService = BrevbestillingService(repositoryProvider),
+        brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider),
         behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         effektuer117repository = repositoryProvider.provide(),
@@ -203,8 +205,8 @@ class Effektuer11_7Steg(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
-            return Effektuer11_7Steg(repositoryProvider)
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+            return Effektuer11_7Steg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {

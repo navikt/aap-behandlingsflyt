@@ -13,7 +13,11 @@ import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.opprettDummySakApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.opprettDummySakApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
     route("/api/test/opprettDummySak") {
         @Suppress("UnauthorizedPost") // bare tilgjengelig i DEV og lokalt
         post<Unit, Map<String, String>, OpprettDummySakDto> { _, req ->
@@ -23,7 +27,7 @@ fun NormalOpenAPIRoute.opprettDummySakApi(dataSource: DataSource, repositoryRegi
 
             try {
                 dataSource.transaction(readOnly = false) { connection ->
-                    val sakService = TestSakService(repositoryRegistry.provider(connection), GatewayProvider)
+                    val sakService = TestSakService(repositoryRegistry.provider(connection), gatewayProvider)
                     sakService.opprettTestSak(
                         ident = Ident(req.ident),
                         erStudent = req.erStudent,

@@ -116,9 +116,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageUtfall
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlagebehandlingAvsluttetDetaljer
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurderingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
@@ -132,6 +134,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.undervei
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FormkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -145,6 +148,7 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -187,7 +191,9 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     overgangBegrunnelse = null
                 ),
             )
-        ).medKontekst {
+        )
+            .løsSykdomsvurderingBrev()
+            .medKontekst {
             assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                 .describedAs("Siden vurderingenGjelderFra er lik kravdato (rettighetsperiode.fom), så kan man revurdere 11-13")
                 .containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
@@ -238,7 +244,9 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     overgangBegrunnelse = null
                 ),
             )
-        ).medKontekst {
+        )
+            .løsSykdomsvurderingBrev()
+            .medKontekst {
             assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                 .describedAs("Siden vurderingenGjelderFra er lik kravdato (rettighetsperiode.fom), så kan man revurdere 11-13")
                 .containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
@@ -292,7 +300,9 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                         overgangBegrunnelse = null
                     ),
                 )
-            ).medKontekst {
+            )
+            .løsSykdomsvurderingBrev()
+            .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .describedAs("Siden vurderingenGjelderFra ikke er lik kravdato (rettighetsperiode.fom), så skal man ikke vurdere 11-13")
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)  // ingen avklaringsbehov løst av NAY, gå rett til fatte vedtak
@@ -352,7 +362,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                         )
                     )
                 ),
-            ).medKontekst {
+            )
+            .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.AVKLAR_BISTANDSBEHOV)
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
@@ -381,7 +392,9 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     overgangBegrunnelse = null
                 ),
             )
-        ).medKontekst {
+        )
+            .løsSykdomsvurderingBrev()
+            .medKontekst {
             assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).describedAs {
                 "Revurdering av sykdom skal gå rett til beslutter når ingen avklaringsbehov trenger å løses av NAY"
             }.containsExactly(Definisjon.FATTE_VEDTAK)
@@ -410,7 +423,9 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     overgangBegrunnelse = null
                 ),
             )
-        ).løsAvklaringsBehov(
+        )
+            .løsSykdomsvurderingBrev()
+            .løsAvklaringsBehov(
             AvklarSykepengerErstatningLøsning(
                 sykepengeerstatningVurdering = SykepengerVurderingDto(
                     begrunnelse = "test",
@@ -452,6 +467,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             .løsSykdom()
             .løsBistand()
             .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
@@ -528,6 +544,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             .løsSykdom()
             .løsBistand()
             .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
@@ -603,6 +620,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             .løsSykdom()
             .løsBistand()
             .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
@@ -726,6 +744,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             .løsSykdom()
             .løsBistand()
             .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
 
         val sak = hentSak(ident, periode)
 
@@ -784,6 +803,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             .løsSykdom()
             .løsBistand()
             .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
             .løsAvklaringsBehov(
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
@@ -998,6 +1018,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             )
         )
 
+        behandling = løsSykdomsvurderingBrev(behandling)
+
         behandling = kvalitetssikreOk(behandling)
 
         behandling = løsAvklaringsBehov(
@@ -1141,6 +1163,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             )
         )
 
+        behandling = løsSykdomsvurderingBrev(behandling)
+
         behandling = kvalitetssikreOk(behandling)
 
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -1246,6 +1270,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     )
                 )
             )
+            .løsSykdomsvurderingBrev()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
 
@@ -1304,6 +1329,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     ),
                 ),
             )
+            .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
@@ -1400,6 +1426,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             ),
         )
 
+        behandling = løsSykdomsvurderingBrev(behandling)
+
         behandling = kvalitetssikreOk(behandling)
 
         // Saken står til To-trinnskontroll hos beslutter
@@ -1433,6 +1461,70 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         // Saken er avsluttet, så det skal ikke være flere åpne avklaringsbehov
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
         assertThat(åpneAvklaringsbehov).isEmpty()
+    }
+
+    @Test
+    fun `ved førstegangsbehandling i steget for sykdom skal sykdomsvurdering for brev vises etter refusjonskrav er løst og før kvalitetsvurdering`() {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val person = TestPersoner.STANDARD_PERSON()
+        val ident = person.aktivIdent()
+
+        val førstegangsbehandling = sendInnSøknad(ident, periode, TestSøknader.STANDARD_SØKNAD)
+            .medKontekst {
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .løsSykdom()
+            .løsBistand()
+            .løsRefusjonskrav()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).anySatisfy {
+                    assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
+                }
+            }
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtakEllerSendRetur()
+            .løsVedtaksbrev()
+
+        assertThat(førstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
+    fun `ved revurdering i steget for sykdom skal sykdomsvurdering for brev vises etter refusjonskrav`() {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val person = TestPersoner.STANDARD_PERSON()
+        val sak = happyCaseFørstegangsbehandling(periode.fom, person)
+
+        val revurdering = sendInnDokument(
+            sak.person.aktivIdent(), DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("12344932122"),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+                strukturertDokument = StrukturertDokument(
+                    ManuellRevurderingV0(
+                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND), ""
+                    ),
+                ),
+                innsendingType = InnsendingType.MANUELL_REVURDERING,
+                periode = periode
+            )
+        )
+            .medKontekst {
+                assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .løsSykdom()
+            .løsBistand()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV) }
+            }
+            .løsSykdomsvurderingBrev() // Krever ikke kvalitetskontroll i revurdering
+            .fattVedtakEllerSendRetur()
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
+
+        assertThat(revurdering.status()).isEqualTo(Status.AVSLUTTET)
     }
 
     @Test
@@ -1492,7 +1584,9 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                     overgangBegrunnelse = null
                 ),
             ),
-        ).løsRefusjonskrav()
+        )
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
             .medKontekst {
                 // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
                 assertThat(åpneAvklaringsbehov).isNotEmpty()
@@ -1651,6 +1745,8 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 )
             )
         )
+
+        behandling = løsSykdomsvurderingBrev(behandling)
 
         behandling = kvalitetssikreOk(behandling)
 
@@ -2634,7 +2730,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             assertThat(behandlingRepo.hent(behandlingId).aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
 
             // Tilbakefør med hjelpefunksjon
-            Driftfunksjoner(postgresRepositoryRegistry.provider(connection)).flyttBehandlingTilStart(
+            Driftfunksjoner(postgresRepositoryRegistry.provider(connection), GatewayProvider).flyttBehandlingTilStart(
                 behandlingId,
                 connection
             )
@@ -3652,5 +3748,41 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         }
         assertThat(feil.message).contains("Kan ikke endre starttidspunkt til å gjelde ETTER søknadstidspunkt")
 
+    }
+
+    @Test
+    fun `barn lagres i pip i starten av behandlingen`() {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val manueltBarnIdent = genererIdent(LocalDate.now().minusYears(3))
+        val person = TestPersoner.STANDARD_PERSON()
+
+        // Oppretter søknad med manuelt barn
+        val behandling = sendInnSøknad(
+            person.aktivIdent(), periode, SøknadV0(
+                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = OppgitteBarn(
+                    barn = listOf(
+                        ManueltOppgittBarn(
+                            navn = "manuelt barn",
+                            fødselsdato = LocalDate.now().minusYears(3),
+                            ident = no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident(manueltBarnIdent.identifikator),
+                            relasjon = ManueltOppgittBarn.Relasjon.FORELDER
+                        )
+                    ),
+                    identer = emptySet()
+                ),
+                medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
+            )
+        )
+
+        dataSource.transaction { connection ->
+            val pipRepository = PipRepositoryImpl(connection)
+            val pipIdenter = pipRepository.finnIdenterPåBehandling(behandling.referanse)
+
+            // Manuelt barn finnes i pip umiddelbart etter at søknad er innsendt
+            assertThat(pipIdenter.map { it.ident }).containsExactlyInAnyOrder(
+                    person.aktivIdent().identifikator,
+                    manueltBarnIdent.identifikator,
+            )
+        }
     }
 }

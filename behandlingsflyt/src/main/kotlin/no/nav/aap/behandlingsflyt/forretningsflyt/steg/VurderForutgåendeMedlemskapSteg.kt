@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -144,7 +145,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         val erSpesifiktTriggetRevurderMedlemskap =
-            kontekst.vurderingsbehov.any { it == Vurderingsbehov.REVURDER_MEDLEMSKAP || it == Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP }
+            kontekst.vurderingsbehovRelevanteForSteg.any { it == Vurderingsbehov.REVURDER_MEDLEMSKAP || it == Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP }
         return erSpesifiktTriggetRevurderMedlemskap && erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene)
     }
 
@@ -155,7 +156,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
             return VurderForutgåendeMedlemskapSteg(repositoryProvider)
         }
 

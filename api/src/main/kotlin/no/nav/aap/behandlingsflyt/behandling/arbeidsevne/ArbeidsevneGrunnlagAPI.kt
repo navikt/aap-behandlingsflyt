@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -24,7 +25,11 @@ import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
     route("/api/behandling/{referanse}/grunnlag/arbeidsevne") {
         getGrunnlag<BehandlingReferanse, ArbeidsevneGrunnlagDto>(
             behandlingPathParam = BehandlingPathParam("referanse"),
@@ -32,7 +37,7 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(dataSource: DataSource, repository
 
         ) { behandlingReferanse ->
 
-            arbeidsevneGrunnlag(dataSource, behandlingReferanse, kanSaksbehandle(), repositoryRegistry)?.let {
+            arbeidsevneGrunnlag(dataSource, behandlingReferanse, kanSaksbehandle(), repositoryRegistry, gatewayProvider)?.let {
                 respond(it)
             } ?: respondWithStatus(HttpStatusCode.NoContent)
         }
@@ -52,7 +57,8 @@ private fun arbeidsevneGrunnlag(
     dataSource: DataSource,
     behandlingReferanse: BehandlingReferanse,
     kanSaksbehandle: Boolean,
-    repositoryRegistry: RepositoryRegistry
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
 ): ArbeidsevneGrunnlagDto? {
     return dataSource.transaction { connection ->
         val repositoryProvider = repositoryRegistry.provider(connection)
@@ -73,7 +79,7 @@ private fun arbeidsevneGrunnlag(
             vurderinger =
                 nåTilstand
                     ?.filterNot { vedtatteVerdier.contains(it) }
-                    ?.map { it.toDto(AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv)) }
+                    ?.map { it.toDto(AnsattInfoService(gatewayProvider).hentAnsattNavnOgEnhet(it.vurdertAv)) }
                     ?.sortedBy { it.fraDato } ?: emptyList(),
             gjeldendeVedtatteVurderinger =
                 vedtatteVerdier

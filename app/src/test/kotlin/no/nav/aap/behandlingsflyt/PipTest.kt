@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
@@ -57,7 +58,11 @@ class PipTest {
         // Starter server
         private val server = embeddedServer(Netty, port = 0) {
             System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
-            server(dbConfig = dbConfig, repositoryRegistry = postgresRepositoryRegistry)
+            server(
+                dbConfig = dbConfig,
+                repositoryRegistry = postgresRepositoryRegistry,
+                gatewayProvider = GatewayProvider
+            )
         }
 
         @JvmStatic

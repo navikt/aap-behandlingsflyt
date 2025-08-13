@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderRettighetsperiodeService(
@@ -25,7 +26,7 @@ class VurderRettighetsperiodeService(
 
     override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return Vurderingsbehov.VURDER_RETTIGHETSPERIODE in kontekst.vurderingsbehov
+        return Vurderingsbehov.VURDER_RETTIGHETSPERIODE in kontekst.vurderingsbehovRelevanteForSteg
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
@@ -42,7 +43,7 @@ class VurderRettighetsperiodeService(
     companion object: Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.RETTIGHETSPERIODE
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): Informasjonskrav {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): Informasjonskrav {
             return VurderRettighetsperiodeService(repositoryProvider)
         }
     }

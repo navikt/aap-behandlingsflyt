@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
@@ -40,7 +41,7 @@ class ProsesserBehandlingJobbUtfører(
         override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
             return ProsesserBehandlingJobbUtfører(
                 låsRepository = repositoryProvider.provide(),
-                kontroller = FlytOrkestrator(repositoryProvider)
+                kontroller = FlytOrkestrator(repositoryProvider, GatewayProvider)
             )
         }
 

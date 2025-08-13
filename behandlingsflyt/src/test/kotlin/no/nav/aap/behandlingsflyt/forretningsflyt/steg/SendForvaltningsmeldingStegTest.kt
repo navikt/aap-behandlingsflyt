@@ -141,7 +141,7 @@ class SendForvaltningsmeldingStegTest {
             forrigeBehandlingId = behandling.forrigeBehandlingId,
             behandlingType = behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehov = setOf(vurderingsbehov),
+            vurderingsbehovRelevanteForSteg = setOf(vurderingsbehov),
             rettighetsperiode = periode,
         )
     }

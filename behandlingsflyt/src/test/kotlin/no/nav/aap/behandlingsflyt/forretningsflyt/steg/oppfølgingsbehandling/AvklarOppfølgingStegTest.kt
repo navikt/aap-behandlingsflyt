@@ -165,7 +165,7 @@ class AvklarOppfølgingStegTest {
             behandlingType = behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
             rettighetsperiode = Periode(13 februar 1989, 13 mars 2025),
-            vurderingsbehov = Vurderingsbehov.alle().toSet()
+            vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle().toSet()
         )
         return Pair(steg, kontekst)
     }

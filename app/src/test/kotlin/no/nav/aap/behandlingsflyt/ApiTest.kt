@@ -50,6 +50,7 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -130,7 +131,11 @@ class ApiTest {
 
         // Starter server
         private val server = embeddedServer(Netty, port = 0) {
-            server(dbConfig = dbConfig, repositoryRegistry = postgresRepositoryRegistry)
+            server(
+                dbConfig = dbConfig,
+                repositoryRegistry = postgresRepositoryRegistry,
+                gatewayProvider = GatewayProvider
+            )
         }
 
         @JvmStatic

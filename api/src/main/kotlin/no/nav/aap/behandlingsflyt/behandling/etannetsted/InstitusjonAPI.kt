@@ -17,13 +17,20 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.institusjonAPI(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
+
     route("/api/behandling") {
         route("/{referanse}/grunnlag/institusjon/soning") {
             getGrunnlag<BehandlingReferanse, SoningsGrunnlagDto>(
@@ -74,7 +81,7 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource, repositoryRegistry
                             }
 
                     val ansattNavnOgEnhet =
-                        grunnlag?.soningsVurderinger?.let { AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv) }
+                        grunnlag?.soningsVurderinger?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv) }
 
 
                     SoningsGrunnlagDto(
@@ -146,7 +153,11 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource, repositoryRegistry
                         }
 
                     val ansattNavnOgEnhet =
-                        grunnlag?.helseoppholdvurderinger?.let { AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv) }
+                        grunnlag?.helseoppholdvurderinger?.let {
+                            ansattInfoService.hentAnsattNavnOgEnhet(
+                                it.vurdertAv
+                            )
+                        }
 
                     HelseinstitusjonGrunnlagDto(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),

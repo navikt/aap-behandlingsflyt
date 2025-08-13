@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.klage.klagebehandling
 
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
@@ -20,18 +21,21 @@ data class KlagevurderingNayDto(
     val vurdertAv: VurdertAvResponse?
 )
 
-internal fun KlagevurderingNay.tilDto() =
+internal fun KlagevurderingNay.tilDto(ansattInfoService: AnsattInfoService) =
     KlagevurderingNayDto(
         begrunnelse = begrunnelse,
         notat = notat,
         innstilling = innstilling,
         vilkårSomOpprettholdes = vilkårSomOpprettholdes,
         vilkårSomOmgjøres = vilkårSomOmgjøres,
-        vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet),
+        vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet, ansattInfoService),
     )
 
-internal fun KlagebehandlingNayGrunnlag.tilDto(harTilgangTilÅSaksbehandle: Boolean) =
+internal fun KlagebehandlingNayGrunnlag.tilDto(
+    harTilgangTilÅSaksbehandle: Boolean,
+    ansattInfoService: AnsattInfoService,
+) =
     KlagebehandlingNayGrunnlagDto(
-        vurdering = vurdering.tilDto(),
+        vurdering = vurdering.tilDto(ansattInfoService),
         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle
     )

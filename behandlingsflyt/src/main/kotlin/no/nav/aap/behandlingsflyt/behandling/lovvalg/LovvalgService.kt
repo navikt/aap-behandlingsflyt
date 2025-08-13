@@ -39,10 +39,12 @@ class LovvalgService private constructor(
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val medlemskapRepository: MedlemskapRepository,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val medlemskapGateway: MedlemskapGateway,
+    private val arbeidsForholdGateway: ArbeidsforholdGateway,
+    private val enhetsregisteretGateway: EnhetsregisteretGateway,
+    private val inntektskomponentenGateway: InntektkomponentenGateway
 ) : Informasjonskrav {
     override val navn = Companion.navn
-
-    private val medlemskapGateway = GatewayProvider.provide<MedlemskapGateway>()
 
     override fun erRelevant(
         kontekst: FlytKontekstMedPerioder,
@@ -51,7 +53,7 @@ class LovvalgService private constructor(
     ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
                 && (oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
-                || kontekst.vurderingsbehov.contains(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))
+                || kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))
                 && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
     }
 
@@ -76,7 +78,7 @@ class LovvalgService private constructor(
             arbeidstakerId = sak.person.aktivIdent().identifikator,
             arbeidsforholdstatuser = listOf(ARBEIDSFORHOLDSTATUSER.AKTIV.toString())
         )
-        return GatewayProvider.provide<ArbeidsforholdGateway>().hentAARegisterData(request)
+        return arbeidsForholdGateway.hentAARegisterData(request)
     }
 
     private fun innhentEREGGrunnlag(inntektGrunnlag: List<ArbeidsInntektMaaned>): List<EnhetGrunnlag> {
@@ -87,13 +89,12 @@ class LovvalgService private constructor(
                 inntekt.virksomhet.identifikator
             }
         }.toSet()
-        val gateway = GatewayProvider.provide<EnhetsregisteretGateway>()
 
         // EREG har ikke batch-oppslag
         val executor = Executors.newVirtualThreadPerTaskExecutor()
         val futures = orgnumre.map { orgnummer ->
             CompletableFuture.supplyAsync({
-                val response = gateway.hentEREGData(Organisasjonsnummer(orgnummer))
+                val response = enhetsregisteretGateway.hentEREGData(Organisasjonsnummer(orgnummer))
                 response?.let {
                     EnhetGrunnlag(
                         orgnummer = it.organisasjonsnummer,
@@ -106,8 +107,7 @@ class LovvalgService private constructor(
     }
 
     private fun innhentAInntektGrunnlag(sak: Sak): List<ArbeidsInntektMaaned> {
-        val inntektskomponentGateway = GatewayProvider.provide<InntektkomponentenGateway>()
-        return inntektskomponentGateway.hentAInntekt(
+        return inntektskomponentenGateway.hentAInntekt(
             sak.person.aktivIdent().identifikator,
             YearMonth.from(sak.rettighetsperiode.fom.minusMonths(1)),
             YearMonth.from(sak.rettighetsperiode.fom)
@@ -138,7 +138,10 @@ class LovvalgService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.LOVVALG
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): LovvalgService {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): LovvalgService {
             val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
             val sakRepository = repositoryProvider.provide<SakRepository>()
             return LovvalgService(
@@ -146,6 +149,10 @@ class LovvalgService private constructor(
                 medlemskapArbeidInntektRepository,
                 repositoryProvider.provide<MedlemskapRepository>(),
                 TidligereVurderingerImpl(repositoryProvider),
+                gatewayProvider.provide(),
+                gatewayProvider.provide(),
+                gatewayProvider.provide(),
+                gatewayProvider.provide(),
             )
         }
     }

@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsRes
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.VentPåOppfølgingLøser
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VENT_PÅ_OPPFØLGING
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonTypeName(value = VENT_PÅ_OPPFØLGING)
@@ -19,7 +20,8 @@ class VentPåOppfølgingLøsning(
 ) : AvklaringsbehovLøsning {
     override fun løs(
         repositoryProvider: RepositoryProvider,
-        kontekst: AvklaringsbehovKontekst
+        kontekst: AvklaringsbehovKontekst,
+        gatewayProvider: GatewayProvider,
     ): LøsningsResultat {
         return VentPåOppfølgingLøser(repositoryProvider).løs(kontekst, this)
     }

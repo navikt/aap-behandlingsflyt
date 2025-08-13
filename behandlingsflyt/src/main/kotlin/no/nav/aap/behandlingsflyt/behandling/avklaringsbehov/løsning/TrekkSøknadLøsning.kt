@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsRes
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.TrekkSøknadLøser
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_TREKK_AV_SØKNAD_KODE
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonTypeName(value = VURDER_TREKK_AV_SØKNAD_KODE)
@@ -15,7 +16,7 @@ class TrekkSøknadLøsning(
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5028`,
     @param:JsonProperty("begrunnelse", required = true) val begrunnelse: String,
 ) : AvklaringsbehovLøsning {
-    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return TrekkSøknadLøser(repositoryProvider).løs(kontekst, this)
     }
 }

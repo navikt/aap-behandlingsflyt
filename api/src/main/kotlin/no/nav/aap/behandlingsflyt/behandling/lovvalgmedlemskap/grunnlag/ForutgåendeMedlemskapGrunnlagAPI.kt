@@ -11,12 +11,18 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.forutgåendeMedlemskapAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.forutgåendeMedlemskapAPI(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("/api/behandling") {
         route("/{referanse}/grunnlag/forutgaaendemedlemskap") {
             getGrunnlag<BehandlingReferanse, ForutgåendeMedlemskapGrunnlagResponse>(
@@ -33,7 +39,7 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapAPI(dataSource: DataSource, reposit
                     val data = forutgåendeRepository.hentHvisEksisterer(behandling.id)?.manuellVurdering
                     val historiskeManuelleVurderinger =
                         forutgåendeRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
-                    val ansattNavnOgEnhet = data?.let { AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv) }
+                    val ansattNavnOgEnhet = data?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv) }
                     
 
                     ForutgåendeMedlemskapGrunnlagResponse(

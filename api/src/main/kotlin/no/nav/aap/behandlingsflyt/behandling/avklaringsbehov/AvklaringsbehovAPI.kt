@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.motor.FlytJobbRepository
@@ -22,7 +23,11 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedPost
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.avklaringsbehovApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
     route("/api/behandling").tag(Tags.Behandling) {
         route("/løs-behov") {
             authorizedPost<Unit, LøsAvklaringsbehovPåBehandling, LøsAvklaringsbehovPåBehandling>(
@@ -48,7 +53,7 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource, repositoryRegi
                             BehandlingReferanse(request.referanse), request.behandlingVersjon
                         )
 
-                        AvklaringsbehovHendelseHåndterer(repositoryProvider).håndtere(
+                        AvklaringsbehovHendelseHåndterer(repositoryProvider, gatewayProvider).håndtere(
                             key = lås.behandlingSkrivelås.id, hendelse = LøsAvklaringsbehovHendelse(
                                 request.behov,
                                 request.ingenEndringIGruppe == true,

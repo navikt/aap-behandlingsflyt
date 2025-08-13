@@ -16,7 +16,7 @@ data class FlytKontekstMedPerioder(
     val behandlingType: TypeBehandling,
     val vurderingType: VurderingType,
     val rettighetsperiode: Periode,
-    val vurderingsbehov: Set<Vurderingsbehov>
+    val vurderingsbehovRelevanteForSteg: Set<Vurderingsbehov>
 ) {
     fun harNoeTilBehandling(): Boolean {
         return vurderingType != VurderingType.IKKE_RELEVANT
@@ -32,6 +32,6 @@ data class FlytKontekstMedPerioder(
 
     fun erRevurderingMedVurderingsbehov(behov: Vurderingsbehov): Boolean {
         return vurderingType == VurderingType.REVURDERING
-                && vurderingsbehov.contains(behov)
+                && vurderingsbehovRelevanteForSteg.contains(behov)
     }
 }

@@ -37,10 +37,10 @@ class OpprettholdelseSteg private constructor(
 
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
             return OpprettholdelseSteg(
                 KlageresultatUtleder(repositoryProvider),
-                AndreinstansService(repositoryProvider, GatewayProvider),
+                AndreinstansService(repositoryProvider, gatewayProvider),
                 TrekkKlageService(repositoryProvider),
             )
         }

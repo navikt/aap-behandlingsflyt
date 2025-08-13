@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -38,9 +39,9 @@ class SamordningAvslagSteg(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         samordningService = SamordningService(repositoryProvider),
-        uføreService = UføreService(repositoryProvider),
+        uføreService = UføreService(repositoryProvider, gatewayProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
     )
@@ -121,8 +122,11 @@ class SamordningAvslagSteg(
         )
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
-            return SamordningAvslagSteg(repositoryProvider)
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
+            return SamordningAvslagSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {

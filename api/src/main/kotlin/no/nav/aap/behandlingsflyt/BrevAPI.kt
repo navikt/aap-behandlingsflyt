@@ -50,7 +50,11 @@ import java.util.*
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("BrevAPI")
-fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.brevApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
     val authorizationParamPathConfig = AuthorizationParamPathConfig(
         operasjon = Operasjon.SAKSBEHANDLE,
         avklaringsbehovKode = SKRIV_BREV_KODE,
@@ -60,21 +64,18 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                 val brevbestillingReferanse = BrevbestillingReferanse(UUID.fromString(it))
                 dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
-                    val brevbestillingRepository =
-                        repositoryProvider.provide<BrevbestillingRepository>()
-                    val behandlingRepository =
-                        repositoryProvider.provide<BehandlingRepository>()
-
-                    val behandlingId =
-                        brevbestillingRepository.hent(brevbestillingReferanse).behandlingId
+                    val brevbestillingRepository = repositoryProvider.provide<BrevbestillingRepository>()
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val behandlingId = brevbestillingRepository.hent(brevbestillingReferanse).behandlingId
 
                     behandlingRepository.hent(behandlingId).referanse.referanse
                 }
             })
     )
 
+    val brevbestillingGateway = gatewayProvider.provide<BrevbestillingGateway>()
+    val personinfoGateway = gatewayProvider.provide<PersoninfoGateway>()
 
-    val brevbestillingGateway = GatewayProvider.provide<BrevbestillingGateway>()
     route("/api") {
         route("/behandling") {
             route("/{referanse}/grunnlag/brev") {
@@ -105,9 +106,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                         val sak = SakService(sakRepository).hent(behandling.sakId)
                         val personIdent = sak.person.aktivIdent()
-                        val personinfo =
-                            GatewayProvider.provide(PersoninfoGateway::class)
-                                .hentPersoninfoForIdent(personIdent, token())
+                        val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
 
                         val skrivBrevAvklaringsbehov = avklaringsbehovene
                             .hentBehovForDefinisjon(
@@ -183,7 +182,8 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                                     token(),
                                     avklaringsbehovene,
                                     bruker(),
-                                    definisjon
+                                    definisjon,
+                                    gatewayProvider
                                 )
                             )
                         }
@@ -219,7 +219,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource, repositoryRegistry: Repos
                             val behandling =
                                 behandlingRepository.hent(req.behandlingsReferanse)
 
-                            val brevbestillingService = BrevbestillingService(repositoryProvider)
+                            val brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider)
 
                             brevbestillingService.bestillV2(
                                 behandlingId = behandling.id,
@@ -267,10 +267,11 @@ private fun utledHarTilgangTilÅSendeBrev(
     token: OidcToken,
     avklaringsbehovene: Avklaringsbehovene,
     bruker: Bruker,
-    definisjon: Definisjon
+    definisjon: Definisjon,
+    gatewayProvider: GatewayProvider
 ): Boolean {
-    val tilgangGateway = GatewayProvider.provide<TilgangGateway>()
-    val unleashGateway = GatewayProvider.provide<UnleashGateway>()
+    val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
+    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
 
     fun harTilgang(tilDefinisjon: Definisjon): Boolean =
         tilgangGateway.sjekkTilgangTilBehandling(behandlingReferanse, tilDefinisjon, token)

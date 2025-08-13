@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.Kanal
@@ -50,7 +51,7 @@ class AktivitetspliktInformasjonskravTest {
                 null
             )
             val aktivitetspliktInformasjonskrav =
-                AktivitetspliktInformasjonskrav.konstruer(repositoryRegistry.provider(connection))
+                AktivitetspliktInformasjonskrav.konstruer(repositoryRegistry.provider(connection), GatewayProvider)
             val flytKontekst = flytKontekstMedPerioder(behandling)
 
             nyeBrudd(
@@ -111,7 +112,7 @@ class AktivitetspliktInformasjonskravTest {
             forrigeBehandlingId = behandling.forrigeBehandlingId,
             behandlingType = TypeBehandling.Førstegangsbehandling,
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         )
 }

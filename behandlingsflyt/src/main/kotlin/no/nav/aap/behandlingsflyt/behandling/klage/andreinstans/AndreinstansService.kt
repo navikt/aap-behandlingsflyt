@@ -38,7 +38,7 @@ class AndreinstansService(
         avklaringsbehovRepository = repositoryProvider.provide(),
         klagebehandlingNayRepository = repositoryProvider.provide(),
         klagebehandlingKontorRepository = repositoryProvider.provide(),
-        ansattInfoService = AnsattInfoService(),
+        ansattInfoService = AnsattInfoService(gatewayProvider),
         klagedokumentInformasjonUtleder = KlagedokumentInformasjonUtleder(repositoryProvider),
         fullmektigRepository = repositoryProvider.provide()
     )

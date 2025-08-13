@@ -26,7 +26,12 @@ import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.utbetal.simulering.UtbetalingOgSimuleringDto
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.simuleringAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.simuleringAPI(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val utbetalingGateway = gatewayProvider.provide(UtbetalingGateway::class)
     route("/api/behandling") {
         route("/{referanse}/utbetaling/simulering") {
             authorizedGet<BehandlingReferanse, List<UtbetalingOgSimuleringDto>>(
@@ -53,7 +58,7 @@ fun NormalOpenAPIRoute.simuleringAPI(dataSource: DataSource, repositoryRegistry:
                     val behandling = behandlingRepo.hent(req)
                     utbetalingService.lagTilkjentYtelseForUtbetaling(behandling.sakId, behandling.id, simulering = true)
                 }
-                val utbetalingGateway = GatewayProvider.provide(UtbetalingGateway::class)
+                val utbetalingGateway = utbetalingGateway
                 if (tilkjentYtelseDto != null) {
                     val simuleringer = utbetalingGateway.simulering(tilkjentYtelseDto)
                     respond(simuleringer)

@@ -92,7 +92,7 @@ class PipRepositoryImpl(private val connection: DBConnection) : PipRepository {
             INNER JOIN BARNOPPLYSNING_GRUNNLAG g ON bv.barn_vurderinger_id = g.vurderte_barn_id
             INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
             INNER JOIN BEHANDLING bRef ON b.SAK_ID = bRef.SAK_ID
-            WHERE bRef.referanse = ?
+            WHERE bRef.referanse = ? and bv.ident is not null
         """.trimIndent()
         ) {
             setParams {

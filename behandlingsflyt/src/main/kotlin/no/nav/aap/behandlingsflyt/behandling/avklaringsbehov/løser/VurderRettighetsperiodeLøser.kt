@@ -31,8 +31,8 @@ class VurderRettighetsperiodeLøser(
     private val mottattDokumentRepository: MottattDokumentRepository,
 ) : AvklaringsbehovsLøser<VurderRettighetsperiodeLøsning> {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
-        unleashGateway = GatewayProvider.provide(),
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        unleashGateway = gatewayProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
         rettighetsperiodeRepository = repositoryProvider.provide(),

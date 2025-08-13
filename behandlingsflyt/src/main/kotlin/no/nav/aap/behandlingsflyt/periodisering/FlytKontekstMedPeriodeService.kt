@@ -22,10 +22,10 @@ class FlytKontekstMedPeriodeService(
     private val behandlingRepository: BehandlingRepository,
     private val unleashGateway: UnleashGateway,
 ) {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
-        unleashGateway = GatewayProvider.provide(),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     fun utled(kontekst: FlytKontekst, stegType: StegType): FlytKontekstMedPerioder {
@@ -40,15 +40,15 @@ class FlytKontekstMedPeriodeService(
                 behandlingType = kontekst.behandlingType,
                 vurderingType = FØRSTEGANGSBEHANDLING,
                 rettighetsperiode = sak.rettighetsperiode,
-                vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet()
+                vurderingsbehovRelevanteForSteg = behandling.vurderingsbehov().map { it.type }.toSet()
             )
         }
         val flyt = behandling.flyt()
-        val vurderingsbehovRelevantForSteg = flyt.vurderingsbehovRelevantForSteg(stegType)
+        val vurderingsbehovRelevanteForSteg = flyt.vurderingsbehovRelevantForSteg(stegType)
 
         val relevanteVurderingsbehov = behandling.vurderingsbehov()
             .map { vurderingsbehov -> vurderingsbehov.type }
-            .filter { vurderingsbehov -> vurderingsbehovRelevantForSteg.contains(vurderingsbehov) }
+            .filter { vurderingsbehov -> vurderingsbehovRelevanteForSteg.contains(vurderingsbehov) }
             .toSet()
 
         return FlytKontekstMedPerioder(
@@ -58,7 +58,7 @@ class FlytKontekstMedPeriodeService(
             behandlingType = kontekst.behandlingType,
             vurderingType = prioritertType(relevanteVurderingsbehov.map { vurderingsbehovTilType(it) }.toSet()),
             rettighetsperiode = sak.rettighetsperiode,
-            vurderingsbehov = relevanteVurderingsbehov
+            vurderingsbehovRelevanteForSteg = relevanteVurderingsbehov
         )
     }
 

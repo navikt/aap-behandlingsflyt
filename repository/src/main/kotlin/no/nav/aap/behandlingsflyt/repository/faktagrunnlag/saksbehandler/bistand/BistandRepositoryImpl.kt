@@ -69,15 +69,32 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
     }
 
     override fun hentHistoriskeBistandsvurderinger(sakId: SakId, behandlingId: BehandlingId): List<BistandVurdering> {
-        val query = """
-            SELECT DISTINCT bistand.*
-            FROM bistand_grunnlag grunnlag
-            INNER JOIN bistand_vurderinger ON grunnlag.bistand_vurderinger_id = bistand_vurderinger.id
-            INNER JOIN bistand ON bistand.bistand_vurderinger_id = bistand_vurderinger.id
-            INNER JOIN behandling ON grunnlag.behandling_id = behandling.id
-            WHERE grunnlag.aktiv AND behandling.sak_id = ?
-                AND behandling.opprettet_tid < (select a.opprettet_tid from behandling a where id = ?)
-            ORDER BY bistand.opprettet_tid
+        val query = """WITH vurderinger_historikk AS (
+            SELECT DISTINCT ON (
+                b.begrunnelse,
+                b.behov_for_aktiv_behandling,
+                b.behov_for_arbeidsrettet_tiltak,
+                b.behov_for_annen_oppfoelging,
+                b.vurderingen_gjelder_fra,
+                b.vurdert_av,
+                b.overgang_til_ufoere,
+                b.overgang_til_arbeid,
+                b.overgang_begrunnelse
+                )
+                b.*
+            FROM bistand_grunnlag g
+                     JOIN bistand_vurderinger v ON g.bistand_vurderinger_id = v.id
+                     JOIN bistand b ON b.bistand_vurderinger_id = v.id
+                     JOIN behandling beh ON g.behandling_id = beh.id
+            WHERE g.aktiv
+              AND beh.sak_id = ?
+              AND beh.opprettet_tid < (
+                SELECT opprettet_tid
+                FROM behandling
+                WHERE id = ?
+            )
+        )
+        SELECT * FROM vurderinger_historikk;
         """.trimIndent()
 
         return connection.queryList(query) {

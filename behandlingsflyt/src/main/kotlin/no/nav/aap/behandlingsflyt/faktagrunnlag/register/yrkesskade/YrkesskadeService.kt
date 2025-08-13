@@ -123,7 +123,7 @@ class YrkesskadeService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.YRKESSKADE
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): YrkesskadeService {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): YrkesskadeService {
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val personopplysningRepository =
                 repositoryProvider.provide<PersonopplysningRepository>()
@@ -133,7 +133,7 @@ class YrkesskadeService private constructor(
                 SakService(sakRepository),
                 repositoryProvider.provide(),
                 personopplysningRepository,
-                GatewayProvider.provide(),
+                gatewayProvider.provide(),
                 mottattDokumentRepository,
                 TidligereVurderingerImpl(repositoryProvider),
             )

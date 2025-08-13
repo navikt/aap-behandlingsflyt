@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
@@ -22,8 +23,11 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
     dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider
 ) {
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
+
     route("/api/behandling/{referanse}/grunnlag/fritak-meldeplikt") {
         getGrunnlag<BehandlingReferanse, FritakMeldepliktGrunnlagResponse>(
             behandlingPathParam = BehandlingPathParam("referanse"),
@@ -51,17 +55,17 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         historikk =
                             historikk
-                                .map { tilResponse(it) }
+                                .map { tilResponse(it, ansattInfoService) }
                                 .sortedBy { it.vurderingsTidspunkt }
                                 .toSet(),
                         gjeldendeVedtatteVurderinger =
                             vedtatteVerdier
-                                .map { tilResponse(it) }
+                                .map { tilResponse(it, ansattInfoService) }
                                 .sortedBy { it.fraDato },
                         vurderinger =
                             nåTilstand
                                 ?.filterNot { vedtatteVerdier.contains(it) }
-                                ?.map { tilResponse(it) }
+                                ?.map { tilResponse(it, ansattInfoService) }
                                 ?.sortedBy { it.fraDato } ?: emptyList()
                     )
                 }
@@ -71,8 +75,11 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
     }
 }
 
-private fun tilResponse(fritaksvurdering: Fritaksvurdering): FritakMeldepliktVurderingResponse {
-    val ansattNavnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(fritaksvurdering.vurdertAv)
+private fun tilResponse(
+    fritaksvurdering: Fritaksvurdering,
+    ansattInfoService: AnsattInfoService
+): FritakMeldepliktVurderingResponse {
+    val ansattNavnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(fritaksvurdering.vurdertAv)
 
     return FritakMeldepliktVurderingResponse(
         begrunnelse = fritaksvurdering.begrunnelse,

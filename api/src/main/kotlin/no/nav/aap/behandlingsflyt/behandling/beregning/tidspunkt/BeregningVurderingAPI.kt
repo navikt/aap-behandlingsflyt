@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattNavnOgEnhet
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
@@ -18,13 +19,20 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.beregningVurderingAPI(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
+
     route("/api/behandling") {
         route("/{referanse}/grunnlag/beregning/tidspunkt") {
             getGrunnlag<BehandlingReferanse, BeregningTidspunktAvklaringResponse>(
@@ -41,13 +49,12 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource, repositoryR
                     // Dette er logikk, burde i egen service
                     val skalVurdereUføre =
                         uføreRepository.hentHvisEksisterer(behandling.id)?.vurderinger?.isNotEmpty() == true
-                    val beregningGrunnlag =
-                        repositoryProvider.provide<BeregningVurderingRepository>()
-                            .hentHvisEksisterer(behandlingId = behandling.id)
+                    val beregningGrunnlag = repositoryProvider.provide<BeregningVurderingRepository>()
+                        .hentHvisEksisterer(behandlingId = behandling.id)
 
                     BeregningTidspunktAvklaringResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        vurdering = beregningGrunnlag?.tidspunktVurdering?.tilResponse(),
+                        vurdering = beregningGrunnlag?.tidspunktVurdering?.tilResponse(ansattInfoService),
                         skalVurdereYtterligere = skalVurdereUføre
                     )
                 }
@@ -95,7 +102,12 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource, repositoryR
                                 ?.yrkesskadeBeløpVurdering
                                 ?.vurderinger
                                 ?.sortedByDescending { vurdering -> vurdering.vurdertTidspunkt }
-                                ?.map { vurdering -> vurdering.toResponse() }
+                                ?.map { vurdering ->
+                                    vurdering.toResponse(
+                                        ansattInfoService.hentAnsattNavnOgEnhet(
+                                            vurdering.vurdertAv
+                                        ))
+                                }
                                 ?: emptyList()
                     )
                 }
@@ -106,8 +118,8 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource, repositoryR
     }
 }
 
-private fun BeregningstidspunktVurdering.tilResponse(): BeregningstidspunktVurderingResponse {
-    val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv)
+private fun BeregningstidspunktVurdering.tilResponse(ansattInfoService: AnsattInfoService): BeregningstidspunktVurderingResponse {
+    val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv)
     return BeregningstidspunktVurderingResponse(
         begrunnelse = begrunnelse,
         nedsattArbeidsevneDato = nedsattArbeidsevneDato,
@@ -123,8 +135,7 @@ private fun BeregningstidspunktVurdering.tilResponse(): BeregningstidspunktVurde
 }
 
 
-private fun YrkesskadeBeløpVurdering.toResponse(): YrkesskadeBeløpVurderingResponse {
-    val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv)
+private fun YrkesskadeBeløpVurdering.toResponse(navnOgEnhet: AnsattNavnOgEnhet?): YrkesskadeBeløpVurderingResponse {
     return YrkesskadeBeløpVurderingResponse(
         antattÅrligInntekt = antattÅrligInntekt,
         referanse = referanse,

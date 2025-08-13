@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -49,7 +50,7 @@ class TrekkKlageSteg private constructor(
     }
 
     private fun erIkkeRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-        return Vurderingsbehov.KLAGE_TRUKKET !in kontekst.vurderingsbehov
+        return Vurderingsbehov.KLAGE_TRUKKET !in kontekst.vurderingsbehovRelevanteForSteg
     }
 
     private fun slettVurderingerOgRegisterdata(behandlingId: BehandlingId) {
@@ -62,7 +63,7 @@ class TrekkKlageSteg private constructor(
     }
     
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
             return TrekkKlageSteg(
                 avklaringsbehovRepository = repositoryProvider.provide(),
                 trekkKlageRepository = repositoryProvider.provide(),

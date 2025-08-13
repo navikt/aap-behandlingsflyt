@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -42,7 +43,7 @@ class StartBehandlingSteg private constructor(
         }
 
         if (kontekst.behandlingType == TypeBehandling.Revurdering) {
-            if (kontekst.vurderingsbehov.contains(Vurderingsbehov.REVURDER_SAMORDNING)) {
+            if (kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.REVURDER_SAMORDNING)) {
                 val ventTil =
                     requireNotNull(samordningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId))
                     { "Forventet å finne samordningvurdering ved revurdering med årsak ${Vurderingsbehov.REVURDER_SAMORDNING}" }
@@ -63,7 +64,7 @@ class StartBehandlingSteg private constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
             return StartBehandlingSteg(
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),

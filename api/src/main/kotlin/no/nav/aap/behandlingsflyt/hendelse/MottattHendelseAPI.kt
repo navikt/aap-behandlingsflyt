@@ -29,7 +29,12 @@ import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.MDC
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.mottattHendelseApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
     route("/api/hendelse") {
         route("/send") {
             authorizedPost<Unit, String, Innsending>(
@@ -59,7 +64,7 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource, repositoryRegi
                     sakPathParam = SakPathParam("saksnummer"),
                 )
             ) { _, dto ->
-                validerHendelse(dto, bruker())
+                validerHendelse(dto, bruker(), unleashGateway)
                 MDC.putCloseable("saksnummer", dto.saksnummer.toString()).use {
                     dataSource.transaction { connection ->
                         val repositoryRegistry = repositoryRegistry.provider(connection)
@@ -72,12 +77,15 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource, repositoryRegi
     }
 }
 
-fun validerHendelse(innsending: Innsending, bruker: Bruker) {
+fun validerHendelse(
+    innsending: Innsending,
+    bruker: Bruker,
+    unleashGateway: UnleashGateway,
+) {
     if (innsending.type == InnsendingType.MANUELL_REVURDERING && innsending.melding is ManuellRevurdering) {
         val melding = innsending.melding as ManuellRevurderingV0
         val gjelderOverstyringAvStarttidspunkt =
             melding.årsakerTilBehandling.contains(Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
-        val unleashGateway = GatewayProvider.provide<UnleashGateway>()
         if (gjelderOverstyringAvStarttidspunkt && !unleashGateway.isEnabled(
                 BehandlingsflytFeature.OverstyrStarttidspunkt,
                 bruker.ident

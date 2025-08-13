@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class TrekkKlageInformasjonskravService (
@@ -29,7 +30,7 @@ class TrekkKlageInformasjonskravService (
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return Vurderingsbehov.KLAGE_TRUKKET in kontekst.vurderingsbehov
+        return Vurderingsbehov.KLAGE_TRUKKET in kontekst.vurderingsbehovRelevanteForSteg
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
@@ -45,7 +46,7 @@ class TrekkKlageInformasjonskravService (
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.TRUKKET_KLAGE
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): Informasjonskrav {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): Informasjonskrav {
             return TrekkKlageInformasjonskravService(repositoryProvider)
         }
     }

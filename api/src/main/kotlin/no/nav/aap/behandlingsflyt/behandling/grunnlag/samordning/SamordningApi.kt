@@ -30,6 +30,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -137,8 +138,10 @@ data class TjenestepensjonYtelseDTO(
 
 fun NormalOpenAPIRoute.samordningGrunnlag(
     dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
 ) {
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("/api/behandling") {
         route("/{referanse}/grunnlag/samordning-ufore") {
             getGrunnlag<BehandlingReferanse, SamordningUføreVurderingGrunnlagDTO>(
@@ -167,7 +170,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                 respond(
                     SamordningUføreVurderingGrunnlagDTO(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        vurdering = mapSamordningUføreVurdering(vurdering),
+                        vurdering = mapSamordningUføreVurdering(vurdering, ansattInfoService),
                         grunnlag = mapSamordningUføreGrunnlag(registerGrunnlag)
                     )
                 )
@@ -248,7 +251,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     }
 
                 val ansattNavnOgEnhet =
-                    samordning?.let { AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv) }
+                    samordning?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv) }
 
                 respond(
                     SamordningYtelseVurderingGrunnlagDTO(
@@ -319,7 +322,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     }
 
                 val navnOgEnhet = samordningAndreStatligeYtelserVurdering?.let {
-                    AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv)
+                    ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)
                 }
 
                 respond(
@@ -378,7 +381,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     }
 
                 val navnOgEnhet = samordningArbeidsgiverVurdering?.let {
-                    AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv)
+                    ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)
                 }
 
                 val vurdering = samordningArbeidsgiverVurdering?.let { vurdering ->
@@ -408,9 +411,12 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
     }
 }
 
-private fun mapSamordningUføreVurdering(vurdering: SamordningUføreVurdering?): SamordningUføreVurderingDTO? =
+private fun mapSamordningUføreVurdering(
+    vurdering: SamordningUføreVurdering?,
+    ansattInfoService: AnsattInfoService,
+): SamordningUføreVurderingDTO? =
     vurdering?.let {
-        val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv)
+        val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)
 
         return SamordningUføreVurderingDTO(
             begrunnelse = it.begrunnelse,

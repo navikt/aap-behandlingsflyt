@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
@@ -70,7 +71,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
                 sakService = SakService(repositoryProvider),
                 underveisRepository = repositoryProvider.provide(),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
-                prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider),
+                prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, GatewayProvider),
             )
         }
 

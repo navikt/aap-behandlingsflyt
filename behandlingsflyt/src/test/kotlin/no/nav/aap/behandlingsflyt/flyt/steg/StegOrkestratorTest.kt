@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -50,10 +51,11 @@ internal class StegOrkestratorTest {
                 informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                     InformasjonskravRepositoryImpl(connection),
                     postgresRepositoryRegistry.provider(connection),
+                    GatewayProvider
                 ),
                 behandlingRepository = BehandlingRepositoryImpl(connection),
                 avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection),
-                stegKonstruktør = StegKonstruktørImpl(postgresRepositoryRegistry.provider(connection))
+                stegKonstruktør = StegKonstruktørImpl(postgresRepositoryRegistry.provider(connection), GatewayProvider)
             ).utfør(
                 TestFlytSteg,
                 FlytKontekstMedPeriodeService(

@@ -40,7 +40,11 @@ import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("behandlingApi")
 
-fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.behandlingApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
     route("/api/behandling").tag(Tags.Behandling) {
         route("/{referanse}") {
             authorizedGet<BehandlingReferanse, DetaljertBehandlingDTO>(
@@ -153,7 +157,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                     if (!behandling.status().erAvsluttet()
                         && behandling.harIkkeVærtAktivitetIDetSiste()
                     ) {
-                        ProsesserBehandlingService(repositoryProvider).triggProsesserBehandling(
+                        ProsesserBehandlingService(repositoryProvider, gatewayProvider).triggProsesserBehandling(
                             behandling.sakId,
                             behandling.id
                         )
@@ -180,7 +184,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource, repositoryRegistry:
                 }
 
                 val response = HashMap<String, String>()
-                val personInfoListe = GatewayProvider.provide(PersoninfoBulkGateway::class)
+                val personInfoListe = gatewayProvider.provide(PersoninfoBulkGateway::class)
                     .hentPersoninfoForIdenter(identer.map { Ident(it.ident) })
                 personInfoListe.forEach { personinfo ->
                     response[personinfo.ident.identifikator] = personinfo.fulltNavn()

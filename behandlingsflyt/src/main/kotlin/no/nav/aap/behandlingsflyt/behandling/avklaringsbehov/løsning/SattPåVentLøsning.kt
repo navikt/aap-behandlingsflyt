@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsRes
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.SattPåVentLøser
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.MANUELT_SATT_PÅ_VENT_KODE
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonTypeName(value = MANUELT_SATT_PÅ_VENT_KODE)
@@ -17,7 +18,7 @@ class SattPåVentLøsning(
         defaultValue = MANUELT_SATT_PÅ_VENT_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`9001`
 ) : AvklaringsbehovLøsning {
-    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return SattPåVentLøser(repositoryProvider).løs(kontekst, this)
     }
 }

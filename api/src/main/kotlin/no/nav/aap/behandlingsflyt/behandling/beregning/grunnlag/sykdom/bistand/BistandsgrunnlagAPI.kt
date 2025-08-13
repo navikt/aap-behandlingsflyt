@@ -18,13 +18,19 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.time.ZoneId
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.bistandsgrunnlagApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("/api/behandling") {
         route("/{referanse}/grunnlag/bistand") {
             getGrunnlag<BehandlingReferanse, BistandGrunnlagResponse>(
@@ -63,10 +69,14 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource, repositoryReg
 
                     BistandGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        vurdering = vurdering?.tilResponse(),
-                        gjeldendeVedtatteVurderinger = vedtatteBistandsvurderinger.map { it.tilResponse() },
-                        historiskeVurderinger = historiskeVurderinger.map { it.tilResponse() },
-                        gjeldendeSykdsomsvurderinger = gjeldendeSykdomsvurderinger.map { it.tilResponse() },
+                        vurdering = vurdering?.tilResponse(ansattInfoService = ansattInfoService),
+                        gjeldendeVedtatteVurderinger = vedtatteBistandsvurderinger.map {
+                            it.tilResponse(ansattInfoService = ansattInfoService)
+                        },
+                        historiskeVurderinger = historiskeVurderinger.map { it.tilResponse(ansattInfoService = ansattInfoService) },
+                        gjeldendeSykdsomsvurderinger = gjeldendeSykdomsvurderinger.map {
+                            it.tilResponse(ansattInfoService)
+                        },
                         harOppfylt11_5 = erOppfylt11_5
                     )
                 }
@@ -77,8 +87,11 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource, repositoryReg
     }
 }
 
-private fun BistandVurdering.tilResponse(erGjeldende: Boolean? = false): BistandVurderingResponse {
-    val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv)
+private fun BistandVurdering.tilResponse(
+    erGjeldende: Boolean? = false,
+    ansattInfoService: AnsattInfoService,
+): BistandVurderingResponse {
+    val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv)
     return BistandVurderingResponse(
         begrunnelse = begrunnelse,
         erBehovForAktivBehandling = erBehovForAktivBehandling,
@@ -99,8 +112,8 @@ private fun BistandVurdering.tilResponse(erGjeldende: Boolean? = false): Bistand
     )
 }
 
-private fun Sykdomsvurdering.tilResponse(): SykdomsvurderingResponse {
-    val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv.ident)
+private fun Sykdomsvurdering.tilResponse(ansattInfoService: AnsattInfoService): SykdomsvurderingResponse {
+    val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv.ident)
     return SykdomsvurderingResponse(
         begrunnelse = begrunnelse,
         vurderingenGjelderFra = vurderingenGjelderFra,

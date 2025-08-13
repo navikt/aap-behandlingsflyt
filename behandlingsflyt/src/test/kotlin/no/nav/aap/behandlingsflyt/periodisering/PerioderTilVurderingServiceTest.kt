@@ -41,7 +41,7 @@ class PerioderTilVurderingServiceTest {
                 sakRepository = InMemorySakRepository
             ),
             behandlingRepository = InMemoryBehandlingRepository,
-            unleashGateway = FakeUnleash
+            FakeUnleash
         )
 
         val res = flytKontekstMedPeriodeService.utled(
@@ -55,7 +55,7 @@ class PerioderTilVurderingServiceTest {
         )
 
         assertThat(res).isNotNull
-        assertThat(res.vurderingsbehov.first()).isEqualTo(Vurderingsbehov.MOTTATT_SØKNAD)
+        assertThat(res.vurderingsbehovRelevanteForSteg.first()).isEqualTo(Vurderingsbehov.MOTTATT_SØKNAD)
         assertThat(res.rettighetsperiode).isEqualTo(periode)
     }
 

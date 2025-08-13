@@ -5,10 +5,12 @@ import no.nav.aap.behandlingsflyt.behandling.ansattinfo.EnhetGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import org.slf4j.LoggerFactory
 
-class NavKontorService {
+class NavKontorService(private val enhetGateway: EnhetGateway) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    private val enhetGateway = GatewayProvider.provide<EnhetGateway>()
+    constructor(gatewayProvider: GatewayProvider) : this(
+        enhetGateway = gatewayProvider.provide()
+    )
 
     fun hentNavEnheter(): List<Enhet>? {
         try {

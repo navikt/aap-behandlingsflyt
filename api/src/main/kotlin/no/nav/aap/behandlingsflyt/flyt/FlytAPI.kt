@@ -55,7 +55,13 @@ import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("flytApi")
 
-fun NormalOpenAPIRoute.flytApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.flytApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
+
     route("/api/behandling") {
         route("/{referanse}/flyt") {
             authorizedGet<BehandlingReferanse, BehandlingFlytOgTilstandDto>(
@@ -176,7 +182,8 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource, repositoryRegistry: Repos
                             typeBehandling = behandling.typeBehandling(),
                             avklaringsbehov = alleAvklaringsbehov,
                             bruker = bruker(),
-                            behandlingStatus = behandling.status()
+                            behandlingStatus = behandling.status(),
+                            unleashGateway = unleashGateway
                         )
                     )
                 }
@@ -233,7 +240,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource, repositoryRegistry: Repos
                             body.behandlingVersjon
                         )
 
-                        AvklaringsbehovOrkestrator(repositoryProvider)
+                        AvklaringsbehovOrkestrator(repositoryProvider, gatewayProvider)
                             .settBehandlingPåVent(
                                 lås.behandlingSkrivelås.id, BehandlingSattPåVent(
                                     frist = body.frist,
@@ -356,9 +363,9 @@ private fun utledVisning(
     typeBehandling: TypeBehandling,
     avklaringsbehov: List<Avklaringsbehov>,
     bruker: Bruker,
-    behandlingStatus: Status
+    behandlingStatus: Status,
+    unleashGateway: UnleashGateway
 ): Visning {
-    val unleashGateway = GatewayProvider.provide<UnleashGateway>()
     val brukerHarIngenValidering = unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)
 
     val brukerHarKvalitetssikret = avklaringsbehov.filter { it.definisjon === Definisjon.KVALITETSSIKRING }

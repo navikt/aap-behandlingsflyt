@@ -14,13 +14,20 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
 
 
-fun NormalOpenAPIRoute.sykepengerGrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.sykepengerGrunnlagApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
+
     route("/api/behandling") {
         route("/{referanse}/grunnlag/sykdom/sykepengergrunnlag") {
             getGrunnlag<BehandlingReferanse, SykepengerGrunnlagResponse>(
@@ -39,7 +46,7 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(dataSource: DataSource, repositoryR
                 respond(
                     SykepengerGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        sykepengerErstatningGrunnlag?.vurdering?.tilResponse()
+                        sykepengerErstatningGrunnlag?.vurdering?.tilResponse(ansattInfoService)
                     )
                 )
             }
@@ -47,8 +54,8 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(dataSource: DataSource, repositoryR
     }
 }
 
-private fun SykepengerVurdering.tilResponse(): SykepengerVurderingResponse {
-    val navnOgEnhet = AnsattInfoService().hentAnsattNavnOgEnhet(vurdertAv)
+private fun SykepengerVurdering.tilResponse(ansattInfoService: AnsattInfoService): SykepengerVurderingResponse {
+    val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv)
     return SykepengerVurderingResponse(
         begrunnelse = begrunnelse,
         dokumenterBruktIVurdering = dokumenterBruktIVurdering,

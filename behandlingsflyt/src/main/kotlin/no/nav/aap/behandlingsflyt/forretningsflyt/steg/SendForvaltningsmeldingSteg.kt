@@ -32,7 +32,7 @@ class SendForvaltningsmeldingSteg(
             TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> {
                 val behandlingId = kontekst.behandlingId
                 val behandling = behandlingRepository.hent(behandlingId)
-                if (erBehandlingForMottattSøknad(kontekst.vurderingsbehov) &&
+                if (erBehandlingForMottattSøknad(kontekst.vurderingsbehovRelevanteForSteg) &&
                     !harAlleredeBestiltForvaltningsmeldingForBehandling(behandling)
                 ) {
                     val brevBehov = Forvaltningsmelding
@@ -61,11 +61,11 @@ class SendForvaltningsmeldingSteg(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
             return SendForvaltningsmeldingSteg(
-                brevbestillingService = BrevbestillingService(repositoryProvider),
+                brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider),
                 behandlingRepository = repositoryProvider.provide(),
-                unleashGateway = GatewayProvider.provide(),
+                unleashGateway = gatewayProvider.provide(),
             )
         }
 

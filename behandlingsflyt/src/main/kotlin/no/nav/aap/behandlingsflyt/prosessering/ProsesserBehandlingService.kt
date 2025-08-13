@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -17,13 +18,14 @@ class ProsesserBehandlingService(
     private val behandlingRepository: BehandlingRepository,
     private val atomærFlytOrkestrator: FlytOrkestrator,
 ) {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): this(
         flytJobbRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         atomærFlytOrkestrator = FlytOrkestrator(
             repositoryProvider,
             stoppNårStatus = setOf(Status.IVERKSETTES, Status.AVSLUTTET),
             markSavepointAt = emptySet(),
+            gatewayProvider = gatewayProvider
         )
     )
 

@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Kvalitetss
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
@@ -117,6 +118,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.type.Periode
@@ -126,6 +128,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -134,6 +137,7 @@ import java.util.*
 
 @Fakes
 open class AbstraktFlytOrkestratorTest {
+
     companion object {
         @JvmStatic
         protected val dataSource = InitTestDatabase.freshDatabase()
@@ -191,6 +195,23 @@ open class AbstraktFlytOrkestratorTest {
         @JvmStatic
         internal fun afterAll() {
 //            motor.stop()
+        }
+    }
+
+    @BeforeEach
+    fun beforeEachClearDatabase() {
+        dataSource.connection.use { conn ->
+            conn.prepareStatement("""
+                DO $$
+                DECLARE
+                    r RECORD;
+                BEGIN
+                    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename NOT LIKE 'flyway_%') LOOP
+                        EXECUTE 'TRUNCATE TABLE public.' || quote_ident(r.tablename) || ' RESTART IDENTITY CASCADE';
+                    END LOOP;
+                END;
+                $$;
+            """.trimIndent()).use { it.execute() }
         }
     }
 
@@ -257,7 +278,7 @@ open class AbstraktFlytOrkestratorTest {
     }
 
 
-    fun happyCaseFørstegangsbehandling(fom: LocalDate = LocalDate.now().minusMonths(3)): Sak {
+    fun happyCaseFørstegangsbehandling(fom: LocalDate = LocalDate.now().minusMonths(3), person: TestPerson = TestPersoner.STANDARD_PERSON()): Sak {
         val periode = Periode(fom, fom.plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
@@ -297,6 +318,7 @@ open class AbstraktFlytOrkestratorTest {
                     )
                 )
             )
+            .løsSykdomsvurderingBrev()
             // Sender inn en søknad
             .sendInnDokument(
                 DokumentMottattPersonHendelse(
@@ -372,7 +394,7 @@ open class AbstraktFlytOrkestratorTest {
     ): Behandling {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(
-                AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(it)),
+                AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(it), GatewayProvider),
                 AvklaringsbehovRepositoryImpl(it),
                 BehandlingRepositoryImpl(it),
             ).håndtere(
@@ -437,6 +459,9 @@ open class AbstraktFlytOrkestratorTest {
                 )
             )
         )
+
+        behandling = løsSykdomsvurderingBrev(behandling)
+
         kvalitetssikreOk(behandling)
     }
 
@@ -509,6 +534,19 @@ open class AbstraktFlytOrkestratorTest {
         )
     }
 
+    protected fun løsSykdomsvurderingBrev(behandling: Behandling): Behandling {
+        return løsAvklaringsBehov(
+            behandling = behandling,
+            avklaringsBehovLøsning = SykdomsvurderingForBrevLøsning(
+                vurdering = "Denne vurderingen skal vises i brev"
+            )
+        )
+    }
+
+    @JvmName("løsSykdomsvurderingBrevExt")
+    protected fun Behandling.løsSykdomsvurderingBrev(): Behandling {
+        return løsSykdomsvurderingBrev(this)
+    }
 
     @JvmName("løsSykdomExt")
     protected fun Behandling.løsSykdom(): Behandling {
@@ -719,6 +757,7 @@ open class AbstraktFlytOrkestratorTest {
                     )
                 )
             )
+            .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
 
         if (harYrkesskade) {
@@ -770,7 +809,7 @@ open class AbstraktFlytOrkestratorTest {
         val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         return løsAvklaringsBehov(
             behandling,
-            KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() }.map { behov ->
+            KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }.map { behov ->
                 TotrinnsVurdering(
                     behov.definisjon.kode, true, "begrunnelse", emptyList()
                 )
@@ -906,7 +945,7 @@ open class AbstraktFlytOrkestratorTest {
 
     protected fun prosesserBehandling(behandling: Behandling): Behandling {
         dataSource.transaction { connection ->
-            FlytOrkestrator(postgresRepositoryRegistry.provider(connection)).forberedOgProsesserBehandling(
+            FlytOrkestrator(postgresRepositoryRegistry.provider(connection), GatewayProvider).forberedOgProsesserBehandling(
                 FlytKontekst(
                     sakId = behandling.sakId,
                     behandlingId = behandling.id,

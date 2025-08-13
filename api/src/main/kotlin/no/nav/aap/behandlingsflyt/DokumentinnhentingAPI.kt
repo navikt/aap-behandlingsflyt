@@ -35,8 +35,14 @@ import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
-    val dokumentinnhentingGateway = GatewayProvider.provide<DokumentinnhentingGateway>()
+fun NormalOpenAPIRoute.dokumentinnhentingAPI(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val dokumentinnhentingGateway = gatewayProvider.provide<DokumentinnhentingGateway>()
+    val personinfoGateway = gatewayProvider.provide(PersoninfoGateway::class)
+
     route("/api/dokumentinnhenting/syfo") {
         route("/bestill") {
             authorizedPost<Unit, String, BestillLegeerklæringDto>(
@@ -56,18 +62,15 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource, repositoryR
                         val låsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
                         val lås = låsRepository.lås(req.behandlingsReferanse)
 
-                        val sak =
-                            repositoryProvider.provide<SakRepository>().hent((Saksnummer(req.saksnummer)))
+                        val sak = repositoryProvider.provide<SakRepository>().hent((Saksnummer(req.saksnummer)))
                         val behandling = repositoryProvider.provide<BehandlingRepository>()
                             .hent(BehandlingReferanse(req.behandlingsReferanse))
 
-                        AvklaringsbehovOrkestrator(repositoryProvider)
+                        AvklaringsbehovOrkestrator(repositoryProvider, gatewayProvider)
                             .settPåVentMensVentePåMedisinskeOpplysninger(behandling.id, bruker())
 
                         val personIdent = sak.person.aktivIdent()
-                        val personinfo =
-                            GatewayProvider.provide(PersoninfoGateway::class)
-                                .hentPersoninfoForIdent(personIdent, token())
+                        val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
 
                         val bestillingUUID: String = dokumentinnhentingGateway.bestillLegeerklæring(
                             LegeerklæringBestillingRequest(
@@ -116,8 +119,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource, repositoryR
                     val sak = repositoryProvider.hent((Saksnummer(req.saksnummer)))
 
                     val personIdent = sak.person.aktivIdent()
-                    val personinfo =
-                        GatewayProvider.provide(PersoninfoGateway::class).hentPersoninfoForIdent(personIdent, token())
+                    val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
 
                     val brevRequest = BrevRequest(
                         bestillerNavIdent = bruker().ident,

@@ -80,7 +80,7 @@ class FormkravStegTest {
             forrigeBehandlingId = null,
             vurderingType = VurderingType.IKKE_RELEVANT,
             rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            vurderingsbehov = setOf(Vurderingsbehov.MOTATT_KLAGE)
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
         )
 
         InMemoryAvklaringsbehovRepository.opprett(
@@ -125,7 +125,7 @@ class FormkravStegTest {
             forrigeBehandlingId = null,
             vurderingType = VurderingType.IKKE_RELEVANT,
             rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            vurderingsbehov = setOf(Vurderingsbehov.MOTATT_KLAGE)
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
         )
 
         InMemoryAvklaringsbehovRepository.opprett(
@@ -180,7 +180,7 @@ class FormkravStegTest {
             forrigeBehandlingId = null,
             vurderingType = VurderingType.IKKE_RELEVANT,
             rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            vurderingsbehov = setOf(Vurderingsbehov.MOTATT_KLAGE)
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
         )
 
         InMemoryAvklaringsbehovRepository.opprett(
@@ -240,7 +240,7 @@ class FormkravStegTest {
             forrigeBehandlingId = null,
             vurderingType = VurderingType.IKKE_RELEVANT,
             rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            vurderingsbehov = setOf(Vurderingsbehov.MOTATT_KLAGE)
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
         )
 
         InMemoryAvklaringsbehovRepository.opprett(
@@ -331,7 +331,7 @@ class FormkravStegTest {
             forrigeBehandlingId = null,
             vurderingType = VurderingType.IKKE_RELEVANT,
             rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            vurderingsbehov = setOf(Vurderingsbehov.MOTATT_KLAGE)
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
         )
 
         InMemoryAvklaringsbehovRepository.opprett(
@@ -381,7 +381,7 @@ class FormkravStegTest {
             forrigeBehandlingId = null,
             vurderingType = VurderingType.IKKE_RELEVANT,
             rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            vurderingsbehov = setOf(Vurderingsbehov.MOTATT_KLAGE)
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
         )
 
         InMemoryAvklaringsbehovRepository.opprett(
@@ -448,7 +448,7 @@ class FormkravStegTest {
             forrigeBehandlingId = null,
             vurderingType = VurderingType.IKKE_RELEVANT,
             rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            vurderingsbehov = setOf(Vurderingsbehov.MOTATT_KLAGE)
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
         )
 
         InMemoryAvklaringsbehovRepository.opprett(

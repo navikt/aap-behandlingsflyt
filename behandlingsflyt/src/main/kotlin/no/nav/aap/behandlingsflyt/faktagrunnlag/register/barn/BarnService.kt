@@ -14,10 +14,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.BARNETILLEGG
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -30,7 +28,6 @@ class BarnService private constructor(
     private val barnGateway: BarnGateway,
     private val identGateway: IdentGateway,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val unleashGateway: UnleashGateway
 ) : Informasjonskrav {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -51,7 +48,7 @@ class BarnService private constructor(
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
-        log.info("Oppdaterer barnegrunnlag for behandling ${kontekst.behandlingId} av type ${kontekst.behandlingType} med årsak(er) ${kontekst.vurderingsbehov}")
+        log.info("Oppdaterer barnegrunnlag for behandling ${kontekst.behandlingId} av type ${kontekst.behandlingType} med årsak(er) ${kontekst.vurderingsbehovRelevanteForSteg}")
 
         val behandlingId = kontekst.behandlingId
         val sak = sakService.hent(kontekst.sakId)
@@ -99,18 +96,14 @@ class BarnService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.BARN
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): BarnService {
-            val sakRepository = repositoryProvider.provide<SakRepository>()
-            val barnGateway = GatewayProvider.provide(BarnGateway::class)
-            val unleashGateway = GatewayProvider.provide(UnleashGateway::class)
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BarnService {
             return BarnService(
-                SakService(sakRepository),
+                SakService(repositoryProvider.provide()),
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),
-                barnGateway,
-                GatewayProvider.provide(),
+                gatewayProvider.provide(),
+                gatewayProvider.provide(),
                 TidligereVurderingerImpl(repositoryProvider),
-                unleashGateway,
             )
         }
     }

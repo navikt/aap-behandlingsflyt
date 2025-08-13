@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -58,18 +59,19 @@ class FlytOrkestrator(
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider,
         stoppNårStatus: Set<Status> = emptySet(),
         markSavepointAt: Set<StegStatus>? = null,
     ) : this(
         ventebehovEvaluererService = VentebehovEvaluererServiceImpl(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
-        informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(repositoryProvider),
+        informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(repositoryProvider, gatewayProvider),
         sakRepository = repositoryProvider.provide(),
-        flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(repositoryProvider),
+        flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(repositoryProvider, gatewayProvider),
         sakOgBehandlingService = SakOgBehandlingService(repositoryProvider),
         behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider),
-        stegOrkestrator = StegOrkestrator(repositoryProvider, markSavepointAt),
+        stegOrkestrator = StegOrkestrator(repositoryProvider, gatewayProvider, markSavepointAt),
         stoppNårStatus = stoppNårStatus,
     )
 
@@ -168,11 +170,10 @@ class FlytOrkestrator(
         avklaringsbehovene.validateTilstand(behandling = behandling)
 
         val behandlingFlyt = behandling.flyt()
-
-        var gjeldendeSteg = behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
+        var gjeldendeSteg = finnGjeldendeSteg(behandling, behandlingFlyt)
 
         while (true) {
-            if (behandling.status() in stoppNårStatus) {
+            if (gjeldendeSteg.type().status in stoppNårStatus) {
                 loggStopp(behandling, avklaringsbehovene)
                 val oppdatertBehandling = behandlingRepository.hent(behandling.id)
                 behandlingHendelseService.stoppet(oppdatertBehandling, avklaringsbehovene)
@@ -225,6 +226,20 @@ class FlytOrkestrator(
             }
             gjeldendeSteg = neste
         }
+    }
+
+    private fun finnGjeldendeSteg(
+        behandling: Behandling,
+        behandlingFlyt: BehandlingFlyt
+    ): FlytSteg {
+        var sisteStegType = behandling.aktivtSteg()
+
+        if (behandling.aktivtStegTilstand().status() == StegStatus.AVSLUTTER) {
+            behandlingFlyt.forberedFlyt(sisteStegType)
+            sisteStegType = behandlingFlyt.neste()?.type() ?: sisteStegType
+        }
+
+        return behandlingFlyt.forberedFlyt(sisteStegType)
     }
 
     private fun validerAtAvklaringsBehovErLukkede(avklaringsbehovene: Avklaringsbehovene) {

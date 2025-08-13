@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -51,6 +52,8 @@ class SamordningYtelseVurderingServiceTest {
                 SamordningYtelseRepositoryImpl(connection),
                 SakService(sakRepository),
                 FakeTidligereVurderinger(),
+                GatewayProvider.provide(),
+                GatewayProvider.provide()
             )
             val kontekst = opprettSakdata(connection)
 

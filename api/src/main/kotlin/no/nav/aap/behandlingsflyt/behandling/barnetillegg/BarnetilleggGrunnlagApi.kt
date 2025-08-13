@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
@@ -27,7 +28,12 @@ import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("barnetilleggApi")
 
-fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.barnetilleggApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("/api/barnetillegg") {
         route("/grunnlag/{referanse}") {
             getGrunnlag<BehandlingReferanse, BarnetilleggDto>(
@@ -59,7 +65,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource, repositoryRegistr
                     val barnGrunnlag = barnRepository.hentHvisEksisterer(behandling.id)
 
                     val ansattNavnOgEnhet =
-                        vurderteBarn?.let { AnsattInfoService().hentAnsattNavnOgEnhet(it.vurdertAv) }
+                        vurderteBarn?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv) }
 
                     BarnetilleggDto(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),

@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -25,9 +26,9 @@ class MeldingOmVedtakBrevSteg private constructor(
     private val behandlingRepository: BehandlingRepository,
     private val trekkKlageService: TrekkKlageService,
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         brevUtlederService = BrevUtlederService(repositoryProvider),
-        brevbestillingService = BrevbestillingService(repositoryProvider),
+        brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider),
         behandlingRepository = repositoryProvider.provide(),
         trekkKlageService = TrekkKlageService(repositoryProvider),
     )
@@ -58,8 +59,8 @@ class MeldingOmVedtakBrevSteg private constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider): BehandlingSteg {
-            return MeldingOmVedtakBrevSteg(repositoryProvider)
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+            return MeldingOmVedtakBrevSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {

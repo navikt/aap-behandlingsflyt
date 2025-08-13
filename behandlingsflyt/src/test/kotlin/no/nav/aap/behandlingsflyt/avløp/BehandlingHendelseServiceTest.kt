@@ -8,10 +8,12 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -40,6 +42,7 @@ class BehandlingHendelseServiceTest {
         val flytJobbRepository = mockk<FlytJobbRepository>()
         val brevbestillingRepository = mockk<BrevbestillingRepository>()
         val mottattDokumentRepository = mockk<MottattDokumentRepository>()
+        val pipRepository = mockk<PipRepository>()
 
         every { flytJobbRepository.leggTil(any()) } returns Unit
         every {
@@ -49,12 +52,15 @@ class BehandlingHendelseServiceTest {
             )
         } returns emptySet()
 
+        every { pipRepository.finnIdenterPåBehandling(any<BehandlingReferanse>()) } returns emptyList()
+
         val behandlingHendelseService =
             BehandlingHendelseServiceImpl(
                 flytJobbRepository,
                 brevbestillingRepository,
                 sakService,
                 mottattDokumentRepository,
+                pipRepository,
             )
 
         val behandling = Behandling(

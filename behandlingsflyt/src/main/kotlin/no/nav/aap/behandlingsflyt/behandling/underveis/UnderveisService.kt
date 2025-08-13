@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Meldepl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRimeligGrunnRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -48,7 +49,7 @@ class UnderveisService(
     private val meldeperiodeRepository: MeldeperiodeRepository,
     private val vedtakService: VedtakService,
 ) {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): this(
         behandlingService = SakOgBehandlingService(repositoryProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
         meldekortRepository = repositoryProvider.provide(),
