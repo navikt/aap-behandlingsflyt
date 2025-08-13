@@ -47,7 +47,7 @@ class FatteVedtakStegTest {
     }
 
     @Test
-    fun `Klagevurderinger fra Nay skal kvalitetssikres hvis delevis omgjøring `() {
+    fun `Klagevurderinger fra Nay skal kvalitetssikres hvis delvis omgjøring `() {
         val kontekst = FlytKontekstMedPerioder(
             sakId = SakId(1L),
             behandlingId = BehandlingId(1L),
