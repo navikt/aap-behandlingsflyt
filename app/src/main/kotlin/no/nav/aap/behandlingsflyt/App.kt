@@ -47,6 +47,7 @@ import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringTi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.forutgåendeMedlemskapAPI
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.lovvalgMedlemskapGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskapAPI
+import no.nav.aap.behandlingsflyt.behandling.mellomlagring.mellomlagretVurderingApi
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.avklarOppfolgingsoppgaveGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringAPI
@@ -216,6 +217,7 @@ internal fun Application.server(
                 auditlogApi(dataSource, repositoryRegistry)
                 refusjonGrunnlagAPI(dataSource, repositoryRegistry, gatewayProvider)
                 manglendeGrunnlagApi(dataSource, repositoryRegistry)
+                mellomlagretVurderingApi(dataSource, repositoryRegistry)
                 // Klage
                 påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 fullmektigGrunnlagApi(dataSource, repositoryRegistry, GatewayProvider)

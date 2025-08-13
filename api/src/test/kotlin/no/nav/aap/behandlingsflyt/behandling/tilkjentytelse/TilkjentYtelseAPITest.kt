@@ -308,9 +308,8 @@ class TilkjentYtelseAPITest : BaseApiTest() {
         path: String
     ): HttpResponse {
         val client = createClient()
-        val jwt = issueToken("nav:aap:afpoffentlig.read")
         return client.get(path) {
-            header("Authorization", "Bearer ${jwt.serialize()}")
+            header("Authorization", "Bearer ${getToken().token()}")
             header("X-callid", UUID.randomUUID().toString())
             contentType(ContentType.Application.Json)
             setBody(payload)
