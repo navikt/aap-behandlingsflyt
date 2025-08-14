@@ -252,12 +252,7 @@ class StegOrkestrator(
         behandling: Behandling,
         nyStegTilstand: StegTilstand
     ) {
-        val førStatus = behandling.status()
         behandling.oppdaterSteg(nyStegTilstand)
         behandlingRepository.leggTilNyttAktivtSteg(behandlingId = behandling.id, nyStegTilstand)
-        val etterStatus = nyStegTilstand.steg().status
-        if (førStatus != etterStatus) {
-            behandlingRepository.oppdaterBehandlingStatus(behandlingId = behandling.id, status = etterStatus)
-        }
     }
 }

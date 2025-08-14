@@ -117,10 +117,10 @@ class EnklereFlytOrkestratorTest {
         }
 
         assertThat(behandling.aktivtSteg()).isEqualTo(FATTE_VEDTAK)
-        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+        assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
         behandlingRepository.hent(behandling.id).also {
             assertThat(it.aktivtSteg()).isEqualTo(FATTE_VEDTAK)
-            assertThat(it.status()).isEqualTo(Status.UTREDES)
+            assertThat(it.status()).isEqualTo(Status.IVERKSETTES)
         }
 
         assertThat(
