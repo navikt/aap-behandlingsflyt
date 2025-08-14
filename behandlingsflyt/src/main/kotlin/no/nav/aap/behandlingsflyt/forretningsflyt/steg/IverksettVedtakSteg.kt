@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
@@ -41,7 +42,8 @@ class IverksettVedtakSteg private constructor(
     private val utbetalingGateway: UtbetalingGateway,
     private val trukketSøknadService: TrukketSøknadService,
     private val flytJobbRepository: FlytJobbRepository,
-    private val unleashGateway: UnleashGateway
+    private val unleashGateway: UnleashGateway,
+    private val mellomlagretVurderingRepository: MellomlagretVurderingRepository
 ) : BehandlingSteg {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -80,6 +82,8 @@ class IverksettVedtakSteg private constructor(
                 .forBehandling(kontekst.sakId.id, kontekst.behandlingId.id)
         )
 
+        mellomlagretVurderingRepository.slett(kontekst.behandlingId)
+
         return Fullført
     }
 
@@ -103,6 +107,7 @@ class IverksettVedtakSteg private constructor(
             val tjenestepensjonRefusjonsKravVurderingRepository =
                 repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>()
             val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
+            val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
             return IverksettVedtakSteg(
                 behandlingRepository = behandlingRepository,
                 utbetalingService = UtbetalingService(
@@ -123,6 +128,7 @@ class IverksettVedtakSteg private constructor(
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
                 flytJobbRepository = flytJobbRepository,
                 unleashGateway = gatewayProvider.provide(),
+                mellomlagretVurderingRepository = mellomlagretVurderingRepository
             )
         }
 

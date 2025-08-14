@@ -24,6 +24,16 @@ object InMemoryMellomlagretVurderingRepository : MellomlagretVurderingRepository
         synchronized(lock) { vurderinger.remove(Pair(behandlingId, avklaringsbehovKode)) }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+        synchronized(lock) {
+            vurderinger.keys.map {
+                if (it.first == behandlingId) {
+                    vurderinger.remove(it)
+                }
+            }
+        }
+    }
+
     override fun lagre(mellomlagretVurdering: MellomlagretVurdering) {
         val (behandlingId, avklaringsbehovKode) = mellomlagretVurdering
         synchronized(lock) { vurderinger[Pair(behandlingId, avklaringsbehovKode)] = mellomlagretVurdering }

@@ -55,6 +55,18 @@ class MellomlagretVurderingRepositoryImpl(private val connection: DBConnection) 
         }
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+        connection.executeReturnUpdated(
+            """
+            delete from MELLOMLAGRET_VURDERING where behandling_id = ?; 
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.id)
+            }
+        }
+    }
+
     override fun lagre(mellomlagretVurdering: MellomlagretVurdering) {
 
         connection.execute(

@@ -93,7 +93,6 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
                 respond(response)
             }
         }
-
     }
 }
 
