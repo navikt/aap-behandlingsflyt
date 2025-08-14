@@ -14,6 +14,10 @@ import java.time.LocalDate
 interface ApiInternGateway : Gateway {
     fun sendPerioder(ident: String, perioder: List<Periode>)
     fun sendSakStatus(ident: String, sakStatus: SakStatus)
+
+    /**
+     * @param vedtakId ID til raden i vedtak-tabellen som referer til behandlingen.
+     */
     fun sendBehandling(
         sak: Sak,
         behandling: Behandling,

@@ -40,7 +40,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldePerioderJobbUtfører
-import no.nav.aap.behandlingsflyt.prosessering.DatadelingSakStatusJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseJobbUtfører
@@ -141,11 +140,6 @@ class BehandlingHendelseServiceImpl(
                 .forBehandling(sak.id.id, behandling.id.id)
         )
 
-        flytJobbRepository.leggTil(
-            JobbInput(jobb = DatadelingSakStatusJobbUtfører).medPayload(hendelse)
-                .forBehandling(sak.id.id, behandling.id.id)
-        )
-
         if (behandling.typeBehandling() in listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)) {
             flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, behandling.id))
         }
@@ -153,11 +147,7 @@ class BehandlingHendelseServiceImpl(
 
     private fun hentReservertTil(behandlingId: BehandlingId): String? {
         val oppfølgingsoppgavedokument =
-            MottaDokumentService(dokumentRepository).hentOppfølgingsBehandlingDokument(behandlingId)
-
-        if (oppfølgingsoppgavedokument == null) {
-            return null
-        }
+            MottaDokumentService(dokumentRepository).hentOppfølgingsBehandlingDokument(behandlingId) ?: return null
 
         return oppfølgingsoppgavedokument.reserverTilBruker
     }

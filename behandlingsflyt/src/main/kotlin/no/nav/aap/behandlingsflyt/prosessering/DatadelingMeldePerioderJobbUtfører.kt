@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
@@ -24,8 +25,12 @@ class DatadelingMeldePerioderJobbUtfører(
         val personIdent = sak.person.aktivIdent().identifikator
 
         val perioder = meldeperiodeRepository.hent(behandling.id)
+        // TODO: slå sammen til ett endepunkt i apiinterngateway
         apiInternGateway.sendPerioder(personIdent, perioder)
-
+        apiInternGateway.sendSakStatus(
+            sak.person.aktivIdent().identifikator,
+            SakStatus.fromKelvin(sak.saksnummer.toString(), sak.status(), sak.rettighetsperiode)
+        )
     }
 
     companion object : ProvidersJobbSpesifikasjon {
