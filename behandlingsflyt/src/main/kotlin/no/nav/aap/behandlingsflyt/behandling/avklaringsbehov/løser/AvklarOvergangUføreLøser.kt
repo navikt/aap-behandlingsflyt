@@ -29,14 +29,15 @@ class AvklarOvergangUføreLøser(
         kontekst: AvklaringsbehovKontekst,
         løsning: AvklarOvergangUføreLøsning
     ): LøsningsResultat {
-        løsning.vurdering.valider()
-    
+
+        løsning.overgangUføreVurdering.valider()
+
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
         val nyesteSykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)
             ?.sykdomsvurderinger?.maxByOrNull { it.opprettet }
 
-        val overgangUføreVurdering = løsning.vurdering.tilOvergangUføreVurdering(
+        val overgangUføreVurdering = løsning.overgangUføreVurdering.tilOvergangUføreVurdering(
             kontekst.bruker,
             nyesteSykdomsvurdering?.vurderingenGjelderFra
         )

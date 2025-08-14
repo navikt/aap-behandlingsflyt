@@ -574,17 +574,18 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
 
     protected fun løsOvergangUføre(behandling: Behandling): Behandling {
         return løsAvklaringsBehov(
-            behandling,
-            AvklarOvergangUføreLøsning(
-                OvergangUføreVurderingLøsningDto(
-                    begrunnelse = "Løsning",
-                    brukerSoktUforetrygd = false,
-                    brukerVedtakUforetrygd = null,
-                    brukerRettPaaAAP = false,
-                    virkningsDato = null,
-                    overgangBegrunnelse = null
+            behandling = behandling,
+            avklaringsBehovLøsning =
+                AvklarOvergangUføreLøsning(
+                    OvergangUføreVurderingLøsningDto(
+                        begrunnelse = "Løsning",
+                        brukerSoktUforetrygd = false,
+                        brukerVedtakUforetrygd = null,
+                        brukerRettPaaAAP = false,
+                        virkningsDato = null,
+                        overgangBegrunnelse = null
+                    )
                 )
-            )
         )
     }
 
@@ -839,7 +840,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
             )
             .løsAvklaringsBehov(
                 AvklarOvergangUføreLøsning(
-                    vurdering = OvergangUføreVurderingLøsningDto(
+                    overgangUføreVurdering = OvergangUføreVurderingLøsningDto(
                         begrunnelse = "Løsning",
                         brukerSoktUforetrygd = false,
                         brukerVedtakUforetrygd = null,
