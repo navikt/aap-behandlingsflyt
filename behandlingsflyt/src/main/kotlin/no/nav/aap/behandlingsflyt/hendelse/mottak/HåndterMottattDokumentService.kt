@@ -132,8 +132,8 @@ class HåndterMottattDokumentService(
             mottaDokumentService.markerSomBehandlet(sakId, opprettetBehandling.åpenBehandling.id, referanse)
         } else {
             when (opprettetBehandling) {
-                is SakOgBehandlingService.Ordinær -> mottaDokumentService.oppdaterBehandling(sakId, opprettetBehandling.åpenBehandling.id, referanse)
-                is SakOgBehandlingService.MåBehandlesAtomært -> mottaDokumentService.oppdaterBehandling(sakId, opprettetBehandling.nyBehandling.id, referanse)
+                is SakOgBehandlingService.Ordinær -> mottaDokumentService.oppdaterMedBehandlingId(sakId, opprettetBehandling.åpenBehandling.id, referanse)
+                is SakOgBehandlingService.MåBehandlesAtomært -> mottaDokumentService.oppdaterMedBehandlingId(sakId, opprettetBehandling.nyBehandling.id, referanse)
             }
         }
 

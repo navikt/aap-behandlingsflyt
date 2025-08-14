@@ -131,7 +131,7 @@ class MottaDokumentService(
         mottattDokumentRepository.oppdaterStatus(referanse, behandlingId, sakId, Status.BEHANDLET)
     }
 
-    fun oppdaterBehandling(sakId: SakId, behandlingId: BehandlingId, referanse: InnsendingReferanse) {
+    fun oppdaterMedBehandlingId(sakId: SakId, behandlingId: BehandlingId, referanse: InnsendingReferanse) {
         mottattDokumentRepository.oppdaterBehandlingId(referanse, behandlingId, sakId)
     }
 
