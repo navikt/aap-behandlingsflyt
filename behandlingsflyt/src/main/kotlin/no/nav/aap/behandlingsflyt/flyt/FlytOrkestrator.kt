@@ -172,6 +172,8 @@ class FlytOrkestrator(
         val behandlingFlyt = behandling.flyt()
         var gjeldendeSteg = finnGjeldendeSteg(behandling, behandlingFlyt)
 
+        oppdaterBehandlingstatusHvisEndret(behandling, gjeldendeSteg.type().status)
+        
         while (true) {
             if (gjeldendeSteg.type().status in stoppNårStatus) {
                 loggStopp(behandling, avklaringsbehovene)
@@ -207,6 +209,9 @@ class FlytOrkestrator(
             validerPlassering(behandlingFlyt, avklaringsbehovene.åpne())
 
             val neste = utledNesteSteg(result, behandlingFlyt)
+
+            oppdaterBehandlingstatusHvisEndret(behandling, neste?.type()?.status)
+            
             if (!result.kanFortsette() || neste == null) {
                 if (neste == null) {
                     log.info("Behandlingen har nådd slutten, avslutter behandling")
@@ -245,6 +250,15 @@ class FlytOrkestrator(
     private fun validerAtAvklaringsBehovErLukkede(avklaringsbehovene: Avklaringsbehovene) {
         check(avklaringsbehovene.åpne().isEmpty()) {
             "Behandlingen er avsluttet, men det finnes åpne avklaringsbehov."
+        }
+    }
+    
+    private fun oppdaterBehandlingstatusHvisEndret(behandling: Behandling, etterStatus: Status?) {
+        if (etterStatus != null) {
+            val førStatus = behandling.status()
+            if (førStatus != etterStatus) {
+                behandlingRepository.oppdaterBehandlingStatus(behandlingId = behandling.id, status = etterStatus)
+            }
         }
     }
 
