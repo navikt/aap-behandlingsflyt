@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedta
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurdering
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
@@ -75,6 +76,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreGateway
 import no.nav.aap.behandlingsflyt.integrasjon.utbetaling.UtbetalingGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -94,6 +96,7 @@ import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.behandling.mellomlagring.MellomlagretVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
@@ -402,6 +405,7 @@ open class AbstraktFlytOrkestratorTest {
                 AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(it), gatewayProvider),
                 AvklaringsbehovRepositoryImpl(it),
                 BehandlingRepositoryImpl(it),
+                MellomlagretVurderingRepositoryImpl(it),
             ).håndtere(
                 behandling.id, LøsAvklaringsbehovHendelse(
                     løsning = avklaringsBehovLøsning,
@@ -470,6 +474,20 @@ open class AbstraktFlytOrkestratorTest {
         kvalitetssikreOk(behandling)
     }
 
+    protected fun mellomlagreSykdom(behandling: Behandling): Behandling {
+        dataSource.transaction { connection ->
+            MellomlagretVurderingRepositoryImpl(connection).lagre(
+                MellomlagretVurdering(
+                    behandlingId = behandling.id,
+                    avklaringsbehovKode = AvklaringsbehovKode.`5003`,
+                    data = """{"test": "testverdi"}""",
+                    vurdertAv = "A123456",
+                    vurdertDato = LocalDateTime.now().withNano(0),
+                )
+            )
+        }
+        return behandling
+    }
     protected fun løsSykdom(behandling: Behandling): Behandling {
         return løsAvklaringsBehov(
             behandling,
@@ -556,6 +574,11 @@ open class AbstraktFlytOrkestratorTest {
     @JvmName("løsSykdomExt")
     protected fun Behandling.løsSykdom(): Behandling {
         return løsSykdom(this)
+    }
+
+    @JvmName("mellomlagreSykdomExt")
+    protected fun Behandling.mellomlagreSykdom(): Behandling {
+        return mellomlagreSykdom(this)
     }
 
     protected fun hentSak(ident: Ident, periode: Periode): Sak {

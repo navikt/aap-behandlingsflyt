@@ -5,6 +5,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.BaseApiTest
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
@@ -28,7 +29,7 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
     fun `hente ut mellomlagret vurdering fra API`() {
         val ds = MockDataSource()
         val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
-        val avklaringsbehovKode = "12345"
+        val avklaringsbehovKode = AvklaringsbehovKode.`5056`
 
         val mellomlagretVurdering = MellomlagretVurdering(
             behandlingId = behandling.id,
@@ -72,7 +73,7 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
     fun `skal overskrive ut mellomlagret vurdering fra API`() {
         val ds = MockDataSource()
         val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
-        val avklaringsbehovKode = "12345"
+        val avklaringsbehovKode = AvklaringsbehovKode.`5001`
 
         val mellomlagretVurdering = MellomlagretVurdering(
             behandlingId = behandling.id,
@@ -92,7 +93,7 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
 
             val nyMellomlagretVurdering = MellomlagretVurderingRequest(
                 behandlingsReferanse = behandling.referanse.referanse,
-                avklaringsbehovkode = avklaringsbehovKode,
+                avklaringsbehovkode = avklaringsbehovKode.name,
                 data = "{}",
             )
             val response =
@@ -112,10 +113,10 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
 
 
     @Test
-    fun `hente få tom verdi dersom man prøver å hente ut uten at det finnes noe mellomlagret verdi`() {
+    fun `skal få tom verdi dersom man prøver å hente ut uten at det finnes noe mellomlagret verdi`() {
         val ds = MockDataSource()
         val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
-        val avklaringsbehovKode = "12345"
+        val avklaringsbehovKode = AvklaringsbehovKode.`8001`
         testApplication {
             installApplication {
                 mellomlagretVurderingApi(ds, repositoryRegistry)
@@ -136,5 +137,44 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
         }
     }
 
+    @Test
+    fun `skal slette mellomlagret vurdering fra API`() {
+        val ds = MockDataSource()
+        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+        val avklaringsbehovKode = AvklaringsbehovKode.`5001`
+
+        val mellomlagretVurdering = MellomlagretVurdering(
+            behandlingId = behandling.id,
+            avklaringsbehovKode = avklaringsbehovKode,
+            data = """
+                    {"element": "verdi", "tallElement": 1234, "boolskElement": true}
+                    """.trimIndent(),
+            vurdertAv = "A123456",
+            vurdertDato = LocalDateTime.now().withNano(0)
+        )
+        InMemoryMellomlagretVurderingRepository.lagre(mellomlagretVurdering)
+
+        testApplication {
+            installApplication {
+                mellomlagretVurderingApi(ds, repositoryRegistry)
+            }
+
+
+            val initiellVerdi =
+                InMemoryMellomlagretVurderingRepository.hentHvisEksisterer(behandling.id, avklaringsbehovKode)
+            assertThat(initiellVerdi).isNotNull
+
+            val response =
+                createClient().post("/api/behandling/mellomlagret-vurdering/${behandling.referanse.referanse}/${avklaringsbehovKode}/slett") {
+                    header("Authorization", "Bearer ${getToken().token()}")
+                    contentType(ContentType.Application.Json)
+                }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.Accepted)
+            val oppdatertVerdi =
+                InMemoryMellomlagretVurderingRepository.hentHvisEksisterer(behandling.id, avklaringsbehovKode)
+            assertThat(oppdatertVerdi).isNull()
+        }
+    }
 
 }

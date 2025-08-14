@@ -409,7 +409,6 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             gjelderFra = sak.rettighetsperiode.fom,
             vissVarighet = false
         )
-
         behandling.løsAvklaringsBehov(
             AvklarBistandsbehovLøsning(
                 bistandsVurdering = BistandVurderingLøsningDto(

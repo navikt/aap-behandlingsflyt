@@ -6,7 +6,9 @@ import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
+import io.ktor.utils.io.core.use
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
 import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
@@ -38,7 +40,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
                     val referanse = BehandlingReferanse(request.behandlingsReferanse)
-
+                    val avklaringsbehovKode = AvklaringsbehovKode.valueOf(request.avklaringsbehovkode)
                     val behandling = behandlingRepository.hent(referanse)
                     LoggingKontekst(
                         repositoryProvider,
@@ -51,7 +53,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
                         mellomlagretVurderingRepository.lagre(
                             MellomlagretVurdering(
                                 behandlingId = behandling.id,
-                                avklaringsbehovKode = request.avklaringsbehovkode,
+                                avklaringsbehovKode = avklaringsbehovKode,
                                 data = request.data,
                                 vurdertAv = bruker().ident,
                                 vurdertDato = LocalDateTime.now()
@@ -69,6 +71,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
                 )
             ) { params ->
                 val behandlingsreferanse = BehandlingReferanse(params.referanse)
+                val avklaringsbehovKode = AvklaringsbehovKode.valueOf(params.avklaringsbehovkode)
                 val response = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
@@ -80,7 +83,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
                     ).use {
                         val mellomlagretVurdering = mellomlagretVurderingRepository.hentHvisEksisterer(
                             behandling.id,
-                            params.avklaringsbehovkode
+                            avklaringsbehovKode
                         )
                         MellomlagredeVurderingResponse(
                             mellomlagretVurdering = mellomlagretVurdering?.tilResponse(),
@@ -92,6 +95,32 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
             }
         }
 
+        route("/mellomlagret-vurdering/{referanse}/{avklaringsbehovkode}/slett") {
+            authorizedPost<BehandlingReferanseMedAvklaringsbehov, Unit, Unit>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse")
+                )
+            ) { params, _ ->
+                val behandlingsreferanse = BehandlingReferanse(params.referanse)
+                val avklaringsbehovKode = AvklaringsbehovKode.valueOf(params.avklaringsbehovkode)
+                dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val behandling = behandlingRepository.hent(behandlingsreferanse)
+                    LoggingKontekst(
+                        repositoryProvider,
+                        LogKontekst(referanse = behandlingsreferanse)
+                    ).use {
+                        mellomlagretVurderingRepository.slett(
+                            behandling.id,
+                            avklaringsbehovKode
+                        )
+                    }
+                }
+                respondWithStatus(HttpStatusCode.Accepted)
+            }
+        }
     }
 }
 

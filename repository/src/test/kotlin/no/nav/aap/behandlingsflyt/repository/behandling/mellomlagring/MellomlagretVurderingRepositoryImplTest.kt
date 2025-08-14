@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.mellomlagring
 
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurdering
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -28,17 +29,20 @@ class MellomlagretVurderingRepositoryImplTest {
         dataSource.transaction { connection ->
             val repository = MellomlagretVurderingRepositoryImpl(connection)
             val behandlingId = opprettBehandling(connection)
-            val vurdering = opprettMellomlagretVurdering(behandlingId, "1234")
+            val avklaringsbehovKode = AvklaringsbehovKode.`5056`
+            val vurdering = opprettMellomlagretVurdering(behandlingId, avklaringsbehovKode)
             repository.lagre(vurdering)
 
-            val mellomlagretVurdering = repository.hentHvisEksisterer(behandlingId, "1234")
+            val mellomlagretVurdering = repository.hentHvisEksisterer(behandlingId, avklaringsbehovKode)
 
             assertThat(mellomlagretVurdering).isNotNull()
             assertThat(mellomlagretVurdering?.behandlingId).isEqualTo(behandlingId)
             assertThat(mellomlagretVurdering?.vurdertDato).isEqualTo(vurdering.vurdertDato)
             assertThat(mellomlagretVurdering?.vurdertAv).isEqualTo(vurdering.vurdertAv)
             assertThat(mellomlagretVurdering?.avklaringsbehovKode).isEqualTo(vurdering.avklaringsbehovKode)
-            assertThat(DefaultJsonMapper.fromJson<FakeDataObjektForMellomlager>(mellomlagretVurdering!!.data)).isEqualTo(DefaultJsonMapper.fromJson<FakeDataObjektForMellomlager>(vurdering.data))
+            assertThat(DefaultJsonMapper.fromJson<FakeDataObjektForMellomlager>(mellomlagretVurdering!!.data)).isEqualTo(
+                DefaultJsonMapper.fromJson<FakeDataObjektForMellomlager>(vurdering.data)
+            )
         }
     }
 
@@ -46,21 +50,25 @@ class MellomlagretVurderingRepositoryImplTest {
     fun `skal overskrive forrige vurdering dersom det kommer inn ny`() {
         dataSource.transaction { connection ->
             val repository = MellomlagretVurderingRepositoryImpl(connection)
+            val avklaringsbehovKode = AvklaringsbehovKode.`5056`
             val behandlingId = opprettBehandling(connection)
-            val vurdering = opprettMellomlagretVurdering(behandlingId, "1234")
+            val vurdering = opprettMellomlagretVurdering(behandlingId, avklaringsbehovKode)
             repository.lagre(vurdering)
 
             val data = FakeDataObjektForMellomlager("tull", true, true, 0)
-            val oppdatertVurdering = opprettMellomlagretVurdering(behandlingId, "1234", bruker = "bruker2", data = data)
+            val oppdatertVurdering =
+                opprettMellomlagretVurdering(behandlingId, avklaringsbehovKode, bruker = "bruker2", data = data)
             repository.lagre(oppdatertVurdering)
 
-            val mellomlagretVurdering = repository.hentHvisEksisterer(behandlingId, "1234")
+            val mellomlagretVurdering = repository.hentHvisEksisterer(behandlingId, avklaringsbehovKode)
             assertThat(mellomlagretVurdering).isNotNull()
             assertThat(mellomlagretVurdering?.behandlingId).isEqualTo(behandlingId)
             assertThat(mellomlagretVurdering?.vurdertDato).isEqualTo(oppdatertVurdering.vurdertDato)
             assertThat(mellomlagretVurdering?.vurdertAv).isEqualTo(oppdatertVurdering.vurdertAv)
             assertThat(mellomlagretVurdering?.avklaringsbehovKode).isEqualTo(oppdatertVurdering.avklaringsbehovKode)
-            assertThat(DefaultJsonMapper.fromJson<FakeDataObjektForMellomlager>(mellomlagretVurdering!!.data)).isEqualTo(data)
+            assertThat(DefaultJsonMapper.fromJson<FakeDataObjektForMellomlager>(mellomlagretVurdering!!.data)).isEqualTo(
+                data
+            )
 
 
         }
@@ -72,10 +80,10 @@ class MellomlagretVurderingRepositoryImplTest {
             val repository = MellomlagretVurderingRepositoryImpl(connection)
             val behandlingId = opprettBehandling(connection)
             val behandlingId2 = opprettBehandling(connection)
-            val vurdering1 = opprettMellomlagretVurdering(behandlingId, "1", bruker = "b1")
-            val vurdering2 = opprettMellomlagretVurdering(behandlingId, "2", bruker = "b1")
-            val vurdering3 = opprettMellomlagretVurdering(behandlingId, "3", bruker = "b1")
-            val vurdering4 = opprettMellomlagretVurdering(behandlingId2, "2", bruker = "b2")
+            val vurdering1 = opprettMellomlagretVurdering(behandlingId, AvklaringsbehovKode.`5001`, bruker = "b1")
+            val vurdering2 = opprettMellomlagretVurdering(behandlingId, AvklaringsbehovKode.`5002`, bruker = "b1")
+            val vurdering3 = opprettMellomlagretVurdering(behandlingId, AvklaringsbehovKode.`5003`, bruker = "b1")
+            val vurdering4 = opprettMellomlagretVurdering(behandlingId2, AvklaringsbehovKode.`5002`, bruker = "b2")
 
             repository.lagre(vurdering1)
             repository.lagre(vurdering2)
@@ -110,7 +118,7 @@ class MellomlagretVurderingRepositoryImplTest {
 
     private fun opprettMellomlagretVurdering(
         behandlingId: BehandlingId,
-        avklaringsbehovKode: String,
+        avklaringsbehovKode: AvklaringsbehovKode,
         bruker: String = "bruker123",
         data: FakeDataObjektForMellomlager = FakeDataObjektForMellomlager()
     ): MellomlagretVurdering = MellomlagretVurdering(
@@ -121,7 +129,12 @@ class MellomlagretVurderingRepositoryImplTest {
         vurdertDato = LocalDateTime.now().withNano(0)
     )
 
-    private data class FakeDataObjektForMellomlager(val beskrivelse: String = "En tekstlig beskrivelse", val harOppfyltA: Boolean = true, val harOppfyltB: Boolean = false, val enTallVerdi: Int = 1324)
+    private data class FakeDataObjektForMellomlager(
+        val beskrivelse: String = "En tekstlig beskrivelse",
+        val harOppfyltA: Boolean = true,
+        val harOppfyltB: Boolean = false,
+        val enTallVerdi: Int = 1324
+    )
 
 
 }
