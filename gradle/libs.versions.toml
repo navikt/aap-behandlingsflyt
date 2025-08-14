@@ -2,7 +2,7 @@
 ktor = "3.2.3"
 komponenter = "1.0.318"
 tilgang = "1.0.106"
-utbetaling = "0.0.54"
+utbetaling = "0.0.55"
 junit = "5.13.4"
 
 [libraries]
