@@ -75,6 +75,33 @@ object InMemoryMottattDokumentRepository : MottattDokumentRepository {
         }
     }
 
+    override fun oppdaterBehandlingId(
+        dokumentReferanse: InnsendingReferanse,
+        behandlingId: BehandlingId,
+        sakId: SakId
+    ) {
+        synchronized(lock) {
+            memory
+                .filter { it.referanse == dokumentReferanse && it.sakId == sakId }
+                .forEach {
+                    memory.remove(it)
+                    memory.add(
+                        MottattDokument(
+                            referanse = it.referanse,
+                            sakId = it.sakId,
+                            behandlingId = behandlingId,
+                            mottattTidspunkt = it.mottattTidspunkt,
+                            type = it.type,
+                            kanal = it.kanal,
+                            status = it.status,
+                            strukturertDokument = it.strukturertDokument
+                        )
+                    )
+                }
+        }
+
+    }
+
     override fun hentUbehandledeDokumenterAvType(
         sakId: SakId,
         dokumentType: InnsendingType

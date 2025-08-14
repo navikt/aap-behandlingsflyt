@@ -127,8 +127,12 @@ class MottaDokumentService(
         )
     }
 
-    fun knyttTilBehandling(sakId: SakId, behandlingId: BehandlingId, referanse: InnsendingReferanse) {
+    fun markerSomBehandlet(sakId: SakId, behandlingId: BehandlingId, referanse: InnsendingReferanse) {
         mottattDokumentRepository.oppdaterStatus(referanse, behandlingId, sakId, Status.BEHANDLET)
+    }
+
+    fun oppdaterMedBehandlingId(sakId: SakId, behandlingId: BehandlingId, referanse: InnsendingReferanse) {
+        mottattDokumentRepository.oppdaterBehandlingId(referanse, behandlingId, sakId)
     }
 
     fun hentOppfølgingsBehandlingDokument(behandlingId: BehandlingId): BehandletOppfølgingsOppgave? {
