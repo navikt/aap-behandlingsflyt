@@ -42,7 +42,6 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                                     tilOgMed = tilkjentYtelsePeriode.periode.tom,
                                     dagsats = it.dagsats.verdi,
                                     gradering = it.gradering.endeligGradering.prosentverdi(),
-                                    grunnlag = it.grunnlag.verdi,
                                     grunnlagsfaktor = it.grunnlagsfaktor.verdi(),
                                     grunnbeløp = it.grunnbeløp.verdi,
                                     antallBarn = it.antallBarn,

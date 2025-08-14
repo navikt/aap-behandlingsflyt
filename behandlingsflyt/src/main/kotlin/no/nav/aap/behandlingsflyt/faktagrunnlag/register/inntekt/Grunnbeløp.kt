@@ -215,7 +215,7 @@ object Grunnbeløp {
         }
     }
 
-    class BenyttetGjennomsnittsbeløp(
+    data class BenyttetGjennomsnittsbeløp(
         val år: Year,
         val beløp: Beløp,
         val gUnit: GUnit

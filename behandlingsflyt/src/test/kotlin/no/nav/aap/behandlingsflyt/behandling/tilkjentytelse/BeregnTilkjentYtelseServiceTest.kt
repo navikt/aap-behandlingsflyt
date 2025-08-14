@@ -90,7 +90,6 @@ class BeregnTilkjentYtelseServiceTest {
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`
                     ),
-                    grunnlag = Beløp("1131.92"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("111477"),
                     antallBarn = 0,
@@ -109,7 +108,6 @@ class BeregnTilkjentYtelseServiceTest {
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`
                     ),
-                    grunnlag = Beløp("1204.45"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620.00"),
                     antallBarn = 0,
@@ -175,7 +173,6 @@ class BeregnTilkjentYtelseServiceTest {
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`
                     ),
-                    grunnlag = Beløp("1204.45"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 1,
@@ -243,7 +240,6 @@ class BeregnTilkjentYtelseServiceTest {
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`
                     ),
-                    grunnlag = Beløp("1204.45"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 1,
@@ -262,7 +258,6 @@ class BeregnTilkjentYtelseServiceTest {
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`
                     ),
-                    grunnlag = Beløp("1204.45"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 1,
@@ -321,7 +316,6 @@ class BeregnTilkjentYtelseServiceTest {
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`
                     ),
-                    grunnlag = Beløp("954.06"),
                     grunnlagsfaktor = GUnit("0.0076923077"),
                     grunnbeløp = Beløp("124028"),
                     antallBarn = 0,
@@ -341,7 +335,6 @@ class BeregnTilkjentYtelseServiceTest {
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`
                     ),
-                    grunnlag = Beløp("973.62"),
                     grunnlagsfaktor = GUnit("0.0078500000"),
                     grunnbeløp = Beløp("124028"),
                     antallBarn = 0,
@@ -400,7 +393,6 @@ class BeregnTilkjentYtelseServiceTest {
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`
                     ),
-                    grunnlag = Beløp("512.09"),
                     grunnlagsfaktor = GUnit("0.0051282051"),
                     grunnbeløp = Beløp("99858"),
                     antallBarn = 0,
@@ -420,7 +412,6 @@ class BeregnTilkjentYtelseServiceTest {
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`
                     ),
-                    grunnlag = Beløp("768.14"),
                     grunnlagsfaktor = GUnit("0.0076923077"),
                     grunnbeløp = Beløp("99858"),
                     antallBarn = 0,
@@ -477,7 +468,6 @@ class BeregnTilkjentYtelseServiceTest {
                         samordningUføregradering = Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`
                     ),
-                    grunnlag = Beløp("1204.45"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 0,
@@ -558,7 +548,6 @@ class BeregnTilkjentYtelseServiceTest {
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`
                     ),
-                    grunnlag = Beløp("1204.45"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 0,
@@ -578,7 +567,6 @@ class BeregnTilkjentYtelseServiceTest {
                         Prosent.`30_PROSENT`,
                         Prosent.`0_PROSENT`
                     ),
-                    grunnlag = Beløp("1204.45"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 0,
@@ -597,7 +585,6 @@ class BeregnTilkjentYtelseServiceTest {
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`
                     ),
-                    grunnlag = Beløp("1204.45"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620.00"),
                     antallBarn = 0,
@@ -674,7 +661,6 @@ class BeregnTilkjentYtelseServiceTest {
                         Prosent.`50_PROSENT`,
                         Prosent.`0_PROSENT`
                     ),
-                    grunnlag = Beløp("1204.45"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 0,
@@ -693,7 +679,6 @@ class BeregnTilkjentYtelseServiceTest {
                         Prosent.`70_PROSENT`,
                         Prosent.`0_PROSENT`
                     ),
-                    grunnlag = Beløp("1204.45"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620.00"),
                     antallBarn = 0,
@@ -751,7 +736,6 @@ class BeregnTilkjentYtelseServiceTest {
                         samordningUføregradering = Prosent.`0_PROSENT`,
                         samordningArbeidsgiverGradering = Prosent.`0_PROSENT`
                     ),
-                    grunnlag = Beløp("1204.45"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 0,
@@ -817,7 +801,6 @@ class BeregnTilkjentYtelseServiceTest {
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`,
                     ),
-                    grunnlag = Beløp("1204.45"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 0,
@@ -905,7 +888,6 @@ class BeregnTilkjentYtelseServiceTest {
                         Prosent.`0_PROSENT`,
                         Prosent.`100_PROSENT`
                     ),
-                    grunnlag = Beløp("1204.45"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 0,
@@ -976,7 +958,6 @@ class BeregnTilkjentYtelseServiceTest {
                         samordningUføregradering = Prosent.`30_PROSENT`,
                         samordningArbeidsgiverGradering = Prosent.`0_PROSENT`
                     ),
-                    grunnlag = Beløp("1204.45"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 0,
@@ -1068,7 +1049,6 @@ arbeidsgrad,	sykepengegrad,	uforegrad,	institusjon,	   effektivGradering
                         samordningUføregradering = Prosent(uforegrad),
                         samordningArbeidsgiverGradering = Prosent.`0_PROSENT`
                     ),
-                    grunnlag = Beløp("1204.45"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 0,
