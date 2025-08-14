@@ -11,7 +11,6 @@ data class TilkjentYtelsePeriodeDTO(
     val tilOgMed: LocalDate,
     val dagsats: BigDecimal,
     val gradering: Int,
-    val grunnlag: BigDecimal,
     val grunnlagsfaktor: BigDecimal,
     val grunnbeløp: BigDecimal,
     val antallBarn: Int,

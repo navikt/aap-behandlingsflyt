@@ -59,7 +59,6 @@ class TilkjentYtelseAPITest : BaseApiTest() {
                             Prosent(30),
                             Prosent(0)
                         ),
-                        grunnlag = Beløp(10000),
                         grunnlagsfaktor = GUnit("1.5"),
                         grunnbeløp = Beløp(106399),
                         antallBarn = 2,
@@ -88,7 +87,6 @@ class TilkjentYtelseAPITest : BaseApiTest() {
                             tilOgMed = LocalDate.parse("2026-03-07"),
                             dagsats = BigDecimal("500.00"),
                             gradering = 50,
-                            grunnlag = BigDecimal("10000.00"),
                             grunnlagsfaktor = BigDecimal("1.5000000000"),
                             grunnbeløp = BigDecimal("106399.00"),
                             antallBarn = 2,
@@ -141,7 +139,6 @@ class TilkjentYtelseAPITest : BaseApiTest() {
                     samordningUføregradering = Prosent(30),
                     samordningArbeidsgiverGradering = Prosent(50),
                 ),
-                grunnlag = Beløp(10000),
                 grunnlagsfaktor = GUnit("1.5"),
                 grunnbeløp = Beløp(106399),
                 antallBarn = 2,

@@ -126,7 +126,7 @@ class UtbetalingService(
                     redusertDagsats = detaljer.redusertDagsats().verdi(),
                     gradering = detaljer.gradering.endeligGradering.prosentverdi(),
                     dagsats = detaljer.dagsats.verdi(),
-                    grunnlag = detaljer.grunnlag.verdi(),
+                    grunnlag = detaljer.dagsats.verdi(),
                     grunnlagsfaktor = detaljer.grunnlagsfaktor.verdi(),
                     grunnbeløp = detaljer.grunnbeløp.verdi(),
                     antallBarn = detaljer.antallBarn,
