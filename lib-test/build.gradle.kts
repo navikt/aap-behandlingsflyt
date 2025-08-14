@@ -18,9 +18,6 @@ dependencies {
     implementation(libs.ktorServerContentNegotation)
 
     implementation(libs.ktorServerNetty)
-    constraints {
-        implementation("io.netty:netty-common:4.2.3.Final")
-    }
     implementation(libs.ktorServerStatusPages)
 
     implementation(libs.ktorSerializationJackson)
