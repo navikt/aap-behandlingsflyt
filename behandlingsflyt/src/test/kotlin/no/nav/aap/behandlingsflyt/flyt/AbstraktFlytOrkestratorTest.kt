@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.Totri
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
@@ -35,6 +36,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
@@ -564,6 +566,28 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
         )
     }
 
+
+    @JvmName("løsOvergangUføreExt")
+    protected fun Behandling.løsOvergangUføre(): Behandling {
+        return løsOvergangUføre(this)
+    }
+
+    protected fun løsOvergangUføre(behandling: Behandling): Behandling {
+        return løsAvklaringsBehov(
+            behandling,
+            AvklarOvergangUføreLøsning(
+                OvergangUføreVurderingLøsningDto(
+                    begrunnelse = "Løsning",
+                    brukerSoktUforetrygd = false,
+                    brukerVedtakUforetrygd = null,
+                    brukerRettPaaAAP = false,
+                    virkningsDato = null,
+                    overgangBegrunnelse = null
+                )
+            )
+        )
+    }
+
     protected fun Behandling.løsRettighetsperiode(dato: LocalDate): Behandling {
         return this.løsAvklaringsBehov(
             avklaringsBehovLøsning = VurderRettighetsperiodeLøsning(
@@ -809,6 +833,18 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
                         erBehovForArbeidsrettetTiltak = false,
                         erBehovForAnnenOppfølging = null,
                         skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null
+                    ),
+                ),
+            )
+            .løsAvklaringsBehov(
+                AvklarOvergangUføreLøsning(
+                    vurdering = OvergangUføreVurderingLøsningDto(
+                        begrunnelse = "Løsning",
+                        brukerSoktUforetrygd = false,
+                        brukerVedtakUforetrygd = null,
+                        brukerRettPaaAAP = false,
+                        virkningsDato = null,
                         overgangBegrunnelse = null
                     ),
                 ),
