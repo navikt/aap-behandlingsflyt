@@ -12,7 +12,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 
-class OvergangUføreLøser(
+class AvklarOvergangUføreLøser(
     private val behandlingRepository: BehandlingRepository,
     private val overgangUforeRepository: OvergangUføreRepository,
     private val sykdomRepository: SykdomRepository,
@@ -29,14 +29,14 @@ class OvergangUføreLøser(
         kontekst: AvklaringsbehovKontekst,
         løsning: AvklarOvergangUføreLøsning
     ): LøsningsResultat {
-        løsning.overgangUføreVurdering.valider()
+        løsning.vurdering.valider()
     
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
         val nyesteSykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)
             ?.sykdomsvurderinger?.maxByOrNull { it.opprettet }
 
-        val overgangUføreVurdering = løsning.overgangUføreVurdering.tilOvergangUføreVurdering(
+        val overgangUføreVurdering = løsning.vurdering.tilOvergangUføreVurdering(
             kontekst.bruker,
             nyesteSykdomsvurdering?.vurderingenGjelderFra
         )
@@ -68,6 +68,6 @@ class OvergangUføreLøser(
     }
 
     override fun forBehov(): Definisjon {
-        return Definisjon.OVERGANG_UFORE
+        return Definisjon.AVKLAR_OVERGANG_UFORE
     }
 }

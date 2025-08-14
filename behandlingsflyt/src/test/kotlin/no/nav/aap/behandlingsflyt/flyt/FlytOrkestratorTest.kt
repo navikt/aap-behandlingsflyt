@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBist
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOverstyrtForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOverstyrtLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
@@ -89,6 +90,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
@@ -513,6 +515,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         )
             .løsSykdom()
             .løsBistand()
+            .løsOvergangUføre()
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
@@ -987,6 +990,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             )
         )
 
+        behandling = løsOvergangUføre(behandling)
         behandling = løsSykdomsvurderingBrev(behandling)
 
         behandling = kvalitetssikreOk(behandling)
@@ -1132,6 +1136,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             )
         )
 
+        behandling = løsOvergangUføre(behandling)
         behandling = løsSykdomsvurderingBrev(behandling)
 
         behandling = kvalitetssikreOk(behandling)
@@ -1297,6 +1302,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     ),
                 ),
             )
+            .løsOvergangUføre()
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .medKontekst {
@@ -1393,7 +1399,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 )
             ),
         )
-
+        behandling = løsOvergangUføre(behandling)
         behandling = løsSykdomsvurderingBrev(behandling)
 
         behandling = kvalitetssikreOk(behandling)
@@ -1711,7 +1717,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 )
             )
         )
-
+        behandling = løsOvergangUføre(behandling)
         behandling = løsSykdomsvurderingBrev(behandling)
 
         behandling = kvalitetssikreOk(behandling)

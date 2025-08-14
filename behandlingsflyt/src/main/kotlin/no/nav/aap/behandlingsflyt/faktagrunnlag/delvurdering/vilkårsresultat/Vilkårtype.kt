@@ -58,6 +58,16 @@ enum class Vilkårtype(
         ),
         hjemmel = "§ 11-6"
     ),
+    OVERGANGUFØREVILKÅRET(
+        kode = "AAP-18",
+        spesielleInnvilgelsesÅrsaker = listOf(
+            Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD,
+        ),
+        avslagsårsaker = listOf(
+            Avslagsårsak.MANGLENDE_DOKUMENTASJON,
+        ),
+        hjemmel = "§ 11-18"
+    ),
     MEDLEMSKAP(
         kode = "AAP-2",
         spesielleInnvilgelsesÅrsaker = emptyList(),

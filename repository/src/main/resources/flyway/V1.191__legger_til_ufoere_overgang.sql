@@ -9,10 +9,10 @@ CREATE TABLE OVERGANG_UFORE_VURDERING
     ID            BIGSERIAL PRIMARY KEY,
     BEGRUNNELSE              TEXT                                   NOT NULL,
     BRUKER_SOKT_UFORETRYGD   BOOLEAN      DEFAULT FALSE             NOT NULL,
-    BRUKER_VEDTAK_UFORETRYGD TEXT                                   NOT NULL,
+    BRUKER_VEDTAK_UFORETRYGD TEXT                                   NULL,
     BRUKER_RETT_PAA_AAP      BOOLEAN      DEFAULT FALSE             NOT NULL,
     VURDERT_AV varchar(50) NOT NULL DEFAULT 'Ukjent',
-    VIRKNINGSDATO       DATE                                   NOT NULL,
+    VIRKNINGSDATO       DATE                                   NULL,
     OPPRETTET_TID TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
     VURDERINGER_ID BIGINT NULL REFERENCES OVERGANG_UFORE_VURDERINGER (ID)
 );

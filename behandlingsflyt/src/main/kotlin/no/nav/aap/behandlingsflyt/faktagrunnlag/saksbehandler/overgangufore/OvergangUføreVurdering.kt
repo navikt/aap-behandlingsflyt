@@ -6,7 +6,7 @@ import java.time.LocalDate
 class OvergangUføreVurdering(
     val begrunnelse: String,
     val brukerSoktUforetrygd: Boolean,
-    val brukerVedtakUforetrygd: String,
+    val brukerVedtakUforetrygd: String?,
     val brukerRettPaaAAP: Boolean?,
     val virkningsDato: LocalDate?,
     val vurdertAv: String,

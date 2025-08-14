@@ -7,7 +7,7 @@ import java.time.LocalDate
 data class OvergangUføreVurderingLøsningDto(
     val begrunnelse: String,
     val brukerSoktUforetrygd: Boolean,
-    val brukerVedtakUforetrygd: String,
+    val brukerVedtakUforetrygd: String?,
     val brukerRettPaaAAP: Boolean?,
     val virkningsDato: LocalDate?,
     val overgangBegrunnelse: String?,

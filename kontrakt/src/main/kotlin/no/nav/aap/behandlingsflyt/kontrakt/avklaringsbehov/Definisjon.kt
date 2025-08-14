@@ -184,7 +184,7 @@ public enum class Definisjon(
         kvalitetssikres = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
     ),
-    OVERGANG_UFORE(
+    AVKLAR_OVERGANG_UFORE(
         kode = AvklaringsbehovKode.`5031`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.OVERGANG_UFORE,
