@@ -40,7 +40,7 @@ abstract class KafkaKonsument(
             // Ignorerer exception hvis vi stenger ned
             log.info("Konsument av $topic ble lukket med WakeupException")
             if (!lukket.get()) throw e
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             log.error("Konsumering av $topic ble lukket pga uhåndtert feil", e)
         } finally {
             log.info("Ferdig med å lese hendelser fra $${this.javaClass.name} - lukker konsument")
