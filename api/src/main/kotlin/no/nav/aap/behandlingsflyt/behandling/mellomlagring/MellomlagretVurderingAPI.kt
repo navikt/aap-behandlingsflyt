@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
+import io.ktor.utils.io.core.use
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -91,6 +92,33 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
                     }
                 }
                 respond(response)
+            }
+        }
+
+        route("/mellomlagret-vurdering/{referanse}/{avklaringsbehovkode}/slett") {
+            authorizedPost<BehandlingReferanseMedAvklaringsbehov, Unit, Unit>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse")
+                )
+            ) { params, _ ->
+                val behandlingsreferanse = BehandlingReferanse(params.referanse)
+                val avklaringsbehovKode = AvklaringsbehovKode.valueOf(params.avklaringsbehovkode)
+                dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val behandling = behandlingRepository.hent(behandlingsreferanse)
+                    LoggingKontekst(
+                        repositoryProvider,
+                        LogKontekst(referanse = behandlingsreferanse)
+                    ).use {
+                        mellomlagretVurderingRepository.slett(
+                            behandling.id,
+                            avklaringsbehovKode
+                        )
+                    }
+                }
+                respondWithStatus(HttpStatusCode.Accepted)
             }
         }
     }

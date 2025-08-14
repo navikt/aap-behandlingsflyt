@@ -137,5 +137,44 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
         }
     }
 
+    @Test
+    fun `skal slette mellomlagret vurdering fra API`() {
+        val ds = MockDataSource()
+        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+        val avklaringsbehovKode = AvklaringsbehovKode.`5001`
+
+        val mellomlagretVurdering = MellomlagretVurdering(
+            behandlingId = behandling.id,
+            avklaringsbehovKode = avklaringsbehovKode,
+            data = """
+                    {"element": "verdi", "tallElement": 1234, "boolskElement": true}
+                    """.trimIndent(),
+            vurdertAv = "A123456",
+            vurdertDato = LocalDateTime.now().withNano(0)
+        )
+        InMemoryMellomlagretVurderingRepository.lagre(mellomlagretVurdering)
+
+        testApplication {
+            installApplication {
+                mellomlagretVurderingApi(ds, repositoryRegistry)
+            }
+
+
+            val initiellVerdi =
+                InMemoryMellomlagretVurderingRepository.hentHvisEksisterer(behandling.id, avklaringsbehovKode)
+            assertThat(initiellVerdi).isNotNull
+
+            val response =
+                createClient().post("/api/behandling/mellomlagret-vurdering/${behandling.referanse.referanse}/${avklaringsbehovKode}/slett") {
+                    header("Authorization", "Bearer ${getToken().token()}")
+                    contentType(ContentType.Application.Json)
+                }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.Accepted)
+            val oppdatertVerdi =
+                InMemoryMellomlagretVurderingRepository.hentHvisEksisterer(behandling.id, avklaringsbehovKode)
+            assertThat(oppdatertVerdi).isNull()
+        }
+    }
 
 }
