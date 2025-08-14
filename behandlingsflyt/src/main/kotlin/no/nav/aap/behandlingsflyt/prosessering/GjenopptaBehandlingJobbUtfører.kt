@@ -5,7 +5,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
-import no.nav.aap.motor.ProviderJobbSpesifikasjon
+import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import no.nav.aap.motor.cron.CronExpression
 
 class GjenopptaBehandlingJobbUtfører(
@@ -21,16 +21,16 @@ class GjenopptaBehandlingJobbUtfører(
         }
     }
 
-    companion object : ProviderJobbSpesifikasjon {
+    companion object : ProvidersJobbSpesifikasjon {
         override val type = "batch.gjenopptaBehandlinger"
         override val navn = "Gjenoppta behandling"
         override val beskrivelse = "Finner behandlinger som er satt på vent og fristen har løpt ut. Gjenopptar behandlingen av disse slik at saksbehandler kan fortsette på saksbehandling av saken"
         override val cron = CronExpression.create("0 0 7 * * *")
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return GjenopptaBehandlingJobbUtfører(
                 gjenopptakRepository = repositoryProvider.provide(),
-                prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, GatewayProvider),
+                prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
             )
         }
     }

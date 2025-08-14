@@ -9,7 +9,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
-import no.nav.aap.motor.ProviderJobbSpesifikasjon
+import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 
 class DatadelingSakStatusJobbUtfører(
     private val apiInternGateway: ApiInternGateway,
@@ -27,14 +27,14 @@ class DatadelingSakStatusJobbUtfører(
         )
     }
 
-    companion object : ProviderJobbSpesifikasjon {
+    companion object : ProvidersJobbSpesifikasjon {
         override val beskrivelse = "Sender status på sak til api-intern."
         override val navn = "DatadelingSakStatusJobbUtfører"
         override val type = "flyt.DatadelingSakStatus"
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return DatadelingSakStatusJobbUtfører(
-                apiInternGateway = GatewayProvider.provide(),
+                apiInternGateway = gatewayProvider.provide(),
                 sakRepository = repositoryProvider.provide(),
                 behandlingRepository = repositoryProvider.provide()
             )

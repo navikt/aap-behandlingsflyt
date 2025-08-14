@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.KabalHendelseId
@@ -29,7 +30,6 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.Motor
@@ -62,7 +62,8 @@ class KabalKafkaKonsumentTest {
                 dataSource,
                 1,
                 jobber = listOf(HendelseMottattHåndteringJobbUtfører),
-                repositoryRegistry = repositoryRegistry
+                repositoryRegistry = repositoryRegistry,
+                gatewayProvider = createGatewayProvider { register<FakeUnleash>() }
             )
         val kafka = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.0.0"))
             .withReuse(true)
@@ -75,10 +76,8 @@ class KabalKafkaKonsumentTest {
         @BeforeAll
         @JvmStatic
         internal fun beforeAll() {
-            GatewayRegistry.register<FakeUnleash>()
             motor.start()
             kafka.start()
-
         }
 
         @AfterAll

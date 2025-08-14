@@ -12,7 +12,7 @@ import no.nav.aap.komponenter.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
-import no.nav.aap.motor.ProviderJobbSpesifikasjon
+import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 
 class VarsleVedtakJobbUtfører(
     private val repositoryProvider: RepositoryProvider,
@@ -52,11 +52,11 @@ class VarsleVedtakJobbUtfører(
         }
     }
 
-    companion object : ProviderJobbSpesifikasjon {
-        override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
+    companion object : ProvidersJobbSpesifikasjon {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return VarsleVedtakJobbUtfører(
                 repositoryProvider,
-                GatewayProvider,
+                gatewayProvider,
             )
         }
 

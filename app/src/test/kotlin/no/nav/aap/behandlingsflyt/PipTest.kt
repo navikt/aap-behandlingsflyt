@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
+import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.pip.IdenterDTO
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -21,7 +22,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
@@ -61,7 +61,7 @@ class PipTest {
             server(
                 dbConfig = dbConfig,
                 repositoryRegistry = postgresRepositoryRegistry,
-                gatewayProvider = GatewayProvider
+                gatewayProvider = defaultGatewayProvider {  },
             )
         }
 

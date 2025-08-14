@@ -14,7 +14,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
-import no.nav.aap.motor.ProviderJobbSpesifikasjon
+import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -62,14 +62,14 @@ class DatadelingBehandlingJobbUtfører(
         )
     }
 
-    companion object : ProviderJobbSpesifikasjon {
+    companion object : ProvidersJobbSpesifikasjon {
         override val beskrivelse = "Sender data rundt behandling til api-intern."
         override val navn = "BehandlingDatadelingUtfører"
         override val type = "flyt.DatadelingBehandlingsdata"
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return DatadelingBehandlingJobbUtfører(
-                apiInternGateway = GatewayProvider.provide(),
+                apiInternGateway = gatewayProvider.provide(),
                 sakRepository = repositoryProvider.provide(),
                 behandlingRepository = repositoryProvider.provide(),
                 tilkjentRepository = repositoryProvider.provide(),

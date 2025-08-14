@@ -1,26 +1,20 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -35,7 +29,7 @@ internal class BistandRepositoryImplTest {
     fun `Finner ikke bistand hvis ikke lagret`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val bistandRepository = BistandRepositoryImpl(connection)
             val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
@@ -47,7 +41,7 @@ internal class BistandRepositoryImplTest {
     fun `Lagrer og henter bistand`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val bistandRepository = BistandRepositoryImpl(connection)
             bistandRepository.lagre(
@@ -131,7 +125,7 @@ internal class BistandRepositoryImplTest {
     fun `Lagrer ikke like bistand flere ganger`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val bistandRepository = BistandRepositoryImpl(connection)
             bistandRepository.lagre(
@@ -208,7 +202,7 @@ internal class BistandRepositoryImplTest {
     fun `Kopierer bistand fra en behandling til en annen`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
-            val behandling1 = behandling(connection, sak)
+            val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val bistandRepository = BistandRepositoryImpl(connection)
             bistandRepository.lagre(
                 behandling1.id,
@@ -228,7 +222,7 @@ internal class BistandRepositoryImplTest {
             )
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
 
-            val behandling2 = behandling(connection, sak)
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling2.id)
             assertThat(bistandGrunnlag?.vurderinger).isEqualTo(
@@ -263,7 +257,7 @@ internal class BistandRepositoryImplTest {
     fun `Kopierer bistand fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
-            val behandling1 = behandling(connection, sak)
+            val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val bistandRepository = BistandRepositoryImpl(connection)
             bistandRepository.lagre(
                 behandling1.id,
@@ -299,7 +293,7 @@ internal class BistandRepositoryImplTest {
             )
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
 
-            val behandling2 = behandling(connection, sak)
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling2.id)
             assertThat(bistandGrunnlag?.vurderinger).isEqualTo(
@@ -324,7 +318,7 @@ internal class BistandRepositoryImplTest {
     fun `Lagrer nye bistandsopplysninger som ny rad og deaktiverer forrige versjon av opplysningene`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
-            val behandling = behandling(connection, sak)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
             val bistandRepository = BistandRepositoryImpl(connection)
 
             bistandRepository.lagre(
@@ -432,7 +426,7 @@ internal class BistandRepositoryImplTest {
     fun `Ved kopiering av bistandsopplysninger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
-            val behandling1 = behandling(connection, sak)
+            val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val bistandRepository = BistandRepositoryImpl(connection)
             bistandRepository.lagre(
                 behandling1.id,
@@ -468,7 +462,7 @@ internal class BistandRepositoryImplTest {
             )
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
 
-            val behandling2 = behandling(connection, sak)
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             data class Opplysning(
                 val behandlingId: Long,
@@ -555,7 +549,7 @@ internal class BistandRepositoryImplTest {
         val (førstegangsbehandling, sak) = dataSource.transaction { connection ->
             val repo = BistandRepositoryImpl(connection)
             val sak = sak(connection)
-            val førstegangsbehandling = behandling(connection, sak)
+            val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
 
             repo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering1))
             repo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering2))
@@ -602,22 +596,10 @@ internal class BistandRepositoryImplTest {
         ).finnEllerOpprett(ident(), periode)
     }
 
-    private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        return SakOgBehandlingService(
-            postgresRepositoryRegistry.provider(connection),
-            GatewayProvider,
-        )
-            .finnEllerOpprettBehandling(
-                sak.saksnummer,
-                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                ÅrsakTilOpprettelse.SØKNAD,
-            )
-    }
-
     private fun revurdering(connection: DBConnection, behandling: Behandling, sak: Sak): Behandling {
         BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
 
-        return behandling(connection, sak)
+        return finnEllerOpprettBehandling(connection, sak)
     }
 
 }

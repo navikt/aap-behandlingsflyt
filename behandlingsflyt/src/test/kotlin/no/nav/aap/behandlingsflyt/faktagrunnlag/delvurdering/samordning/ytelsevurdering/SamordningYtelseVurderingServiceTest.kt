@@ -20,28 +20,14 @@ import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.gateway.GatewayRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 @Fakes
 class SamordningYtelseVurderingServiceTest {
-
-    companion object {
-        @BeforeAll
-        @JvmStatic
-        fun beforeAll() {
-            GatewayRegistry
-                .register<AbakusForeldrepengerGateway>()
-                .register<AbakusSykepengerGateway>()
-        }
-    }
-
     @Test
     fun `krever avklaring når endringer kommer`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
@@ -52,8 +38,8 @@ class SamordningYtelseVurderingServiceTest {
                 SamordningYtelseRepositoryImpl(connection),
                 SakService(sakRepository),
                 FakeTidligereVurderinger(),
-                GatewayProvider.provide(),
-                GatewayProvider.provide()
+                AbakusForeldrepengerGateway(),
+                AbakusSykepengerGateway(),
             )
             val kontekst = opprettSakdata(connection)
 

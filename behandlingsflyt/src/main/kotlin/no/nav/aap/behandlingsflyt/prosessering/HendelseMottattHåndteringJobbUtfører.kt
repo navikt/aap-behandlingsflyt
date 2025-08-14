@@ -16,7 +16,7 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
-import no.nav.aap.motor.ProviderJobbSpesifikasjon
+import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -108,7 +108,7 @@ class HendelseMottattHåndteringJobbUtfører(
         return innsendinger.any { dokument -> dokument.referanse == innsendingReferanse }
     }
 
-    companion object : ProviderJobbSpesifikasjon {
+    companion object : ProvidersJobbSpesifikasjon {
         fun nyJobb(
             sakId: SakId,
             dokumentReferanse: InnsendingReferanse,
@@ -127,10 +127,10 @@ class HendelseMottattHåndteringJobbUtfører(
                 medPayload(melding)
             }
 
-        override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return HendelseMottattHåndteringJobbUtfører(
                 låsRepository = repositoryProvider.provide(),
-                håndterMottattDokumentService = HåndterMottattDokumentService(repositoryProvider, GatewayProvider),
+                håndterMottattDokumentService = HåndterMottattDokumentService(repositoryProvider, gatewayProvider),
                 mottaDokumentService = MottaDokumentService(repositoryProvider),
                 mottattDokumentRepository = repositoryProvider.provide()
             )

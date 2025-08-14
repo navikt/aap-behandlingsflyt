@@ -24,10 +24,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
-import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
-import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoBulkGateway
-import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
-import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -83,10 +79,9 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.gateway.GatewayRegistry
-import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -94,7 +89,6 @@ import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Instant
@@ -105,15 +99,6 @@ import java.util.*
 
 @Fakes
 class StatistikkJobbUtførerTest {
-    @BeforeEach
-    fun setUp() {
-        GatewayRegistry.register<PdlBarnGateway>()
-            .register<PdlIdentGateway>()
-            .register<PdlPersoninfoBulkGateway>()
-            .register<PdlPersoninfoGateway>()
-            .register<StatistikkGatewayImpl>()
-    }
-
     private val dataSource1 = InitTestDatabase.freshDatabase()
 
     @Test
@@ -211,7 +196,8 @@ class StatistikkJobbUtførerTest {
                 sykdomRepository = SykdomRepositoryImpl(connection),
                 underveisRepository = UnderveisRepositoryImpl(connection),
                 trukketSøknadService = TrukketSøknadService(postgresRepositoryRegistry.provider(connection)),
-                klageresultatUtleder = KlageresultatUtleder(postgresRepositoryRegistry.provider(connection))
+                klageresultatUtleder = KlageresultatUtleder(postgresRepositoryRegistry.provider(connection)),
+                statistikkGateway = StatistikkGatewayImpl()
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -404,7 +390,8 @@ class StatistikkJobbUtførerTest {
                 sykdomRepository = SykdomRepositoryImpl(connection),
                 underveisRepository = UnderveisRepositoryImpl(connection),
                 trukketSøknadService = TrukketSøknadService(postgresRepositoryRegistry.provider(connection)),
-                klageresultatUtleder = KlageresultatUtleder(postgresRepositoryRegistry.provider(connection))
+                klageresultatUtleder = KlageresultatUtleder(postgresRepositoryRegistry.provider(connection)),
+                statistikkGateway = StatistikkGatewayImpl(),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -589,7 +576,8 @@ class StatistikkJobbUtførerTest {
                     InMemoryAvklaringsbehovRepository,
                     InMemoryTrukketSøknadRepository
                 ),
-                klageresultatUtleder = DummyKlageresultatUtleder()
+                klageresultatUtleder = DummyKlageresultatUtleder(),
+                statistikkGateway = StatistikkGatewayImpl(),
             )
 
         val avklaringsbehov = listOf(

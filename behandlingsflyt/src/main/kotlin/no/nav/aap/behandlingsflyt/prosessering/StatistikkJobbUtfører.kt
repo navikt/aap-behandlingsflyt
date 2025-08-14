@@ -52,7 +52,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
-import no.nav.aap.motor.ProviderJobbSpesifikasjon
+import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -70,6 +70,7 @@ class StatistikkJobbUtfører(
     private val underveisRepository: UnderveisRepository,
     private val trukketSøknadService: TrukketSøknadService,
     private val klageresultatUtleder: IKlageresultatUtleder,
+    private val statistikkGateway: StatistikkGateway,
 ) : JobbUtfører {
 
     private val resultatUtleder = ResultatUtleder(underveisRepository, behandlingRepository, trukketSøknadService)
@@ -83,7 +84,6 @@ class StatistikkJobbUtfører(
         håndterBehandlingStoppet(payload)
     }
 
-    private val statistikkGateway: StatistikkGateway = GatewayProvider.provide()
 
     private fun håndterBehandlingStoppet(hendelse: BehandlingFlytStoppetHendelse) {
 
@@ -403,8 +403,8 @@ class StatistikkJobbUtfører(
     )
 
 
-    companion object : ProviderJobbSpesifikasjon {
-        override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
+    companion object : ProvidersJobbSpesifikasjon {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return StatistikkJobbUtfører(
                 vilkårsresultatRepository = repositoryProvider.provide(),
                 behandlingRepository = repositoryProvider.provide(),
@@ -416,7 +416,8 @@ class StatistikkJobbUtfører(
                 sykdomRepository = repositoryProvider.provide(),
                 underveisRepository = repositoryProvider.provide(),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
-                klageresultatUtleder = KlageresultatUtleder(repositoryProvider)
+                klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
+                statistikkGateway = gatewayProvider.provide(),
             )
         }
 

@@ -10,7 +10,7 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
-import no.nav.aap.motor.ProviderJobbSpesifikasjon
+import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 
 
@@ -37,11 +37,11 @@ class ProsesserBehandlingJobbUtfører(
         låsRepository.verifiserSkrivelås(skrivelås)
     }
 
-    companion object : ProviderJobbSpesifikasjon {
-        override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
+    companion object : ProvidersJobbSpesifikasjon {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return ProsesserBehandlingJobbUtfører(
                 låsRepository = repositoryProvider.provide(),
-                kontroller = FlytOrkestrator(repositoryProvider, GatewayProvider)
+                kontroller = FlytOrkestrator(repositoryProvider, gatewayProvider)
             )
         }
 

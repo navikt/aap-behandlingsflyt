@@ -15,11 +15,9 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMellomlagretVurderin
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDateTime
 
 @Fakes
-@ExtendWith(BaseApiTest::class)
 class MellomlagretVurderingAPITest : BaseApiTest() {
     private val repositoryRegistry = RepositoryRegistry()
         .register<InMemoryMellomlagretVurderingRepository>()

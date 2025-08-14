@@ -6,11 +6,13 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
-import no.nav.aap.motor.ProviderJobbSpesifikasjon
+import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 
 
-class StoppetHendelseJobbUtfører private constructor() : JobbUtfører {
+class StoppetHendelseJobbUtfører private constructor(
+    private val oppgavestyringGateway: OppgavestyringGateway,
+) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -18,12 +20,14 @@ class StoppetHendelseJobbUtfører private constructor() : JobbUtfører {
         val hendelse = input.payload<BehandlingFlytStoppetHendelse>()
 
         log.info("Varsler hendelse til OppgaveStyring. ${hendelse.saksnummer} :: ${hendelse.referanse.referanse}")
-        GatewayProvider.provide<OppgavestyringGateway>().varsleHendelse(hendelse)
+        oppgavestyringGateway.varsleHendelse(hendelse)
     }
 
-    companion object : ProviderJobbSpesifikasjon {
-        override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
-            return StoppetHendelseJobbUtfører()
+    companion object : ProvidersJobbSpesifikasjon {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
+            return StoppetHendelseJobbUtfører(
+                gatewayProvider.provide(),
+            )
         }
 
         override val type = "flyt.hendelse"

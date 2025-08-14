@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -80,7 +81,7 @@ fun main() {
         // Useful for connecting to the test database locally
         // jdbc URL contains the host and port and database name.
         println("jdbcUrl: ${postgres.jdbcUrl}. Password: ${postgres.password}. Username: ${postgres.username}.")
-        server(dbConfig, postgresRepositoryRegistry, GatewayProvider)
+        server(dbConfig, postgresRepositoryRegistry, defaultGatewayProvider())
 
         val datasource = initDatasource(dbConfig)
         opprettTestKlage(datasource, alderIkkeOppfyltTestCase)

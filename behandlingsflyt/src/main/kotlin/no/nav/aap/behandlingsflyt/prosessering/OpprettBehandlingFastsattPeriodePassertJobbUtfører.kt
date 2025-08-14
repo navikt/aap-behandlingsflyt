@@ -12,7 +12,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
-import no.nav.aap.motor.ProviderJobbSpesifikasjon
+import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -76,13 +76,13 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
         prosesserBehandlingService.triggProsesserBehandling(fastsattPeriodePassertBehandling)
     }
 
-    companion object : ProviderJobbSpesifikasjon {
-        override fun konstruer(repositoryProvider: RepositoryProvider): JobbUtfører {
+    companion object : ProvidersJobbSpesifikasjon {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return OpprettBehandlingFastsattPeriodePassertJobbUtfører(
                 sakService = SakService(repositoryProvider),
                 underveisRepository = repositoryProvider.provide(),
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, GatewayProvider),
-                prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, GatewayProvider),
+                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
             )
         }
 

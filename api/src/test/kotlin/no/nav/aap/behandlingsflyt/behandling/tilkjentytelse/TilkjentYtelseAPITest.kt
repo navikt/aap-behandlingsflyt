@@ -25,13 +25,11 @@ import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.*
 
 @Fakes
-@ExtendWith(BaseApiTest::class)
 class TilkjentYtelseAPITest : BaseApiTest() {
     private val repositoryRegistry = RepositoryRegistry()
         .register<InMemoryTilkjentYtelseRepository>()
