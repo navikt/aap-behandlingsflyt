@@ -12,7 +12,7 @@ object ProsesseringsJobber {
             GjenopptaBehandlingJobbUtfører,
             HendelseMottattHåndteringJobbUtfører,
             StatistikkJobbUtfører,
-            DatadelingMeldePerioderJobbUtfører,
+            DatadelingMeldePerioderOgSakStatusJobbUtfører,
             DatadelingBehandlingJobbUtfører,
             MeldeperiodeTilMeldekortBackendJobbUtfører,
             OpprettJobbForFastsattPeriodeJobbUtfører,

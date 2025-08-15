@@ -39,7 +39,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.pip.PipRepository
-import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldePerioderJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldePerioderOgSakStatusJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseJobbUtfører
@@ -136,7 +136,7 @@ class BehandlingHendelseServiceImpl(
                 .forBehandling(sak.id.id, behandling.id.id)
         )
         flytJobbRepository.leggTil(
-            JobbInput(jobb = DatadelingMeldePerioderJobbUtfører).medPayload(hendelse)
+            JobbInput(jobb = DatadelingMeldePerioderOgSakStatusJobbUtfører).medPayload(hendelse)
                 .forBehandling(sak.id.id, behandling.id.id)
         )
 

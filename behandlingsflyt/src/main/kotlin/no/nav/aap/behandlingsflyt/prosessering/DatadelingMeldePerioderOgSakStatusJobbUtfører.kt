@@ -12,7 +12,7 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 
-class DatadelingMeldePerioderJobbUtfører(
+class DatadelingMeldePerioderOgSakStatusJobbUtfører(
     private val apiInternGateway: ApiInternGateway,
     private val behandlingRepository: BehandlingRepository,
     private val sakRepository: SakRepository,
@@ -39,7 +39,7 @@ class DatadelingMeldePerioderJobbUtfører(
         override val type = "flyt.DatadelingMeldePerioder"
 
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
-            return DatadelingMeldePerioderJobbUtfører(
+            return DatadelingMeldePerioderOgSakStatusJobbUtfører(
                 apiInternGateway = gatewayProvider.provide(),
                 behandlingRepository = repositoryProvider.provide(),
                 sakRepository = repositoryProvider.provide(),
