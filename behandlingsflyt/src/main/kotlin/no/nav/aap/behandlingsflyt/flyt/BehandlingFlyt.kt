@@ -103,7 +103,11 @@ class BehandlingFlyt private constructor(
     }
 
     private fun steg(nåværendeSteg: StegType): Behandlingsflytsteg {
-        return flyt[flyt.indexOfFirst { it.steg.type() == nåværendeSteg }]
+        return try {
+            flyt[flyt.indexOfFirst { it.steg.type() == nåværendeSteg }]
+        } catch (e: IndexOutOfBoundsException) {
+            throw IllegalArgumentException("Steg $nåværendeSteg finnes ikke i flyten", e)
+        }
     }
 
     fun erStegFør(stegA: StegType, stegB: StegType): Boolean {
