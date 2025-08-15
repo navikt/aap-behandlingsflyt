@@ -52,7 +52,7 @@ class PdlBarnGateway : BarnGateway {
                     val fødselsdato = PdlParser.utledFødselsdato(foedsel)
                     Barn(
                         ident = Ident(res.ident),
-                        fødselsdato = requireNotNull(fødselsdato),
+                        fødselsdato = requireNotNull(fødselsdato) { "Barn i PDL manglet fødselsdato. " },
                         dødsdato = person.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) })
                 }
             }
