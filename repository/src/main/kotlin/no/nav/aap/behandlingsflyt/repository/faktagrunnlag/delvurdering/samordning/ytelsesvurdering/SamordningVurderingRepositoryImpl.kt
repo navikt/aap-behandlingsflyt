@@ -73,7 +73,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
                 }
                 setRowMapper {
                     SamordningVurderingGrunnlag(
-                        begrunnelse = it.getString("begrunnelse"),
+                        begrunnelse = it.getStringOrNull("begrunnelse"),
                         maksDatoEndelig = it.getBoolean("maksdato_endelig"),
                         fristNyRevurdering = it.getLocalDateOrNull("frist_ny_revurdering"),
                         vurderingerId = vurderingerId,
