@@ -980,6 +980,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             ),
         )
 
+        behandling = løsOvergangUføre(behandling)
+
         behandling = løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
@@ -994,7 +996,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             )
         )
 
-        behandling = løsOvergangUføre(behandling)
         behandling = løsSykdomsvurderingBrev(behandling)
 
         behandling = kvalitetssikreOk(behandling)
