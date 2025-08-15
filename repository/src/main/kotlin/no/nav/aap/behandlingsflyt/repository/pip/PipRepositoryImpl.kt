@@ -75,7 +75,8 @@ class PipRepositoryImpl(private val connection: DBConnection) : PipRepository {
             FROM barnopplysning bo
                      join person p on bo.person_id = p.id
                      join person_ident pi on p.id = pi.person_id
-                     join barnopplysning_grunnlag bg on bg.register_barn_id = bo.id
+                     join barnopplysning_grunnlag_barnopplysning bgb on bo.bgb_id = bgb.id
+                     join barnopplysning_grunnlag bg on bg.register_barn_id = bgb.id
                      join behandling b on bg.behandling_id = b.id
                      join behandling bRef on b.sak_id = bRef.sak_id
             WHERE bRef.referanse = ? and aktiv = true
