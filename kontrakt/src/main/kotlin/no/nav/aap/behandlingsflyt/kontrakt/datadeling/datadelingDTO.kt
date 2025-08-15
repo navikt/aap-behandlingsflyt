@@ -5,6 +5,9 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+/**
+ * @param beregningsgrunnlag Hvilket beløp ble brukt for å utlede dagsats før redusering. Det er G-justert mhp rettighetsperiode.fom.
+ */
 public data class DatadelingDTO(
     val underveisperiode: List<UnderveisDTO>,
     val rettighetsPeriodeFom: LocalDate,
@@ -17,7 +20,8 @@ public data class DatadelingDTO(
     val rettighetsTypeTidsLinje: List<RettighetsTypePeriode>,
     val behandlingsReferanse: String,
     val samId: String? = null,
-    val vedtakId: Long
+    val vedtakId: Long,
+    val beregningsgrunnlag: BigDecimal
 )
 
 public data class RettighetsTypePeriode(
@@ -43,9 +47,6 @@ public data class UnderveisDTO(
     val avslagsårsak: String?, // skal ikke denne være Avslagsårsak?
 )
 
-/**
- * @param beregningsgrunnlag Hvilket beløp ble brukt for å utlede dagsats før redusering. Det er G-justert mhp rettighetsperiode.fom.
- */
 public data class TilkjentDTO(
     val tilkjentFom: LocalDate,
     val tilkjentTom: LocalDate,
@@ -54,7 +55,6 @@ public data class TilkjentDTO(
     val samordningUføregradering: Int? = null,
     @Deprecated("Denne er alltid lik dagsats fra behandlingsflyt.")
     val grunnlag: BigDecimal,
-    val beregningsgrunnlag: BigDecimal,
     val grunnlagsfaktor: BigDecimal,
     val grunnbeløp: BigDecimal,
     val antallBarn: Int,

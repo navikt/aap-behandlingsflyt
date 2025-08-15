@@ -89,6 +89,7 @@ class ApiInternGatewayImpl() : ApiInternGateway {
                     rettighetsPeriodeTom = sak.rettighetsperiode.tom,
                     behandlingStatus = behandling.status(),
                     vedtaksDato = vedtaksDato,
+                    beregningsgrunnlag = beregningsgrunnlag,
                     sak = SakDTO(
                         saksnummer = sak.saksnummer.toString(),
                         status = sak.status(),
@@ -109,7 +110,6 @@ class ApiInternGatewayImpl() : ApiInternGateway {
                             antallBarn = tilkjentPeriode.tilkjent.antallBarn,
                             barnetilleggsats = tilkjentPeriode.tilkjent.barnetilleggsats.verdi,
                             barnetillegg = tilkjentPeriode.tilkjent.barnetillegg.verdi,
-                            beregningsgrunnlag = beregningsgrunnlag
                         )
                     },
                     rettighetsTypeTidsLinje = rettighetsTypeTidslinje.map { segment ->
