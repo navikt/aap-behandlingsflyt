@@ -435,7 +435,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         )
             .løsSykdom()
             .løsBistand()
-            //.løsOvergangUføre()
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
@@ -516,7 +515,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         )
             .løsSykdom()
             .løsBistand()
-            //løsOvergangUføre()
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
@@ -593,7 +591,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         )
             .løsSykdom()
             .løsBistand()
-            //.løsOvergangUføre()
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
@@ -718,7 +715,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             }
             .løsSykdom()
             .løsBistand()
-            //.løsOvergangUføre()
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
 
@@ -778,7 +774,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .fattVedtakEllerSendRetur(returVed = Definisjon.AVKLAR_SYKDOM)
             .løsSykdom()
             .løsBistand()
-            //.løsOvergangUføre()
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .løsAvklaringsBehov(
@@ -1306,7 +1301,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     ),
                 ),
             )
-             //løsOvergangUføre()
+            .løsOvergangUføre()
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .medKontekst {
@@ -1453,7 +1448,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             }
             .løsSykdom()
             .løsBistand()
-            //.løsOvergangUføre()
             .løsRefusjonskrav()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).anySatisfy {
@@ -1563,7 +1557,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 ),
             ),
         )
-             //.løsOvergangUføre()
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .medKontekst {
@@ -1723,7 +1716,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 )
             )
         )
-        //behandling = løsOvergangUføre(behandling)
+
         behandling = løsSykdomsvurderingBrev(behandling)
 
         behandling = kvalitetssikreOk(behandling)
@@ -4185,6 +4178,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsRettighetsperiode(nyStartDato)
             .løsSykdom()
             .løsBistand()
+            .løsOvergangUføre()
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt(nyStartDato)
             .løsFastsettManuellInntekt()

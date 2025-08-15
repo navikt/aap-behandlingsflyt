@@ -78,16 +78,9 @@ class OvergangUføreSteg private constructor(
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         }
 
-        postcondition(vilkårsresultat.finnVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET))
-
         return Fullført
     }
 
-    private fun postcondition(vilkår: Vilkår) {
-        if (vilkår.harPerioderSomIkkeErVurdert(vilkår.vilkårsperioder().map { it.periode }.toSet())) {
-            throw IllegalStateException("Det finnes perioder som ikke er vurdert")
-        }
-    }
 
     private fun harOppfyltBistandsVilkår(avklaringsbehovene: Avklaringsbehovene): Boolean {
         return avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.AVKLAR_BISTANDSBEHOV)
