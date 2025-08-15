@@ -9,6 +9,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 
 class OvergangUføreRepositoryImpl(private val connection: DBConnection) : OvergangUføreRepository {
 
@@ -34,7 +35,7 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
             setRowMapper { row ->
                 OvergangUføreGrunnlag(
                     id = row.getLong("ID"),
-                    vurderinger = mapOvergangUforevurderinger(row.getLongOrNull("BISTAND_VURDERINGER_ID"))
+                    vurderinger = mapOvergangUforevurderinger(row.getLongOrNull("VURDERINGER_ID"))
                 )
             }
         }
@@ -43,7 +44,7 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
     private fun mapOvergangUforevurderinger(overgangUforevurderingerId: Long?): List<OvergangUføreVurdering> {
         return connection.queryList(
             """
-                SELECT * FROM OVERGANG_UFORE_VURDERING WHERE OVERGANG_UFORE_VURDERINGER_ID = ?
+                SELECT * FROM OVERGANG_UFORE_VURDERING WHERE VURDERINGER_ID = ?
             """.trimIndent()
         ) {
             setParams {
@@ -57,7 +58,7 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
         return OvergangUføreVurdering(
             begrunnelse = row.getString("BEGRUNNELSE"),
             brukerSoktUforetrygd = row.getBoolean("BRUKER_SOKT_UFORETRYGD"),
-            brukerVedtakUforetrygd = row.getString("BRUKER_VEDTAK_UFORETRYGD"),
+            brukerVedtakUforetrygd = row.getStringOrNull("BRUKER_VEDTAK_UFORETRYGD"),
             brukerRettPaaAAP = row.getBooleanOrNull("BRUKER_RETT_PAA_AAP"),
             vurderingenGjelderFra = row.getLocalDateOrNull("VURDERINGEN_GJELDER_FRA"),
             virkningsDato = row.getLocalDateOrNull("VIRKNINGSDATO"),
@@ -151,7 +152,7 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
         val overganguforevurderingerId = connection.executeReturnKey("""INSERT INTO OVERGANG_UFORE_VURDERINGER DEFAULT VALUES""")
 
         connection.executeBatch(
-            "INSERT INTO OVERGANG_UFORE_VURDERING (BEGRUNNELSE, BRUKER_SOKT_UFORETRYGD, BRUKER_VEDTAK_UFORETRYGD, BRUKER_RETT_PAA_AAP, VIRKNINGSDATO, VURDERT_AV, VURDERINGER_ID) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO OVERGANG_UFORE_VURDERING (BEGRUNNELSE, BRUKER_SOKT_UFORETRYGD, BRUKER_VEDTAK_UFORETRYGD, BRUKER_RETT_PAA_AAP, VIRKNINGSDATO, VURDERT_AV, VURDERINGER_ID, VURDERINGEN_GJELDER_FRA) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             vurderinger
         ) {
             setParams { vurdering ->
@@ -162,6 +163,7 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
                 setLocalDate(5, vurdering.virkningsDato)
                 setString(6, vurdering.vurdertAv)
                 setLong(7, overganguforevurderingerId)
+                setLocalDate(8, null)
             }
         }
 

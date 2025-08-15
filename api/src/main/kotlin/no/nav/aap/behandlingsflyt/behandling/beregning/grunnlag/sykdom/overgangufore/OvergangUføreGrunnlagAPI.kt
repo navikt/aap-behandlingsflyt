@@ -24,7 +24,12 @@ import no.nav.aap.tilgang.getGrunnlag
 import java.time.ZoneId
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
+    dataSource: DataSource, repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
+
     route("/api/behandling") {
         route("/{referanse}/grunnlag/overgangufore") {
             getGrunnlag<BehandlingReferanse, OvergangUføreGrunnlagResponse>(
@@ -56,10 +61,10 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(dataSource: DataSource, reposito
 
                     OvergangUføreGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        vurdering = vurdering?.tilResponse(),
-                        gjeldendeVedtatteVurderinger = vedtatteBistandsvurderinger.map { it.tilResponse() },
-                        historiskeVurderinger = historiskeVurderinger.map { it.tilResponse() },
-                        gjeldendeSykdsomsvurderinger = gjeldendeSykdomsvurderinger.map { it.tilResponse() },
+                        vurdering = vurdering?.tilResponse(ansattInfoService = ansattInfoService),
+                        gjeldendeVedtatteVurderinger = vedtatteBistandsvurderinger.map { it.tilResponse(ansattInfoService = ansattInfoService) },
+                        historiskeVurderinger = historiskeVurderinger.map { it.tilResponse(ansattInfoService = ansattInfoService) },
+                        gjeldendeSykdsomsvurderinger = gjeldendeSykdomsvurderinger.map { it.tilResponse(ansattInfoService) },
                     )
                 }
 
@@ -69,8 +74,8 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(dataSource: DataSource, reposito
     }
 }
 
-private fun OvergangUføreVurdering.tilResponse(erGjeldende: Boolean? = false): OvergangUføreVurderingResponse {
-    val navnOgEnhet = AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(vurdertAv)
+private fun OvergangUføreVurdering.tilResponse(erGjeldende: Boolean? = false, ansattInfoService: AnsattInfoService): OvergangUføreVurderingResponse {
+    val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv)
     return OvergangUføreVurderingResponse(
         begrunnelse = begrunnelse,
         brukerSoktUforetrygd = brukerSoktUforetrygd,
@@ -89,8 +94,8 @@ private fun OvergangUføreVurdering.tilResponse(erGjeldende: Boolean? = false): 
     )
 }
 
-private fun Sykdomsvurdering.tilResponse(): SykdomsvurderingResponse {
-    val navnOgEnhet = AnsattInfoService(GatewayProvider).hentAnsattNavnOgEnhet(vurdertAv.ident)
+private fun Sykdomsvurdering.tilResponse(ansattInfoService: AnsattInfoService): SykdomsvurderingResponse {
+    val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv.ident)
     return SykdomsvurderingResponse(
         begrunnelse = begrunnelse,
         vurderingenGjelderFra = vurderingenGjelderFra,
