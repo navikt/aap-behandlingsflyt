@@ -71,10 +71,10 @@ class BeregningService(
         )
 
         val beregning = Beregning(input)
-        val beregningMedEllerUtenUføreMedEllerUtenYrkesskade = beregning.beregneMedInput()
+        val beregningsgrunnlag = beregning.beregneMedInput()
 
-        beregningsgrunnlagRepository.lagre(behandlingId, beregningMedEllerUtenUføreMedEllerUtenYrkesskade)
-        return beregningMedEllerUtenUføreMedEllerUtenYrkesskade
+        beregningsgrunnlagRepository.lagre(behandlingId, beregningsgrunnlag)
+        return beregningsgrunnlag
     }
 
     fun deaktiverGrunnlag(behandlingId: BehandlingId) {

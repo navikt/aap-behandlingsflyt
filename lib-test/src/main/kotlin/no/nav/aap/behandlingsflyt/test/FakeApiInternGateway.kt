@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import java.math.BigDecimal
 import java.time.LocalDate
 
 class FakeApiInternGateway : ApiInternGateway {
@@ -31,7 +32,8 @@ class FakeApiInternGateway : ApiInternGateway {
         behandling: Behandling,
         vedtakId: Long,
         samId: String?,
-        tilkjent: List<TilkjentYtelsePeriode>?,
+        tilkjent: List<TilkjentYtelsePeriode>,
+        beregningsgrunnlag: BigDecimal,
         underveis: List<Underveisperiode>,
         vedtaksDato: LocalDate,
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>
