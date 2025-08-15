@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import java.time.LocalDate
 
-sealed abstract class BrevBehov(val typeBrev: TypeBrev)
+sealed class BrevBehov(val typeBrev: TypeBrev)
 
 data class Innvilgelse(val virkningstidspunkt: LocalDate) : BrevBehov(TypeBrev.VEDTAK_INNVILGELSE)
 object Avslag : BrevBehov(TypeBrev.VEDTAK_AVSLAG)
