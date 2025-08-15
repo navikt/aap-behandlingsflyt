@@ -217,7 +217,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest() {
         // Siden samordning overlappet, skal en revurdering opprettes med en gang
         assertThat(revurdering.referanse).isNotEqualTo(behandlingReferanse)
         assertThat(revurdering.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-        util.ventPåSvar(sakId = behandling.sakId.id)
+        motor.kjørJobber()
 
         // Verifiser at den er satt på vent
         var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
@@ -493,7 +493,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest() {
         assertThat(nyesteBehandling.referanse).isNotEqualTo(behandlingReferanse)
         assertThat(nyesteBehandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
 
-        util.ventPåSvar(sakId = behandling.sakId.id)
+        motor.kjørJobber()
         return nyesteBehandling
     }
 }

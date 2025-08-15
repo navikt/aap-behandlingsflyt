@@ -1913,7 +1913,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
 
         // Oppretter bestilling av legeerklæring
         hendelsesMottak.bestillLegeerklæring(behandling.id)
-        util.ventPåSvar(behandling.id.toLong())
+        motor.kjørJobber()
 
         behandling.medKontekst {
             assertThat(åpneAvklaringsbehov.all { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING })
@@ -1936,7 +1936,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 )
             )
         }
-        util.ventPåSvar()
+        motor.kjørJobber()
 
         // Validér avklaring
         behandling.medKontekst {
@@ -1969,7 +1969,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
 
         // Oppretter bestilling av legeerklæring
         hendelsesMottak.bestillLegeerklæring(behandling.id)
-        util.ventPåSvar(behandling.id.toLong())
+        motor.kjørJobber()
 
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
         assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING).isTrue() }
@@ -1995,7 +1995,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 )
             )
         }
-        util.ventPåSvar(sak.id.toLong())
+        motor.kjørJobber()
 
         // Validér avklaring
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -2049,7 +2049,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
                 )
             )
         }
-        util.ventPåSvar()
+        motor.kjørJobber()
 
         // Validér avklaring
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -2737,7 +2737,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             assertThat(behandlingRepo.hent(behandlingId).aktivtSteg()).isEqualTo(StegType.START_BEHANDLING)
         }
 
-        util.ventPåSvar()
+        motor.kjørJobber()
         val b = hentNyesteBehandlingForSak(behandling.sakId)
         assertThat(b.aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
     }
@@ -2932,7 +2932,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             Bruker("X123456")
         )
 
-        util.ventPåSvar(klagebehandling.sakId.id)
+        motor.kjørJobber()
 
         // OmgjøringSteg
         dataSource.transaction { connection ->
@@ -3152,7 +3152,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
             Bruker("X123456")
         )
 
-        util.ventPåSvar(klagebehandling.sakId.id)
+        motor.kjørJobber()
 
         // OmgjøringSteg
         dataSource.transaction { connection ->
@@ -3674,7 +3674,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         )
 
         // Sjekk at Klagen nå har fått "KLAGE_TRUKKET" som årsak til behandling (og derfor er i riktig tilstand)
-        util.ventPåSvar()
+        motor.kjørJobber()
         assertThat(trekkKlageBehandling.id).isEqualTo(klagebehandling.id)
         assertThat(trekkKlageBehandling.vurderingsbehov().map { it.type }).contains(Vurderingsbehov.KLAGE_TRUKKET)
 
@@ -3790,7 +3790,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         assertThat(åpneAvklaringsbehov).isEmpty()
         assertThat(svarFraAndreinstansBehandling.status()).isEqualTo(Status.AVSLUTTET)
 
-        util.ventPåSvar(sakId = svarFraAndreinstansBehandling.sakId.id)
+        motor.kjørJobber()
 
         val revurdering = hentNyesteBehandlingForSak(svarFraAndreinstansBehandling.sakId)
         assertThat(revurdering).isNotNull
@@ -3896,7 +3896,7 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         assertThat(åpneAvklaringsbehov).isEmpty()
         assertThat(svarFraAndreinstansBehandling.status()).isEqualTo(Status.AVSLUTTET)
 
-        util.ventPåSvar(sakId = svarFraAndreinstansBehandling.sakId.id)
+        motor.kjørJobber()
 
         val revurdering = hentNyesteBehandlingForSak(svarFraAndreinstansBehandling.sakId)
         assertThat(revurdering).isNotNull

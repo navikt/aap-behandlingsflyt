@@ -77,7 +77,7 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest() {
                 listOf(TypeBehandling.Revurdering)
             )
 
-        util.ventPåSvar(opprettetBehandling)
+        motor.kjørJobber()
 
         opprettetBehandling.medKontekst {
             assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)

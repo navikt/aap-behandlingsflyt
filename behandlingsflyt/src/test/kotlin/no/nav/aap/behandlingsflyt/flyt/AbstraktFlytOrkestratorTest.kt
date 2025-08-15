@@ -40,7 +40,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
-import no.nav.aap.behandlingsflyt.flyt.AbstraktFlytOrkestratorTest.Companion.util
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.NyÅrsakTilBehandlingHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
@@ -122,10 +121,9 @@ import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.motor.Motor
-import no.nav.aap.motor.testutil.TestUtil
+import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -177,20 +175,16 @@ open class AbstraktFlytOrkestratorTest {
             register<GosysGateway>()
         }
 
-        protected val motor =
-            Motor(
-                dataSource, 8,
-                jobber = ProsesseringsJobber.alle(),
-                repositoryRegistry = postgresRepositoryRegistry,
-                gatewayProvider = gatewayProvider
-            )
+        @JvmStatic
+        protected val motor = ManuellMotorImpl(
+            dataSource,
+            jobber = ProsesseringsJobber.alle(),
+            repositoryRegistry = postgresRepositoryRegistry,
+            gatewayProvider = gatewayProvider
+        )
 
         @JvmStatic
         protected val hendelsesMottak = TestHendelsesMottak(dataSource, gatewayProvider)
-
-        @JvmStatic
-        protected val util =
-            TestUtil(dataSource, ProsesseringsJobber.alle().filter { it.cron != null }.map { it.type })
 
         @BeforeAll
         @JvmStatic
@@ -392,7 +386,7 @@ open class AbstraktFlytOrkestratorTest {
 
 
     /**
-     * Løser avklaringsbehov og venter på svar vha [util].
+     * Løser avklaringsbehov og venter på svar.
      */
     protected fun løsAvklaringsBehov(
         behandling: Behandling,
@@ -415,12 +409,8 @@ open class AbstraktFlytOrkestratorTest {
                 )
             )
         }
-        util.ventPåSvar(behandling.sakId.id, behandling.id.id)
+        motor.kjørJobber()
         return hentBehandling(behandling.referanse)
-    }
-
-    protected fun TestUtil.ventPåSvar(behandling: Behandling) {
-        util.ventPåSvar(behandling.sakId.id, behandling.id.id)
     }
 
     @JvmName("løsAvklaringsBehovExt")
@@ -705,7 +695,7 @@ open class AbstraktFlytOrkestratorTest {
         dokumentMottattPersonHendelse: DokumentMottattPersonHendelse
     ): Behandling {
         hendelsesMottak.håndtere(ident, dokumentMottattPersonHendelse)
-        util.ventPåSvar()
+        motor.kjørJobber()
         val sak = hentSak(ident, dokumentMottattPersonHendelse.periode)
         val behandling = hentNyesteBehandlingForSak(sak.id)
         return behandling
@@ -723,7 +713,7 @@ open class AbstraktFlytOrkestratorTest {
         hendelse: NyÅrsakTilBehandlingHendelse
     ): Behandling {
         hendelsesMottak.håndtere(ident, hendelse)
-        util.ventPåSvar()
+        motor.kjørJobber()
         return hentBehandling(hendelse.referanse.asBehandlingReferanse)
     }
 
@@ -982,7 +972,7 @@ open class AbstraktFlytOrkestratorTest {
                 ),
             )
         }
-        util.ventPåSvar(behandling.sakId.id, behandling.id.id)
+        motor.kjørJobber()
         return hentBehandling(behandling.referanse)
     }
 

@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -25,7 +24,6 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.motor.testutil.TestUtil
 import no.nav.aap.verdityper.dokument.Kanal
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.time.LocalDate
@@ -39,7 +37,6 @@ internal class LegeerklæringVentebehovEvaluererTest {
 
     companion object {
         private val dataSource = InitTestDatabase.freshDatabase()
-        private val util = TestUtil(dataSource, ProsesseringsJobber.alle().filter { it.cron != null }.map { it.type })
     }
 
     @Test
@@ -179,7 +176,6 @@ internal class LegeerklæringVentebehovEvaluererTest {
         referanse: InnsendingReferanse,
         mottatt: LocalDateTime
     ) {
-        util.ventPåSvar(sakId.id)
         val mottattDokument = MottattDokument(
             referanse = referanse,
             sakId = sakId,

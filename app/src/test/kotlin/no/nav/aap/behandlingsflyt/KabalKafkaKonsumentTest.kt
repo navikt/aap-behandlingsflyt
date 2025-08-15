@@ -32,8 +32,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.motor.Motor
-import no.nav.aap.motor.testutil.TestUtil
+import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.Kanal
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
@@ -58,9 +57,8 @@ class KabalKafkaKonsumentTest {
         private val repositoryRegistry = postgresRepositoryRegistry
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         private val motor =
-            Motor(
+            ManuellMotorImpl(
                 dataSource,
-                1,
                 jobber = listOf(HendelseMottattHåndteringJobbUtfører),
                 repositoryRegistry = repositoryRegistry,
                 gatewayProvider = createGatewayProvider { register<FakeUnleash>() }
@@ -69,9 +67,6 @@ class KabalKafkaKonsumentTest {
             .withReuse(true)
             .waitingFor(Wait.forListeningPort())
             .withStartupTimeout(Duration.ofSeconds(60))
-
-        private val util =
-            TestUtil(dataSource, listOf(HendelseMottattHåndteringJobbUtfører.type))
 
         @BeforeAll
         @JvmStatic
@@ -125,7 +120,7 @@ class KabalKafkaKonsumentTest {
         assertThat(konsument.antallMeldinger).isEqualTo(1)
         konsument.lukk()
 
-        util.ventPåSvar()
+        motor.kjørJobber()
         val svarFraAnderinstansBehandling = dataSource.transaction { connection ->
             var behandlinger: List<Behandling> = emptyList()
             var tries = 0
