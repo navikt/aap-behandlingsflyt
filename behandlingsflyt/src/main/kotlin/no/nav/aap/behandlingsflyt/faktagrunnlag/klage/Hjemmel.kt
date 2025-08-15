@@ -81,7 +81,7 @@ enum class Hjemmel(val hjemmel: String) {
             FOLKETRYGDLOVEN_11_27,
             FOLKETRYGDLOVEN_11_28 -> Vurderingsbehov.SAMORDNING_OG_AVREGNING
 
-            FOLKETRYGDLOVEN_KAPITTEL_2,
+            FOLKETRYGDLOVEN_KAPITTEL_2 -> Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP
             FOLKETRYGDLOVEN_11_3,
             FOLKETRYGDLOVEN_11_4,
             FOLKETRYGDLOVEN_11_7,
