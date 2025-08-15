@@ -78,6 +78,10 @@ spec:
           permissions:
             roles:
               - "pip-api"
+        - application: oppgave
+          permissions:
+            roles:
+              - "pip-api"
         - application: postmottak-backend
           permissions:
             roles:
