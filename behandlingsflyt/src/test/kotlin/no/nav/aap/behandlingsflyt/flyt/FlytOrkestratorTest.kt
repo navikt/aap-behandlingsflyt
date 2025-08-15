@@ -2743,6 +2743,226 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
     }
 
     @Test
+    fun `Teste Klageflyt - Omgjøring av kapitel 2 og revurdering genereres `() {
+        val person = TestPersoner.PERSON_FOR_UNG()
+        val ident = person.aktivIdent()
+
+        val periode = Periode(LocalDate.now().minusMonths(3), LocalDate.now().plusYears(3))
+
+        // Avslås pga. alder
+        val avslåttFørstegang = sendInnSøknad(
+            ident, periode, SøknadV0(
+                student = SøknadStudentDto("NEI"),
+                yrkesskade = "NEI",
+                oppgitteBarn = null,
+                medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
+            )
+        )
+        assertThat(avslåttFørstegang)
+            .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
+            .extracting { b -> b.status().erAvsluttet() }.isEqualTo(true)
+        val kravMottatt = LocalDate.now().minusMonths(1)
+        val klagebehandling = sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("4002"),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+                InnsendingType.KLAGE,
+                strukturertDokument = StrukturertDokument(KlageV0(kravMottatt = kravMottatt)),
+                periode
+            )
+        )
+        assertThat(klagebehandling.referanse).isNotEqualTo(avslåttFørstegang.referanse)
+        assertThat(klagebehandling.typeBehandling()).isEqualTo(TypeBehandling.Klage)
+
+        dataSource.transaction { connection ->
+            val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
+            val klageDokumenter =
+                mottattDokumentRepository.hentDokumenterAvType(klagebehandling.id, InnsendingType.KLAGE)
+            assertThat(klageDokumenter).hasSize(1)
+            assertThat(klageDokumenter.first().strukturertDokument).isNotNull
+            assertThat(klageDokumenter.first().strukturerteData<KlageV0>()?.data?.kravMottatt).isEqualTo(kravMottatt)
+        }
+
+        // PåklagetBehandlingSteg
+        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            .isEqualTo(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = FastsettPåklagetBehandlingLøsning(
+                påklagetBehandlingVurdering = PåklagetBehandlingVurderingLøsningDto(
+                    påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
+                    påklagetBehandling = avslåttFørstegang.referanse.referanse,
+                )
+            )
+        )
+
+        // FullmektigSteg
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FASTSETT_FULLMEKTIG)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = FastsettFullmektigLøsning(
+                fullmektigVurdering = FullmektigLøsningDto(
+                    harFullmektig = false
+                )
+            )
+        )
+
+        // FormkravSteg
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = VurderFormkravLøsning(
+                formkravVurdering = FormkravVurderingLøsningDto(
+                    begrunnelse = "Begrunnelse",
+                    erBrukerPart = true,
+                    erFristOverholdt = false,
+                    likevelBehandles = true,
+                    erKonkret = true,
+                    erSignert = true
+                )
+            )
+        )
+
+        // BehandlendeEnhetSteg
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            .isEqualTo(Definisjon.FASTSETT_BEHANDLENDE_ENHET)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = FastsettBehandlendeEnhetLøsning(
+                behandlendeEnhetVurdering = BehandlendeEnhetLøsningDto(
+                    skalBehandlesAvNay = true,
+                    skalBehandlesAvKontor = true
+                )
+            )
+        )
+
+        // KlagebehandlingKontorSteg
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_KONTOR)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = VurderKlageKontorLøsning(
+                klagevurderingKontor = KlagevurderingKontorLøsningDto(
+                    begrunnelse = "Begrunnelse",
+                    notat = null,
+                    innstilling = KlageInnstilling.OMGJØR,
+                    vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_KAPITTEL_2),
+                    vilkårSomOpprettholdes = emptyList()
+                )
+            )
+        )
+
+        // KvalitetssikringsSteg
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
+
+        kvalitetssikreOk(klagebehandling)
+
+        // KlagebehandlingNaySteg
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_NAY)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = VurderKlageNayLøsning(
+                klagevurderingNay = KlagevurderingNayLøsningDto(
+                    begrunnelse = "Begrunnelse",
+                    notat = null,
+                    innstilling = KlageInnstilling.OMGJØR,
+                    vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_KAPITTEL_2),
+                    vilkårSomOpprettholdes = emptyList()
+                )
+            )
+        )
+
+
+        // Totalvurdering
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.BEKREFT_TOTALVURDERING_KLAGE)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = BekreftTotalvurderingKlageLøsning()
+        )
+
+        // FatteVedtakSteg
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FATTE_VEDTAK)
+
+        løsAvklaringsBehov(
+            klagebehandling,
+            avklaringsBehovLøsning = FatteVedtakLøsning(
+                vurderinger = listOf(
+                    TotrinnsVurdering(
+                        begrunnelse = "Begrunnelse",
+                        godkjent = true,
+                        definisjon = Definisjon.VURDER_KLAGE_NAY.kode,
+                        grunner = emptyList(),
+                    ),
+                    TotrinnsVurdering(
+                        begrunnelse = "Begrunnelse",
+                        godkjent = true,
+                        definisjon = Definisjon.VURDER_KLAGE_KONTOR.kode,
+                        grunner = emptyList(),
+                    ),
+                    TotrinnsVurdering(
+                        begrunnelse = "Begrunnelse",
+                        godkjent = true,
+                        definisjon = Definisjon.VURDER_FORMKRAV.kode,
+                        grunner = emptyList()
+                    )
+                )
+            ),
+            Bruker("X123456")
+        )
+
+        util.ventPåSvar(klagebehandling.sakId.id)
+
+        // OmgjøringSteg
+        dataSource.transaction { connection ->
+            val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
+
+            val omgjøringKlageRevurdering = mottattDokumentRepository.hentDokumenterAvType(
+                klagebehandling.sakId,
+                InnsendingType.OMGJØRING_KLAGE_REVURDERING
+            )
+
+            assertThat(omgjøringKlageRevurdering).hasSize(1).first()
+                .extracting(MottattDokument::strukturertDokument)
+                .isNotNull
+            assertThat(
+                omgjøringKlageRevurdering.first().strukturerteData<OmgjøringKlageRevurderingV0>()?.data?.beskrivelse
+            ).isEqualTo("Revurdering etter klage som tas til følge. Følgende vilkår omgjøres: Kapittel 2")
+        }
+
+        val revurdering = hentNyesteBehandlingForSak(klagebehandling.sakId, listOf(TypeBehandling.Revurdering))
+        assertThat(revurdering.vurderingsbehov()).containsExactly(VurderingsbehovMedPeriode(Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP))
+
+        // OpprettholdelseSteg
+        val steghistorikk = hentStegHistorikk(klagebehandling.id)
+        assertThat(steghistorikk)
+            .anySatisfy { it -> assertThat(it.steg() == StegType.OMGJØRING && it.status() == StegStatus.AVSLUTTER).isTrue }
+
+    }
+
+
+    @Test
     fun `Teste Klageflyt`() {
         val person = TestPersoner.PERSON_FOR_UNG()
         val ident = person.aktivIdent()
@@ -3476,6 +3696,110 @@ class FlytOrkestratorTest() : AbstraktFlytOrkestratorTest() {
         val avsluttetBehandling = hentBehandling(trekkKlageBehandling.referanse)
         assertThat(avsluttetBehandling.status()).isEqualTo(Status.AVSLUTTET)
     }
+    @Test
+    fun `Håndtere svar fra kabal - valg omgjøring av kapitel 2 skal opprette en revurdering av LOVVALG_OG_MEDLEMSKAP`() {
+        val person = TestPersoner.PERSON_FOR_UNG()
+        val ident = person.aktivIdent()
+
+        val periode = Periode(LocalDate.now().minusMonths(3), LocalDate.now().plusYears(3))
+
+        // Avslås pga. alder
+        val avslåttFørstegang = sendInnSøknad(
+            ident, periode, SøknadV0(
+                student = SøknadStudentDto("NEI"),
+                yrkesskade = "NEI",
+                oppgitteBarn = null,
+                medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
+            )
+        )
+        assertThat(avslåttFørstegang)
+            .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
+            .extracting { b -> b.status().erAvsluttet() }.isEqualTo(true)
+        val kravMottatt = LocalDate.now().minusMonths(1)
+        val klagebehandling = sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("401"),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+                InnsendingType.KLAGE,
+                strukturertDokument = StrukturertDokument(KlageV0(kravMottatt = kravMottatt)),
+                periode
+            )
+        )
+
+        assertThat(klagebehandling.referanse).isNotEqualTo(avslåttFørstegang.referanse)
+        assertThat(klagebehandling.typeBehandling()).isEqualTo(TypeBehandling.Klage)
+
+        var svarFraAndreinstansBehandling = sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("402"),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+                InnsendingType.KABAL_HENDELSE,
+                strukturertDokument = StrukturertDokument(
+                    KabalHendelseV0(
+                        eventId = UUID.randomUUID(),
+                        kildeReferanse = klagebehandling.referanse.toString(),
+                        kilde = Fagsystem.KELVIN.name,
+                        kabalReferanse = UUID.randomUUID().toString(),
+                        type = BehandlingEventType.KLAGEBEHANDLING_AVSLUTTET,
+                        detaljer = BehandlingDetaljer(
+                            KlagebehandlingAvsluttetDetaljer(
+                                avsluttet = LocalDateTime.now().minusMinutes(2),
+                                utfall = KlageUtfall.MEDHOLD,
+                                journalpostReferanser = emptyList()
+                            ),
+                        )
+                    )
+                ),
+                periode
+            )
+        )
+
+        assertThat(svarFraAndreinstansBehandling.referanse).isNotEqualTo(klagebehandling.referanse)
+        assertThat(svarFraAndreinstansBehandling.typeBehandling()).isEqualTo(TypeBehandling.SvarFraAndreinstans)
+
+        dataSource.transaction { connection ->
+            val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
+            val kabalHendelseDokumenter =
+                mottattDokumentRepository.hentDokumenterAvType(
+                    svarFraAndreinstansBehandling.sakId,
+                    InnsendingType.KABAL_HENDELSE
+                )
+            assertThat(kabalHendelseDokumenter).hasSize(1)
+            assertThat(kabalHendelseDokumenter.first().strukturertDokument).isNotNull
+            assertThat(kabalHendelseDokumenter.first().strukturerteData<KabalHendelseV0>()?.data).isNotNull
+        }
+
+        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(svarFraAndreinstansBehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            .isEqualTo(Definisjon.HÅNDTER_SVAR_FRA_ANDREINSTANS)
+
+        svarFraAndreinstansBehandling = løsAvklaringsBehov(
+            svarFraAndreinstansBehandling,
+            avklaringsBehovLøsning = HåndterSvarFraAndreinstansLøsning(
+                svarFraAndreinstansVurdering = HåndterSvarFraAndreinstansLøsningDto(
+                    begrunnelse = "Begrunnelse for håndtering",
+                    konsekvens = SvarFraAndreinstansKonsekvens.OMGJØRING,
+                    vilkårSomOmgjøres = listOf(
+                        Hjemmel.FOLKETRYGDLOVEN_KAPITTEL_2
+                    )
+                )
+            )
+        )
+
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(svarFraAndreinstansBehandling.id)
+        assertThat(åpneAvklaringsbehov).isEmpty()
+        assertThat(svarFraAndreinstansBehandling.status()).isEqualTo(Status.AVSLUTTET)
+
+        util.ventPåSvar(sakId = svarFraAndreinstansBehandling.sakId.id)
+
+        val revurdering = hentNyesteBehandlingForSak(svarFraAndreinstansBehandling.sakId)
+        assertThat(revurdering).isNotNull
+        assertThat(revurdering.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+        assertThat(
+            revurdering.vurderingsbehov().map { it.type }).contains(Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP)
+    }
+
+
 
     @Test
     fun `Håndtere svar fra kabal - valg omgjøring skal opprette en revurdering`() {
