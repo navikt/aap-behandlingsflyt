@@ -142,7 +142,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 )
             )
-            /*.medSteg(
+            .medSteg(
                 steg = OvergangUføreSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
@@ -150,7 +150,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.OVERGANG_UFORE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 )
-            )*/
+            )
             .medSteg(
                 steg = RefusjonkravSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
