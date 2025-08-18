@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.Oppfølgings
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.BehandletOppfølgingsOppgave
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -69,7 +70,7 @@ class AvklarOppfølgingStegTest {
 
     @BeforeEach
     fun setup() {
-        every { sakOgBehandlingService.finnEllerOpprettBehandling(any<SakId>(), any(), any()) } returns behandling
+        every { sakOgBehandlingService.finnEllerOpprettBehandling(any<SakId>(), any()) } returns behandling
 
         every { mottaDokumentService.hentOppfølgingsBehandlingDokument(any())} returns BehandletOppfølgingsOppgave(
             datoForOppfølging = LocalDate.now(),
@@ -97,8 +98,10 @@ class AvklarOppfølgingStegTest {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
             sakOgBehandlingService.finnEllerOpprettBehandling(
                 behandling.sakId,
-                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
-                ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+                VurderingsbehovOgÅrsak(
+                    listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
+                    ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,
+                )
             )
         }
     }
@@ -121,8 +124,10 @@ class AvklarOppfølgingStegTest {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
             sakOgBehandlingService.finnEllerOpprettBehandling(
                 behandling.sakId,
-                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
-                ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+                VurderingsbehovOgÅrsak(
+                    listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
+                    ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,
+                )
             )
         }
     }
@@ -139,8 +144,10 @@ class AvklarOppfølgingStegTest {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
             sakOgBehandlingService.finnEllerOpprettBehandling(
                 behandling.sakId,
-                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
-                ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+                VurderingsbehovOgÅrsak(
+                    listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
+                    ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,
+                )
             )
         }
     }

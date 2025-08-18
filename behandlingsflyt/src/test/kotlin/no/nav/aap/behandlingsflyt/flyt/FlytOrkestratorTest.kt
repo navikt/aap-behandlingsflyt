@@ -914,7 +914,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         var behandling = sendInnSøknad(ident, periode, TestSøknader.STANDARD_SØKNAD)
 
         løsSykdom(behandling)
-        leggTilÅrsakForBehandling(behandling, listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SØKNAD_TRUKKET)))
+        leggTilVurderingsbehovForBehandling(behandling, listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SØKNAD_TRUKKET)))
         assertThat(hentAlleAvklaringsbehov(behandling)).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erÅpent() && avklaringsbehov.definisjon == Definisjon.VURDER_TREKK_AV_SØKNAD).isTrue() }
 
         behandling = løsAvklaringsBehov(
@@ -2240,7 +2240,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         assertTrue(vilkårsResultat.all { it.erOppfylt() })
 
         // Teste å trekke søknad
-        leggTilÅrsakForBehandling(behandling, listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SØKNAD_TRUKKET)))
+        leggTilVurderingsbehovForBehandling(behandling, listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SØKNAD_TRUKKET)))
     }
 
     @Test

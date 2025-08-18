@@ -21,7 +21,8 @@
       <env name="INTEGRASJON_INSTITUSJONSOPPHOLD_SCOPE" value="api://dev-fss.team-rocket.inst2-q2/.default" />
       <env name="INTEGRASJON_INNTEKT_URL" value="https://pensjon-popp-q2.dev-fss-pub.nais.io/popp/api/inntekt/sumPi" />
       <env name="INTEGRASJON_INNTEKT_SCOPE" value="api://dev-fss.pensjonopptjening.pensjon-popp-q2/.default" />
-      <env name="INTEGRASJON_OPPGAVESTYRING_URL" value="https://aap-oppgave.intern.dev.nav.no" />
+      <!--<env name="INTEGRASJON_OPPGAVESTYRING_URL" value="https://aap-oppgave.intern.dev.nav.no" />-->
+      <env name="INTEGRASJON_OPPGAVESTYRING_URL" value="http://localhost:8081" />
       <env name="INTEGRASJON_OPPGAVESTYRING_SCOPE" value="api://dev-gcp.aap.oppgave/.default" />
       <env name="INTEGRASJON_STATISTIKK_URL" value="https://aap-statistikk.intern.dev.nav.no" />
       <env name="INTEGRASJON_STATISTIKK_SCOPE" value="api://dev-gcp.aap.statistikk/.default" />

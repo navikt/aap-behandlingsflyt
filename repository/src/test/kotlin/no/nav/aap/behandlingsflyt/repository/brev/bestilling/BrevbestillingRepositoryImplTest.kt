@@ -10,6 +10,8 @@ import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
@@ -67,9 +69,12 @@ internal class BrevbestillingRepositoryImplTest {
         ).id
         return BehandlingRepositoryImpl(connection).opprettBehandling(
             sakId,
-            listOf(),
             TypeBehandling.Førstegangsbehandling,
-            null
+            null,
+            VurderingsbehovOgÅrsak(
+                vurderingsbehov = emptyList(),
+                årsak = ÅrsakTilOpprettelse.SØKNAD,
+            )
         ).id
     }
 }

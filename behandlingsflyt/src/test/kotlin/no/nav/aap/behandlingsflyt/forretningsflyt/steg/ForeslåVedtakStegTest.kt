@@ -1,10 +1,12 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -39,7 +41,12 @@ class ForeslåVedtakStegTest {
 
         val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         val behandling =
-            behandlingRepository.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+            behandlingRepository.opprettBehandling(
+                sakId = sak.id,
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = null,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(emptyList(), ÅrsakTilOpprettelse.SØKNAD)
+            )
         val kontekstMedPerioder = FlytKontekstMedPerioder(
             sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
@@ -59,7 +66,12 @@ class ForeslåVedtakStegTest {
 
         val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         val behandling =
-            behandlingRepository.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+            behandlingRepository.opprettBehandling(
+                sakId = sak.id,
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = null,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(emptyList(), ÅrsakTilOpprettelse.SØKNAD)
+            )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
             definisjoner = listOf(Definisjon.AVKLAR_SYKDOM),
@@ -85,7 +97,12 @@ class ForeslåVedtakStegTest {
 
         val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         val behandling =
-            behandlingRepository.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+            behandlingRepository.opprettBehandling(
+                sakId = sak.id,
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = null,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(emptyList(), ÅrsakTilOpprettelse.SØKNAD)
+            )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
             definisjoner = listOf(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP),
@@ -111,7 +128,12 @@ class ForeslåVedtakStegTest {
 
         val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         val behandling =
-            behandlingRepository.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+            behandlingRepository.opprettBehandling(
+                sakId = sak.id,
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = null,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(emptyList(), ÅrsakTilOpprettelse.SØKNAD)
+            )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
             definisjoner = listOf(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP),

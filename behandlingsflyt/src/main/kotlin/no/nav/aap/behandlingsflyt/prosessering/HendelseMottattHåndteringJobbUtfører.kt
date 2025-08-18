@@ -71,6 +71,7 @@ class HendelseMottattHåndteringJobbUtfører(
                 håndterMottattDokumentService.oppdaterÅrsakerTilBehandlingPåEksisterendeÅpenBehandling(
                     sakId = sakId,
                     behandlingsreferanse = referanse.asBehandlingReferanse,
+                    innsendingType = innsendingType,
                     melding = parsedMelding
                 )
             }

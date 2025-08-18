@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAv
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -57,8 +58,10 @@ class AvklarOppfølgingSteg(
                 log.info("Oppretter ny behandling med vurderingsbehov $vurderingsbehov for sak ${kontekst.sakId}.")
                 val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
                     sakId = kontekst.sakId,
-                    vurderingsbehov = vurderingsbehov.map { VurderingsbehovMedPeriode(it) },
-                    årsakTilOpprettelse = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+                    vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                        årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,
+                        vurderingsbehov = vurderingsbehov.map { VurderingsbehovMedPeriode(it) },
+                    ),
                 )
 
                 val behandlingSkrivelås =

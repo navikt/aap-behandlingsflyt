@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.help
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -53,4 +54,4 @@ fun finnEllerOpprettBehandling(
     vurderingsbehov: List<VurderingsbehovMedPeriode> = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
     årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
 ) = SakOgBehandlingService(repositoryProvider, gatewayProvider)
-    .finnEllerOpprettBehandling(saksnummer, vurderingsbehov, årsakTilOpprettelse)
+    .finnEllerOpprettBehandling(saksnummer, VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse))

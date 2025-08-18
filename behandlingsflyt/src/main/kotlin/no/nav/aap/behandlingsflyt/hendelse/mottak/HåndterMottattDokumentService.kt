@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.hendelse.mottak
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -76,8 +77,13 @@ class HåndterMottattDokumentService(
                     behandlingRepository.hent(BehandlingReferanse(UUID.fromString(melding.behandlingReferanse)))
                 } else {
                     sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(
-                        sak.saksnummer, vurderingsbehov,
-                        ÅrsakTilOpprettelse.KLAGE
+                        sak.saksnummer,
+                        VurderingsbehovOgÅrsak(
+                            årsak = ÅrsakTilOpprettelse.KLAGE,
+                            vurderingsbehov = vurderingsbehov,
+                            beskrivelse = melding.beskrivelse,
+                            opprettet = mottattTidspunkt
+                        )
                     ).åpenBehandling
                 }
 
@@ -117,8 +123,16 @@ class HåndterMottattDokumentService(
 
         val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(
             sak.saksnummer,
-            vurderingsbehov,
-            årsakTilOpprettelse
+            VurderingsbehovOgÅrsak(
+                årsak = årsakTilOpprettelse,
+                vurderingsbehov = vurderingsbehov,
+                opprettet = mottattTidspunkt,
+                beskrivelse =  when (melding) {
+                    is ManuellRevurderingV0 -> melding.beskrivelse
+                    is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
+                    else -> null
+                }
+            )
         )
 
         val behandlingSkrivelås = opprettetBehandling.åpenBehandling?.let {
@@ -158,14 +172,16 @@ class HåndterMottattDokumentService(
     fun oppdaterÅrsakerTilBehandlingPåEksisterendeÅpenBehandling(
         sakId: SakId,
         behandlingsreferanse: BehandlingReferanse,
+        innsendingType: InnsendingType,
         melding: NyÅrsakTilBehandlingV0
     ) {
         val behandling = sakOgBehandlingService.finnBehandling(behandlingsreferanse)
+        val årsakTilOpprettelse = utledÅrsakTilOpprettelse(innsendingType, melding)
 
         låsRepository.withLåstBehandling(behandling.id) {
             val vurderingsbehov =
                 melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
-            sakOgBehandlingService.oppdaterVurderingsbehovTilBehandling(behandling, vurderingsbehov)
+            sakOgBehandlingService.oppdaterVurderingsbehovTilBehandling(behandling, VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse))
 
             prosesserBehandling.triggProsesserBehandling(
                 sakId,

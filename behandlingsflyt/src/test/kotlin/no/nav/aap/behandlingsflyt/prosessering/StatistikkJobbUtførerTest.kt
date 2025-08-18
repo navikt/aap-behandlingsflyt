@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
@@ -62,6 +63,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -128,15 +130,15 @@ class StatistikkJobbUtførerTest {
             val opprettetBehandling = behandlingRepository.opprettBehandling(
                 sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
-                vurderingsbehov = listOf(),
-                forrigeBehandlingId = null
+                forrigeBehandlingId = null,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(listOf(), ÅrsakTilOpprettelse.SØKNAD)
             )
 
             val revurdering = behandlingRepository.opprettBehandling(
                 sak.id,
                 typeBehandling = TypeBehandling.Revurdering,
-                vurderingsbehov = listOf(),
-                forrigeBehandlingId = opprettetBehandling.id
+                forrigeBehandlingId = opprettetBehandling.id,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(listOf(), ÅrsakTilOpprettelse.SØKNAD)
             )
 
             opprettetTidspunkt = revurdering.opprettetTidspunkt
@@ -248,8 +250,11 @@ class StatistikkJobbUtførerTest {
             val opprettetBehandling = behandlingRepository.opprettBehandling(
                 sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
-                vurderingsbehov = listOf(),
-                forrigeBehandlingId = null
+                forrigeBehandlingId = null,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    årsak = ÅrsakTilOpprettelse.SØKNAD,
+                    vurderingsbehov = listOf(),
+                ),
             )
             beregningsgrunnlagRepository.lagre(
                 behandlingId = opprettetBehandling.id,
@@ -465,14 +470,15 @@ class StatistikkJobbUtførerTest {
         val sakId = sak.id
         val behandling = behandlingRepository.opprettBehandling(
             sakId = sakId,
-            vurderingsbehov = listOf(
-                VurderingsbehovMedPeriode(
+            typeBehandling = TypeBehandling.Klage,
+            forrigeBehandlingId = null,
+            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(
                     type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD,
                     periode = Periode(LocalDate.now(), LocalDate.now().plusDays(1))
-                )
-            ),
-            typeBehandling = TypeBehandling.Klage,
-            forrigeBehandlingId = null
+                )),
+                årsak = ÅrsakTilOpprettelse.SØKNAD
+            )
         )
         val referanse = behandling.referanse
 
