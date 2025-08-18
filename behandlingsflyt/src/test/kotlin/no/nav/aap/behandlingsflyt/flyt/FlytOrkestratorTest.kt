@@ -2913,7 +2913,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             Bruker("X123456")
         )
 
-        util.ventPåSvar(klagebehandling.sakId.id)
+
+        motor.kjørJobber()
 
         // OmgjøringSteg
         dataSource.transaction { connection ->
