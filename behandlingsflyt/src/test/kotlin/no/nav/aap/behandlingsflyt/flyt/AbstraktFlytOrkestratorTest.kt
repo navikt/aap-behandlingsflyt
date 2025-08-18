@@ -120,28 +120,40 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDatabase
+import no.nav.aap.komponenter.dbtest.TestDatabaseExtension
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
+import javax.sql.DataSource
 
 
 @Fakes
+@ExtendWith(TestDatabaseExtension::class)
 open class AbstraktFlytOrkestratorTest {
+    @TestDatabase
+    lateinit var dataSource: DataSource
+
+    protected val motor by lazy {
+        ManuellMotorImpl(
+        dataSource,
+        jobber = ProsesseringsJobber.alle(),
+        repositoryRegistry = postgresRepositoryRegistry,
+        gatewayProvider = gatewayProvider
+    )}
+
+    protected val hendelsesMottak by lazy {TestHendelsesMottak(dataSource, gatewayProvider) }
 
     companion object {
-        @JvmStatic
-        protected val dataSource = InitTestDatabase.freshDatabase()
-
         @JvmStatic
         protected val gatewayProvider = createGatewayProvider {
             register<PdlBarnGateway>()
@@ -175,28 +187,10 @@ open class AbstraktFlytOrkestratorTest {
             register<GosysGateway>()
         }
 
-        @JvmStatic
-        protected val motor = ManuellMotorImpl(
-            dataSource,
-            jobber = ProsesseringsJobber.alle(),
-            repositoryRegistry = postgresRepositoryRegistry,
-            gatewayProvider = gatewayProvider
-        )
-
-        @JvmStatic
-        protected val hendelsesMottak = TestHendelsesMottak(dataSource, gatewayProvider)
-
         @BeforeAll
         @JvmStatic
         internal fun beforeAll() {
             System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
-            motor.start()
-        }
-
-        @AfterAll
-        @JvmStatic
-        internal fun afterAll() {
-//            motor.stop()
         }
     }
 
