@@ -119,6 +119,7 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDatabase
 import no.nav.aap.komponenter.dbtest.TestDatabaseExtension
@@ -135,11 +136,12 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
+import kotlin.reflect.KClass
 
 
 @Fakes
 @ExtendWith(TestDatabaseExtension::class)
-open class AbstraktFlytOrkestratorTest {
+open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
     @TestDatabase
     lateinit var dataSource: DataSource
 
@@ -153,40 +155,39 @@ open class AbstraktFlytOrkestratorTest {
 
     protected val hendelsesMottak by lazy {TestHendelsesMottak(dataSource, gatewayProvider) }
 
+    protected val gatewayProvider = createGatewayProvider {
+        register<PdlBarnGateway>()
+        register<PdlIdentGateway>()
+        register<PdlPersoninfoBulkGateway>()
+        register<PdlPersoninfoGateway>()
+        register<PdlPersonopplysningGateway>()
+        register<AbakusSykepengerGateway>()
+        register<AbakusForeldrepengerGateway>()
+        register<DokumentinnhentingGatewayImpl>()
+        register<MedlemskapGateway>()
+        register<FakeApiInternGateway>()
+        register<UtbetalingGatewayImpl>()
+        register<AARegisterGateway>()
+        register<EREGGateway>()
+        register<StatistikkGatewayImpl>()
+        register<InntektGatewayImpl>()
+        register<InstitusjonsoppholdGatewayImpl>()
+        register<InntektkomponentenGatewayImpl>()
+        register<BrevGateway>()
+        register<OppgavestyringGatewayImpl>()
+        register<UføreGateway>()
+        register<YrkesskadeRegisterGatewayImpl>()
+        register<MeldekortGatewayImpl>()
+        register<TjenestePensjonGatewayImpl>()
+        register(unleashGateway)
+        register<SamGatewayImpl>()
+        register<NomInfoGateway>()
+        register<KabalGateway>()
+        register<NorgGateway>()
+        register<GosysGateway>()
+    }
+    
     companion object {
-        @JvmStatic
-        protected val gatewayProvider = createGatewayProvider {
-            register<PdlBarnGateway>()
-            register<PdlIdentGateway>()
-            register<PdlPersoninfoBulkGateway>()
-            register<PdlPersoninfoGateway>()
-            register<PdlPersonopplysningGateway>()
-            register<AbakusSykepengerGateway>()
-            register<AbakusForeldrepengerGateway>()
-            register<DokumentinnhentingGatewayImpl>()
-            register<MedlemskapGateway>()
-            register<FakeApiInternGateway>()
-            register<UtbetalingGatewayImpl>()
-            register<AARegisterGateway>()
-            register<EREGGateway>()
-            register<StatistikkGatewayImpl>()
-            register<InntektGatewayImpl>()
-            register<InstitusjonsoppholdGatewayImpl>()
-            register<InntektkomponentenGatewayImpl>()
-            register<BrevGateway>()
-            register<OppgavestyringGatewayImpl>()
-            register<UføreGateway>()
-            register<YrkesskadeRegisterGatewayImpl>()
-            register<MeldekortGatewayImpl>()
-            register<TjenestePensjonGatewayImpl>()
-            register<FakeUnleash>()
-            register<SamGatewayImpl>()
-            register<NomInfoGateway>()
-            register<KabalGateway>()
-            register<NorgGateway>()
-            register<GosysGateway>()
-        }
-
         @BeforeAll
         @JvmStatic
         internal fun beforeAll() {
