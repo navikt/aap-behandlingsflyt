@@ -5,7 +5,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
-class OvergangUføreGrunnlag(
+data class OvergangUføreGrunnlag(
     val id: Long?,
     val vurderinger: List<OvergangUføreVurdering>,
 ) {

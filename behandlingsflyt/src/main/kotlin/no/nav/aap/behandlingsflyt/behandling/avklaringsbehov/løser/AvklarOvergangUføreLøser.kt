@@ -60,7 +60,7 @@ class AvklarOvergangUføreLøser(
 
         overgangUforeRepository.lagre(
             behandlingId = behandling.id,
-            bistandsvurderinger = gjeldende
+            overgangUføreVurderinger = gjeldende
         )
 
         return LøsningsResultat(
