@@ -1,6 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-val opentelemetryVersion = "2.18.1-alpha"
+val opentelemetryVersion = "2.19.0-alpha"
 
 plugins {
     id("behandlingsflyt.conventions")
