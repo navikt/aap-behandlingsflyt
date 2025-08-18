@@ -96,7 +96,7 @@ enum class Hjemmel(val hjemmel: String) {
             FOLKETRYGDLOVEN_11_31,
             FOLKETRYGDLOVEN_21_3,
             FOLKETRYGDLOVEN_21_7,
-            FOLKETRYGDLOVEN_22_13,
+            FOLKETRYGDLOVEN_22_13 -> Vurderingsbehov.HELHETLIG_VURDERING
             FOLKETRYGDLOVEN_22_15,
             FOLKETRYGDLOVEN_22_17 -> throw IllegalStateException("Ingen ÅrsaTilBehandling-mapping er implementert for klage på hjemmel $name ($hjemmel).")
         }
