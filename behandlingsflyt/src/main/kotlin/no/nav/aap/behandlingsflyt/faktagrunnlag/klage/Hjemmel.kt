@@ -82,6 +82,9 @@ enum class Hjemmel(val hjemmel: String) {
             FOLKETRYGDLOVEN_11_28 -> Vurderingsbehov.SAMORDNING_OG_AVREGNING
 
             FOLKETRYGDLOVEN_KAPITTEL_2 -> Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP
+
+            FOLKETRYGDLOVEN_22_13 -> Vurderingsbehov.HELHETLIG_VURDERING
+
             FOLKETRYGDLOVEN_11_3,
             FOLKETRYGDLOVEN_11_4,
             FOLKETRYGDLOVEN_11_7,
@@ -96,7 +99,6 @@ enum class Hjemmel(val hjemmel: String) {
             FOLKETRYGDLOVEN_11_31,
             FOLKETRYGDLOVEN_21_3,
             FOLKETRYGDLOVEN_21_7,
-            FOLKETRYGDLOVEN_22_13 -> Vurderingsbehov.HELHETLIG_VURDERING
             FOLKETRYGDLOVEN_22_15,
             FOLKETRYGDLOVEN_22_17 -> throw IllegalStateException("Ingen ÅrsaTilBehandling-mapping er implementert for klage på hjemmel $name ($hjemmel).")
         }
