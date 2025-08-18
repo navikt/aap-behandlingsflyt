@@ -27,6 +27,8 @@ import java.time.LocalDate
 
 class ApiInternGatewayImpl() : ApiInternGateway {
 
+    private val log = org.slf4j.LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<ApiInternGateway> {
         override fun konstruer(): ApiInternGateway {
             return ApiInternGatewayImpl()
@@ -68,6 +70,7 @@ class ApiInternGatewayImpl() : ApiInternGateway {
         vedtaksDato: LocalDate,
         rettighetsTypeTidslinje: Tidslinje<no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType>
     ) {
+        log.info("Sender behandling for behandlingId=${behandling.id} med vedtakId=$vedtakId, sak: ${sak.saksnummer}. Beregningsgrunnlag: $beregningsgrunnlag")
         restClient.post(
             uri = uri.resolve("/api/insert/vedtak"),
             request = PostRequest(
