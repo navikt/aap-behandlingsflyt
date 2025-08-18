@@ -340,55 +340,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             }
     }
 
-    fun revurdereFramTilOgMedSykdom(sak: Sak, gjelderFra: LocalDate, vissVarighet: Boolean? = null): Behandling {
-        val ident = sak.person.aktivIdent()
-        val periode = sak.rettighetsperiode
-
-        return sendInnDokument(
-            ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId("29"),
-                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
-                strukturertDokument = StrukturertDokument(
-                    SøknadV0(
-                        student = SøknadStudentDto("NEI"),
-                        yrkesskade = "NEI",
-                        oppgitteBarn = null,
-                        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-                    ),
-                ),
-                periode = periode
-            )
-        )
-            .medKontekst {
-                assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .løsAvklaringsBehov(
-                AvklarSykdomLøsning(
-                    sykdomsvurderinger = listOf(
-                        SykdomsvurderingLøsningDto(
-                            begrunnelse = "Er syk nok",
-                            dokumenterBruktIVurdering = listOf(JournalpostId("1349532")),
-                            harSkadeSykdomEllerLyte = true,
-                            erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = vissVarighet,
-                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true,
-                            yrkesskadeBegrunnelse = null,
-                            // Ny revurdering
-                            vurderingenGjelderFra = gjelderFra
-                        )
-                    )
-                ),
-            )
-            .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
-                    .containsExactlyInAnyOrder(Definisjon.AVKLAR_BISTANDSBEHOV)
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            }
-    }
-
     @Test
     fun `hopper over foreslå vedtak-steg når revurdering ikke skal innom NAY`() {
         val sak = happyCaseFørstegangsbehandling()
