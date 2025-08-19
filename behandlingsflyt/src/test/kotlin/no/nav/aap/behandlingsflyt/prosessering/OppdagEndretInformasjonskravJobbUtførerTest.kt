@@ -1,7 +1,15 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import javax.sql.DataSource
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnService
@@ -35,7 +43,6 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import javax.sql.DataSource
 
 class OppdagEndretInformasjonskravJobbUtførerTest {
     init {
@@ -58,10 +65,20 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         }
     }
 
+    object FakeForeldrepengerGateway : ForeldrepengerGateway {
+        override fun hentVedtakYtelseForPerson(request: ForeldrepengerRequest) = ForeldrepengerResponse(listOf())
+    }
+
+    object FakeSykepegerGateway : SykepengerGateway {
+        override fun hentYtelseSykepenger(request: SykepengerRequest) = SykepengerResponse(listOf())
+    }
+
     private val gatewayProvider = createGatewayProvider {
         register<FakeUnleashFasttrackMeldekort>()
         register<FakeBarnGateway>()
         register<FakePdlGateway>()
+        register<FakeForeldrepengerGateway>()
+        register<FakeSykepegerGateway>()
     }
 
     @TestDatabase
@@ -101,7 +118,8 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             assertThat(sisteYtelsesbehandling.typeBehandling())
                 .isEqualTo(TypeBehandling.Revurdering)
 
-            val jobber = repositoryProvider.provide<FlytJobbRepository>().hentJobberForBehandling(sisteYtelsesbehandling.id.toLong())
+            val jobber = repositoryProvider.provide<FlytJobbRepository>()
+                .hentJobberForBehandling(sisteYtelsesbehandling.id.toLong())
                 .filter { it.type() == ProsesserBehandlingJobbUtfører.type }
             assertThat(jobber).isNotEmpty
         }
@@ -134,17 +152,17 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             val sak = sak(connection)
             val førstegangsbehandlingen = finnEllerOpprettBehandling(connection, sak)
 
-            BarnService.konstruer(repositoryProvider, gatewayProvider).oppdater(
-                FlytKontekstMedPerioder(
-                    sakId = sak.id,
-                    behandlingId = førstegangsbehandlingen.id,
-                    forrigeBehandlingId = null,
-                    behandlingType = TypeBehandling.Førstegangsbehandling,
-                    vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                    rettighetsperiode = sak.rettighetsperiode,
-                    vurderingsbehovRelevanteForSteg = setOf()
-                )
+            val kontekst = FlytKontekstMedPerioder(
+                sakId = sak.id,
+                behandlingId = førstegangsbehandlingen.id,
+                forrigeBehandlingId = null,
+                behandlingType = TypeBehandling.Førstegangsbehandling,
+                vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+                rettighetsperiode = sak.rettighetsperiode,
+                vurderingsbehovRelevanteForSteg = setOf()
             )
+            BarnService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
+            SamordningYtelseVurderingService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
             repositoryProvider.provide<BehandlingRepository>()
                 .oppdaterBehandlingStatus(førstegangsbehandlingen.id, Status.AVSLUTTET)
             førstegangsbehandlingen

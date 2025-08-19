@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -28,7 +29,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
     fun utfør(sakId: SakId, behandlingId: BehandlingId) {
         val relevanteInformasjonskrav: List<KanTriggeRevurdering> = listOf(
             BarnService.konstruer(repositoryProvider, gatewayProvider),
-            //            InformasjonskravNavn.SAMORDNING_YTELSE,
+            SamordningYtelseVurderingService.konstruer(repositoryProvider, gatewayProvider),
             //            InformasjonskravNavn.SAMORDNING_TJENESTEPENSJON,
             //            InformasjonskravNavn.UFØRE,
             //            InformasjonskravNavn.INSTITUSJONSOPPHOLD,
