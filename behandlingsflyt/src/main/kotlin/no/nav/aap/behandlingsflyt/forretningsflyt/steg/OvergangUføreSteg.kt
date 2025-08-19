@@ -53,9 +53,6 @@ class OvergangUføreSteg private constructor(
                     )
                     return Fullført
                 }
-                val a = harVurdertBistandsVilkår(avklaringsbehovene)
-                val b = !bistandsVilkårErOppfylt(kontekst.behandlingId)
-                val c = harIkkeVurdert1118tidligere(avklaringsbehovene)
                 if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && harIkkeVurdert1118tidligere(
                         avklaringsbehovene
                     )
@@ -65,7 +62,25 @@ class OvergangUføreSteg private constructor(
             }
 
             VurderingType.REVURDERING -> {
-                return FantAvklaringsbehov(Definisjon.AVKLAR_OVERGANG_UFORE)
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    log.info("Ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.OVERGANGUFØREVILKÅRET} for behandlingId ${kontekst.behandlingId}. Avbryter steg.")
+                    avklaringsbehovene.avbrytForSteg(type())
+                    vilkårService.ingenNyeVurderinger(
+                        kontekst.behandlingId,
+                        Vilkårtype.OVERGANGUFØREVILKÅRET,
+                        kontekst.rettighetsperiode,
+                        "mangler behandlingsgrunnlag",
+                    )
+                    return Fullført
+                }
+                if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && harIkkeVurdert1118tidligere(
+                        avklaringsbehovene
+                    )
+                ) {
+                    return FantAvklaringsbehov(Definisjon.AVKLAR_OVERGANG_UFORE)
+                } else {
+                    return Fullført
+                }
             }
 
             VurderingType.MELDEKORT,
