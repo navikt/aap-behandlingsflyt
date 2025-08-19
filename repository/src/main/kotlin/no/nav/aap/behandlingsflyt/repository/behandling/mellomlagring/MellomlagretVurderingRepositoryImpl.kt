@@ -67,7 +67,7 @@ class MellomlagretVurderingRepositoryImpl(private val connection: DBConnection) 
         }
     }
 
-    override fun lagre(mellomlagretVurdering: MellomlagretVurdering) {
+    override fun lagre(mellomlagretVurdering: MellomlagretVurdering): MellomlagretVurdering {
 
         connection.execute(
             """ 
@@ -94,6 +94,7 @@ class MellomlagretVurderingRepositoryImpl(private val connection: DBConnection) 
             }
         }
 
+        return mellomlagretVurdering
     }
 
 }

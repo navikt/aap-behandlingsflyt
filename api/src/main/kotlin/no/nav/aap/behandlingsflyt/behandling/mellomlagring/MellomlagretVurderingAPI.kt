@@ -29,12 +29,12 @@ import javax.sql.DataSource
 fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling").tag(Tags.Behandling) {
         route("/mellomlagret-vurdering") {
-            authorizedPost<Unit, MellomlagretVurderingDto, MellomlagretVurderingRequest>(
+            authorizedPost<Unit, MellomlagredeVurderingResponse, MellomlagretVurderingRequest>(
                 AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SAKSBEHANDLE,
                 )
             ) { _, request ->
-                dataSource.transaction { connection ->
+                val response = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
@@ -49,7 +49,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
                             throw UgyldigForespørselException("Kan ikke mellomlagre vurderinger på en avsluttet behandling")
                         }
 
-                        mellomlagretVurderingRepository.lagre(
+                        val mellomlagretVurdering = mellomlagretVurderingRepository.lagre(
                             MellomlagretVurdering(
                                 behandlingId = behandling.id,
                                 avklaringsbehovKode = avklaringsbehovKode,
@@ -58,9 +58,14 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
                                 vurdertDato = LocalDateTime.now()
                             )
                         )
+
+                        MellomlagredeVurderingResponse(
+                            mellomlagretVurdering = mellomlagretVurdering.tilResponse(),
+                            harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        )
                     }
                 }
-                respondWithStatus(HttpStatusCode.Accepted)
+                respond(response)
             }
         }
         route("/mellomlagret-vurdering/{referanse}/{avklaringsbehovkode}") {
