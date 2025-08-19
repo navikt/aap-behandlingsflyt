@@ -27,6 +27,7 @@ enum class BehandlingHendelseType {
     VEDTAK_FATTET, // Resultat, evt avslag med årsak
     BREV_SENDT, //  Sendte brev med tittel
     SENDT_TIL_BESLUTTER,
+    RETUR_FRA_BESLUTTER,
     SENDT_TIL_KVALITETSSIKRER, // med resultat
     RETUR_FRA_KVALITETSSIKRER, // med resultat og eventuell årsak for retur + begrunnelse
     REVURDERING_OPPRETTET,
