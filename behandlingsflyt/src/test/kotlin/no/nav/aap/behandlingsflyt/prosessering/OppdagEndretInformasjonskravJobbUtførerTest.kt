@@ -4,6 +4,9 @@ import javax.sql.DataSource
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerResponse
@@ -73,12 +76,17 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         override fun hentYtelseSykepenger(request: SykepengerRequest) = SykepengerResponse(listOf())
     }
 
+    object FakeTjenestePensjonGateway : TjenestePensjonGateway {
+        override fun hentTjenestePensjon(ident: String, periode: Periode): List<TjenestePensjonForhold> = listOf()
+    }
+
     private val gatewayProvider = createGatewayProvider {
         register<FakeUnleashFasttrackMeldekort>()
         register<FakeBarnGateway>()
         register<FakePdlGateway>()
         register<FakeForeldrepengerGateway>()
         register<FakeSykepegerGateway>()
+        register<FakeTjenestePensjonGateway>()
     }
 
     @TestDatabase
@@ -163,6 +171,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             )
             BarnService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
             SamordningYtelseVurderingService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
+            TjenestePensjonService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
             repositoryProvider.provide<BehandlingRepository>()
                 .oppdaterBehandlingStatus(førstegangsbehandlingen.id, Status.AVSLUTTET)
             førstegangsbehandlingen
