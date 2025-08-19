@@ -8,7 +8,7 @@ dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation(project(":kontrakt"))
-    implementation("no.nav.aap.brev:kontrakt:0.0.140")
+    implementation("no.nav.aap.brev:kontrakt:0.0.141")
     implementation(libs.tilgangKontrakt)
     implementation(libs.httpklient)
     implementation(libs.verdityper)

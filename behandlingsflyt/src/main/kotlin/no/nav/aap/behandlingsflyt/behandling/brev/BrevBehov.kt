@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.komponenter.verdityper.Beløp
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.Year
@@ -12,9 +13,9 @@ data class Innvilgelse(
     val grunnlagBeregning: GrunnlagBeregning?
 ) : BrevBehov(TypeBrev.VEDTAK_INNVILGELSE) {
     data class GrunnlagBeregning(
-        val dagsats: BigDecimal?,
+        val dagsats: Beløp?,
         val beregningstidspunkt: LocalDate?,
-        val beregningsgrunnlagBeløp: BigDecimal?,
+        val beregningsgrunnlag: Beløp?,
         val inntekterPerÅr: List<InntektPerÅr>
     ) {
         data class InntektPerÅr(val år: Year, val inntekt: BigDecimal)

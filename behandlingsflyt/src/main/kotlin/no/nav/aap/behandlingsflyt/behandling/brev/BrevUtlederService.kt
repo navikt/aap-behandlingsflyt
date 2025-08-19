@@ -111,9 +111,9 @@ class BrevUtlederService(
         val grunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(behandlingId)
 
         return Innvilgelse.GrunnlagBeregning(
-            dagsats = utledDagsats(behandlingId, virkningstidspunkt)?.verdi,
+            dagsats = utledDagsats(behandlingId, virkningstidspunkt),
             beregningstidspunkt = hentBeregningstidspunkt(behandlingId),
-            beregningsgrunnlagBeløp = beregnBeregningsgrunnlagBeløp(grunnlag, virkningstidspunkt)?.verdi,
+            beregningsgrunnlag = beregnBeregningsgrunnlagBeløp(grunnlag, virkningstidspunkt),
             inntekterPerÅr = utledInntektererPerÅr(grunnlag)
         )
     }

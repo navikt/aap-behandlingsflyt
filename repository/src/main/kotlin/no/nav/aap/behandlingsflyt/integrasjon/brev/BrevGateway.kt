@@ -235,7 +235,23 @@ class BrevGateway : BrevbestillingGateway {
 
     private fun mapFaktagrunnlag(brevBehov: BrevBehov): Set<Faktagrunnlag> {
         return when (brevBehov) {
-            is Innvilgelse -> setOf(Faktagrunnlag.AapFomDato(brevBehov.virkningstidspunkt))
+            is Innvilgelse ->
+                buildSet {
+                    add(Faktagrunnlag.AapFomDato(brevBehov.virkningstidspunkt))
+                    if (brevBehov.grunnlagBeregning != null) {
+                        add(
+                            Faktagrunnlag.GrunnlagBeregning(
+                                dagsats = brevBehov.grunnlagBeregning?.dagsats?.verdi,
+                                beregningstidspunkt = brevBehov.grunnlagBeregning?.beregningstidspunkt,
+                                beregningsgrunnlag = brevBehov.grunnlagBeregning?.beregningsgrunnlag?.verdi,
+                                inntekterPerÅr = brevBehov.grunnlagBeregning?.inntekterPerÅr?.map {
+                                    Faktagrunnlag.GrunnlagBeregning.InntektPerÅr(it.år, it.inntekt)
+                                } ?: emptyList(),
+                            )
+                        )
+                    }
+                }
+
             else -> emptySet()
         }
     }
