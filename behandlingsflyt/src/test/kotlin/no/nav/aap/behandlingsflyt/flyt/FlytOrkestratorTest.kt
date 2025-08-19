@@ -2934,29 +2934,21 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         }
 
         val revurdering = hentNyesteBehandlingForSak(klagebehandling.sakId, listOf(TypeBehandling.Revurdering))
-        assertThat(revurdering.vurderingsbehov()).containsExactly(VurderingsbehovMedPeriode(Vurderingsbehov.HELHETLIG_VURDERING))
+        assertThat(revurdering.vurderingsbehov()).containsExactly(VurderingsbehovMedPeriode(type=Vurderingsbehov.VURDER_RETTIGHETSPERIODE, periode=null),
+            VurderingsbehovMedPeriode(type= Vurderingsbehov.HELHETLIG_VURDERING, periode=null))
 
         dataSource.transaction { connection ->
             val behandlingRepo = BehandlingRepositoryImpl(connection)
-            assertThat(behandlingRepo.hent(revurdering.id).aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
+            assertThat(behandlingRepo.hent(revurdering.id).aktivtSteg()).isEqualTo(StegType.VURDER_RETTIGHETSPERIODE)
 
             assertThat(behandlingRepo.hentStegHistorikk(revurdering.id).map { tilstand -> tilstand.steg()}
                 .distinct()).containsExactlyElementsOf(
                 listOf(
-                    START_BEHANDLING,
-                    SEND_FORVALTNINGSMELDING,
-                    SØKNAD,
-                    VURDER_RETTIGHETSPERIODE,
-                    VURDER_LOVVALG,
-                    FASTSETT_MELDEPERIODER,
-                    VURDER_ALDER,
-                    AVKLAR_STUDENT,
-                    AVKLAR_SYKDOM
+                    START_BEHANDLING, SEND_FORVALTNINGSMELDING, SØKNAD, VURDER_RETTIGHETSPERIODE
                 )
             )
 
         }
-
 
         // OpprettholdelseSteg
         val steghistorikk = hentStegHistorikk(klagebehandling.id)

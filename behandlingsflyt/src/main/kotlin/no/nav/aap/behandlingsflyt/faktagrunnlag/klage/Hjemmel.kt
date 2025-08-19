@@ -55,9 +55,9 @@ enum class Hjemmel(val hjemmel: String) {
         }
     }
 
-    fun tilVurderingsbehov(): Vurderingsbehov {
+    fun tilVurderingsbehov(): List<Vurderingsbehov> {
         return when (this) {
-            FOLKETRYGDLOVEN_11_2 -> Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP
+            FOLKETRYGDLOVEN_11_2 -> listOf( Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP)
 
             FOLKETRYGDLOVEN_11_5,
             FOLKETRYGDLOVEN_11_6,
@@ -66,24 +66,24 @@ enum class Hjemmel(val hjemmel: String) {
             FOLKETRYGDLOVEN_11_17,
             FOLKETRYGDLOVEN_11_18,
             FOLKETRYGDLOVEN_11_23_UUTNYTTET_ARB_EVNE
-                -> Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+                -> listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
 
-            FOLKETRYGDLOVEN_11_19 -> Vurderingsbehov.REVURDER_BEREGNING
+            FOLKETRYGDLOVEN_11_19 -> listOf(Vurderingsbehov.REVURDER_BEREGNING)
 
-            FOLKETRYGDLOVEN_11_20 -> Vurderingsbehov.BARNETILLEGG
+            FOLKETRYGDLOVEN_11_20 -> listOf(Vurderingsbehov.BARNETILLEGG)
 
-            FOLKETRYGDLOVEN_11_22 -> Vurderingsbehov.REVURDER_YRKESSKADE
+            FOLKETRYGDLOVEN_11_22 -> listOf(Vurderingsbehov.REVURDER_YRKESSKADE)
 
             FOLKETRYGDLOVEN_11_25,
-            FOLKETRYGDLOVEN_11_26 -> Vurderingsbehov.INSTITUSJONSOPPHOLD
+            FOLKETRYGDLOVEN_11_26 -> listOf(Vurderingsbehov.INSTITUSJONSOPPHOLD)
 
             FOLKETRYGDLOVEN_11_24,
             FOLKETRYGDLOVEN_11_27,
-            FOLKETRYGDLOVEN_11_28 -> Vurderingsbehov.SAMORDNING_OG_AVREGNING
+            FOLKETRYGDLOVEN_11_28 -> listOf(Vurderingsbehov.SAMORDNING_OG_AVREGNING)
 
-            FOLKETRYGDLOVEN_KAPITTEL_2 -> Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP
+            FOLKETRYGDLOVEN_KAPITTEL_2 -> listOf(Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP)
 
-            FOLKETRYGDLOVEN_22_13 -> Vurderingsbehov.HELHETLIG_VURDERING
+            FOLKETRYGDLOVEN_22_13 -> listOf(Vurderingsbehov.HELHETLIG_VURDERING, Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
 
             FOLKETRYGDLOVEN_11_3,
             FOLKETRYGDLOVEN_11_4,

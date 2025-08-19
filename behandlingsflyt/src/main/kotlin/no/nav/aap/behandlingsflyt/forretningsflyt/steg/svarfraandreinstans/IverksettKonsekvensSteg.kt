@@ -82,7 +82,7 @@ class IverksettKonsekvensSteg private constructor(
         }
         val hjemler = vurdering.vilkårSomOmgjøres
         val beskrivelse = konstruerBegrunnelse(hjemler)
-        val vurderingsbehov = hjemler.map { it.tilVurderingsbehov() }
+        val vurderingsbehov = hjemler.map { it.tilVurderingsbehov() }.flatten()
 
         return OmgjøringKlageRevurderingV0(
             vurderingsbehov = vurderingsbehov,
