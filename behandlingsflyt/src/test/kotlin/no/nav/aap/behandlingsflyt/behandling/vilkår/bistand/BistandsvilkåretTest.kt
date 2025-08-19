@@ -133,11 +133,8 @@ class BistandsvilkåretTest {
                         erBehovForAktivBehandling = false,
                         erBehovForAnnenOppfølging = false,
                         erBehovForArbeidsrettetTiltak = false,
-<<<<<<< HEAD
                         skalVurdereAapIOvergangTilArbeid = true,
-=======
                         skalVurdereAapIOvergangTilUføre = false
->>>>>>> dad43f5f5 (Begynner på jobben om overgang Arbeidssøker)
                     )
                 ),
                 studentvurdering = null
@@ -168,11 +165,8 @@ class BistandsvilkåretTest {
                         erBehovForAktivBehandling = false,
                         erBehovForAnnenOppfølging = false,
                         erBehovForArbeidsrettetTiltak = false,
-<<<<<<< HEAD
-                        skalVurdereAapIOvergangTilArbeid = true,
-=======
+                        skalVurdereAapIOvergangTilArbeid = false,
                         skalVurdereAapIOvergangTilUføre = true
->>>>>>> dad43f5f5 (Begynner på jobben om overgang Arbeidssøker)
                     )
                 ),
                 studentvurdering = null

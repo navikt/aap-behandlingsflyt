@@ -76,11 +76,8 @@ public enum class Vilkårtype {
     MEDLEMSKAP,
     LOVVALG,
     GRUNNLAGET,
-<<<<<<< HEAD
-    OVERGANGUFØREVILKÅRET,
-=======
     OVERGANGARBEIDVILKÅRET,
->>>>>>> dad43f5f5 (Begynner på jobben om overgang Arbeidssøker)
+    OVERGANGUFØREVILKÅRET,
 
     @Deprecated("Skal fases ut.")
     SYKEPENGEERSTATNING,

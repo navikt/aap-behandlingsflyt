@@ -58,6 +58,16 @@ enum class Vilkårtype(
         ),
         hjemmel = "§ 11-6"
     ),
+    OVERGANGARBEIDVILKÅRET(
+        kode = "AAP-17",
+        spesielleInnvilgelsesÅrsaker = listOf(
+            Innvilgelsesårsak.ARBEIDSSØKER,
+        ),
+        avslagsårsaker = listOf(
+            Avslagsårsak.MANGLENDE_DOKUMENTASJON,
+        ),
+        hjemmel = "§ 11-17"
+    ),
     OVERGANGUFØREVILKÅRET(
         kode = "AAP-18",
         spesielleInnvilgelsesÅrsaker = listOf(

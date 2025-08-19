@@ -96,6 +96,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.SØKNAD_TRUKKET,
             Vurderingsbehov.REVURDER_MANUELL_INNTEKT,
             Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN,
+            Vurderingsbehov.OVERGANG_ARBEID,
             Vurderingsbehov.OVERGANG_UFORE,
             Vurderingsbehov.OVERGANG_ARBEID,
             Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT ->

@@ -20,6 +20,7 @@ data class BistandVurderingLøsningDto(
         erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
         erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
         vurderingenGjelderFra = vurderingenGjelderFra,
+        skalVurdereAapIOvergangTilUføre = skalVurdereAapIOvergangTilUføre,
         overgangBegrunnelse = overgangBegrunnelse,
         skalVurdereAapIOvergangTilUføre = skalVurdereAapIOvergangTilUføre,
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
