@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -54,8 +53,10 @@ class OvergangUføreSteg private constructor(
                     )
                     return Fullført
                 }
-
-                if (harOppfyltBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && harIkkeVurdert1118tidligere(
+                val a = harVurdertBistandsVilkår(avklaringsbehovene)
+                val b = !bistandsVilkårErOppfylt(kontekst.behandlingId)
+                val c = harIkkeVurdert1118tidligere(avklaringsbehovene)
+                if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && harIkkeVurdert1118tidligere(
                         avklaringsbehovene
                     )
                 ) {
@@ -80,7 +81,7 @@ class OvergangUføreSteg private constructor(
     }
 
 
-    private fun harOppfyltBistandsVilkår(avklaringsbehovene: Avklaringsbehovene): Boolean {
+    private fun harVurdertBistandsVilkår(avklaringsbehovene: Avklaringsbehovene): Boolean {
         return avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.AVKLAR_BISTANDSBEHOV)
     }
 
