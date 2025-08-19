@@ -36,7 +36,8 @@ enum class Vurderingsbehov {
     OPPFØLGINGSOPPGAVE,
     AKTIVITETSPLIKT_11_7,
     EFFEKTUER_AKTIVITETSPLIKT,
-    OVERGANG_UFORE;
+    OVERGANG_UFORE,
+    OVERGANG_ARBEID;
 
     companion object {
         /**
@@ -94,4 +95,5 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.AKTIVITETSPLIKT_11_7 -> Vurderingsbehov.AKTIVITETSPLIKT_11_7
         EksponertÅrsak.EFFEKTUER_AKTIVITETSPLIKT -> Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
         EksponertÅrsak.OVERGANG_UFORE -> Vurderingsbehov.OVERGANG_UFORE
+        EksponertÅrsak.OVERGANG_ARBEID -> Vurderingsbehov.OVERGANG_ARBEID
     }

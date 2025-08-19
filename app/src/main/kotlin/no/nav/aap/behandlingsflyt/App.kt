@@ -26,7 +26,11 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder.aldersGrun
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt.meldepliktsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon.refusjonGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.bistand.bistandsgrunnlagApi
+<<<<<<< HEAD
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangufore.overgangUforeGrunnlagApi
+=======
+import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangarbeid.overgangArbeidGrunnlagApi
+>>>>>>> dad43f5f5 (Begynner på jobben om overgang Arbeidssøker)
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepengergrunnlag.sykepengerGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt.manglendeGrunnlagApi
@@ -219,7 +223,7 @@ internal fun Application.server(
                 forutgåendeMedlemskapAPI(dataSource, repositoryRegistry, gatewayProvider)
                 driftAPI(dataSource, repositoryRegistry, gatewayProvider)
                 simuleringAPI(dataSource, repositoryRegistry, gatewayProvider)
-
+                overgangArbeidGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 // Endepunkter kun tilgjengelig lokalt og i test
                 if (!Miljø.erProd()) {
                     opprettDummySakApi(dataSource, repositoryRegistry, gatewayProvider)

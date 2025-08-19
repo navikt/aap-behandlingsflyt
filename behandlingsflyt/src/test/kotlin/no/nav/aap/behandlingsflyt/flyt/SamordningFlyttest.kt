@@ -89,6 +89,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class as KCl
                         erBehovForAktivBehandling = true,
                         erBehovForArbeidsrettetTiltak = false,
                         erBehovForAnnenOppfølging = null,
+                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null
                     ),
@@ -412,6 +413,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class as KCl
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = null,
+                    skalVurdereAapIOvergangTilUføre = null,
                     skalVurdereAapIOvergangTilArbeid = null,
                     overgangBegrunnelse = null
                 ),

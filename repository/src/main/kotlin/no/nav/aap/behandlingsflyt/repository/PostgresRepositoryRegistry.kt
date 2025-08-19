@@ -53,6 +53,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.overganguføre.OvergangUføreRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.overganguføre.OvergangArbeidRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.rettighetsperiode.VurderRettighetsperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
@@ -135,4 +136,5 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<MellomlagretVurderingRepositoryImpl>()
     .register<Aktivitetsplikt11_7RepositoryImpl>()
     .register<OvergangUføreRepositoryImpl>()
+    .register<OvergangArbeidRepositoryImpl>()
 

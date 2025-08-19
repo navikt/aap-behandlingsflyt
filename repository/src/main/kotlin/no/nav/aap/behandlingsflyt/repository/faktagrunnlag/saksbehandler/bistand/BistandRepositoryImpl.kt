@@ -76,8 +76,12 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 b.behov_for_annen_oppfoelging,
                 b.vurderingen_gjelder_fra,
                 b.vurdert_av,
+<<<<<<< HEAD
                 b.overgang_til_arbeid,
                 b.overgang_begrunnelse
+=======
+                b.overgang_til_ufoere
+>>>>>>> dad43f5f5 (Begynner på jobben om overgang Arbeidssøker)
                 )
                 b.*
             FROM bistand_grunnlag g
@@ -168,7 +172,11 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         val bistandvurderingerId = connection.executeReturnKey("""INSERT INTO BISTAND_VURDERINGER DEFAULT VALUES""")
 
         connection.executeBatch(
+<<<<<<< HEAD
             "INSERT INTO BISTAND (BEGRUNNELSE, BEHOV_FOR_AKTIV_BEHANDLING, BEHOV_FOR_ARBEIDSRETTET_TILTAK, BEHOV_FOR_ANNEN_OPPFOELGING, VURDERINGEN_GJELDER_FRA, VURDERT_AV, OVERGANG_BEGRUNNELSE, OVERGANG_TIL_ARBEID, BISTAND_VURDERINGER_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+=======
+            "INSERT INTO BISTAND (BEGRUNNELSE, BEHOV_FOR_AKTIV_BEHANDLING, BEHOV_FOR_ARBEIDSRETTET_TILTAK, BEHOV_FOR_ANNEN_OPPFOELGING, VURDERINGEN_GJELDER_FRA, VURDERT_AV, OVERGANG_TIL_UFOERE, BISTAND_VURDERINGER_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+>>>>>>> dad43f5f5 (Begynner på jobben om overgang Arbeidssøker)
             vurderinger
         ) {
             setParams { vurdering ->
@@ -178,9 +186,14 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 setBoolean(4, vurdering.erBehovForAnnenOppfølging)
                 setLocalDate(5, vurdering.vurderingenGjelderFra)
                 setString(6, vurdering.vurdertAv)
+<<<<<<< HEAD
                 setString(7, vurdering.overgangBegrunnelse)
                 setBoolean(8, vurdering.skalVurdereAapIOvergangTilArbeid)
                 setLong(9, bistandvurderingerId)
+=======
+                setBoolean(7, vurdering.skalVurdereAapIOvergangTilUføre)
+                setLong(8, bistandvurderingerId)
+>>>>>>> dad43f5f5 (Begynner på jobben om overgang Arbeidssøker)
             }
         }
 

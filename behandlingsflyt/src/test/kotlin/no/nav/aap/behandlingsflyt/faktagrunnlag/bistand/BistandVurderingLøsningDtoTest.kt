@@ -19,6 +19,7 @@ class BistandVurderingLøsningLøsningDtoTest {
             erBehovForAktivBehandling = false,
             erBehovForArbeidsrettetTiltak = false,
             erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
+            skalVurdereAapIOvergangTilUføre = null,
             skalVurdereAapIOvergangTilArbeid = null,
             overgangBegrunnelse = null,
         )
@@ -33,6 +34,7 @@ class BistandVurderingLøsningLøsningDtoTest {
             erBehovForAktivBehandling = behov,
             erBehovForArbeidsrettetTiltak = !behov,
             erBehovForAnnenOppfølging = null,
+            skalVurdereAapIOvergangTilUføre = null,
             skalVurdereAapIOvergangTilArbeid = null,
             overgangBegrunnelse = null,
         )
@@ -44,6 +46,7 @@ class BistandVurderingLøsningLøsningDtoTest {
             erBehovForAktivBehandling = true,
             erBehovForArbeidsrettetTiltak = true,
             erBehovForAnnenOppfølging = null,
+            skalVurdereAapIOvergangTilUføre = null,
             skalVurdereAapIOvergangTilArbeid = null,
             overgangBegrunnelse = null,
         )
@@ -61,6 +64,7 @@ class BistandVurderingLøsningLøsningDtoTest {
                 erBehovForAktivBehandling = behov,
                 erBehovForArbeidsrettetTiltak = !behov,
                 erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
+                skalVurdereAapIOvergangTilUføre = null,
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
             ).valider()
@@ -78,6 +82,7 @@ class BistandVurderingLøsningLøsningDtoTest {
                 erBehovForAktivBehandling = true,
                 erBehovForArbeidsrettetTiltak = true,
                 erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
+                skalVurdereAapIOvergangTilUføre = null,
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
             ).valider()
@@ -92,6 +97,7 @@ class BistandVurderingLøsningLøsningDtoTest {
                 erBehovForAktivBehandling = false,
                 erBehovForArbeidsrettetTiltak = false,
                 erBehovForAnnenOppfølging = null,
+                skalVurdereAapIOvergangTilUføre = null,
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
             ).valider()

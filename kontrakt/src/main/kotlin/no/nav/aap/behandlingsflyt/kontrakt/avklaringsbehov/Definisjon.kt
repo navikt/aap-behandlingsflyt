@@ -184,6 +184,14 @@ public enum class Definisjon(
         kvalitetssikres = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
     ),
+    AVKLAR_OVERGANG_ARBEID(
+        kode = AvklaringsbehovKode.`5032`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.VURDER_BISTANDSBEHOV,
+        kreverToTrinn = true,
+        kvalitetssikres = true,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
+    ),
     AVKLAR_OVERGANG_UFORE(
         kode = AvklaringsbehovKode.`5031`,
         type = BehovType.MANUELT_PÅKREVD,

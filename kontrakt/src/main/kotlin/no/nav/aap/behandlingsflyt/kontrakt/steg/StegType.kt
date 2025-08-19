@@ -51,6 +51,10 @@ public enum class StegType(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
+    OVEGANG_ARBEID(
+        gruppe = StegGruppe.SYKDOM,
+        status = Status.UTREDES
+    ),
     VURDER_SYKEPENGEERSTATNING(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES

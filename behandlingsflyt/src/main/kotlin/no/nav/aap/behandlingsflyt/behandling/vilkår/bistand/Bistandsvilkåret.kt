@@ -69,9 +69,15 @@ class Bistandsvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<B
         if (studentvurdering?.erOppfylt() == true) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.STUDENT
+<<<<<<< HEAD
         } else if (bistandsvurdering?.skalVurdereAapIOvergangTilArbeid == true) {
             innvilgelsesårsak = Innvilgelsesårsak.ARBEIDSSØKER
             utfall = Utfall.OPPFYLT
+=======
+        } else if (bistandsvurdering?.skalVurdereAapIOvergangTilUføre == true) {
+            utfall = Utfall.OPPFYLT
+            innvilgelsesårsak = Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD
+>>>>>>> dad43f5f5 (Begynner på jobben om overgang Arbeidssøker)
         } else if (bistandsvurdering?.erBehovForBistand() == true
         ) {
             utfall = Utfall.OPPFYLT
