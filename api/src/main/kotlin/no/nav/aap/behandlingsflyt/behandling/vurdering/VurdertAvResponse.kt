@@ -1,6 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.vurdering
 
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -40,5 +43,21 @@ data class VurdertAvResponse(
                 ansattInfoService = ansattInfoService
             )
         }
+    }
+}
+
+fun utledNyesteKvalitetssikring(definisjon: Definisjon, behandlingId: BehandlingId, avklaringsbehovRepository: AvklaringsbehovRepository, ansattInfoService: AnsattInfoService): VurdertAvResponse? {
+    val kvalitetsikring = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId).hentNyesteKvalitetssikringGittDefinisjon(definisjon)
+
+    return if (kvalitetsikring != null) {
+        val ansattNavnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(kvalitetsikring.endretAv)
+        VurdertAvResponse(
+            ident = kvalitetsikring.endretAv,
+            dato = kvalitetsikring.tidsstempel.toLocalDate(),
+            ansattnavn = ansattNavnOgEnhet?.navn,
+            enhetsnavn = ansattNavnOgEnhet?.enhet
+        )
+    } else {
+        null
     }
 }

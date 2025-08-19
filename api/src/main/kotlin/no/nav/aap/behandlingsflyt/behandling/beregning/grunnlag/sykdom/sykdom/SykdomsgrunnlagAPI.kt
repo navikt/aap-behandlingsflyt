@@ -4,7 +4,9 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.utledNyesteKvalitetssikring
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -44,6 +46,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
                     val yrkesskadeRepository = repositoryProvider.provide<YrkesskadeRepository>()
+                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
 
                     val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
@@ -79,7 +82,13 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                         gjeldendeVedtatteSykdomsvurderinger = vedtatteSykdomsvurderinger
                             .sortedBy { it.vurderingenGjelderFra ?: LocalDate.MIN }
                             .map { it.toDto(ansattInfoService) },
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle()
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        kvalitetssikretAv = utledNyesteKvalitetssikring(
+                            definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,
+                            behandlingId = behandling.id,
+                            avklaringsbehovRepository = avklaringsbehovRepository,
+                            ansattInfoService = ansattInfoService,
+                        )
                     )
                 }
 
