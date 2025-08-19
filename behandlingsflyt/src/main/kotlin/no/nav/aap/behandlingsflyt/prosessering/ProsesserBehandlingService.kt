@@ -57,6 +57,7 @@ class ProsesserBehandlingService(
 
         if (eksisterendeJobber.isNotEmpty()) {
             log.info("Har planlagt eksisterende kjøring, planlegger ikke en ny. {}", eksisterendeJobber)
+            /* Når vi returnerer her mister vi triggerne. Er det problematisk? */
             return
         }
 
@@ -91,6 +92,7 @@ class ProsesserBehandlingService(
         if (åpenBehandling != null) {
             val kontekst = atomærFlytOrkestrator.opprettKontekst(åpenBehandling.sakId, åpenBehandling.id)
             atomærFlytOrkestrator.tilbakeførEtterAtomærBehandling(kontekst)
+            triggProsesserBehandling(åpenBehandling, emptyList())
         }
     }
 }
