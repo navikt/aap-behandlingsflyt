@@ -23,7 +23,7 @@ data class OvergangArbeidGrunnlag(
         return vurderinger.hashCode()
     }
 
-    fun somOvergangArbeidvurderingstidslinje(startDato: LocalDate): Tidslinje<OvergangArbeidGrunnlag> {
+    fun somOvergangArbeidvurderingstidslinje(startDato: LocalDate): Tidslinje<OvergangArbeidVurdering> {
         return vurderinger
             .sortedBy { it.vurderingenGjelderFra ?: startDato }
             .fold(Tidslinje()) { tidslinje, vurdering ->
