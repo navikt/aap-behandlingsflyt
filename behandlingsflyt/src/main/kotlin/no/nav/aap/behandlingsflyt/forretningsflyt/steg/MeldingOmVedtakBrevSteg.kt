@@ -27,7 +27,7 @@ class MeldingOmVedtakBrevSteg private constructor(
     private val trekkKlageService: TrekkKlageService,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        brevUtlederService = BrevUtlederService(repositoryProvider),
+        brevUtlederService = BrevUtlederService(repositoryProvider, gatewayProvider),
         brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider),
         behandlingRepository = repositoryProvider.provide(),
         trekkKlageService = TrekkKlageService(repositoryProvider),
