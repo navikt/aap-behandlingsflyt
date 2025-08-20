@@ -8,23 +8,25 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_END
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway as IInstitusjonsoppholdGateway
 
 class InstitusjonsoppholdService private constructor(
-    private val sakService: SakService,
+    private val sakOgBehandlingService: SakOgBehandlingService,
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val institusjonsoppholdRegisterGateway: IInstitusjonsoppholdGateway,
     private val tidligereVurderinger: TidligereVurderinger,
-) : Informasjonskrav {
+) : Informasjonskrav, KanTriggeRevurdering {
     override val navn = Companion.navn
 
     override fun erRelevant(
@@ -38,39 +40,52 @@ class InstitusjonsoppholdService private constructor(
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
-        val behandlingId = kontekst.behandlingId
-        val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
+        val eksisterendeGrunnlag = hentHvisEksisterer(kontekst.behandlingId)
+        val institusjonsopphold = hentInstitusjonsopphold(kontekst.behandlingId)
 
-        val sak = sakService.hent(kontekst.sakId)
+        institusjonsoppholdRepository.lagreOpphold(kontekst.behandlingId, institusjonsopphold)
 
-        val rettighetsperiode = sak.rettighetsperiode
-
-        val institusjonsopphold = institusjonsoppholdRegisterGateway.innhent(sak.person)
-            .filter { it.periode().overlapper(rettighetsperiode) }
-
-        institusjonsoppholdRepository.lagreOpphold(behandlingId, institusjonsopphold)
-
-        return if (erUendret(eksisterendeGrunnlag, hentHvisEksisterer(behandlingId))) IKKE_ENDRET else ENDRET
+        return if (erEndret(eksisterendeGrunnlag, institusjonsopphold)) ENDRET else IKKE_ENDRET
     }
 
-    private fun erUendret(
+    private fun hentInstitusjonsopphold(behandlingId: BehandlingId): List<Institusjonsopphold> {
+        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
+        val institusjonsopphold = institusjonsoppholdRegisterGateway.innhent(sak.person)
+            .filter { it.periode().overlapper(sak.rettighetsperiode) }
+        return institusjonsopphold
+    }
+
+    private fun erEndret(
         eksisterendeGrunnlag: InstitusjonsoppholdGrunnlag?,
-        institusjonsopphold: InstitusjonsoppholdGrunnlag?
+        institusjonsopphold: List<Institusjonsopphold>
     ): Boolean {
-        return eksisterendeGrunnlag?.oppholdene?.opphold == institusjonsopphold?.oppholdene?.opphold
+        val oppholdeneFraRegister = Oppholdene(null, institusjonsopphold.map { it.tilInstitusjonSegment() })
+        return eksisterendeGrunnlag == null || eksisterendeGrunnlag.oppholdene != oppholdeneFraRegister
     }
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): InstitusjonsoppholdGrunnlag? {
         return institusjonsoppholdRepository.hentHvisEksisterer(behandlingId)
     }
 
+    override fun behovForRevurdering(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
+        val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
+        val institusjonsopphold = hentInstitusjonsopphold(behandlingId)
+
+        return if (erEndret(eksisterendeGrunnlag, institusjonsopphold))
+            listOf(VurderingsbehovMedPeriode(Vurderingsbehov.INSTITUSJONSOPPHOLD))
+        else
+            listOf()
+    }
+
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.INSTITUSJONSOPPHOLD
 
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): InstitusjonsoppholdService {
-            val sakRepository = repositoryProvider.provide<SakRepository>()
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): InstitusjonsoppholdService {
             return InstitusjonsoppholdService(
-                SakService(sakRepository),
+                SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 repositoryProvider.provide(),
                 gatewayProvider.provide(),
                 TidligereVurderingerImpl(repositoryProvider),

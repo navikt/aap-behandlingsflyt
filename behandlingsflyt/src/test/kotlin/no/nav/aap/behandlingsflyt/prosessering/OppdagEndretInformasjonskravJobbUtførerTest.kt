@@ -51,6 +51,9 @@ import no.nav.aap.motor.JobbType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdService
 
 class OppdagEndretInformasjonskravJobbUtførerTest {
     init {
@@ -64,17 +67,12 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             registerBarn = emptyList(),
             oppgitteBarnFraPDL = emptyList(),
         )
-
-        override fun hentBarn(
-            person: Person,
-            oppgitteBarnIdenter: List<Ident>
-        ): BarnInnhentingRespons {
-            return barnInnhentingRespons
-        }
+        override fun hentBarn( person: Person, oppgitteBarnIdenter: List<Ident>) = barnInnhentingRespons
     }
 
     object FakeForeldrepengerGateway : ForeldrepengerGateway {
-        override fun hentVedtakYtelseForPerson(request: ForeldrepengerRequest) = ForeldrepengerResponse(listOf())
+        var response = ForeldrepengerResponse(listOf())
+        override fun hentVedtakYtelseForPerson(request: ForeldrepengerRequest) = response
     }
 
     object FakeSykepegerGateway : SykepengerGateway {
@@ -90,6 +88,11 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         override fun innhentMedHistorikk(person: Person, fraDato: LocalDate): List<Uføre> = listOf()
     }
 
+    object FakeInstitusjonsoppholdGateway: InstitusjonsoppholdGateway {
+        var response: List<Institusjonsopphold> = listOf()
+        override fun innhent(person: Person) = response
+    }
+
     private val gatewayProvider = createGatewayProvider {
         register<FakeUnleashFasttrackMeldekort>()
         register<FakeBarnGateway>()
@@ -98,6 +101,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         register<FakeSykepegerGateway>()
         register<FakeTjenestePensjonGateway>()
         register<FakeUføreRegisterGateway>()
+        register<FakeInstitusjonsoppholdGateway>()
     }
 
     @TestDatabase
@@ -184,6 +188,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             SamordningYtelseVurderingService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
             TjenestePensjonService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
             UføreService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
+            InstitusjonsoppholdService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
             repositoryProvider.provide<BehandlingRepository>()
                 .oppdaterBehandlingStatus(førstegangsbehandlingen.id, Status.AVSLUTTET)
             førstegangsbehandlingen
