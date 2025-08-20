@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.LocalDateTime
 
 data class SaksHistorikkDTO (
@@ -33,6 +32,5 @@ enum class BehandlingHendelseType {
     FØRSTEGANGSBEHANDLING_OPPRETTET,
     KLAGE_OPPRETTET,
     MOTTATT_DIALOGMELDING, // ? Mottatt legeerklæring og dialogmelding
-    BESTILT_LEGEERKLÆRING // ? Mottatt legeerklæring og dialogmelding
-    //  Behandling / vurderingsbehov startet, med årsak, vurderingsbehov og eventuell begrunnelse
+    BESTILT_LEGEERKLÆRING
 }

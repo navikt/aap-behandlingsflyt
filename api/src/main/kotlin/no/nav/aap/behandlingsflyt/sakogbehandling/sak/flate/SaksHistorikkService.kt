@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovForSak
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_BESLUTTER
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -25,10 +26,17 @@ class SaksHistorikkService(
         val behandlingHendelser = utledBehandlingHendelser(behandlingerMedBehov)
         val returerMedÅrsakHendelser = utledReturerMedÅrsak(behandlingerMedBehov)
 
+        val historikk: List<BehandlingHistorikkDTO> =
+            (opprettelsesHendelser + behandlingHendelser + returerMedÅrsakHendelser)
+                .groupBy { it.behandlingId }
+                .map { (_, behandlingData) ->
+                    val samlet = behandlingData
+                        .flatMap { it.hendelser }
+                        .sortedByDescending { it.tidspunkt }
+                    BehandlingHistorikkDTO(samlet)
+                }
 
-        // Combine and sort the above, map into the BehandlingHistorikkDTO that doesnt have behandlingId
-
-        return SaksHistorikkDTO(emptyList())
+        return SaksHistorikkDTO(historikk)
     }
 
     private fun utledBehandlingHendelser(behandlingerMedBehov: List<AvklaringsbehovForSak>): List<BehandlingHistorikkInternal> {
@@ -41,17 +49,19 @@ class SaksHistorikkService(
             Definisjon.KVALITETSSIKRING
         )
 
+        val avklaringsbehovene = behandlingerMedBehov.flatMap { it.avklaringsbehov }
+        val erVedtatt = avklaringsbehovene.filter { it.erTotrinn() }.all { it.erTotrinnsVurdert() }
+
         return behandlingerMedBehov.mapNotNull { behandling ->
             val hendelser: List<BehandlingHendelseDTO> =
                 behandling.avklaringsbehov
-                    .asSequence()
                     .filter { it.definisjon in relevanteDefinisjoner }
                     .flatMap { avklaringsbehov ->
                         avklaringsbehov.historikk.asSequence().mapNotNull { hendelse ->
 
                             when (avklaringsbehov.definisjon) {
                                 Definisjon.MANUELT_SATT_PÅ_VENT -> {
-                                    val type = if (hendelse.status.erAvsluttet()) {
+                                    val type = if (hendelse.status == Status.AVSLUTTET) {
                                         BehandlingHendelseType.TATT_AV_VENT
                                     } else {
                                         BehandlingHendelseType.SATT_PÅ_VENT
@@ -69,54 +79,66 @@ class SaksHistorikkService(
                                 }
 
                                 Definisjon.FATTE_VEDTAK -> {
-                                    if (!hendelse.status.erAvsluttet()) null
-
-                                    BehandlingHendelseDTO(
-                                        hendelse = BehandlingHendelseType.VEDTAK_FATTET,
-                                        tidspunkt = hendelse.tidsstempel,
-                                        utførtAv = hendelse.endretAv,
-                                    )
+                                    if (hendelse.status == Status.AVSLUTTET && erVedtatt) {
+                                        BehandlingHendelseDTO(
+                                            hendelse = BehandlingHendelseType.VEDTAK_FATTET,
+                                            tidspunkt = hendelse.tidsstempel,
+                                            utførtAv = hendelse.endretAv,
+                                        )
+                                    } else {
+                                        null
+                                    }
                                 }
 
                                 Definisjon.FORESLÅ_VEDTAK -> {
-                                    if (!hendelse.status.erAvsluttet()) null
-
-                                    BehandlingHendelseDTO(
-                                        hendelse = BehandlingHendelseType.SENDT_TIL_BESLUTTER,
-                                        tidspunkt = hendelse.tidsstempel,
-                                        utførtAv = hendelse.endretAv,
-                                    )
+                                    if (hendelse.status == Status.AVSLUTTET) {
+                                        BehandlingHendelseDTO(
+                                            hendelse = BehandlingHendelseType.SENDT_TIL_BESLUTTER,
+                                            tidspunkt = hendelse.tidsstempel,
+                                            utførtAv = hendelse.endretAv,
+                                        )
+                                    } else {
+                                        null
+                                    }
                                 }
 
                                 Definisjon.SKRIV_VEDTAKSBREV -> {
-                                    if (!hendelse.status.erAvsluttet()) null
-
-                                    BehandlingHendelseDTO(
-                                        hendelse = BehandlingHendelseType.BREV_SENDT,
-                                        tidspunkt = hendelse.tidsstempel,
-                                        utførtAv = hendelse.endretAv,
-                                        begrunnelse = hendelse.begrunnelse
-                                    )
+                                    if (hendelse.status == Status.AVSLUTTET) {
+                                        BehandlingHendelseDTO(
+                                            hendelse = BehandlingHendelseType.BREV_SENDT,
+                                            tidspunkt = hendelse.tidsstempel,
+                                            utførtAv = hendelse.endretAv,
+                                            begrunnelse = hendelse.begrunnelse
+                                        )
+                                    } else {
+                                        null
+                                    }
                                 }
 
                                 Definisjon.KVALITETSSIKRING -> {
-                                    if (hendelse.status.erAvsluttet()) null
-                                    BehandlingHendelseDTO(
-                                        hendelse = BehandlingHendelseType.SENDT_TIL_KVALITETSSIKRER,
-                                        tidspunkt = hendelse.tidsstempel,
-                                        utførtAv = hendelse.endretAv,
-                                        begrunnelse = hendelse.begrunnelse
-                                    )
+                                    if (hendelse.status == Status.AVSLUTTET) {
+                                        null
+                                    } else {
+                                        BehandlingHendelseDTO(
+                                            hendelse = BehandlingHendelseType.SENDT_TIL_KVALITETSSIKRER,
+                                            tidspunkt = hendelse.tidsstempel,
+                                            utførtAv = hendelse.endretAv,
+                                            begrunnelse = hendelse.begrunnelse
+                                        )
+                                    }
                                 }
 
                                 Definisjon.BESTILL_LEGEERKLÆRING -> {
-                                    if (hendelse.status.erAvsluttet()) null
-                                    BehandlingHendelseDTO(
-                                        hendelse = BehandlingHendelseType.BESTILT_LEGEERKLÆRING,
-                                        tidspunkt = hendelse.tidsstempel,
-                                        utførtAv = hendelse.endretAv,
-                                        begrunnelse = hendelse.begrunnelse
-                                    )
+                                    if (hendelse.status == Status.AVSLUTTET) {
+                                        null
+                                    } else {
+                                        BehandlingHendelseDTO(
+                                            hendelse = BehandlingHendelseType.BESTILT_LEGEERKLÆRING,
+                                            tidspunkt = hendelse.tidsstempel,
+                                            utførtAv = hendelse.endretAv,
+                                            begrunnelse = hendelse.begrunnelse
+                                        )
+                                    }
                                 }
 
                                 else -> null
@@ -195,7 +217,7 @@ class SaksHistorikkService(
                     BehandlingHendelseDTO(
                         hendelse = hendelseType,
                         årsaker = behandling.vurderingsbehov().map { it.type.name },
-                        tidspunkt = behandling.opprettetTidspunkt,
+                        tidspunkt = behandling.opprettetTidspunkt
                     )
                 )
             )
