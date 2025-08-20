@@ -12,6 +12,7 @@ data class SykdomGrunnlagResponse(
     val sykdomsvurderinger: List<SykdomsvurderingResponse>,
     val historikkSykdomsvurderinger: List<SykdomsvurderingResponse>,
     val gjeldendeVedtatteSykdomsvurderinger: List<SykdomsvurderingResponse>,
+    val kvalitetssikretAv: VurdertAvResponse?,
 )
 
 data class SykdomsvurderingResponse(

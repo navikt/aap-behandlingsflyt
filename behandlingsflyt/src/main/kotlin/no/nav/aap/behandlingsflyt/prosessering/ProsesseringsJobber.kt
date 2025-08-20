@@ -19,6 +19,7 @@ object ProsesseringsJobber {
             OpprettJobbForFritakMeldepliktJobbUtfører,
             OpprettBehandlingFritakMeldepliktJobbUtfører,
             OpprettBehandlingFastsattPeriodePassertJobbUtfører,
+            OppdagEndretInformasjonskravJobbUtfører,
             HentSamIdJobbUtfører,
             VarsleVedtakJobbUtfører
         )

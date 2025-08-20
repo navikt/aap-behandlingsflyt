@@ -4,8 +4,10 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.SykdomsvurderingResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.utledNyesteKvalitetssikring
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
@@ -43,6 +45,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val bistandRepository = repositoryProvider.provide<BistandRepository>()
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
+                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
@@ -77,7 +80,13 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
                         gjeldendeSykdsomsvurderinger = gjeldendeSykdomsvurderinger.map {
                             it.tilResponse(ansattInfoService)
                         },
-                        harOppfylt11_5 = erOppfylt11_5
+                        harOppfylt11_5 = erOppfylt11_5,
+                        kvalitetssikretAv = utledNyesteKvalitetssikring(
+                            definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,
+                            behandlingId = behandling.id,
+                            avklaringsbehovRepository = avklaringsbehovRepository,
+                            ansattInfoService = ansattInfoService,
+                        )
                     )
                 }
 

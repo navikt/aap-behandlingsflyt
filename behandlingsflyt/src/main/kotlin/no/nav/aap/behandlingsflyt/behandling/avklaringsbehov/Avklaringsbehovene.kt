@@ -245,6 +245,10 @@ class Avklaringsbehovene(
         return alle().any { avklaringsbehov -> avklaringsbehov.harVærtSendtTilbakeFraBeslutterTidligere() }
     }
 
+    fun hentNyesteKvalitetssikringGittDefinisjon(definisjon: Definisjon): Endring? {
+        return hentBehovForDefinisjon(definisjon)?.historikk?.filter { it.status == Status.KVALITETSSIKRET }?.maxOrNull()
+    }
+
     fun validateTilstand(behandling: Behandling, avklaringsbehov: Definisjon? = null) {
         ValiderBehandlingTilstand.validerTilstandBehandling(
             behandling = behandling,

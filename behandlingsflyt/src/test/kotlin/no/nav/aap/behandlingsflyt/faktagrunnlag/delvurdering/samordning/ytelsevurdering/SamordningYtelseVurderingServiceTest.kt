@@ -2,19 +2,21 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsev
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningVurderingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -33,19 +35,18 @@ class SamordningYtelseVurderingServiceTest {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val ytelseRepo = SamordningYtelseRepositoryImpl(connection)
             val repo = SamordningVurderingRepositoryImpl(connection)
-            val sakRepository = SakRepositoryImpl(connection)
             val service = SamordningYtelseVurderingService(
                 SamordningYtelseRepositoryImpl(connection),
-                SakService(sakRepository),
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
+                SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), defaultGatewayProvider()),
             )
             val kontekst = opprettSakdata(connection)
 
-            // Når det ikke finnes data
+            // Når vi for første gang får opplysninger er det en endring
             val ingenData = service.oppdater(kontekst)
-            assertEquals(Informasjonskrav.Endret.IKKE_ENDRET, ingenData)
+            assertEquals(Informasjonskrav.Endret.ENDRET, ingenData)
 
             // Data er uforandret
             val sammeData = service.oppdater(kontekst)

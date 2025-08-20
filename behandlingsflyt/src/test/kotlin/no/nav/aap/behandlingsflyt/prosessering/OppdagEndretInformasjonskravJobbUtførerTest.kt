@@ -1,12 +1,27 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import javax.sql.DataSource
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreService
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -35,7 +50,7 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import javax.sql.DataSource
+import java.time.LocalDate
 
 class OppdagEndretInformasjonskravJobbUtførerTest {
     init {
@@ -58,10 +73,31 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         }
     }
 
+    object FakeForeldrepengerGateway : ForeldrepengerGateway {
+        override fun hentVedtakYtelseForPerson(request: ForeldrepengerRequest) = ForeldrepengerResponse(listOf())
+    }
+
+    object FakeSykepegerGateway : SykepengerGateway {
+        var sykepengerRespons = SykepengerResponse(listOf())
+        override fun hentYtelseSykepenger(request: SykepengerRequest) = sykepengerRespons
+    }
+
+    object FakeTjenestePensjonGateway : TjenestePensjonGateway {
+        override fun hentTjenestePensjon(ident: String, periode: Periode): List<TjenestePensjonForhold> = listOf()
+    }
+
+    object FakeUføreRegisterGateway : UføreRegisterGateway {
+        override fun innhentMedHistorikk(person: Person, fraDato: LocalDate): List<Uføre> = listOf()
+    }
+
     private val gatewayProvider = createGatewayProvider {
         register<FakeUnleashFasttrackMeldekort>()
         register<FakeBarnGateway>()
         register<FakePdlGateway>()
+        register<FakeForeldrepengerGateway>()
+        register<FakeSykepegerGateway>()
+        register<FakeTjenestePensjonGateway>()
+        register<FakeUføreRegisterGateway>()
     }
 
     @TestDatabase
@@ -74,14 +110,14 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
 
         dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-            FakeBarnGateway.barnInnhentingRespons = BarnInnhentingRespons(
-                registerBarn = listOf(
-                    Barn(
-                        ident = Ident("11111"),
-                        fødselsdato = Fødselsdato(1 januar 2010),
+            FakeSykepegerGateway.sykepengerRespons = SykepengerResponse(
+                listOf(
+                    UtbetaltePerioder(
+                        fom = 10 januar 2020,
+                        tom = 20 januar 2020,
+                        grad = 100,
                     )
-                ),
-                oppgitteBarnFraPDL = listOf(),
+                )
             )
 
             val oppdagEndretInformasjonskravJobbUtfører = OppdagEndretInformasjonskravJobbUtfører.konstruer(
@@ -97,11 +133,12 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             assertThat(sisteYtelsesbehandling.id)
                 .isNotEqualTo(førstegangsbehandlingen.id)
             assertThat(sisteYtelsesbehandling.vurderingsbehov())
-                .isEqualTo(listOf(VurderingsbehovMedPeriode(Vurderingsbehov.BARNETILLEGG)))
+                .isEqualTo(listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING)))
             assertThat(sisteYtelsesbehandling.typeBehandling())
                 .isEqualTo(TypeBehandling.Revurdering)
 
-            val jobber = repositoryProvider.provide<FlytJobbRepository>().hentJobberForBehandling(sisteYtelsesbehandling.id.toLong())
+            val jobber = repositoryProvider.provide<FlytJobbRepository>()
+                .hentJobberForBehandling(sisteYtelsesbehandling.id.toLong())
                 .filter { it.type() == ProsesserBehandlingJobbUtfører.type }
             assertThat(jobber).isNotEmpty
         }
@@ -134,17 +171,19 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             val sak = sak(connection)
             val førstegangsbehandlingen = finnEllerOpprettBehandling(connection, sak)
 
-            BarnService.konstruer(repositoryProvider, gatewayProvider).oppdater(
-                FlytKontekstMedPerioder(
-                    sakId = sak.id,
-                    behandlingId = førstegangsbehandlingen.id,
-                    forrigeBehandlingId = null,
-                    behandlingType = TypeBehandling.Førstegangsbehandling,
-                    vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                    rettighetsperiode = sak.rettighetsperiode,
-                    vurderingsbehovRelevanteForSteg = setOf()
-                )
+            val kontekst = FlytKontekstMedPerioder(
+                sakId = sak.id,
+                behandlingId = førstegangsbehandlingen.id,
+                forrigeBehandlingId = null,
+                behandlingType = TypeBehandling.Førstegangsbehandling,
+                vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+                rettighetsperiode = sak.rettighetsperiode,
+                vurderingsbehovRelevanteForSteg = setOf()
             )
+            BarnService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
+            SamordningYtelseVurderingService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
+            TjenestePensjonService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
+            UføreService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
             repositoryProvider.provide<BehandlingRepository>()
                 .oppdaterBehandlingStatus(førstegangsbehandlingen.id, Status.AVSLUTTET)
             førstegangsbehandlingen

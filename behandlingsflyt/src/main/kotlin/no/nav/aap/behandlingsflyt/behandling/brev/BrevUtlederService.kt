@@ -2,30 +2,55 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse.GrunnlagBeregning.InntektPerÅr
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FASTSATT_PERIODE_PASSERT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_MELDEKORT
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDate
 
 class BrevUtlederService(
-    private val behandlingRepository: BehandlingRepository,
     private val resultatUtleder: ResultatUtleder,
     private val klageresultatUtleder: KlageresultatUtleder,
+    private val behandlingRepository: BehandlingRepository,
     private val vedtakRepository: VedtakRepository,
+    private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
+    private val beregningVurderingRepository: BeregningVurderingRepository,
+    private val tilkjentYtelseRepository: TilkjentYtelseRepository,
+    private val unleashGateway: UnleashGateway,
 ) {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
         resultatUtleder = ResultatUtleder(repositoryProvider),
         klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
         vedtakRepository = repositoryProvider.provide(),
+        beregningsgrunnlagRepository = repositoryProvider.provide(),
+        beregningVurderingRepository = repositoryProvider.provide(),
+        tilkjentYtelseRepository = repositoryProvider.provide(),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov? {
@@ -71,6 +96,66 @@ class BrevUtlederService(
         checkNotNull(vedtak.virkningstidspunkt) {
             "Vedtak for behandling med innvilgelse mangler virkningstidspunkt"
         }
-        return Innvilgelse(vedtak.virkningstidspunkt)
+        val grunnlagBeregning = if (unleashGateway.isEnabled(BehandlingsflytFeature.BrevBeregningsgrunnlag)) {
+            hentGrunnlagBeregning(behandling.id, vedtak.virkningstidspunkt)
+        } else {
+            null
+        }
+        return Innvilgelse(vedtak.virkningstidspunkt, grunnlagBeregning)
+    }
+
+    private fun hentGrunnlagBeregning(
+        behandlingId: BehandlingId,
+        virkningstidspunkt: LocalDate
+    ): Innvilgelse.GrunnlagBeregning {
+        val grunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(behandlingId)
+
+        return Innvilgelse.GrunnlagBeregning(
+            dagsats = utledDagsats(behandlingId, virkningstidspunkt),
+            beregningstidspunkt = hentBeregningstidspunkt(behandlingId),
+            beregningsgrunnlag = beregnBeregningsgrunnlagBeløp(grunnlag, virkningstidspunkt),
+            inntekterPerÅr = utledInntektererPerÅr(grunnlag)
+        )
+    }
+
+    private fun utledDagsats(behandlingId: BehandlingId, virkningstidspunkt: LocalDate): Beløp? {
+        // Henter dagsats fra første periode. Kan variere basert på minste årlig ytelse, alder og grunnbeløp
+        return tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)?.tilTidslinje()
+            ?.segment(virkningstidspunkt)?.verdi?.dagsats
+    }
+
+    private fun hentBeregningstidspunkt(behandlingId: BehandlingId): LocalDate? {
+        return beregningVurderingRepository.hentHvisEksisterer(behandlingId)?.tidspunktVurdering?.let {
+            it.ytterligereNedsattArbeidsevneDato ?: it.nedsattArbeidsevneDato
+        }
+    }
+
+    private fun beregnBeregningsgrunnlagBeløp(grunnlag: Beregningsgrunnlag?, virkningstidspunkt: LocalDate): Beløp? {
+        return grunnlag?.grunnlaget()?.multiplisert(Grunnbeløp.finnGrunnbeløp(virkningstidspunkt))
+    }
+
+    private fun utledInntektererPerÅr(grunnlag: Beregningsgrunnlag?): List<InntektPerÅr> {
+        return when (grunnlag) {
+            is Grunnlag11_19 ->
+                grunnlag.inntekter().grunnlagInntektTilInntektPerÅr()
+
+            is GrunnlagUføre -> grunnlag.uføreInntekterFraForegåendeÅr().uføreInntektTilInntektPerÅr()
+            is GrunnlagYrkesskade ->
+                when (val underliggende = grunnlag.underliggende()) {
+                    is Grunnlag11_19 -> underliggende.inntekter().grunnlagInntektTilInntektPerÅr()
+                    is GrunnlagUføre -> underliggende.uføreInntekterFraForegåendeÅr().uføreInntektTilInntektPerÅr()
+                    is GrunnlagYrkesskade -> throw IllegalStateException("GrunnlagYrkesskade kan ikke ha grunnlag som også er GrunnlagYrkesskade")
+                }
+
+            null -> emptyList()
+        }
+    }
+
+    private fun List<GrunnlagInntekt>.grunnlagInntektTilInntektPerÅr(): List<InntektPerÅr> {
+        return this.map { InntektPerÅr(it.år, it.inntektIKroner.verdi()) }
+    }
+
+    private fun List<UføreInntekt>.uføreInntektTilInntektPerÅr(): List<InntektPerÅr> {
+        return this.map { InntektPerÅr(it.år, it.inntektIKroner.verdi()) }
     }
 }

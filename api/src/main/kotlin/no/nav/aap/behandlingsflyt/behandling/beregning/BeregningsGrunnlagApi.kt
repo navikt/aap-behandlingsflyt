@@ -129,7 +129,7 @@ internal fun beregningDTO(beregning: Beregningsgrunnlag, behandlingOpprettet: Lo
 
 private fun hentGjeldendeGrunnbeløp(behandlingOpprettet: LocalDate): GjeldendeGrunnbeløpDTO {
     return GjeldendeGrunnbeløpDTO(
-        grunnbeløp = Grunnbeløp.tilTidslinje().segment(behandlingOpprettet)!!.verdi.verdi,
+        grunnbeløp = Grunnbeløp.finnGrunnbeløp(behandlingOpprettet).verdi,
         dato = behandlingOpprettet
     )
 }

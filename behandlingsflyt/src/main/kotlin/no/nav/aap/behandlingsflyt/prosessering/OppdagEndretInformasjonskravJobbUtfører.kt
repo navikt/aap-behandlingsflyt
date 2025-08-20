@@ -2,7 +2,9 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -27,10 +29,10 @@ class OppdagEndretInformasjonskravJobbUtfører(
 
     fun utfør(sakId: SakId, behandlingId: BehandlingId) {
         val relevanteInformasjonskrav: List<KanTriggeRevurdering> = listOf(
-            BarnService.konstruer(repositoryProvider, gatewayProvider),
-            //            InformasjonskravNavn.SAMORDNING_YTELSE,
-            //            InformasjonskravNavn.SAMORDNING_TJENESTEPENSJON,
-            //            InformasjonskravNavn.UFØRE,
+            //BarnService.konstruer(repositoryProvider, gatewayProvider), Vente på avklaring fra departementet
+            SamordningYtelseVurderingService.konstruer(repositoryProvider, gatewayProvider),
+            TjenestePensjonService.konstruer(repositoryProvider, gatewayProvider),
+            UføreService.konstruer(repositoryProvider, gatewayProvider)
             //            InformasjonskravNavn.INSTITUSJONSOPPHOLD,
             //            InformasjonskravNavn.PERSONOPPLYSNING
         )

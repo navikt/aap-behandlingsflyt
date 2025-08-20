@@ -8,13 +8,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_END
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -22,14 +25,14 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
 
 class UføreService(
-    private val sakService: SakService,
+    private val sakOgBehandlingService: SakOgBehandlingService,
     private val uføreRepository: UføreRepository,
     private val samordningUføreRepository: SamordningUføreRepository,
     private val uføreRegisterGateway: UføreRegisterGateway,
     private val tidligereVurderinger: TidligereVurderinger,
-) : Informasjonskrav {
-    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): this(
-        sakService = SakService(repositoryProvider),
+) : Informasjonskrav, KanTriggeRevurdering {
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
         uføreRepository = repositoryProvider.provide(),
         samordningUføreRepository = repositoryProvider.provide(),
         uføreRegisterGateway = gatewayProvider.provide(),
@@ -38,17 +41,19 @@ class UføreService(
 
     override val navn = Companion.navn
 
-    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+    override fun erRelevant(
+        kontekst: FlytKontekstMedPerioder,
+        steg: StegType,
+        oppdatert: InformasjonskravOppdatert?
+    ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
                 oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
-        val sak = sakService.hent(kontekst.sakId)
-        val uføregrader = uføreRegisterGateway.innhentMedHistorikk(sak.person, sak.rettighetsperiode.fom)
-
         val behandlingId = kontekst.behandlingId
+        val uføregrader = hentUføregrader(behandlingId)
         val eksisterendeGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
 
         if (harEndringerUføre(eksisterendeGrunnlag, uføregrader)) {
@@ -59,8 +64,24 @@ class UføreService(
         return IKKE_ENDRET
     }
 
+    private fun hentUføregrader(behandlingId: BehandlingId): List<Uføre> {
+        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
+        return uføreRegisterGateway.innhentMedHistorikk(sak.person, sak.rettighetsperiode.fom)
+    }
+
+    override fun behovForRevurdering(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
+        val uføregrader = hentUføregrader(behandlingId)
+        val eksisterendeGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
+        return if (harEndringerUføre(eksisterendeGrunnlag, uføregrader)) {
+            listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING))
+        } else {
+            emptyList()
+        }
+    }
+
     fun tidslinje(behandlingId: BehandlingId): Tidslinje<Prosent> {
-        return samordningUføreRepository.hentHvisEksisterer(behandlingId)?.vurdering?.tilTidslinje() ?: Tidslinje.empty()
+        return samordningUføreRepository.hentHvisEksisterer(behandlingId)?.vurdering?.tilTidslinje()
+            ?: Tidslinje.empty()
     }
 
     fun hentRegisterGrunnlagHvisEksisterer(behandlingId: BehandlingId): UføreGrunnlag? {
