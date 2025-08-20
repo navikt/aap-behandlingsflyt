@@ -221,6 +221,12 @@ object Grunnbeløp {
         val gUnit: GUnit
     )
 
+    fun finnGrunnbeløp(dato: LocalDate): Beløp {
+        return checkNotNull(tilTidslinje().segment(dato)?.verdi) {
+            "Fant ikke grunnbeløp for dato $dato."
+        }
+    }
+
     fun finnGUnit(år: Year, beløp: Beløp): BenyttetGjennomsnittsbeløp {
         return GjennomsnittElement.finnGUnit(år, beløp)
     }

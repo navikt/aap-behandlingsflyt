@@ -131,13 +131,7 @@ class BrevUtlederService(
     }
 
     private fun beregnBeregningsgrunnlagBeløp(grunnlag: Beregningsgrunnlag?, virkningstidspunkt: LocalDate): Beløp? {
-        return grunnlag?.grunnlaget()?.multiplisert(grunnbeløp(virkningstidspunkt))
-    }
-
-    private fun grunnbeløp(dato: LocalDate): Beløp {
-        return checkNotNull(Grunnbeløp.tilTidslinje().segment(dato)?.verdi) {
-            "Fant ikke grunnbeløp for dato $dato."
-        }
+        return grunnlag?.grunnlaget()?.multiplisert(Grunnbeløp.finnGrunnbeløp(virkningstidspunkt))
     }
 
     private fun utledInntektererPerÅr(grunnlag: Beregningsgrunnlag?): List<InntektPerÅr> {
