@@ -847,6 +847,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
                         erBehovForAktivBehandling = true,
                         erBehovForArbeidsrettetTiltak = false,
                         erBehovForAnnenOppfølging = null,
+                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null
                     ),

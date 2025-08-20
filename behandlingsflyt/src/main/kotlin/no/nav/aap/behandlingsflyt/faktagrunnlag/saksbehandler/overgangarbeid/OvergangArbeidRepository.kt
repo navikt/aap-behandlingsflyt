@@ -7,6 +7,6 @@ import no.nav.aap.lookup.repository.Repository
 interface OvergangArbeidRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): OvergangArbeidGrunnlag?
     fun hentHistoriskeOvergangArbeidVurderinger(sakId: SakId, behandlingId: BehandlingId): List<OvergangArbeidVurdering>
-    fun lagre(behandlingId: BehandlingId, overgangArbeidVurderinger: List<OvergangArbeidGrunnlag>)
+    fun lagre(behandlingId: BehandlingId, overgangArbeidVurderinger: List<OvergangArbeidVurdering>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }
