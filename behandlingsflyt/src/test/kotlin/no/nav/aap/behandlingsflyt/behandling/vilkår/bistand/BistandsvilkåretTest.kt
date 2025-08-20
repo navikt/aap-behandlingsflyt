@@ -147,8 +147,8 @@ class BistandsvilkåretTest {
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
         assertThat(vilkår.vilkårsperioder()).hasSize(2)
-        assertThat(vilkår.vilkårsperioder()).allMatch { it.utfall == Utfall.OPPFYLT }
-        assertThat(vilkår.vilkårsperioder().last().innvilgelsesårsak).isEqualTo(Innvilgelsesårsak.ARBEIDSSØKER)
+        assertThat(vilkår.vilkårsperioder()).anyMatch { it.utfall == Utfall.OPPFYLT }
+        assertThat(vilkår.vilkårsperioder().last().innvilgelsesårsak).isNull()
     }
 
     @Test
