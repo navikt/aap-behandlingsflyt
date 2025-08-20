@@ -28,7 +28,7 @@ import javax.sql.DataSource
 fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling").tag(Tags.Behandling) {
         route("/mellomlagret-vurdering") {
-            authorizedPost<Unit, MellomlagredeVurderingResponse, MellomlagretVurderingRequest>(
+            authorizedPost<Unit, MellomlagretVurderingResponse, MellomlagretVurderingRequest>(
                 AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SAKSBEHANDLE,
                 )
@@ -58,7 +58,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
                             )
                         )
 
-                        MellomlagredeVurderingResponse(
+                        MellomlagretVurderingResponse(
                             mellomlagretVurdering = mellomlagretVurdering.tilResponse()
                         )
                     }
@@ -67,7 +67,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
             }
         }
         route("/mellomlagret-vurdering/{referanse}/{avklaringsbehovkode}") {
-            authorizedGet<BehandlingReferanseMedAvklaringsbehov, MellomlagredeVurderingResponse>(
+            authorizedGet<BehandlingReferanseMedAvklaringsbehov, MellomlagretVurderingResponse>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
@@ -87,7 +87,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
                             behandling.id,
                             avklaringsbehovKode
                         )
-                        MellomlagredeVurderingResponse(
+                        MellomlagretVurderingResponse(
                             mellomlagretVurdering = mellomlagretVurdering?.tilResponse(),
                         )
                     }

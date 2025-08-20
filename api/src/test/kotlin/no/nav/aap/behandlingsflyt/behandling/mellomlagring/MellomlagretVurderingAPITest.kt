@@ -53,8 +53,8 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
                 }
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
 
-            assertThat(response.body<MellomlagredeVurderingResponse>()).isEqualTo(
-                MellomlagredeVurderingResponse(
+            assertThat(response.body<MellomlagretVurderingResponse>()).isEqualTo(
+                MellomlagretVurderingResponse(
                     mellomlagretVurdering = MellomlagretVurderingDto(
                         behandlingId = mellomlagretVurdering.behandlingId,
                         avklaringsbehovkode = mellomlagretVurdering.avklaringsbehovKode,
@@ -130,8 +130,8 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
                 }
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
 
-            assertThat(response.body<MellomlagredeVurderingResponse>()).isEqualTo(
-                MellomlagredeVurderingResponse(
+            assertThat(response.body<MellomlagretVurderingResponse>()).isEqualTo(
+                MellomlagretVurderingResponse(
                     mellomlagretVurdering = null
                 )
             )

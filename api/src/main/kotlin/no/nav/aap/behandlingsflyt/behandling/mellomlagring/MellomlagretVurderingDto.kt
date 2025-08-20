@@ -14,7 +14,7 @@ data class MellomlagretVurderingDto(
     val vurdertDato: LocalDateTime
 )
 
-data class MellomlagredeVurderingResponse(
+data class MellomlagretVurderingResponse(
     val mellomlagretVurdering: MellomlagretVurderingDto?
 )
 
