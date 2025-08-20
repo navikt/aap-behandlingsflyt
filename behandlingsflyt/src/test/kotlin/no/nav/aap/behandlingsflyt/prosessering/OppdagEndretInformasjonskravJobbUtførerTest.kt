@@ -1,12 +1,13 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import java.time.LocalDate
 import javax.sql.DataSource
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerResponse
@@ -14,11 +15,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreService
@@ -46,14 +48,11 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDatabase
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdService
 
 class OppdagEndretInformasjonskravJobbUtførerTest {
     init {
@@ -67,7 +66,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             registerBarn = emptyList(),
             oppgitteBarnFraPDL = emptyList(),
         )
-        override fun hentBarn( person: Person, oppgitteBarnIdenter: List<Ident>) = barnInnhentingRespons
+        override fun hentBarn(person: Person, oppgitteBarnIdenter: List<Ident>) = barnInnhentingRespons
     }
 
     object FakeForeldrepengerGateway : ForeldrepengerGateway {
@@ -85,12 +84,12 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
     }
 
     object FakeUføreRegisterGateway : UføreRegisterGateway {
-        override fun innhentMedHistorikk(person: Person, fraDato: LocalDate): List<Uføre> = listOf()
+        var response: List<Uføre> = listOf()
+        override fun innhentMedHistorikk(person: Person, fraDato: LocalDate) = response
     }
 
-    object FakeInstitusjonsoppholdGateway: InstitusjonsoppholdGateway {
-        var response: List<Institusjonsopphold> = listOf()
-        override fun innhent(person: Person) = response
+    object FakeInstitusjonsoppholdGateway : InstitusjonsoppholdGateway {
+        override fun innhent(person: Person): List<Institusjonsopphold> = listOf()
     }
 
     private val gatewayProvider = createGatewayProvider {
@@ -109,11 +108,12 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
 
 
     @Test
-    fun `endring i register fører til revurdering`() {
+    fun `endring i register fører til revurdering og deduplisering av vurderingsbehov`() {
         val førstegangsbehandlingen = settOppFørstegangsvurdering()
 
         dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+
             FakeSykepegerGateway.sykepengerRespons = SykepengerResponse(
                 listOf(
                     UtbetaltePerioder(
@@ -123,13 +123,17 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                     )
                 )
             )
-
-            val oppdagEndretInformasjonskravJobbUtfører = OppdagEndretInformasjonskravJobbUtfører.konstruer(
-                repositoryProvider = repositoryProvider,
-                gatewayProvider = gatewayProvider,
+            FakeUføreRegisterGateway.response =
+                listOf(
+                    Uføre(
+                        virkningstidspunkt = periode.fom,
+                        uføregrad = Prosent.`100_PROSENT`,
+                        kilde = "",
+                    )
             )
 
-            oppdagEndretInformasjonskravJobbUtfører.utfør(førstegangsbehandlingen.sakId, førstegangsbehandlingen.id)
+            OppdagEndretInformasjonskravJobbUtfører.konstruer(repositoryProvider, gatewayProvider)
+                .utfør(førstegangsbehandlingen.sakId, førstegangsbehandlingen.id)
 
             val sisteYtelsesbehandling =
                 SakOgBehandlingService(repositoryProvider, gatewayProvider)

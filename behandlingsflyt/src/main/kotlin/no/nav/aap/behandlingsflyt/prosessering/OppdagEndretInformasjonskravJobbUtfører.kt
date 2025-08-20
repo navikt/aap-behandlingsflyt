@@ -39,7 +39,9 @@ class OppdagEndretInformasjonskravJobbUtfører(
         )
 
 
-        val vurderingsbehov = relevanteInformasjonskrav.flatMap { it.behovForRevurdering(behandlingId) }
+        val vurderingsbehov = relevanteInformasjonskrav
+            .flatMap { it.behovForRevurdering(behandlingId) }
+            .toSet().toList() // Fjern duplikater
 
         if (vurderingsbehov.isNotEmpty()) {
             val revurdering = this.sakOgBehandlingService.finnEllerOpprettBehandling(
