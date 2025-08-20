@@ -23,6 +23,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikk
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreService
@@ -95,7 +101,18 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         var response: List<Institusjonsopphold> = listOf()
         override fun innhent(person: Person) = response
     }
+    
+    object FakePersonopplysningGateway: PersonopplysningGateway {
+        override fun innhent(person: Person): Personopplysning = Personopplysning(
+            fødselsdato = Fødselsdato(1 januar 1990),
+            status = PersonStatus.bosatt,
+            statsborgerskap = emptyList()
+        )
 
+        override fun innhentMedHistorikk(person: Person): PersonopplysningMedHistorikk {
+            TODO("Not yet implemented")
+        }
+    }
     private val gatewayProvider = createGatewayProvider {
         register<FakeUnleashFasttrackMeldekort>()
         register<FakeBarnGateway>()
@@ -105,6 +122,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         register<FakeTjenestePensjonGateway>()
         register<FakeUføreRegisterGateway>()
         register<FakeInstitusjonsoppholdGateway>()
+        register<FakePersonopplysningGateway>()
     }
 
     @TestDatabase
@@ -212,6 +230,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             TjenestePensjonService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
             UføreService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
             InstitusjonsoppholdService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
+            PersonopplysningService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
 
             repositoryProvider.provide<BehandlingRepository>()
                 .oppdaterBehandlingStatus(førstegangsbehandlingen.id, Status.AVSLUTTET)
