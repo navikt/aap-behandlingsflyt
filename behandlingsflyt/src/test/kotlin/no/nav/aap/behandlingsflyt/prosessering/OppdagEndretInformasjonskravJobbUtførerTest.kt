@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnService
@@ -77,7 +78,8 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
     }
 
     object FakeSykepegerGateway : SykepengerGateway {
-        override fun hentYtelseSykepenger(request: SykepengerRequest) = SykepengerResponse(listOf())
+        var sykepengerRespons = SykepengerResponse(listOf())
+        override fun hentYtelseSykepenger(request: SykepengerRequest) = sykepengerRespons
     }
 
     object FakeTjenestePensjonGateway : TjenestePensjonGateway {
@@ -108,14 +110,14 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
 
         dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-            FakeBarnGateway.barnInnhentingRespons = BarnInnhentingRespons(
-                registerBarn = listOf(
-                    Barn(
-                        ident = Ident("11111"),
-                        fødselsdato = Fødselsdato(1 januar 2010),
+            FakeSykepegerGateway.sykepengerRespons = SykepengerResponse(
+                listOf(
+                    UtbetaltePerioder(
+                        fom = 10 januar 2020,
+                        tom = 20 januar 2020,
+                        grad = 100,
                     )
-                ),
-                oppgitteBarnFraPDL = listOf(),
+                )
             )
 
             val oppdagEndretInformasjonskravJobbUtfører = OppdagEndretInformasjonskravJobbUtfører.konstruer(
@@ -131,7 +133,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             assertThat(sisteYtelsesbehandling.id)
                 .isNotEqualTo(førstegangsbehandlingen.id)
             assertThat(sisteYtelsesbehandling.vurderingsbehov())
-                .isEqualTo(listOf(VurderingsbehovMedPeriode(Vurderingsbehov.BARNETILLEGG)))
+                .isEqualTo(listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING)))
             assertThat(sisteYtelsesbehandling.typeBehandling())
                 .isEqualTo(TypeBehandling.Revurdering)
 
