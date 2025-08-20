@@ -103,7 +103,7 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
                 }
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
 
-            val resBody = response.body<MellomlagredeVurderingResponse>()
+            val resBody = response.body<MellomlagretVurderingResponse>()
             assertThat(resBody.mellomlagretVurdering?.data).isEqualTo(nyMellomlagretVurdering.data)
 
             val oppdatertVerdi =
