@@ -84,7 +84,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                             .map { it.toDto(ansattInfoService) },
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         kvalitetssikretAv = utledNyesteKvalitetssikring(
-                            definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,
+                            definisjon = Definisjon.AVKLAR_SYKDOM,
                             behandlingId = behandling.id,
                             avklaringsbehovRepository = avklaringsbehovRepository,
                             ansattInfoService = ansattInfoService,
