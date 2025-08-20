@@ -277,7 +277,7 @@ class SamordningPeriodeSammenlignerTest {
     }
     private fun opprettBehandling(sak: Sak): Behandling {
         return InMemorySakOgBehandlingService
-            .finnEllerOpprettBehandling(sak.saksnummer, listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+            .finnEllerOpprettOrdinærBehandling(sak.saksnummer, listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
                 ÅrsakTilOpprettelse.SØKNAD)
     }
 }

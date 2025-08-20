@@ -75,7 +75,7 @@ class HåndterMottattDokumentService(
                 val behandling = if (melding.behandlingReferanse != null) {
                     behandlingRepository.hent(BehandlingReferanse(UUID.fromString(melding.behandlingReferanse)))
                 } else {
-                    sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(
+                    sakOgBehandlingService.finnEllerOpprettBehandling(
                         sak.saksnummer, vurderingsbehov,
                         ÅrsakTilOpprettelse.KLAGE
                     ).åpenBehandling
@@ -115,7 +115,7 @@ class HåndterMottattDokumentService(
         val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
         val årsakTilOpprettelse = utledÅrsakTilOpprettelse(brevkategori, melding)
 
-        val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(
+        val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
             sak.saksnummer,
             vurderingsbehov,
             årsakTilOpprettelse

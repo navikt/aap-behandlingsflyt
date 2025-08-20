@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Årsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
@@ -140,6 +139,6 @@ class ResultatUtlederTest {
     }
 
     private fun opprettBehandling(sak: Sak): Behandling {
-        return InMemorySakOgBehandlingService.finnEllerOpprettBehandling(sak.saksnummer, listOf(), ÅrsakTilOpprettelse.SØKNAD)
+        return InMemorySakOgBehandlingService.finnEllerOpprettOrdinærBehandling(sak.saksnummer, listOf(), ÅrsakTilOpprettelse.SØKNAD)
     }
 }

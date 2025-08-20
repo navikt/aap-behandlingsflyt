@@ -67,7 +67,7 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
             return
         }
 
-        val fastsattPeriodePassertBehandling = sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(
+        val fastsattPeriodePassertBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
             sak.id,
             listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.FASTSATT_PERIODE_PASSERT)),
             ÅrsakTilOpprettelse.FASTSATT_PERIODE_PASSERT

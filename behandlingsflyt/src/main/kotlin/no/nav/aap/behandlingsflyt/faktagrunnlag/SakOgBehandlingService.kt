@@ -89,7 +89,7 @@ class SakOgBehandlingService(
         Vurderingsbehov.FASTSATT_PERIODE_PASSERT
     )
 
-    fun finnEllerOpprettBehandlingFasttrack(sakId: SakId, vurderingsbehov: List<VurderingsbehovMedPeriode>, årsakTilOpprettelse: ÅrsakTilOpprettelse): OpprettetBehandling {
+    fun finnEllerOpprettBehandling(sakId: SakId, vurderingsbehov: List<VurderingsbehovMedPeriode>, årsakTilOpprettelse: ÅrsakTilOpprettelse): OpprettetBehandling {
         val sisteYtelsesbehandling = finnSisteYtelsesbehandlingFor(sakId)
         val fasttrackkandidat = vurderingsbehov.isNotEmpty()
                 && vurderingsbehov.all { it.type in fasttrackKandidater }
@@ -130,8 +130,8 @@ class SakOgBehandlingService(
         }
     }
 
-    fun finnEllerOpprettBehandling(sakId: SakId, vurderingsbehov: List<VurderingsbehovMedPeriode>, årsakTilOpprettelse: ÅrsakTilOpprettelse): Behandling {
-        return when (val b = finnEllerOpprettBehandlingFasttrack(sakId, vurderingsbehov, årsakTilOpprettelse)) {
+    fun finnEllerOpprettOrdinærBehandling(sakId: SakId, vurderingsbehov: List<VurderingsbehovMedPeriode>, årsakTilOpprettelse: ÅrsakTilOpprettelse): Behandling {
+        return when (val b = finnEllerOpprettBehandling(sakId, vurderingsbehov, årsakTilOpprettelse)) {
             is MåBehandlesAtomært -> error("skal ikke føre til atmoær behandling")
             is Ordinær -> b.åpenBehandling
         }
@@ -256,16 +256,16 @@ class SakOgBehandlingService(
         return sisteYtelsesbehandling
     }
 
-    fun finnEllerOpprettBehandling(saksnummer: Saksnummer, vurderingsbehov: List<VurderingsbehovMedPeriode>, årsakTilOpprettelse: ÅrsakTilOpprettelse): Behandling {
+    fun finnEllerOpprettOrdinærBehandling(saksnummer: Saksnummer, vurderingsbehov: List<VurderingsbehovMedPeriode>, årsakTilOpprettelse: ÅrsakTilOpprettelse): Behandling {
+        val sak = sakRepository.hent(saksnummer)
+
+        return finnEllerOpprettOrdinærBehandling(sak.id, vurderingsbehov, årsakTilOpprettelse)
+    }
+
+    fun finnEllerOpprettBehandling(saksnummer: Saksnummer, vurderingsbehov: List<VurderingsbehovMedPeriode>, årsakTilOpprettelse: ÅrsakTilOpprettelse): OpprettetBehandling {
         val sak = sakRepository.hent(saksnummer)
 
         return finnEllerOpprettBehandling(sak.id, vurderingsbehov, årsakTilOpprettelse)
-    }
-
-    fun finnEllerOpprettBehandlingFasttrack(saksnummer: Saksnummer, vurderingsbehov: List<VurderingsbehovMedPeriode>, årsakTilOpprettelse: ÅrsakTilOpprettelse): OpprettetBehandling {
-        val sak = sakRepository.hent(saksnummer)
-
-        return finnEllerOpprettBehandlingFasttrack(sak.id, vurderingsbehov, årsakTilOpprettelse)
     }
 
     fun lukkBehandling(behandlingId: BehandlingId) {
