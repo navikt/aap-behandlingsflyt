@@ -96,7 +96,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
-    override fun oppdaterVurderingsbehov(
+    override fun oppdaterVurderingsbehovOgÅrsak(
         behandling: Behandling,
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak,
     ) {

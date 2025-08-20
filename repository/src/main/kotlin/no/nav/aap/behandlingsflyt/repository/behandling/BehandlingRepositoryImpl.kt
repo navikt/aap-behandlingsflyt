@@ -410,7 +410,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
-    override fun oppdaterVurderingsbehov(behandling: Behandling, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak) {
+    override fun oppdaterVurderingsbehovOgÅrsak(behandling: Behandling, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak) {
         val nyeVurderingsbehov = vurderingsbehovOgÅrsak.vurderingsbehov.filter { !behandling.vurderingsbehov().contains(it) }
 
         val årsakQuery = """

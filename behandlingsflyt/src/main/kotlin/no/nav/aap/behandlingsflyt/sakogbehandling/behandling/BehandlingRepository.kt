@@ -37,7 +37,7 @@ interface BehandlingRepository : Repository {
 
     fun hentBehandlingType(behandlingId: BehandlingId): TypeBehandling
 
-    fun oppdaterVurderingsbehov(behandling: Behandling, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak)
+    fun oppdaterVurderingsbehovOgÅrsak(behandling: Behandling, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak)
 
     fun hentVurderingsbehovOgÅrsaker(behandlingId: BehandlingId): List<VurderingsbehovOgÅrsak>
 

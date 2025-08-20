@@ -123,7 +123,7 @@ class SakOgBehandlingService(
                         sisteYtelsesbehandling
                     )
                 else
-                    Ordinær(oppdaterVurderingsbehov(sisteYtelsesbehandling, vurderingsbehovOgÅrsak))
+                    Ordinær(oppdaterVurderingsbehovOgÅrsak(sisteYtelsesbehandling, vurderingsbehovOgÅrsak))
 
             else ->
                 error("greier ikke å finne eller opprette behandling, uventet tilstand i saken")
@@ -234,7 +234,7 @@ class SakOgBehandlingService(
         }
     }
 
-    private fun oppdaterVurderingsbehov(
+    private fun oppdaterVurderingsbehovOgÅrsak(
         sisteYtelsesbehandling: Behandling,
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
     ): Behandling {
@@ -243,7 +243,7 @@ class SakOgBehandlingService(
         }
         // Valider at behandlingen står i et sted hvor den kan data
         validerStegStatus(sisteYtelsesbehandling)
-        behandlingRepository.oppdaterVurderingsbehov(sisteYtelsesbehandling, vurderingsbehovOgÅrsak)
+        behandlingRepository.oppdaterVurderingsbehovOgÅrsak(sisteYtelsesbehandling, vurderingsbehovOgÅrsak)
         return sisteYtelsesbehandling
     }
 
@@ -304,7 +304,7 @@ class SakOgBehandlingService(
     }
 
     fun oppdaterVurderingsbehovTilBehandling(behandling: Behandling, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak) {
-        behandlingRepository.oppdaterVurderingsbehov(behandling, vurderingsbehovOgÅrsak)
+        behandlingRepository.oppdaterVurderingsbehovOgÅrsak(behandling, vurderingsbehovOgÅrsak)
     }
 
     fun overstyrRettighetsperioden(sakId: SakId, startDato: LocalDate, sluttDato: LocalDate) {
