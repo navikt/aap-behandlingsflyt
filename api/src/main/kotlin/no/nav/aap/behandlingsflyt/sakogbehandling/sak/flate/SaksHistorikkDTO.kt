@@ -8,7 +8,6 @@ data class SaksHistorikkDTO (
 )
 
 data class BehandlingHistorikkDTO(
-    val behandlingId: BehandlingId,
     val hendelser: List<BehandlingHendelseDTO> = emptyList()
 )
 
@@ -32,7 +31,8 @@ enum class BehandlingHendelseType {
     RETUR_FRA_KVALITETSSIKRER, // med resultat og eventuell årsak for retur + begrunnelse
     REVURDERING_OPPRETTET,
     FØRSTEGANGSBEHANDLING_OPPRETTET,
-    MOTTATT_DIALOGMELDING // ? Mottatt legeerklæring og dialogmelding
+    KLAGE_OPPRETTET,
+    MOTTATT_DIALOGMELDING, // ? Mottatt legeerklæring og dialogmelding
+    BESTILT_LEGEERKLÆRING // ? Mottatt legeerklæring og dialogmelding
     //  Behandling / vurderingsbehov startet, med årsak, vurderingsbehov og eventuell begrunnelse
 }
-
