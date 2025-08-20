@@ -21,6 +21,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhen
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreService
@@ -66,6 +68,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             registerBarn = emptyList(),
             oppgitteBarnFraPDL = emptyList(),
         )
+
         override fun hentBarn(person: Person, oppgitteBarnIdenter: List<Ident>) = barnInnhentingRespons
     }
 
@@ -89,7 +92,8 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
     }
 
     object FakeInstitusjonsoppholdGateway : InstitusjonsoppholdGateway {
-        override fun innhent(person: Person): List<Institusjonsopphold> = listOf()
+        var response: List<Institusjonsopphold> = listOf()
+        override fun innhent(person: Person) = response
     }
 
     private val gatewayProvider = createGatewayProvider {
@@ -130,18 +134,33 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                         uføregrad = Prosent.`100_PROSENT`,
                         kilde = "",
                     )
+                )
+            FakeInstitusjonsoppholdGateway.response = listOf(
+                Institusjonsopphold(
+                    institusjonstype = Institusjonstype.FO,
+                    kategori = Oppholdstype.A,
+                    startdato = periode.fom,
+                    sluttdato = periode.tom,
+                    orgnr = "0".repeat(9),
+                    institusjonsnavn = "hei"
+                )
             )
 
             OppdagEndretInformasjonskravJobbUtfører.konstruer(repositoryProvider, gatewayProvider)
                 .utfør(førstegangsbehandlingen.sakId, førstegangsbehandlingen.id)
 
-            val sisteYtelsesbehandling =
-                SakOgBehandlingService(repositoryProvider, gatewayProvider)
-                    .finnSisteYtelsesbehandlingFor(førstegangsbehandlingen.sakId)!!
+            val sisteYtelsesbehandling = SakOgBehandlingService(repositoryProvider, gatewayProvider)
+                .finnSisteYtelsesbehandlingFor(førstegangsbehandlingen.sakId)!!
             assertThat(sisteYtelsesbehandling.id)
                 .isNotEqualTo(førstegangsbehandlingen.id)
-            assertThat(sisteYtelsesbehandling.vurderingsbehov())
-                .isEqualTo(listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING)))
+            assertThat(sisteYtelsesbehandling.vurderingsbehov()).hasSize(2)
+            assertThat(sisteYtelsesbehandling.vurderingsbehov().toSet())
+                .isEqualTo(
+                    setOf(
+                        VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING),
+                        VurderingsbehovMedPeriode(Vurderingsbehov.INSTITUSJONSOPPHOLD),
+                    )
+                )
             assertThat(sisteYtelsesbehandling.typeBehandling())
                 .isEqualTo(TypeBehandling.Revurdering)
 
@@ -193,6 +212,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             TjenestePensjonService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
             UføreService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
             InstitusjonsoppholdService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
+
             repositoryProvider.provide<BehandlingRepository>()
                 .oppdaterBehandlingStatus(førstegangsbehandlingen.id, Status.AVSLUTTET)
             førstegangsbehandlingen

@@ -50,9 +50,8 @@ class InstitusjonsoppholdService private constructor(
 
     private fun hentInstitusjonsopphold(behandlingId: BehandlingId): List<Institusjonsopphold> {
         val sak = sakOgBehandlingService.hentSakFor(behandlingId)
-        val institusjonsopphold = institusjonsoppholdRegisterGateway.innhent(sak.person)
+        return institusjonsoppholdRegisterGateway.innhent(sak.person)
             .filter { it.periode().overlapper(sak.rettighetsperiode) }
-        return institusjonsopphold
     }
 
     private fun erEndret(
