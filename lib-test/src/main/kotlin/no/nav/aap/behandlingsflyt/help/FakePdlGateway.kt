@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag
+package no.nav.aap.behandlingsflyt.help
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway

@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.gjenopptak
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
+import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status

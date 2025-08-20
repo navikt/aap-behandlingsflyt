@@ -5,8 +5,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigVurde
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentMedType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.NavnOgAdresse
+import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FullmektigRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
