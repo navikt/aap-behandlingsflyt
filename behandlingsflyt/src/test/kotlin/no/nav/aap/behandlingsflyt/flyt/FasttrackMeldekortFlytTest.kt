@@ -121,8 +121,9 @@ class FasttrackMeldekortFlytTest :
             .allSatisfy { rettighetsType ->
                 assertThat(rettighetsType).isEqualTo(RettighetsType.BISTANDSBEHOV)
             }
-
-
+        val tilkjentYtelseFørMeldekort = dataSource.transaction {
+            TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(åpenBehandling.id)
+        }
 
         åpenBehandling.sendInnMeldekort(
             sak.rettighetsperiode, listOf(
@@ -164,7 +165,7 @@ class FasttrackMeldekortFlytTest :
             val åpenBehandling = behandlinger
                 .filter { it.typeBehandling() == TypeBehandling.Revurdering }
                 .minBy { it.opprettetTidspunkt }
-            assertThat(åpenBehandling.aktivtSteg()).isEqualTo(StegType.IKKE_OPPFYLT_MELDEPLIKT)
+            assertThat(åpenBehandling.aktivtSteg()).isEqualTo(StegType.FATTE_VEDTAK)
 
             åpenBehandling
         }
@@ -175,6 +176,11 @@ class FasttrackMeldekortFlytTest :
         }
 
         assertThat(underveisGrunnlag).isNotEqualTo(underveisGrunnlag2)
+
+        val tilkjentYtelseEtterMeldekort = dataSource.transaction {
+            TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(åpenBehandling.id)
+        }
+        assertThat(tilkjentYtelseFørMeldekort).isNotEqualTo(tilkjentYtelseEtterMeldekort)
     }
 
     fun hentMeldekortGrunnlag(connection: DBConnection, behandlingId: BehandlingId): MeldekortGrunnlag? {

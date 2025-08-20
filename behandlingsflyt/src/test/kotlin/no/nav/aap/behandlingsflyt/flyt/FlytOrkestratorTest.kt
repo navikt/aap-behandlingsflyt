@@ -3223,7 +3223,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 fullmektigVurdering = FullmektigLøsningDto(
                     harFullmektig = true,
                     fullmektigIdentMedType = IdentMedType(
-                        "21049599999",
+                        "22128209852",
                         IdentType.FNR_DNR
                     )
                 )
