@@ -1309,8 +1309,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 ),
             )
             .løsOvergangUføre()
-            .løsSykdomsvurderingBrev()
             .løsOvergangArbeid()
+            .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
