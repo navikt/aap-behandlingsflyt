@@ -102,7 +102,10 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
                     contentType(ContentType.Application.Json)
                     setBody(nyMellomlagretVurdering)
                 }
-            assertThat(response.status).isEqualTo(HttpStatusCode.Accepted)
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+
+            val resBody = response.body<MellomlagredeVurderingResponse>()
+            assertThat(resBody.mellomlagretVurdering?.data).isEqualTo(nyMellomlagretVurdering.data)
 
             val oppdatertVerdi =
                 InMemoryMellomlagretVurderingRepository.hentHvisEksisterer(behandling.id, avklaringsbehovKode)
