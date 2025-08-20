@@ -73,7 +73,7 @@ class UføreService(
         val uføregrader = hentUføregrader(behandlingId)
         val eksisterendeGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
         return if (harEndringerUføre(eksisterendeGrunnlag, uføregrader)) {
-            listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SAMORDNING_OG_AVREGNING))
+            listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING))
         } else {
             emptyList()
         }
