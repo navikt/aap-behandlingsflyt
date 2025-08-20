@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjeneste
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -43,8 +44,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
         if (vurderingsbehov.isNotEmpty()) {
             val revurdering = this.sakOgBehandlingService.finnEllerOpprettBehandling(
                 sakId,
-                vurderingsbehov,
-                ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
+                VurderingsbehovOgÅrsak(vurderingsbehov, ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
             )
             prosesserBehandlingService.triggProsesserBehandling(
                 revurdering,

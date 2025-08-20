@@ -2,8 +2,8 @@ CREATE TABLE BEHANDLING_AARSAK
 (
     ID                   BIGSERIAL                              NOT NULL PRIMARY KEY,
     BEHANDLING_ID        BIGINT                                 NULL REFERENCES BEHANDLING (ID),
-    AARSAK               TEXT                                   NULL,
-    BEGRUNNELSE          TEXT                                   NOT NULL,
+    AARSAK               TEXT                                   NOT NULL,
+    BEGRUNNELSE          TEXT                                   NULL,
     OPPRETTET_TID        TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 

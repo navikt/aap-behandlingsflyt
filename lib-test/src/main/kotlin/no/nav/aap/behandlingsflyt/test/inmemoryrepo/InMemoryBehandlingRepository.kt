@@ -103,6 +103,10 @@ object InMemoryBehandlingRepository : BehandlingRepository {
 
     }
 
+    override fun hentVurderingsbehovOgÅrsaker(behandlingId: BehandlingId): List<VurderingsbehovOgÅrsak> {
+        return emptyList()
+    }
+
     override fun hentSakId(referanse: BehandlingReferanse): SakId {
         TODO("Not yet implemented")
     }
