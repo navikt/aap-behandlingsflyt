@@ -49,10 +49,27 @@ class SakOgBehandlingService(
      * Ytelsesbehandling betyr førstegangsbehandling eller revurdering.
      */
     fun finnSisteYtelsesbehandlingFor(sakId: SakId): Behandling? {
-        return behandlingRepository.finnSisteBehandlingFor(
+        /* Finn siste ytelsesbehandling basert på `forrigeBehandlingId`-kjeden.
+         * Behandlingene er i praksis en singly-linked list. Pekerne går "feil vei",
+         * så vi regner ut bakover-pekerne.
+        **/
+        val ytelsesbehandlinger = behandlingRepository.hentAlleFor(
             sakId,
             listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
         )
+        val nesteId = mutableMapOf<BehandlingId, BehandlingId>()
+        for (behandling in ytelsesbehandlinger) {
+            if (behandling.forrigeBehandlingId != null) {
+                nesteId[behandling.forrigeBehandlingId] = behandling.id
+            }
+        }
+
+        var behandling = ytelsesbehandlinger.firstOrNull()?.id ?: return null
+
+        while (nesteId[behandling] != null) {
+            behandling = nesteId[behandling]!!
+        }
+        return ytelsesbehandlinger.find { it.id == behandling }
     }
 
     sealed interface OpprettetBehandling {
