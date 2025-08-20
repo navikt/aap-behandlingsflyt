@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
 import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -60,8 +59,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
                         )
 
                         MellomlagredeVurderingResponse(
-                            mellomlagretVurdering = mellomlagretVurdering.tilResponse(),
-                            harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                            mellomlagretVurdering = mellomlagretVurdering.tilResponse()
                         )
                     }
                 }
@@ -91,7 +89,6 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
                         )
                         MellomlagredeVurderingResponse(
                             mellomlagretVurdering = mellomlagretVurdering?.tilResponse(),
-                            harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         )
                     }
                 }

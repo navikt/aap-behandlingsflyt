@@ -15,8 +15,7 @@ data class MellomlagretVurderingDto(
 )
 
 data class MellomlagredeVurderingResponse(
-    val mellomlagretVurdering: MellomlagretVurderingDto?,
-    val harTilgangTilÅSaksbehandle: Boolean
+    val mellomlagretVurdering: MellomlagretVurderingDto?
 )
 
 data class BehandlingReferanseMedAvklaringsbehov(@param:PathParam("referanse") val referanse: UUID, @param:PathParam("avklaringsbehovkode") val avklaringsbehovkode: String)

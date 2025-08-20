@@ -55,7 +55,6 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
 
             assertThat(response.body<MellomlagredeVurderingResponse>()).isEqualTo(
                 MellomlagredeVurderingResponse(
-                    harTilgangTilÅSaksbehandle = true,
                     mellomlagretVurdering = MellomlagretVurderingDto(
                         behandlingId = mellomlagretVurdering.behandlingId,
                         avklaringsbehovkode = mellomlagretVurdering.avklaringsbehovKode,
@@ -133,7 +132,6 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
 
             assertThat(response.body<MellomlagredeVurderingResponse>()).isEqualTo(
                 MellomlagredeVurderingResponse(
-                    harTilgangTilÅSaksbehandle = true,
                     mellomlagretVurdering = null
                 )
             )
