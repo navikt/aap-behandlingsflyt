@@ -8,9 +8,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_END
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -18,11 +23,11 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
 
 class PersonopplysningService private constructor(
-    private val sakService: SakService,
+    private val sakOgBehandlingService: SakOgBehandlingService,
     private val personopplysningRepository: PersonopplysningRepository,
     private val personopplysningGateway: PersonopplysningGateway,
     private val tidligereVurderinger: TidligereVurderinger,
-) : Informasjonskrav {
+) : Informasjonskrav, KanTriggeRevurdering {
     override val navn = Companion.navn
 
     override fun erRelevant(
@@ -36,9 +41,7 @@ class PersonopplysningService private constructor(
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
-        val sak = sakService.hent(kontekst.sakId)
-        val personopplysninger =
-            personopplysningGateway.innhent(sak.person)
+        val personopplysninger = hentPersonopplysninger(kontekst.behandlingId)
         val eksisterendeData =
             personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)
 
@@ -49,15 +52,32 @@ class PersonopplysningService private constructor(
         return IKKE_ENDRET
     }
 
+    override fun behovForRevurdering(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
+        val eksisterendeData =
+            personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(behandlingId)
+        val personopplysninger = hentPersonopplysninger(behandlingId)
+        return if (personopplysninger != eksisterendeData) {
+            listOf(
+                VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_LOVVALG)
+            )
+        } else {
+            emptyList()
+        }
+    }
+    
+    private fun hentPersonopplysninger(behandlingId: BehandlingId): Personopplysning {
+        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
+        return personopplysningGateway.innhent(sak.person)
+    }
+
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.PERSONOPPLYSNING
 
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): PersonopplysningService {
-            val sakRepository = repositoryProvider.provide<SakRepository>()
             val personopplysningRepository =
                 repositoryProvider.provide<PersonopplysningRepository>()
             return PersonopplysningService(
-                SakService(sakRepository),
+                SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 personopplysningRepository,
                 gatewayProvider.provide(),
                 TidligereVurderingerImpl(repositoryProvider),
