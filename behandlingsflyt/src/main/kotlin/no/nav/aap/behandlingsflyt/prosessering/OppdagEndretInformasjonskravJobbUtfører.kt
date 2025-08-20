@@ -45,7 +45,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
             .toSet().toList() // Fjern duplikater
 
         if (vurderingsbehov.isNotEmpty()) {
-            val revurdering = this.sakOgBehandlingService.finnEllerOpprettBehandling(
+            val revurdering = this.sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
                 sakId,
                 vurderingsbehov,
                 ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA

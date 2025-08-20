@@ -69,7 +69,7 @@ class AvklarOppfølgingStegTest {
 
     @BeforeEach
     fun setup() {
-        every { sakOgBehandlingService.finnEllerOpprettBehandling(any<SakId>(), any(), any()) } returns behandling
+        every { sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(any<SakId>(), any(), any()) } returns behandling
 
         every { mottaDokumentService.hentOppfølgingsBehandlingDokument(any())} returns BehandletOppfølgingsOppgave(
             datoForOppfølging = LocalDate.now(),
@@ -95,7 +95,7 @@ class AvklarOppfølgingStegTest {
 
         verify {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
-            sakOgBehandlingService.finnEllerOpprettBehandling(
+            sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
                 behandling.sakId,
                 listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
                 ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
@@ -119,7 +119,7 @@ class AvklarOppfølgingStegTest {
 
         verify(exactly = 0) {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
-            sakOgBehandlingService.finnEllerOpprettBehandling(
+            sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
                 behandling.sakId,
                 listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
                 ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
@@ -137,7 +137,7 @@ class AvklarOppfølgingStegTest {
 
         verify(exactly = 0) {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
-            sakOgBehandlingService.finnEllerOpprettBehandling(
+            sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
                 behandling.sakId,
                 listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
                 ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE

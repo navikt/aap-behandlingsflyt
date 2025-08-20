@@ -42,7 +42,7 @@ class OpprettRevurderingSteg(
                 if (!erUsikkerhetTilknyttetMaksSykepengerDato(samordningVurdering)) return Fullført
 
                 logger.info("Oppretter revurdering. SakID: ${kontekst.sakId}")
-                val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
+                val behandling = sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
                     sakId = kontekst.sakId,
                     vurderingsbehov = listOf(
                         VurderingsbehovMedPeriode(
