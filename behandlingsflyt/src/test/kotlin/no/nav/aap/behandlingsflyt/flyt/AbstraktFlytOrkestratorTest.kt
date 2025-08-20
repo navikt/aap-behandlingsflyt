@@ -655,7 +655,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
                 AvklarOvergangArbeidLøsning(
                     OvergangArbeidVurderingLøsningDto(
                         begrunnelse = "Løsning",
-                        brukerRettPaaAAP = false,
+                        brukerRettPaaAAP = true,
                         virkningsDato = null,
                         overgangBegrunnelse = null
                     )

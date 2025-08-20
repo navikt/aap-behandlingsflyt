@@ -187,7 +187,7 @@ public enum class Definisjon(
     AVKLAR_OVERGANG_ARBEID(
         kode = AvklaringsbehovKode.`5032`,
         type = BehovType.MANUELT_PÅKREVD,
-        løsesISteg = StegType.VURDER_BISTANDSBEHOV,
+        løsesISteg = StegType.OVERGANG_ARBEID,
         kreverToTrinn = true,
         kvalitetssikres = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
