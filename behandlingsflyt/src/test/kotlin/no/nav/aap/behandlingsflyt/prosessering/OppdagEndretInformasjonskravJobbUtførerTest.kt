@@ -18,6 +18,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreService
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -46,6 +49,7 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 
 class OppdagEndretInformasjonskravJobbUtførerTest {
     init {
@@ -80,6 +84,10 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         override fun hentTjenestePensjon(ident: String, periode: Periode): List<TjenestePensjonForhold> = listOf()
     }
 
+    object FakeUføreRegisterGateway : UføreRegisterGateway {
+        override fun innhentMedHistorikk(person: Person, fraDato: LocalDate): List<Uføre> = listOf()
+    }
+
     private val gatewayProvider = createGatewayProvider {
         register<FakeUnleashFasttrackMeldekort>()
         register<FakeBarnGateway>()
@@ -87,6 +95,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         register<FakeForeldrepengerGateway>()
         register<FakeSykepegerGateway>()
         register<FakeTjenestePensjonGateway>()
+        register<FakeUføreRegisterGateway>()
     }
 
     @TestDatabase
@@ -172,6 +181,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             BarnService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
             SamordningYtelseVurderingService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
             TjenestePensjonService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
+            UføreService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
             repositoryProvider.provide<BehandlingRepository>()
                 .oppdaterBehandlingStatus(førstegangsbehandlingen.id, Status.AVSLUTTET)
             førstegangsbehandlingen

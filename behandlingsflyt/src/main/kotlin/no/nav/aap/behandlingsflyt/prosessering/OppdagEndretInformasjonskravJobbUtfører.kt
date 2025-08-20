@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -32,7 +33,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
             BarnService.konstruer(repositoryProvider, gatewayProvider),
             SamordningYtelseVurderingService.konstruer(repositoryProvider, gatewayProvider),
             TjenestePensjonService.konstruer(repositoryProvider, gatewayProvider),
-            //            InformasjonskravNavn.UFØRE,
+            UføreService.konstruer(repositoryProvider, gatewayProvider)
             //            InformasjonskravNavn.INSTITUSJONSOPPHOLD,
             //            InformasjonskravNavn.PERSONOPPLYSNING
         )
