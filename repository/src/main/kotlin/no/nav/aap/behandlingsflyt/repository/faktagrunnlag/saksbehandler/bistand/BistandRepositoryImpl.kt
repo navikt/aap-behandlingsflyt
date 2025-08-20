@@ -60,8 +60,9 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
             erBehovForArbeidsrettetTiltak = row.getBoolean("BEHOV_FOR_ARBEIDSRETTET_TILTAK"),
             erBehovForAnnenOppfølging = row.getBooleanOrNull("BEHOV_FOR_ANNEN_OPPFOELGING"),
             vurderingenGjelderFra = row.getLocalDateOrNull("VURDERINGEN_GJELDER_FRA"),
-            overgangBegrunnelse = row.getStringOrNull("OVERGANG_BEGRUNNELSE"),
+            skalVurdereAapIOvergangTilUføre = row.getBooleanOrNull("OVERGANG_TIL_UFOERE"),
             skalVurdereAapIOvergangTilArbeid = row.getBooleanOrNull("OVERGANG_TIL_ARBEID"),
+            overgangBegrunnelse = row.getStringOrNull("OVERGANG_BEGRUNNELSE"),
             vurdertAv = row.getString("VURDERT_AV"),
             opprettet = row.getInstant("OPPRETTET_TID")
         )
@@ -76,12 +77,9 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 b.behov_for_annen_oppfoelging,
                 b.vurderingen_gjelder_fra,
                 b.vurdert_av,
-<<<<<<< HEAD
+                b.overgang_til_ufoere,
                 b.overgang_til_arbeid,
                 b.overgang_begrunnelse
-=======
-                b.overgang_til_ufoere
->>>>>>> dad43f5f5 (Begynner på jobben om overgang Arbeidssøker)
                 )
                 b.*
             FROM bistand_grunnlag g
