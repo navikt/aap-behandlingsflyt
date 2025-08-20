@@ -143,13 +143,13 @@ class BrevUtlederService(
     private fun utledInntektererPerÅr(grunnlag: Beregningsgrunnlag?): List<InntektPerÅr> {
         return when (grunnlag) {
             is Grunnlag11_19 ->
-                grunnlag.inntekter().grunnlagInntekttilInntektPerÅr()
+                grunnlag.inntekter().grunnlagInntektTilInntektPerÅr()
 
-            is GrunnlagUføre -> grunnlag.uføreInntekterFraForegåendeÅr().uføreInntekttilInntektPerÅr()
+            is GrunnlagUføre -> grunnlag.uføreInntekterFraForegåendeÅr().uføreInntektTilInntektPerÅr()
             is GrunnlagYrkesskade ->
                 when (val underliggende = grunnlag.underliggende()) {
-                    is Grunnlag11_19 -> underliggende.inntekter().grunnlagInntekttilInntektPerÅr()
-                    is GrunnlagUføre -> underliggende.uføreInntekterFraForegåendeÅr().uføreInntekttilInntektPerÅr()
+                    is Grunnlag11_19 -> underliggende.inntekter().grunnlagInntektTilInntektPerÅr()
+                    is GrunnlagUføre -> underliggende.uføreInntekterFraForegåendeÅr().uføreInntektTilInntektPerÅr()
                     is GrunnlagYrkesskade -> throw IllegalStateException("GrunnlagYrkesskade kan ikke ha grunnlag som også er GrunnlagYrkesskade")
                 }
 
@@ -157,11 +157,11 @@ class BrevUtlederService(
         }
     }
 
-    private fun List<GrunnlagInntekt>.grunnlagInntekttilInntektPerÅr(): List<InntektPerÅr> {
+    private fun List<GrunnlagInntekt>.grunnlagInntektTilInntektPerÅr(): List<InntektPerÅr> {
         return this.map { InntektPerÅr(it.år, it.inntektIKroner.verdi()) }
     }
 
-    private fun List<UføreInntekt>.uføreInntekttilInntektPerÅr(): List<InntektPerÅr> {
+    private fun List<UføreInntekt>.uføreInntektTilInntektPerÅr(): List<InntektPerÅr> {
         return this.map { InntektPerÅr(it.år, it.inntektIKroner.verdi()) }
     }
 }
