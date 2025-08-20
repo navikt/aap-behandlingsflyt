@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
@@ -45,7 +46,10 @@ class ForeslåVedtakStegTest {
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
-                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(emptyList(), ÅrsakTilOpprettelse.SØKNAD)
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                )
             )
         val kontekstMedPerioder = FlytKontekstMedPerioder(
             sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
@@ -70,7 +74,10 @@ class ForeslåVedtakStegTest {
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
-                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(emptyList(), ÅrsakTilOpprettelse.SØKNAD)
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                )
             )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
@@ -101,7 +108,10 @@ class ForeslåVedtakStegTest {
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
-                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(emptyList(), ÅrsakTilOpprettelse.SØKNAD)
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                )
             )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
@@ -132,7 +142,10 @@ class ForeslåVedtakStegTest {
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
-                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(emptyList(), ÅrsakTilOpprettelse.SØKNAD)
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                )
             )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(

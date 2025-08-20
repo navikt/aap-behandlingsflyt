@@ -131,14 +131,24 @@ class StatistikkJobbUtførerTest {
                 sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
-                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(listOf(), ÅrsakTilOpprettelse.SØKNAD)
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(
+                        no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD)
+                    ),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                )
             )
 
             val revurdering = behandlingRepository.opprettBehandling(
                 sak.id,
                 typeBehandling = TypeBehandling.Revurdering,
                 forrigeBehandlingId = opprettetBehandling.id,
-                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(listOf(), ÅrsakTilOpprettelse.SØKNAD)
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(
+                        no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD)
+                    ),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                )
             )
 
             opprettetTidspunkt = revurdering.opprettetTidspunkt
@@ -253,7 +263,9 @@ class StatistikkJobbUtførerTest {
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                     årsak = ÅrsakTilOpprettelse.SØKNAD,
-                    vurderingsbehov = listOf(),
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(
+                        no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD)
+                    ),
                 ),
             )
             beregningsgrunnlagRepository.lagre(

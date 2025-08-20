@@ -161,6 +161,15 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
     }
 
     override fun hentVurderingsbehovOgÅrsaker(behandlingId: BehandlingId): List<VurderingsbehovOgÅrsak> {
+        data class VurderingsbehovOgÅrsakInternal(
+            val id: Long,
+            val vurderingsbehovType: Vurderingsbehov,
+            val vurderingsbehovPeriode: no.nav.aap.komponenter.type.Periode?,
+            val årsak: ÅrsakTilOpprettelse,
+            val opprettet: LocalDateTime,
+            val beskrivelse: String?
+        )
+
         val query = """
             SELECT ba.id as aarsak_id, ba.aarsak, ba.begrunnelse, ba.opprettet_tid,
                    vb.aarsak as vurderingsbehov, vb.periode
@@ -170,7 +179,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             ORDER BY ba.opprettet_tid DESC, vb.opprettet_tid DESC
         """.trimIndent()
 
-        return connection.queryList(query) {
+        val vurderingsbehovOgÅrsakInternal = connection.queryList(query) {
             setParams {
                 setLong(1, behandlingId.id)
             }
@@ -185,6 +194,8 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 )
             }
         }
+
+        return vurderingsbehovOgÅrsakInternal
             .groupBy { it.id }
             .map { (_, vurderingsbehovOgÅrsak) ->
                 VurderingsbehovOgÅrsak(
@@ -195,15 +206,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 )
             }
     }
-
-    private data class VurderingsbehovOgÅrsakInternal(
-        val id: Long,
-        val vurderingsbehovType: Vurderingsbehov,
-        val vurderingsbehovPeriode: no.nav.aap.komponenter.type.Periode?,
-        val årsak: ÅrsakTilOpprettelse,
-        val opprettet: LocalDateTime,
-        val beskrivelse: String?
-    )
 
     override fun oppdaterBehandlingStatus(
         behandlingId: BehandlingId,

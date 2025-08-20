@@ -64,7 +64,7 @@ class AvklarOppfølgingStegTest {
         typeBehandling = TypeBehandling.Førstegangsbehandling,
         årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
         status = Status.UTREDES,
-        vurderingsbehov = listOf(),
+        vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
         versjon = 0
     )
 

@@ -64,7 +64,10 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
                     sak.id,
                     TypeBehandling.Førstegangsbehandling,
                     null,
-                    VurderingsbehovOgÅrsak(emptyList(), ÅrsakTilOpprettelse.SØKNAD)
+                    VurderingsbehovOgÅrsak(
+                        listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                        ÅrsakTilOpprettelse.SØKNAD
+                    )
                 )
             lagNyFullVurdering(behandling.id, repo, "Første begrunnelse", connection)
 
@@ -134,7 +137,10 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
                 sak2.id,
                 TypeBehandling.Førstegangsbehandling,
                 null,
-                VurderingsbehovOgÅrsak(emptyList(), ÅrsakTilOpprettelse.SØKNAD)
+                VurderingsbehovOgÅrsak(
+                    listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                    ÅrsakTilOpprettelse.SØKNAD
+                )
             )
 
             val sisteUtenlandsOppholdData =

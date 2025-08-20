@@ -650,7 +650,10 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
                 forrigeBehandlingId = forrigeBehandlingId,
                 sakId = sakId,
                 typeBehandling = typeBehandling,
-                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(emptyList(), ÅrsakTilOpprettelse.SØKNAD),
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = årsaker,
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                )
             )
         }
     }
