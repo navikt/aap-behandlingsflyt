@@ -184,6 +184,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as Avklaringsb
 @MethodSource("testData")
 class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
     companion object {
+        @Suppress("unused")
         @JvmStatic
         fun testData(): List<Arguments> {
             return listOf(
