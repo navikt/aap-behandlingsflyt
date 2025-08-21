@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.test
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.http.*
@@ -27,7 +28,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjeneste
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Anvist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Utbetalingsgrad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
@@ -38,11 +38,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.Meld
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.SumPi
-import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeModell
 import no.nav.aap.behandlingsflyt.integrasjon.ident.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
+import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomData
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomDataRessurs
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgEnhet
@@ -81,6 +80,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.ufore.UførePeriode
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRequest
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRespons
 import no.nav.aap.behandlingsflyt.integrasjon.util.GraphQLResponse
+import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeModell
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRequest
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
@@ -781,6 +781,7 @@ object FakeServers : AutoCloseable {
             jackson {
                 registerModule(JavaTimeModule())
                 disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             }
         }
         install(StatusPages) {
@@ -797,6 +798,7 @@ object FakeServers : AutoCloseable {
             }
         }
         routing {
+            data class SykepengerRequest(val personidentifikatorer: Set<String>)
             post("/utbetalte-perioder-aap") {
                 val request = call.receive<SykepengerRequest>()
                 val fakePerson = FakePersoner.hentPerson(request.personidentifikatorer.first())

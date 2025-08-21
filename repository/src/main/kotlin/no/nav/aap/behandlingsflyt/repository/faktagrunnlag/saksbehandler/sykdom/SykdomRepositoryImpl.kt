@@ -54,8 +54,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
     }
 
     override fun lagre(
-        behandlingId: BehandlingId,
-        yrkesskadevurdering: Yrkesskadevurdering?
+        behandlingId: BehandlingId, yrkesskadevurdering: Yrkesskadevurdering?
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val nyttGrunnlag = SykdomGrunnlag(
@@ -78,7 +77,8 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         val sykdomVurderingIds = getSykdomVurderingIds(sykdomVurderingerIds)
         val yrkesskadevurderingIds = getYrkesskadeVurderingIds(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from sykdom_grunnlag where behandling_id = ?; 
             delete from sykdom_vurdering_bidiagnoser where vurdering_id = ANY(?::bigint[]);
             delete from sykdom_vurdering_dokumenter where vurdering_id = ANY(?::bigint[]);
@@ -86,7 +86,8 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             delete from sykdom_vurderinger where id = ANY(?::bigint[]);
             delete from yrkesskade_relaterte_saker where vurdering_id = ANY(?::bigint[]);
             delete from yrkesskade_vurdering where id = ANY(?::bigint[]);
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, sykdomVurderingIds)
@@ -316,7 +317,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
 
     private fun mapSykdommer(sykdomVurderingerId: Long?): List<Sykdomsvurdering> {
         return connection.queryList(
-        """
+            """
             SELECT id, BEGRUNNELSE, VURDERINGEN_GJELDER_FRA, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET, ER_ARBEIDSEVNE_NEDSATT, YRKESSKADE_BEGRUNNELSE, KODEVERK, DIAGNOSE, OPPRETTET_TID, VURDERT_AV_IDENT
             FROM SYKDOM_VURDERING WHERE SYKDOM_VURDERINGER_ID = ?
             """.trimIndent()
@@ -416,7 +417,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
     }
 
     override fun hent(behandlingId: BehandlingId): SykdomGrunnlag {
-        return requireNotNull(hentHvisEksisterer(behandlingId))
+        return requireNotNull(hentHvisEksisterer(behandlingId)) { "Fant ikke sykdomsgrunnlag for behandling med ID $behandlingId." }
     }
 
     override fun hentHistoriskeSykdomsvurderinger(sakId: SakId, behandlingId: BehandlingId): List<Sykdomsvurdering> {

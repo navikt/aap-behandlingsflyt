@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.integrasjon.samordning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -25,14 +24,13 @@ class AbakusSykepengerGatewayTest {
         FakePersoner.leggTil(person)
 
         val spGateway = AbakusSykepengerGateway()
-        val request = SykepengerRequest(
+
+        val response = spGateway.hentYtelseSykepenger(
             person.identer.map { it.identifikator }.toSet(),
             LocalDate.now(),
             LocalDate.now().plusDays(1),
         )
-
-        val response = spGateway.hentYtelseSykepenger(request)
-        assertThat(response.utbetaltePerioder).hasSize(1)
-        assertEquals(50, response.utbetaltePerioder[0].grad)
+        assertThat(response).hasSize(1)
+        assertEquals(50, response[0].grad)
     }
 }

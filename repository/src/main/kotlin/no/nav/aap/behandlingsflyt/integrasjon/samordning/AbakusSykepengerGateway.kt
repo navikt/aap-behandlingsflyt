@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.integrasjon.samordning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.prometheus
@@ -50,7 +49,21 @@ class AbakusSykepengerGateway : SykepengerGateway {
         return requireNotNull(client.post(uri = url, request = httpRequest))
     }
 
-    override fun hentYtelseSykepenger(request: SykepengerRequest): SykepengerResponse {
-        return query(request)
+    override fun hentYtelseSykepenger(
+        personidentifikatorer: Set<String>,
+        fom: LocalDate,
+        tom: LocalDate
+    ): List<UtbetaltePerioder> {
+        return query(SykepengerRequest(personidentifikatorer, fom, tom)).utbetaltePerioder
     }
 }
+
+
+/**
+ * @param personidentifikatorer Er for en liste om vedkommende har hatt flere personidentifikatorerer. Ikke for å slå opp fler personer i samme oppslag. Da blir responsen bare krøll - Team SP
+ */
+private data class SykepengerRequest(
+    val personidentifikatorer: Set<String>,
+    val fom: LocalDate,
+    val tom: LocalDate
+)

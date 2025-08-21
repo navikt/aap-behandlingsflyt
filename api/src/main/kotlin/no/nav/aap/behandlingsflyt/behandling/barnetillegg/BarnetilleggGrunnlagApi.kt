@@ -144,7 +144,7 @@ fun hentBarn(ident: BarnIdentifikator, barnGrunnlag: BarnGrunnlag?): Identifiser
             val oppgittBarn = oppgitteBarn.singleOrNull { it.ident == ident.ident }
 
             if (barn != null && oppgittBarn != null && barn.ident != oppgittBarn.ident) {
-                log.warn("Mismatch mellom idnet for registerbarn og oppgitte barn for ident ${ident.ident}.")
+                log.warn("Mismatch mellom ident for registerbarn og oppgitte barn for ident ${ident.ident}.")
             }
 
             if (barn != null && oppgittBarn != null && barn.fødselsdato != oppgittBarn.fødselsdato) {

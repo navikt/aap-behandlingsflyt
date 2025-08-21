@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import java.time.LocalDate
-import javax.sql.DataSource
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonService
@@ -11,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
@@ -61,6 +58,8 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
+import javax.sql.DataSource
 
 class OppdagEndretInformasjonskravJobbUtførerTest {
     init {
@@ -85,7 +84,13 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
 
     object FakeSykepegerGateway : SykepengerGateway {
         var sykepengerRespons = SykepengerResponse(listOf())
-        override fun hentYtelseSykepenger(request: SykepengerRequest) = sykepengerRespons
+        override fun hentYtelseSykepenger(
+            personidentifikatorer: Set<String>,
+            fom: LocalDate,
+            tom: LocalDate
+        ): List<UtbetaltePerioder> {
+            return sykepengerRespons.utbetaltePerioder
+        }
     }
 
     object FakeTjenestePensjonGateway : TjenestePensjonGateway {
@@ -101,8 +106,8 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         var response: List<Institusjonsopphold> = listOf()
         override fun innhent(person: Person) = response
     }
-    
-    object FakePersonopplysningGateway: PersonopplysningGateway {
+
+    object FakePersonopplysningGateway : PersonopplysningGateway {
         override fun innhent(person: Person): Personopplysning = Personopplysning(
             fødselsdato = Fødselsdato(1 januar 1990),
             status = PersonStatus.bosatt,
@@ -113,6 +118,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             TODO("Not yet implemented")
         }
     }
+
     private val gatewayProvider = createGatewayProvider {
         register<FakeUnleashFasttrackMeldekort>()
         register<FakeBarnGateway>()

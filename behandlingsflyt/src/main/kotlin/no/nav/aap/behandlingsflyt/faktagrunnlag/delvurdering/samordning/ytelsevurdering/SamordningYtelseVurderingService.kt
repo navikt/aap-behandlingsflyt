@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
@@ -93,12 +92,10 @@ class SamordningYtelseVurderingService(
 
     private fun hentYtelseSykepenger(personIdent: String, fom: LocalDate, tom: LocalDate): List<UtbetaltePerioder> {
         return spGateway.hentYtelseSykepenger(
-            SykepengerRequest(
-                setOf(personIdent),
-                fom,
-                tom
-            )
-        ).utbetaltePerioder
+            setOf(personIdent),
+            fom,
+            tom
+        )
     }
 
     private fun harEndringerIYtelser(
