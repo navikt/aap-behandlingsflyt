@@ -373,7 +373,7 @@ fun NormalOpenAPIRoute.saksApi(
             }
         }
 
-        route("{saksnummer}/historikk").authorizedGet<HentSakDTO, SaksHistorikkDTO>(
+        route("{saksnummer}/historikk").authorizedGet<HentSakDTO, List<BehandlingHistorikkDTO>>(
             AuthorizationParamPathConfig(
                 sakPathParam = SakPathParam("saksnummer")
             ),

@@ -16,7 +16,7 @@ import no.nav.aap.komponenter.repository.RepositoryProvider
 class SaksHistorikkService(
     val repositoryProvider: RepositoryProvider
 ) {
-    fun utledSaksHistorikk(sakId: SakId): SaksHistorikkDTO {
+    fun utledSaksHistorikk(sakId: SakId): List<BehandlingHistorikkDTO> {
         val alleBehandlinger = repositoryProvider.provide<BehandlingRepository>().hentAlleFor(sakId)
         val behandlingerMedBehov = repositoryProvider.provide<AvklaringsbehovOperasjonerRepository>()
             .hentAlleAvklaringsbehovForSak(alleBehandlinger.map { it.id })
@@ -25,17 +25,14 @@ class SaksHistorikkService(
         val behandlingHendelser = utledBehandlingHendelser(behandlingerMedBehov)
         val returerMedÅrsakHendelser = utledReturerMedÅrsak(behandlingerMedBehov)
 
-        val historikk: List<BehandlingHistorikkDTO> =
-            (opprettelsesHendelser + behandlingHendelser + returerMedÅrsakHendelser)
-                .groupBy { it.behandlingId }
-                .map { (_, behandlingData) ->
-                    val samlet = behandlingData
-                        .flatMap { it.hendelser }
-                        .sortedByDescending { it.tidspunkt }
-                    BehandlingHistorikkDTO(samlet)
-                }
-
-        return SaksHistorikkDTO(historikk)
+        return (opprettelsesHendelser + behandlingHendelser + returerMedÅrsakHendelser)
+            .groupBy { it.behandlingId }
+            .map { (_, behandlingData) ->
+                val samlet = behandlingData
+                    .flatMap { it.hendelser }
+                    .sortedByDescending { it.tidspunkt }
+                BehandlingHistorikkDTO(samlet)
+            }
     }
 
     private fun utledBehandlingHendelser(

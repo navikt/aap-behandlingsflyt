@@ -2,10 +2,6 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 
 import java.time.LocalDateTime
 
-data class SaksHistorikkDTO (
-    val behandlinger: List<BehandlingHistorikkDTO>
-)
-
 data class BehandlingHistorikkDTO(
     val hendelser: List<BehandlingHendelseDTO> = emptyList()
 )
