@@ -32,6 +32,7 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt.beregningVurder
 import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
 import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.aktivitetspliktApi
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.institusjonAPI
+import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakAPI
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.klage.behandlendeenhet.behandlendeEnhetGrunnlagApi
@@ -175,6 +176,7 @@ internal fun Application.server(
                 institusjonAPI(dataSource, repositoryRegistry, gatewayProvider)
                 avklaringsbehovApi(dataSource, repositoryRegistry, gatewayProvider)
                 tilkjentYtelseAPI(dataSource, repositoryRegistry)
+                foreslaaVedtakAPI(dataSource, repositoryRegistry)
                 trukketSøknadGrunnlagAPI(dataSource, repositoryRegistry)
                 rettighetsperiodeGrunnlagAPI(dataSource, repositoryRegistry, gatewayProvider)
                 beregningVurderingAPI(dataSource, repositoryRegistry, gatewayProvider)
