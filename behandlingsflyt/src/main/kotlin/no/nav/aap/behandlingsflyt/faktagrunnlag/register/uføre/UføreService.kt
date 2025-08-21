@@ -91,22 +91,22 @@ class UføreService(
     fun hentVurderingGrunnlagHvisEksisterer(behandlingId: BehandlingId): SamordningUføreGrunnlag? {
         return samordningUføreRepository.hentHvisEksisterer(behandlingId)
     }
-    
+
+    private fun harEndringerUføre(
+        eksisterende: UføreGrunnlag?,
+        uføregrader: List<Uføre>
+    ): Boolean {
+        if (eksisterende == null && uføregrader.isEmpty()) {
+            return false
+        }
+        return uføregrader != eksisterende?.vurderinger
+    }
+
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.UFØRE
 
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): UføreService {
             return UføreService(repositoryProvider, gatewayProvider)
-        }
-
-        fun harEndringerUføre(
-            eksisterende: UføreGrunnlag?,
-            uføregrader: List<Uføre>
-        ): Boolean {
-            if (eksisterende == null) {
-                return false
-            }
-            return uføregrader.toSet() != eksisterende.vurderinger.toSet()
         }
     }
 }
