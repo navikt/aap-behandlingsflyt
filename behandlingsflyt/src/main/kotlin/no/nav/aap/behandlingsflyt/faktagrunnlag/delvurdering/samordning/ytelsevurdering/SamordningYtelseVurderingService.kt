@@ -98,13 +98,6 @@ class SamordningYtelseVurderingService(
         )
     }
 
-    private fun harEndringerIYtelser(
-        eksisterende: SamordningYtelseGrunnlag?,
-        samordningYtelser: List<SamordningYtelse>
-    ): Boolean {
-        return eksisterende == null || samordningYtelser != eksisterende.ytelser
-    }
-
     private fun mapTilSamordningYtelse(
         foreldrepenger: List<ForeldrePengerYtelse>,
         sykepenger: List<UtbetaltePerioder>
@@ -180,6 +173,13 @@ class SamordningYtelseVurderingService(
                 gatewayProvider.provide(),
                 SakOgBehandlingService(repositoryProvider, gatewayProvider)
             )
+        }
+
+        fun harEndringerIYtelser(
+            eksisterende: SamordningYtelseGrunnlag?,
+            samordningYtelser: List<SamordningYtelse>
+        ): Boolean {
+            return eksisterende == null || samordningYtelser.toSet() != eksisterende.ytelser.toSet()
         }
     }
 }
