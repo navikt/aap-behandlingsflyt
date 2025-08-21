@@ -221,7 +221,7 @@ class SaksHistorikkService(
         }
     }
 
-    data class BehandlingHistorikkInternal(
+    private data class BehandlingHistorikkInternal(
         val behandlingId: BehandlingId,
         val hendelser: List<BehandlingHendelseDTO> = emptyList()
     )
