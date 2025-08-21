@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.InformasjonskravRepositoryImpl
 import no.nav.aap.behandlingsflyt.flyt.steg.internal.StegKonstruktørImpl
+import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling

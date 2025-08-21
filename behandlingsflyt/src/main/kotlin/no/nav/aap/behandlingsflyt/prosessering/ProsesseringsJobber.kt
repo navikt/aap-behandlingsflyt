@@ -12,14 +12,14 @@ object ProsesseringsJobber {
             GjenopptaBehandlingJobbUtfører,
             HendelseMottattHåndteringJobbUtfører,
             StatistikkJobbUtfører,
-            DatadelingMeldePerioderJobbUtfører,
-            DatadelingSakStatusJobbUtfører,
+            DatadelingMeldePerioderOgSakStatusJobbUtfører,
             DatadelingBehandlingJobbUtfører,
             MeldeperiodeTilMeldekortBackendJobbUtfører,
             OpprettJobbForFastsattPeriodeJobbUtfører,
             OpprettJobbForFritakMeldepliktJobbUtfører,
             OpprettBehandlingFritakMeldepliktJobbUtfører,
             OpprettBehandlingFastsattPeriodePassertJobbUtfører,
+            OppdagEndretInformasjonskravJobbUtfører,
             HentSamIdJobbUtfører,
             VarsleVedtakJobbUtfører
         )

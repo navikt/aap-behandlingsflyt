@@ -61,7 +61,7 @@ class PipTest {
             server(
                 dbConfig = dbConfig,
                 repositoryRegistry = postgresRepositoryRegistry,
-                gatewayProvider = defaultGatewayProvider {  },
+                gatewayProvider = defaultGatewayProvider { },
             )
         }
 
@@ -70,7 +70,7 @@ class PipTest {
         fun beforeall() {
             server.start()
             port = runBlocking {
-                server.engine.resolvedConnectors().first { it.type == ConnectorType.Companion.HTTP }.port
+                server.engine.resolvedConnectors().first { it.type == ConnectorType.HTTP }.port
             }
         }
 
@@ -82,9 +82,10 @@ class PipTest {
         }
     }
 
+    val dataSource = initDatasource(dbConfig)
+
     @Test
     fun `pip test sak`() {
-        val dataSource = initDatasource(dbConfig)
 
         val saksnummer = dataSource.transaction { connection ->
             val periode = Periode(LocalDate.now(), LocalDate.now())
@@ -149,7 +150,6 @@ class PipTest {
 
     @Test
     fun `pip test behandling`() {
-        val dataSource = initDatasource(dbConfig)
 
         val behandlingsreferanse = dataSource.transaction { connection ->
             val periode = Periode(LocalDate.now(), LocalDate.now())
@@ -176,6 +176,10 @@ class PipTest {
                     Barn(
                         ident = Ident("regbarn"),
                         Fødselsdato(LocalDate.now())
+                    ),
+                    Barn(
+                        ident = Ident("regbarn2"),
+                        Fødselsdato(LocalDate.now().minusYears(1))
                     )
                 ).associateWith { personRepository.finnEllerOpprett(listOf(it.ident)).id }
             )
@@ -246,6 +250,14 @@ class PipTest {
             .hasSize(3)
             .contains("ident", "gammelident", "endaeldreident")
         Assertions.assertThat(pipIdenter?.barn)
-            .containsExactlyInAnyOrder("regbarn", "oppgittbarn", "vurdertbarn", "regbar2", "oppgittbar2", "vurdertbar2")
+            .containsExactlyInAnyOrder(
+                "regbarn",
+                "regbarn2",
+                "oppgittbarn",
+                "vurdertbarn",
+                "regbar2",
+                "oppgittbar2",
+                "vurdertbar2"
+            )
     }
 }

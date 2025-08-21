@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import org.slf4j.LoggerFactory
 import java.util.*
 
 
@@ -19,6 +20,7 @@ class BehandlingFlyt private constructor(
     private val parent: BehandlingFlyt?
 ) {
     private var aktivtSteg: Behandlingsflytsteg? = flyt.firstOrNull()
+    private val log = LoggerFactory.getLogger(this::class.java)
 
     /**
      * @param oppdaterFaktagrunnlag Om faktagrunnlaget skal oppdateres for dette steget.
@@ -103,7 +105,11 @@ class BehandlingFlyt private constructor(
     }
 
     private fun steg(nåværendeSteg: StegType): Behandlingsflytsteg {
-        return flyt[flyt.indexOfFirst { it.steg.type() == nåværendeSteg }]
+        return try {
+            flyt[flyt.indexOfFirst { it.steg.type() == nåværendeSteg }]
+        } catch (e: IndexOutOfBoundsException) {
+            throw IllegalArgumentException("Steg $nåværendeSteg finnes ikke i flyten", e)
+        }
     }
 
     fun erStegFør(stegA: StegType, stegB: StegType): Boolean {

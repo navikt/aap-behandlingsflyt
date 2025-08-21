@@ -91,10 +91,11 @@ class FlytOrkestrator(
     fun tilbakeførEtterAtomærBehandling(kontekst: FlytKontekst) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val behandlingFlyt = behandling.flyt()
+        behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
 
         val endredeInformasjonskrav = informasjonskravGrunnlag
             .flettOpplysningerFraAtomærBehandling(kontekst, behandlingFlyt.alleInformasjonskravForÅpneSteg())
-
+        log.info("Endrede informasjonskrav etter atomær behandling: {}", endredeInformasjonskrav)
         tilbakefør(
             kontekst = kontekst,
             behandling = behandling,
@@ -173,7 +174,7 @@ class FlytOrkestrator(
         var gjeldendeSteg = finnGjeldendeSteg(behandling, behandlingFlyt)
 
         oppdaterBehandlingstatusHvisEndret(behandling, gjeldendeSteg.type().status)
-        
+
         while (true) {
             if (gjeldendeSteg.type().status in stoppNårStatus) {
                 loggStopp(behandling, avklaringsbehovene)
@@ -211,7 +212,7 @@ class FlytOrkestrator(
             val neste = utledNesteSteg(result, behandlingFlyt)
 
             oppdaterBehandlingstatusHvisEndret(behandling, neste?.type()?.status)
-            
+
             if (!result.kanFortsette() || neste == null) {
                 if (neste == null) {
                     log.info("Behandlingen har nådd slutten, avslutter behandling")
@@ -252,7 +253,7 @@ class FlytOrkestrator(
             "Behandlingen er avsluttet, men det finnes åpne avklaringsbehov."
         }
     }
-    
+
     private fun oppdaterBehandlingstatusHvisEndret(behandling: Behandling, etterStatus: Status?) {
         if (etterStatus != null) {
             val førStatus = behandling.status()
@@ -322,6 +323,12 @@ class FlytOrkestrator(
         avklaringsbehovene: Avklaringsbehovene,
         harHeltStoppet: Boolean = true
     ) {
+        log.info(
+            "Tilbakefører {} for behandling {} med flyt {}",
+            behandling.aktivtSteg(),
+            behandling.referanse,
+            behandlingFlyt
+        )
         if (behandlingFlyt.erTom()) {
             return
         }

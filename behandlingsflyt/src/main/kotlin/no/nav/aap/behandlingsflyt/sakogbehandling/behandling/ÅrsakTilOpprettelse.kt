@@ -7,6 +7,7 @@ enum class ÅrsakTilOpprettelse {
     ANNET_RELEVANT_DOKUMENT,
     OMGJØRING_ETTER_KLAGE,
     OMGJØRING_ETTER_SVAR_FRA_KLAGEINSTANS,
+    ENDRING_I_REGISTERDATA,
 
     // Meldeperioder og aktivitet
     FASTSATT_PERIODE_PASSERT,

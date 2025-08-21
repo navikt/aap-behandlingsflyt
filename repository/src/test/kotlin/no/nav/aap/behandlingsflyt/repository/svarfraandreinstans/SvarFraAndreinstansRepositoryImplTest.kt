@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.repository.svarfraandreinstans
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.svarfraandreinstans.SvarFraAndreinstansKonsekvens
 import no.nav.aap.behandlingsflyt.faktagrunnlag.svarfraandreinstans.SvarFraAndreinstansVurdering
+import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.svarfraanadreinstans.SvarFraAndreinstansRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl

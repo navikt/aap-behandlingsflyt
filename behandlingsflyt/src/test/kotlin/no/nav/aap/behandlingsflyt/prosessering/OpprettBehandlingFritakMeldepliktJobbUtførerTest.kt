@@ -54,7 +54,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
         utfører.utfør(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id))
 
-        verify { sakOgBehandlingServiceMock.finnEllerOpprettBehandlingFasttrack(any<SakId>(), any(), any()) }
+        verify { sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any(), any()) }
     }
 
     @Test
@@ -65,7 +65,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
         utfører.utfør(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id))
 
-        verify(exactly = 0) { sakOgBehandlingServiceMock.finnEllerOpprettBehandlingFasttrack(any<SakId>(), any(), any()) }
+        verify(exactly = 0) { sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any(), any()) }
     }
 
     @Test
@@ -78,7 +78,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
         utfører.utfør(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id))
 
-        verify(exactly = 0) { sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any(), any()) }
+        verify(exactly = 0) { sakOgBehandlingServiceMock.finnEllerOpprettOrdinærBehandling(any<SakId>(), any(), any()) }
     }
 
     private fun mockAvhengigheterForOpprettBehandlingFritakMeldepliktJobbUtfører(
@@ -122,7 +122,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
         every { sakOgBehandlingServiceMock.finnSisteYtelsesbehandlingFor(sakId) } returns fakeBehandling
         every {
-            sakOgBehandlingServiceMock.finnEllerOpprettBehandlingFasttrack(
+            sakOgBehandlingServiceMock.finnEllerOpprettBehandling(
                 sakId,
                 any(),
                 any()
@@ -156,7 +156,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             )
         )
 
-        every { sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any(), any()) } returns fakeBehandling
+        every { sakOgBehandlingServiceMock.finnEllerOpprettOrdinærBehandling(any<SakId>(), any(), any()) } returns fakeBehandling
 
         return OpprettBehandlingFritakMeldepliktJobbUtfører(
             sakService = sakServiceMock,

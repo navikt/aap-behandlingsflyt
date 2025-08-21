@@ -36,7 +36,9 @@ import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentY
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -49,9 +51,10 @@ import org.assertj.core.api.Assertions.tuple
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import kotlin.reflect.KClass
 
 
-class SamordningFlyttest : AbstraktFlytOrkestratorTest() {
+class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class as KClass<UnleashGateway>) {
 
     @Test
     fun `ingen sykepenger i register, vurderer sykepenger for samordning med ukjent maksdato som fører til revurdering og ingen utbetaling etter kjent sykepengedato`() {
@@ -217,7 +220,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest() {
         // Siden samordning overlappet, skal en revurdering opprettes med en gang
         assertThat(revurdering.referanse).isNotEqualTo(behandlingReferanse)
         assertThat(revurdering.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-        util.ventPåSvar(sakId = behandling.sakId.id)
+        motor.kjørJobber()
 
         // Verifiser at den er satt på vent
         var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
@@ -493,7 +496,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest() {
         assertThat(nyesteBehandling.referanse).isNotEqualTo(behandlingReferanse)
         assertThat(nyesteBehandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
 
-        util.ventPåSvar(sakId = behandling.sakId.id)
+        motor.kjørJobber()
         return nyesteBehandling
     }
 }

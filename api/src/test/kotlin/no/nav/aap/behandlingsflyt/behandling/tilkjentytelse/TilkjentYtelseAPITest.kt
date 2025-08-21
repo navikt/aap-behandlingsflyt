@@ -38,76 +38,6 @@ class TilkjentYtelseAPITest : BaseApiTest() {
         .register<InMemoryMeldeperiodeRepository>()
 
     @Test
-    fun `hente ut tilkjent ytelse fra API`() {
-        val ds = MockDataSource()
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
-
-        InMemoryTilkjentYtelseRepository.lagre(
-            behandling.id, tilkjent = listOf(
-                TilkjentYtelsePeriode(
-                    Periode(
-                        fom = LocalDate.parse("2025-03-07"),
-                        tom = LocalDate.parse("2026-03-07"),
-                    ),
-                    tilkjent = Tilkjent(
-                        dagsats = Beløp(500),
-                        gradering = TilkjentGradering(
-                            Prosent(50),
-                            Prosent(50),
-                            Prosent(50),
-                            Prosent(50),
-                            Prosent(30),
-                            Prosent(0)
-                        ),
-                        grunnlag = Beløp(10000),
-                        grunnlagsfaktor = GUnit("1.5"),
-                        grunnbeløp = Beløp(106399),
-                        antallBarn = 2,
-                        barnetilleggsats = Beløp(150),
-                        barnetillegg = Beløp(300),
-                        utbetalingsdato = LocalDate.parse("2025-03-08"),
-                    )
-                )
-            )
-        )
-
-        testApplication {
-            installApplication {
-                tilkjentYtelseAPI(ds, repositoryRegistry)
-            }
-
-            val response =
-                sendGetRequest(behandling.id, "/api/behandling/tilkjent/${behandling.referanse.referanse}")
-            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
-
-            assertThat(response.body<TilkjentYtelseDto>()).isEqualTo(
-                TilkjentYtelseDto(
-                    perioder = listOf(
-                        TilkjentYtelsePeriodeDTO(
-                            fraOgMed = LocalDate.parse("2025-03-07"),
-                            tilOgMed = LocalDate.parse("2026-03-07"),
-                            dagsats = BigDecimal("500.00"),
-                            gradering = 50,
-                            grunnlag = BigDecimal("10000.00"),
-                            grunnlagsfaktor = BigDecimal("1.5000000000"),
-                            grunnbeløp = BigDecimal("106399.00"),
-                            antallBarn = 2,
-                            barnetilleggsats = BigDecimal("150.00"),
-                            barnetillegg = BigDecimal("300.00"),
-                            utbetalingsdato = LocalDate.parse("2025-03-08"),
-                            redusertDagsats = 400.0,
-                            arbeidGradering = 50,
-                            institusjonGradering = 50,
-                            samordningGradering = 50,
-                            samordningUføreGradering = 30
-                        )
-                    )
-                )
-            )
-        }
-    }
-
-    @Test
     fun `teste v2`() {
         val ds = MockDataSource()
         val sak = nySak(LocalDate.parse("2025-08-06"))
@@ -141,7 +71,6 @@ class TilkjentYtelseAPITest : BaseApiTest() {
                     samordningUføregradering = Prosent(30),
                     samordningArbeidsgiverGradering = Prosent(50),
                 ),
-                grunnlag = Beløp(10000),
                 grunnlagsfaktor = GUnit("1.5"),
                 grunnbeløp = Beløp(106399),
                 antallBarn = 2,

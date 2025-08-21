@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeService
+import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.integrasjon.aordning.InntektkomponentenGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.AARegisterGateway

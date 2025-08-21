@@ -167,12 +167,10 @@ class BeregnTilkjentYtelseService(
             Grunnbeløp.tilTidslinje(), JoinStyle.INNER_JOIN { periode, venstre, grunnbeløp ->
                 val dagsats = grunnbeløp.verdi.multiplisert(venstre.verdi.dagsats)
                 val redusertUtbetalingsgrad = reduserUtbetalingsgradVedInstitusjonsopphold(venstre.verdi.gradering)
-
                 Segment(
                     periode, TilkjentFørBarn(
                         dagsats = dagsats,
                         gradering = redusertUtbetalingsgrad,
-                        grunnlag = dagsats,
                         grunnlagsfaktor = venstre.verdi.dagsats,
                         grunnbeløp = grunnbeløp.verdi,
                         utbetalingsdato = venstre.verdi.utbetalingsdato,
@@ -200,7 +198,6 @@ class BeregnTilkjentYtelseService(
         return gradertÅrligTilkjentYtelseBeløp.kombiner(
             barnetilleggTidslinje,
             JoinStyle.LEFT_JOIN { periode, venstre, høyre ->
-                val dagsats = venstre.verdi.dagsats
                 val gradering = TilkjentGradering(
                     samordningGradering = venstre.verdi.samordningGradering,
                     institusjonGradering = venstre.verdi.institusjonGradering,
@@ -211,11 +208,10 @@ class BeregnTilkjentYtelseService(
                 )
                 Segment(
                     periode, Tilkjent(
-                        dagsats = dagsats,
+                        dagsats = venstre.verdi.dagsats,
                         gradering = gradering,
                         barnetillegg = høyre?.verdi?.barnetillegg ?: Beløp(0),
                         grunnlagsfaktor = venstre.verdi.grunnlagsfaktor,
-                        grunnlag = venstre.verdi.grunnlag,
                         grunnbeløp = venstre.verdi.grunnbeløp,
                         antallBarn = høyre?.verdi?.antallBarn ?: 0,
                         barnetilleggsats = høyre?.verdi?.barnetilleggsats ?: Beløp(0),
@@ -233,7 +229,6 @@ class BeregnTilkjentYtelseService(
     private class TilkjentFørBarn(
         val dagsats: Beløp,
         val gradering: Prosent,
-        val grunnlag: Beløp,
         val grunnlagsfaktor: GUnit,
         val grunnbeløp: Beløp,
         val utbetalingsdato: LocalDate,

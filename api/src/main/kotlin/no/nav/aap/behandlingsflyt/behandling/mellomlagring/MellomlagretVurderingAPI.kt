@@ -6,14 +6,12 @@ import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
-import io.ktor.utils.io.core.use
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
 import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -30,12 +28,12 @@ import javax.sql.DataSource
 fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling").tag(Tags.Behandling) {
         route("/mellomlagret-vurdering") {
-            authorizedPost<Unit, MellomlagretVurderingDto, MellomlagretVurderingRequest>(
+            authorizedPost<Unit, MellomlagretVurderingResponse, MellomlagretVurderingRequest>(
                 AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SAKSBEHANDLE,
                 )
             ) { _, request ->
-                dataSource.transaction { connection ->
+                val response = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
@@ -50,7 +48,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
                             throw UgyldigForespørselException("Kan ikke mellomlagre vurderinger på en avsluttet behandling")
                         }
 
-                        mellomlagretVurderingRepository.lagre(
+                        val mellomlagretVurdering = mellomlagretVurderingRepository.lagre(
                             MellomlagretVurdering(
                                 behandlingId = behandling.id,
                                 avklaringsbehovKode = avklaringsbehovKode,
@@ -59,13 +57,17 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
                                 vurdertDato = LocalDateTime.now()
                             )
                         )
+
+                        MellomlagretVurderingResponse(
+                            mellomlagretVurdering = mellomlagretVurdering.tilResponse()
+                        )
                     }
                 }
-                respondWithStatus(HttpStatusCode.Accepted)
+                respond(response)
             }
         }
         route("/mellomlagret-vurdering/{referanse}/{avklaringsbehovkode}") {
-            authorizedGet<BehandlingReferanseMedAvklaringsbehov, MellomlagredeVurderingResponse>(
+            authorizedGet<BehandlingReferanseMedAvklaringsbehov, MellomlagretVurderingResponse>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
@@ -85,9 +87,8 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
                             behandling.id,
                             avklaringsbehovKode
                         )
-                        MellomlagredeVurderingResponse(
+                        MellomlagretVurderingResponse(
                             mellomlagretVurdering = mellomlagretVurdering?.tilResponse(),
-                            harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         )
                     }
                 }

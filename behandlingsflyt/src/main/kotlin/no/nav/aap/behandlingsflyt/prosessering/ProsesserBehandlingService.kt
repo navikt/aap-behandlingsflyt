@@ -18,7 +18,7 @@ class ProsesserBehandlingService(
     private val behandlingRepository: BehandlingRepository,
     private val atomærFlytOrkestrator: FlytOrkestrator,
 ) {
-    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         flytJobbRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         atomærFlytOrkestrator = FlytOrkestrator(
@@ -37,7 +37,11 @@ class ProsesserBehandlingService(
     ) {
 
         when (opprettetBehandling) {
-            is SakOgBehandlingService.Ordinær -> triggProsesserBehandling(opprettetBehandling.åpenBehandling, parameters)
+            is SakOgBehandlingService.Ordinær -> triggProsesserBehandling(
+                opprettetBehandling.åpenBehandling,
+                parameters
+            )
+
             is SakOgBehandlingService.MåBehandlesAtomært -> kjørAtomærBehandling(opprettetBehandling)
         }
     }
@@ -57,6 +61,7 @@ class ProsesserBehandlingService(
 
         if (eksisterendeJobber.isNotEmpty()) {
             log.info("Har planlagt eksisterende kjøring, planlegger ikke en ny. {}", eksisterendeJobber)
+            /* Når vi returnerer her mister vi triggerne. Er det problematisk? */
             return
         }
 
@@ -91,6 +96,14 @@ class ProsesserBehandlingService(
         if (åpenBehandling != null) {
             val kontekst = atomærFlytOrkestrator.opprettKontekst(åpenBehandling.sakId, åpenBehandling.id)
             atomærFlytOrkestrator.tilbakeførEtterAtomærBehandling(kontekst)
+            triggProsesserBehandling(åpenBehandling, emptyList())
+        } else {
+            flytJobbRepository.leggTil(
+                JobbInput(jobb = OppdagEndretInformasjonskravJobbUtfører).forBehandling(
+                    sakID = behandling.sakId.toLong(),
+                    behandlingId = behandling.id.toLong()
+                ).medCallId()
+            )
         }
     }
 }

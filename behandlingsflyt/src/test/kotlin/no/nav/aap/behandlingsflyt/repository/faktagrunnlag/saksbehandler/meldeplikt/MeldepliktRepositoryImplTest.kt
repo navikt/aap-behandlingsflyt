@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
+import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status

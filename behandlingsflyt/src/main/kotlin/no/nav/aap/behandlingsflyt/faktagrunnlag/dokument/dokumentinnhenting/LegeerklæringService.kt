@@ -49,7 +49,7 @@ class LegeerklæringService private constructor(
         }
 
         for (dokument in ubehandledeLegeerklæringer) {
-            mottaDokumentService.knyttTilBehandling(
+            mottaDokumentService.markerSomBehandlet(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
                 referanse = InnsendingReferanse(dokument.journalpostId)
@@ -57,7 +57,7 @@ class LegeerklæringService private constructor(
         }
 
         for (dokument in ubehandledeDialogmeldinger) {
-            mottaDokumentService.knyttTilBehandling(
+            mottaDokumentService.markerSomBehandlet(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
                 referanse = InnsendingReferanse(dokument.journalpostId)

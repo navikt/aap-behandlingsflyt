@@ -65,7 +65,6 @@ jobs:
       needs: build
       concurrency:
           group: kontrakt
-          cancel-in-progress: true
       permissions:
           contents: write
           packages: write
@@ -123,6 +122,8 @@ jobs:
     permissions:
         contents: read
         id-token: write
+    concurrency:
+      group: deploy-dev
     steps:
       - uses: actions/checkout@v5
       - uses: nais/deploy/actions/deploy@v2
@@ -135,6 +136,8 @@ jobs:
   deploy-prod:
       needs: [deploy-dev, build]
       runs-on: ubuntu-latest
+      concurrency:
+        group: deploy-prod
       permissions:
           contents: read
           id-token: write

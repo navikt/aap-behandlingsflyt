@@ -36,7 +36,7 @@ data class OppgitteBarn(val id: Long? = null, val oppgitteBarn: List<OppgittBarn
         }
 
         override fun fødselsdato(): Fødselsdato {
-            return requireNotNull(fødselsdato) { "Fødselsdato skal være oppgitt i søknaden." }
+            return requireNotNull(fødselsdato) { "Fødselsdato skal være oppgitt i søknaden. Identifikatortype: ${identifikator().javaClass.simpleName}" }
         }
     }
 }

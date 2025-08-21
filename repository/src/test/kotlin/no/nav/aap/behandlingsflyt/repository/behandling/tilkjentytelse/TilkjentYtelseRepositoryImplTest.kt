@@ -3,8 +3,8 @@ package no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentGradering
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
+import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -53,7 +53,6 @@ class TilkjentYtelseRepositoryImplTest {
                             ),
                             barnetillegg = Beløp(999),
                             grunnlagsfaktor = GUnit("1.0"),
-                            grunnlag = Beløp(999),
                             antallBarn = 1,
                             barnetilleggsats = Beløp(999),
                             grunnbeløp = Beløp(1000),
@@ -77,7 +76,6 @@ class TilkjentYtelseRepositoryImplTest {
                             ),
                             barnetillegg = Beløp(1000),
                             grunnlagsfaktor = GUnit("1.0"),
-                            grunnlag = Beløp(1000),
                             antallBarn = 1,
                             barnetilleggsats = Beløp(1000),
                             grunnbeløp = Beløp(1000),
@@ -133,7 +131,6 @@ class TilkjentYtelseRepositoryImplTest {
                             ),
                             barnetillegg = Beløp(999),
                             grunnlagsfaktor = GUnit("1.0"),
-                            grunnlag = Beløp(999),
                             antallBarn = 1,
                             barnetilleggsats = Beløp(999),
                             grunnbeløp = Beløp(1000),
@@ -157,7 +154,6 @@ class TilkjentYtelseRepositoryImplTest {
                             ),
                             barnetillegg = Beløp(1000),
                             grunnlagsfaktor = GUnit("1.0"),
-                            grunnlag = Beløp(1000),
                             antallBarn = 1,
                             barnetilleggsats = Beløp(1000),
                             grunnbeløp = Beløp(1000),
@@ -186,7 +182,6 @@ class TilkjentYtelseRepositoryImplTest {
                             ),
                             barnetillegg = Beløp(999),
                             grunnlagsfaktor = GUnit("1.0"),
-                            grunnlag = Beløp(999),
                             antallBarn = 1,
                             barnetilleggsats = Beløp(999),
                             grunnbeløp = Beløp(1000),
@@ -210,7 +205,6 @@ class TilkjentYtelseRepositoryImplTest {
                             ),
                             barnetillegg = Beløp(1000),
                             grunnlagsfaktor = GUnit("1.0"),
-                            grunnlag = Beløp(1000),
                             antallBarn = 1,
                             barnetilleggsats = Beløp(1000),
                             grunnbeløp = Beløp(1000),

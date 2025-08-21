@@ -11,8 +11,8 @@ dependencies {
 
     api(libs.tilgangPlugin)
     api(libs.tilgangKontrakt)
-    api("no.nav.aap.brev:kontrakt:0.0.139")
-    api("no.nav.aap.meldekort:kontrakt:0.0.95")
+    api("no.nav.aap.brev:kontrakt:0.0.141")
+    api("no.nav.aap.meldekort:kontrakt:0.0.102")
     api(libs.motor)
     api(libs.gateway)
     api(libs.utbetalKontrakt)
@@ -24,7 +24,7 @@ dependencies {
     implementation(libs.verdityper)
     implementation(libs.tidslinje)
     implementation(kotlin("reflect"))
-    implementation("org.flywaydb:flyway-database-postgresql:11.11.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.11.1")
     runtimeOnly("org.postgresql:postgresql:42.7.7")
 
 

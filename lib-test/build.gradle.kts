@@ -8,7 +8,7 @@ dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation(project(":kontrakt"))
-    implementation("no.nav.aap.brev:kontrakt:0.0.139")
+    implementation("no.nav.aap.brev:kontrakt:0.0.141")
     implementation(libs.tilgangKontrakt)
     implementation(libs.httpklient)
     implementation(libs.verdityper)
@@ -18,9 +18,6 @@ dependencies {
     implementation(libs.ktorServerContentNegotation)
 
     implementation(libs.ktorServerNetty)
-    constraints {
-        implementation("io.netty:netty-common:4.2.3.Final")
-    }
     implementation(libs.ktorServerStatusPages)
 
     implementation(libs.ktorSerializationJackson)
@@ -29,7 +26,7 @@ dependencies {
 
     implementation("ch.qos.logback:logback-classic:1.5.18")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:10.4.1")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.4.2")
 
     implementation(libs.bundles.junit)
 }

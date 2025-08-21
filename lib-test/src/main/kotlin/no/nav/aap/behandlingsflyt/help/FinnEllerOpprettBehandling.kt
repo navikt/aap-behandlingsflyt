@@ -53,4 +53,4 @@ fun finnEllerOpprettBehandling(
     vurderingsbehov: List<VurderingsbehovMedPeriode> = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
     årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
 ) = SakOgBehandlingService(repositoryProvider, gatewayProvider)
-    .finnEllerOpprettBehandling(saksnummer, vurderingsbehov, årsakTilOpprettelse)
+    .finnEllerOpprettOrdinærBehandling(saksnummer, vurderingsbehov, årsakTilOpprettelse)

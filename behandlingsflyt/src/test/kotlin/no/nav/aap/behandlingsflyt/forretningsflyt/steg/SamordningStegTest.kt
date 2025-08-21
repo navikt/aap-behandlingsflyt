@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
@@ -12,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -466,7 +466,7 @@ class SamordningStegTest {
 
     private fun opprettBehandling(sak: Sak): Behandling {
         return InMemorySakOgBehandlingService
-            .finnEllerOpprettBehandling(
+            .finnEllerOpprettOrdinærBehandling(
                 sak.saksnummer,
                 listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
                 ÅrsakTilOpprettelse.SØKNAD

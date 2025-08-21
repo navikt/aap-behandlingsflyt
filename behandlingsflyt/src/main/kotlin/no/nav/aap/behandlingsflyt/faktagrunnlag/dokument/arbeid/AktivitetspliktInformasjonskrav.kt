@@ -58,7 +58,7 @@ class AktivitetspliktInformasjonskrav (
         for (ubehandletInnsendingId in aktivitetskortSomIkkeErBehandlet) {
             val nyeBrudd = aktivitetspliktRepository.hentBruddForInnsending(ubehandletInnsendingId)
             alleBrudd.addAll(nyeBrudd)
-            mottaDokumentService.knyttTilBehandling(
+            mottaDokumentService.markerSomBehandlet(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
                 referanse = InnsendingReferanse(ubehandletInnsendingId),

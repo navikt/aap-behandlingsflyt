@@ -6,12 +6,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -20,24 +23,23 @@ import java.time.Duration
 
 class TjenestePensjonService(
     private val tjenestePensjonRepository: TjenestePensjonRepository,
-    private val sakService: SakService,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val tpGateway: TjenestePensjonGateway
-) : Informasjonskrav {
+    private val tpGateway: TjenestePensjonGateway,
+    private val sakOgBehandlingService: SakOgBehandlingService,
+) : Informasjonskrav, KanTriggeRevurdering {
     private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.SAMORDNING_TJENESTEPENSJON
 
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): Informasjonskrav {
-            val sakRepository = repositoryProvider.provide<SakRepository>()
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): TjenestePensjonService {
             val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
 
             return TjenestePensjonService(
                 tjenestePensjonRepository = tjenestePensjonRepository,
-                sakService = SakService(sakRepository),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
-                gatewayProvider.provide()
+                gatewayProvider.provide(),
+                SakOgBehandlingService(repositoryProvider, gatewayProvider),
             )
         }
     }
@@ -51,16 +53,7 @@ class TjenestePensjonService(
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
-        val sak = sakService.hent(kontekst.sakId)
-        val personIdent = sak.person.aktivIdent().identifikator
-
-        val tjenestePensjon = hentTjenestePensjon(
-            personIdent,
-            sak.rettighetsperiode
-        )
-
-        log.info("hentet tjeneste pensjon for person i sak ${sak.saksnummer}. Antall: ${tjenestePensjon.size}")
-
+        val tjenestePensjon = hentTjenestePensjon(kontekst.behandlingId)
         val eksisterendeData = tjenestePensjonRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         if (harEndringerITjenestePensjon(eksisterendeData, tjenestePensjon)) {
@@ -70,6 +63,18 @@ class TjenestePensjonService(
         }
 
         return Informasjonskrav.Endret.IKKE_ENDRET
+    }
+
+    private fun hentTjenestePensjon(behandlingId: BehandlingId): List<TjenestePensjonForhold> {
+        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
+        val personIdent = sak.person.aktivIdent().identifikator
+
+        return hentTjenestePensjon(
+            personIdent,
+            sak.rettighetsperiode
+        ).also {
+            log.info("hentet tjeneste pensjon for person i sak ${sak.saksnummer}. Antall: ${it.size}")
+        }
     }
 
     private fun hentTjenestePensjon(
@@ -86,6 +91,17 @@ class TjenestePensjonService(
         eksisterendeData: List<TjenestePensjonForhold>?,
         tjenestePensjon: List<TjenestePensjonForhold>
     ): Boolean {
-        return  eksisterendeData.isNullOrEmpty() || eksisterendeData != tjenestePensjon
+        return  eksisterendeData == null || eksisterendeData != tjenestePensjon
+    }
+
+    override fun behovForRevurdering(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
+        val tjenestePensjon = hentTjenestePensjon(behandlingId)
+        val eksisterendeData = tjenestePensjonRepository.hentHvisEksisterer(behandlingId)
+
+        return if (harEndringerITjenestePensjon(eksisterendeData, tjenestePensjon)) {
+            listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING))
+        } else {
+            listOf()
+        }
     }
 }

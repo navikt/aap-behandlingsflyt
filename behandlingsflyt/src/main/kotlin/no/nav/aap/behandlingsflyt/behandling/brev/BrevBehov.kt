@@ -1,11 +1,27 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.komponenter.verdityper.Beløp
+import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.Year
 
-sealed abstract class BrevBehov(val typeBrev: TypeBrev)
+sealed class BrevBehov(val typeBrev: TypeBrev)
 
-data class Innvilgelse(val virkningstidspunkt: LocalDate) : BrevBehov(TypeBrev.VEDTAK_INNVILGELSE)
+data class Innvilgelse(
+    val virkningstidspunkt: LocalDate,
+    val grunnlagBeregning: GrunnlagBeregning?
+) : BrevBehov(TypeBrev.VEDTAK_INNVILGELSE) {
+    data class GrunnlagBeregning(
+        val dagsats: Beløp?,
+        val beregningstidspunkt: LocalDate?,
+        val beregningsgrunnlag: Beløp?,
+        val inntekterPerÅr: List<InntektPerÅr>
+    ) {
+        data class InntektPerÅr(val år: Year, val inntekt: BigDecimal)
+    }
+}
+
 object Avslag : BrevBehov(TypeBrev.VEDTAK_AVSLAG)
 object VedtakEndring : BrevBehov(TypeBrev.VEDTAK_ENDRING)
 object VarselOmBestilling : BrevBehov(TypeBrev.VARSEL_OM_BESTILLING)

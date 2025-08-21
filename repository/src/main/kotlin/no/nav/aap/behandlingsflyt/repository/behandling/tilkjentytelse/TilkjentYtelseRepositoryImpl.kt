@@ -47,7 +47,6 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                         ),
                         barnetillegg = Beløp(it.getInt("BARNETILLEGG")),
                         grunnlagsfaktor = GUnit(it.getBigDecimal("GRUNNLAGSFAKTOR")),
-                        grunnlag = Beløp(it.getInt("GRUNNLAG")),
                         antallBarn = it.getInt("ANTALL_BARN"),
                         barnetilleggsats = Beløp(it.getInt("BARNETILLEGGSATS")),
                         grunnbeløp = Beløp(it.getInt("GRUNNBELOP")),
@@ -116,7 +115,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                 setInt(4, tilkjent.gradering.endeligGradering.prosentverdi())
                 setBigDecimal(5, tilkjent.barnetillegg.verdi())
                 setBigDecimal(6, tilkjent.grunnlagsfaktor.verdi())
-                setBigDecimal(7, tilkjent.grunnlag.verdi())
+                setBigDecimal(7, tilkjent.dagsats.verdi())
                 setInt(8, tilkjent.antallBarn)
                 setBigDecimal(9, tilkjent.barnetilleggsats.verdi())
                 setBigDecimal(10, tilkjent.grunnbeløp.verdi())

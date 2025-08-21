@@ -2,9 +2,9 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.barneti
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
+import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
-import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl

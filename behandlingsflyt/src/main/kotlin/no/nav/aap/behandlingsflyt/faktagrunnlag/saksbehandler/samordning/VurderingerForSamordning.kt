@@ -6,7 +6,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 data class VurderingerForSamordning(
-    val begrunnelse: String,
+    val begrunnelse: String?,
     val maksDatoEndelig: Boolean?,
     val fristNyRevurdering: LocalDate?,
     val vurderteSamordningerData: List<SamordningVurderingData>

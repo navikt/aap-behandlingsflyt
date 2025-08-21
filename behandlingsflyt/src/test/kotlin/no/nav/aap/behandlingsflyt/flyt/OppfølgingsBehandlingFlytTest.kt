@@ -14,13 +14,16 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.reflect.KClass
 
-class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest() {
+class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class as KClass<UnleashGateway>) {
     @Test
     fun `opprette oppfølgingsbehandling`() {
         val sak = happyCaseFørstegangsbehandling()
@@ -77,7 +80,7 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest() {
                 listOf(TypeBehandling.Revurdering)
             )
 
-        util.ventPåSvar(opprettetBehandling)
+        motor.kjørJobber()
 
         opprettetBehandling.medKontekst {
             assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)

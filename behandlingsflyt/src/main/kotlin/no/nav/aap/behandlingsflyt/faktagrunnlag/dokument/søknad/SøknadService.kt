@@ -74,7 +74,7 @@ class SøknadService private constructor(
                 )
             }
 
-            mottaDokumentService.knyttTilBehandling(
+            mottaDokumentService.markerSomBehandlet(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
                 referanse = InnsendingReferanse(ubehandletSøknad.journalpostId)

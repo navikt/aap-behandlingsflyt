@@ -64,6 +64,28 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
         }
     }
 
+    override fun oppdaterBehandlingId(
+        dokumentReferanse: InnsendingReferanse,
+        behandlingId: BehandlingId,
+        sakId: SakId
+    ) {
+        val query = """
+            UPDATE MOTTATT_DOKUMENT SET behandling_id = ? WHERE referanse_type = ? AND referanse = ? AND sak_id = ?
+        """.trimIndent()
+        connection.execute(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setEnumName(2, dokumentReferanse.type)
+                setString(3, dokumentReferanse.verdi)
+                setLong(4, sakId.toLong())
+            }
+            setResultValidator {
+                require(1 == it)
+            }
+        }
+
+    }
+
     override fun hentUbehandledeDokumenterAvType(sakId: SakId, dokumentType: InnsendingType): Set<MottattDokument> {
         val query = """
             SELECT * FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND status = ? AND type = ?

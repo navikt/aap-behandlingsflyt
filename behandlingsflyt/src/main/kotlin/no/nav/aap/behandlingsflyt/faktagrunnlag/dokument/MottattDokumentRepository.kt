@@ -17,6 +17,12 @@ interface MottattDokumentRepository : Repository {
         status: Status
     )
 
+    fun oppdaterBehandlingId(
+        dokumentReferanse: InnsendingReferanse,
+        behandlingId: BehandlingId,
+        sakId: SakId,
+    )
+
     fun hentUbehandledeDokumenterAvType(sakId: SakId, dokumentType: InnsendingType): Set<MottattDokument>
     fun hentDokumentRekkefølge(sakId: SakId, type: InnsendingType): Set<DokumentRekkefølge>
     fun hentDokumenterAvType(sakId: SakId, type: InnsendingType): Set<MottattDokument>

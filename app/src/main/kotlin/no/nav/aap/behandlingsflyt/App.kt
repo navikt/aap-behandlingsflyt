@@ -63,6 +63,7 @@ import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
@@ -272,9 +273,13 @@ fun Application.startKabalKonsument(
         repositoryRegistry = repositoryRegistry
     )
     monitor.subscribe(ApplicationStarted) {
-        Thread {
+        val t = Thread() {
             konsument.konsumer()
-        }.start()
+        }
+        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
+            log.error("Konsumering av $KABAL_EVENT_TOPIC ble lukket pga uhåndtert feil", e)
+        }
+        t.start()
     }
     monitor.subscribe(ApplicationStopped) {
         log.info("Applikasjonen er stoppet, lukker KabalKafkaKonsument.")

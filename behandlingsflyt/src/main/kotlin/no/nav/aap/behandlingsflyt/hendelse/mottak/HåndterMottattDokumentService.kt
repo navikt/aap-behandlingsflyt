@@ -11,10 +11,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDoku
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Omgjøringskilde
@@ -73,7 +75,7 @@ class HåndterMottattDokumentService(
                 val behandling = if (melding.behandlingReferanse != null) {
                     behandlingRepository.hent(BehandlingReferanse(UUID.fromString(melding.behandlingReferanse)))
                 } else {
-                    sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(
+                    sakOgBehandlingService.finnEllerOpprettBehandling(
                         sak.saksnummer, vurderingsbehov,
                         ÅrsakTilOpprettelse.KLAGE
                     ).åpenBehandling
@@ -85,7 +87,7 @@ class HåndterMottattDokumentService(
 
                 sakOgBehandlingService.oppdaterRettighetsperioden(sakId, brevkategori, mottattTidspunkt.toLocalDate())
 
-                mottaDokumentService.knyttTilBehandling(sakId, behandling!!.id, referanse)
+                mottaDokumentService.markerSomBehandlet(sakId, behandling!!.id, referanse)
 
                 prosesserBehandling.triggProsesserBehandling(
                     behandling,
@@ -113,7 +115,7 @@ class HåndterMottattDokumentService(
         val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
         val årsakTilOpprettelse = utledÅrsakTilOpprettelse(brevkategori, melding)
 
-        val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(
+        val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
             sak.saksnummer,
             vurderingsbehov,
             årsakTilOpprettelse
@@ -125,11 +127,14 @@ class HåndterMottattDokumentService(
 
         sakOgBehandlingService.oppdaterRettighetsperioden(sakId, brevkategori, mottattTidspunkt.toLocalDate())
 
-        // Knytter klage og oppfølgingsbehandling direkte til behandlingen den opprettet, i stedet for via informasjonskrav.
-        // Dette fordi vi kan ha flere åpne klagebehandlinger.
-        if (melding is KabalHendelse || melding is Oppfølgingsoppgave) {
+        if (skalMarkereDokumentSomBehandlet(melding)) {
             require(opprettetBehandling is SakOgBehandlingService.Ordinær)
-            mottaDokumentService.knyttTilBehandling(sakId, opprettetBehandling.åpenBehandling.id, referanse)
+            mottaDokumentService.markerSomBehandlet(sakId, opprettetBehandling.åpenBehandling.id, referanse)
+        } else {
+            when (opprettetBehandling) {
+                is SakOgBehandlingService.Ordinær -> mottaDokumentService.oppdaterMedBehandlingId(sakId, opprettetBehandling.åpenBehandling.id, referanse)
+                is SakOgBehandlingService.MåBehandlesAtomært -> mottaDokumentService.oppdaterMedBehandlingId(sakId, opprettetBehandling.nyBehandling.id, referanse)
+            }
         }
 
         prosesserBehandling.triggProsesserBehandling(
@@ -141,6 +146,14 @@ class HåndterMottattDokumentService(
             låsRepository.verifiserSkrivelås(behandlingSkrivelås)
         }
     }
+
+    /**
+     * Knytter klage og oppfølgingsbehandling direkte til behandlingen den opprettet, ikke via informasjonskrav.
+     * Dette fordi det være flere åpne behandlinger av disse typene.
+     * ManuellVurdering og NyÅrsakTilBehandling er knyttet eksplisitt til behandling og er ikke et informasjonskrav i flyten
+     */
+    private fun skalMarkereDokumentSomBehandlet(melding: Melding?): Boolean =
+        melding is KabalHendelse || melding is Oppfølgingsoppgave || melding is ManuellRevurdering || melding is NyÅrsakTilBehandling
 
     fun oppdaterÅrsakerTilBehandlingPåEksisterendeÅpenBehandling(
         sakId: SakId,

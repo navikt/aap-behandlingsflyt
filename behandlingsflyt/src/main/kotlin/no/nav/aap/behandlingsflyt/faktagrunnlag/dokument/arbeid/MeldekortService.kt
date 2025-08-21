@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.FØRSTEGANGSBEHANDLING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
@@ -60,7 +59,7 @@ class MeldekortService private constructor(
                 timerArbeidPerPeriode = ubehandletMeldekort.timerArbeidPerPeriode,
                 mottattTidspunkt = ubehandletMeldekort.mottattTidspunkt
             )
-            mottaDokumentService.knyttTilBehandling(
+            mottaDokumentService.markerSomBehandlet(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
                 referanse = InnsendingReferanse(ubehandletMeldekort.journalpostId)

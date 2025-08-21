@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
 
+import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
@@ -15,6 +16,20 @@ class Institusjonsopphold(
     fun periode(): Periode {
         return Periode(startdato, sluttdato ?: Tid.MAKS)
     }
+
+    fun tilInstitusjonSegment(): Segment<Institusjon> =
+        Segment(
+            periode(),
+            Institusjon(
+                type = institusjonstype,
+                kategori = kategori,
+                orgnr = requireNotNull(orgnr) {
+                    """Orgnr er nullable i følge inst2-swagger, men databasen krever not null.
+                        | Dette burde kanskjehåndteres en dag?""".trimMargin()
+                },
+                navn = institusjonsnavn,
+            )
+        )
 
     companion object {
         fun nyttOpphold(

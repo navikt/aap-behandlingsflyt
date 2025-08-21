@@ -7,12 +7,13 @@ import java.math.RoundingMode
 import java.time.LocalDate
 
 /**
- * @param grunnlag Beregningsgrunnlag som er lagt til grunn før beregning av dagsats og før gradering er beregnet.
+ * @param grunnlagsfaktor Dagsats = grunnbeløp * grunnlagsfaktor
+ * @param grunnbeløp Grunnbeløp i denne perioden.
+ * @param dagsats Daglig utbetaling i denne perioden.
  */
 data class Tilkjent(
     val dagsats: Beløp,
     val gradering: TilkjentGradering,
-    val grunnlag: Beløp,
     val grunnlagsfaktor: GUnit,
     val grunnbeløp: Beløp,
     val antallBarn: Int,
