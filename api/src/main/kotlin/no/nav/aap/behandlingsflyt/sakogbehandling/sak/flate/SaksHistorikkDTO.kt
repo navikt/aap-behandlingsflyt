@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import java.time.LocalDateTime
 
 data class BehandlingHistorikkDTO(
@@ -10,7 +13,9 @@ data class BehandlingHendelseDTO(
     val hendelse: BehandlingHendelseType,
     val tidspunkt: LocalDateTime,
     val utførtAv: String? = null,
-    val årsaker: List<String>? = emptyList(),
+    val årsakerTilRetur: List<ÅrsakTilRetur>? = emptyList(),
+    val årsakTilSattPåVent: ÅrsakTilSettPåVent? = null,
+    val årsakerTilOpprettelse: List<Vurderingsbehov?> = emptyList(),
     val begrunnelse: String? = null,
     val resultat: String? = null,
 )

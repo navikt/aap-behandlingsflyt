@@ -86,7 +86,7 @@ class SaksHistorikkService(
                                     hendelse = type,
                                     tidspunkt = h.tidsstempel,
                                     utførtAv = h.endretAv,
-                                    årsaker = listOfNotNull(h.grunn?.name),
+                                    årsakTilSattPåVent = h.grunn,
                                     begrunnelse = h.begrunnelse
                                 )
                             }
@@ -177,7 +177,7 @@ class SaksHistorikkService(
                                 hendelse = typeRetur,
                                 tidspunkt = hendelse.tidsstempel,
                                 utførtAv = hendelse.endretAv,
-                                årsaker = hendelse.årsakTilRetur.map { it.årsak.name },
+                                årsakerTilRetur = hendelse.årsakTilRetur,
                                 begrunnelse = hendelse.begrunnelse,
                             )
                         }
@@ -213,7 +213,7 @@ class SaksHistorikkService(
                 listOf(
                     BehandlingHendelseDTO(
                         hendelse = hendelseType,
-                        årsaker = behandling.vurderingsbehov().map { it.type.name },
+                        årsakerTilOpprettelse = behandling.vurderingsbehov().map { it.type },
                         tidspunkt = behandling.opprettetTidspunkt
                     )
                 )
