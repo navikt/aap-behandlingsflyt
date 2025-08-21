@@ -54,14 +54,6 @@ class InstitusjonsoppholdService private constructor(
             .filter { it.periode().overlapper(sak.rettighetsperiode) }
     }
 
-    private fun erEndret(
-        eksisterendeGrunnlag: InstitusjonsoppholdGrunnlag?,
-        institusjonsopphold: List<Institusjonsopphold>
-    ): Boolean {
-        val oppholdeneFraRegister = Oppholdene(null, institusjonsopphold.map { it.tilInstitusjonSegment() })
-        return eksisterendeGrunnlag == null || eksisterendeGrunnlag.oppholdene != oppholdeneFraRegister
-    }
-
     fun hentHvisEksisterer(behandlingId: BehandlingId): InstitusjonsoppholdGrunnlag? {
         return institusjonsoppholdRepository.hentHvisEksisterer(behandlingId)
     }
@@ -89,6 +81,15 @@ class InstitusjonsoppholdService private constructor(
                 gatewayProvider.provide(),
                 TidligereVurderingerImpl(repositoryProvider),
             )
+        }
+
+
+        fun erEndret(
+            eksisterendeGrunnlag: InstitusjonsoppholdGrunnlag?,
+            institusjonsopphold: List<Institusjonsopphold>
+        ): Boolean {
+            val oppholdeneFraRegister = Oppholdene(null, institusjonsopphold.map { it.tilInstitusjonSegment() })
+            return eksisterendeGrunnlag == null || eksisterendeGrunnlag.oppholdene != oppholdeneFraRegister
         }
     }
 }
