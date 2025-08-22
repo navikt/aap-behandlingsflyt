@@ -53,9 +53,8 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
                 }
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
 
-            assertThat(response.body<MellomlagredeVurderingResponse>()).isEqualTo(
-                MellomlagredeVurderingResponse(
-                    harTilgangTilÅSaksbehandle = true,
+            assertThat(response.body<MellomlagretVurderingResponse>()).isEqualTo(
+                MellomlagretVurderingResponse(
                     mellomlagretVurdering = MellomlagretVurderingDto(
                         behandlingId = mellomlagretVurdering.behandlingId,
                         avklaringsbehovkode = mellomlagretVurdering.avklaringsbehovKode,
@@ -102,7 +101,10 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
                     contentType(ContentType.Application.Json)
                     setBody(nyMellomlagretVurdering)
                 }
-            assertThat(response.status).isEqualTo(HttpStatusCode.Accepted)
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+
+            val resBody = response.body<MellomlagretVurderingResponse>()
+            assertThat(resBody.mellomlagretVurdering?.data).isEqualTo(nyMellomlagretVurdering.data)
 
             val oppdatertVerdi =
                 InMemoryMellomlagretVurderingRepository.hentHvisEksisterer(behandling.id, avklaringsbehovKode)
@@ -128,9 +130,8 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
                 }
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
 
-            assertThat(response.body<MellomlagredeVurderingResponse>()).isEqualTo(
-                MellomlagredeVurderingResponse(
-                    harTilgangTilÅSaksbehandle = true,
+            assertThat(response.body<MellomlagretVurderingResponse>()).isEqualTo(
+                MellomlagretVurderingResponse(
                     mellomlagretVurdering = null
                 )
             )

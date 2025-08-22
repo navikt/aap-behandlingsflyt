@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.samordning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -278,6 +278,6 @@ class SamordningPeriodeSammenlignerTest {
     }
     private fun opprettBehandling(sak: Sak): Behandling {
         return InMemorySakOgBehandlingService
-            .finnEllerOpprettBehandling(sak.saksnummer, VurderingsbehovOgÅrsak(listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)), ÅrsakTilOpprettelse.SØKNAD))
+            .finnEllerOpprettOrdinærBehandling(sak.saksnummer, VurderingsbehovOgÅrsak(listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)), ÅrsakTilOpprettelse.SØKNAD))
     }
 }

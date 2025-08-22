@@ -28,7 +28,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
         val sak = sakService.hent(SakId(input.sakId()))
 
         if (skalHaFritakForPassertMeldeperiode(sak)) {
-            val fritakMeldepliktBehandling = sakOgBehandlingService.finnEllerOpprettBehandlingFasttrack(
+            val fritakMeldepliktBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
                 sakId = sak.id,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                     årsak = ÅrsakTilOpprettelse.FRITAK_MELDEPLIKT,

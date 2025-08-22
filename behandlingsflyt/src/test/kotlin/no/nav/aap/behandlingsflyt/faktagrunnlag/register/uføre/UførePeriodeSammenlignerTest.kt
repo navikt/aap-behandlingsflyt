@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.EndringStatus
-import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
+import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre.UføreRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl

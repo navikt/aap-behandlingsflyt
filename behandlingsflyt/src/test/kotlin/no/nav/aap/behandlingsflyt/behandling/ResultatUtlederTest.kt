@@ -2,18 +2,18 @@ package no.nav.aap.behandlingsflyt.behandling
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
-import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -142,7 +142,9 @@ class ResultatUtlederTest {
     }
 
     private fun opprettBehandling(sak: Sak): Behandling {
-        return InMemorySakOgBehandlingService.finnEllerOpprettBehandling(sak.saksnummer, VurderingsbehovOgÅrsak(listOf(
-            VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)), ÅrsakTilOpprettelse.SØKNAD))
+        return InMemorySakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
+            sak.saksnummer,
+            VurderingsbehovOgÅrsak(listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)), ÅrsakTilOpprettelse.SØKNAD)
+        )
     }
 }

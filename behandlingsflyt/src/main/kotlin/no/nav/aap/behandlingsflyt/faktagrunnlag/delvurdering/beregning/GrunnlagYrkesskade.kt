@@ -22,7 +22,7 @@ import java.time.Year
  * @param yrkesskadeinntektIG Inntekt på yrkesskadetidspunktet i G.
  * @param grunnlagEtterYrkesskadeFordel Dette er det største av grunnlagene etter §11-19 eller inntekt på yrkesskadetidspunktet.
  */
-class GrunnlagYrkesskade(
+data class GrunnlagYrkesskade(
     private val grunnlaget: GUnit,
     private val beregningsgrunnlag: Beregningsgrunnlag,
     private val terskelverdiForYrkesskade: Prosent,
@@ -101,49 +101,5 @@ class GrunnlagYrkesskade(
 
     fun underliggende(): Beregningsgrunnlag {
         return beregningsgrunnlag
-    }
-
-    override fun toString(): String {
-        return "GrunnlagYrkesskade(grunnlaget=$grunnlaget, beregningsgrunnlag=$beregningsgrunnlag)"
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as GrunnlagYrkesskade
-
-        if (grunnlaget != other.grunnlaget) return false
-        if (beregningsgrunnlag != other.beregningsgrunnlag) return false
-        if (terskelverdiForYrkesskade != other.terskelverdiForYrkesskade) return false
-        if (andelSomSkyldesYrkesskade != other.andelSomSkyldesYrkesskade) return false
-        if (andelYrkesskade != other.andelYrkesskade) return false
-        if (benyttetAndelForYrkesskade != other.benyttetAndelForYrkesskade) return false
-        if (andelSomIkkeSkyldesYrkesskade != other.andelSomIkkeSkyldesYrkesskade) return false
-        if (antattÅrligInntektYrkesskadeTidspunktet != other.antattÅrligInntektYrkesskadeTidspunktet) return false
-        if (yrkesskadeTidspunkt != other.yrkesskadeTidspunkt) return false
-        if (grunnlagForBeregningAvYrkesskadeandel != other.grunnlagForBeregningAvYrkesskadeandel) return false
-        if (grunnbeløp != other.grunnbeløp) return false
-        if (yrkesskadeinntektIG != other.yrkesskadeinntektIG) return false
-        if (grunnlagEtterYrkesskadeFordel != other.grunnlagEtterYrkesskadeFordel) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = grunnlaget.hashCode()
-        result = 31 * result + beregningsgrunnlag.hashCode()
-        result = 31 * result + terskelverdiForYrkesskade.hashCode()
-        result = 31 * result + andelSomSkyldesYrkesskade.hashCode()
-        result = 31 * result + andelYrkesskade.hashCode()
-        result = 31 * result + benyttetAndelForYrkesskade.hashCode()
-        result = 31 * result + andelSomIkkeSkyldesYrkesskade.hashCode()
-        result = 31 * result + antattÅrligInntektYrkesskadeTidspunktet.hashCode()
-        result = 31 * result + yrkesskadeTidspunkt.hashCode()
-        result = 31 * result + grunnlagForBeregningAvYrkesskadeandel.hashCode()
-        result = 31 * result + grunnbeløp.hashCode()
-        result = 31 * result + yrkesskadeinntektIG.hashCode()
-        result = 31 * result + grunnlagEtterYrkesskadeFordel.hashCode()
-        return result
     }
 }

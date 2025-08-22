@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.repository.klage
 
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageVurdering
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageÅrsak
+import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.TrekkKlageRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl

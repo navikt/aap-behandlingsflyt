@@ -34,8 +34,9 @@ object InMemoryMellomlagretVurderingRepository : MellomlagretVurderingRepository
         }
     }
 
-    override fun lagre(mellomlagretVurdering: MellomlagretVurdering) {
+    override fun lagre(mellomlagretVurdering: MellomlagretVurdering): MellomlagretVurdering {
         val (behandlingId, avklaringsbehovKode) = mellomlagretVurdering
         synchronized(lock) { vurderinger[Pair(behandlingId, avklaringsbehovKode)] = mellomlagretVurdering }
+        return mellomlagretVurdering
     }
 }

@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.repository.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -59,11 +60,5 @@ class AvklaringsbehovRepositoryTest {
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident(), periode)
-    }
-}
-
-object FakePdlGateway : IdentGateway {
-    override fun hentAlleIdenterForPerson(ident: Ident): List<Ident> {
-        return listOf(ident)
     }
 }

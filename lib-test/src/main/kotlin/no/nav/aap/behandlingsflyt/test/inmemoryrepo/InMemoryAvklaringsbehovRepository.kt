@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovForSak
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
@@ -29,6 +30,10 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
             ensureDefault(behandlingId)
             return memory.getValue(behandlingId).avklaringsbehovene
         }
+    }
+
+    override fun hentAlleAvklaringsbehovForSak(behandlingIder: List<BehandlingId>): List<AvklaringsbehovForSak> {
+        return listOf()
     }
 
     override fun opprett(

@@ -1,11 +1,29 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon
 
 import java.time.LocalDate
+import java.util.Objects
 
 data class TjenestePensjonForhold(
     val ordning: TjenestePensjonOrdning,
     val ytelser: List<TjenestePensjonYtelse>
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is TjenestePensjonForhold) return false
+
+        if (ordning != other.ordning) return false
+        if (ytelser.size != other.ytelser.size) return false
+
+        val sorterteYtelser = ytelser.sortedBy { it.ytelseId }
+        val otherSorterteYtelser = other.ytelser.sortedBy { it.ytelseId }
+
+        return sorterteYtelser == otherSorterteYtelser
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(ordning, ytelser.sortedBy { it.ytelseId })
+    }
+}
 
 data class TjenestePensjonOrdning(
     val navn: String,

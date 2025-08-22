@@ -26,17 +26,23 @@ import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import javax.sql.DataSource
 
 @Fakes
 class SamordningYtelseVurderingServiceTest {
+    @TestDatabase
+    lateinit var dataSource: DataSource
+
     @Test
     fun `krever avklaring når endringer kommer`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val ytelseRepo = SamordningYtelseRepositoryImpl(connection)
             val repo = SamordningVurderingRepositoryImpl(connection)
             val service = SamordningYtelseVurderingService(
@@ -62,6 +68,83 @@ class SamordningYtelseVurderingServiceTest {
             val nyData = service.oppdater(kontekst)
             assertEquals(Informasjonskrav.Endret.ENDRET, nyData)
         }
+    }
+
+    @Test
+    fun `Rekkefølge i lister skal ikke gi endring`() {
+        val nå = LocalDate.now()
+
+        val eksisterendeGrunnlag = SamordningYtelseGrunnlag(
+            1, listOf(
+                SamordningYtelse(
+                    Ytelse.SYKEPENGER,
+                    listOf(
+                        SamordningYtelsePeriode(
+                            Periode(nå.plusDays(5), nå.plusDays(10)),
+                            Prosent(50),
+                            0
+                        ),
+                        SamordningYtelsePeriode(
+                            Periode(nå.plusDays(5), nå.plusDays(10)),
+                            Prosent(40),
+                            0
+                        ),
+                    ),
+                    "kilde",
+                    "ref"
+                ),
+                SamordningYtelse(
+                    Ytelse.SYKEPENGER,
+                    listOf(
+                        SamordningYtelsePeriode(
+                            Periode(nå.plusDays(5), nå.plusDays(10)),
+                            Prosent(50),
+                            0
+                        ),
+                    ),
+                    "kilde",
+                    "ref"
+                ),
+            )
+        )
+
+        val ny = listOf(
+            SamordningYtelse(
+                Ytelse.SYKEPENGER,
+                listOf(
+                    SamordningYtelsePeriode(
+                        Periode(nå.plusDays(5), nå.plusDays(10)),
+                        Prosent(50),
+                        0
+                    ),
+                ),
+                "kilde",
+                "ref"
+            ),
+            SamordningYtelse(
+                Ytelse.SYKEPENGER,
+                listOf(
+                    SamordningYtelsePeriode(
+                        Periode(nå.plusDays(5), nå.plusDays(10)),
+                        Prosent(40),
+                        0
+                    ),
+                    SamordningYtelsePeriode(
+                        Periode(nå.plusDays(5), nå.plusDays(10)),
+                        Prosent(50),
+                        0
+                    ),
+                ),
+                "kilde",
+                "ref"
+            ),
+        )
+
+        assertThat(
+            SamordningYtelseVurderingService.harEndringerIYtelser(
+                eksisterendeGrunnlag, ny
+            )
+        ).isFalse()
     }
 
     private fun opprettVurderingData(repo: SamordningVurderingRepositoryImpl, behandlingId: BehandlingId) {

@@ -48,10 +48,27 @@ class SakOgBehandlingService(
      * Ytelsesbehandling betyr førstegangsbehandling eller revurdering.
      */
     fun finnSisteYtelsesbehandlingFor(sakId: SakId): Behandling? {
-        return behandlingRepository.finnSisteBehandlingFor(
+        /* Finn siste ytelsesbehandling basert på `forrigeBehandlingId`-kjeden.
+         * Behandlingene er i praksis en singly-linked list. Pekerne går "feil vei",
+         * så vi regner ut bakover-pekerne.
+        **/
+        val ytelsesbehandlinger = behandlingRepository.hentAlleFor(
             sakId,
             listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
         )
+        val nesteId = mutableMapOf<BehandlingId, BehandlingId>()
+        for (behandling in ytelsesbehandlinger) {
+            if (behandling.forrigeBehandlingId != null) {
+                nesteId[behandling.forrigeBehandlingId] = behandling.id
+            }
+        }
+
+        var behandling = ytelsesbehandlinger.firstOrNull()?.id ?: return null
+
+        while (nesteId[behandling] != null) {
+            behandling = nesteId[behandling]!!
+        }
+        return ytelsesbehandlinger.find { it.id == behandling }
     }
 
     sealed interface OpprettetBehandling {
@@ -88,7 +105,7 @@ class SakOgBehandlingService(
         Vurderingsbehov.FASTSATT_PERIODE_PASSERT
     )
 
-    fun finnEllerOpprettBehandlingFasttrack(sakId: SakId, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): OpprettetBehandling {
+    fun finnEllerOpprettBehandling(sakId: SakId, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): OpprettetBehandling {
         val sisteYtelsesbehandling = finnSisteYtelsesbehandlingFor(sakId)
         val vurderingsbehov = vurderingsbehovOgÅrsak.vurderingsbehov
         val fasttrackkandidat = vurderingsbehov.isNotEmpty()
@@ -130,8 +147,8 @@ class SakOgBehandlingService(
         }
     }
 
-    fun finnEllerOpprettBehandling(sakId: SakId, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): Behandling {
-        return when (val b = finnEllerOpprettBehandlingFasttrack(sakId, vurderingsbehovOgÅrsak)) {
+    fun finnEllerOpprettOrdinærBehandling(sakId: SakId, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): Behandling {
+        return when (val b = finnEllerOpprettBehandling(sakId, vurderingsbehovOgÅrsak)) {
             is MåBehandlesAtomært -> error("skal ikke føre til atmoær behandling")
             is Ordinær -> b.åpenBehandling
         }
@@ -247,16 +264,16 @@ class SakOgBehandlingService(
         return sisteYtelsesbehandling
     }
 
-    fun finnEllerOpprettBehandling(saksnummer: Saksnummer, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): Behandling {
+    fun finnEllerOpprettOrdinærBehandling(saksnummer: Saksnummer, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): Behandling {
+        val sak = sakRepository.hent(saksnummer)
+
+        return finnEllerOpprettOrdinærBehandling(sak.id, vurderingsbehovOgÅrsak)
+    }
+
+    fun finnEllerOpprettBehandling(saksnummer: Saksnummer, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): OpprettetBehandling {
         val sak = sakRepository.hent(saksnummer)
 
         return finnEllerOpprettBehandling(sak.id, vurderingsbehovOgÅrsak)
-    }
-
-    fun finnEllerOpprettBehandlingFasttrack(saksnummer: Saksnummer, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): OpprettetBehandling {
-        val sak = sakRepository.hent(saksnummer)
-
-        return finnEllerOpprettBehandlingFasttrack(sak.id, vurderingsbehovOgÅrsak)
     }
 
     fun lukkBehandling(behandlingId: BehandlingId) {

@@ -114,7 +114,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.FakePersoner
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -1015,7 +1014,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
     protected fun leggTilVurderingsbehovForBehandling(behandling: Behandling, vurderingsbehov: List<VurderingsbehovMedPeriode>) {
         dataSource.transaction { connection ->
             SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
-                .finnEllerOpprettBehandling(behandling.sakId, VurderingsbehovOgÅrsak(vurderingsbehov, ÅrsakTilOpprettelse.SØKNAD))
+                .finnEllerOpprettOrdinærBehandling(behandling.sakId, VurderingsbehovOgÅrsak(vurderingsbehov, ÅrsakTilOpprettelse.SØKNAD))
         }
         prosesserBehandling(behandling)
     }

@@ -56,7 +56,7 @@ class AvklarOppfølgingSteg(
             KonsekvensAvOppfølging.OPPRETT_VURDERINGSBEHOV -> {
                 val vurderingsbehov = grunnlag.opplysningerTilRevurdering
                 log.info("Oppretter ny behandling med vurderingsbehov $vurderingsbehov for sak ${kontekst.sakId}.")
-                val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
+                val behandling = sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
                     sakId = kontekst.sakId,
                     vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                         årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,

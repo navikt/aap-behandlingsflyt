@@ -32,7 +32,10 @@ class TjenestePensjonService(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.SAMORDNING_TJENESTEPENSJON
 
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): TjenestePensjonService {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): TjenestePensjonService {
             val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
 
             return TjenestePensjonService(
@@ -42,11 +45,22 @@ class TjenestePensjonService(
                 SakOgBehandlingService(repositoryProvider, gatewayProvider),
             )
         }
+
+        fun harEndringerITjenestePensjon(
+            eksisterendeData: List<TjenestePensjonForhold>?,
+            tjenestePensjon: List<TjenestePensjonForhold>
+        ): Boolean {
+            return eksisterendeData == null || eksisterendeData.toSet() != tjenestePensjon.toSet()
+        }
     }
 
     override val navn = Companion.navn
 
-    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+    override fun erRelevant(
+        kontekst: FlytKontekstMedPerioder,
+        steg: StegType,
+        oppdatert: InformasjonskravOppdatert?
+    ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
                 oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
@@ -82,16 +96,9 @@ class TjenestePensjonService(
         rettigetsperiode: Periode
     ): List<TjenestePensjonForhold> {
         return tpGateway.hentTjenestePensjon(
-                personIdent,
-                rettigetsperiode
+            personIdent,
+            rettigetsperiode
         )
-    }
-
-    private fun harEndringerITjenestePensjon(
-        eksisterendeData: List<TjenestePensjonForhold>?,
-        tjenestePensjon: List<TjenestePensjonForhold>
-    ): Boolean {
-        return  eksisterendeData == null || eksisterendeData != tjenestePensjon
     }
 
     override fun behovForRevurdering(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {

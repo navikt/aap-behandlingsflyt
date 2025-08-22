@@ -427,6 +427,6 @@ class InMemorySamordningYtelseRepositoryTest {
 
     private fun opprettBehandling(sak: Sak): Behandling {
         return InMemorySakOgBehandlingService
-            .finnEllerOpprettBehandling(sak.saksnummer, VurderingsbehovOgÅrsak(listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)), ÅrsakTilOpprettelse.SØKNAD))
+            .finnEllerOpprettOrdinærBehandling(sak.saksnummer, VurderingsbehovOgÅrsak(listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)), ÅrsakTilOpprettelse.SØKNAD))
     }
 }

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovForSak
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
@@ -193,6 +194,67 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         }
     }
 
+    override fun hentAlleAvklaringsbehovForSak(behandlingIder: List<BehandlingId>): List<AvklaringsbehovForSak> {
+        if (behandlingIder.isEmpty()) return emptyList()
+
+        val avklaringsbehovQuery = """
+        SELECT * 
+        FROM AVKLARINGSBEHOV ab
+        WHERE behandling_id = ANY(?::bigint[])
+    """.trimIndent()
+
+        val avklaringsbehovInternal = connection.queryList(avklaringsbehovQuery) {
+            setParams {
+                setArray(1, behandlingIder.map { "${it.id}" })
+            }
+            setRowMapper { mapAvklaringsbehov(it) }
+        }
+
+        val endringerQuery = """
+        SELECT * 
+        FROM AVKLARINGSBEHOV_ENDRING 
+        WHERE avklaringsbehov_id = ANY(?::bigint[])
+    """.trimIndent()
+
+        val endringerInternal = connection.queryList(endringerQuery) {
+            setParams {
+                setArray(1, avklaringsbehovInternal.map { "${it.id}" })
+            }
+            setRowMapper { mapEndringer(it) }
+        }
+
+        val årsakerInternal = if (endringerInternal.isNotEmpty()) {
+            val årsakerQuery = """
+            SELECT * 
+            FROM AVKLARINGSBEHOV_ENDRING_AARSAK 
+            WHERE endring_id = ANY(?::bigint[])
+        """.trimIndent()
+
+            connection.queryList(årsakerQuery) {
+                setParams {
+                    setArray(1, endringerInternal.map { "${it.id}" })
+                }
+                setRowMapper { mapÅrsaker(it) }
+            }
+        } else {
+            emptyList()
+        }
+
+        val avklaringsbehovByBehandling = avklaringsbehovInternal.groupBy { it.behandlingId }
+
+        return behandlingIder.map { behandlingId ->
+            val behovForBehandling = avklaringsbehovByBehandling[behandlingId.toLong()].orEmpty().map { behov ->
+                mapTilAvklaringsBehov(
+                    behov,
+                    endringerInternal,
+                    årsakerInternal
+                )
+            }
+            AvklaringsbehovForSak(behandlingId, behovForBehandling)
+        }
+    }
+
+
     override fun hent(behandlingId: BehandlingId): List<Avklaringsbehov> {
         val avklaringsbehovQuery = """
             SELECT * 
@@ -287,6 +349,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
             definisjon = definisjon,
             funnetISteg = row.getEnum("funnet_i_steg"),
             kreverToTrinn = row.getBooleanOrNull("krever_to_trinn"),
+            behandlingId = row.getLong("behandling_id")
         )
     }
 
@@ -316,7 +379,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         val id: Long,
         val definisjon: Definisjon,
         val funnetISteg: StegType,
-        val kreverToTrinn: Boolean?
+        val kreverToTrinn: Boolean?,
+        val behandlingId: Long?
     )
 
     internal class EndringInternal(
