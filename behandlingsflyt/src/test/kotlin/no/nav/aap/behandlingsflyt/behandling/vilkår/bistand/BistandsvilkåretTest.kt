@@ -144,8 +144,8 @@ class BistandsvilkåretTest {
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
         assertThat(vilkår.vilkårsperioder()).hasSize(2)
-        assertThat(vilkår.vilkårsperioder()).anyMatch { it.utfall == Utfall.OPPFYLT }
-        assertThat(vilkår.vilkårsperioder().last().innvilgelsesårsak).isNull()
+        assertThat(vilkår.vilkårsperioder()).allMatch { it.utfall == Utfall.OPPFYLT }
+        assertThat(vilkår.vilkårsperioder().last().innvilgelsesårsak).isEqualTo(Innvilgelsesårsak.ARBEIDSSØKER)
     }
 
     @Test
@@ -179,7 +179,7 @@ class BistandsvilkåretTest {
         assertThat(vilkår.vilkårsperioder()).allMatch { it.utfall == Utfall.OPPFYLT }
         assertThat(
             vilkår.vilkårsperioder().last().innvilgelsesårsak
-        ).isEqualTo(Innvilgelsesårsak.ARBEIDSSØKER)
+        ).isEqualTo(Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD)
         assertThat(vilkår.vilkårsperioder().last().periode.fom).isEqualTo(iDag.plusDays(10))
     }
 
@@ -192,12 +192,9 @@ class BistandsvilkåretTest {
             erBehovForAnnenOppfølging = false,
             vurderingenGjelderFra = null,
             vurdertAv = "Z00000",
-<<<<<<< HEAD
-            overgangBegrunnelse = null,
-            skalVurdereAapIOvergangTilArbeid = null,
-=======
             skalVurdereAapIOvergangTilUføre = null,
->>>>>>> dad43f5f5 (Begynner på jobben om overgang Arbeidssøker)
+            skalVurdereAapIOvergangTilArbeid = null,
+            overgangBegrunnelse = null,
         )
 
         val (førstegangsbehandling, sak) = dataSource.transaction { connection ->
@@ -262,12 +259,9 @@ class BistandsvilkåretTest {
                 erBehovForAktivBehandling = false,
                 erBehovForArbeidsrettetTiltak = false,
                 erBehovForAnnenOppfølging = false,
-<<<<<<< HEAD
+                skalVurdereAapIOvergangTilUføre = false,
                 skalVurdereAapIOvergangTilArbeid = false,
                 overgangBegrunnelse = null,
-=======
-                skalVurdereAapIOvergangTilUføre = false,
->>>>>>> dad43f5f5 (Begynner på jobben om overgang Arbeidssøker)
             )
 
             AvklarBistandLøser(postgresRepositoryRegistry.provider(connection)).løs(
@@ -323,11 +317,9 @@ class BistandsvilkåretTest {
         erBehovForAktivBehandling: Boolean = true,
         erBehovForArbeidsrettetTiltak: Boolean = true,
         erBehovForAnnenOppfølging: Boolean = true,
-<<<<<<< HEAD
-        skalVurdereAapIOvergangTilArbeid: Boolean? = null,
-=======
+        overgangBegrunnelse: String? = null,
         skalVurdereAapIOvergangTilUføre: Boolean? = null,
->>>>>>> dad43f5f5 (Begynner på jobben om overgang Arbeidssøker)
+        skalVurdereAapIOvergangTilArbeid: Boolean? = null,
         vurdertAv: String = "Z00000",
         vurderingenGjelderFra: LocalDate = LocalDate.now()
 
@@ -336,13 +328,10 @@ class BistandsvilkåretTest {
         erBehovForAktivBehandling = erBehovForAktivBehandling,
         erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
         erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
-<<<<<<< HEAD
-        skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
-=======
+        overgangBegrunnelse = overgangBegrunnelse,
         skalVurdereAapIOvergangTilUføre = skalVurdereAapIOvergangTilUføre,
->>>>>>> dad43f5f5 (Begynner på jobben om overgang Arbeidssøker)
+        skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
         vurdertAv = vurdertAv,
-        overgangBegrunnelse = null,
         vurderingenGjelderFra = vurderingenGjelderFra
     )
 

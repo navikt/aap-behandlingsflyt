@@ -307,12 +307,9 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
                         erBehovForAktivBehandling = true,
                         erBehovForArbeidsrettetTiltak = false,
                         erBehovForAnnenOppfølging = null,
-<<<<<<< HEAD
                         skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null
-=======
+                        overgangBegrunnelse = null,
                         skalVurdereAapIOvergangTilUføre = null,
->>>>>>> dad43f5f5 (Begynner på jobben om overgang Arbeidssøker)
                     ),
                 )
             ).løsAvklaringsBehov(
@@ -495,8 +492,10 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = null,
                     skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null
-                ),
+                    overgangBegrunnelse = null,
+                    skalVurdereAapIOvergangTilUføre = null,
+
+                    ),
             ),
         )
 
@@ -564,12 +563,9 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = null,
-<<<<<<< HEAD
                     skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null
-=======
+                    overgangBegrunnelse = null,
                     skalVurdereAapIOvergangTilUføre = null,
->>>>>>> dad43f5f5 (Begynner på jobben om overgang Arbeidssøker)
                 )
             )
         )

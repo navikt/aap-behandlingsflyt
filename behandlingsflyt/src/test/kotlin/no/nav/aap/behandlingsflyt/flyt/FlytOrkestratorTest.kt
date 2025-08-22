@@ -1308,8 +1308,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     ),
                 ),
             )
-            .løsOvergangUføre()
             .løsOvergangArbeid()
+            .løsOvergangUføre()
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .medKontekst {
