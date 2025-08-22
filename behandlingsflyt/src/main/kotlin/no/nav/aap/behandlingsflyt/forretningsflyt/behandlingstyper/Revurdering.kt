@@ -230,6 +230,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.BARNETILLEGG,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.VURDER_RETTIGHETSPERIODE
                 )
             )
             .medSteg(
