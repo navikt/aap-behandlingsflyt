@@ -30,7 +30,7 @@ class UnderveisSteg(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
-            if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
+            if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                 return Fullført
             }
         }
