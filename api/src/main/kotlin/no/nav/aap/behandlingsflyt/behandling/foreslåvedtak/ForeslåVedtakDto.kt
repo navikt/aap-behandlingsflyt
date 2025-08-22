@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.komponenter.type.Periode
 
 data class ForeslåVedtakDto(
-    val periode: Periode,
+    val periode: Periode?,
     val utfall: Utfall,
     val rettighetsType: RettighetsType?
 ) {
