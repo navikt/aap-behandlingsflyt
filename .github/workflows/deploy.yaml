@@ -21,7 +21,7 @@ jobs:
         checks: write
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-java@v4.3.0
+      - uses: actions/setup-java@v5
         with:
           java-version: 23
           distribution: 'temurin'
@@ -83,7 +83,7 @@ jobs:
                 tag_prefix: ""
                 bump_each_commit_patch_pattern: ''
                 major_pattern: "(MAJOR)" # If major bump, include this in the commit message
-          - uses: actions/setup-java@v4
+          - uses: actions/setup-java@v5
             if: ${{ steps.tag.outputs.changed == 'true' }}
             with:
                 java-version: 23
