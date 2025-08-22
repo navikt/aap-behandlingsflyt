@@ -1858,11 +1858,16 @@ object FakeServers : AutoCloseable {
                     put("/oppdater") {
                         val ref = UUID.fromString(call.pathParameters["referanse"])!!
                         val brev = call.receive<Brev>()
-                        synchronized(mutex) {
-                            val i = brevStore.indexOfFirst { it.referanse == ref }
-                            brevStore[i] = brevStore[i].copy(brev = brev)
+
+                        val i = brevStore.indexOfFirst { it.referanse == ref }
+                        if (brevStore[i].status != Status.UNDER_ARBEID) {
+                            call.respond(HttpStatusCode.BadRequest)
+                        } else {
+                            synchronized(mutex) {
+                                brevStore[i] = brevStore[i].copy(brev = brev)
+                            }
+                            call.respond(HttpStatusCode.NoContent, Unit)
                         }
-                        call.respond(HttpStatusCode.NoContent, Unit)
                     }
                 }
                 post("/ferdigstill") {
