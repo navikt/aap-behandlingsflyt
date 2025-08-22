@@ -36,6 +36,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 
 @ExtendWith(MockKExtension::class)
@@ -98,10 +99,10 @@ class AvklarOppfølgingStegTest {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
             sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
                 behandling.sakId,
-                VurderingsbehovOgÅrsak(
-                    listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
-                    ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,
-                )
+                match {
+                    it.vurderingsbehov == listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)) &&
+                            it.årsak == ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+                }
             )
         }
     }
