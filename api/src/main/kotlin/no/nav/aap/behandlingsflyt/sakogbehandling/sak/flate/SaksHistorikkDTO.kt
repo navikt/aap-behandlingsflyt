@@ -13,7 +13,7 @@ data class BehandlingHendelseDTO(
     val hendelse: BehandlingHendelseType,
     val tidspunkt: LocalDateTime,
     val utførtAv: String? = null,
-    val årsakerTilRetur: List<ÅrsakTilRetur>? = emptyList(),
+    val årsakerTilRetur: List<ÅrsakTilRetur?> = emptyList(),
     val årsakTilSattPåVent: ÅrsakTilSettPåVent? = null,
     val årsakerTilOpprettelse: List<Vurderingsbehov?> = emptyList(),
     val begrunnelse: String? = null,
