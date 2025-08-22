@@ -80,7 +80,8 @@ public enum class Vurderingsbehov {
     MOTTATT_KABAL_HENDELSE, // Hendelser fra klage andreinstans
     OPPFØLGINGSOPPGAVE,
     HELHETLIG_VURDERING,
-    REVURDER_MELDEPLIKT_RIMELIG_GRUNN
+    REVURDER_MELDEPLIKT_RIMELIG_GRUNN,
+    AKTIVITETSPLIKT_11_7
 }
 
 /**

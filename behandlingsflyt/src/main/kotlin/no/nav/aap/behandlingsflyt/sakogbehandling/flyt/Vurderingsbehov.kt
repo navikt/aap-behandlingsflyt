@@ -33,7 +33,8 @@ enum class Vurderingsbehov {
     FRITAK_MELDEPLIKT,
     VURDER_RETTIGHETSPERIODE,
     MOTTATT_KABAL_HENDELSE,
-    OPPFØLGINGSOPPGAVE;
+    OPPFØLGINGSOPPGAVE,
+    AKTIVITETSPLIKT_11_7;
 
     companion object {
         /**
@@ -88,4 +89,5 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.OPPFØLGINGSOPPGAVE -> Vurderingsbehov.OPPFØLGINGSOPPGAVE
         EksponertÅrsak.HELHETLIG_VURDERING -> Vurderingsbehov.HELHETLIG_VURDERING
         EksponertÅrsak.REVURDER_MELDEPLIKT_RIMELIG_GRUNN -> Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN
+        EksponertÅrsak.AKTIVITETSPLIKT_11_7 -> Vurderingsbehov.AKTIVITETSPLIKT_11_7
     }
