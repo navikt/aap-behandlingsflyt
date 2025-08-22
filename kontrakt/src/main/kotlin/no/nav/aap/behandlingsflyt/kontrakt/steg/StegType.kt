@@ -51,7 +51,7 @@ public enum class StegType(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
-    OVEGANG_ARBEID(
+    OVERGANG_ARBEID(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),

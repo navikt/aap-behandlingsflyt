@@ -25,13 +25,10 @@ class AvklarBistandsbehovLøsning(
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5006`
 ) : AvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
-<<<<<<< HEAD
         if (this.bistandsVurdering.skalVurdereAapIOvergangTilArbeid == true
         ) {
             TODO("Implementer støtte for oppfylt 11-17 og 11-18 og kvote")
         }
-=======
->>>>>>> dad43f5f5 (Begynner på jobben om overgang Arbeidssøker)
         return AvklarBistandLøser(repositoryProvider).løs(kontekst, this)
     }
 }

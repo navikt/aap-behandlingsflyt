@@ -107,11 +107,8 @@ private fun BistandVurdering.tilResponse(
         erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
         erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
         vurderingenGjelderFra = vurderingenGjelderFra,
-<<<<<<< HEAD
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
-=======
         skalVurdereAapIOvergangTilUføre = skalVurdereAapIOvergangTilUføre,
->>>>>>> dad43f5f5 (Begynner på jobben om overgang Arbeidssøker)
         vurdertAv = VurdertAvResponse(
             ident = vurdertAv,
             dato = opprettet?.atZone(ZoneId.of("Europe/Oslo"))?.toLocalDate()
