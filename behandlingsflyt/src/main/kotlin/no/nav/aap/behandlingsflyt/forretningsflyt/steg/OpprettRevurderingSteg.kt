@@ -52,6 +52,7 @@ class OpprettRevurderingSteg(
                                 type = Vurderingsbehov.REVURDER_SAMORDNING,
                             )
                         ),
+                        beskrivelse = samordningVurdering.begrunnelse
                     ),
                 )
 

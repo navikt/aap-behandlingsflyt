@@ -61,6 +61,7 @@ class AvklarOppfølgingSteg(
                     vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                         årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,
                         vurderingsbehov = vurderingsbehov.map { VurderingsbehovMedPeriode(it) },
+                        beskrivelse = grunnlag.årsak
                     ),
                 )
 
