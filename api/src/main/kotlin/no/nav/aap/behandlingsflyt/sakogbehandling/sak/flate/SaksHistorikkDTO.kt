@@ -21,17 +21,17 @@ data class BehandlingHendelseDTO(
 )
 
 enum class BehandlingHendelseType {
-    SATT_PÅ_VENT, //  Behandling satt på vent, med årsak og begrunnelse
-    TATT_AV_VENT, // Behandling tatt av vent, med årsak
-    VEDTAK_FATTET, // Resultat, evt avslag med årsak
-    BREV_SENDT, //  Sendte brev med tittel
+    SATT_PÅ_VENT,
+    TATT_AV_VENT,
+    VEDTAK_FATTET,
+    BREV_SENDT,
     SENDT_TIL_BESLUTTER,
     RETUR_FRA_BESLUTTER,
-    SENDT_TIL_KVALITETSSIKRER, // med resultat
-    RETUR_FRA_KVALITETSSIKRER, // med resultat og eventuell årsak for retur + begrunnelse
+    SENDT_TIL_KVALITETSSIKRER,
+    RETUR_FRA_KVALITETSSIKRER,
     REVURDERING_OPPRETTET,
     FØRSTEGANGSBEHANDLING_OPPRETTET,
     KLAGE_OPPRETTET,
-    MOTTATT_DIALOGMELDING, // ? Mottatt legeerklæring og dialogmelding
+    MOTTATT_DIALOGMELDING,
     BESTILT_LEGEERKLÆRING
 }
