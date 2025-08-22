@@ -280,6 +280,41 @@ internal class BehandlingRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `Kan hente vurderingbehovOgÅrsaker for behandling`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+
+            // Legger til nye vurderingsbehov og årsak
+            finnEllerOpprettBehandling(connection, sak,
+                vurderingsbehov = listOf(
+                    VurderingsbehovMedPeriode(
+                        type = Vurderingsbehov.BARNETILLEGG
+                    ),
+                    VurderingsbehovMedPeriode(
+                        type = Vurderingsbehov.REVURDER_MEDLEMSKAP
+                    )
+                ),
+                årsakTilOpprettelse = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+            )
+
+            val behandlingRepository = BehandlingRepositoryImpl(connection)
+
+            val vurderingsbehovOgÅrsaker = behandlingRepository.hentVurderingsbehovOgÅrsaker(behandling.id)
+
+            val vurderingsbehovOgÅrsakSøknad = vurderingsbehovOgÅrsaker.find { it.årsak == ÅrsakTilOpprettelse.SØKNAD }
+            assertThat(vurderingsbehovOgÅrsakSøknad).isNotNull
+            assertThat(vurderingsbehovOgÅrsakSøknad?.vurderingsbehov?.map { it.type})
+                .containsExactlyInAnyOrder(Vurderingsbehov.MOTTATT_SØKNAD)
+
+            val vurderingbehovOgÅrsakManuellOpprettelse = vurderingsbehovOgÅrsaker.find { it.årsak == ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE }
+            assertThat(vurderingbehovOgÅrsakManuellOpprettelse).isNotNull
+            assertThat(vurderingbehovOgÅrsakManuellOpprettelse?.vurderingsbehov?.map { it.type })
+                .containsExactlyInAnyOrder(Vurderingsbehov.BARNETILLEGG, Vurderingsbehov.REVURDER_MEDLEMSKAP)
+        }
+    }
+
     private fun sak(connection: DBConnection): Sak {
         return PersonOgSakService(
             FakePdlGateway,
