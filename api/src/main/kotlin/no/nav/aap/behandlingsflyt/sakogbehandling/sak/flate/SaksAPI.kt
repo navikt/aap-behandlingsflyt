@@ -11,8 +11,10 @@ import no.nav.aap.behandlingsflyt.Azp
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
 import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -21,6 +23,7 @@ import no.nav.aap.behandlingsflyt.medAzureTokenGen
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
@@ -368,6 +371,28 @@ fun NormalOpenAPIRoute.saksApi(
                     )
                 )
             }
+        }
+
+        route("{saksnummer}/historikk").authorizedGet<HentSakDTO, List<BehandlingHistorikkDTO>>(
+            AuthorizationParamPathConfig(
+                sakPathParam = SakPathParam("saksnummer")
+            ),
+            null,
+            TagModule(listOf(Tags.Sak)),
+        ) { req ->
+            val saksnummer = req.saksnummer
+
+            val historikk =
+                dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+
+                    val sakId = sakRepository.hent(Saksnummer(saksnummer)).id
+                    val saksHistorikkService = SaksHistorikkService(repositoryProvider)
+
+                    saksHistorikkService.utledSaksHistorikk(sakId)
+                }
+            respond(historikk)
         }
     }
 }

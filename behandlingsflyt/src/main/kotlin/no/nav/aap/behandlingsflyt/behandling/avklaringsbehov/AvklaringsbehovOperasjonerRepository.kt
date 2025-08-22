@@ -13,6 +13,7 @@ import java.time.LocalDate
  */
 interface AvklaringsbehovOperasjonerRepository : Repository {
     fun hent(behandlingId: BehandlingId): List<Avklaringsbehov>
+    fun hentAlleAvklaringsbehovForSak(behandlingIder: List<BehandlingId>): List<AvklaringsbehovForSak>
     fun opprett(
         behandlingId: BehandlingId,
         definisjon: Definisjon,
