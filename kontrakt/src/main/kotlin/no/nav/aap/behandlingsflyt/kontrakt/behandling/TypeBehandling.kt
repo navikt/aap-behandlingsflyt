@@ -12,8 +12,9 @@ public enum class TypeBehandling(
     Revurdering("ae0028"),
     Tilbakekreving(""),
     Klage("ae0058"),
-    SvarFraAndreinstans("svar-fra-andreinstans"),  // TODO: Undersøk om vi bør opprette kode i kodeverk
-    OppfølgingsBehandling("oppfølgingsbehandling");
+    SvarFraAndreinstans("svar-fra-andreinstans"),
+    OppfølgingsBehandling("oppfølgingsbehandling"),
+    Aktivitetsplikt("aktivitetsplikt");
 
     public fun identifikator(): String = identifikator
 

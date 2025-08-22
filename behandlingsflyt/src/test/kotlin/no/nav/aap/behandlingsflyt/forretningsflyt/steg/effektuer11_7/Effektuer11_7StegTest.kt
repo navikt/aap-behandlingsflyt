@@ -314,6 +314,7 @@ class Effektuer11_7StegTest {
             TypeBehandling.Klage -> VurderingType.IKKE_RELEVANT
             TypeBehandling.SvarFraAndreinstans -> VurderingType.IKKE_RELEVANT
             TypeBehandling.OppfølgingsBehandling -> VurderingType.IKKE_RELEVANT
+            TypeBehandling.Aktivitetsplikt -> VurderingType.IKKE_RELEVANT
         }
         return FlytKontekstMedPerioder(
             sakId = sak.id,

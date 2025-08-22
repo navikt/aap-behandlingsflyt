@@ -38,5 +38,8 @@ public enum class StegGruppe(public val skalVises: Boolean, public val obligator
 
     // Oppfølgingsbehandling
     START_OPPFØLGINGSBEHANDLING(false, false),
-    AVKLAR_OPPPFØLGING(true, true)
+    AVKLAR_OPPPFØLGING(true, true),
+    
+    // Aktivitetsplikt
+    AKTIVITETSPLIKT_11_7(true, true)
 }
