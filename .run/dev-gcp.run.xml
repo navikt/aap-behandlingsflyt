@@ -21,15 +21,13 @@
       <env name="INTEGRASJON_INSTITUSJONSOPPHOLD_SCOPE" value="api://dev-fss.team-rocket.inst2-q2/.default" />
       <env name="INTEGRASJON_INNTEKT_URL" value="https://pensjon-popp-q2.dev-fss-pub.nais.io/popp/api/inntekt/sumPi" />
       <env name="INTEGRASJON_INNTEKT_SCOPE" value="api://dev-fss.pensjonopptjening.pensjon-popp-q2/.default" />
-      <!--<env name="INTEGRASJON_OPPGAVESTYRING_URL" value="https://aap-oppgave.intern.dev.nav.no" />-->
-      <env name="INTEGRASJON_OPPGAVESTYRING_URL" value="http://localhost:8081" />
+      <env name="INTEGRASJON_OPPGAVESTYRING_URL" value="https://aap-oppgave.intern.dev.nav.no" />
       <env name="INTEGRASJON_OPPGAVESTYRING_SCOPE" value="api://dev-gcp.aap.oppgave/.default" />
       <env name="INTEGRASJON_STATISTIKK_URL" value="https://aap-statistikk.intern.dev.nav.no" />
       <env name="INTEGRASJON_STATISTIKK_SCOPE" value="api://dev-gcp.aap.statistikk/.default" />
       <env name="INTEGRASJON_PESYS_URL" value="https://pensjon-pen-q2.dev-fss-pub.nais.io" />
       <env name="INTEGRASJON_PESYS_SCOPE" value="api://dev-fss.pensjon-q2.pensjon-pen-q2/.default" />
-      <env name="INTEGRASJON_TILGANG_URL" value="http://localhost:8087" />
-      <!--<env name="INTEGRASJON_TILGANG_URL" value="https://aap-tilgang.intern.dev.nav.no" />-->
+      <env name="INTEGRASJON_TILGANG_URL" value="https://aap-tilgang.intern.dev.nav.no" />
       <env name="INTEGRASJON_TILGANG_SCOPE" value="api://dev-gcp.aap.tilgang/.default" />
       <env name="INTEGRASJON_TILGANG_AZP" value="0612f13d-08fb-44ff-a5ac-1233e2fec0fc" />
       <env name="INTEGRASJON_MEDL_URL" value="https://medlemskap-medl-api.dev-fss-pub.nais.io/api/v1/medlemskapsunntak" />
