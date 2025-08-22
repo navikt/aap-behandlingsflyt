@@ -13,6 +13,7 @@ object FakeUnleash : UnleashGateway {
         BehandlingsflytFeature.SendForvaltningsmelding to true,
         BehandlingsflytFeature.SosialHjelpFlereKontorer to false,
         BehandlingsflytFeature.BrevBeregningsgrunnlag to true,
+        BehandlingsflytFeature.Aktivitetsplikt11_7 to false,
     )
 
     override fun isEnabled(featureToggle: FeatureToggle) = requireNotNull(flags[featureToggle]) {
@@ -38,6 +39,7 @@ object FakeUnleashFasttrackMeldekort : UnleashGateway {
         BehandlingsflytFeature.SendForvaltningsmelding to true,
         BehandlingsflytFeature.SosialHjelpFlereKontorer to false,
         BehandlingsflytFeature.BrevBeregningsgrunnlag to true,
+        BehandlingsflytFeature.Aktivitetsplikt11_7 to true,
     )
 
     override fun isEnabled(featureToggle: FeatureToggle) = requireNotNull(flags[featureToggle]) {
