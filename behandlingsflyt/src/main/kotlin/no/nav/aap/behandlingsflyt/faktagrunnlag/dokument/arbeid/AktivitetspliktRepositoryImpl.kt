@@ -10,6 +10,9 @@ import no.nav.aap.lookup.repository.Factory
 import org.jetbrains.annotations.TestOnly
 import org.slf4j.LoggerFactory
 
+/**
+ * TODO: Må gås igjennom ved implementasjon av ny aktivitetsplikt-flyt!
+ */
 class AktivitetspliktRepositoryImpl(private val connection: DBConnection) : AktivitetspliktRepository {
 
     private val log = LoggerFactory.getLogger(javaClass)
