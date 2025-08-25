@@ -1,10 +1,12 @@
 package no.nav.aap.behandlingsflyt.integrasjon.medlemsskap
 
-import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDate
 
 data class MedlemskapRequest(
-    val ident: String,
-    val periode: Periode
+    val personident: String,
+    val fraOgMed: LocalDate,
+    val tilOgMed: LocalDate,
+    val inkluderSporingsinfo: Boolean
 )
 
 // Swagger-doc her: https://medlemskap-medl-api.dev.intern.nav.no/swagger-ui/index.html

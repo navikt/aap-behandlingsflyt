@@ -285,7 +285,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
         val periode = Periode(fom, fom.plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
-        val person = TestPersoner.STANDARD_PERSON()
         val ident = person.aktivIdent()
 
         // Sender inn en søknad
@@ -640,7 +639,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
 
     protected fun opprettBehandling(
         sakId: SakId,
-        årsaker: List<VurderingsbehovMedPeriode>,
+        vurderingsbehov: List<VurderingsbehovMedPeriode>,
         typeBehandling: TypeBehandling,
         forrigeBehandlingId: BehandlingId?
     ): Behandling {
@@ -650,7 +649,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
                 sakId = sakId,
                 typeBehandling = typeBehandling,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                    vurderingsbehov = årsaker,
+                    vurderingsbehov = vurderingsbehov,
                     årsak = ÅrsakTilOpprettelse.SØKNAD
                 )
             )

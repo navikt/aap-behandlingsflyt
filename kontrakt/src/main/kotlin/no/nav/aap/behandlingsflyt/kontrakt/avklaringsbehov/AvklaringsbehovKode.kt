@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov
 /**
  * Disse verdiene må igjen gjenspeile enumene under
  */
-public const val VURDER_RETTIGHETSPERIODE_KODE: String = "5029"
 public const val AVKLAR_STUDENT_KODE: String = "5001"
 public const val OVERSTYR_IKKE_OPPFYKT_MELDEPLIKT_KODE: String = "5002"
 public const val AVKLAR_SYKDOM_KODE: String = "5003"
@@ -16,9 +15,6 @@ public const val AVKLAR_BARNETILLEGG_KODE: String = "5009"
 public const val AVKLAR_SONINGSFORRHOLD_KODE: String = "5010"
 public const val AVKLAR_HELSEINSTITUSJON_KODE: String = "5011"
 public const val AVKLAR_SAMORDNING_GRADERING_KODE: String = "5012"
-public const val AVKLAR_SAMORDNING_UFØRE_KODE: String = "5024"
-public const val AVKLAR_SAMORDNING_ANDRE_STATLIGE_YTELSER_KODE: String = "5027"
-public const val AVKLAR_SAMORDNING_ARBEIDSGIVER_KODE: String = "5030"
 public const val AVKLAR_YRKESSKADE_KODE: String = "5013"
 public const val FASTSETT_YRKESSKADE_BELØP_KODE: String = "5014"
 public const val EFFEKTUER_11_7_KODE: String = "5015"
@@ -30,13 +26,17 @@ public const val AVKLAR_FORUTGÅENDE_MEDLEMSKAP_KODE: String = "5020"
 public const val MANUELL_OVERSTYRING_LOVVALG: String = "5021"
 public const val MANUELL_OVERSTYRING_MEDLEMSKAP: String = "5022"
 public const val VENTE_PÅ_KLAGE_IMPLEMENTASJON_KODE: String = "5023"
+public const val AVKLAR_SAMORDNING_UFØRE_KODE: String = "5024"
 public const val SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT: String = "5025"
+public const val REFUSJON_KRAV: String = "5026"
+public const val AVKLAR_SAMORDNING_ANDRE_STATLIGE_YTELSER_KODE: String = "5027"
+public const val VURDER_TREKK_AV_SØKNAD_KODE: String = "5028"
+public const val VURDER_RETTIGHETSPERIODE_KODE: String = "5029"
+public const val AVKLAR_SAMORDNING_ARBEIDSGIVER_KODE: String = "5030"
 public const val SKRIV_BREV_KODE: String = "5050"
 public const val SKRIV_VEDTAKSBREV_KODE: String = "5051"
 public const val SKRIV_FORHÅNDSVARSEL_AKTIVITETSPLIKT_BREV_KODE: String = "5052"
 public const val SKRIV_SYKDOMSVURDERING_BREV_KODE: String = "5053"
-public const val REFUSJON_KRAV: String = "5026"
-public const val VURDER_TREKK_AV_SØKNAD_KODE: String = "5028"
 public const val SAMORDNING_REFUSJONS_KRAV: String = "5056"
 public const val FORESLÅ_UTTAK_KODE: String = "5096"
 public const val KVALITETSSIKRING_KODE: String = "5097"
@@ -65,31 +65,6 @@ public const val OPPRETT_HENDELSE_PÅ_SAK_KODE: String = "9004"
 
 @Suppress("EnumEntryName")
 public enum class AvklaringsbehovKode {
-    /**
-     * [MANUELT_SATT_PÅ_VENT_KODE]
-     */
-    `9001`,
-
-    /**
-     * [BESTILL_BREV_KODE]
-     */
-    `9002`,
-
-    /**
-     * [BESTILL_LEGEERKLÆRING_KODE]
-     */
-    `9003`,
-
-    /**
-     * [OPPRETT_HENDELSE_PÅ_SAK_KODE]
-     */
-    `9004`,
-
-    /**
-     * [VURDER_RETTIGHETSPERIODE_KODE]
-     */
-    `5029`,
-
     /**
      * [AVKLAR_STUDENT_KODE]
      */
@@ -124,27 +99,71 @@ public enum class AvklaringsbehovKode {
      * [VURDER_SYKEPENGEERSTATNING_KODE]
      */
     `5007`,
-    `5008`,
-    `5009`,
-    `5010`,
-    `5011`,
-    `5012`,
-    `5013`,
-    `5014`,
-    `5015`,
-    `5016`,
-    `5017`,
-    `5018`,
-    `5020`,
-    `5024`,
 
     /**
-     * [FORESLÅ_UTTAK_KODE]
+     * [FASTSETT_BEREGNINGSTIDSPUNKT_KODE]
      */
-    `5096`,
-    `5097`,
-    `5098`,
-    `5099`,
+    `5008`,
+
+    /**
+     * [AVKLAR_BARNETILLEGG_KODE]
+     */
+    `5009`,
+
+    /**
+     * [AVKLAR_SONINGSFORRHOLD_KODE]
+     */
+    `5010`,
+
+    /**
+     * [AVKLAR_HELSEINSTITUSJON_KODE]
+     */
+    `5011`,
+
+    /**
+     * [AVKLAR_SAMORDNING_GRADERING_KODE]
+     */
+    `5012`,
+
+    /**
+     * [AVKLAR_YRKESSKADE_KODE]
+     */
+    `5013`,
+
+    /**
+     * [FASTSETT_YRKESSKADE_BELØP_KODE]
+     */
+    `5014`,
+
+    /**
+     * [EFFEKTUER_11_7_KODE]
+     */
+    `5015`,
+
+    /**
+     * [FORHÅNDSVARSEL_AKTIVITETSPLIKT_KODE]
+     */
+    `5016`,
+
+    /**
+     * [AVKLAR_LOVVALG_MEDLEMSKAP_KODE]
+     */
+    `5017`,
+
+    /**
+     * [VENTE_PÅ_FIRST_EFFEKTUER_11_7_KODE]
+     */
+    `5018`,
+
+    /**
+     * [AVKLAR_UTENLANDSK_MEDLEMSKAP_KODE]
+     */
+    `5019`,
+
+    /**
+     * [AVKLAR_FORUTGÅENDE_MEDLEMSKAP_KODE]
+     */
+    `5020`,
 
     /**
      * [MANUELL_OVERSTYRING_LOVVALG]
@@ -155,7 +174,16 @@ public enum class AvklaringsbehovKode {
      * [MANUELL_OVERSTYRING_MEDLEMSKAP]
      */
     `5022`,
+
+    /**
+     * [VENTE_PÅ_KLAGE_IMPLEMENTASJON_KODE]
+     */
     `5023`,
+
+    /**
+     * [AVKLAR_SAMORDNING_UFØRE_KODE]
+     */
+    `5024`,
 
     /**
      * [SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT], for [Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT].
@@ -163,14 +191,14 @@ public enum class AvklaringsbehovKode {
     `5025`,
 
     /**
+     * [REFUSJON_KRAV]
+     * */
+    `5026`,
+
+    /**
      * [AVKLAR_SAMORDNING_ANDRE_STATLIGE_YTELSER_KODE]
      */
     `5027`,
-
-    /**
-     * [AVKLAR_SAMORDNING_ARBEIDSGIVER_KODE]
-     */
-    `5030`,
 
     /**
      * [VURDER_TREKK_AV_SØKNAD_KODE]
@@ -178,9 +206,14 @@ public enum class AvklaringsbehovKode {
     `5028`,
 
     /**
-     * [AVKLAR_UTENLANDSK_MEDLEMSKAP_KODE]
+     * [VURDER_RETTIGHETSPERIODE_KODE]
      */
-    `5019`,
+    `5029`,
+
+    /**
+     * [AVKLAR_SAMORDNING_ARBEIDSGIVER_KODE]
+     */
+    `5030`,
 
     /**
      * [SKRIV_BREV_KODE]
@@ -203,19 +236,34 @@ public enum class AvklaringsbehovKode {
     `5053`,
 
     /**
-     * [REFUSJON_KRAV]
+     * [SAMORDNING_REFUSJONS_KRAV]
      * */
-    `5026`,
+    `5056`,
+
+    /**
+     * [FORESLÅ_UTTAK_KODE]
+     */
+    `5096`,
+
+    /**
+     * [KVALITETSSIKRING_KODE]
+     */
+    `5097`,
+
+    /**
+     * [FORESLÅ_VEDTAK_KODE]
+     */
+    `5098`,
+
+    /**
+     * [FATTE_VEDTAK_KODE]
+     */
+    `5099`,
 
     /**
      * [FASTSETT_PÅKLAGET_BEHANDLING_KODE]
      */
     `5999`,
-
-    /**
-     * [SAMORDNING_REFUSJONS_KRAV]
-     * */
-    `5056`,
 
     /**
      * [VURDER_FORMKRAV_KODE]
@@ -272,8 +320,7 @@ public enum class AvklaringsbehovKode {
      * [VURDER_TREKK_AV_KLAGE_KODE]
      */
     `6010`,
-
-
+    
     /**
      * [FASTSETT_MANUELL_INNTEKT]
      */
@@ -292,5 +339,25 @@ public enum class AvklaringsbehovKode {
     /**
      * [VENT_PÅ_OPPFØLGING]
      */
-    `8003`
+    `8003`,
+
+    /**
+     * [MANUELT_SATT_PÅ_VENT_KODE]
+     */
+    `9001`,
+
+    /**
+     * [BESTILL_BREV_KODE]
+     */
+    `9002`,
+
+    /**
+     * [BESTILL_LEGEERKLÆRING_KODE]
+     */
+    `9003`,
+
+    /**
+     * [OPPRETT_HENDELSE_PÅ_SAK_KODE]
+     */
+    `9004`,
 }

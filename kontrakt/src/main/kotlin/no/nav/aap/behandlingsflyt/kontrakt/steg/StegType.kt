@@ -233,6 +233,15 @@ public enum class StegType(
     ),
 
     // Oppfølgingsbehandling slutt
+    
+    // Aktivitetsplikt start
+    VURDER_AKTIVITETSPLIKT_11_7(
+        gruppe = StegGruppe.AKTIVITETSPLIKT_11_7,
+        status = Status.UTREDES,
+    ),
+    
+    // Aktivitetsplikt slutt
+    
     UDEFINERT(
         gruppe = StegGruppe.UDEFINERT,
         status = Status.UTREDES,

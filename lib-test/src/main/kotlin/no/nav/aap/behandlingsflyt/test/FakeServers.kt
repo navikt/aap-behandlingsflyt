@@ -41,6 +41,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.SumPi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.integrasjon.ident.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
+import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapRequest
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomData
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomDataRessurs
@@ -1309,7 +1310,10 @@ object FakeServers : AutoCloseable {
 
     private fun Application.medlFake() {
         install(ContentNegotiation) {
-            jackson()
+            jackson {
+                registerModule(JavaTimeModule())
+                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            }
         }
         install(StatusPages) {
             exception<Throwable> { call, cause ->
@@ -1322,24 +1326,21 @@ object FakeServers : AutoCloseable {
         }
 
         routing {
-            get {
-                call.response.header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            post {
+                val body = call.receive<MedlemskapRequest>()
+                val ident = body.personident
 
-                val ident = call.request.header("Nav-Personident")
+                val fakePerson = FakePersoner.hentPerson(ident)
 
-                if (ident != null) {
+                if (fakePerson != null) {
+                    call.respond(fakePerson.medlStatus)
+                } else {
+                    call.respond<List<MedlemskapResponse>>(emptyList())
+                }
 
-                    val fakePerson = FakePersoner.hentPerson(ident)
-
-                    if (fakePerson != null) {
-                        call.respond(fakePerson.medlStatus)
-                    } else {
-                        call.respond<List<MedlemskapResponse>>(emptyList())
-                    }
-
-                    @Suppress("UnusedVariable")
-                    @Language("JSON") val eksempelRespons =
-                        """[
+                @Suppress("UnusedVariable")
+                @Language("JSON") val eksempelRespons =
+                    """[
   {
     "unntakId": 100087727,
     "ident": "$ident",
@@ -1376,9 +1377,6 @@ object FakeServers : AutoCloseable {
     }
   }
 ]"""
-                } else {
-                    call.respond(HttpStatusCode.BadRequest, "Mangler fødselnr i header")
-                }
             }
         }
     }
@@ -1858,11 +1856,16 @@ object FakeServers : AutoCloseable {
                     put("/oppdater") {
                         val ref = UUID.fromString(call.pathParameters["referanse"])!!
                         val brev = call.receive<Brev>()
-                        synchronized(mutex) {
-                            val i = brevStore.indexOfFirst { it.referanse == ref }
-                            brevStore[i] = brevStore[i].copy(brev = brev)
+
+                        val i = brevStore.indexOfFirst { it.referanse == ref }
+                        if (brevStore[i].status != Status.UNDER_ARBEID) {
+                            call.respond(HttpStatusCode.BadRequest)
+                        } else {
+                            synchronized(mutex) {
+                                brevStore[i] = brevStore[i].copy(brev = brev)
+                            }
+                            call.respond(HttpStatusCode.NoContent, Unit)
                         }
-                        call.respond(HttpStatusCode.NoContent, Unit)
                     }
                 }
                 post("/ferdigstill") {
