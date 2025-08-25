@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -41,7 +42,11 @@ class AktivitetspliktFlytTest :
         assertThat(aktivitetspliktBehandling)
             .extracting { it.aktivtSteg() }
             .isEqualTo(StegType.VURDER_AKTIVITETSPLIKT_11_7)
-        
-        assertThat(aktivitetspliktBehandling.status()).isEqualTo(Status.AVSLUTTET)
+        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(aktivitetspliktBehandling)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_BRUDD_11_7)
+
+
+        //assertThat(aktivitetspliktBehandling.status()).isEqualTo(Status.AVSLUTTET)
     }
 }
