@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 
 import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import no.nav.aap.komponenter.json.WhiteSpaceRemovalDeserializer
 import java.time.LocalDate
 
 public sealed interface Søknad : Melding
@@ -80,9 +82,8 @@ public data class ManueltOppgittBarn(
     }
 }
 
-public data class Ident(val identifikator: String) {
+public data class Ident(@param:JsonDeserialize(using = WhiteSpaceRemovalDeserializer::class) val identifikator: String) {
     init {
         require(identifikator.matches("\\d{11}".toRegex())) { "Ugyldig identifikator. Lengden må være 11 siffer. Lengde: ${identifikator.length}. Ikke-siffer: ${identifikator.filterNot { it.isDigit() }.length}." }
     }
 }
-
