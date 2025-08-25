@@ -41,7 +41,6 @@ class OvergangUføreSteg private constructor(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.NyeSykdomVilkar)) {
             val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
             when (kontekst.vurderingType) {
@@ -97,8 +96,6 @@ class OvergangUføreSteg private constructor(
             }
 
             return Fullført
-        }
-        return Fullført
     }
 
 
@@ -119,10 +116,12 @@ class OvergangUføreSteg private constructor(
 
 
     companion object : FlytSteg {
+
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
+
             return OvergangUføreSteg(repositoryProvider, gatewayProvider)
         }
 

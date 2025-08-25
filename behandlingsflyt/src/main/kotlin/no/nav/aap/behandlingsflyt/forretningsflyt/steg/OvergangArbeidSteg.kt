@@ -41,62 +41,58 @@ class OvergangArbeidSteg private constructor(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.NyeSykdomVilkar)) {
-            val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-            val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-            when (kontekst.vurderingType) {
-                VurderingType.FØRSTEGANGSBEHANDLING -> {
-                    if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-                        log.info("Ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.OVERGANGARBEIDVILKÅRET} for behandlingId ${kontekst.behandlingId}. Avbryter steg.")
-                        avklaringsbehovene.avbrytForSteg(type())
-                        vilkårService.ingenNyeVurderinger(
-                            kontekst.behandlingId,
-                            Vilkårtype.OVERGANGARBEIDVILKÅRET,
-                            kontekst.rettighetsperiode,
-                            "mangler behandlingsgrunnlag",
-                        )
-                        return Fullført
-                    }
-                    if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && harIkkeVurdert1118tidligere(
-                            avklaringsbehovene
-                        )
-                    ) {
-                        return FantAvklaringsbehov(Definisjon.AVKLAR_OVERGANG_ARBEID)
-                    }
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        when (kontekst.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    log.info("Ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.OVERGANGARBEIDVILKÅRET} for behandlingId ${kontekst.behandlingId}. Avbryter steg.")
+                    avklaringsbehovene.avbrytForSteg(type())
+                    vilkårService.ingenNyeVurderinger(
+                        kontekst.behandlingId,
+                        Vilkårtype.OVERGANGARBEIDVILKÅRET,
+                        kontekst.rettighetsperiode,
+                        "mangler behandlingsgrunnlag",
+                    )
+                    return Fullført
                 }
-
-                VurderingType.REVURDERING -> {
-                    if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-                        log.info("Ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.OVERGANGARBEIDVILKÅRET} for behandlingId ${kontekst.behandlingId}. Avbryter steg.")
-                        avklaringsbehovene.avbrytForSteg(type())
-                        vilkårService.ingenNyeVurderinger(
-                            kontekst.behandlingId,
-                            Vilkårtype.OVERGANGARBEIDVILKÅRET,
-                            kontekst.rettighetsperiode,
-                            "mangler behandlingsgrunnlag",
-                        )
-                        return Fullført
-                    }
-                    if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && harIkkeVurdert1118tidligere(
-                            avklaringsbehovene
-                        )
-                    ) {
-                        return FantAvklaringsbehov(Definisjon.AVKLAR_OVERGANG_ARBEID)
-                    } else {
-                        return Fullført
-                    }
-                }
-
-                VurderingType.MELDEKORT,
-                VurderingType.IKKE_RELEVANT -> {
-                    // Skal ikke gjøre noe
+                if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && harIkkeVurdert1118tidligere(
+                        avklaringsbehovene
+                    )
+                ) {
+                    return FantAvklaringsbehov(Definisjon.AVKLAR_OVERGANG_ARBEID)
                 }
             }
-            if (kontekst.harNoeTilBehandling()) {
-                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+
+            VurderingType.REVURDERING -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    log.info("Ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.OVERGANGARBEIDVILKÅRET} for behandlingId ${kontekst.behandlingId}. Avbryter steg.")
+                    avklaringsbehovene.avbrytForSteg(type())
+                    vilkårService.ingenNyeVurderinger(
+                        kontekst.behandlingId,
+                        Vilkårtype.OVERGANGARBEIDVILKÅRET,
+                        kontekst.rettighetsperiode,
+                        "mangler behandlingsgrunnlag",
+                    )
+                    return Fullført
+                }
+                if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && harIkkeVurdert1118tidligere(
+                        avklaringsbehovene
+                    )
+                ) {
+                    return FantAvklaringsbehov(Definisjon.AVKLAR_OVERGANG_ARBEID)
+                } else {
+                    return Fullført
+                }
             }
 
-            return Fullført
+            VurderingType.MELDEKORT,
+            VurderingType.IKKE_RELEVANT -> {
+                // Skal ikke gjøre noe
+            }
+        }
+        if (kontekst.harNoeTilBehandling()) {
+            vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         }
         return Fullført
     }

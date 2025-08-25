@@ -143,24 +143,36 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 )
             )
-            .medSteg(
-                steg = OvergangArbeidSteg, vurderingsbehovRelevanteForSteg = listOf(
-                    Vurderingsbehov.MOTTATT_SØKNAD,
-                    Vurderingsbehov.MOTTATT_DIALOGMELDING,
-                    Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
-                    Vurderingsbehov.OVERGANG_ARBEID,
-                    Vurderingsbehov.HELHETLIG_VURDERING,
-                )
-            )
-            .medSteg(
-                steg = OvergangUføreSteg, vurderingsbehovRelevanteForSteg = listOf(
-                    Vurderingsbehov.MOTTATT_SØKNAD,
-                    Vurderingsbehov.MOTTATT_DIALOGMELDING,
-                    Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
-                    Vurderingsbehov.OVERGANG_UFORE,
-                    Vurderingsbehov.HELHETLIG_VURDERING,
-                )
-            )
+            .apply {
+                // TODO legges kun ut i dev i første runde
+                if (Miljø.erDev() || Miljø.erLokal()) {
+                    medSteg(
+                        steg = OvergangUføreSteg,
+                        vurderingsbehovRelevanteForSteg = listOf(
+                            Vurderingsbehov.MOTTATT_SØKNAD,
+                            Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                            Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+                            Vurderingsbehov.OVERGANG_UFORE,
+                            Vurderingsbehov.HELHETLIG_VURDERING,
+                        )
+                    )
+                }
+            }
+            .apply {
+                // TODO legges kun ut i dev i første runde
+                if (Miljø.erDev() || Miljø.erLokal()) {
+                    medSteg(
+                        steg = OvergangArbeidSteg,
+                        vurderingsbehovRelevanteForSteg = listOf(
+                            Vurderingsbehov.MOTTATT_SØKNAD,
+                            Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                            Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+                            Vurderingsbehov.OVERGANG_ARBEID,
+                            Vurderingsbehov.HELHETLIG_VURDERING,
+                        )
+                    )
+                }
+            }
             .medSteg(
                 steg = RefusjonkravSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
@@ -316,3 +328,4 @@ object Revurdering : BehandlingType {
     }
 
 }
+
