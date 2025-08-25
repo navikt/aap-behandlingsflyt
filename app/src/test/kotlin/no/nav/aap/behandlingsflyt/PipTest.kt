@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import kotlinx.coroutines.runBlocking
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
@@ -19,6 +20,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -99,9 +101,13 @@ class PipTest {
             )
             val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, periode)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
-                sak.id,
-                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD, periode)),
-                TypeBehandling.Førstegangsbehandling, null
+                sakId = sak.id,
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = null,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD, periode)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD,
+                )
             )
 
             val barnRepository = postgresRepositoryRegistry.provider(connection).provide<BarnRepository>()
@@ -163,9 +169,13 @@ class PipTest {
             )
             val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, periode)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
-                sak.id,
-                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD, periode)),
-                TypeBehandling.Førstegangsbehandling, null
+                sakId = sak.id,
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = null,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD, periode)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD,
+                )
             )
 
             val barnRepository = postgresRepositoryRegistry.provider(connection).provide<BarnRepository>()
@@ -209,9 +219,13 @@ class PipTest {
 
             val periode2 = Periode(LocalDate.now().minusYears(5), LocalDate.now().minusYears(5))
             val behandling2 = BehandlingRepositoryImpl(connection).opprettBehandling(
-                sak.id,
-                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD, periode2)),
-                TypeBehandling.Førstegangsbehandling, null
+                sakId = sak.id,
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = null,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD, periode2)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD,
+                )
             )
 
             barnRepository.lagreRegisterBarn(

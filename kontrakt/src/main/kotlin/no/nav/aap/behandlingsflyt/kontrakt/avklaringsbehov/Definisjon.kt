@@ -35,6 +35,7 @@ public enum class Definisjon(
             Rolle.SAKSBEHANDLER_NASJONAL
         )
     ),
+
     @Deprecated("Ikke i bruk lenger")
     BESTILL_BREV(
         kode = AvklaringsbehovKode.`9002`,
@@ -468,6 +469,15 @@ public enum class Definisjon(
         løsesISteg = StegType.START_OPPFØLGINGSBEHANDLING,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.SAKSBEHANDLER_NASJONAL),
         defaultFrist = Period.ofWeeks(4),
+    ),
+
+    // Aktivitetsplikt
+    VURDER_BRUDD_11_7(
+        kode = AvklaringsbehovKode.`4101`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.VURDER_AKTIVITETSPLIKT_11_7,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
+        kreverToTrinn = true
     );
 
     public companion object {
@@ -518,6 +528,7 @@ public enum class Definisjon(
          * Brevpunkter
          */
         BREV(Definisjon::validerBrevpunkt),
+
         @Deprecated("Ikke i bruk lenger")
         BREV_VENTEPUNKT(Definisjon::validerBrevVentepunkt),
 

@@ -2,9 +2,10 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsev
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
-import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -15,8 +16,11 @@ import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -198,9 +202,12 @@ class SamordningYtelseVurderingServiceTest {
         ).id
         val behandlingId = BehandlingRepositoryImpl(connection).opprettBehandling(
             sakId,
-            listOf(),
             TypeBehandling.Førstegangsbehandling,
-            null
+            null,
+            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                årsak = ÅrsakTilOpprettelse.SØKNAD,
+            ),
         ).id
         return FlytKontekstMedPerioder(
             sakId, behandlingId, null, TypeBehandling.Førstegangsbehandling,

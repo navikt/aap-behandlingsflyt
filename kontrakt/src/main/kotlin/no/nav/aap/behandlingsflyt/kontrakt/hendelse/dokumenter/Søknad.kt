@@ -82,7 +82,7 @@ public data class ManueltOppgittBarn(
 
 public data class Ident(val identifikator: String) {
     init {
-        require(identifikator.matches("\\d{11}".toRegex())) { "Ugyldig identifikator" }
+        require(identifikator.matches("\\d{11}".toRegex())) { "Ugyldig identifikator. Lengden må være 11 siffer. Lengde: ${identifikator.length}. Ikke-siffer: ${identifikator.filterNot { it.isDigit() }.length}." }
     }
 }
 

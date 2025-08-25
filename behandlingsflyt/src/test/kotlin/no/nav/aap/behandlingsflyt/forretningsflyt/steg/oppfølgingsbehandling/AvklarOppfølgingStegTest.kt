@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.Oppfølgings
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.BehandletOppfølgingsOppgave
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -35,6 +36,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 
 @ExtendWith(MockKExtension::class)
@@ -63,13 +65,13 @@ class AvklarOppfølgingStegTest {
         typeBehandling = TypeBehandling.Førstegangsbehandling,
         årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
         status = Status.UTREDES,
-        vurderingsbehov = listOf(),
+        vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
         versjon = 0
     )
 
     @BeforeEach
     fun setup() {
-        every { sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(any<SakId>(), any(), any()) } returns behandling
+        every { sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) } returns behandling
 
         every { mottaDokumentService.hentOppfølgingsBehandlingDokument(any())} returns BehandletOppfølgingsOppgave(
             datoForOppfølging = LocalDate.now(),
@@ -97,8 +99,10 @@ class AvklarOppfølgingStegTest {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
             sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
                 behandling.sakId,
-                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
-                ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+                match {
+                    it.vurderingsbehov == listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)) &&
+                            it.årsak == ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+                }
             )
         }
     }
@@ -121,8 +125,10 @@ class AvklarOppfølgingStegTest {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
             sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
                 behandling.sakId,
-                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
-                ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+                VurderingsbehovOgÅrsak(
+                    listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
+                    ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,
+                )
             )
         }
     }
@@ -139,8 +145,10 @@ class AvklarOppfølgingStegTest {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
             sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
                 behandling.sakId,
-                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
-                ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+                VurderingsbehovOgÅrsak(
+                    listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
+                    ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,
+                )
             )
         }
     }

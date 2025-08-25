@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
@@ -82,6 +83,8 @@ fun NormalOpenAPIRoute.behandlingApi(
                         behandling
                     )
 
+                    val vurderingsbehovOgÅrsaker = behandlingRepository.hentVurderingsbehovOgÅrsaker(behandling.id)
+
                     DetaljertBehandlingDTO(
                         referanse = behandling.referanse.referanse,
                         type = behandling.typeBehandling(),
@@ -132,7 +135,8 @@ fun NormalOpenAPIRoute.behandlingApi(
                         virkningstidspunkt = virkningstidspunkt,
                         kravMottatt = kravMottatt,
                         tilhørendeKlagebehandling = tilhørendeKlagebehandling?.referanse,
-                        vedtaksdato = VedtakService(repositoryProvider).vedtakstidspunkt(behandling)?.toLocalDate()
+                        vedtaksdato = VedtakService(repositoryProvider).vedtakstidspunkt(behandling)?.toLocalDate(),
+                        vurderingsbehovOgÅrsaker = vurderingsbehovOgÅrsaker
                     )
                 }
                 respond(dto)
@@ -196,6 +200,7 @@ fun NormalOpenAPIRoute.behandlingApi(
             }
         }
     }
+
 }
 
 private fun behandling(behandlingRepository: BehandlingRepository, req: BehandlingReferanse): Behandling {

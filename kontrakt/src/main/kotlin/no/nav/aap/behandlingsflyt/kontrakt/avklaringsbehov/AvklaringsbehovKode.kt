@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov
 /**
  * Disse verdiene må igjen gjenspeile enumene under
  */
+public const val VURDER_BRUDD_11_7_KODE: String = "4101"
 public const val AVKLAR_STUDENT_KODE: String = "5001"
 public const val OVERSTYR_IKKE_OPPFYKT_MELDEPLIKT_KODE: String = "5002"
 public const val AVKLAR_SYKDOM_KODE: String = "5003"
@@ -65,6 +66,11 @@ public const val OPPRETT_HENDELSE_PÅ_SAK_KODE: String = "9004"
 
 @Suppress("EnumEntryName")
 public enum class AvklaringsbehovKode {
+    /**
+     * [VURDER_BRUDD_11_7_KODE]
+     */
+    `4101`,
+
     /**
      * [AVKLAR_STUDENT_KODE]
      */
@@ -320,7 +326,7 @@ public enum class AvklaringsbehovKode {
      * [VURDER_TREKK_AV_KLAGE_KODE]
      */
     `6010`,
-    
+
     /**
      * [FASTSETT_MANUELL_INNTEKT]
      */

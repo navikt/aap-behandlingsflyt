@@ -1,8 +1,10 @@
 package no.nav.aap.behandlingsflyt.periodisering
 
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -32,8 +34,13 @@ class PerioderTilVurderingServiceTest {
         )
 
         val behandling = InMemoryBehandlingRepository.opprettBehandling(
-            sak.id, listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-            TypeBehandling.Førstegangsbehandling, null
+            sak.id,
+            TypeBehandling.Førstegangsbehandling,
+            null,
+            VurderingsbehovOgÅrsak(
+                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                ÅrsakTilOpprettelse.SØKNAD
+            )
         )
 
         val flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(

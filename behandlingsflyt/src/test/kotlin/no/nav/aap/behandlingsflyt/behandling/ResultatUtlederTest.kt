@@ -12,7 +12,10 @@ import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.desember
@@ -139,6 +142,9 @@ class ResultatUtlederTest {
     }
 
     private fun opprettBehandling(sak: Sak): Behandling {
-        return InMemorySakOgBehandlingService.finnEllerOpprettOrdinærBehandling(sak.saksnummer, listOf(), ÅrsakTilOpprettelse.SØKNAD)
+        return InMemorySakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
+            sak.saksnummer,
+            VurderingsbehovOgÅrsak(listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)), ÅrsakTilOpprettelse.SØKNAD)
+        )
     }
 }

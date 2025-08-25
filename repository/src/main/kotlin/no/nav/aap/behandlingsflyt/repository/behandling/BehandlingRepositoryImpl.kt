@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.behandling
 
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -11,11 +12,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
+import no.nav.aap.meldekort.kontrakt.Periode
 import java.time.LocalDateTime
 
 class BehandlingRepositoryImpl(private val connection: DBConnection) : BehandlingRepository {
@@ -28,10 +31,9 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun opprettBehandling(
         sakId: SakId,
-        vurderingsbehov: List<VurderingsbehovMedPeriode>,
         typeBehandling: TypeBehandling,
         forrigeBehandlingId: BehandlingId?,
-        årsakTilOpprettelse: ÅrsakTilOpprettelse?
+        vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak,
     ): Behandling {
 
         val query = """
@@ -47,20 +49,35 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 setEnumName(3, Status.OPPRETTET)
                 setString(4, typeBehandling.identifikator())
                 setLong(5, forrigeBehandlingId?.toLong())
-                setEnumName(6, årsakTilOpprettelse)
+                setEnumName(6, vurderingsbehovOgÅrsak.årsak)
             }
         }
 
-        val vurderingsbehovQuery = """
-            INSERT INTO vurderingsbehov (behandling_id, aarsak, periode)
-            VALUES (?, ?, ?::daterange)
+        val årsakQuery = """
+            INSERT INTO behandling_aarsak(behandling_id, aarsak, begrunnelse, opprettet_tid)
+            VALUES (?, ?, ?, ?)
         """.trimIndent()
 
-        connection.executeBatch(vurderingsbehovQuery, vurderingsbehov) {
+        val behandlingÅrsakId = connection.executeReturnKey(årsakQuery, {
+            setParams {
+                setLong(1, behandlingId)
+                setEnumName(2, vurderingsbehovOgÅrsak.årsak)
+                setString(3, vurderingsbehovOgÅrsak.beskrivelse)
+                setLocalDateTime(4, vurderingsbehovOgÅrsak.opprettet)
+            }
+        })
+
+        val vurderingsbehovQuery = """
+            INSERT INTO vurderingsbehov (behandling_id, aarsak, periode, behandling_aarsak_id)
+            VALUES (?, ?, ?::daterange, ?)
+        """.trimIndent()
+
+        connection.executeBatch(vurderingsbehovQuery, vurderingsbehovOgÅrsak.vurderingsbehov) {
             setParams {
                 setLong(1, behandlingId)
                 setEnumName(2, it.type)
                 setPeriode(3, it.periode)
+                setLong(4, behandlingÅrsakId)
             }
         }
 
@@ -141,6 +158,58 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 VurderingsbehovMedPeriode(it.getEnum("aarsak"), it.getPeriodeOrNull("periode"))
             }
         }
+    }
+
+    /**
+     * Merk at denne ikke vil returnere vurderingsbehov og årsaker for behandlinger før tabellen `behandling_aarsak` ble introdusert.
+     * Det er besluttet å ikke migrere data for denne perioden da det mangler data for å gjøre dette korrekt samt at det er snakk
+     * om få behandlinger hvor dette er aktuelt.
+     */
+    override fun hentVurderingsbehovOgÅrsaker(behandlingId: BehandlingId): List<VurderingsbehovOgÅrsak> {
+        data class VurderingsbehovOgÅrsakInternal(
+            val id: Long,
+            val vurderingsbehovType: Vurderingsbehov,
+            val vurderingsbehovPeriode: no.nav.aap.komponenter.type.Periode?,
+            val årsak: ÅrsakTilOpprettelse,
+            val opprettet: LocalDateTime,
+            val beskrivelse: String?
+        )
+
+        val query = """
+            SELECT ba.id as aarsak_id, ba.aarsak, ba.begrunnelse, ba.opprettet_tid,
+                   vb.aarsak as vurderingsbehov, vb.periode
+            FROM behandling_aarsak ba
+            INNER JOIN vurderingsbehov vb ON vb.behandling_aarsak_id = ba.id
+            WHERE vb.behandling_id = ?
+            ORDER BY ba.opprettet_tid DESC, vb.opprettet_tid DESC
+        """.trimIndent()
+
+        val vurderingsbehovOgÅrsakInternal = connection.queryList(query) {
+            setParams {
+                setLong(1, behandlingId.id)
+            }
+            setRowMapper { row ->
+                VurderingsbehovOgÅrsakInternal(
+                    id = row.getLong("aarsak_id"),
+                    årsak = row.getEnum("aarsak"),
+                    beskrivelse = row.getStringOrNull("begrunnelse"),
+                    opprettet = row.getLocalDateTime("opprettet_tid"),
+                    vurderingsbehovType = row.getEnum("vurderingsbehov"),
+                    vurderingsbehovPeriode = row.getPeriodeOrNull("periode")
+                )
+            }
+        }
+
+        return vurderingsbehovOgÅrsakInternal
+            .groupBy { it.id }
+            .map { (_, vurderingsbehovOgÅrsak) ->
+                VurderingsbehovOgÅrsak(
+                    årsak = vurderingsbehovOgÅrsak.first().årsak,
+                    beskrivelse = vurderingsbehovOgÅrsak.first().beskrivelse,
+                    opprettet = vurderingsbehovOgÅrsak.first().opprettet,
+                    vurderingsbehov = vurderingsbehovOgÅrsak.map { VurderingsbehovMedPeriode(it.vurderingsbehovType, it.vurderingsbehovPeriode) }
+                )
+            }
     }
 
     override fun oppdaterBehandlingStatus(
@@ -346,17 +415,34 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
-    override fun oppdaterVurderingsbehov(behandling: Behandling, vurderingsbehov: List<VurderingsbehovMedPeriode>) {
-        val vurderingsbehovQuery = """
-            INSERT INTO vurderingsbehov (behandling_id, aarsak, periode)
-            VALUES (?, ?, ?::daterange)
+    override fun oppdaterVurderingsbehovOgÅrsak(behandling: Behandling, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak) {
+        val nyeVurderingsbehov = vurderingsbehovOgÅrsak.vurderingsbehov.filter { !behandling.vurderingsbehov().contains(it) }
+
+        val årsakQuery = """
+            INSERT INTO behandling_aarsak(behandling_id, aarsak, begrunnelse, opprettet_tid)
+            VALUES (?, ?, ?, ?)
         """.trimIndent()
 
-        connection.executeBatch(vurderingsbehovQuery, vurderingsbehov.filter { !behandling.vurderingsbehov().contains(it) }) {
+        val behandlingÅrsakId = connection.executeReturnKey(årsakQuery, {
+            setParams {
+                setLong(1, behandling.id.toLong())
+                setEnumName(2, vurderingsbehovOgÅrsak.årsak)
+                setString(3, vurderingsbehovOgÅrsak.beskrivelse)
+                setLocalDateTime(4, vurderingsbehovOgÅrsak.opprettet)
+            }
+        })
+
+        val vurderingsbehovQuery = """
+            INSERT INTO vurderingsbehov (behandling_id, aarsak, periode, behandling_aarsak_id)
+            VALUES (?, ?, ?::daterange, ?)
+        """.trimIndent()
+
+        connection.executeBatch(vurderingsbehovQuery, nyeVurderingsbehov) {
             setParams {
                 setLong(1, behandling.id.toLong())
                 setEnumName(2, it.type)
                 setPeriode(3, it.periode)
+                setLong(4, behandlingÅrsakId)
             }
         }
     }

@@ -17,6 +17,8 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -58,7 +60,15 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             val sak =
                 personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
             val behandling =
-                behandlingRepo.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+                behandlingRepo.opprettBehandling(
+                    sak.id,
+                    TypeBehandling.Førstegangsbehandling,
+                    null,
+                    VurderingsbehovOgÅrsak(
+                        listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                        ÅrsakTilOpprettelse.SØKNAD
+                    )
+                )
             lagNyFullVurdering(behandling.id, repo, "Første begrunnelse", connection)
 
             val lagretInntekt = repo.hentHvisEksisterer(behandling.id)!!
@@ -123,7 +133,15 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             )
 
             // Random ny behandling uten kobling
-            behandlingRepo.opprettBehandling(sak2.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+            behandlingRepo.opprettBehandling(
+                sak2.id,
+                TypeBehandling.Førstegangsbehandling,
+                null,
+                VurderingsbehovOgÅrsak(
+                    listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                    ÅrsakTilOpprettelse.SØKNAD
+                )
+            )
 
             val sisteUtenlandsOppholdData =
                 arbeidInntektRepo.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(sak.id)
@@ -186,7 +204,12 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
         return dataSource.transaction { connection ->
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val forutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
-            val behandling = behandlingRepo.opprettBehandling(sakId, årsaker, typeBehandling, forrigeBehandlingId)
+            val behandling = behandlingRepo.opprettBehandling(
+                sakId,
+                typeBehandling,
+                forrigeBehandlingId,
+                VurderingsbehovOgÅrsak(årsaker, ÅrsakTilOpprettelse.SØKNAD)
+            )
             lagNyFullVurdering(behandling.id, forutgåendeRepo, "Heftig vurdering", connection, utenlandsOppholdData)
             behandling
         }

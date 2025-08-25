@@ -1,0 +1,11 @@
+CREATE TABLE BEHANDLING_AARSAK
+(
+    ID                   BIGSERIAL                              NOT NULL PRIMARY KEY,
+    BEHANDLING_ID        BIGINT                                 NULL REFERENCES BEHANDLING (ID),
+    AARSAK               TEXT                                   NOT NULL,
+    BEGRUNNELSE          TEXT                                   NULL,
+    OPPRETTET_TID        TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+ALTER TABLE VURDERINGSBEHOV
+    ADD COLUMN BEHANDLING_AARSAK_ID BIGINT NULL REFERENCES BEHANDLING_AARSAK (ID);

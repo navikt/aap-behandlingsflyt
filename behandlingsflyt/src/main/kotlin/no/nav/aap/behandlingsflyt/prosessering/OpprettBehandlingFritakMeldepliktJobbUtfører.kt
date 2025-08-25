@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -28,9 +29,11 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
 
         if (skalHaFritakForPassertMeldeperiode(sak)) {
             val fritakMeldepliktBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
-                sak.id,
-                listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.FRITAK_MELDEPLIKT)),
-                ÅrsakTilOpprettelse.FRITAK_MELDEPLIKT
+                sakId = sak.id,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    årsak = ÅrsakTilOpprettelse.FRITAK_MELDEPLIKT,
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.FRITAK_MELDEPLIKT))
+                ),
             )
 
             prosesserBehandlingService.triggProsesserBehandling(fritakMeldepliktBehandling)
