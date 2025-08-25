@@ -17,6 +17,10 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.Med
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -56,7 +60,15 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             val sak =
                 personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
             val behandling =
-                behandlingRepo.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+                behandlingRepo.opprettBehandling(
+                    sak.id,
+                    TypeBehandling.Førstegangsbehandling,
+                    null,
+                    VurderingsbehovOgÅrsak(
+                        listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                        ÅrsakTilOpprettelse.SØKNAD
+                    )
+                )
             lagNyFullVurdering(behandling.id, repo, "Første begrunnelse")
 
             val lagretInntekt = repo.hentHvisEksisterer(behandling.id)!!
@@ -86,7 +98,15 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             val sak =
                 personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
             val behandling =
-                behandlingRepo.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+                behandlingRepo.opprettBehandling(
+                    sak.id,
+                    TypeBehandling.Førstegangsbehandling,
+                    null,
+                    VurderingsbehovOgÅrsak(
+                        listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                        ÅrsakTilOpprettelse.SØKNAD
+                    )
+                )
             lagNyFullVurdering(behandling.id, repo, "Første begrunnelse")
 
             val historikk = repo.hentHistoriskeVurderinger(sak.id, behandling.id)
@@ -101,7 +121,15 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             val repo = MedlemskapArbeidInntektRepositoryImpl(connection)
 
             val revurdering =
-                behandlingRepo.opprettBehandling(behandling.sakId, listOf(), TypeBehandling.Revurdering, behandling.id)
+                behandlingRepo.opprettBehandling(
+                    behandling.sakId,
+                    TypeBehandling.Revurdering,
+                    behandling.id,
+                    VurderingsbehovOgÅrsak(
+                        listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                        ÅrsakTilOpprettelse.SØKNAD
+                    )
+                )
 
             val historikk = repo.hentHistoriskeVurderinger(revurdering.sakId, revurdering.id)
             lagNyFullVurdering(revurdering.id, repo, "Andre begrunnelse")

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyBehandlingHendelseService
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyInformasjonskravGrunnlag
@@ -27,6 +28,7 @@ import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -102,11 +104,14 @@ class EnklereFlytOrkestratorTest {
         val sak = sakRepository.finnEllerOpprett(person, periode)
         val behandling = behandlingRepository.opprettBehandling(
             sakId = sak.id,
-            vurderingsbehov = listOf(
-                VurderingsbehovMedPeriode(
-                    type = Vurderingsbehov.MOTTATT_MELDEKORT,
-                    periode = periode,
-                )
+            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                vurderingsbehov = listOf(
+                    VurderingsbehovMedPeriode(
+                        type = Vurderingsbehov.MOTTATT_MELDEKORT,
+                        periode = periode,
+                    )
+                ),
+                årsak = ÅrsakTilOpprettelse.MELDEKORT
             ),
             typeBehandling = TypeBehandling.Førstegangsbehandling,
             forrigeBehandlingId = null
@@ -176,7 +181,15 @@ class EnklereFlytOrkestratorTest {
 
         val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         val behandling =
-            behandlingRepository.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+            behandlingRepository.opprettBehandling(
+                sakId = sak.id,
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = null,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                )
+            )
 
         val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
 
@@ -196,7 +209,15 @@ class EnklereFlytOrkestratorTest {
         val person = Person(UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
         val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         val behandling =
-            behandlingRepository.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+            behandlingRepository.opprettBehandling(
+                sakId = sak.id,
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = null,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                )
+            )
 
         val behandlingHendelseService = object : BehandlingHendelseService {
             val hendelser = mutableListOf<Pair<Behandling, Avklaringsbehovene>>()
@@ -239,7 +260,15 @@ class EnklereFlytOrkestratorTest {
 
         val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         val behandling =
-            behandlingRepository.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+            behandlingRepository.opprettBehandling(
+                sakId = sak.id,
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = null,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                )
+            )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
             definisjoner = listOf(Definisjon.AVKLAR_SYKDOM), funnetISteg = AVKLAR_SYKDOM
@@ -314,7 +343,15 @@ class EnklereFlytOrkestratorTest {
 
         val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         val behandling =
-            behandlingRepository.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+            behandlingRepository.opprettBehandling(
+                sakId = sak.id,
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = null,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                )
+            )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
             definisjoner = listOf(Definisjon.AVKLAR_STUDENT), funnetISteg = AVKLAR_STUDENT

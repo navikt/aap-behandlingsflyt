@@ -9,8 +9,12 @@ import io.ktor.serialization.jackson.*
 import io.ktor.server.auth.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeServers
@@ -38,8 +42,11 @@ open class BaseApiTest {
     fun opprettBehandling(sak: Sak, typeBehandling: TypeBehandling) =
         InMemoryBehandlingRepository.opprettBehandling(
             sak.id,
-            vurderingsbehov = listOf(),
             typeBehandling = typeBehandling,
+            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                årsak = ÅrsakTilOpprettelse.SØKNAD,
+            ),
             forrigeBehandlingId = null,
         )
 

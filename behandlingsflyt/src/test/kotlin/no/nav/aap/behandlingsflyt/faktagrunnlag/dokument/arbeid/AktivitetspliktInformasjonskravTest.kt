@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_7
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_AKTIVT_BIDRAG
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
@@ -15,6 +16,8 @@ import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -46,9 +49,12 @@ class AktivitetspliktInformasjonskravTest {
             val sak = nySak(connection)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sak.id,
-                listOf(),
                 TypeBehandling.Førstegangsbehandling,
-                null
+                null,
+                VurderingsbehovOgÅrsak(
+                    listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                    ÅrsakTilOpprettelse.SØKNAD
+                )
             )
             val aktivitetspliktInformasjonskrav = AktivitetspliktInformasjonskrav.konstruer(
                 repositoryRegistry.provider(connection),

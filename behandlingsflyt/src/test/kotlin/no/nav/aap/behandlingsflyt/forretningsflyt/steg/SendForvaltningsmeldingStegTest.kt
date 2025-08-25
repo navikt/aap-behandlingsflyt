@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.testutil.FakeBrevbestillingGateway
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
@@ -11,6 +12,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -125,9 +128,12 @@ class SendForvaltningsmeldingStegTest {
         val sak = InMemorySakRepository.finnEllerOpprett(person, periode)
         return InMemoryBehandlingRepository.opprettBehandling(
             sak.id,
-            listOf(),
             typeBehandling,
-            null
+            null,
+            VurderingsbehovOgÅrsak(
+                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                ÅrsakTilOpprettelse.SØKNAD
+            )
         )
     }
 

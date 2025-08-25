@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -44,12 +45,15 @@ class OpprettRevurderingSteg(
                 logger.info("Oppretter revurdering. SakID: ${kontekst.sakId}")
                 val behandling = sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
                     sakId = kontekst.sakId,
-                    vurderingsbehov = listOf(
-                        VurderingsbehovMedPeriode(
-                            type = Vurderingsbehov.REVURDER_SAMORDNING,
-                        )
+                    vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                        årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,
+                        vurderingsbehov = listOf(
+                            VurderingsbehovMedPeriode(
+                                type = Vurderingsbehov.REVURDER_SAMORDNING,
+                            )
+                        ),
+                        beskrivelse = samordningVurdering.begrunnelse
                     ),
-                    årsakTilOpprettelse = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
                 )
 
                 val behandlingSkrivelås =

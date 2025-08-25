@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
@@ -647,7 +648,10 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
                 forrigeBehandlingId = forrigeBehandlingId,
                 sakId = sakId,
                 typeBehandling = typeBehandling,
-                vurderingsbehov = vurderingsbehov
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = vurderingsbehov,
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                )
             )
         }
     }
@@ -1006,10 +1010,10 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
         return this.løsAvklaringsBehov(vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
     }
 
-    protected fun leggTilÅrsakForBehandling(behandling: Behandling, årsaker: List<VurderingsbehovMedPeriode>) {
+    protected fun leggTilVurderingsbehovForBehandling(behandling: Behandling, vurderingsbehov: List<VurderingsbehovMedPeriode>) {
         dataSource.transaction { connection ->
             SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
-                .finnEllerOpprettOrdinærBehandling(behandling.sakId, årsaker, ÅrsakTilOpprettelse.SØKNAD)
+                .finnEllerOpprettOrdinærBehandling(behandling.sakId, VurderingsbehovOgÅrsak(vurderingsbehov, ÅrsakTilOpprettelse.SØKNAD))
         }
         prosesserBehandling(behandling)
     }

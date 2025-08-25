@@ -39,7 +39,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 import kotlin.test.Test
 
 @ExtendWith(MockKExtension::class)
@@ -54,7 +54,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
         utfører.utfør(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id))
 
-        verify { sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any(), any()) }
+        verify { sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any()) }
     }
 
     @Test
@@ -65,7 +65,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
         utfører.utfør(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id))
 
-        verify(exactly = 0) { sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any(), any()) }
+        verify(exactly = 0) { sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any()) }
     }
 
     @Test
@@ -78,7 +78,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
         utfører.utfør(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id))
 
-        verify(exactly = 0) { sakOgBehandlingServiceMock.finnEllerOpprettOrdinærBehandling(any<SakId>(), any(), any()) }
+        verify(exactly = 0) { sakOgBehandlingServiceMock.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) }
     }
 
     private fun mockAvhengigheterForOpprettBehandlingFritakMeldepliktJobbUtfører(
@@ -124,7 +124,6 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
         every {
             sakOgBehandlingServiceMock.finnEllerOpprettBehandling(
                 sakId,
-                any(),
                 any()
             )
         } returns SakOgBehandlingService.Ordinær(fakeBehandling)
@@ -156,7 +155,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             )
         )
 
-        every { sakOgBehandlingServiceMock.finnEllerOpprettOrdinærBehandling(any<SakId>(), any(), any()) } returns fakeBehandling
+        every { sakOgBehandlingServiceMock.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) } returns fakeBehandling
 
         return OpprettBehandlingFritakMeldepliktJobbUtfører(
             sakService = sakServiceMock,

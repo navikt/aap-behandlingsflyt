@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -26,10 +27,9 @@ object InMemoryBehandlingRepository : BehandlingRepository {
 
     override fun opprettBehandling(
         sakId: SakId,
-        vurderingsbehov: List<VurderingsbehovMedPeriode>,
         typeBehandling: TypeBehandling,
         forrigeBehandlingId: BehandlingId?,
-        årsakTilOpprettelse: ÅrsakTilOpprettelse?
+        vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak,
     ): Behandling {
         synchronized(lock) {
             val id = BehandlingId(idSeq.andIncrement)
@@ -45,8 +45,8 @@ object InMemoryBehandlingRepository : BehandlingRepository {
                 sakId = sakId,
                 typeBehandling = typeBehandling,
                 versjon = 1,
-                vurderingsbehov = vurderingsbehov,
-                årsakTilOpprettelse = årsakTilOpprettelse,
+                vurderingsbehov = vurderingsbehovOgÅrsak.vurderingsbehov,
+                årsakTilOpprettelse = vurderingsbehovOgÅrsak.årsak,
             )
             memory[id] = behandling
 
@@ -96,11 +96,15 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
-    override fun oppdaterVurderingsbehov(
+    override fun oppdaterVurderingsbehovOgÅrsak(
         behandling: Behandling,
-        vurderingsbehov: List<VurderingsbehovMedPeriode>
+        vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak,
     ) {
 
+    }
+
+    override fun hentVurderingsbehovOgÅrsaker(behandlingId: BehandlingId): List<VurderingsbehovOgÅrsak> {
+        return emptyList()
     }
 
     override fun hentSakId(referanse: BehandlingReferanse): SakId {

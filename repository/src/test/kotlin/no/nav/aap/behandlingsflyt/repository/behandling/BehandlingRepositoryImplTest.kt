@@ -47,6 +47,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -90,10 +91,12 @@ internal class BehandlingRepositoryImplTest {
             // Opprett
             repo.opprettBehandling(
                 sakId = sak.id,
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
-                årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                ),
             )
         }
 
@@ -127,10 +130,12 @@ internal class BehandlingRepositoryImplTest {
             // Opprett
             repo.opprettBehandling(
                 sakId = sak.id,
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
-                årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                ),
             )
         }
 
@@ -160,18 +165,22 @@ internal class BehandlingRepositoryImplTest {
             // Opprett
             val førstegang = repo.opprettBehandling(
                 sakId = sak.id,
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
-                årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                ),
             )
 
             val klage = repo.opprettBehandling(
                 sakId = sak.id,
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTATT_KLAGE)),
                 typeBehandling = TypeBehandling.Klage,
                 forrigeBehandlingId = null,
-                årsakTilOpprettelse = ÅrsakTilOpprettelse.KLAGE
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTATT_KLAGE)),
+                    årsak = ÅrsakTilOpprettelse.KLAGE
+                ),
             )
             Triple(sak, førstegang, klage)
         }
@@ -214,10 +223,12 @@ internal class BehandlingRepositoryImplTest {
             // Opprett
             val førstegang = repo.opprettBehandling(
                 sakId = sak.id,
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
-                årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                ),
             )
 
             vedtakRepo.lagre(
@@ -228,10 +239,12 @@ internal class BehandlingRepositoryImplTest {
 
             val klage = repo.opprettBehandling(
                 sakId = sak.id,
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTATT_KLAGE)),
                 typeBehandling = TypeBehandling.Klage,
                 forrigeBehandlingId = null,
-                årsakTilOpprettelse = ÅrsakTilOpprettelse.KLAGE
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTATT_KLAGE)),
+                    årsak = ÅrsakTilOpprettelse.KLAGE
+                ),
             )
             Triple(sak, førstegang, klage)
         }
@@ -264,6 +277,41 @@ internal class BehandlingRepositoryImplTest {
             val saksnummer = behandlingRepository.finnSaksnummer(behandling.referanse)
 
             assertThat(saksnummer).isEqualTo(sak.saksnummer)
+        }
+    }
+
+    @Test
+    fun `Kan hente vurderingbehovOgÅrsaker for behandling`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+
+            // Legger til nye vurderingsbehov og årsak
+            finnEllerOpprettBehandling(connection, sak,
+                vurderingsbehov = listOf(
+                    VurderingsbehovMedPeriode(
+                        type = Vurderingsbehov.BARNETILLEGG
+                    ),
+                    VurderingsbehovMedPeriode(
+                        type = Vurderingsbehov.REVURDER_MEDLEMSKAP
+                    )
+                ),
+                årsakTilOpprettelse = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+            )
+
+            val behandlingRepository = BehandlingRepositoryImpl(connection)
+
+            val vurderingsbehovOgÅrsaker = behandlingRepository.hentVurderingsbehovOgÅrsaker(behandling.id)
+
+            val vurderingsbehovOgÅrsakSøknad = vurderingsbehovOgÅrsaker.find { it.årsak == ÅrsakTilOpprettelse.SØKNAD }
+            assertThat(vurderingsbehovOgÅrsakSøknad).isNotNull
+            assertThat(vurderingsbehovOgÅrsakSøknad?.vurderingsbehov?.map { it.type})
+                .containsExactlyInAnyOrder(Vurderingsbehov.MOTTATT_SØKNAD)
+
+            val vurderingbehovOgÅrsakManuellOpprettelse = vurderingsbehovOgÅrsaker.find { it.årsak == ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE }
+            assertThat(vurderingbehovOgÅrsakManuellOpprettelse).isNotNull
+            assertThat(vurderingbehovOgÅrsakManuellOpprettelse?.vurderingsbehov?.map { it.type })
+                .containsExactlyInAnyOrder(Vurderingsbehov.BARNETILLEGG, Vurderingsbehov.REVURDER_MEDLEMSKAP)
         }
     }
 

@@ -3,13 +3,17 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -114,9 +118,12 @@ class FatteVedtakLøserTest {
         )
         val behandling = InMemoryBehandlingRepository.opprettBehandling(
             sakId = sak.id,
-            vurderingsbehov = listOf(),
             typeBehandling = TypeBehandling.Førstegangsbehandling,
-            forrigeBehandlingId = null
+            forrigeBehandlingId = null,
+            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                årsak = ÅrsakTilOpprettelse.SØKNAD
+            ),
         )
         return Pair(sak, behandling)
     }

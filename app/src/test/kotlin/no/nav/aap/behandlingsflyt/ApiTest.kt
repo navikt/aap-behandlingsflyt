@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
@@ -38,6 +39,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -52,7 +54,6 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -172,9 +173,13 @@ class ApiTest {
             val sak =
                 personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
             val behandling = behandlingRepo.opprettBehandling(
-                sak.id,
-                listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
-                TypeBehandling.Førstegangsbehandling, null
+                sakId = sak.id,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD,
+                ),
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = null
             )
             val medlRepo = postgresRepositoryRegistry.provider(connection).provide<MedlemskapRepository>()
             medlRepo.lagreUnntakMedlemskap(
@@ -222,9 +227,13 @@ class ApiTest {
             val sak =
                 personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
             val behandling = behandlingRepo.opprettBehandling(
-                sak.id,
-                listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
-                TypeBehandling.Førstegangsbehandling, null
+                sakId = sak.id,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD,
+                ),
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = null
             )
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
             beregningsgrunnlagRepository.lagre(
