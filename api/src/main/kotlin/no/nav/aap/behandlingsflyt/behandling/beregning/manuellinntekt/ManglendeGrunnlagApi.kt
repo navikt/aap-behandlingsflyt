@@ -35,6 +35,7 @@ data class ManuellInntektGrunnlagResponse(
     val ar: Int,
     val gverdi: BigDecimal,
     val vurdering: ManuellInntektVurderingGrunnlagResponse?,
+    val historiskeVurderinger: List<ManuellInntektVurderingGrunnlagResponse>,
     val harTilgangTilÅSaksbehandle: Boolean,
 )
 
@@ -47,11 +48,11 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(dataSource: DataSource, repositoryRe
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.FASTSETT_MANUELL_INNTEKT.kode.toString()
             ) { req ->
-                val (manuellInntekt, år) = dataSource.transaction {
+                val (manuellInntekt, år, historiskeVurderinger) = dataSource.transaction {
                     val provider = repositoryRegistry.provider(it)
                     val behandlingRepository = provider.provide<BehandlingRepository>()
-                    val manuellInntektRepository = provider.provide<ManuellInntektGrunnlagRepository>()
                     val beregningService = BeregningService(provider)
+                    val manuellInntektRepository = provider.provide<ManuellInntektGrunnlagRepository>()
 
                     val behandling = behandlingRepository.hent(req.referanse.let(::BehandlingReferanse))
                     val relevanteÅr = beregningService.utledRelevanteBeregningsÅr(behandling.id)
@@ -63,7 +64,10 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(dataSource: DataSource, repositoryRe
                         log.warn("Fant flere manuelle inntekter for behandling ${behandling.id}. Per nå gjør vi antakelse om kun én.")
                     }
 
-                    Pair(manuellInntekter?.firstOrNull(), relevanteÅr.max())
+                    val historiskeVurderinger =
+                        manuellInntektRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
+
+                    Triple(manuellInntekter?.firstOrNull(), relevanteÅr.max(), historiskeVurderinger)
                 }
 
                 // Gjennomsnittlig G-verdi første januar i året vi er interessert i
@@ -79,6 +83,14 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(dataSource: DataSource, repositoryRe
                         gverdi = gVerdi.verdi,
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = manuellInntekt?.let {
+                            ManuellInntektVurderingGrunnlagResponse(
+                                begrunnelse = it.begrunnelse,
+                                vurdertAv = VurdertAvResponse(it.vurdertAv, it.opprettet.toLocalDate()),
+                                ar = it.år.value,
+                                belop = it.belop.verdi,
+                            )
+                        },
+                        historiskeVurderinger = historiskeVurderinger.map {
                             ManuellInntektVurderingGrunnlagResponse(
                                 begrunnelse = it.begrunnelse,
                                 vurdertAv = VurdertAvResponse(it.vurdertAv, it.opprettet.toLocalDate()),

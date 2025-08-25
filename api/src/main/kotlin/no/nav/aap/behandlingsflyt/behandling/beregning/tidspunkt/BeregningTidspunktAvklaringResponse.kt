@@ -6,6 +6,7 @@ import java.time.LocalDate
 data class BeregningTidspunktAvklaringResponse(
     val harTilgangTilÅSaksbehandle: Boolean,
     val vurdering: BeregningstidspunktVurderingResponse?,
+    val historiskeVurderinger: List<BeregningstidspunktVurderingResponse>,
     val skalVurdereYtterligere: Boolean
 )
 

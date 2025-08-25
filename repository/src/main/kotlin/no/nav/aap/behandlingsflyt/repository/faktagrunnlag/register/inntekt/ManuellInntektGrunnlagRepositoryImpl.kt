@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.Factory
@@ -39,6 +40,30 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
         return ManuellInntektGrunnlag(
             manuelleInntekter = hentManuellInntektVurderinger(manuellInntektVurderingId)
         )
+    }
+
+    override fun hentHistoriskeVurderinger(
+        sakId: SakId,
+        behandlingId: BehandlingId
+    ): List<ManuellInntektVurdering> {
+        val query = """
+            SELECT MANUELL_INNTEKT_VURDERINGER_ID
+            FROM MANUELL_INNTEKT_VURDERING_GRUNNLAG GRUNNLAG
+                JOIN BEHANDLING B1 ON B1.ID = GRUNNLAG.BEHANDLING_ID
+            WHERE GRUNNLAG.AKTIV
+            AND B1.SAK_ID = ?
+            AND B1.OPPRETTET_TID < (SELECT B2.OPPRETTET_TID FROM BEHANDLING B2 WHERE ID = ?)
+        """.trimIndent()
+
+        return connection.querySet(query) {
+            setParams {
+                setLong(1, sakId.id)
+                setLong(2, behandlingId.id)
+            }
+            setRowMapper {
+                hentManuellInntektVurderinger(it.getLong("MANUELL_INNTEKT_VURDERINGER_ID"))
+            }
+        }.flatten()
     }
 
     private fun hentManuellInntektVurderinger(vurderingerId: Long): Set<ManuellInntektVurdering> {
