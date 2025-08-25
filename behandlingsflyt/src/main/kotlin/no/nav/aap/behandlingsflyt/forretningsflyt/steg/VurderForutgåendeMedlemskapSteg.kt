@@ -32,7 +32,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     private val forutgåendeMedlemskapArbeidInntektRepository: MedlemskapArbeidInntektForutgåendeRepository,
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val personopplysningForutgåendeRepository: PersonopplysningForutgåendeRepository,
-    private val sykdomRepositor: SykdomRepository,
+    private val sykdomRepository: SykdomRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårService: VilkårService,
@@ -46,7 +46,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         medlemskapArbeidInntektRepository = repositoryProvider.provide(),
         personopplysningForutgåendeRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
-        sykdomRepositor = repositoryProvider.provide(),
+        sykdomRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         vilkårService = VilkårService(repositoryProvider),
     )
@@ -95,7 +95,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)?.manuellVurdering
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        val sykdomGrunnlag = sykdomRepositor.hent(kontekst.behandlingId)
+        val sykdomGrunnlag = sykdomRepository.hent(kontekst.behandlingId)
         val harYrkesskadeSammenheng = sykdomGrunnlag.yrkesskadevurdering?.erÅrsakssammenheng
         if (harYrkesskadeSammenheng == true) {
             ForutgåendeMedlemskapvilkåret(
@@ -156,7 +156,10 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return VurderForutgåendeMedlemskapSteg(repositoryProvider)
         }
 

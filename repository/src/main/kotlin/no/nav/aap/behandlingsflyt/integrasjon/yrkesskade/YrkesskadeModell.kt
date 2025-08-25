@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.integrasjon.yrkesskade
 
 import java.time.LocalDate
 
-class YrkesskadeModell(
+data class YrkesskadeModell(
     val kommunenr: String,
     val saksblokk: String,
     // bruke denne?
