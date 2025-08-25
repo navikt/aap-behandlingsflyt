@@ -160,6 +160,11 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
+    /**
+     * Merk at denne ikke vil returnere vurderingsbehov og årsaker for behandlinger før tabellen `behandling_aarsak` ble introdusert.
+     * Det er besluttet å ikke migrere data for denne perioden da det mangler data for å gjøre dette korrekt samt at det er snakk
+     * om få behandlinger hvor dette er aktuelt.
+     */
     override fun hentVurderingsbehovOgÅrsaker(behandlingId: BehandlingId): List<VurderingsbehovOgÅrsak> {
         data class VurderingsbehovOgÅrsakInternal(
             val id: Long,
