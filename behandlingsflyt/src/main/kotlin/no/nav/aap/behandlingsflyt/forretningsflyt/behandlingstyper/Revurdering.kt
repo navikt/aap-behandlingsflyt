@@ -85,7 +85,8 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = RettighetsperiodeSteg,
                 informasjonskrav = listOf(VurderRettighetsperiodeService),
-                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
             )
             .medSteg(
                 steg = VurderLovvalgSteg,
