@@ -174,16 +174,6 @@ public enum class AvklaringsbehovKode {
     `5020`,
 
     /**
-     * [AVKLAR_OVERGANG_ARBEID]
-     */
-    `5032`,
-
-    /**
-     * [AVKLAR_OVERGANG_ARBEID]
-     */
-    `5032`,
-
-    /**
      * [MANUELL_OVERSTYRING_LOVVALG]
      */
     `5021`,
@@ -239,9 +229,9 @@ public enum class AvklaringsbehovKode {
     `5031`,
 
     /**
-     * [AVKLAR_OVERGANG_UFORE]
+     * [AVKLAR_OVERGANG_ARBEID]
      */
-    `5031`,
+    `5032`,
 
     /**
      * [SKRIV_BREV_KODE]
