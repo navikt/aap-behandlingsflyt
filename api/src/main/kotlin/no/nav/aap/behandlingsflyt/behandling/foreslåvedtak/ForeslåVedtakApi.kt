@@ -5,7 +5,6 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.ForeslåVedtakDto.Companion.tilForeslåVedtakData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FORESLÅ_VEDTAK_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -35,12 +34,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakAPI(dataSource: DataSource, repositoryRegis
 
             // Hvis avslag tidlig i behandlingen finnes ikke underveisgrunnlag
             if (underveisGrunnlag == null) {
-                respond(ForeslåVedtakResponse(
-                    listOf(ForeslåVedtakDto(
-                    utfall = Utfall.IKKE_OPPFYLT,
-                    rettighetsType = null,
-                    periode = null,
-                ))))
+                respond(ForeslåVedtakResponse(emptyList()))
             } else {
                 val foreslåVedtakPerioder = underveisGrunnlag.perioder.map {
                     ForeslåVedtakDto(
@@ -52,9 +46,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakAPI(dataSource: DataSource, repositoryRegis
 
                 val perioderMedUtfallOgRettighetstype = foreslåVedtakPerioder
                     .map {
-                        Segment(requireNotNull(it.periode) {
-                            "Periode i underveisgrunnlag kan ikke være null"
-                        }, it.tilForeslåVedtakData())
+                        Segment(it.periode, it.tilForeslåVedtakData())
                     }
                     .let(::Tidslinje).komprimer()
                     .map {
