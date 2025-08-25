@@ -11,14 +11,14 @@ import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
-import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
+import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import java.net.URI
 
 class MedlemskapGateway : MedlemskapGateway {
-    private val url = requiredConfigForKey("integrasjon.medl.url")
+    private val url = URI.create(requiredConfigForKey("integrasjon.medl.url"))
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.medl.scope"))
 
     private val client = RestClient.withDefaultResponseHandler(
@@ -34,19 +34,17 @@ class MedlemskapGateway : MedlemskapGateway {
     }
 
     private fun query(request: MedlemskapRequest): List<MedlemskapResponse> {
-        val urlWithParam = URI.create(url+"?fraOgMed=${request.periode.fom}&tilOgMed=${request.periode.tom}&inkluderSporingsinfo=true")
-
-        val httpRequest = GetRequest(
+        val httpRequest = PostRequest(
+            body = request,
             additionalHeaders = listOf(
                 Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
-                Header("Nav-Personident", request.ident),
                 Header("Accept", "application/json"),
             )
         )
 
         return requireNotNull(
-            client.get(
-                uri = urlWithParam,
+            client.post(
+                uri = url,
                 request = httpRequest,
                 mapper = { body, _ ->
                     DefaultJsonMapper.fromJson(body)
@@ -57,8 +55,10 @@ class MedlemskapGateway : MedlemskapGateway {
 
     override fun innhent(person: Person, periode: Periode): List<MedlemskapDataIntern> {
         val request = MedlemskapRequest(
-            ident = person.aktivIdent().identifikator,
-            periode = periode
+            personident = person.aktivIdent().identifikator,
+            fraOgMed = periode.fom,
+            tilOgMed = periode.tom,
+            inkluderSporingsinfo = true
         )
         val medlemskapResultat = query(request)
 

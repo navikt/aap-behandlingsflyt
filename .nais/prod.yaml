@@ -165,7 +165,7 @@ spec:
     - name: INTEGRASJON_TILGANG_SCOPE
       value: api://prod-gcp.aap.tilgang/.default
     - name: INTEGRASJON_MEDL_URL
-      value: https://medlemskap-medl-api.prod-fss-pub.nais.io/api/v1/medlemskapsunntak
+      value: https://medlemskap-medl-api.prod-fss-pub.nais.io/rest/v1/periode/soek
     - name: INTEGRASJON_MEDL_SCOPE
       value: api://prod-fss.team-rocket.medlemskap-medl-api/.default
     - name: INTEGRASJON_FORELDREPENGER_URL
