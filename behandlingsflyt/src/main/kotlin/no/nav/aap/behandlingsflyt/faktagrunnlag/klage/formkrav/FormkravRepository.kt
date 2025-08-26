@@ -8,7 +8,6 @@ import java.time.LocalDate
 
 interface FormkravRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): FormkravGrunnlag?
-    fun hentAlleVurderinger(sakId: SakId, behandlingId: BehandlingId): Set<FormkravVurdering>
     fun lagre(behandlingId: BehandlingId, formkravVurdering: FormkravVurdering)
     fun lagreVarsel(behandlingId: BehandlingId, varsel: BrevbestillingReferanse)
     fun lagreFrist(behandlingId: BehandlingId, datoVarslet: LocalDate, svarfrist: LocalDate)

@@ -39,10 +39,6 @@ class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRep
         }
     }
 
-    override fun hentAlleVurderinger(sakId: SakId, behandlingId: BehandlingId): Set<FormkravVurdering> {
-        TODO("Not yet implemented")
-    }
-
     override fun lagre(behandlingId: BehandlingId, formkravVurdering: FormkravVurdering) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val nyttGrunnlag = FormkravGrunnlag(vurdering = formkravVurdering)
