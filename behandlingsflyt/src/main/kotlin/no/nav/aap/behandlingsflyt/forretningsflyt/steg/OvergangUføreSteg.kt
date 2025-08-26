@@ -45,7 +45,7 @@ class OvergangUføreSteg private constructor(
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 return Fullført
             }
-                
+
 
             VurderingType.REVURDERING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
