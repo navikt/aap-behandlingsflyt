@@ -84,8 +84,8 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
     private fun lagreVurdering(vurdering: Aktivitetsplikt11_7Vurdering): Long {
         val query = """
             INSERT INTO aktivitetsplikt_11_7_vurdering 
-            (begrunnelse, er_oppfylt, utfall, vurdert_av, opprettet_tid) 
-            VALUES (?, ?, ?, ?, ?)
+            (begrunnelse, er_oppfylt, utfall, vurdert_av, vurderingen_gjelder_fra, opprettet_tid) 
+            VALUES (?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         return connection.executeReturnKey(query) {
@@ -94,7 +94,8 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
                 setBoolean(2, vurdering.erOppfylt)
                 setEnumName(3, vurdering.utfall)
                 setString(4, vurdering.vurdertAv)
-                setInstant(5, vurdering.opprettet)
+                setLocalDate(5, vurdering.gjelderFra)
+                setInstant(6, vurdering.opprettet)
             }
             setResultValidator { rowsUpdated ->
                 require(rowsUpdated == 1)
@@ -125,6 +126,7 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
             erOppfylt = row.getBoolean("er_oppfylt"),
             utfall = row.getStringOrNull("utfall")?.let { Utfall.valueOf(it) },
             vurdertAv = row.getString("vurdert_av"),
+            gjelderFra = row.getLocalDate("vurderingen_gjelder_fra"),
             opprettet = row.getInstant("opprettet_tid")
         )
     }
