@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.Brevbest
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7RepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningAndreStatligeYtelserRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningRepositoryImpl
@@ -338,7 +337,6 @@ fun main() {
         VedtakRepositoryImpl(connection).slett(BehandlingId(1L))
         BehandlingRepositoryImpl(connection).slett(BehandlingId(1L))
         BarnetilleggRepositoryImpl(connection).slett(BehandlingId(1L))
-        Effektuer11_7RepositoryImpl(connection).slett(BehandlingId(1L))
         MeldeperiodeRepositoryImpl(connection).slett(BehandlingId(1L))
         TjenestePensjonRepositoryImpl(connection).slett(BehandlingId(1L))
         SamordningVurderingRepositoryImpl(connection).slett(BehandlingId(1L))

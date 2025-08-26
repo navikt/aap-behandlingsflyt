@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.samid.SamIdReposi
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.InformasjonskravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomsvurderingForBrevRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7RepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningAndreStatligeYtelserRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningRepositoryImpl
@@ -84,7 +83,6 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<MeldekortRepositoryImpl>()
     .register<UnderveisRepositoryImpl>()
     .register<ArbeidsevneRepositoryImpl>()
-    .register<Effektuer11_7RepositoryImpl>()
     .register<BarnetilleggRepositoryImpl>()
     .register<ContextRepositoryImpl>()
     .register<BistandRepositoryImpl>()

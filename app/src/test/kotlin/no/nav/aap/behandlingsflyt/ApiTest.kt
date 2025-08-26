@@ -6,9 +6,6 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.GrunnDTO
-import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.OpprettAktivitetspliktDTO
-import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.PeriodeDTO
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.MedlemskapGrunnlagDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
@@ -411,64 +408,6 @@ class ApiTest {
         assertThat(behandling?.virkningstidspunkt).isNull()
         assertThat(behandling?.vedtaksdato).isNull()
         assertThat(behandling?.aktivtSteg).isEqualTo(StegType.AVKLAR_SYKDOM)
-
-    }
-
-    @Test
-    fun `registrere aktivetsplikt, får opprettet ny behandling`() {
-        FakePersoner.leggTil(
-            TestPerson(
-                identer = setOf(Ident("12345678910")),
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
-                yrkesskade = emptyList()
-            )
-        )
-
-        val responseSak: SaksinfoDTO? = ccClient.post(
-            URI.create("http://localhost:$port/").resolve("api/sak/finnEllerOpprett"),
-            PostRequest(
-                body = FinnEllerOpprettSakDTO("12345678910", LocalDate.now().minusDays(30)),
-                currentToken = getToken()
-            )
-        )
-
-        requireNotNull(responseSak)
-
-        val saksnummer = responseSak.saksnummer
-
-        client.post<Any, Map<String, String>>(
-            URI.create("http://localhost:$port/").resolve("api/sak/$saksnummer/aktivitetsplikt/opprett"),
-            PostRequest(
-                body = OpprettAktivitetspliktDTO(
-                    brudd = BruddType.IKKE_AKTIVT_BIDRAG,
-                    paragraf = Brudd.Paragraf.PARAGRAF_11_7,
-                    begrunnelse = "heya",
-                    grunn = GrunnDTO.INGEN_GYLDIG_GRUNN,
-                    perioder = listOf(
-                        PeriodeDTO(
-                            fom = LocalDate.now().plusDays(10),
-                            tom = LocalDate.now().plusDays(20)
-                        )
-                    )
-                ),
-                currentToken = getToken()
-            )
-        )
-
-        val ds = initDatasource(dbConfig)
-
-        val behandlinger = kallInntilKlar(maxTries = 10, delayMs = 500) {
-            val behandlinger = ds.transaction { connection ->
-                val sak = SakRepositoryImpl(connection).hent(Saksnummer(saksnummer))
-                BehandlingRepositoryImpl(connection).hentAlleFor(sak.id)
-            }
-            behandlinger
-        }
-
-        assertThat(behandlinger).hasSize(1)
-        assertThat(behandlinger!!.first().vurderingsbehov().map { it.type }).contains(
-            Vurderingsbehov.MOTTATT_AKTIVITETSMELDING
-        )
 
     }
 

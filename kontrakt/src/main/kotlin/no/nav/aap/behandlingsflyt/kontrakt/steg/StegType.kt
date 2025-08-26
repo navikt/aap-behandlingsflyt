@@ -135,6 +135,7 @@ public enum class StegType(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES
     ),
+    @Deprecated("Ikke lenger i bruk for vanlig flyt")
     EFFEKTUER_11_7(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES
