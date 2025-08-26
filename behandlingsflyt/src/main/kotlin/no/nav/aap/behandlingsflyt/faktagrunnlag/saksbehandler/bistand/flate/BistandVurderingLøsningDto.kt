@@ -28,7 +28,7 @@ data class BistandVurderingLøsningDto(
     )
 
     fun valider() {
-        if (Miljø.erProd() || Miljø.erLokal()) {
+        if (Miljø.erProd()) {
             val gyldigAnnenOppfølging =
                 (erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak) xor (erBehovForAnnenOppfølging != null)
             if (!gyldigAnnenOppfølging) throw UgyldigForespørselException(
