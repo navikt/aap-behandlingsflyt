@@ -867,18 +867,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
                     ),
                 ),
             )
-            /*.løsAvklaringsBehov(
-                AvklarOvergangUføreLøsning(
-                    overgangUføreVurdering = OvergangUføreVurderingLøsningDto(
-                        begrunnelse = "Løsning",
-                        brukerSoktUforetrygd = false,
-                        brukerVedtakUforetrygd = null,
-                        brukerRettPaaAAP = false,
-                        virkningsDato = null,
-                        overgangBegrunnelse = null
-                    ),
-                ),
-            )*/
             .løsAvklaringsBehov(
                 RefusjonkravLøsning(
                     listOf(

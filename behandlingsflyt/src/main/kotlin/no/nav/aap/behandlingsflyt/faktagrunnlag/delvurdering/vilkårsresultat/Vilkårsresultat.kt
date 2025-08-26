@@ -118,11 +118,32 @@ class Vilkårsresultat(
             if (sykepengerErstatning != null) {
                 return RettighetsType.SYKEPENGEERSTATNING
             }
+
         }
 
         // Vi har tatt hånd om sykepengervilkåret, og da må vi anta at 11-5 er oppfylt.
         require(sykdomsUtfall == Utfall.OPPFYLT) {
             "Sykepengeerstatning må være oppfylt om ikke 11-5 er oppfylt."
+        }
+
+        // Sjekker på overgang uføre og overgang arbeid før bistandsvurderingen
+        val overgangUføre =
+            vilkårPar.find {
+                it.first == Vilkårtype.OVERGANGUFØREVILKÅRET
+                        && it.second.utfall == Utfall.OPPFYLT
+                        && it.second.innvilgelsesårsak == Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD
+            }
+        if (overgangUføre != null) {
+            return RettighetsType.VURDERES_FOR_UFØRETRYGD
+        }
+        val overgangArbeid =
+            vilkårPar.find {
+                it.first == Vilkårtype.OVERGANGARBEIDVILKÅRET
+                        && it.second.utfall == Utfall.OPPFYLT
+                        && it.second.innvilgelsesårsak == Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD
+            }
+        if (overgangArbeid != null) {
+            return RettighetsType.ARBEIDSSØKER
         }
 
         val bistandsvurderingInnvilgelsesårsak = bistandsvurderingen.innvilgelsesårsak
