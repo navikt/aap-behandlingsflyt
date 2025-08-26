@@ -65,7 +65,9 @@ data class CSVLine(
 
 fun readCSV(inputStream: InputStream): List<CSVLine> {
     val reader = inputStream.bufferedReader()
-    val header = reader.readLine()
+
+    // Fjerne header
+    reader.readLine()
 
     return reader.lineSequence()
         .filter { it.isNotBlank() }
@@ -135,7 +137,7 @@ fun beregnForInput(input: Input, fødselsdato: Fødselsdato): Triple<Year, GUnit
                     brukerAvKvoter = setOf(),
                     bruddAktivitetspliktId = BruddAktivitetspliktId(0),
                     id = UnderveisperiodeId(0),
-                    institusjonsoppholdReduksjon = TODO(),
+                    institusjonsoppholdReduksjon = Prosent(0),
                     meldepliktStatus = null,
                 )
             )
@@ -181,7 +183,12 @@ fun main() {
     println("FRA_ARENA_BELOP,FRA_ARENA_GUNIT,FRA_KELVIN_BELOP,FRA_KELVIN_GUNIT,DIFF_PROSENT,PERSON_KODE,DAGSATS")
     for (row in readRows) {
         val (inp, år) = tilInput(row)
-        val beregnForInput = beregnForInput(inp, år)
+        val beregnForInput = try {
+            beregnForInput(inp, år)
+        } catch (e: Exception) {
+            print("FEILET FOR INPUT: $row.")
+            throw e
+        }
         val beregnet = beregnForInput.second
         val dagsats = beregnForInput.third
         printRad(Year.of(row.beregningsAar), row.grunnlagFraArena, beregnet, row.personKode, dagsats)
