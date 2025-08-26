@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentY
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.samid.SamIdRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.InformasjonskravRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7RepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomsvurderingForBrevRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepositoryImpl
@@ -131,4 +132,4 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<MeldepliktRimeligGrunnRepositoryImpl>()
     .register<SykdomsvurderingForBrevRepositoryImpl>()
     .register<MellomlagretVurderingRepositoryImpl>()
-
+    .register<Aktivitetsplikt11_7RepositoryImpl>()
