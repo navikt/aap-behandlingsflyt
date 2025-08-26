@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderBrudd11_7Løsning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7LøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -35,18 +38,32 @@ class AktivitetspliktFlytTest :
         )
 
         assertThat(aktivitetspliktBehandling.status()).isEqualTo(Status.OPPRETTET)
-        
+
         prosesserBehandling(aktivitetspliktBehandling)
-        
-        aktivitetspliktBehandling = hentBehandling(aktivitetspliktBehandling.referanse)
-        assertThat(aktivitetspliktBehandling)
-            .extracting { it.aktivtSteg() }
-            .isEqualTo(StegType.VURDER_AKTIVITETSPLIKT_11_7)
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(aktivitetspliktBehandling)
-        assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_BRUDD_11_7)
 
+        hentBehandling(aktivitetspliktBehandling.referanse)
+            .medKontekst {
+                assertThat(this.behandling).extracting { it.aktivtSteg() }
+                    .isEqualTo(StegType.VURDER_AKTIVITETSPLIKT_11_7)
+                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .containsExactlyInAnyOrder(Definisjon.VURDER_BRUDD_11_7)
 
-        //assertThat(aktivitetspliktBehandling.status()).isEqualTo(Status.AVSLUTTET)
+            }.løsAvklaringsBehov(
+                VurderBrudd11_7Løsning(
+                    aktivitetsplikt11_7Vurdering = Aktivitetsplikt11_7LøsningDto(
+                        begrunnelse = "Brudd",
+                        erOppfylt = false,
+                        utfall = Utfall.STANS,
+                        gjelderFra = sak.rettighetsperiode.fom.plusWeeks(20)
+                    )
+                )
+            ).medKontekst {
+                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
+            }.fattVedtakEllerSendRetur().medKontekst {
+                assertThat(this.behandling).extracting { it.aktivtSteg() }
+                    .isEqualTo(StegType.IVERKSETT_BRUDD)
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+            }
     }
 }

@@ -241,6 +241,11 @@ public enum class StegType(
         status = Status.UTREDES,
     ),
     
+    IVERKSETT_BRUDD(
+        gruppe = StegGruppe.UDEFINERT,
+        status = Status.IVERKSETTES,
+    ),
+    
     // Aktivitetsplikt slutt
     
     UDEFINERT(
