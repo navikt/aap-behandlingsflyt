@@ -24,6 +24,8 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import java.io.InputStream
 import java.math.BigDecimal
+import java.math.MathContext
+import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.Year
 
@@ -118,7 +120,7 @@ fun beregnForInput(input: Input, fødselsdato: Fødselsdato): Triple<Year, GUnit
             id = 0,
             perioder = listOf(
                 Underveisperiode(
-                    periode = Periode(LocalDate.now().withMonth(1), LocalDate.now().plusMonths(12)),
+                    periode = Periode(LocalDate.now().withMonth(6), LocalDate.now().plusMonths(12)),
                     meldePeriode = Periode(LocalDate.MIN, LocalDate.now().plusMonths(12)),
                     utfall = Utfall.OPPFYLT,
                     rettighetsType = RettighetsType.BISTANDSBEHOV,
@@ -156,17 +158,20 @@ fun beregnForInput(input: Input, fødselsdato: Fødselsdato): Triple<Year, GUnit
     return Triple(Year.of(input.nedsettelsesDato.year), beregnet.grunnlaget(), dagsats.toDouble())
 }
 
-fun printRad(år: Year, arenaBeløp: Int, beregnetGUnit: GUnit, personKode: Int, dagsats: Double) {
+fun printRad(arenaBeløp: Int, beregnetGUnit: GUnit, personKode: Int, dagsats: Double) {
     val arenaGUnit =
-        Grunnbeløp.finnGUnit(år.atDay(355), Beløp(arenaBeløp)).gUnit
+        BigDecimal(arenaBeløp).divide(
+            Grunnbeløp.tilTidslinje().segment(Year.of(2025).atDay(200))!!.verdi.verdi, MathContext(5, RoundingMode.HALF_UP)
+        )
 
-    val grunnBeløp = grunnBeløpDetteÅret(år)
+    val grunnBeløp = grunnBeløpDetteÅret(Year.of(2025))
     val iKroner = beregnetGUnit.multiplisert(grunnBeløp)
 
+    // FRA_ARENA_BELOP,FRA_ARENA_GUNIT,FRA_KELVIN_BELOP,FRA_KELVIN_GUNIT,DIFF_PROSENT,PERSON_KODE,DAGSATS
     println(
-        "$arenaBeløp,${arenaGUnit.verdi()},${iKroner.verdi},${beregnetGUnit.verdi()},${
+        "$arenaBeløp,${arenaGUnit},${iKroner.verdi},${beregnetGUnit.verdi()},${
             prosentDiff(
-                arenaGUnit.verdi(),
+                arenaGUnit,
                 beregnetGUnit.verdi()
             )
         },$personKode,$dagsats"
@@ -191,10 +196,10 @@ fun main() {
         }
         val beregnet = beregnForInput.second
         val dagsats = beregnForInput.third
-        printRad(Year.of(row.beregningsAar), row.grunnlagFraArena, beregnet, row.personKode, dagsats)
+        printRad(row.grunnlagFraArena, beregnet, row.personKode, dagsats)
     }
 }
 
 private fun grunnBeløpDetteÅret(årstall: Year): Beløp {
-    return Grunnbeløp.tilTidslinjeGjennomsnitt().segment(årstall.atDay(1))!!.verdi
+    return Grunnbeløp.tilTidslinje().segment(årstall.atDay(200))!!.verdi
 }

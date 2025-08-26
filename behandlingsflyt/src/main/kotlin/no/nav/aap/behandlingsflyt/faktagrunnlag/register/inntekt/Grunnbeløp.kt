@@ -200,6 +200,7 @@ object Grunnbeløp {
                 return priv_tilTidslinjeGjennomsnitt().mapValue(GjennomsnittElement::gjennomsnittBeløp)
             }
 
+            @Suppress("FunctionName")
             private fun priv_tilTidslinjeGjennomsnitt(): Tidslinje<GjennomsnittElement> {
                 val siste = gjennomsnittsbeløpene.last()
 
