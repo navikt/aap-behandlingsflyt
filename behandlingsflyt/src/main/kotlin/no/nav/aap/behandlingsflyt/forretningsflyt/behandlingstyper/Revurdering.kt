@@ -160,7 +160,7 @@ object Revurdering : BehandlingType {
             }
             .apply {
                 // TODO legges kun ut i dev i første runde
-                if (Miljø.erDev() || Miljø.erLokal()) {
+                if (Miljø.erDev()) {
                     medSteg(
                         steg = OvergangArbeidSteg,
                         vurderingsbehovRelevanteForSteg = listOf(
