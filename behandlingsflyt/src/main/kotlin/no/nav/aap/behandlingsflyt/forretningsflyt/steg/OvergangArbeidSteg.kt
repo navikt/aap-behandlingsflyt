@@ -43,23 +43,7 @@ class OvergangArbeidSteg private constructor(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
-                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-                    log.info("Ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.OVERGANGARBEIDVILKÅRET} for behandlingId ${kontekst.behandlingId}. Avbryter steg.")
-                    avklaringsbehovene.avbrytForSteg(type())
-                    vilkårService.ingenNyeVurderinger(
-                        kontekst.behandlingId,
-                        Vilkårtype.OVERGANGARBEIDVILKÅRET,
-                        kontekst.rettighetsperiode,
-                        "mangler behandlingsgrunnlag",
-                    )
-                    return Fullført
-                }
-                if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && harIkkeVurdert1118tidligere(
-                        avklaringsbehovene
-                    )
-                ) {
-                    return FantAvklaringsbehov(Definisjon.AVKLAR_OVERGANG_ARBEID)
-                }
+                return Fullført
             }
 
             VurderingType.REVURDERING -> {
