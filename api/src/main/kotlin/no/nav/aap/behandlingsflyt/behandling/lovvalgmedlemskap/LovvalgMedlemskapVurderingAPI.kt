@@ -66,7 +66,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource, repositoryRe
                     )
                 }
                 if (vurdering == null) {
-                    respond(KanBehandlesAutomatiskVurdering(false, listOf()))
+                    respond(KanBehandlesAutomatiskVurdering(false, emptyList()))
                 } else {
                     respond(vurdering)
                 }
@@ -111,7 +111,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource, repositoryRe
                     )
                 }
                 if (vurdering == null) {
-                    respond(KanBehandlesAutomatiskVurdering(false, listOf()))
+                    respond(KanBehandlesAutomatiskVurdering(false, emptyList()))
                 } else {
                     respond(vurdering)
                 }

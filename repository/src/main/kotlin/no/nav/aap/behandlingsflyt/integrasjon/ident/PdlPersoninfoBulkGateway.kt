@@ -34,7 +34,7 @@ object PdlPersoninfoBulkGateway : PersoninfoBulkGateway {
         val request = PdlRequest(PERSONINFO_BOLK_QUERY, IdentVariables(identer = identer.map { it.identifikator }))
         val response: PdlPersonNavnDataResponse = PdlGateway.query(request)
 
-        return response.data?.hentPersonBolk?.map { person -> mapPersoninformasjon(person) } ?: emptyList()
+        return response.data?.hentPersonBolk?.map { person -> mapPersoninformasjon(person) }.orEmpty()
     }
 
     private fun mapPersoninformasjon(data: PdlNavnDataBolk): Personinfo {

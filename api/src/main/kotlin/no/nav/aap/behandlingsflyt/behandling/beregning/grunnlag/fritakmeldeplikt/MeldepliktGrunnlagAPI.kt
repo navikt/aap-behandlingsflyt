@@ -45,8 +45,10 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
                     val nåTilstand = meldepliktRepository.hentHvisEksisterer(behandling.id)?.vurderinger
 
                     val vedtatteVerdier =
-                        behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }?.vurderinger
-                            ?: emptyList()
+                        behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }
+                            ?.vurderinger
+                            .orEmpty()
+
                     val historikk =
                         meldepliktRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
 
@@ -66,7 +68,8 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
                             nåTilstand
                                 ?.filterNot { vedtatteVerdier.contains(it) }
                                 ?.map { tilResponse(it, ansattInfoService) }
-                                ?.sortedBy { it.fraDato } ?: emptyList()
+                                ?.sortedBy { it.fraDato }
+                                .orEmpty()
                     )
                 }
 

@@ -37,7 +37,7 @@ internal class SykdomRepositoryImplTest {
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
-            repo.lagre(behandling.id, listOf())
+            repo.lagre(behandling.id, emptyList())
             assertEquals(emptyList(), repo.hent(behandling.id).sykdomsvurderinger)
         }
     }

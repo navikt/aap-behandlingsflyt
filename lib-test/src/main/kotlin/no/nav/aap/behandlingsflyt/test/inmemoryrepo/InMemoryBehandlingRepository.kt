@@ -79,7 +79,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
 
     override fun hentStegHistorikk(behandlingId: BehandlingId): List<StegTilstand> {
         synchronized(lock) {
-            return memoryStegHistorikk[behandlingId] ?: emptyList()
+            return memoryStegHistorikk[behandlingId].orEmpty()
         }
     }
 
@@ -153,7 +153,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
                     stegType = it.steg(),
                     aktiv = false
                 )
-            } ?: emptyList()
+            }.orEmpty()
             memoryStegHistorikk[behandlingId] = stegHistorikk.plus(tilstand).sorted()
         }
     }

@@ -113,7 +113,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         input: Faktagrunnlag
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
-        val eksisterendePerioder = eksisterendeGrunnlag?.perioder ?: emptySet()
+        val eksisterendePerioder = eksisterendeGrunnlag?.perioder.orEmpty()
 
         if (eksisterendePerioder != underveisperioder) {
             if (eksisterendeGrunnlag != null) {

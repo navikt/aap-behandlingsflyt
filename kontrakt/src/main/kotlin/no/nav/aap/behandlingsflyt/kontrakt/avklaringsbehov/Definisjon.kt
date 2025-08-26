@@ -42,7 +42,7 @@ public enum class Definisjon(
         løsesISteg = StegType.UDEFINERT,
         type = BehovType.BREV_VENTEPUNKT,
         defaultFrist = Period.ofDays(1),
-        løsesAv = listOf()
+        løsesAv = emptyList()
     ),
     VURDER_TREKK_AV_SØKNAD(
         kode = AvklaringsbehovKode.`5028`,

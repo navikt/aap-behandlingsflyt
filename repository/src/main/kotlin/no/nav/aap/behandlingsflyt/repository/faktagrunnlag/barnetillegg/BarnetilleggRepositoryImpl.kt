@@ -39,7 +39,7 @@ class BarnetilleggRepositoryImpl(private val connection: DBConnection) : Barneti
 
     override fun lagre(behandlingId: BehandlingId, barnetilleggPerioder: List<BarnetilleggPeriode>) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
-        val eksisterendePerioder = eksisterendeGrunnlag?.perioder ?: emptySet()
+        val eksisterendePerioder = eksisterendeGrunnlag?.perioder.orEmpty()
 
         if (eksisterendePerioder != barnetilleggPerioder) {
             if (eksisterendeGrunnlag != null) {

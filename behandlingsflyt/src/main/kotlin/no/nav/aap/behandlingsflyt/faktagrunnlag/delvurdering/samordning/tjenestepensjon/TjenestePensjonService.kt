@@ -108,7 +108,7 @@ class TjenestePensjonService(
         return if (harEndringerITjenestePensjon(eksisterendeData, tjenestePensjon)) {
             listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING))
         } else {
-            listOf()
+            emptyList()
         }
     }
 }

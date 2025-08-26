@@ -332,15 +332,13 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                             SamordningAndreStatligeYtelserVurderingDTO(
                                 begrunnelse = samordningAndreStatligeYtelserVurdering?.begrunnelse ?: "",
                                 vurderingPerioder =
-                                    (
-                                            samordningAndreStatligeYtelserVurdering?.vurderingPerioder
-                                                ?: listOf()
-                                            ).map {
+                                    samordningAndreStatligeYtelserVurdering?.vurderingPerioder
+                                        ?.map {
                                             SamordningAndreStatligeYtelserVurderingPeriodeDTO(
                                                 periode = it.periode,
                                                 ytelse = it.ytelse,
                                             )
-                                        },
+                                        }.orEmpty(),
                                 vurdertAv =
                                     samordningAndreStatligeYtelserVurdering?.let {
                                         VurdertAvResponse(

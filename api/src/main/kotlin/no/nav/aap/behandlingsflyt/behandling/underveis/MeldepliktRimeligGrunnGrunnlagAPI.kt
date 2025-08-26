@@ -49,8 +49,9 @@ fun NormalOpenAPIRoute.meldepliktRimeligGrunnGrunnlagApi(
                     val nåTilstand = meldepliktRimeligGrunnRepository.hentHvisEksisterer(behandling.id)?.vurderinger
 
                     val vedtatteVerdier =
-                        behandling.forrigeBehandlingId?.let { meldepliktRimeligGrunnRepository.hentHvisEksisterer(it) }?.vurderinger
-                            ?: emptyList()
+                        behandling.forrigeBehandlingId?.let { meldepliktRimeligGrunnRepository.hentHvisEksisterer(it) }
+                            ?.vurderinger
+                            .orEmpty()
                     val historikk =
                         meldepliktRimeligGrunnRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
 
@@ -63,11 +64,11 @@ fun NormalOpenAPIRoute.meldepliktRimeligGrunnGrunnlagApi(
                         perioderIkkeMeldt = underveisGrunnlag?.perioder
                             ?.filter { it.meldepliktStatus == MeldepliktStatus.IKKE_MELDT_SEG }
                             ?.map { it.meldePeriode }
-                            ?: emptyList(),
+                            .orEmpty(),
                         perioderRimeligGrunn = underveisGrunnlag?.perioder
                             ?.filter { it.meldepliktStatus == MeldepliktStatus.RIMELIG_GRUNN }
                             ?.map { it.meldePeriode }
-                            ?: emptyList(),
+                            .orEmpty(),
                         historikk =
                             historikk
                                 .map { tilResponse(it, ansattInfoService) }
@@ -81,7 +82,8 @@ fun NormalOpenAPIRoute.meldepliktRimeligGrunnGrunnlagApi(
                             nåTilstand
                                 ?.filterNot { vedtatteVerdier.contains(it) }
                                 ?.map { tilResponse(it, ansattInfoService) }
-                                ?.sortedBy { it.fraDato } ?: emptyList()
+                                ?.sortedBy { it.fraDato }
+                                .orEmpty()
                     )
                 }
 

@@ -365,7 +365,7 @@ class BistandsvilkåretTest {
         opprettet: Instant = Instant.now(),
     ) = Sykdomsvurdering(
         begrunnelse = "",
-        dokumenterBruktIVurdering = listOf(),
+        dokumenterBruktIVurdering = emptyList(),
         harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
         erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
         erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,

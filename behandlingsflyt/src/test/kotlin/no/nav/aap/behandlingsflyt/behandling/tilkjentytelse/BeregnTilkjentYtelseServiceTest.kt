@@ -436,7 +436,7 @@ class BeregnTilkjentYtelseServiceTest {
         val underveisgrunnlag = underveisgrunnlag(periode, institusjonsOppholdReduksjon = Prosent.`50_PROSENT`)
 
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
-        val samordningsgrunnlag = SamordningGrunnlag(0L, listOf())
+        val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
         val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList(), "ident"))
 
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(

@@ -29,7 +29,7 @@ class PerioderTilVurderingServiceTest {
         val sak = InMemorySakRepository.finnEllerOpprett(
             Person(
                 identifikator = UUID.randomUUID(),
-                identer = listOf(),
+                identer = emptyList(),
             ), periode
         )
 

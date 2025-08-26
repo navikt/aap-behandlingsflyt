@@ -43,8 +43,8 @@ class UførePeriodeSammenligner(private val uføreRepository: UføreRepository) 
             return gjeldendeUføreGrunnlag.vurderinger.medStatus(EndringStatus.NY)
         }
 
-        val gjeldendeVurderinger = gjeldendeUføreGrunnlag?.vurderinger ?: emptyList()
-        val eldsteVurderinger = eldsteUføreGrunnlag?.vurderinger ?: emptyList()
+        val gjeldendeVurderinger = gjeldendeUføreGrunnlag?.vurderinger.orEmpty()
+        val eldsteVurderinger = eldsteUføreGrunnlag?.vurderinger.orEmpty()
 
         val slettede = eldsteVurderinger.filterNot { it in gjeldendeVurderinger }.medStatus(EndringStatus.SLETTET)
         val nye = gjeldendeVurderinger.filterNot { it in eldsteVurderinger }.medStatus(EndringStatus.NY)

@@ -97,7 +97,7 @@ fun NormalOpenAPIRoute.flytApi(
                                     type = it.type(),
                                     status = it.status(),
                                     planlagtKjøretidspunkt = it.nesteKjøring(),
-                                    metadata = mapOf(),
+                                    metadata = emptyMap(),
                                     antallFeilendeForsøk = it.antallRetriesForsøkt(),
                                     feilmelding = hentFeilmeldingHvisBehov(
                                         it.status(),

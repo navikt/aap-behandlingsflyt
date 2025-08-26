@@ -28,7 +28,7 @@ object InMemoryTjenestePensjonRepository : TjenestePensjonRepository {
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         synchronized(lock) {
-            tjenestePensjon[tilBehandling] = tjenestePensjon[fraBehandling]?: emptyList()
+            tjenestePensjon[tilBehandling] = tjenestePensjon[fraBehandling].orEmpty()
         }
     }
 

@@ -136,7 +136,7 @@ fun beregnForInput(input: Input, fødselsdato: Fødselsdato): Triple<Year, GUnit
                         opplysningerMottatt = null,
                     ),
                     trekk = Dagsatser(0),
-                    brukerAvKvoter = setOf(),
+                    brukerAvKvoter = emptySet(),
                     bruddAktivitetspliktId = BruddAktivitetspliktId(0),
                     id = UnderveisperiodeId(0),
                     institusjonsoppholdReduksjon = Prosent(0),
@@ -146,9 +146,9 @@ fun beregnForInput(input: Input, fødselsdato: Fødselsdato): Triple<Year, GUnit
         ),
         barnetilleggGrunnlag = BarnetilleggGrunnlag(
             id = 0,
-            perioder = listOf()
+            perioder = emptyList()
         ),
-        samordningGrunnlag = SamordningGrunnlag(0L, listOf()),
+        samordningGrunnlag = SamordningGrunnlag(0L, emptyList()),
         samordningUføre = null,
         samordningArbeidsgiver = null
     )

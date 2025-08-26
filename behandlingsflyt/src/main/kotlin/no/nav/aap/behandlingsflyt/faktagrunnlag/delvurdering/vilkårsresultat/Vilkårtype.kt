@@ -12,7 +12,7 @@ enum class Vilkårtype(
 ) {
     ALDERSVILKÅRET(
         kode = "AAP-4",
-        spesielleInnvilgelsesÅrsaker = listOf(),
+        spesielleInnvilgelsesÅrsaker = emptyList(),
         avslagsårsaker = listOf(
             Avslagsårsak.BRUKER_OVER_67,
             Avslagsårsak.BRUKER_UNDER_18,
@@ -22,7 +22,7 @@ enum class Vilkårtype(
     ),
     LOVVALG(
         kode = "AAP-3",
-        spesielleInnvilgelsesÅrsaker = listOf(),
+        spesielleInnvilgelsesÅrsaker = emptyList(),
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON,
             Avslagsårsak.IKKE_MEDLEM,
@@ -60,7 +60,7 @@ enum class Vilkårtype(
     ),
     MEDLEMSKAP(
         kode = "AAP-2",
-        spesielleInnvilgelsesÅrsaker = listOf(),
+        spesielleInnvilgelsesÅrsaker = emptyList(),
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON,
             Avslagsårsak.IKKE_MEDLEM,
@@ -70,7 +70,7 @@ enum class Vilkårtype(
     ),
     GRUNNLAGET(
         kode = "AAP-19",
-        spesielleInnvilgelsesÅrsaker = listOf(),
+        spesielleInnvilgelsesÅrsaker = emptyList(),
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON
         ),
@@ -78,7 +78,7 @@ enum class Vilkårtype(
     ),
     SAMORDNING(
         kode = "AAP-27",
-        spesielleInnvilgelsesÅrsaker = listOf(),
+        spesielleInnvilgelsesÅrsaker = emptyList(),
         avslagsårsaker = listOf(
             Avslagsårsak.ANNEN_FULL_YTELSE
         ),
@@ -91,7 +91,7 @@ enum class Vilkårtype(
         deretter _slette_ raden som inneholder det gamle vilkåret.""")
     SYKEPENGEERSTATNING(
         kode = "AAP-13",
-        spesielleInnvilgelsesÅrsaker = listOf(),
+        spesielleInnvilgelsesÅrsaker = emptyList(),
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON
         ),

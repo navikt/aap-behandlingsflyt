@@ -89,7 +89,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
                 vedtakstidspunkt = LocalDateTime.parse("2025-05-05T10:43:44.561"),
                 virkningstidspunkt = LocalDate.parse("2025-05-13"),
             ),
-            meldepliktGrunnlag = MeldepliktGrunnlag(listOf()),
+            meldepliktGrunnlag = MeldepliktGrunnlag(emptyList()),
             underveisGrunnlag = UnderveisGrunnlag(
                 id = 0,
                 perioder = underveisperioder,
@@ -181,7 +181,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
             opplysningerMottatt = null,
         ),
         trekk = Dagsatser(0),
-        brukerAvKvoter = setOf(),
+        brukerAvKvoter = emptySet(),
         bruddAktivitetspliktId = null,
         meldepliktStatus = meldepliktStatus,
         id = UnderveisperiodeId(id.also { id += 1 }),

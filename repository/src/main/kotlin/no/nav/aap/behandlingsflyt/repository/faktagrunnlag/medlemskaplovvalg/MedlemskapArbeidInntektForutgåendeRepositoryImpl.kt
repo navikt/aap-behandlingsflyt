@@ -374,7 +374,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
     }
 
     private fun hentArbeiderINorgeGrunnlag(arbeiderINorgeId: Long?): List<ArbeidINorgeGrunnlag> {
-        if (arbeiderINorgeId == null) return listOf()
+        if (arbeiderINorgeId == null) return emptyList()
 
         val query = """
             SELECT * FROM ARBEID_FORUTGAAENDE WHERE arbeider_id = ?
@@ -395,7 +395,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
     }
 
     private fun hentInntekterINorgeGrunnlag(inntekterINorgeId: Long?): List<InntektINorgeGrunnlag> {
-        if (inntekterINorgeId == null) return listOf()
+        if (inntekterINorgeId == null) return emptyList()
 
         val query = """
             SELECT * FROM INNTEKT_I_NORGE_FORUTGAAENDE WHERE inntekter_i_norge_id = ?

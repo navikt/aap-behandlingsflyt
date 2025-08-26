@@ -101,7 +101,7 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
 
     override fun lagre(behandlingId: BehandlingId, meldekortene: Set<Meldekort>) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
-        val eksisterendeKort = eksisterendeGrunnlag?.meldekort()?.toSet() ?: emptySet()
+        val eksisterendeKort = eksisterendeGrunnlag?.meldekort()?.toSet().orEmpty()
 
         if (eksisterendeKort != meldekortene) {
             if (eksisterendeGrunnlag != null) {

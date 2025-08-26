@@ -1434,7 +1434,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun barn(req: PdlRequest): PdlRelasjonDataResponse {
-        val forespurtIdenter = req.variables.identer ?: emptyList()
+        val forespurtIdenter = req.variables.identer.orEmpty()
 
         val barnIdenter = forespurtIdenter.mapNotNull { mapIdentBolk(it) }.toList()
 

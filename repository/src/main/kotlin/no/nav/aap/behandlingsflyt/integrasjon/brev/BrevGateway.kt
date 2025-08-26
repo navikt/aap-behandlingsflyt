@@ -83,7 +83,7 @@ class BrevGateway : BrevbestillingGateway {
             sprak = Språk.NB, // TODO språk
             faktagrunnlag = mapFaktagrunnlag(brevBehov),
             ferdigstillAutomatisk = ferdigstillAutomatisk,
-            vedlegg = vedlegg?.let { setOf(it) } ?: setOf()
+            vedlegg = vedlegg?.let { setOf(it) }.orEmpty()
         )
         val httpRequest = PostRequest(
             body = request,
@@ -246,7 +246,7 @@ class BrevGateway : BrevbestillingGateway {
                                 beregningsgrunnlag = brevBehov.grunnlagBeregning?.beregningsgrunnlag?.verdi,
                                 inntekterPerÅr = brevBehov.grunnlagBeregning?.inntekterPerÅr?.map {
                                     Faktagrunnlag.GrunnlagBeregning.InntektPerÅr(it.år, it.inntekt)
-                                } ?: emptyList(),
+                                }.orEmpty(),
                             )
                         )
                     }

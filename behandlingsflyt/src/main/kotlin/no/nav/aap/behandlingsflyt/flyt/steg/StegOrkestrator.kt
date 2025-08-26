@@ -130,7 +130,7 @@ class StegOrkestrator(
                         kontekstMedPerioder,
                         StegStatus.TILBAKEFØRT,
                         behandling,
-                        listOf()
+                        emptyList()
                     )
                 }
             }
