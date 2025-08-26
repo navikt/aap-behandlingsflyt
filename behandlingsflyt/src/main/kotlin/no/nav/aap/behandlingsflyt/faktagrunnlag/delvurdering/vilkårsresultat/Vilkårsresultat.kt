@@ -127,22 +127,22 @@ class Vilkårsresultat(
         }
 
         // Sjekker på overgang uføre og overgang arbeid før bistandsvurderingen
-        val overgangUføre =
-            vilkårPar.find {
+        val harOppfyltVilkårForOvergangUføre =
+            vilkårPar.any {
                 it.first == Vilkårtype.OVERGANGUFØREVILKÅRET
                         && it.second.utfall == Utfall.OPPFYLT
                         && it.second.innvilgelsesårsak == Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD
             }
-        if (overgangUføre != null) {
+        if (harOppfyltVilkårForOvergangUføre) {
             return RettighetsType.VURDERES_FOR_UFØRETRYGD
         }
-        val overgangArbeid =
-            vilkårPar.find {
+        val harOppfyltVilkårForOvergangArbeid =
+            vilkårPar.any {
                 it.first == Vilkårtype.OVERGANGARBEIDVILKÅRET
                         && it.second.utfall == Utfall.OPPFYLT
                         && it.second.innvilgelsesårsak == Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD
             }
-        if (overgangArbeid != null) {
+        if (harOppfyltVilkårForOvergangArbeid) {
             return RettighetsType.ARBEIDSSØKER
         }
 

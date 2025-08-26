@@ -17,8 +17,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -42,7 +40,7 @@ class OvergangUføreSteg private constructor(
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING -> {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     log.info("Ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.OVERGANGUFØREVILKÅRET} for behandlingId ${kontekst.behandlingId}. Avbryter steg.")
                     avklaringsbehovene.avbrytForSteg(type())
@@ -54,7 +52,7 @@ class OvergangUføreSteg private constructor(
                     )
                     return Fullført
                 }
-                if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && harIkkeVurdert1118tidligere(
+                if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && harIkkeVurdert_11_18_tidligere(
                         avklaringsbehovene
                     )
                 ) {
@@ -63,11 +61,6 @@ class OvergangUføreSteg private constructor(
                     return Fullført
                 }
 
-            }
-
-
-            VurderingType.REVURDERING -> {
-                return Fullført
             }
 
             VurderingType.MELDEKORT,
@@ -94,7 +87,7 @@ class OvergangUføreSteg private constructor(
         return alleBistandsVilkårOppfylt
     }
 
-    private fun harIkkeVurdert1118tidligere(avklaringsbehovene: Avklaringsbehovene): Boolean {
+    private fun harIkkeVurdert_11_18_tidligere(avklaringsbehovene: Avklaringsbehovene): Boolean {
         return !avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.AVKLAR_OVERGANG_UFORE)
     }
 

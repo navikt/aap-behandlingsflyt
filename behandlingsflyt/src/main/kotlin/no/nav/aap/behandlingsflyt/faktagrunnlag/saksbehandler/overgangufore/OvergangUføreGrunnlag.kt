@@ -10,19 +10,6 @@ data class OvergangUføreGrunnlag(
     val vurderinger: List<OvergangUføreVurdering>,
 ) {
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as OvergangUføreGrunnlag
-
-        return vurderinger == other.vurderinger
-    }
-
-    override fun hashCode(): Int {
-        return vurderinger.hashCode()
-    }
-    
     fun somOvergangUforevurderingstidslinje(startDato: LocalDate): Tidslinje<OvergangUføreVurdering> {
         return vurderinger
             .sortedBy { it.vurderingenGjelderFra ?: startDato }

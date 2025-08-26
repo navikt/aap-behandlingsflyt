@@ -10,31 +10,4 @@ data class OvergangArbeidVurdering(
     val vurdertAv: String,
     val vurderingenGjelderFra: LocalDate?,
     val opprettet: Instant? = null
-) {
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as OvergangArbeidVurdering
-
-        if (brukerRettPaaAAP != other.brukerRettPaaAAP) return false
-        if (virkningsDato != other.virkningsDato) return false
-        if (begrunnelse != other.begrunnelse) return false
-        if (vurdertAv != other.vurdertAv) return false
-        if (vurderingenGjelderFra != other.vurderingenGjelderFra) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = begrunnelse.hashCode()
-        result = 31 * result + (brukerRettPaaAAP?.hashCode() ?: 0)
-        result = 31 * result + (virkningsDato?.hashCode() ?: 0)
-        result = 31 * result + vurdertAv.hashCode()
-        result = 31 * result + (vurderingenGjelderFra?.hashCode() ?: 0)
-        return result
-    }
-
-
-}
+)

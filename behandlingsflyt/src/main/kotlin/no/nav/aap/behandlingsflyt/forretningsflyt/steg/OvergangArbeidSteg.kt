@@ -17,8 +17,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -58,7 +56,7 @@ class OvergangArbeidSteg private constructor(
                     )
                     return Fullført
                 }
-                if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && harIkkeVurdert1118tidligere(
+                if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && harIkkeVurdert_11_17_tidligere(
                         avklaringsbehovene
                     )
                 ) {
@@ -91,7 +89,7 @@ class OvergangArbeidSteg private constructor(
         return alleBistandsVilkårOppfylt
     }
 
-    private fun harIkkeVurdert1118tidligere(avklaringsbehovene: Avklaringsbehovene): Boolean {
+    private fun harIkkeVurdert_11_17_tidligere(avklaringsbehovene: Avklaringsbehovene): Boolean {
         return !avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.AVKLAR_OVERGANG_ARBEID)
     }
 

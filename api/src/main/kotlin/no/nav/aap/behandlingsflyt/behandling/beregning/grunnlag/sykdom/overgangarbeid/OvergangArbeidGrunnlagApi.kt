@@ -84,7 +84,7 @@ private fun OvergangArbeidVurdering.tilResponse(erGjeldende: Boolean? = false, a
         vurdertAv = VurdertAvResponse(
             ident = vurdertAv,
             dato = opprettet?.atZone(ZoneId.of("Europe/Oslo"))?.toLocalDate()
-                ?: error("Mangler opprettet dato for bistandvurdering"),
+                ?: error("Mangler opprettet dato for overgangarbeidvurdering"),
             ansattnavn = navnOgEnhet?.navn,
             enhetsnavn = navnOgEnhet?.enhet,
         ),
