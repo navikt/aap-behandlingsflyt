@@ -40,21 +40,28 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT.kode.toString()
             ) { req ->
-                val responsDto = dataSource.transaction(readOnly = true) {
-                    val repositoryProvider = repositoryRegistry.provider(it)
+                val responsDto = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val uføreRepository = repositoryProvider.provide<UføreRepository>()
+                    val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
 
                     // Dette er logikk, burde i egen service
                     val skalVurdereUføre =
                         uføreRepository.hentHvisEksisterer(behandling.id)?.vurderinger?.isNotEmpty() == true
-                    val beregningGrunnlag = repositoryProvider.provide<BeregningVurderingRepository>()
-                        .hentHvisEksisterer(behandlingId = behandling.id)
+
+                    val beregningGrunnlag =
+                        beregningVurderingRepository.hentHvisEksisterer(behandlingId = behandling.id)
+                    val historiskeVurderinger =
+                        beregningVurderingRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
 
                     BeregningTidspunktAvklaringResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = beregningGrunnlag?.tidspunktVurdering?.tilResponse(ansattInfoService),
+                        historiskeVurderinger = historiskeVurderinger.mapNotNull {
+                            it.tidspunktVurdering?.tilResponse(ansattInfoService)
+                        },
                         skalVurdereYtterligere = skalVurdereUføre
                     )
                 }
@@ -72,6 +79,7 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
                     val yrkesskadeRepository = repositoryProvider.provide<YrkesskadeRepository>()
+                    val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
 
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val yrkesskadevurdering =
@@ -79,9 +87,10 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(
                     val registerYrkeskade =
                         yrkesskadeRepository.hentHvisEksisterer(behandling.id)?.yrkesskader?.yrkesskader
                             ?: emptyList()
-                    val beregningGrunnlag =
-                        repositoryProvider.provide<BeregningVurderingRepository>()
-                            .hentHvisEksisterer(behandlingId = behandling.id)
+                    val beregningGrunnlag = beregningVurderingRepository
+                        .hentHvisEksisterer(behandlingId = behandling.id)
+                    val historiskeVurderinger = beregningVurderingRepository
+                        .hentHistoriskeVurderinger(behandling.sakId, behandling.id)
 
                     val relevanteSaker = yrkesskadevurdering?.relevanteSaker ?: emptyList()
                     val sakerMedDato =
@@ -108,7 +117,11 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(
                                             vurdering.vurdertAv
                                         ))
                                 }
-                                ?: emptyList()
+                                .orEmpty(),
+                        historiskeVurderinger = historiskeVurderinger
+                            .mapNotNull { it.yrkesskadeBeløpVurdering }
+                            .flatMap { it.vurderinger }
+                            .map { it.toResponse(ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)) }
                     )
                 }
 

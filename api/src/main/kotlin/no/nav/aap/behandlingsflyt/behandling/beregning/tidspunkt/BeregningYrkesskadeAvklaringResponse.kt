@@ -7,7 +7,8 @@ import java.time.LocalDate
 data class BeregningYrkesskadeAvklaringResponse(
     val harTilgangTilÅSaksbehandle: Boolean,
     val skalVurderes: List<YrkesskadeTilVurderingResponse>,
-    val vurderinger: List<YrkesskadeBeløpVurderingResponse>
+    val vurderinger: List<YrkesskadeBeløpVurderingResponse>,
+    val historiskeVurderinger: List<YrkesskadeBeløpVurderingResponse>
 )
 
 data class YrkesskadeTilVurderingResponse(val referanse: String, val skadeDato: LocalDate, val grunnbeløp: Beløp)
