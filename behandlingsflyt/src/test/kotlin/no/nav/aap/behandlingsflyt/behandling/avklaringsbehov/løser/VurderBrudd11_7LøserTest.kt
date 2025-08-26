@@ -19,6 +19,7 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import java.time.LocalDate
 
 @ExtendWith(MockKExtension::class)
 @MockKExtension.CheckUnnecessaryStub
@@ -76,13 +77,16 @@ class VurderBrudd11_7LøserTest {
                 aktivitetsplikt11_7Vurdering = Aktivitetsplikt11_7LøsningDto(
                     begrunnelse = "Ikke oppfylt",
                     erOppfylt = false,
+                    gjelderFra = LocalDate.now()
                 )
             ),
             VurderBrudd11_7Løsning(
                 aktivitetsplikt11_7Vurdering = Aktivitetsplikt11_7LøsningDto(
                     begrunnelse = "Oppfylt",
                     erOppfylt = true,
-                    utfall = Utfall.OPPHØR
+                    utfall = Utfall.OPPHØR,
+                    gjelderFra = LocalDate.now()
+
                 )
             )
         )
@@ -93,13 +97,15 @@ class VurderBrudd11_7LøserTest {
                 aktivitetsplikt11_7Vurdering = Aktivitetsplikt11_7LøsningDto(
                     begrunnelse = "Gyldig",
                     erOppfylt = false,
-                    utfall = Utfall.OPPHØR
+                    utfall = Utfall.OPPHØR,
+                    gjelderFra = LocalDate.now()
                 )
             ),
             VurderBrudd11_7Løsning(
                 aktivitetsplikt11_7Vurdering = Aktivitetsplikt11_7LøsningDto(
                     begrunnelse = "Gyldig",
                     erOppfylt = true,
+                    gjelderFra = LocalDate.now()
                 )
             )
         )

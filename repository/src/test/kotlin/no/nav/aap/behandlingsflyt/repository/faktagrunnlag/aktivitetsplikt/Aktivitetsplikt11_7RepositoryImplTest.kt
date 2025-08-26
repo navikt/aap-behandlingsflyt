@@ -35,6 +35,7 @@ internal class Aktivitetsplikt11_7RepositoryImplTest {
                 begrunnelse = "Begrunnelse",
                 erOppfylt = true,
                 vurdertAv = "ident",
+                gjelderFra = LocalDate.parse("2023-01-01"),
                 opprettet = Instant.parse("2023-01-01T12:00:00Z")
             )
 
@@ -48,6 +49,7 @@ internal class Aktivitetsplikt11_7RepositoryImplTest {
                 erOppfylt = false,
                 utfall = Utfall.STANS,
                 vurdertAv = "ident2",
+                gjelderFra = LocalDate.parse("2023-02-01"),
                 opprettet = Instant.parse("2023-01-02T12:10:00Z")
             )
             aktivitetspliktRepository.lagre(behandling.id, vurdering2)
