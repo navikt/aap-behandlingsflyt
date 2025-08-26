@@ -118,8 +118,8 @@ fun beregnForInput(input: Input, fødselsdato: Fødselsdato): Triple<Year, GUnit
             id = 0,
             perioder = listOf(
                 Underveisperiode(
-                    periode = Periode(LocalDate.now().withMonth(1), LocalDate.MAX),
-                    meldePeriode = Periode(LocalDate.MIN, LocalDate.MAX),
+                    periode = Periode(LocalDate.now().withMonth(1), LocalDate.now().plusMonths(12)),
+                    meldePeriode = Periode(LocalDate.MIN, LocalDate.now().plusMonths(12)),
                     utfall = Utfall.OPPFYLT,
                     rettighetsType = RettighetsType.BISTANDSBEHOV,
                     avslagsårsak = null,
