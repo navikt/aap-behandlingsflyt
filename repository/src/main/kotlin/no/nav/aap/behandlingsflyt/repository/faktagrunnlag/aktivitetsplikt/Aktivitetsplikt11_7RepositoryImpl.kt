@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
@@ -12,7 +13,7 @@ import org.slf4j.LoggerFactory
 
 class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : Aktivitetsplikt11_7Repository {
     private val log = LoggerFactory.getLogger(javaClass)
-    
+
     companion object : Factory<Aktivitetsplikt11_7RepositoryImpl> {
         override fun konstruer(connection: DBConnection): Aktivitetsplikt11_7RepositoryImpl {
             return Aktivitetsplikt11_7RepositoryImpl(connection)
@@ -34,8 +35,27 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
         }
     }
 
-    override fun hentAlleVurderinger(behandlingId: BehandlingId): Set<Aktivitetsplikt11_7Vurdering> {
-        TODO("Not yet implemented")
+    override fun hentHistoriskeVurderinger(
+        sakId: SakId,
+        behandlingId: BehandlingId
+    ): List<Aktivitetsplikt11_7Vurdering> {
+        val query = """
+            select v.* 
+            from aktivitetsplikt_11_7_vurdering v
+            inner join aktivitetsplikt_11_7_grunnlag g on v.id = g.vurdering_id
+            inner join behandling b on g.behandling_id = b.id
+            where g.aktiv 
+            and b.sak_id = ?
+            and b.opprettet_tid < (select a.opprettet_tid from behandling a where id = ?)
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, sakId.toLong())
+                setLong(2, behandlingId.toLong())
+            }
+            setRowMapper(::mapVurdering)
+        }
     }
 
     override fun lagre(
