@@ -43,8 +43,12 @@ fun NormalOpenAPIRoute.aktivitetsplikt11_7GrunnlagApi(
                 val behandling: Behandling =
                     BehandlingReferanseService(behandlingRepository).behandling(req)
 
+                val historiskeVurderinger = aktivitetsplikt11_7Repository.hentHistoriskeVurderinger(
+                    sakId = behandling.sakId,
+                    behandlingId = behandling.id
+                )
                 aktivitetsplikt11_7Repository.hentHvisEksisterer(behandling.id)
-                    ?.tilDto(kanSaksbehandle(), ansattInfoService)
+                    ?.tilDto(kanSaksbehandle(), ansattInfoService, historiskeVurderinger)
                     ?: Aktivitetsplikt11_7GrunnlagDto(harTilgangTilÅSaksbehandle = kanSaksbehandle())
             }
             respond(respons)
@@ -54,6 +58,7 @@ fun NormalOpenAPIRoute.aktivitetsplikt11_7GrunnlagApi(
 
 data class Aktivitetsplikt11_7GrunnlagDto(
     val vurdering: Aktivitetsplikt11_7VurderingDto? = null,
+    val historiskeVurderinger: List<Aktivitetsplikt11_7VurderingDto> = emptyList(),
     val harTilgangTilÅSaksbehandle: Boolean
 )
 
@@ -77,8 +82,10 @@ internal fun Aktivitetsplikt11_7Vurdering.tilDto(ansattInfoService: AnsattInfoSe
 
 internal fun Aktivitetsplikt11_7Grunnlag.tilDto(
     harTilgangTilÅSaksbehandle: Boolean,
-    ansattInfoService: AnsattInfoService
+    ansattInfoService: AnsattInfoService,
+    historiskeVurderinger: List<Aktivitetsplikt11_7Vurdering>
 ) = Aktivitetsplikt11_7GrunnlagDto(
     vurdering = vurdering.tilDto(ansattInfoService),
+    historiskeVurderinger = historiskeVurderinger.map { it.tilDto(ansattInfoService) },
     harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle
 )
