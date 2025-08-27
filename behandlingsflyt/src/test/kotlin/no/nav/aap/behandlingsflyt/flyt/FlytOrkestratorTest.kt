@@ -949,6 +949,11 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
     }
 
+    @Test // TODO Thao
+    fun `avbrutt revurdering blokkerer nye ytelsebehandlinger`() {
+        TODO("Implementer test for avbrutt revurdering som blokkerer nye ytelsesbehandlinger")
+    }
+
     @Test
     fun `skal avklare yrkesskade hvis det finnes spor av yrkesskade - yrkesskade har årsakssammenheng`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))

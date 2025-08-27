@@ -53,6 +53,15 @@ public enum class Definisjon(
             Rolle.SAKSBEHANDLER_NASJONAL
         ),
     ),
+    KANSELLER_REVURDERING(
+        kode = AvklaringsbehovKode.`5031`,
+        løsesISteg = StegType.KANSELLER_REVURDERING,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_OPPFOLGING,
+            Rolle.SAKSBEHANDLER_NASJONAL
+        ),
+    ),
     BESTILL_LEGEERKLÆRING(
         kode = AvklaringsbehovKode.`9003`,
         løsesISteg = StegType.UDEFINERT,

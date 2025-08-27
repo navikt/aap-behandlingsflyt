@@ -54,6 +54,7 @@ import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiode
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringAPI
 import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.revurdering.kansellertRevurderingGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktRimeligGrunnGrunnlagApi
@@ -178,6 +179,7 @@ internal fun Application.server(
                 tilkjentYtelseAPI(dataSource, repositoryRegistry)
                 foreslaaVedtakAPI(dataSource, repositoryRegistry)
                 trukketSøknadGrunnlagAPI(dataSource, repositoryRegistry)
+                kansellertRevurderingGrunnlagAPI(dataSource, repositoryRegistry)
                 rettighetsperiodeGrunnlagAPI(dataSource, repositoryRegistry, gatewayProvider)
                 beregningVurderingAPI(dataSource, repositoryRegistry, gatewayProvider)
                 beregningsGrunnlagApi(dataSource, repositoryRegistry)
