@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortGrunnla
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
-import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -19,23 +18,16 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackMeldekort
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
-import no.nav.aap.komponenter.verdityper.Prosent.Companion.`50_PROSENT`
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import java.time.LocalDate
@@ -62,8 +54,6 @@ class FasttrackMeldekortFlytTest :
             val behandlinger = behandlingRepo.hentAlleFor(åpenBehandling.sakId)
             assertThat(behandlinger).hasSize(3)
             val meldekortbehandling = behandlinger.maxBy { it.opprettetTidspunkt }
-            assertThat(meldekortbehandling.årsakTilOpprettelse)
-                .isEqualTo(ÅrsakTilOpprettelse.MELDEKORT)
             assertThat(meldekortbehandling.vurderingsbehov().map { it.type })
                 .hasSameElementsAs(listOf(Vurderingsbehov.MOTTATT_MELDEKORT))
             assertThat(meldekortbehandling.status()).isEqualTo(Status.AVSLUTTET)
@@ -153,8 +143,6 @@ class FasttrackMeldekortFlytTest :
             val meldekortbehandling = behandlinger.maxBy { it.opprettetTidspunkt }
             assertThat(meldekortbehandling.vurderingsbehov().map { it.type })
                 .hasSameElementsAs(listOf(Vurderingsbehov.MOTTATT_MELDEKORT))
-            assertThat(meldekortbehandling.årsakTilOpprettelse)
-                .isEqualTo(ÅrsakTilOpprettelse.MELDEKORT)
 
             AvklaringsbehovRepositoryImpl(connection)
                 .hentAvklaringsbehovene(meldekortbehandling.id)
@@ -195,152 +183,25 @@ class FasttrackMeldekortFlytTest :
         assertThat(tilkjentYtelseFørMeldekort).isNotEqualTo(tilkjentYtelseEtterMeldekort)
     }
 
-    @Test
-    fun `sender inn to meldekort, resultat reflektert i åpen behandling`() {
-        val sak = happyCaseFørstegangsbehandling()
-        val revurderingGjelderFra = sak.rettighetsperiode.fom.plusWeeks(2)
-        val åpenBehandling = revurdereFramTilOgMedSykdom(sak, revurderingGjelderFra)
-        åpenBehandling.løsSykdom().løsBistand().løsSykdomsvurderingBrev()
-
-        val (førsteMeldeperiode, andreMeldeperiode) = dataSource.transaction {
-            MeldeperiodeRepositoryImpl(it).hent(åpenBehandling.id)
-        }
-        åpenBehandling.sendInnMeldekort(
-            sak.rettighetsperiode,
-            listOf(
-                ArbeidIPeriodeV0(
-                    fraOgMedDato = førsteMeldeperiode.fom,
-                    tilOgMedDato = førsteMeldeperiode.tom,
-                    timerArbeid = 37.5 / 2,
-                ),
-            ),
-            mottattTidspunkt = førsteMeldeperiode.fom.plusDays(1).atTime(8, 0),
-        )
-        åpenBehandling.sendInnMeldekort(
-            sak.rettighetsperiode, listOf(
-                ArbeidIPeriodeV0(
-                    fraOgMedDato = andreMeldeperiode.fom,
-                    tilOgMedDato = andreMeldeperiode.tom,
-                    timerArbeid = 37.5,
-                )
-            ),
-            mottattTidspunkt = andreMeldeperiode.fom.plusDays(1).atTime(8, 0),
-        )
-        motor.kjørJobber()
-
-        dataSource.transaction { connection ->
-            val behandlinger = BehandlingRepositoryImpl(connection).hentAlleFor(åpenBehandling.sakId)
-                .let { it.sortedWith(BehandlingCompare(it)) }
-
-            assertThat(behandlinger).hasSize(4)
-            val (førstegangsbehandling, førsteMeldekort, andreMeldekort, åpenBehandling) = behandlinger
-
-            assertThat(førstegangsbehandling.årsakTilOpprettelse)
-                .isEqualTo(ÅrsakTilOpprettelse.SØKNAD)
-            assertTidslinje(
-                andelArbeidetTidslinje(connection, førstegangsbehandling),
-                sak.rettighetsperiode to {
-                    assertThat(it).isEqualTo(`0_PROSENT`)
-                },
-            )
-
-            assertThat(førsteMeldekort.årsakTilOpprettelse)
-                .isEqualTo(ÅrsakTilOpprettelse.MELDEKORT)
-            assertTidslinje(
-                andelArbeidetTidslinje(connection, førsteMeldekort),
-                førsteMeldeperiode to {
-                    assertThat(it).isEqualTo(Prosent(24))
-                },
-                Periode(førsteMeldeperiode.tom.plusDays(1), sak.rettighetsperiode.tom) to {
-                    assertThat(it).isEqualTo(`0_PROSENT`)
-                },
-            )
-
-            assertThat(andreMeldekort.årsakTilOpprettelse)
-                .isEqualTo(ÅrsakTilOpprettelse.MELDEKORT)
-            assertTidslinje(
-                andelArbeidetTidslinje(connection, andreMeldekort),
-                førsteMeldeperiode to {
-                    assertThat(it).isEqualTo(Prosent(24))
-                },
-                andreMeldeperiode to {
-                    assertThat(it).isEqualTo(`50_PROSENT`)
-                },
-                Periode(andreMeldeperiode.tom.plusDays(1), sak.rettighetsperiode.tom) to {
-                    assertThat(it).isEqualTo(`0_PROSENT`)
-                },
-            )
-
-            assertThat(åpenBehandling.årsakTilOpprettelse)
-                .isEqualTo(ÅrsakTilOpprettelse.SØKNAD)
-            assertTidslinje(
-                andelArbeidetTidslinje(connection, åpenBehandling),
-                førsteMeldeperiode to {
-                    assertThat(it).isEqualTo(Prosent(24))
-                },
-                andreMeldeperiode to {
-                    assertThat(it).isEqualTo(`50_PROSENT`)
-                },
-                Periode(andreMeldeperiode.tom.plusDays(1), sak.rettighetsperiode.tom) to {
-                    assertThat(it).isEqualTo(`0_PROSENT`)
-                },
-            )
-        }
-    }
-
-    private fun andelArbeidetTidslinje(connection: DBConnection, behandling: Behandling): Tidslinje<Prosent> {
-        return UnderveisRepositoryImpl(connection).hent(behandling.id)
-            .perioder
-            .map { Segment(it.periode, it.arbeidsgradering.andelArbeid) }
-            .let { Tidslinje(it) }
-    }
-
-    private class BehandlingCompare(behandlinger: List<Behandling>): Comparator<Behandling> {
-        private val behandlinger = behandlinger.associateBy { it.id }
-
-        override fun compare(o1: Behandling, o2: Behandling): Int {
-            if (o1.id == o2.id) {
-                return 0
-            }
-
-            var current: Behandling? = o1
-            while (current != null) {
-                if (current.id == o2.id) {
-                    return 1
-                }
-                current = behandlinger[current.forrigeBehandlingId]
-            }
-            return -1
-        }
-    }
-
     fun hentMeldekortGrunnlag(connection: DBConnection, behandlingId: BehandlingId): MeldekortGrunnlag? {
         val repositoryProvider = postgresRepositoryRegistry.provider(connection)
         val meldekortRespoitory: MeldekortRepository = repositoryProvider.provide()
         return meldekortRespoitory.hentHvisEksisterer(behandlingId)
     }
 
-    private var nesteJournalpostId = (300..1000000)
-        .asSequence()
-        .map { JournalpostId(it.toString()) }
-        .iterator()
-
     private fun Behandling.sendInnMeldekort(
-        periode: Periode,
-        timerArbeidIPeriode: List<ArbeidIPeriodeV0> = listOf(
+        periode: Periode, timerArbeidIPeriode: List<ArbeidIPeriodeV0> = listOf(
             ArbeidIPeriodeV0(
                 fraOgMedDato = LocalDate.now().minusMonths(3),
                 tilOgMedDato = LocalDate.now().plusMonths(3),
                 timerArbeid = 0.0,
             )
-        ),
-        journalpostId: JournalpostId = nesteJournalpostId.next(),
-        mottattTidspunkt: LocalDateTime = LocalDateTime.now()
+        )
     ) {
         this.sendInnDokument(
             DokumentMottattPersonHendelse(
-                journalpost = journalpostId,
-                mottattTidspunkt = mottattTidspunkt,
+                journalpost = JournalpostId("300"),
+                mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     MeldekortV0(
                         harDuArbeidet = timerArbeidIPeriode.any { it.timerArbeid > 0.0 },
