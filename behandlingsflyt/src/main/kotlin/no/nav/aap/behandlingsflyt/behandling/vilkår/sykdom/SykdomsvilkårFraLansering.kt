@@ -9,11 +9,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.komponenter.tidslinje.JoinStyle
+import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -34,6 +38,46 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
             grunnlag.yrkesskadevurdering
         )
 
+        val overgangUføreVurderingTidslinje: Tidslinje<OvergangUføreVurdering> =
+            if (grunnlag.overgangUføreVurdering.isNullOrEmpty()) {
+                Tidslinje.empty()
+            } else {
+                grunnlag.overgangUføreVurdering
+                    .sortedBy { it.opprettet }
+                    .map { vurdering ->
+                        Tidslinje(
+                            Periode(
+                                fom = vurdering.vurderingenGjelderFra ?: grunnlag.kravDato,
+                                tom = grunnlag.sisteDagMedMuligYtelse
+                            ),
+                            vurdering
+                        )
+                    }
+                    .fold(Tidslinje.empty()) { t1, t2 ->
+                        t1.kombiner(t2, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+                    }
+            }
+
+        val overgangArbeidVurderingTidslinje: Tidslinje<OvergangArbeidVurdering> =
+            if (grunnlag.overgangArbeidVurdering.isNullOrEmpty()) {
+                Tidslinje.empty()
+            } else {
+                grunnlag.overgangArbeidVurdering
+                    .sortedBy { it.opprettet }
+                    .map { vurdering ->
+                        Tidslinje(
+                            Periode(
+                                fom = vurdering.vurderingenGjelderFra ?: grunnlag.kravDato,
+                                tom = grunnlag.sisteDagMedMuligYtelse
+                            ),
+                            vurdering
+                        )
+                    }
+                    .fold(Tidslinje.empty()) { t1, t2 ->
+                        t1.kombiner(t2, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+                    }
+            }
+
         val sykdomsvurderingTidslinje = grunnlag.sykdomsvurderinger
             .sortedBy { it.opprettet }
             .map { vurdering ->
@@ -52,13 +96,21 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
         val sykepengerVurdering = grunnlag.sykepengerErstatningFaktagrunnlag
 
         val tidslinje =
-            Tidslinje.zip3(studentVurderingTidslinje, yrkesskadeVurderingTidslinje, sykdomsvurderingTidslinje)
-                .mapValue { (studentVurdering, yrkesskadeVurdering, sykdomVurdering) ->
+            Tidslinje.zip5(
+                studentVurderingTidslinje,
+                yrkesskadeVurderingTidslinje,
+                sykdomsvurderingTidslinje,
+                overgangUføreVurderingTidslinje,
+                overgangArbeidVurderingTidslinje
+            )
+                .mapValue { (studentVurdering, yrkesskadeVurdering, sykdomVurdering, overgangUføreVurdering, overgangArbeidVurdering) ->
                     opprettVilkårsvurdering(
                         studentVurdering,
                         sykdomVurdering,
                         yrkesskadeVurdering,
                         sykepengerVurdering,
+                        overgangUføreVurdering,
+                        overgangArbeidVurdering,
                         grunnlag
                     )
                 }
@@ -71,6 +123,8 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
         sykdomVurdering: Sykdomsvurdering?,
         yrkesskadeVurdering: Yrkesskadevurdering?,
         sykepengerVurdering: SykepengerVurdering?,
+        overgangUføreVurdering: OvergangUføreVurdering?,
+        overgangArbeidVurdering: OvergangArbeidVurdering?,
         grunnlag: SykdomsFaktagrunnlag
     ): Vilkårsvurdering {
         var utfall: Utfall
@@ -88,13 +142,33 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
             if (sykepengerVurdering?.harRettPå == true) {
                 innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING
             }
+        } else if (!harSykdomBlittVurdertTilGodkjent(
+                sykdomVurdering,
+                yrkesskadeVurdering
+            ) && harOvergangUføreVurdertTilGodkjent(overgangUføreVurdering)
+        ) {
+            utfall = Utfall.OPPFYLT
+            innvilgelsesårsak = Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD
+
+        } else if (!harSykdomBlittVurdertTilGodkjent(
+                sykdomVurdering,
+                yrkesskadeVurdering
+            ) && harOvergangArbeidVurdertTilGodkjent(overgangArbeidVurdering)
+        ) {
+            utfall = Utfall.OPPFYLT
+            innvilgelsesårsak = Innvilgelsesårsak.ARBEIDSSØKER
+
         } else {
             utfall = Utfall.IKKE_OPPFYLT
             avslagsårsak = if (sykdomVurdering?.erSkadeSykdomEllerLyteVesentligdel == false) {
                 Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
             } else if (sykdomVurdering?.erNedsettelseIArbeidsevneMerEnnHalvparten == false && sykdomVurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != true) {
                 Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
-            } else if (sykdomVurdering?.erNedsettelseIArbeidsevneAvEnVissVarighet == false && relevantÅVurdereSykepengerErstatning(grunnlag, sykdomVurdering)) {
+            } else if (sykdomVurdering?.erNedsettelseIArbeidsevneAvEnVissVarighet == false && relevantÅVurdereSykepengerErstatning(
+                    grunnlag,
+                    sykdomVurdering
+                )
+            ) {
                 Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET
             } else {
                 // TODO: dekk alle muligheter for nei her
@@ -139,10 +213,33 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
         }
         return sykdomsvurdering.run {
             erSkadeSykdomEllerLyteVesentligdel == true &&
-                    erArbeidsevnenNedsatt == true &&
-                    (erNedsettelseIArbeidsevneAvEnVissVarighet == null || erNedsettelseIArbeidsevneAvEnVissVarighet == true) &&
-                    (erNedsettelseIArbeidsevneMerEnnHalvparten == true ||
-                            (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true && yrkesskadevurdering?.erÅrsakssammenheng == true))
+                    erArbeidsevnenNedsatt == true && (erNedsettelseIArbeidsevneAvEnVissVarighet == null || erNedsettelseIArbeidsevneAvEnVissVarighet) && (erNedsettelseIArbeidsevneMerEnnHalvparten == true ||
+                    (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true && yrkesskadevurdering?.erÅrsakssammenheng == true))
         }
     }
+
+    private fun harOvergangUføreVurdertTilGodkjent(
+        overgangUføreVurdering: OvergangUføreVurdering?,
+    ): Boolean {
+        if (overgangUføreVurdering == null) {
+            return false
+        }
+        return overgangUføreVurdering.run {
+            virkningsDato != null && brukerSoktUforetrygd && brukerVedtakUforetrygd != "NEI" && brukerRettPaaAAP == true
+        }
+    }
+
+    private fun harOvergangArbeidVurdertTilGodkjent(
+        overgangArbeidVurdering: OvergangArbeidVurdering?,
+    ): Boolean {
+        if (overgangArbeidVurdering == null) {
+            return false
+        }
+        return overgangArbeidVurdering.run {
+            virkningsDato != null &&
+                    brukerRettPaaAAP == true
+        }
+    }
+
+
 }

@@ -7,6 +7,8 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.Sykdomsvilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
@@ -24,6 +26,8 @@ class FastsettSykdomsvilkåretSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sykdomRepository: SykdomRepository,
     private val studentRepository: StudentRepository,
+    private val overgangArbeidRepository: OvergangArbeidRepository,
+    private val overgangUføreRespoitory: OvergangUføreRepository,
     private val sykepengerErstatningRepository: SykepengerErstatningRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårService: VilkårService,
@@ -32,6 +36,8 @@ class FastsettSykdomsvilkåretSteg private constructor(
         vilkårsresultatRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         studentRepository = repositoryProvider.provide(),
+        overgangArbeidRepository = repositoryProvider.provide(),
+        overgangUføreRespoitory = repositoryProvider.provide(),
         sykepengerErstatningRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         vilkårService = VilkårService(repositoryProvider),
@@ -74,6 +80,8 @@ class FastsettSykdomsvilkåretSteg private constructor(
         val sykdomsGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
         val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
         val sykepengerErstatningGrunnlag = sykepengerErstatningRepository.hentHvisEksisterer(behandlingId)
+        val overgangArbeidGrunnlag  =overgangArbeidRepository.hentHvisEksisterer(behandlingId)
+        val overgangUføreGrunnlag = overgangUføreRespoitory.hentHvisEksisterer(behandlingId)
 
         val rettighetsperiode = kontekst.rettighetsperiode
         val faktagrunnlag = SykdomsFaktagrunnlag(
@@ -83,7 +91,9 @@ class FastsettSykdomsvilkåretSteg private constructor(
             sykdomsGrunnlag?.yrkesskadevurdering,
             sykepengerErstatningGrunnlag?.vurdering,
             sykdomsGrunnlag?.sykdomsvurderinger.orEmpty(),
-            studentGrunnlag?.studentvurdering
+            studentGrunnlag?.studentvurdering,
+           overgangArbeidGrunnlag?.vurderinger ?: emptyList(),
+            overgangUføreGrunnlag?.vurderinger ?: emptyList()
         )
         Sykdomsvilkår(vilkårResultat).vurder(faktagrunnlag)
 

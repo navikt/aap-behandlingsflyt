@@ -36,7 +36,9 @@ class SykdomsvilkårTest {
                     sykdomsvurdering()
                 ),
                 studentvurdering = null,
-                sykepengerErstatningFaktagrunnlag = null
+                sykepengerErstatningFaktagrunnlag = null,
+                overgangArbeidVurdering = emptyList(),
+                overgangUføreVurdering = emptyList()
             )
         )
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
@@ -53,7 +55,9 @@ class SykdomsvilkårTest {
                     sykdomsvurdering(erNedsettelseIArbeidsevneMerEnnHalvparten = false)
                 ),
                 studentvurdering = null,
-                sykepengerErstatningFaktagrunnlag = null
+                sykepengerErstatningFaktagrunnlag = null,
+                overgangArbeidVurdering = emptyList(),
+                overgangUføreVurdering = emptyList()
             )
         )
 
@@ -81,7 +85,9 @@ class SykdomsvilkårTest {
                     )
                 ),
                 studentvurdering = null,
-                sykepengerErstatningFaktagrunnlag = null
+                sykepengerErstatningFaktagrunnlag = null,
+                overgangArbeidVurdering = emptyList(),
+                overgangUføreVurdering = emptyList()
             )
         )
 
@@ -120,7 +126,9 @@ class SykdomsvilkårTest {
                     )
                 ),
                 studentvurdering = null,
-                sykepengerErstatningFaktagrunnlag = null
+                sykepengerErstatningFaktagrunnlag = null,
+                overgangArbeidVurdering = emptyList(),
+                overgangUføreVurdering = emptyList()
             )
         )
 
@@ -159,7 +167,9 @@ class SykdomsvilkårTest {
                     )
                 ),
                 studentvurdering = null,
-                sykepengerErstatningFaktagrunnlag = null
+                sykepengerErstatningFaktagrunnlag = null,
+                overgangArbeidVurdering = emptyList(),
+                overgangUføreVurdering = emptyList()
             )
         )
 
@@ -206,8 +216,10 @@ class SykdomsvilkårTest {
                         harRettPå = true,
                         grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
                         vurdertAv = "abc123",
-                        vurdertTidspunkt = LocalDateTime.now()
-                    )
+                        vurdertTidspunkt = LocalDateTime.now(),
+                    ),
+                overgangArbeidVurdering = emptyList(),
+                overgangUføreVurdering = emptyList()
 
             )
         )
