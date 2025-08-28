@@ -110,12 +110,12 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             val arbeidInntektRepo = MedlemskapArbeidInntektRepositoryImpl(connection)
 
             val førstegangsBehandling =
-                opprettBehandlingMedVurdering(TypeBehandling.Førstegangsbehandling, sak.id, null, listOf(), null)
+                opprettBehandlingMedVurdering(TypeBehandling.Førstegangsbehandling, sak.id, null, emptyList(), null)
             val revurdering = opprettBehandlingMedVurdering(
                 TypeBehandling.Revurdering,
                 sak.id,
                 førstegangsBehandling.id,
-                listOf(),
+                emptyList(),
                 UtenlandsOppholdData(
                     harBoddINorgeSiste5År = true,
                     harArbeidetINorgeSiste5År = false,
@@ -175,18 +175,18 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             val forutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
 
             val førstegangsBehandling =
-                opprettBehandlingMedVurdering(TypeBehandling.Førstegangsbehandling, sak.id, null, listOf(), null)
+                opprettBehandlingMedVurdering(TypeBehandling.Førstegangsbehandling, sak.id, null, emptyList(), null)
             val revurdering = opprettBehandlingMedVurdering(
                 TypeBehandling.Revurdering,
                 sak.id,
                 førstegangsBehandling.id,
-                listOf(),
+                emptyList(),
                 null
             )
 
             val historikk = forutgåendeRepo.hentHistoriskeVurderinger(sak.id, revurdering.id)
             assertEquals(1, historikk.size)
-            opprettBehandlingMedVurdering(TypeBehandling.Førstegangsbehandling, sak2.id, null, listOf(), null)
+            opprettBehandlingMedVurdering(TypeBehandling.Førstegangsbehandling, sak2.id, null, emptyList(), null)
 
             val nyHistorikk = forutgåendeRepo.hentHistoriskeVurderinger(sak.id, revurdering.id)
             assertEquals(1, nyHistorikk.size)
@@ -235,7 +235,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             utenlandsOppholdData
         )
         forutgåendeRepository.lagreArbeidsforholdOgInntektINorge(
-            behandlingId, listOf(),
+            behandlingId, emptyList(),
             listOf(
                 ArbeidsInntektMaaned(
                     aarMaaned = YearMonth.now(),

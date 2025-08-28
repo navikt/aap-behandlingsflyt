@@ -31,7 +31,7 @@ fun NormalOpenAPIRoute.medlemskapsgrunnlagApi(dataSource: DataSource, repository
                     val behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
                     repositoryProvider.provide<MedlemskapRepository>().hentHvisEksisterer(behandling.id)
-                        ?: MedlemskapUnntakGrunnlag(unntak = listOf())
+                        ?: MedlemskapUnntakGrunnlag(unntak = emptyList())
                 }
                 respond(MedlemskapGrunnlagDto(medlemskap = medlemskap))
             }

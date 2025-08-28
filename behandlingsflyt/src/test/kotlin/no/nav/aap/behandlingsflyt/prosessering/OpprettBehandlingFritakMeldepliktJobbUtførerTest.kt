@@ -95,7 +95,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             person = Person(
                 id = 456L.let(::PersonId),
                 identifikator = UUID.randomUUID(),
-                identer = listOf()
+                identer = emptyList()
             ),
             rettighetsperiode = Periode(LocalDate.now().minusDays(14), LocalDate.now().plusDays(14)),
             status = no.nav.aap.behandlingsflyt.kontrakt.sak.Status.OPPRETTET,
@@ -147,7 +147,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
                         null
                     ),
                     trekk = Dagsatser(0),
-                    brukerAvKvoter = setOf(),
+                    brukerAvKvoter = emptySet(),
                     bruddAktivitetspliktId = null,
                     meldepliktStatus = if (fritak) MeldepliktStatus.FRITAK else MeldepliktStatus.IKKE_MELDT_SEG,
                     id = UnderveisperiodeId(3)

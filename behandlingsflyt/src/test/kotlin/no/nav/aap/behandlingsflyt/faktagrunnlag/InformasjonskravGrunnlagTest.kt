@@ -195,7 +195,7 @@ class InformasjonskravGrunnlagTest {
                 TestPerson(
                     identer = setOf(ident),
                     fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
-                    yrkesskade = listOf()
+                    yrkesskade = emptyList()
                 )
             )
 

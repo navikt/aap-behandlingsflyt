@@ -83,7 +83,7 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
                 }
                     ?.map { enhet ->
                         NavEnheterResponse(navn = enhet.navn, enhetsnummer = enhet.enhetsNummer)
-                    } ?: emptyList()
+                    }.orEmpty()
                 respond(response)
             }
         }

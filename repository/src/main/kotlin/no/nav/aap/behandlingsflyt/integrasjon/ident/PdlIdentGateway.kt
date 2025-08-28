@@ -29,7 +29,7 @@ class PdlIdentGateway : IdentGateway {
             ?.identer
             ?.filter { it.gruppe == PdlGruppe.FOLKEREGISTERIDENT }
             ?.map { Ident(identifikator = it.ident, aktivIdent = it.historisk.not()) }
-            ?: emptyList()
+            .orEmpty()
     }
 }
 

@@ -51,7 +51,7 @@ class TestPerson(
             null
         )
     ),
-    val medlStatus: List<MedlemskapDataIntern> = listOf(),
+    val medlStatus: List<MedlemskapDataIntern> = emptyList(),
     var sykepenger: List<Sykepenger>? = null,
     val foreldrepenger: List<ForeldrePenger>? = null,
     val tjenestePensjon: TjenestePensjonRespons? = null
@@ -75,7 +75,7 @@ class TestPerson(
     }
 
     fun sykepenger(): List<Sykepenger> {
-        return sykepenger ?: emptyList()
+        return sykepenger.orEmpty()
     }
 
     fun medBarn(barn: List<TestPerson>): TestPerson {

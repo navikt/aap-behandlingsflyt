@@ -17,13 +17,14 @@ import java.time.LocalDate
 interface IKlageresultatUtleder {
     fun utledKlagebehandlingResultat(behandlingId: BehandlingId): KlageResultat
 }
+
 class KlageresultatUtleder(
     private val formkravRepository: FormkravRepository,
     private val behandlendeEnhetRepository: BehandlendeEnhetRepository,
     private val klagebehandlingKontorRepository: KlagebehandlingKontorRepository,
     private val klagebehandlingNayRepository: KlagebehandlingNayRepository,
     private val trekkKlageService: TrekkKlageService
-): IKlageresultatUtleder {
+) : IKlageresultatUtleder {
     constructor(repositoryProvider: RepositoryProvider) : this(
         formkravRepository = repositoryProvider.provide(),
         behandlendeEnhetRepository = repositoryProvider.provide(),
@@ -71,8 +72,10 @@ class KlageresultatUtleder(
             val skalOpprettholdes =
                 (klagebehandlingNayVurdering == null || klagebehandlingNayVurdering.innstilling == KlageInnstilling.OPPRETTHOLD) && (klagebehandlingKontorVurdering == null || klagebehandlingKontorVurdering.innstilling == KlageInnstilling.OPPRETTHOLD)
 
-            val formkravIkkeOppfylltFortsattInnenforSvarfrist = formkravVurdering?.erIkkeOppfylt() == true && svarFrist != null && svarFrist > LocalDate.now()
-            val formkravIkkeOppfylltOgEtterSvarfrist = formkravVurdering?.erIkkeOppfylt() == true && svarFrist != null && svarFrist <= LocalDate.now()
+            val formkravIkkeOppfylltFortsattInnenforSvarfrist =
+                formkravVurdering?.erIkkeOppfylt() == true && svarFrist != null && svarFrist > LocalDate.now()
+            val formkravIkkeOppfylltOgEtterSvarfrist =
+                formkravVurdering?.erIkkeOppfylt() == true && svarFrist != null && svarFrist <= LocalDate.now()
 
             return when {
                 erKlageTrukket -> Trukket
@@ -84,24 +87,19 @@ class KlageresultatUtleder(
 
                 skalOmgjøres -> Omgjøres(
                     vilkårSomSkalOmgjøres = ((klagebehandlingNayVurdering?.vilkårSomOmgjøres
-                        ?: emptyList()) + (klagebehandlingKontorVurdering?.vilkårSomOmgjøres ?: emptyList())).distinct()
+                        .orEmpty()) + (klagebehandlingKontorVurdering?.vilkårSomOmgjøres.orEmpty())).distinct()
                 )
 
                 skalOpprettholdes -> Opprettholdes(
                     vilkårSomSkalOpprettholdes = ((klagebehandlingNayVurdering?.vilkårSomOpprettholdes
-                        ?: emptyList()) + (klagebehandlingKontorVurdering?.vilkårSomOpprettholdes
-                        ?: emptyList())).distinct()
+                        .orEmpty()) + (klagebehandlingKontorVurdering?.vilkårSomOpprettholdes
+                        .orEmpty())).distinct()
                 )
 
                 else -> DelvisOmgjøres(
-                    vilkårSomSkalOmgjøres = ((klagebehandlingNayVurdering?.vilkårSomOmgjøres
-                        ?: emptyList()) + (klagebehandlingKontorVurdering?.vilkårSomOmgjøres
-                        ?: emptyList())).distinct(),
-                    vilkårSomSkalOpprettholdes = ((klagebehandlingNayVurdering?.vilkårSomOpprettholdes
-                        ?: emptyList()) + (klagebehandlingKontorVurdering?.vilkårSomOpprettholdes
-                        ?: emptyList())).distinct()
+                    vilkårSomSkalOmgjøres = ((klagebehandlingNayVurdering?.vilkårSomOmgjøres.orEmpty()) + (klagebehandlingKontorVurdering?.vilkårSomOmgjøres.orEmpty())).distinct(),
+                    vilkårSomSkalOpprettholdes = ((klagebehandlingNayVurdering?.vilkårSomOpprettholdes.orEmpty()) + (klagebehandlingKontorVurdering?.vilkårSomOpprettholdes.orEmpty())).distinct()
                 )
-
 
             }
         }

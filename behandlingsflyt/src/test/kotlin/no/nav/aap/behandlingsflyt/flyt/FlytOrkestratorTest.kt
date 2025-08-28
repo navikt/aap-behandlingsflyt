@@ -231,7 +231,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 AvklarSykepengerErstatningLøsning(
                     sykepengeerstatningVurdering = SykepengerVurderingDto(
                         begrunnelse = "...",
-                        dokumenterBruktIVurdering = listOf(),
+                        dokumenterBruktIVurdering = emptyList(),
                         harRettPå = true,
                         grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR
                     ),
@@ -285,7 +285,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 AvklarSykepengerErstatningLøsning(
                     sykepengeerstatningVurdering = SykepengerVurderingDto(
                         begrunnelse = "HAR IKKE RETT",
-                        dokumenterBruktIVurdering = listOf(),
+                        dokumenterBruktIVurdering = emptyList(),
                         harRettPå = false,
                         grunn = null
                     ),
@@ -752,7 +752,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "Ikke årsakssammenheng",
-                        relevanteSaker = listOf(),
+                        relevanteSaker = emptyList(),
                         andelAvNedsettelsen = null,
                         erÅrsakssammenheng = false
                     )
@@ -787,7 +787,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "Ikke årsakssammenheng",
-                        relevanteSaker = listOf(),
+                        relevanteSaker = emptyList(),
                         andelAvNedsettelsen = null,
                         erÅrsakssammenheng = false
                     )
@@ -1153,7 +1153,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             behandling, AvklarSykepengerErstatningLøsning(
                 sykepengeerstatningVurdering = SykepengerVurderingDto(
                     begrunnelse = "...",
-                    dokumenterBruktIVurdering = listOf(),
+                    dokumenterBruktIVurdering = emptyList(),
                     harRettPå = true,
                     grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR
                 ),
@@ -1317,7 +1317,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 AvklarSykepengerErstatningLøsning(
                     sykepengeerstatningVurdering = SykepengerVurderingDto(
                         begrunnelse = "...",
-                        dokumenterBruktIVurdering = listOf(),
+                        dokumenterBruktIVurdering = emptyList(),
                         harRettPå = true,
                         grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR
                     ),
@@ -1577,7 +1577,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "",
-                        relevanteSaker = listOf(),
+                        relevanteSaker = emptyList(),
                         andelAvNedsettelsen = null,
                         erÅrsakssammenheng = false
                     )
@@ -1937,7 +1937,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             ident, periode,
             SøknadV0(
                 student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", listOf())
+                medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", emptyList())
             ),
         )
 
@@ -3687,7 +3687,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     begrunnelse = "Begrunnelse",
                     notat = null,
                     innstilling = KlageInnstilling.OMGJØR,
-                    vilkårSomOpprettholdes = listOf(),
+                    vilkårSomOpprettholdes = emptyList(),
                     vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
                 )
             )

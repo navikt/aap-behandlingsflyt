@@ -409,7 +409,7 @@ class SamordningStegTest {
 
         val uthentet = InMemorySamordningRepository.hentHvisEksisterer(behandling.id)
 
-        val samordninger = uthentet?.samordningPerioder ?: emptyList()
+        val samordninger = uthentet?.samordningPerioder.orEmpty()
         assertThat(samordninger).hasSize(2)
         assertThat(samordninger.first().gradering).isEqualTo(Prosent.`100_PROSENT`)
         assertThat(samordninger.last().gradering).isEqualTo(Prosent.`100_PROSENT`)

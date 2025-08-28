@@ -155,7 +155,7 @@ class SamordningYtelseVurderingService(
         return if (harEndringerIYtelser(eksisterendeData, samordningYtelser))
             listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING))
         else
-            listOf()
+            emptyList()
     }
 
 

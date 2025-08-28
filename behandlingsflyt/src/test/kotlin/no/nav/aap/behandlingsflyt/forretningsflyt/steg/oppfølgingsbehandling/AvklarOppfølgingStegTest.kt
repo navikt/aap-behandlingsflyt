@@ -111,7 +111,7 @@ class AvklarOppfølgingStegTest {
     fun `om konsekvens av oppfølging er INGEN, så fullføres steget`() {
         val grunnlag = OppfølgingsoppgaveGrunnlag(
             konsekvensAvOppfølging = KonsekvensAvOppfølging.INGEN,
-            opplysningerTilRevurdering = listOf(),
+            opplysningerTilRevurdering = emptyList(),
             årsak = "...",
             vurdertAv = "ff"
         )

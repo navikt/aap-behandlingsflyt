@@ -127,7 +127,7 @@ class ResultatUtlederTest {
             opplysningerMottatt = null,
         ),
         trekk = Dagsatser(0),
-        brukerAvKvoter = setOf(),
+        brukerAvKvoter = emptySet(),
         bruddAktivitetspliktId = null,
         institusjonsoppholdReduksjon = Prosent.`0_PROSENT`,
         meldepliktStatus = MeldepliktStatus.MELDT_SEG,

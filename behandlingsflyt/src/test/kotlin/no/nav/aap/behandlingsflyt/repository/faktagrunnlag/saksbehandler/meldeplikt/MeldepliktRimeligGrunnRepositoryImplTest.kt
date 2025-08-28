@@ -74,11 +74,11 @@ class MeldepliktRimeligGrunnRepositoryImplTest {
                 listOf(rimeligGrunnVurdering)
             )
             val behandling1Grunnlag =
-                meldepliktRimeligGrunnRepository.hentHvisEksisterer(behandling1.id)?.vurderinger ?: emptyList()
+                meldepliktRimeligGrunnRepository.hentHvisEksisterer(behandling1.id)?.vurderinger.orEmpty()
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
-            val meldepliktRimeligGrunnGrunnlag = meldepliktRimeligGrunnRepository.hentHvisEksisterer(behandling2.id)?.vurderinger ?: emptyList()
+            val meldepliktRimeligGrunnGrunnlag = meldepliktRimeligGrunnRepository.hentHvisEksisterer(behandling2.id)?.vurderinger.orEmpty()
             assertThat(meldepliktRimeligGrunnGrunnlag).containsExactlyInAnyOrderElementsOf(behandling1Grunnlag)
         }
     }

@@ -51,7 +51,7 @@ class AktivitetspliktInformasjonskrav (
 
         val eksisterendeBrudd = aktivitetspliktRepository.hentGrunnlagHvisEksisterer(kontekst.behandlingId)
             ?.bruddene
-            ?: emptyList()
+            .orEmpty()
 
         val alleBrudd = HashSet<AktivitetspliktDokument>(eksisterendeBrudd)
 

@@ -59,7 +59,7 @@ class SamordningRepositoryImpl(private val connection: DBConnection) : Samordnin
 
     override fun lagre(behandlingId: BehandlingId, samordningPerioder: List<SamordningPeriode>, input: Faktagrunnlag) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
-        val eksisterendePerioder = eksisterendeGrunnlag?.samordningPerioder ?: emptySet()
+        val eksisterendePerioder = eksisterendeGrunnlag?.samordningPerioder.orEmpty()
 
         if (eksisterendePerioder != samordningPerioder) {
             if (eksisterendeGrunnlag != null) {

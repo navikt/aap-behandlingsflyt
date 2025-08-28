@@ -63,7 +63,7 @@ class FatteVedtakLøser(
 
             val vurderingerSomMåReåpnes =
                 if (unntaksVurderinger.containsAll(vurderingerSomErSendtTilbake.map { it.definisjon })) {
-                    listOf()
+                    emptyList()
                 } else {
                     avklaringsbehovene.alleEkskludertVentebehov()
                         .filterNot { behov ->
@@ -94,7 +94,7 @@ class FatteVedtakLøser(
                     definisjon = Definisjon.forKode(vurdering.definisjon),
                     begrunnelse = vurdering.begrunnelse(),
                     godkjent = vurdering.godkjent!!,
-                    årsakTilRetur = vurdering.grunner ?: listOf(),
+                    årsakTilRetur = vurdering.grunner.orEmpty(),
                     vurdertAv = kontekst.bruker.ident
                 )
             }

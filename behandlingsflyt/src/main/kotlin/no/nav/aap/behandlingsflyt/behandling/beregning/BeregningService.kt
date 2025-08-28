@@ -66,7 +66,7 @@ class BeregningService(
             yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
             vurdering = beregningVurdering,
             inntekter = kombinertInntekt,
-            uføregrad = uføre?.vurderinger ?: emptyList(),
+            uføregrad = uføre?.vurderinger.orEmpty(),
             registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader
         )
 
@@ -94,8 +94,8 @@ class BeregningService(
         val behov = Inntektsbehov(
             Input(
                 nedsettelsesDato = nedsettelsesDato,
-                inntekter = setOf(),
-                uføregrad = uføreGrunnlag?.vurderinger ?: emptyList(),
+                inntekter = emptySet(),
+                uføregrad = uføreGrunnlag?.vurderinger.orEmpty(),
                 yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
                 registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
                 beregningGrunnlag = beregningVurdering

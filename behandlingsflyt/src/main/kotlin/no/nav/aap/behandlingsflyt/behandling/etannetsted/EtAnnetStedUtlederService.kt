@@ -305,17 +305,17 @@ class EtAnnetStedUtlederService(
         val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandlingId)
         val barnetillegg = barnetilleggRepository.hentHvisEksisterer(behandlingId)?.perioder.orEmpty()
 
-        val opphold = grunnlag?.oppholdene?.opphold ?: emptyList()
+        val opphold = grunnlag?.oppholdene?.opphold.orEmpty()
         val soningsvurderinger: List<Soningsvurdering>
         val helsevurderinger: List<HelseinstitusjonVurdering>
         if (basertPåVurderingerFørDenneBehandlingen) {
             val forrigeGrunnlag =
                 behandling.forrigeBehandlingId?.let { institusjonsoppholdRepository.hentHvisEksisterer(behandling.forrigeBehandlingId) }
-            soningsvurderinger = forrigeGrunnlag?.soningsVurderinger?.vurderinger ?: emptyList()
-            helsevurderinger = forrigeGrunnlag?.helseoppholdvurderinger?.vurderinger ?: emptyList()
+            soningsvurderinger = forrigeGrunnlag?.soningsVurderinger?.vurderinger.orEmpty()
+            helsevurderinger = forrigeGrunnlag?.helseoppholdvurderinger?.vurderinger.orEmpty()
         } else {
-            soningsvurderinger = grunnlag?.soningsVurderinger?.vurderinger ?: emptyList()
-            helsevurderinger = grunnlag?.helseoppholdvurderinger?.vurderinger ?: emptyList()
+            soningsvurderinger = grunnlag?.soningsVurderinger?.vurderinger.orEmpty()
+            helsevurderinger = grunnlag?.helseoppholdvurderinger?.vurderinger.orEmpty()
         }
 
         return EtAnnetStedInput(rettighetsperiode, opphold, soningsvurderinger, barnetillegg, helsevurderinger)

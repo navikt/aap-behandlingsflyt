@@ -143,7 +143,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         begrunnelse: String
     ) {
         repo.lagreArbeidsforholdOgInntektINorge(
-            behandlingId, listOf(),
+            behandlingId, emptyList(),
             listOf(
                 ArbeidsInntektMaaned(
                     aarMaaned = YearMonth.now(),

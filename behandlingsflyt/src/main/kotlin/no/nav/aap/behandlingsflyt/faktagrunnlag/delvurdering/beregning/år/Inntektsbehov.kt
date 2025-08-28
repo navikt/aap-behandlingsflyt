@@ -88,7 +88,7 @@ class Inntektsbehov(private val input: Input) {
 
     private fun samleOpplysningerOmYrkesskade(): List<YrkesskadeBeregning> {
         // Finn den saken med størst beløp basert på antall G på skadetidspunktet
-        val relevanteSaker = input.yrkesskadevurdering?.relevanteSaker ?: emptyList()
+        val relevanteSaker = input.yrkesskadevurdering?.relevanteSaker.orEmpty()
         val sakerMedDato =
             relevanteSaker.map { sak -> input.registrerteYrkesskader?.yrkesskader?.singleOrNull { it.ref == sak } }
 

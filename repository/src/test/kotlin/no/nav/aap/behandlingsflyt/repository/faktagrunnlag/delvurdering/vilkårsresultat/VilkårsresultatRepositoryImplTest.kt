@@ -91,7 +91,7 @@ class VilkårsresultatRepositoryImplTest {
                 ),
                 Vilkår(
                     Vilkårtype.SAMORDNING,
-                    setOf()
+                    emptySet()
                 )
             )
         )

@@ -91,7 +91,7 @@ class SamordningApiKtTest : BaseApiTest() {
                             endringStatus = EndringStatus.NY
                         )
                     ),
-                    vurderinger = listOf(),
+                    vurderinger = emptyList(),
                     begrunnelse = null,
                     fristNyRevurdering = null,
                     maksDatoEndelig = null,

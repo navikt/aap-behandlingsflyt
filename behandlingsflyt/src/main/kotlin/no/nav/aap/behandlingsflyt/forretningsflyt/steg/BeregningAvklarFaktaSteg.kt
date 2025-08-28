@@ -143,7 +143,7 @@ class BeregningAvklarFaktaSteg private constructor(
         relevanteSaker: List<String>,
         beregningGrunnlag: BeregningGrunnlag?
     ): Boolean {
-        val vurderteSaker = beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger ?: emptyList()
+        val vurderteSaker = beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger.orEmpty()
         if (relevanteSaker.isEmpty()) {
             return false
         }

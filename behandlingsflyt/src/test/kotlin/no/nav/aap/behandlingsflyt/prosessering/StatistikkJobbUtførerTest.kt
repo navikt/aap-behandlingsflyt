@@ -175,7 +175,7 @@ class StatistikkJobbUtførerTest {
             referanse = behandling.referanse,
             behandlingType = behandling.typeBehandling(),
             status = behandling.status(),
-            avklaringsbehov = listOf(),
+            avklaringsbehov = emptyList(),
             erPåVent = false,
             relevanteIdenterPåBehandling = emptyList(),
             opprettetTidspunkt = opprettetTidspunkt!!,
@@ -183,7 +183,7 @@ class StatistikkJobbUtførerTest {
             versjon = "123",
             årsakerTilBehandling = listOf(Vurderingsbehov.SØKNAD.name),
             vurderingsbehov = listOf(Vurderingsbehov.SØKNAD.name),
-            mottattDokumenter = listOf(),
+            mottattDokumenter = emptyList(),
             årsakTilOpprettelse = behandling.årsakTilOpprettelse?.name ?: "Ukjent",
         )
 
@@ -274,7 +274,7 @@ class StatistikkJobbUtførerTest {
                     grunnlaget = GUnit(7),
                     erGjennomsnitt = false,
                     gjennomsnittligInntektIG = GUnit(0),
-                    inntekter = listOf()
+                    inntekter = emptyList()
                 )
             )
 
@@ -315,7 +315,7 @@ class StatistikkJobbUtførerTest {
             SykdomRepositoryImpl(connection).lagre(
                 behandlingId = opprettetBehandling.id, Sykdomsvurdering(
                     begrunnelse = "123",
-                    dokumenterBruktIVurdering = listOf(),
+                    dokumenterBruktIVurdering = emptyList(),
                     harSkadeSykdomEllerLyte = true,
                     erSkadeSykdomEllerLyteVesentligdel = true,
                     erNedsettelseIArbeidsevneAvEnVissVarighet = true,
@@ -373,7 +373,7 @@ class StatistikkJobbUtførerTest {
             referanse = behandling.referanse,
             behandlingType = behandling.typeBehandling(),
             status = behandling.status(),
-            avklaringsbehov = listOf(),
+            avklaringsbehov = emptyList(),
             erPåVent = false,
             relevanteIdenterPåBehandling = emptyList(),
             opprettetTidspunkt = LocalDateTime.now(),
@@ -383,7 +383,7 @@ class StatistikkJobbUtførerTest {
             vurderingsbehov = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
             årsakTilOpprettelse = behandling.årsakTilOpprettelse?.name ?: "Ukjent",
             reserverTil = "meg",
-            mottattDokumenter = listOf()
+            mottattDokumenter = emptyList()
         )
 
         val hendelse2 = DefaultJsonMapper.toJson(payload)
@@ -419,10 +419,10 @@ class StatistikkJobbUtførerTest {
         assertThat(hendelser).isNotEmpty()
         assertThat(hendelser.first().avsluttetBehandling.toString()).isEqualTo(
             AvsluttetBehandlingDTO(
-                tilkjentYtelse = TilkjentYtelseDTO(perioder = listOf()),
+                tilkjentYtelse = TilkjentYtelseDTO(perioder = emptyList()),
                 beregningsGrunnlag = BeregningsgrunnlagDTO(
                     grunnlag11_19dto = Grunnlag11_19DTO(
-                        inntekter = mapOf(),
+                        inntekter = emptyMap(),
                         grunnlaget = 7.0,
                         er6GBegrenset = false,
                         erGjennomsnitt = false,
@@ -628,7 +628,7 @@ class StatistikkJobbUtførerTest {
             årsakerTilBehandling = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
             vurderingsbehov = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
             årsakTilOpprettelse = behandling.årsakTilOpprettelse?.name ?: "Ukjent",
-            mottattDokumenter = listOf(),
+            mottattDokumenter = emptyList(),
             reserverTil = "meg",
         )
 

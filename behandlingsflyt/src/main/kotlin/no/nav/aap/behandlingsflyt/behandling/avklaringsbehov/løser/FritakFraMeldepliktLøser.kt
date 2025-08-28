@@ -33,8 +33,7 @@ class FritakFraMeldepliktLøser(
                 opprettetTid = null,
             ) }
         val eksisterendeFritaksperioder = MeldepliktFritaksperioder(
-            behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }?.vurderinger
-                ?: emptyList()
+            behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
         )
 
         val nyeFritaksperioder =

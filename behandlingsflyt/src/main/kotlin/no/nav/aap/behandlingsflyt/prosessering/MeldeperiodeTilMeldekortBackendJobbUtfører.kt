@@ -111,9 +111,9 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                 saksnummer = sak.saksnummer.toString(),
                 sakStatus = SakStatus.AVSLUTTET,
                 sakenGjelderFor = sak.rettighetsperiode.somKontraktperiode,
-                meldeperioder = listOf(),
-                meldeplikt = listOf(),
-                opplysningsbehov = listOf(),
+                meldeperioder = emptyList(),
+                meldeplikt = emptyList(),
+                opplysningsbehov = emptyList(),
             )
 
         internal fun opplysningerVedVedtak(

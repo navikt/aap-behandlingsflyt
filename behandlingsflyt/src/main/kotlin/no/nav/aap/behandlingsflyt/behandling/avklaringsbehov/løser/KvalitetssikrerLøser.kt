@@ -82,7 +82,7 @@ class KvalitetssikrerLøser(
                     definisjon = Definisjon.forKode(vurdering.definisjon),
                     begrunnelse = vurdering.begrunnelse(),
                     godkjent = vurdering.godkjent!!,
-                    årsakTilRetur = vurdering.grunner ?: listOf(),
+                    årsakTilRetur = vurdering.grunner.orEmpty(),
                     vurdertAv = kontekst.bruker.ident
                 )
             }

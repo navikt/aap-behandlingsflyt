@@ -153,7 +153,7 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
 
     private fun mapInntekter(inntektId: Long?): Set<InntektPerÅr> {
         if (inntektId == null) {
-            return setOf()
+            return emptySet()
         }
         val query = """
             SELECT * FROM INNTEKT WHERE inntekt_id = ?
