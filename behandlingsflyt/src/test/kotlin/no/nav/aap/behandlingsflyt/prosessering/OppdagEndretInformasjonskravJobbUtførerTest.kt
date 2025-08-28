@@ -78,12 +78,12 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
     }
 
     object FakeForeldrepengerGateway : ForeldrepengerGateway {
-        var response = ForeldrepengerResponse(listOf())
+        var response = ForeldrepengerResponse(emptyList())
         override fun hentVedtakYtelseForPerson(request: ForeldrepengerRequest) = response
     }
 
     object FakeSykepegerGateway : SykepengerGateway {
-        var sykepengerRespons = SykepengerResponse(listOf())
+        var sykepengerRespons = SykepengerResponse(emptyList())
         override fun hentYtelseSykepenger(
             personidentifikatorer: Set<String>,
             fom: LocalDate,
@@ -94,16 +94,16 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
     }
 
     object FakeTjenestePensjonGateway : TjenestePensjonGateway {
-        override fun hentTjenestePensjon(ident: String, periode: Periode): List<TjenestePensjonForhold> = listOf()
+        override fun hentTjenestePensjon(ident: String, periode: Periode): List<TjenestePensjonForhold> = emptyList()
     }
 
     object FakeUføreRegisterGateway : UføreRegisterGateway {
-        var response: List<Uføre> = listOf()
+        var response: List<Uføre> = emptyList()
         override fun innhentMedHistorikk(person: Person, fraDato: LocalDate) = response
     }
 
     object FakeInstitusjonsoppholdGateway : InstitusjonsoppholdGateway {
-        var response: List<Institusjonsopphold> = listOf()
+        var response: List<Institusjonsopphold> = emptyList()
         override fun innhent(person: Person) = response
     }
 
@@ -229,7 +229,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                 behandlingType = TypeBehandling.Førstegangsbehandling,
                 vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
                 rettighetsperiode = sak.rettighetsperiode,
-                vurderingsbehovRelevanteForSteg = setOf()
+                vurderingsbehovRelevanteForSteg = emptySet()
             )
             BarnService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
             SamordningYtelseVurderingService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)

@@ -50,7 +50,7 @@ class BehandlingFlyt private constructor(
     fun faktagrunnlagForGjeldendeSteg(): List<Pair<StegType, Informasjonskravkonstruktør>> {
         return aktivtSteg
             ?.let { steg -> steg.kravliste.map { steg.steg.type() to it } }
-            ?: emptyList()
+            .orEmpty()
     }
 
     /**
@@ -149,7 +149,7 @@ class BehandlingFlyt private constructor(
 
     internal fun tilbakeflyt(avklaringsbehov: Avklaringsbehov?): BehandlingFlyt {
         if (avklaringsbehov == null) {
-            return tilbakeflyt(listOf())
+            return tilbakeflyt(emptyList())
         }
         return tilbakeflyt(listOf(avklaringsbehov))
     }
@@ -176,7 +176,7 @@ class BehandlingFlyt private constructor(
         nyeVurderingsbehov: List<Vurderingsbehov>? = null
     ): BehandlingFlyt {
         val tidligsteStegForVurderingsbehov =
-            nyeVurderingsbehov?.flatMap { vurderingsbehov[it] ?: emptyList() }
+            nyeVurderingsbehov?.flatMap { vurderingsbehov[it].orEmpty() }
                 // Skal ikke kunne flyttes tilbake til steg med status OPPRETTET
                 ?.minus(StegType.entries.filter { it.status == Status.OPPRETTET })
                 ?.minWithOrNull(compareable())

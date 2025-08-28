@@ -48,7 +48,7 @@ class InntektsbehovTest {
         val relevanteÅr = Inntektsbehov(
             Input(
                 nedsettelsesDato,
-                inntekter = setOf(),
+                inntekter = emptySet(),
                 uføregrad = listOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = null,
@@ -73,7 +73,7 @@ class InntektsbehovTest {
         val relevanteÅr = Inntektsbehov(
             Input(
                 nedsettelsesDato,
-                setOf(),
+                emptySet(),
                 listOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
                 null,
                 null,
@@ -109,7 +109,7 @@ class InntektsbehovTest {
         val inntektsbehov = Inntektsbehov(
             Input(
                 nedsettelsesDato,
-                inntekter = setOf(),
+                inntekter = emptySet(),
                 uføregrad = listOf(Uføre(LocalDate.now(), Prosent.`30_PROSENT`)),
                 yrkesskadevurdering = null,
                 registrerteYrkesskader = null,

@@ -70,7 +70,7 @@ class SaksHistorikkService(
                                             )
                                         )
                                     }
-                                    ?: emptyList()
+                                    .orEmpty()
                             } else emptyList()
                         }
 

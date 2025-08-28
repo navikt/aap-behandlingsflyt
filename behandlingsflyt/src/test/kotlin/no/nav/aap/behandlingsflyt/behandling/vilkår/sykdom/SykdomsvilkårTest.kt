@@ -202,7 +202,7 @@ class SykdomsvilkårTest {
                 sykepengerErstatningFaktagrunnlag =
                     SykepengerVurdering(
                         begrunnelse = "",
-                        dokumenterBruktIVurdering = listOf(),
+                        dokumenterBruktIVurdering = emptyList(),
                         harRettPå = true,
                         grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
                         vurdertAv = "abc123",
@@ -235,7 +235,7 @@ class SykdomsvilkårTest {
         opprettet: LocalDateTime = LocalDateTime.now()
     ) = Sykdomsvurdering(
         begrunnelse = "",
-        dokumenterBruktIVurdering = listOf(),
+        dokumenterBruktIVurdering = emptyList(),
         harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
         erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
         erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,

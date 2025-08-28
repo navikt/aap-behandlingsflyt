@@ -35,14 +35,14 @@ fun tomUnderveisInput(
     ),
     opptrappingPerioder: List<Periode> = emptyList(),
     meldekort: List<Meldekort> = emptyList(),
-    innsendingsTidspunkt: Map<LocalDate, JournalpostId> = mapOf(),
+    innsendingsTidspunkt: Map<LocalDate, JournalpostId> = emptyMap(),
     kvoter: Kvoter = tomKvoter,
     aktivitetspliktGrunnlag: AktivitetspliktGrunnlag = AktivitetspliktGrunnlag(emptySet()),
-    etAnnetSted: List<EtAnnetSted> = listOf(),
+    etAnnetSted: List<EtAnnetSted> = emptyList(),
     arbeidsevneGrunnlag: ArbeidsevneGrunnlag = ArbeidsevneGrunnlag(emptyList()),
     meldepliktGrunnlag: MeldepliktGrunnlag = MeldepliktGrunnlag(emptyList()),
     meldepliktRimeligGrunnGrunnlag: MeldepliktRimeligGrunnGrunnlag = MeldepliktRimeligGrunnGrunnlag(emptyList()),
-    meldeperioder: List<Periode> = FastsettMeldeperiodeSteg.utledMeldeperiode(listOf(), rettighetsperiode),
+    meldeperioder: List<Periode> = FastsettMeldeperiodeSteg.utledMeldeperiode(emptyList(), rettighetsperiode),
     vedtaksdatoFørstegangsbehandling: LocalDate? = rettighetsperiode.fom,
 ): UnderveisInput {
     return UnderveisInput(

@@ -80,7 +80,8 @@ private fun arbeidsevneGrunnlag(
                 nåTilstand
                     ?.filterNot { vedtatteVerdier.contains(it) }
                     ?.map { it.toDto(AnsattInfoService(gatewayProvider).hentAnsattNavnOgEnhet(it.vurdertAv)) }
-                    ?.sortedBy { it.fraDato } ?: emptyList(),
+                    ?.sortedBy { it.fraDato }
+                    .orEmpty(),
             gjeldendeVedtatteVurderinger =
                 vedtatteVerdier
                     .map { it.toDto() }

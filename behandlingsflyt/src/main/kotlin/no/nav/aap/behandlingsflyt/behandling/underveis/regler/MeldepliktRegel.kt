@@ -112,7 +112,7 @@ class MeldepliktRegel(
          * med vilkårsprøvingen.
          */
         val meldepliktFraOgMed = vedtaksdatoFørstegangsbehandling?.plusDays(1)
-            ?: return listOf()
+            ?: return emptyList()
 
         val harRett = underveis.mapValue {
             it.rettighetsType != null

@@ -78,8 +78,8 @@ class InntektService private constructor(
                 val behov = Inntektsbehov(
                     Input(
                         nedsettelsesDato = nedsettelsesDato,
-                        inntekter = setOf(),
-                        uføregrad = uføreGrunnlag?.vurderinger ?: emptyList(),
+                        inntekter = emptySet(),
+                        uføregrad = uføreGrunnlag?.vurderinger.orEmpty(),
                         yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
                         registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
                         beregningGrunnlag = beregningVurdering

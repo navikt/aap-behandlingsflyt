@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold
 import java.time.LocalDate
 
 data class ArbeidsforholdoversiktResponse(
-    val arbeidsforholdoversikter: List<ArbeidsforholdOversikt> = listOf()
+    val arbeidsforholdoversikter: List<ArbeidsforholdOversikt> = emptyList()
 )
 
 data class ArbeidsforholdOversikt(

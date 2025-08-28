@@ -56,7 +56,7 @@ class AARegisterGateway : ArbeidsforholdGateway {
             query(request)
         } catch (e: IkkeFunnetException) {
             // Fant ikke ident i AAreg, de returnerer 404
-            listOf()
+            emptyList()
         } catch (e: Exception) {
             throw RuntimeException("Feil ved henting av data i AAreg: ${e.message}", e)
         }

@@ -136,8 +136,8 @@ class UnderveisService(
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
 
         val meldekortGrunnlag = meldekortRepository.hentHvisEksisterer(behandlingId)
-        val meldekort = meldekortGrunnlag?.meldekort() ?: listOf()
-        val innsendingsTidspunkt = meldekortGrunnlag?.innsendingsdatoPerMelding() ?: mapOf()
+        val meldekort = meldekortGrunnlag?.meldekort().orEmpty()
+        val innsendingsTidspunkt = meldekortGrunnlag?.innsendingsdatoPerMelding().orEmpty()
         val kvote = kvoteService.beregn(behandlingId)
         val utlederResultat = etAnnetStedUtlederService.utled(behandlingId)
 
@@ -162,7 +162,7 @@ class UnderveisService(
         return UnderveisInput(
             rettighetsperiode = sak.rettighetsperiode,
             vilkårsresultat = vilkårsresultat,
-            opptrappingPerioder = listOf(),
+            opptrappingPerioder = emptyList(),
             meldekort = meldekort,
             innsendingsTidspunkt = innsendingsTidspunkt,
             kvoter = kvote,

@@ -11,8 +11,8 @@ dependencies {
 
     api(libs.tilgangPlugin)
     api(libs.tilgangKontrakt)
-    api("no.nav.aap.brev:kontrakt:0.0.142")
-    api("no.nav.aap.meldekort:kontrakt:0.0.105")
+    api("no.nav.aap.brev:kontrakt:0.0.144")
+    api("no.nav.aap.meldekort:kontrakt:0.0.106")
     api(libs.motor)
     api(libs.gateway)
     api(libs.utbetalKontrakt)

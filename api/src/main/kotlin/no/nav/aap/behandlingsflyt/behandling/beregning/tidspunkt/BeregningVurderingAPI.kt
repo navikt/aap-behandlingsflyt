@@ -85,14 +85,13 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(
                     val yrkesskadevurdering =
                         sykdomRepository.hentHvisEksisterer(behandling.id)?.yrkesskadevurdering
                     val registerYrkeskade =
-                        yrkesskadeRepository.hentHvisEksisterer(behandling.id)?.yrkesskader?.yrkesskader
-                            ?: emptyList()
+                        yrkesskadeRepository.hentHvisEksisterer(behandling.id)?.yrkesskader?.yrkesskader.orEmpty()
                     val beregningGrunnlag = beregningVurderingRepository
                         .hentHvisEksisterer(behandlingId = behandling.id)
                     val historiskeVurderinger = beregningVurderingRepository
                         .hentHistoriskeVurderinger(behandling.sakId, behandling.id)
 
-                    val relevanteSaker = yrkesskadevurdering?.relevanteSaker ?: emptyList()
+                    val relevanteSaker = yrkesskadevurdering?.relevanteSaker.orEmpty()
                     val sakerMedDato =
                         relevanteSaker.map { sak -> registerYrkeskade.singleOrNull { it.ref == sak } }
 
@@ -102,6 +101,8 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(
                             sakerMedDato.filterNotNull().map {
                                 YrkesskadeTilVurderingResponse(
                                     it.ref,
+                                    it.saksnummer,
+                                    it.kildesystem,
                                     it.skadedato,
                                     Grunnbeløp.finnGUnit(it.skadedato, Beløp(1)).beløp
                                 )

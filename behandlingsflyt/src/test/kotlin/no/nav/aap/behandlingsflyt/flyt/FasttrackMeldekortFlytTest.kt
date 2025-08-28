@@ -22,11 +22,13 @@ import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentY
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
+import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackMeldekort
+import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -197,13 +199,12 @@ class FasttrackMeldekortFlytTest :
 
     @Test
     fun `sender inn to meldekort, resultat reflektert i åpen behandling`() {
-        val sak = happyCaseFørstegangsbehandling()
-        val revurderingGjelderFra = sak.rettighetsperiode.fom.plusWeeks(2)
-        val åpenBehandling = revurdereFramTilOgMedSykdom(sak, revurderingGjelderFra)
+        val sak = happyCaseFørstegangsbehandling(fom = 25 august 2025)
+        val åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom.plusWeeks(2))
         åpenBehandling.løsSykdom().løsBistand().løsSykdomsvurderingBrev()
 
-        val (førsteMeldeperiode, andreMeldeperiode) = dataSource.transaction {
-            MeldeperiodeRepositoryImpl(it).hent(åpenBehandling.id)
+        val (førsteMeldeperiode, andreMeldeperiode) = dataSource.transaction { connection ->
+            MeldeperiodeRepositoryImpl(connection).hent(åpenBehandling.id)
         }
         åpenBehandling.sendInnMeldekort(
             sak.rettighetsperiode,
@@ -214,7 +215,7 @@ class FasttrackMeldekortFlytTest :
                     timerArbeid = 37.5 / 2,
                 ),
             ),
-            mottattTidspunkt = førsteMeldeperiode.fom.plusDays(1).atTime(8, 0),
+            mottattTidspunkt = førsteMeldeperiode.tom.plusDays(1).atTime(8, 0),
         )
         åpenBehandling.sendInnMeldekort(
             sak.rettighetsperiode, listOf(
@@ -224,7 +225,7 @@ class FasttrackMeldekortFlytTest :
                     timerArbeid = 37.5,
                 )
             ),
-            mottattTidspunkt = andreMeldeperiode.fom.plusDays(1).atTime(8, 0),
+            mottattTidspunkt = andreMeldeperiode.tom.plusDays(1).atTime(8, 0),
         )
         motor.kjørJobber()
 

@@ -18,7 +18,7 @@ import java.time.ZoneId
 
 fun underveisInput(
     rettighetsperiode: Periode,
-    aktivitetspliktDokument: Set<AktivitetspliktDokument> = setOf(),
+    aktivitetspliktDokument: Set<AktivitetspliktDokument> = emptySet(),
 ) = tomUnderveisInput(
     rettighetsperiode = rettighetsperiode,
     aktivitetspliktGrunnlag = AktivitetspliktGrunnlag(aktivitetspliktDokument),

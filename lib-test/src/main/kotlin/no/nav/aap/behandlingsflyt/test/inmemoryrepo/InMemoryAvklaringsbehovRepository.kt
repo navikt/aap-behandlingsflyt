@@ -33,7 +33,7 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
     }
 
     override fun hentAlleAvklaringsbehovForSak(behandlingIder: List<BehandlingId>): List<AvklaringsbehovForSak> {
-        return listOf()
+        return emptyList()
     }
 
     override fun opprett(

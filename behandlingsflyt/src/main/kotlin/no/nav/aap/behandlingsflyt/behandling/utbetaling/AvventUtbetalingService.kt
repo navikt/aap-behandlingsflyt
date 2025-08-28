@@ -32,7 +32,7 @@ class AvventUtbetalingService(
 
     private fun overlapperMedSosialRefusjonskrav(behandlingId: BehandlingId, førsteVedtaksdato: LocalDate, tilkjentYtelseHelePerioden: Periode): TilkjentYtelseAvventDto? {
         val sosialRefusjonskrav = refusjonskravRepository.hentHvisEksisterer(behandlingId)
-        val perioderMedKrav = sosialRefusjonskrav?.filter {it.harKrav && it.fom != null} ?: listOf()
+        val perioderMedKrav = sosialRefusjonskrav?.filter {it.harKrav && it.fom != null}.orEmpty()
         val harKrav = perioderMedKrav.any { tilkjentYtelseHelePerioden.overlapper(tilPeriode(it.fom, it.tom)) }
         if (harKrav) {
 

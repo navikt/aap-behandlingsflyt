@@ -62,7 +62,7 @@ class GraderingArbeidRegelTest {
                         )
                     )
                 ),
-                opplysningerTidslinje = Tidslinje(listOf()),
+                opplysningerTidslinje = Tidslinje(emptyList()),
                 dagensDato = 24 mars 2025
             ),
         )
@@ -83,7 +83,7 @@ class GraderingArbeidRegelTest {
                         )
                     )
                 ),
-                opplysningerTidslinje = Tidslinje(listOf()),
+                opplysningerTidslinje = Tidslinje(emptyList()),
                 dagensDato = 25 mars 2025
             ),
         )

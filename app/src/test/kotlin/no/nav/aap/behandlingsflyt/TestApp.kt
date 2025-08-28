@@ -143,7 +143,7 @@ fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): S�
                         relasjon = ManueltOppgittBarn.Relasjon.FORELDER
                     )
                 },
-            identer = setOf()
+            identer = emptySet()
         )
     } else {
         log.info("Oppretter ikke oppgitte barn siden det ikke er noen urelatert barn i testcase")
@@ -152,7 +152,7 @@ fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): S�
     val harMedlemskap = if (dto.medlemskap) "JA" else "NEI"
     return SøknadV0(
         student = SøknadStudentDto(erStudent), harYrkesskade, oppgitteBarn,
-        medlemskap = SøknadMedlemskapDto(harMedlemskap, null, null, null, listOf()),
+        medlemskap = SøknadMedlemskapDto(harMedlemskap, null, null, null, emptyList()),
     )
 }
 

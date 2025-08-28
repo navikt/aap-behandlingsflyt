@@ -50,7 +50,7 @@ class MeldekortService private constructor(
         }
 
         val eksisterendeGrunnlag = meldekortRepository.hentHvisEksisterer(kontekst.behandlingId)
-        val eksisterendeMeldekort = eksisterendeGrunnlag?.meldekortene ?: emptySet()
+        val eksisterendeMeldekort = eksisterendeGrunnlag?.meldekortene.orEmpty()
         val allePlussNye = HashSet<Meldekort>(eksisterendeMeldekort)
 
         for (ubehandletMeldekort in meldekortSomIkkeErBehandlet) {
@@ -78,7 +78,7 @@ class MeldekortService private constructor(
 
         val meldekortIBehandling = meldekortRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.meldekortene
-            ?: emptySet()
+            .orEmpty()
 
         val journalpostIderIBehandling = meldekortIBehandling.map { it.journalpostId }
 

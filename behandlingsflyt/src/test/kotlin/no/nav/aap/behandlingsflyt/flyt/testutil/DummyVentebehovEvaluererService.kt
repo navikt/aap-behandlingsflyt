@@ -10,6 +10,6 @@ class DummyVentebehovEvaluererService : VentebehovEvaluererService {
         kontekst: FlytKontekst,
         avklaringsbehovene: Avklaringsbehovene
     ): List<Avklaringsbehov> {
-        return listOf()
+        return emptyList()
     }
 }

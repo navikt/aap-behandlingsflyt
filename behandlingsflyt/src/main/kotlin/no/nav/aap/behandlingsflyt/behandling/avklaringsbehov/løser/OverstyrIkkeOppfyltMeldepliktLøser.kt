@@ -36,7 +36,7 @@ class OverstyrIkkeOppfyltMeldepliktLøser(
             }
         val eksisterendeRimeligGrunnPerioder = MeldepliktRimeligGrunnPerioder(
             behandling.forrigeBehandlingId?.let { meldepliktRimeligGrunnRepository.hentHvisEksisterer(it) }?.vurderinger
-                ?: emptyList()
+                .orEmpty()
         )
 
         val nyeRimeligGrunnPerioder =

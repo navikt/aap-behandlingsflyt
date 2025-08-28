@@ -35,7 +35,7 @@ public data class StoppetBehandling(
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
     val hendelsesTidspunkt: LocalDateTime,
     val avsluttetBehandling: AvsluttetBehandlingDTO? = null,
-    val identerForSak: List<String> = listOf(),
+    val identerForSak: List<String> = emptyList(),
 ) {
     init {
         require(ident.isNotEmpty())

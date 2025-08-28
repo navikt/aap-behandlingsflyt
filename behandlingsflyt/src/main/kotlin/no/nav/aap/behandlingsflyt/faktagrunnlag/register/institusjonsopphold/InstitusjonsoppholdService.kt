@@ -65,7 +65,7 @@ class InstitusjonsoppholdService private constructor(
         return if (erEndret(eksisterendeGrunnlag, institusjonsopphold))
             listOf(VurderingsbehovMedPeriode(Vurderingsbehov.INSTITUSJONSOPPHOLD))
         else
-            listOf()
+            emptyList()
     }
 
     companion object : Informasjonskravkonstruktør {

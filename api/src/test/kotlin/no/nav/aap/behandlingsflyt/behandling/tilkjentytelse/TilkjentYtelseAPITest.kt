@@ -50,7 +50,7 @@ class TilkjentYtelseAPITest : BaseApiTest() {
             val rettighetsperiode = sak.rettighetsperiode
 
             val perioder = FastsettMeldeperiodeSteg.utledMeldeperiode(
-                listOf(),
+                emptyList(),
                 rettighetsperiode
             ).take(3)
 

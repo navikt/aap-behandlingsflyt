@@ -220,8 +220,8 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
             FakePersoner.leggTil(
                 TestPerson(
                     fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
-                    yrkesskade = listOf(),
-                    sykepenger = listOf()
+                    yrkesskade = emptyList(),
+                    sykepenger = emptyList()
                 )
             )
         }
@@ -840,7 +840,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "",
-                        relevanteSaker = listOf(),
+                        relevanteSaker = emptyList(),
                         andelAvNedsettelsen = null,
                         erÅrsakssammenheng = true
                     )

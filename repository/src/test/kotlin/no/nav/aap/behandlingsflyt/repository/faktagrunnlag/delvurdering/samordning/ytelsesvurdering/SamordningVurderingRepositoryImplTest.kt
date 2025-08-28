@@ -107,7 +107,7 @@ internal class SamordningVurderingRepositoryImplTest {
                     begrunnelse = "xxxx",
                     maksDatoEndelig = true,
                     fristNyRevurdering = LocalDate.now().plusYears(1),
-                    vurderinger = listOf(),
+                    vurderinger = emptyList(),
                     vurdertAv = "ident"
                 )
             )

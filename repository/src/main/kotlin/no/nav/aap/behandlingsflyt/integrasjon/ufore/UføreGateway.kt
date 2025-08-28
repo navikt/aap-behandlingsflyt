@@ -71,7 +71,7 @@ object UføreGateway : UføreRegisterGateway {
         val request =
             UføreRequest(person.identer().filter { it.aktivIdent }.map { it.identifikator }.first(), datoString)
         val uføreRes = queryMedHistorikk(request)
-        val uføreperioder = uføreRes?.uforeperioder ?: emptyList()
+        val uføreperioder = uføreRes?.uforeperioder.orEmpty()
 
         return uføreperioder.map {
             Uføre(

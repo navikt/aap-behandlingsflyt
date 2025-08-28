@@ -74,12 +74,12 @@ class MeldepliktRepositoryImplTest {
                 listOf(fritaksvurdering)
             )
             val behandling1Grunnlag =
-                meldepliktRepository.hentHvisEksisterer(behandling1.id)?.vurderinger ?: emptyList()
+                meldepliktRepository.hentHvisEksisterer(behandling1.id)?.vurderinger.orEmpty()
 
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
-            val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling2.id)?.vurderinger ?: emptyList()
+            val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling2.id)?.vurderinger.orEmpty()
             assertThat(meldepliktGrunnlag).containsExactlyInAnyOrderElementsOf(behandling1Grunnlag)
         }
     }

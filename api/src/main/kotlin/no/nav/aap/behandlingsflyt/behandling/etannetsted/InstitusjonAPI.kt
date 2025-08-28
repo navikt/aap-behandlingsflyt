@@ -183,6 +183,5 @@ fun NormalOpenAPIRoute.institusjonAPI(
 private fun byggTidslinjeAvType(
     soningsopphold: InstitusjonsoppholdGrunnlag?, institusjonstype: Institusjonstype
 ): Tidslinje<Institusjon> {
-    return Tidslinje(soningsopphold?.oppholdene?.opphold?.filter { it.verdi.type == institusjonstype }
-        ?: emptyList())
+    return Tidslinje(soningsopphold?.oppholdene?.opphold?.filter { it.verdi.type == institusjonstype }.orEmpty())
 }

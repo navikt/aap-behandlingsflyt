@@ -67,7 +67,7 @@ internal class StegOrkestratorTest {
                     FakeUnleash,
                ).utled(kontekst, TestFlytSteg.type()),
                 behandling,
-                listOf()
+                emptyList()
             )
 
             assertThat(resultat).isNotNull

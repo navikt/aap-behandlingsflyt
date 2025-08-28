@@ -6,7 +6,7 @@ import java.time.YearMonth
 // TODO: her burde respons fra eksternt API og hva som lagres i db være forskjellige klasser
 
 data class InntektskomponentResponse(
-    val arbeidsInntektMaaned: List<ArbeidsInntektMaaned> = listOf()
+    val arbeidsInntektMaaned: List<ArbeidsInntektMaaned> = emptyList()
 )
 
 data class ArbeidsInntektMaaned(

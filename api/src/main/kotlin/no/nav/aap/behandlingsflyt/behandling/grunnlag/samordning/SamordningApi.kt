@@ -40,16 +40,20 @@ import javax.sql.DataSource
 
 /**
  * @param ytelser Hvilke ytelser det er funnet på denne personen.
- * @param vurderinger Manuelle vurderinger gjort av saksbehandler for gitte ytelser.
+ * @param vurdering Manuelle vurderinger gjort av saksbehandler for gitte ytelser.
  */
 data class SamordningYtelseVurderingGrunnlagDTO(
     val harTilgangTilÅSaksbehandle: Boolean,
+    val ytelser: List<SamordningYtelseDTO>,
+    val vurdering: SamordningYtelseVurderingDTO?,
+    val tpYtelser: List<TjenestePensjonForhold>?,
+)
+
+data class SamordningYtelseVurderingDTO(
     val begrunnelse: String?,
     val fristNyRevurdering: LocalDate?,
     val maksDatoEndelig: Boolean?,
-    val ytelser: List<SamordningYtelseDTO>,
     val vurderinger: List<SamordningVurderingDTO>,
-    val tpYtelser: List<TjenestePensjonForhold>?,
     val vurdertAv: VurdertAvResponse?
 )
 
@@ -268,34 +272,33 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                                     endringStatus = ytelse.endringStatus
                                 )
                             },
-                        vurderinger =
-                            samordning?.vurderinger.orEmpty().flatMap { vurdering ->
-                                vurdering.vurderingPerioder.map {
-                                    SamordningVurderingDTO(
-                                        ytelseType = vurdering.ytelseType,
-                                        gradering = it.gradering?.prosentverdi(),
-                                        periode = Periode(fom = it.periode.fom, tom = it.periode.tom),
-                                        kronesum = it.kronesum?.toInt(),
-                                        manuell = it.manuell
-                                    )
-                                }
-                            },
-                        begrunnelse = samordning?.begrunnelse,
-                        fristNyRevurdering = samordning?.fristNyRevurdering,
-                        maksDatoEndelig = samordning?.maksDatoEndelig,
-                        tpYtelser = tp,
-                        vurdertAv =
-                            samordning?.let {
-                                VurdertAvResponse(
-                                    ident = it.vurdertAv,
-                                    dato =
-                                        requireNotNull(
-                                            it.vurdertTidspunkt?.toLocalDate()
-                                        ) { "Fant ikke vurderingstidspunkt for yrkesskadevurdering" },
+                        vurdering = samordning?.let { samordning ->
+                            SamordningYtelseVurderingDTO(
+                                begrunnelse = samordning.begrunnelse,
+                                fristNyRevurdering = samordning.fristNyRevurdering,
+                                maksDatoEndelig = samordning.maksDatoEndelig,
+                                vurderinger = samordning.vurderinger.flatMap { vurdering ->
+                                    vurdering.vurderingPerioder.map {
+                                        SamordningVurderingDTO(
+                                            ytelseType = vurdering.ytelseType,
+                                            gradering = it.gradering?.prosentverdi(),
+                                            periode = it.periode,
+                                            kronesum = it.kronesum?.toInt(),
+                                            manuell = it.manuell
+                                        )
+                                    }
+                                },
+                                vurdertAv = VurdertAvResponse(
+                                    ident = samordning.vurdertAv,
+                                    dato = requireNotNull(
+                                        samordning.vurdertTidspunkt?.toLocalDate()
+                                    ) { "Fant ikke vurderingstidspunkt for yrkesskadevurdering" },
                                     ansattnavn = ansattNavnOgEnhet?.navn,
                                     enhetsnavn = ansattNavnOgEnhet?.enhet
                                 )
-                            }
+                            )
+                        },
+                        tpYtelser = tp,
                     )
                 )
             }
@@ -332,15 +335,13 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                             SamordningAndreStatligeYtelserVurderingDTO(
                                 begrunnelse = samordningAndreStatligeYtelserVurdering?.begrunnelse ?: "",
                                 vurderingPerioder =
-                                    (
-                                            samordningAndreStatligeYtelserVurdering?.vurderingPerioder
-                                                ?: listOf()
-                                            ).map {
+                                    samordningAndreStatligeYtelserVurdering?.vurderingPerioder
+                                        ?.map {
                                             SamordningAndreStatligeYtelserVurderingPeriodeDTO(
                                                 periode = it.periode,
                                                 ytelse = it.ytelse,
                                             )
-                                        },
+                                        }.orEmpty(),
                                 vurdertAv =
                                     samordningAndreStatligeYtelserVurdering?.let {
                                         VurdertAvResponse(

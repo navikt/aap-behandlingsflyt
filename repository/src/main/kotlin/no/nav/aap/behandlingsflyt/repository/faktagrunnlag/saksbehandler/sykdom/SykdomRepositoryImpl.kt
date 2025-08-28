@@ -60,7 +60,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         val nyttGrunnlag = SykdomGrunnlag(
             null,
             yrkesskadevurdering = yrkesskadevurdering,
-            sykdomsvurderinger = eksisterendeGrunnlag?.sykdomsvurderinger ?: emptyList(),
+            sykdomsvurderinger = eksisterendeGrunnlag?.sykdomsvurderinger.orEmpty(),
         )
 
         if (eksisterendeGrunnlag != nyttGrunnlag) {

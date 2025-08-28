@@ -59,7 +59,7 @@ class AktivitetspliktRepositoryImpl(private val connection: DBConnection) : Akti
 
     override fun nyttGrunnlag(behandlingId: BehandlingId, brudd: Set<AktivitetspliktDokument>) {
         val eksisterendeGrunnlag = this.hentGrunnlagHvisEksisterer(behandlingId)
-        val eksisterendeBrudd = eksisterendeGrunnlag?.bruddene ?: emptyList()
+        val eksisterendeBrudd = eksisterendeGrunnlag?.bruddene.orEmpty()
 
         if (brudd == eksisterendeBrudd) {
             return

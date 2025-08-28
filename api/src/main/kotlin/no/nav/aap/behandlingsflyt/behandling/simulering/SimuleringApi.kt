@@ -63,7 +63,7 @@ fun NormalOpenAPIRoute.simuleringAPI(
                     val simuleringer = utbetalingGateway.simulering(tilkjentYtelseDto)
                     respond(simuleringer)
                 } else {
-                    respond(listOf())
+                    respond(emptyList())
                 }
             }
         }

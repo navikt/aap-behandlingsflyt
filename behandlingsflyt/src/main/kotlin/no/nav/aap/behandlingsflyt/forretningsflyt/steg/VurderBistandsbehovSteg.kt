@@ -60,7 +60,7 @@ class VurderBistandsbehovSteg private constructor(
         val bistandsGrunnlag = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
         val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
         val sykdomsvurderinger =
-            sykdomsRepository.hentHvisEksisterer(kontekst.behandlingId)?.sykdomsvurderinger ?: emptyList()
+            sykdomsRepository.hentHvisEksisterer(kontekst.behandlingId)?.sykdomsvurderinger.orEmpty()
 
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
@@ -185,7 +185,7 @@ class VurderBistandsbehovSteg private constructor(
         val grunnlag = BistandFaktagrunnlag(
             periode.fom,
             periode.tom,
-            bistandsGrunnlag?.vurderinger ?: emptyList(),
+            bistandsGrunnlag?.vurderinger.orEmpty(),
             studentGrunnlag?.studentvurdering
         )
         Bistandsvilkåret(vilkårsresultat).vurder(grunnlag = grunnlag)
