@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
+import com.papsign.ktor.openapigen.route.path.normal.route
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
@@ -22,7 +23,9 @@ import no.nav.aap.behandlingsflyt.medAzureTokenGen
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
@@ -31,6 +34,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
@@ -101,6 +105,55 @@ fun NormalOpenAPIRoute.saksApi(
             }
             respond(saker)
         }
+        route("/{saksnummer}/opprettAktivitetspliktBehandling").authorizedPost<SaksnummerParameter, BehandlingAvTypeDTO,Unit> (
+            AuthorizationParamPathConfig(
+                sakPathParam = SakPathParam("saksnummer"),
+             operasjon = Operasjon.SAKSBEHANDLE
+            )
+        ){ req,_ ->
+            dataSource.transaction {connection ->
+                val repositoryProvider = repositoryRegistry.provider(connection)
+
+                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+
+                val sakRepository = repositoryProvider.provide<SakRepository>()
+                val sakId = sakRepository.hent(Saksnummer(req.saksnummer)).id
+
+                val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider,gatewayProvider)
+                val sisteYtelseBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId)
+
+                if (sisteYtelseBehandling == null){
+                    throw UgyldigForespørselException("Kan ikke opprette aktiviterspliktbehandling uten en ytelsebehandling")
+                }
+                val aktivitetspliktBehandlinger = behandlingRepository
+                    .hentAlleFor(sakId = sakId, behandlingstypeFilter = listOf(TypeBehandling.Aktivitetsplikt))
+
+                val åpeneAktivitetspliktBehandling = aktivitetspliktBehandlinger.filter { it.status().erÅpen() }
+
+
+                if (åpeneAktivitetspliktBehandling.isNotEmpty()){
+                    throw UgyldigForespørselException("Finnes allerede en åpen behandling for aktivitetsplikt")
+                }
+
+                val behandling = sakOgBehandlingService.opprettAktivitetsPliktBrudd(
+                    sakId, VurderingsbehovOgÅrsak(
+                        vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.AKTIVITETSPLIKT_11_7)),
+                        årsak = ÅrsakTilOpprettelse.AKTIVITETSPLIKT
+                    ),
+                    forrigeBehandlingId = aktivitetspliktBehandlinger.firstOrNull()?.id
+                )
+                BehandlingAvTypeDTO(
+                    behandlingsReferanse = behandling.referanse.referanse,
+                    opprettetDato = behandling.opprettetTidspunkt
+                )
+
+
+            }
+
+
+        }
+
+
         @Suppress("UnauthorizedPost")
         route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
             val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->

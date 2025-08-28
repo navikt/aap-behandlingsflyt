@@ -21,6 +21,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
+import java.util.UUID
 
 class SakOgBehandlingService(
     private val grunnlagKopierer: GrunnlagKopierer,
@@ -102,7 +103,8 @@ class SakOgBehandlingService(
     private val fasttrackKandidater = listOf(
         Vurderingsbehov.FRITAK_MELDEPLIKT,
         Vurderingsbehov.MOTTATT_MELDEKORT,
-        Vurderingsbehov.FASTSATT_PERIODE_PASSERT
+        Vurderingsbehov.FASTSATT_PERIODE_PASSERT,
+        Vurderingsbehov.AKTIVITETSPLIKT_11_7
     )
 
     fun finnEllerOpprettBehandling(sakId: SakId, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): OpprettetBehandling {
@@ -154,6 +156,21 @@ class SakOgBehandlingService(
         }
     }
 
+     fun opprettAktivitetsPliktBrudd(
+         sakId: SakId,
+         vuderingsbehovOgÅrsak: VurderingsbehovOgÅrsak,
+         forrigeBehandlingId: BehandlingId?,
+
+         ): Behandling {
+         return behandlingRepository.opprettBehandling(
+            sakId = sakId,
+            vurderingsbehovOgÅrsak = vuderingsbehovOgÅrsak,
+            typeBehandling = TypeBehandling.Aktivitetsplikt,
+            forrigeBehandlingId = forrigeBehandlingId,
+        )
+    }
+
+
     private fun opprettKlagebehandling(
         sisteYtelsesbehandling: Behandling?,
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
@@ -162,14 +179,13 @@ class SakOgBehandlingService(
             "Mottok klage, men det finnes ingen eksisterende behandling"
         }
 
-        //if referanse == null opprettBehandling
+
         return behandlingRepository.opprettBehandling(
             sakId = sisteYtelsesbehandling.sakId,
             typeBehandling = TypeBehandling.Klage,
             forrigeBehandlingId = null,
             vurderingsbehovOgÅrsak = vurderingsbehovOgÅrsak
         )
-        //else koble på eksisterende behandling?
     }
 
     private fun opprettOppfølgingsbehandling(sisteYtelsesbehandling: Behandling, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): Behandling {
