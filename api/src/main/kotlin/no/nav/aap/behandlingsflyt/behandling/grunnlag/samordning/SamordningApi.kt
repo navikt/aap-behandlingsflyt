@@ -40,7 +40,7 @@ import javax.sql.DataSource
 
 /**
  * @param ytelser Hvilke ytelser det er funnet på denne personen.
- * @param vurderinger Manuelle vurderinger gjort av saksbehandler for gitte ytelser.
+ * @param vurdering Manuelle vurderinger gjort av saksbehandler for gitte ytelser.
  */
 data class SamordningYtelseVurderingGrunnlagDTO(
     val harTilgangTilÅSaksbehandle: Boolean,
