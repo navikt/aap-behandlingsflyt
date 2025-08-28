@@ -92,13 +92,7 @@ class SamordningApiKtTest : BaseApiTest() {
                             endringStatus = EndringStatus.NY
                         )
                     ),
-                    vurdering = SamordningYtelseVurderingDTO(
-                        begrunnelse = null,
-                        fristNyRevurdering = null,
-                        maksDatoEndelig = null,
-                        vurderinger = emptyList(),
-                        vurdertAv = null
-                    ),
+                    vurdering = null,
                     tpYtelser = null,
                 )
             )
