@@ -15,7 +15,7 @@ data class InnhentetSykdomsOpplysninger(
 
 data class RegistrertYrkesskade(
     val ref: String,
-    val yrkesskadeSaksnummer: Int?,
+    val saksnummer: Int?,
     val skadedato: LocalDate,
     val kilde: String,
 ) {

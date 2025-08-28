@@ -101,6 +101,8 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(
                             sakerMedDato.filterNotNull().map {
                                 YrkesskadeTilVurderingResponse(
                                     it.ref,
+                                    it.saksnummer,
+                                    it.kildesystem,
                                     it.skadedato,
                                     Grunnbeløp.finnGUnit(it.skadedato, Beløp(1)).beløp
                                 )

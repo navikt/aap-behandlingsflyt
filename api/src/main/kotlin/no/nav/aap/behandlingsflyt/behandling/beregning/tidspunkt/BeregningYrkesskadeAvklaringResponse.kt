@@ -11,7 +11,7 @@ data class BeregningYrkesskadeAvklaringResponse(
     val historiskeVurderinger: List<YrkesskadeBeløpVurderingResponse>
 )
 
-data class YrkesskadeTilVurderingResponse(val referanse: String, val skadeDato: LocalDate, val grunnbeløp: Beløp)
+data class YrkesskadeTilVurderingResponse(val referanse: String, val saksnummer: Int?, val kilde: String, val skadeDato: LocalDate, val grunnbeløp: Beløp)
 
 data class YrkesskadeBeløpVurderingResponse(
     val antattÅrligInntekt: Beløp,
