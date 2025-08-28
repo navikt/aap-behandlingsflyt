@@ -44,17 +44,19 @@ class StartBehandlingSteg private constructor(
 
         if (kontekst.behandlingType == TypeBehandling.Revurdering) {
             if (kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.REVURDER_SAMORDNING)) {
-                val ventTil =
-                    requireNotNull(samordningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId))
-                    { "Forventet å finne samordningvurdering ved revurdering med årsak ${Vurderingsbehov.REVURDER_SAMORDNING}" }
-                logger.info("Fant samordningdato, setter på vent.")
-                return FantVentebehov(
-                    Ventebehov(
-                        definisjon = Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT,
-                        grunn = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER,
-                        frist = ventTil.fristNyRevurdering!!
+                val eksisterendeSamordningsvurdering =
+                    samordningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
+                if (eksisterendeSamordningsvurdering != null && eksisterendeSamordningsvurdering.fristNyRevurdering != null) {
+                    logger.info("Fant samordningdato, setter på vent.")
+                    return FantVentebehov(
+                        Ventebehov(
+                            definisjon = Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT,
+                            grunn = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER,
+                            frist = eksisterendeSamordningsvurdering.fristNyRevurdering
+                        )
                     )
-                )
+
+                }
             }
         }
 
