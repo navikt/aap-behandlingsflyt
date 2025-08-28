@@ -272,12 +272,12 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                                     endringStatus = ytelse.endringStatus
                                 )
                             },
-                        vurdering = SamordningYtelseVurderingDTO(
-                            begrunnelse = samordning?.begrunnelse,
-                            fristNyRevurdering = samordning?.fristNyRevurdering,
-                            maksDatoEndelig = samordning?.maksDatoEndelig,
-                            vurderinger =
-                                samordning?.vurderinger.orEmpty().flatMap { vurdering ->
+                        vurdering = samordning?.let { samordning ->
+                            SamordningYtelseVurderingDTO(
+                                begrunnelse = samordning.begrunnelse,
+                                fristNyRevurdering = samordning.fristNyRevurdering,
+                                maksDatoEndelig = samordning.maksDatoEndelig,
+                                vurderinger = samordning.vurderinger.flatMap { vurdering ->
                                     vurdering.vurderingPerioder.map {
                                         SamordningVurderingDTO(
                                             ytelseType = vurdering.ytelseType,
@@ -288,19 +288,16 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                                         )
                                     }
                                 },
-                            vurdertAv = samordning?.let {
-                                VurdertAvResponse(
-                                    ident = it.vurdertAv,
-                                    dato =
-                                        requireNotNull(
-                                            it.vurdertTidspunkt?.toLocalDate()
-                                        ) { "Fant ikke vurderingstidspunkt for yrkesskadevurdering" },
+                                vurdertAv = VurdertAvResponse(
+                                    ident = samordning.vurdertAv,
+                                    dato = requireNotNull(
+                                        samordning.vurdertTidspunkt?.toLocalDate()
+                                    ) { "Fant ikke vurderingstidspunkt for yrkesskadevurdering" },
                                     ansattnavn = ansattNavnOgEnhet?.navn,
                                     enhetsnavn = ansattNavnOgEnhet?.enhet
                                 )
-                            }
-
-                        ),
+                            )
+                        },
                         tpYtelser = tp,
                     )
                 )
