@@ -282,7 +282,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                                         SamordningVurderingDTO(
                                             ytelseType = vurdering.ytelseType,
                                             gradering = it.gradering?.prosentverdi(),
-                                            periode = Periode(fom = it.periode.fom, tom = it.periode.tom),
+                                            periode = it.periode,
                                             kronesum = it.kronesum?.toInt(),
                                             manuell = it.manuell
                                         )
