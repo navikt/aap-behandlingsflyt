@@ -14,7 +14,10 @@ import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_STUDENT_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.OPPRETT_HENDELSE_PÅ_SAK_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -106,9 +109,11 @@ fun NormalOpenAPIRoute.saksApi(
             respond(saker)
         }
         route("/{saksnummer}/opprettAktivitetspliktBehandling").authorizedPost<SaksnummerParameter, BehandlingAvTypeDTO,Unit> (
-            AuthorizationParamPathConfig(
+            routeConfig =  AuthorizationParamPathConfig(
                 sakPathParam = SakPathParam("saksnummer"),
-             operasjon = Operasjon.SAKSBEHANDLE
+                operasjon = Operasjon.SAKSBEHANDLE,
+                avklaringsbehovKode = AvklaringsbehovKode.`5028`
+
             )
         ){ req,_ ->
             dataSource.transaction {connection ->
@@ -120,6 +125,7 @@ fun NormalOpenAPIRoute.saksApi(
                 val sakId = sakRepository.hent(Saksnummer(req.saksnummer)).id
 
                 val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider,gatewayProvider)
+
                 val sisteYtelseBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId)
 
                 if (sisteYtelseBehandling == null){
