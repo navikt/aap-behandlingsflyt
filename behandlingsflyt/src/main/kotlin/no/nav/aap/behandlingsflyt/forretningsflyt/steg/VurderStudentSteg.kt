@@ -21,7 +21,7 @@ class VurderStudentSteg private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         studentRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
@@ -40,6 +40,7 @@ class VurderStudentSteg private constructor(
                     return FantAvklaringsbehov(Definisjon.AVKLAR_STUDENT)
                 }
             }
+
             VurderingType.REVURDERING -> {
                 val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
                 if (studentGrunnlag != null && !studentGrunnlag.erKonsistent()) {
@@ -48,6 +49,7 @@ class VurderStudentSteg private constructor(
             }
 
             VurderingType.MELDEKORT,
+            VurderingType.AKTIVITETSPLIKT,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
             }
@@ -57,7 +59,10 @@ class VurderStudentSteg private constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return VurderStudentSteg(repositoryProvider)
         }
 

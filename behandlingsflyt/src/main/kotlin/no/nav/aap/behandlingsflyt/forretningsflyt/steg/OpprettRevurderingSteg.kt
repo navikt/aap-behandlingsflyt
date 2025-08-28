@@ -65,7 +65,7 @@ class OpprettRevurderingSteg(
                 return Fullført
             }
 
-            VurderingType.REVURDERING, VurderingType.MELDEKORT, VurderingType.IKKE_RELEVANT -> {
+            VurderingType.REVURDERING, VurderingType.MELDEKORT, VurderingType.AKTIVITETSPLIKT, VurderingType.IKKE_RELEVANT -> {
                 Fullført
             }
         }
@@ -76,7 +76,10 @@ class OpprettRevurderingSteg(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
 
             return OpprettRevurderingSteg(
                 SakOgBehandlingService(repositoryProvider, gatewayProvider),

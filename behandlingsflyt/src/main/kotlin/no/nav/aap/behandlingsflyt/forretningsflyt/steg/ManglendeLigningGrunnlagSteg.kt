@@ -59,6 +59,7 @@ class ManglendeLigningGrunnlagSteg private constructor(
             }
 
             VurderingType.MELDEKORT,
+            VurderingType.AKTIVITETSPLIKT,
             VurderingType.IKKE_RELEVANT -> {
                 // Always do nothing
             }
@@ -86,8 +87,12 @@ class ManglendeLigningGrunnlagSteg private constructor(
         return Fullført
     }
 
-    private fun revurderInntekter(avklaringsbehovene: Avklaringsbehovene, kontekst: FlytKontekstMedPerioder): StegResultat {
-        val erIkkeVurdertTidligereIBehandlingen = !avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.FASTSETT_MANUELL_INNTEKT)
+    private fun revurderInntekter(
+        avklaringsbehovene: Avklaringsbehovene,
+        kontekst: FlytKontekstMedPerioder
+    ): StegResultat {
+        val erIkkeVurdertTidligereIBehandlingen =
+            !avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.FASTSETT_MANUELL_INNTEKT)
         val manuellInntektGrunnlag = manuellInnektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         if (erIkkeVurdertTidligereIBehandlingen || manuellInntektGrunnlag == null) {
@@ -97,7 +102,10 @@ class ManglendeLigningGrunnlagSteg private constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return ManglendeLigningGrunnlagSteg(repositoryProvider)
         }
 

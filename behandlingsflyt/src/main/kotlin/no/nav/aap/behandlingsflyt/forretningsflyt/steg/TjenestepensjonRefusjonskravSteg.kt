@@ -22,7 +22,7 @@ class TjenestepensjonRefusjonskravSteg private constructor(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tjenestePensjonRepository: TjenestePensjonRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-): BehandlingSteg {
+) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         tjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
@@ -40,21 +40,15 @@ class TjenestepensjonRefusjonskravSteg private constructor(
                     return Fullført
                 }
                 val tpResultat = tjenestePensjonRepository.hent(kontekst.behandlingId)
-                val tidligereTpVurderinger = tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
+                val tidligereTpVurderinger =
+                    tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
 
                 if (tidligereTpVurderinger == null && tpResultat.isNotEmpty()) return FantAvklaringsbehov(
                     Definisjon.SAMORDNING_REFUSJONS_KRAV
                 )
             }
-            VurderingType.REVURDERING -> {
-                //Do nothing
-            }
 
-            VurderingType.MELDEKORT -> {
-                //Do nothing
-            }
-
-            VurderingType.IKKE_RELEVANT -> {
+            VurderingType.REVURDERING, VurderingType.MELDEKORT, VurderingType.AKTIVITETSPLIKT, VurderingType.IKKE_RELEVANT -> {
                 //Do nothing
             }
         }
@@ -62,7 +56,10 @@ class TjenestepensjonRefusjonskravSteg private constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return TjenestepensjonRefusjonskravSteg(repositoryProvider)
         }
 

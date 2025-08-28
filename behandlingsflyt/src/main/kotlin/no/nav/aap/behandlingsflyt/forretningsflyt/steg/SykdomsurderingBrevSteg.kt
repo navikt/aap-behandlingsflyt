@@ -37,10 +37,13 @@ class SykdomsurderingBrevSteg internal constructor(
 
                 return vurder(kontekst)
             }
+
             VurderingType.REVURDERING -> {
                 return vurder(kontekst)
             }
+
             VurderingType.MELDEKORT,
+            VurderingType.AKTIVITETSPLIKT,
             VurderingType.IKKE_RELEVANT -> {
                 return Fullført
             }
@@ -59,7 +62,10 @@ class SykdomsurderingBrevSteg internal constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return SykdomsurderingBrevSteg(repositoryProvider)
         }
 

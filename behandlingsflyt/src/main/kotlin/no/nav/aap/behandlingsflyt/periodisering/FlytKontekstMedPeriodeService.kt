@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.FØRSTEGANG
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.IKKE_RELEVANT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -67,6 +68,7 @@ class FlytKontekstMedPeriodeService(
             FØRSTEGANGSBEHANDLING in vurderingTyper -> FØRSTEGANGSBEHANDLING
             REVURDERING in vurderingTyper -> REVURDERING
             MELDEKORT in vurderingTyper -> MELDEKORT
+            AKTIVITETSPLIKT in vurderingTyper -> AKTIVITETSPLIKT
             else -> IKKE_RELEVANT
         }
     }

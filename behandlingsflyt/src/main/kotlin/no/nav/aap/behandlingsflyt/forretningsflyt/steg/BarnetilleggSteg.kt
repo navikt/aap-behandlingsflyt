@@ -51,6 +51,7 @@ class BarnetilleggSteg(
         }
 
         VurderingType.MELDEKORT,
+        VurderingType.AKTIVITETSPLIKT,
         VurderingType.IKKE_RELEVANT -> {
             /* do nothing */
             Fullført
@@ -81,7 +82,10 @@ class BarnetilleggSteg(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return BarnetilleggSteg(repositoryProvider, gatewayProvider)
         }
 

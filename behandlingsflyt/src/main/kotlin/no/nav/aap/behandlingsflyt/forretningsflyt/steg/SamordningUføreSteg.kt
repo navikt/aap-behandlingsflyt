@@ -70,7 +70,9 @@ class SamordningUføreSteg(
             }
 
             VurderingType.MELDEKORT,
-            VurderingType.IKKE_RELEVANT -> {}
+            VurderingType.AKTIVITETSPLIKT,
+            VurderingType.IKKE_RELEVANT -> {
+            }
         }
         return Fullført
     }
@@ -91,7 +93,10 @@ class SamordningUføreSteg(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return SamordningUføreSteg(repositoryProvider)
         }
 

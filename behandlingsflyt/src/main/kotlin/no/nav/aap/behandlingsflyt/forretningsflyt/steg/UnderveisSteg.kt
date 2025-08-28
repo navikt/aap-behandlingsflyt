@@ -46,7 +46,7 @@ class UnderveisSteg(
                 }
             }
 
-            VurderingType.MELDEKORT -> {
+            VurderingType.MELDEKORT, VurderingType.AKTIVITETSPLIKT -> {
                 underveisService.vurder(kontekst.sakId, kontekst.behandlingId)
             }
 

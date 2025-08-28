@@ -81,6 +81,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             }
 
             VurderingType.MELDEKORT,
+            VurderingType.AKTIVITETSPLIKT,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
             }
