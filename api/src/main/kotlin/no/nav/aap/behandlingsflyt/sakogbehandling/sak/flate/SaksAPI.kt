@@ -117,6 +117,10 @@ fun NormalOpenAPIRoute.saksApi(
 
             )
         ){ req,_ ->
+
+            if (Miljø.erProd()){
+                throw UgyldigForespørselException("Ikke produksjon enda")
+            }
             dataSource.transaction {connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
 
