@@ -148,19 +148,15 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 )
             )
-            .apply {
-                // TODO legges kun ut i dev i første runde
-                if (Miljø.erDev() || Miljø.erLokal()) {
-                    medSteg(
-                        steg = SykdomsurderingBrevSteg, vurderingsbehovRelevanteForSteg = listOf(
-                            Vurderingsbehov.MOTTATT_SØKNAD,
-                            Vurderingsbehov.MOTTATT_DIALOGMELDING,
-                            Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
-                            Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
-                        )
-                    )
-                }
-            }
+            .medSteg(
+                steg = SykdomsurderingBrevSteg, vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                    Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.HELHETLIG_VURDERING,
+                )
+            )
             .medSteg(steg = KvalitetssikringsSteg)
             .medSteg(
                 steg = VurderYrkesskadeSteg, vurderingsbehovRelevanteForSteg = listOf(
