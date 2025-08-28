@@ -156,7 +156,7 @@ class SakOgBehandlingService(
         }
     }
 
-     fun opprettAktivitetsPliktBrudd(
+     fun opprettAktivitetsPliktBehandling(
          sakId: SakId,
          vuderingsbehovOgÅrsak: VurderingsbehovOgÅrsak,
          forrigeBehandlingId: BehandlingId?,
