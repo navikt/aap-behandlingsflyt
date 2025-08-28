@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_STUDENT_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.OPPRETT_HENDELSE_PÅ_SAK_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_BRUDD_11_7_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -112,7 +113,7 @@ fun NormalOpenAPIRoute.saksApi(
             routeConfig =  AuthorizationParamPathConfig(
                 sakPathParam = SakPathParam("saksnummer"),
                 operasjon = Operasjon.SAKSBEHANDLE,
-                avklaringsbehovKode = AvklaringsbehovKode.`5028`
+                avklaringsbehovKode = VURDER_BRUDD_11_7_KODE
 
             )
         ){ req,_ ->
