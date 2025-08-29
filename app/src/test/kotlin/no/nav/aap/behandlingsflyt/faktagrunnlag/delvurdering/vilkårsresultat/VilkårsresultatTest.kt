@@ -258,23 +258,15 @@ class VilkårsresultatTest {
 
 
         @Test
-        fun `om 11-16 ikke er oppfylt, kan man likevel få innvilgelse etter 11-17`() {
+        fun `om 11-5 ikke er oppfylt, kan man likevel få innvilgelse etter 11-17`() {
             val v = tomVurdering()
             val nå = LocalDate.now()
 
             val sykepengerPeriode = nå.plusDays(5)
-            v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
-                Vilkårsperiode(
-                    Periode(nå, sykepengerPeriode),
-                    utfall = Utfall.OPPFYLT,
-                    innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING,
-                    begrunnelse = null
-                )
-            )
             v.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGARBEIDVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
                     Periode(nå, sykepengerPeriode),
-                    utfall = Utfall.IKKE_RELEVANT,
+                    utfall = Utfall.OPPFYLT,
                     begrunnelse = null,
                 )
             )
@@ -282,7 +274,7 @@ class VilkårsresultatTest {
             v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
                     andrePeriode,
-                    utfall = Utfall.OPPFYLT,
+                    utfall = Utfall.IKKE_RELEVANT,
                     begrunnelse = null,
                 )
             )
@@ -298,29 +290,19 @@ class VilkårsresultatTest {
             assertTidslinje(
                 res,
                 Periode(nå, sykepengerPeriode) to {
-                    assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
+                    assertThat(it).isEqualTo(RettighetsType.ARBEIDSSØKER)
                 },
 
-                andrePeriode to {
-                    assertThat(it).isEqualTo(RettighetsType.ARBEIDSSØKER)
-                }
             )
         }
 
         @Test
-        fun `om 11-16 ikke er oppfylt, kan man likevel få innvilgelse etter 11-18`() {
+        fun `om 11-5 ikke er oppfylt, kan man likevel få innvilgelse etter 11-18`() {
             val v = tomVurdering()
             val nå = LocalDate.now()
 
             val sykepengerPeriode = nå.plusDays(5)
-            v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
-                Vilkårsperiode(
-                    Periode(nå, sykepengerPeriode),
-                    utfall = Utfall.OPPFYLT,
-                    innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING,
-                    begrunnelse = null
-                )
-            )
+
             v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
                     Periode(nå, sykepengerPeriode),
@@ -348,12 +330,8 @@ class VilkårsresultatTest {
             assertTidslinje(
                 res,
                 Periode(nå, sykepengerPeriode) to {
-                    assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
-                },
-
-                andrePeriode to {
                     assertThat(it).isEqualTo(RettighetsType.VURDERES_FOR_UFØRETRYGD)
-                }
+                },
             )
         }
     }

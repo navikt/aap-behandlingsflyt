@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.bistand
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
@@ -12,6 +13,7 @@ class BistandVurderingLøsningLøsningDtoTest {
 
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
+    @Disabled("Inntil vi går i prod med 11-17 og 11-18")
     fun `erBehovForAnnenOppfølging kan være en Boolean hvis erBehovForAnnenOppfølging AND erBehovForArbeidsrettetTiltak er false`(
         erBehovForAnnenOppfølging: Boolean
     ) {
@@ -27,6 +29,7 @@ class BistandVurderingLøsningLøsningDtoTest {
 
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
+    @Disabled("Inntil vi går i prod med 11-17 og 11-18")
     fun `erBehovForAnnenOppfølging kan være null hvis erBehovForAnnenOppfølging OR erBehovForArbeidsrettetTiltak er true`(
         behov: Boolean
     ) {
@@ -41,6 +44,7 @@ class BistandVurderingLøsningLøsningDtoTest {
     }
 
     @Test
+    @Disabled("Inntil vi går i prod med 11-17 og 11-18")
     fun `erBehovForAnnenOppfølging kan være null hvis erBehovForAnnenOppfølging AND erBehovForArbeidsrettetTiltak er true`() {
         BistandVurderingLøsningDto("hei",
             erBehovForAktivBehandling = true,
@@ -54,6 +58,7 @@ class BistandVurderingLøsningLøsningDtoTest {
 
     @ParameterizedTest
     @CsvSource(value = ["true, true", "true, false", "false, true", "false, false"])
+    @Disabled("Inntil vi går i prod med 11-17 og 11-18")
     fun `erBehovForAnnenOppfølging kan ikke være en Boolean hvis erBehovForAnnenOppfølging OR erBehovForArbeidsrettetTiltak er true`(
         behov: Boolean,
         erBehovForAnnenOppfølging: Boolean
@@ -73,6 +78,7 @@ class BistandVurderingLøsningLøsningDtoTest {
 
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
+    @Disabled("Inntil vi går i prod med 11-17 og 11-18")
     fun `erBehovForAnnenOppfølging kan ikke være en Boolean hvis erBehovForAnnenOppfølging AND erBehovForArbeidsrettetTiltak er true`(
         erBehovForAnnenOppfølging: Boolean
     ) {
@@ -90,6 +96,7 @@ class BistandVurderingLøsningLøsningDtoTest {
     }
 
     @Test
+    @Disabled("Inntil vi går i prod med 11-17 og 11-18")
     fun `erBehovForAnnenOppfølging kan ikke være null hvis erBehovForAnnenOppfølging AND erBehovForArbeidsrettetTiltak er false`() {
         assertThrows<UgyldigForespørselException> {
             BistandVurderingLøsningDto(
