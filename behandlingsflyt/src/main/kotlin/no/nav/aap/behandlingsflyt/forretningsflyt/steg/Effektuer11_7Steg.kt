@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-@Deprecated("Tidligere brukt til ventebehov for effektuering av 11-7 i vanlig flyt, aldri vært brukt i produksjon. Kan den slettes?")
+@Deprecated("Tidligere brukt til ventebehov for effektuering av 11-7 i vanlig flyt, aldri vært brukt i produksjon. Kan ikke slettes pga historikk i revurderinger i produksjon")
 class Effektuer11_7Steg() : BehandlingSteg {
 
 
