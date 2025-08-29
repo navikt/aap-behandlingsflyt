@@ -7,5 +7,5 @@ import java.time.LocalDate
 data class OvergangUføreFaktagrunnlag(
     val vurderingsdato: LocalDate,
     val sisteDagMedMuligYtelse: LocalDate,
-    val vurdering: OvergangUføreVurdering
+    val vurderinger: List<OvergangUføreVurdering>
 ) : Faktagrunnlag

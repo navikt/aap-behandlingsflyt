@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.vilkår.overganguføre
+package no.nav.aap.behandlingsflyt.behandling.vilkår.overgangarbeid
 
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
@@ -9,19 +9,18 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidVurdering
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 
 
-class OvergangUføreVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<OvergangUføreFaktagrunnlag> {
-    private val vilkår: Vilkår = vilkårsresultat.finnVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)
-    override fun vurder(grunnlag: OvergangUføreFaktagrunnlag) {
+class OvergangArbeidVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<OvergangArbeidFaktagrunnlag> {
+    private val vilkår: Vilkår = vilkårsresultat.finnVilkår(Vilkårtype.OVERGANGARBEIDVILKÅRET)
+    override fun vurder(grunnlag: OvergangArbeidFaktagrunnlag) {
+        val overgangArbeidVurderinger = grunnlag.vurderinger
 
-        val overgangUføreVurderinger = grunnlag.vurderinger
-
-        val overgangUføreTidslinje = overgangUføreVurderinger
+        val overgangArbeidTidslinje = overgangArbeidVurderinger
             .sortedBy { it.opprettet }
             .map { vurdering ->
                 Tidslinje(
@@ -32,13 +31,13 @@ class OvergangUføreVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
                     vurdering
                 )
             }
-            .fold(Tidslinje<OvergangUføreVurdering>()) { t1, t2 ->
+            .fold(Tidslinje<OvergangArbeidVurdering>()) { t1, t2 ->
                 t1.kombiner(t2, StandardSammenslåere.prioriterHøyreSideCrossJoin())
             }
 
-        val tidslinje = overgangUføreTidslinje.mapValue { overganguførevurdering ->
+        val tidslinje = overgangArbeidTidslinje.mapValue { overgangarbeidvurdering ->
             opprettVilkårsvurdering(
-                overganguførevurdering,
+                overgangarbeidvurdering,
                 grunnlag
             )
         }
@@ -46,19 +45,21 @@ class OvergangUføreVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
     }
 
     private fun opprettVilkårsvurdering(
-        overgangUføreVurdering: OvergangUføreVurdering?,
-        grunnlag: OvergangUføreFaktagrunnlag
+        overgangArbeidVurdering: OvergangArbeidVurdering?,
+        grunnlag: OvergangArbeidFaktagrunnlag
     ): Vilkårsvurdering {
         val utfall: Utfall
         var avslagsårsak: Avslagsårsak? = null
         var innvilgelsesårsak: Innvilgelsesårsak? = null
 
-        if (overgangUføreVurdering == null) {
+        if (overgangArbeidVurdering == null) {
             utfall = Utfall.IKKE_OPPFYLT
-        } else if (overgangUføreVurdering.virkningsDato != null && overgangUføreVurdering.brukerSoktUforetrygd && overgangUføreVurdering.brukerVedtakUforetrygd != UføreSøknadVedtak.NEI.verdi && overgangUføreVurdering.brukerRettPaaAAP == true) {
+        } else if (overgangArbeidVurdering.virkningsDato != null &&
+            overgangArbeidVurdering.brukerRettPaaAAP == true
+        ) {
 
             utfall = Utfall.OPPFYLT
-            innvilgelsesårsak = Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD
+            innvilgelsesårsak = Innvilgelsesårsak.ARBEIDSSØKER
         } else {
             utfall = Utfall.IKKE_OPPFYLT
         }
@@ -74,9 +75,5 @@ class OvergangUføreVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
                 manuellVurdering = false
             )
         )
-    }
-
-    enum class UføreSøknadVedtak(val verdi: String) {
-        JA_AVSLAG("JA_AVSLAG"), JA_GRADERT("JA_GRADERT"), JA_FULL("JA_FULL"), NEI("NEI")
     }
 }

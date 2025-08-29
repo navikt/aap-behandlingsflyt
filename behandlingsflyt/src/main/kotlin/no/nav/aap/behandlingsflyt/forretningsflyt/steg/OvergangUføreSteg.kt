@@ -4,15 +4,22 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.behandling.vilkår.bistand.BistandFaktagrunnlag
+import no.nav.aap.behandlingsflyt.behandling.vilkår.bistand.Bistandsvilkåret
+import no.nav.aap.behandlingsflyt.behandling.vilkår.overganguføre.OvergangUføreFaktagrunnlag
+import no.nav.aap.behandlingsflyt.behandling.vilkår.overganguføre.OvergangUføreVilkår
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningFaktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -27,16 +34,19 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import kotlin.collections.orEmpty
 
 class OvergangUføreSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val overgangUføreRepository: OvergangUføreRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårService: VilkårService,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
+        overgangUføreRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         vilkårService = VilkårService(repositoryProvider),
     )
@@ -46,6 +56,8 @@ class OvergangUføreSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        val overgangUføreGrunnlag = overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
+
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
@@ -66,6 +78,13 @@ class OvergangUføreSteg private constructor(
                     settBistandsBehovTilIkkeRelevant(kontekst)
                     return FantAvklaringsbehov(Definisjon.AVKLAR_OVERGANG_UFORE)
                 } else {
+
+                    vurderVilkårForPeriode(
+                        kontekst.rettighetsperiode,
+                        overgangUføreGrunnlag,
+                        vilkårsresultat
+                    )
+
                     return Fullført
                 }
 
@@ -103,7 +122,7 @@ class OvergangUføreSteg private constructor(
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET).leggTilVurdering(
             Vilkårsperiode(
-                periode = Periode( kontekst.rettighetsperiode.fom, kontekst.rettighetsperiode.tom),
+                periode = Periode(kontekst.rettighetsperiode.fom, kontekst.rettighetsperiode.tom),
                 utfall = Utfall.IKKE_RELEVANT,
                 begrunnelse = null,
                 versjon = ApplikasjonsVersjon.versjon
@@ -114,6 +133,19 @@ class OvergangUføreSteg private constructor(
 
 
         return Fullført
+    }
+
+    private fun vurderVilkårForPeriode(
+        periode: Periode,
+        overgangUføreGrunnlag: OvergangUføreGrunnlag?,
+        vilkårsresultat: Vilkårsresultat
+    ) {
+        val grunnlag = OvergangUføreFaktagrunnlag(
+            periode.fom,
+            periode.tom,
+            overgangUføreGrunnlag?.vurderinger.orEmpty(),
+        )
+        OvergangUføreVilkår(vilkårsresultat).vurder(grunnlag = grunnlag)
     }
 
     companion object : FlytSteg {
