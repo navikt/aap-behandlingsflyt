@@ -104,7 +104,7 @@ class SakOgBehandlingService(
         Vurderingsbehov.FRITAK_MELDEPLIKT,
         Vurderingsbehov.MOTTATT_MELDEKORT,
         Vurderingsbehov.FASTSATT_PERIODE_PASSERT,
-        Vurderingsbehov.AKTIVITETSPLIKT_11_7
+        Vurderingsbehov.MOTTATT_AKTIVITETSMELDING,
     )
 
     fun finnEllerOpprettBehandling(sakId: SakId, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): OpprettetBehandling {
@@ -112,7 +112,13 @@ class SakOgBehandlingService(
         val vurderingsbehov = vurderingsbehovOgÅrsak.vurderingsbehov
         val fasttrackkandidat = vurderingsbehov.isNotEmpty()
                 && vurderingsbehov.all { it.type in fasttrackKandidater }
-                && unleashGateway.isEnabled(BehandlingsflytFeature.FasttrackMeldekort)
+                && (!vurderingsbehov.none { it.type == Vurderingsbehov.MOTTATT_MELDEKORT } || unleashGateway.isEnabled(
+            BehandlingsflytFeature.FasttrackMeldekort
+        ))
+                && (vurderingsbehov.none { it.type == Vurderingsbehov.MOTTATT_AKTIVITETSMELDING } || unleashGateway.isEnabled(
+            BehandlingsflytFeature.Aktivitetsplikt11_7
+        ))
+
         val mottokKabalHendelse = vurderingsbehov.any { it.type == Vurderingsbehov.MOTTATT_KABAL_HENDELSE }
         val mottokKlage = vurderingsbehov.any { it.type == Vurderingsbehov.MOTATT_KLAGE }
 
@@ -120,8 +126,19 @@ class SakOgBehandlingService(
 
         return when {
             mottokKlage -> Ordinær(opprettKlagebehandling(sisteYtelsesbehandling, vurderingsbehovOgÅrsak))
-            mottokKabalHendelse -> Ordinær(opprettSvarFraKlageenhetBehandling(sisteYtelsesbehandling, vurderingsbehovOgÅrsak))
-            mottokOppfølgingsOppgave -> Ordinær(opprettOppfølgingsbehandling(sisteYtelsesbehandling!!, vurderingsbehovOgÅrsak))
+            mottokKabalHendelse -> Ordinær(
+                opprettSvarFraKlageenhetBehandling(
+                    sisteYtelsesbehandling,
+                    vurderingsbehovOgÅrsak
+                )
+            )
+
+            mottokOppfølgingsOppgave -> Ordinær(
+                opprettOppfølgingsbehandling(
+                    sisteYtelsesbehandling!!,
+                    vurderingsbehovOgÅrsak
+                )
+            )
 
             /* Tilbakekreving kommer kanskje som et case her ... */
 
@@ -188,7 +205,10 @@ class SakOgBehandlingService(
         )
     }
 
-    private fun opprettOppfølgingsbehandling(sisteYtelsesbehandling: Behandling, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): Behandling {
+    private fun opprettOppfølgingsbehandling(
+        sisteYtelsesbehandling: Behandling,
+        vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
+    ): Behandling {
         requireNotNull(sisteYtelsesbehandling) {
             "Mottok oppfølgingsbehandling, men det finnes ingen eksisterende behandling. Behandling-ID: ${sisteYtelsesbehandling.id}"
         }
@@ -280,13 +300,19 @@ class SakOgBehandlingService(
         return sisteYtelsesbehandling
     }
 
-    fun finnEllerOpprettOrdinærBehandling(saksnummer: Saksnummer, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): Behandling {
+    fun finnEllerOpprettOrdinærBehandling(
+        saksnummer: Saksnummer,
+        vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
+    ): Behandling {
         val sak = sakRepository.hent(saksnummer)
 
         return finnEllerOpprettOrdinærBehandling(sak.id, vurderingsbehovOgÅrsak)
     }
 
-    fun finnEllerOpprettBehandling(saksnummer: Saksnummer, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): OpprettetBehandling {
+    fun finnEllerOpprettBehandling(
+        saksnummer: Saksnummer,
+        vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
+    ): OpprettetBehandling {
         val sak = sakRepository.hent(saksnummer)
 
         return finnEllerOpprettBehandling(sak.id, vurderingsbehovOgÅrsak)
