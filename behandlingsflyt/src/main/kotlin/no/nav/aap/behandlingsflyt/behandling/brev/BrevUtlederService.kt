@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtle
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -112,7 +113,7 @@ class BrevUtlederService(
 
         return Innvilgelse.GrunnlagBeregning(
             dagsats = utledDagsats(behandlingId, virkningstidspunkt),
-            beregningstidspunkt = hentBeregningstidspunkt(behandlingId),
+            beregningstidspunkt = hentBeregningstidspunkt(behandlingId, grunnlag),
             beregningsgrunnlag = beregnBeregningsgrunnlagBeløp(grunnlag, virkningstidspunkt),
             inntekterPerÅr = utledInntektererPerÅr(grunnlag)
         )
@@ -124,9 +125,30 @@ class BrevUtlederService(
             ?.segment(virkningstidspunkt)?.verdi?.dagsats
     }
 
-    private fun hentBeregningstidspunkt(behandlingId: BehandlingId): LocalDate? {
-        return beregningVurderingRepository.hentHvisEksisterer(behandlingId)?.tidspunktVurdering?.let {
-            it.ytterligereNedsattArbeidsevneDato ?: it.nedsattArbeidsevneDato
+    private fun hentBeregningstidspunkt(behandlingId: BehandlingId, grunnlag: Beregningsgrunnlag?): LocalDate? {
+        val beregningstidspunktVurdering =
+            beregningVurderingRepository.hentHvisEksisterer(behandlingId)?.tidspunktVurdering
+
+        return when (grunnlag) {
+            is Grunnlag11_19 -> beregningstidspunktVurdering?.nedsattArbeidsevneDato
+            is GrunnlagUføre -> hentBeregningstidspunktUføre(grunnlag, beregningstidspunktVurdering)
+            is GrunnlagYrkesskade -> when (val underliggende = grunnlag.underliggende()) {
+                is Grunnlag11_19 -> beregningstidspunktVurdering?.nedsattArbeidsevneDato
+                is GrunnlagUføre -> hentBeregningstidspunktUføre(underliggende, beregningstidspunktVurdering)
+                is GrunnlagYrkesskade -> throw IllegalStateException("GrunnlagYrkesskade kan ikke ha grunnlag som også er GrunnlagYrkesskade")
+            }
+
+            null -> null
+        }
+    }
+
+    private fun hentBeregningstidspunktUføre(
+        grunnlag: GrunnlagUføre,
+        beregningstidspunktVurdering: BeregningstidspunktVurdering?
+    ): LocalDate? {
+        return when (grunnlag.type()) {
+            GrunnlagUføre.Type.STANDARD -> beregningstidspunktVurdering?.nedsattArbeidsevneDato
+            GrunnlagUføre.Type.YTTERLIGERE_NEDSATT -> beregningstidspunktVurdering?.ytterligereNedsattArbeidsevneDato
         }
     }
 
@@ -139,15 +161,25 @@ class BrevUtlederService(
             is Grunnlag11_19 ->
                 grunnlag.inntekter().grunnlagInntektTilInntektPerÅr()
 
-            is GrunnlagUføre -> grunnlag.uføreInntekterFraForegåendeÅr().uføreInntektTilInntektPerÅr()
+            is GrunnlagUføre ->
+                utledInntekterPerÅrUføre(grunnlag)
+
             is GrunnlagYrkesskade ->
                 when (val underliggende = grunnlag.underliggende()) {
                     is Grunnlag11_19 -> underliggende.inntekter().grunnlagInntektTilInntektPerÅr()
-                    is GrunnlagUføre -> underliggende.uføreInntekterFraForegåendeÅr().uføreInntektTilInntektPerÅr()
+                    is GrunnlagUføre -> utledInntekterPerÅrUføre(underliggende)
                     is GrunnlagYrkesskade -> throw IllegalStateException("GrunnlagYrkesskade kan ikke ha grunnlag som også er GrunnlagYrkesskade")
                 }
 
             null -> emptyList()
+        }
+    }
+
+    private fun utledInntekterPerÅrUføre(grunnlag: GrunnlagUføre): List<InntektPerÅr> {
+        return when (grunnlag.type()) {
+            GrunnlagUføre.Type.STANDARD -> grunnlag.underliggende().inntekter().grunnlagInntektTilInntektPerÅr()
+            GrunnlagUføre.Type.YTTERLIGERE_NEDSATT -> grunnlag.uføreInntekterFraForegåendeÅr()
+                .uføreInntektTilInntektPerÅr()
         }
     }
 
