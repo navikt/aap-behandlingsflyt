@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtle
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -101,7 +102,18 @@ class BrevUtlederService(
         } else {
             null
         }
-        return Innvilgelse(vedtak.virkningstidspunkt, grunnlagBeregning)
+
+        val dagsats = if (unleashGateway.isEnabled(BehandlingsflytFeature.BrevBeregningsgrunnlag)) {
+            utledDagsats(behandling.id, vedtak.virkningstidspunkt)
+        } else {
+            null
+        }
+
+        return Innvilgelse(
+            virkningstidspunkt = vedtak.virkningstidspunkt,
+            grunnlagBeregning = grunnlagBeregning,
+            dagsats = dagsats
+        )
     }
 
     private fun hentGrunnlagBeregning(
@@ -109,12 +121,62 @@ class BrevUtlederService(
         virkningstidspunkt: LocalDate
     ): Innvilgelse.GrunnlagBeregning {
         val grunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(behandlingId)
+        val beregningsgrunnlag = beregnBeregningsgrunnlagBeløp(grunnlag, virkningstidspunkt)
+        val beregningstidspunktVurdering =
+            beregningVurderingRepository.hentHvisEksisterer(behandlingId)?.tidspunktVurdering
 
+        return when (grunnlag) {
+            is Grunnlag11_19 -> {
+                utledGrunnlagBeregning11_9(grunnlag, beregningstidspunktVurdering, beregningsgrunnlag)
+            }
+
+            is GrunnlagUføre -> {
+                utledGrunnlagBeregningUføre(grunnlag, beregningstidspunktVurdering, beregningsgrunnlag)
+            }
+
+            is GrunnlagYrkesskade -> {
+                when (val underliggende = grunnlag.underliggende()) {
+                    is Grunnlag11_19 -> {
+                        utledGrunnlagBeregning11_9(underliggende, beregningstidspunktVurdering, beregningsgrunnlag)
+                    }
+
+                    is GrunnlagUføre -> {
+                        utledGrunnlagBeregningUføre(underliggende, beregningstidspunktVurdering, beregningsgrunnlag)
+                    }
+
+                    is GrunnlagYrkesskade -> throw IllegalStateException("GrunnlagYrkesskade kan ikke ha grunnlag som også er GrunnlagYrkesskade")
+                }
+            }
+
+            null -> Innvilgelse.GrunnlagBeregning(null, emptyList(), beregningsgrunnlag)
+        }
+    }
+
+    private fun utledGrunnlagBeregning11_9(
+        grunnlag: Grunnlag11_19,
+        beregningstidspunktVurdering: BeregningstidspunktVurdering?,
+        beregningsgrunnlag: Beløp?,
+    ): Innvilgelse.GrunnlagBeregning {
+        val beregningstidspunkt = beregningstidspunktVurdering?.nedsattArbeidsevneDato
+        val inntekter = grunnlag.inntekter().grunnlagInntektTilInntektPerÅr()
         return Innvilgelse.GrunnlagBeregning(
-            dagsats = utledDagsats(behandlingId, virkningstidspunkt),
-            beregningstidspunkt = hentBeregningstidspunkt(behandlingId),
-            beregningsgrunnlag = beregnBeregningsgrunnlagBeløp(grunnlag, virkningstidspunkt),
-            inntekterPerÅr = utledInntektererPerÅr(grunnlag)
+            beregningstidspunkt = beregningstidspunkt,
+            inntekterPerÅr = inntekter,
+            beregningsgrunnlag = beregningsgrunnlag,
+        )
+    }
+
+    private fun utledGrunnlagBeregningUføre(
+        grunnlag: GrunnlagUføre,
+        beregningstidspunktVurdering: BeregningstidspunktVurdering?,
+        beregningsgrunnlag: Beløp?,
+    ): Innvilgelse.GrunnlagBeregning {
+        val beregningstidspunkt = utledBeregningstidspunktUføre(grunnlag, beregningstidspunktVurdering)
+        val inntekter = utledInntekterPerÅrUføre(grunnlag)
+        return Innvilgelse.GrunnlagBeregning(
+            beregningstidspunkt = beregningstidspunkt,
+            inntekterPerÅr = inntekter,
+            beregningsgrunnlag = beregningsgrunnlag,
         )
     }
 
@@ -124,30 +186,21 @@ class BrevUtlederService(
             ?.segment(virkningstidspunkt)?.verdi?.dagsats
     }
 
-    private fun hentBeregningstidspunkt(behandlingId: BehandlingId): LocalDate? {
-        return beregningVurderingRepository.hentHvisEksisterer(behandlingId)?.tidspunktVurdering?.let {
-            it.ytterligereNedsattArbeidsevneDato ?: it.nedsattArbeidsevneDato
+    private fun utledBeregningstidspunktUføre(
+        grunnlag: GrunnlagUføre,
+        beregningstidspunktVurdering: BeregningstidspunktVurdering?
+    ): LocalDate? {
+        return when (grunnlag.type()) {
+            GrunnlagUføre.Type.STANDARD -> beregningstidspunktVurdering?.nedsattArbeidsevneDato
+            GrunnlagUføre.Type.YTTERLIGERE_NEDSATT -> beregningstidspunktVurdering?.ytterligereNedsattArbeidsevneDato
         }
     }
 
-    private fun beregnBeregningsgrunnlagBeløp(grunnlag: Beregningsgrunnlag?, virkningstidspunkt: LocalDate): Beløp? {
-        return grunnlag?.grunnlaget()?.multiplisert(Grunnbeløp.finnGrunnbeløp(virkningstidspunkt))
-    }
-
-    private fun utledInntektererPerÅr(grunnlag: Beregningsgrunnlag?): List<InntektPerÅr> {
-        return when (grunnlag) {
-            is Grunnlag11_19 ->
-                grunnlag.inntekter().grunnlagInntektTilInntektPerÅr()
-
-            is GrunnlagUføre -> grunnlag.uføreInntekterFraForegåendeÅr().uføreInntektTilInntektPerÅr()
-            is GrunnlagYrkesskade ->
-                when (val underliggende = grunnlag.underliggende()) {
-                    is Grunnlag11_19 -> underliggende.inntekter().grunnlagInntektTilInntektPerÅr()
-                    is GrunnlagUføre -> underliggende.uføreInntekterFraForegåendeÅr().uføreInntektTilInntektPerÅr()
-                    is GrunnlagYrkesskade -> throw IllegalStateException("GrunnlagYrkesskade kan ikke ha grunnlag som også er GrunnlagYrkesskade")
-                }
-
-            null -> emptyList()
+    private fun utledInntekterPerÅrUføre(grunnlag: GrunnlagUføre): List<InntektPerÅr> {
+        return when (grunnlag.type()) {
+            GrunnlagUføre.Type.STANDARD -> grunnlag.underliggende().inntekter().grunnlagInntektTilInntektPerÅr()
+            GrunnlagUføre.Type.YTTERLIGERE_NEDSATT -> grunnlag.uføreInntekterFraForegåendeÅr()
+                .uføreInntektTilInntektPerÅr()
         }
     }
 
@@ -157,5 +210,9 @@ class BrevUtlederService(
 
     private fun List<UføreInntekt>.uføreInntektTilInntektPerÅr(): List<InntektPerÅr> {
         return this.map { InntektPerÅr(it.år, it.inntektIKroner.verdi()) }
+    }
+
+    private fun beregnBeregningsgrunnlagBeløp(grunnlag: Beregningsgrunnlag?, virkningstidspunkt: LocalDate): Beløp? {
+        return grunnlag?.grunnlaget()?.multiplisert(Grunnbeløp.finnGrunnbeløp(virkningstidspunkt))
     }
 }
