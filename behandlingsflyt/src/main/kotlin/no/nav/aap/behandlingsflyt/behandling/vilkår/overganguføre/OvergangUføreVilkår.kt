@@ -55,17 +55,19 @@ class OvergangUføreVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
 
         if (overgangUføreVurdering == null) {
             utfall = Utfall.IKKE_OPPFYLT
-        } else if (overgangUføreVurdering.virkningsDato != null && overgangUføreVurdering.brukerSoktUforetrygd && overgangUføreVurdering.brukerVedtakUforetrygd != UføreSøknadVedtak.NEI.verdi && overgangUføreVurdering.brukerRettPaaAAP == true) {
+            avslagsårsak = Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING
+        } else if (overgangUføreVurdering.virkningsDato != null && overgangUføreVurdering.brukerSoktUforetrygd && overgangUføreVurdering.brukerVedtakUforetrygd != UføreSøknadVedtak.JA_AVSLAG.verdi && overgangUføreVurdering.brukerRettPaaAAP == true) {
 
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD
         } else {
             utfall = Utfall.IKKE_OPPFYLT
+            avslagsårsak = Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING
         }
 
         return Vilkårsvurdering(
             Vilkårsperiode(
-                periode = Periode(grunnlag.vurderingsdato, grunnlag.sisteDagMedMuligYtelse),
+                periode = Periode(grunnlag.vurderingsdato, grunnlag.vurderingsdato.plusMonths(8)),
                 utfall = utfall,
                 begrunnelse = null,
                 innvilgelsesårsak = innvilgelsesårsak,
