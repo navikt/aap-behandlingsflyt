@@ -30,7 +30,7 @@ class SykdomsvurderingBrevStegTest {
 
     private val random = Random(1235123)
 
-    private val steg = SykdomsurderingBrevSteg(InMemorySykdomsvurderingForBrevRepository, FakeTidligereVurderinger())
+    private val steg = SykdomsvurderingBrevSteg(InMemorySykdomsvurderingForBrevRepository, FakeTidligereVurderinger())
     private val sakRepository = InMemorySakRepository
     private val behandlingRepository = InMemoryBehandlingRepository
 

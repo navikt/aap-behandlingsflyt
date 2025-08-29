@@ -4178,9 +4178,9 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         }
 
         revurdering = revurdering
+            .løsRettighetsperiode(nyStartDato)
             .løsSykdom()
             .løsBistand()
-            .løsRettighetsperiode(nyStartDato)
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt(nyStartDato)
             .løsFastsettManuellInntekt()
@@ -4221,6 +4221,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             } .løsRettighetsperiode(førsteOverstyring)
             .løsSykdom()
             .løsBistand()
+            .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt(LocalDate.now())
             .løsFastsettManuellInntekt()
             .løsUtenSamordning()
@@ -4247,6 +4248,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsRettighetsperiode(andreOverstyring)
             .løsSykdom()
             .løsBistand()
+            .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt(LocalDate.now())
             .løsFastsettManuellInntekt()
             .løsUtenSamordning()

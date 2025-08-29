@@ -12,12 +12,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
-class SykdomsurderingBrevSteg internal constructor(
+class SykdomsvurderingBrevSteg internal constructor(
     private val sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
@@ -60,7 +59,7 @@ class SykdomsurderingBrevSteg internal constructor(
 
     companion object : FlytSteg {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
-            return SykdomsurderingBrevSteg(repositoryProvider)
+            return SykdomsvurderingBrevSteg(repositoryProvider)
         }
 
         override fun type(): StegType {
