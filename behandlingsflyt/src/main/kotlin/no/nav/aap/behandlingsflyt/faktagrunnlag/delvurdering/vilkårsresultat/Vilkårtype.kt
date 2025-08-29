@@ -35,7 +35,7 @@ enum class Vilkårtype(
         spesielleInnvilgelsesÅrsaker = listOf(
             Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG,
             Innvilgelsesårsak.STUDENT,
-            Innvilgelsesårsak.SYKEPENGEERSTATNING
+            Innvilgelsesårsak.SYKEPENGEERSTATNING,
         ),
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON,

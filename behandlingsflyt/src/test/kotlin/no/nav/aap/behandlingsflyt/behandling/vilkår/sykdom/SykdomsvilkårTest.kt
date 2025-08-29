@@ -37,8 +37,6 @@ class SykdomsvilkårTest {
                 ),
                 studentvurdering = null,
                 sykepengerErstatningFaktagrunnlag = null,
-                overgangArbeidVurdering = emptyList(),
-                overgangUføreVurdering = emptyList()
             )
         )
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
@@ -56,8 +54,6 @@ class SykdomsvilkårTest {
                 ),
                 studentvurdering = null,
                 sykepengerErstatningFaktagrunnlag = null,
-                overgangArbeidVurdering = emptyList(),
-                overgangUføreVurdering = emptyList()
             )
         )
 
@@ -86,8 +82,6 @@ class SykdomsvilkårTest {
                 ),
                 studentvurdering = null,
                 sykepengerErstatningFaktagrunnlag = null,
-                overgangArbeidVurdering = emptyList(),
-                overgangUføreVurdering = emptyList()
             )
         )
 
@@ -127,8 +121,6 @@ class SykdomsvilkårTest {
                 ),
                 studentvurdering = null,
                 sykepengerErstatningFaktagrunnlag = null,
-                overgangArbeidVurdering = emptyList(),
-                overgangUføreVurdering = emptyList()
             )
         )
 
@@ -168,8 +160,6 @@ class SykdomsvilkårTest {
                 ),
                 studentvurdering = null,
                 sykepengerErstatningFaktagrunnlag = null,
-                overgangArbeidVurdering = emptyList(),
-                overgangUføreVurdering = emptyList()
             )
         )
 
@@ -218,8 +208,6 @@ class SykdomsvilkårTest {
                         vurdertAv = "abc123",
                         vurdertTidspunkt = LocalDateTime.now(),
                     ),
-                overgangArbeidVurdering = emptyList(),
-                overgangUføreVurdering = emptyList()
 
             )
         )

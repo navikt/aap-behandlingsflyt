@@ -106,7 +106,7 @@ class Vilkårsresultat(
         val (_, vilkårsVurdering) = requireNotNull(vilkårPar.firstOrNull { it.first == Vilkårtype.SYKDOMSVILKÅRET })
         val sykdomsUtfall = vilkårsVurdering.utfall
 
-        // Hvis bistandsvurderingen ikke er relevant, kan det være fordi det er sykepengeerstatning
+        // Hvis bistandsvurderingen ikke er relevant, kan det være fordi det er sykepengeerstatning, eller at 11-17 eller 11-18 er oppfylt.
         if (bistandsvurderingen.erIkkeRelevant()) {
             val sykepengerErstatning =
                 vilkårPar.find {
