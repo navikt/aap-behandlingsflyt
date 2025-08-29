@@ -183,7 +183,9 @@ class BrevUtlederService(
     private fun utledDagsats(behandlingId: BehandlingId, virkningstidspunkt: LocalDate): Beløp? {
         // Henter dagsats fra første periode. Kan variere basert på minste årlig ytelse, alder og grunnbeløp
         return tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)?.tilTidslinje()
-            ?.segment(virkningstidspunkt)?.verdi?.dagsats
+            ?.segment(virkningstidspunkt)?.verdi?.let { tilkjent ->
+                tilkjent.dagsats.multiplisert(tilkjent.gradering.endeligGradering)
+            }
     }
 
     private fun utledBeregningstidspunktUføre(
