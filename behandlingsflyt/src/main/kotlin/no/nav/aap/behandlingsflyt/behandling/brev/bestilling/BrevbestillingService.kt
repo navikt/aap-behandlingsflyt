@@ -10,6 +10,7 @@ import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.MottakerDto
 import no.nav.aap.brev.kontrakt.Vedlegg
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.util.*
@@ -98,7 +99,7 @@ class BrevbestillingService(
         val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, bruker)
         val ferdigstilt = brevbestillingGateway.ferdigstill(brevbestillingReferanse, signaturer, mottakere)
         if (!ferdigstilt) {
-            throw IllegalArgumentException("Brevet er ikke gyldig ferdigstilt, fullfør brevet og prøv på nytt.")
+            throw UgyldigForespørselException("Brevet er ikke gyldig ferdigstilt, fullfør brevet og prøv på nytt.")
         } else {
             brevbestillingRepository.oppdaterStatus(
                 behandlingId = behandlingId,
