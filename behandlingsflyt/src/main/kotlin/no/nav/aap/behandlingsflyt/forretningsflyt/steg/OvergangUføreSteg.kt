@@ -84,8 +84,6 @@ class OvergangUføreSteg private constructor(
                         overgangUføreGrunnlag,
                         vilkårsresultat
                     )
-
-                    return Fullført
                 }
 
             }
