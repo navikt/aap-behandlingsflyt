@@ -34,7 +34,7 @@ fun NormalOpenAPIRoute.kansellertRevurderingGrunnlagAPI(dataSource: DataSource, 
 
             val behandlingId = behandlingRepository.hent(BehandlingReferanse(req.referanse)).id
 
-            kansellerRevurderingRepository.hentKansellertRevurderingGrunnlag(behandlingId)?.vurdering?.let {
+            kansellerRevurderingRepository.hentHvisEksisterer(behandlingId)?.vurdering?.let {
                 KansellertRevurderingGrunnlagDto(vurdering = it.tilDto())
             } ?: KansellertRevurderingGrunnlagDto(vurdering = null)
         }

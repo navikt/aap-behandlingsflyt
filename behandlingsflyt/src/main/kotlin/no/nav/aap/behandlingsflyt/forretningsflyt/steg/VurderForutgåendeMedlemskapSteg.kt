@@ -65,7 +65,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         }
 
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING -> {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
                         .avbrytForSteg(type())
@@ -73,10 +73,6 @@ class VurderForutgåendeMedlemskapSteg private constructor(
                     return Fullført
                 }
 
-                return vurderVilkår(kontekst)
-            }
-
-            VurderingType.REVURDERING -> {
                 return vurderVilkår(kontekst)
             }
 

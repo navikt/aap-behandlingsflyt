@@ -11,5 +11,5 @@ data class UtvidetSaksinfoDTO(
     val periode: Periode,
     val behandlinger: List<BehandlinginfoDTO>,
     val ident: String,
-    val søknadErTrukket: Boolean? = null
+    val søknadErTrukket: Boolean? = null,
 )

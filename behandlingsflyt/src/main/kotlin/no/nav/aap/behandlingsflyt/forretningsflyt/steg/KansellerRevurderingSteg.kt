@@ -10,9 +10,10 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.REVURDERING_KANSELLERT
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -22,20 +23,20 @@ class KansellerRevurderingSteg private constructor(
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (erIkkeRelevant(kontekst)) {
+        if (!erRelevant(kontekst)) {
             return Fullført
         }
 
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val kansellerRevurderingGrunnlag =
-            kansellerRevurderingRepository.hentKansellertRevurderingGrunnlag(kontekst.behandlingId)
+            kansellerRevurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         if (avklaringsbehov.harIkkeBlittLøst(Definisjon.KANSELLER_REVURDERING)) {
             return FantAvklaringsbehov(Definisjon.KANSELLER_REVURDERING)
         }
 
         checkNotNull(kansellerRevurderingGrunnlag) {
-            "Kanseller revurdering har blitt satt som løst, men ingen grunnlag har blitt lagret på behandlingen."
+            "Kanseller revurdering har blitt satt som løst."
         }
 
         if (kansellerRevurderingGrunnlag.vurdering.årsak != null) {
@@ -45,8 +46,9 @@ class KansellerRevurderingSteg private constructor(
         return Fullført
     }
 
-    private fun erIkkeRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-        return Vurderingsbehov.REVURDERING_KANSELLERT !in kontekst.vurderingsbehovRelevanteForSteg
+    private fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
+        return (kontekst.behandlingType == TypeBehandling.Revurdering)
+                && (REVURDERING_KANSELLERT in kontekst.vurderingsbehovRelevanteForSteg)
     }
 
     companion object : FlytSteg {

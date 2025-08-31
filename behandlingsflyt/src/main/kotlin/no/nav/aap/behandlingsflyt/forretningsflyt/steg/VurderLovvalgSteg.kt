@@ -65,6 +65,15 @@ class VurderLovvalgSteg private constructor(
             }
 
             VurderingType.REVURDERING -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    avklaringsbehovService.avbrytForSteg(kontekst.behandlingId, type())
+                    vilkårService.ingenNyeVurderinger(
+                        kontekst,
+                        Vilkårtype.LOVVALG,
+                        "mangler behandlingsgrunnlag",
+                    )
+                    return Fullført
+                }
                 return vurderVilkår(kontekst)
             }
 

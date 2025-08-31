@@ -67,16 +67,18 @@ class VurderSykdomSteg private constructor(
             }
 
             VurderingType.REVURDERING -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    log.info("Tidligere vurderinger gir ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.SYKDOMSVILKÅRET} for behandlingId ${kontekst.behandlingId}")
+                    avklaringsbehovene.avbrytForSteg(type())
+                    return Fullført
+                }
+
                 val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
                 if (kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()) {
-                    return if (avklaringsbehov == null) {
-                        FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
-                    } else {
-                        if (!avklaringsbehov.harAvsluttetStatusIHistorikken()) {
-                            FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
-                        } else {
-                            Fullført
-                        }
+                    return when {
+                        avklaringsbehov == null -> FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
+                        !avklaringsbehov.harAvsluttetStatusIHistorikken() -> FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
+                        else -> Fullført
                     }
                 }
 
@@ -96,6 +98,72 @@ class VurderSykdomSteg private constructor(
         }
 
         return Fullført
+    }
+
+    private fun håndterFørstegangsbehandling(
+        kontekst: FlytKontekstMedPerioder,
+        avklaringsbehovene: Avklaringsbehovene
+    ): StegResultat? {
+        if (harIngenBehandlingsgrunnlag(kontekst, avklaringsbehovene)) return Fullført
+
+        val vilkårResultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
+        val studentVurdering = studentGrunnlag?.studentvurdering
+
+        if (skalStoppeIFørstegangsbehandling(vilkårResultat, studentVurdering, avklaringsbehovene)) {
+            return FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
+        }
+
+        håndterÅpentAvklaringsbehov(avklaringsbehovene, studentVurdering)
+        return null
+    }
+
+    private fun håndterRevurdering(
+        kontekst: FlytKontekstMedPerioder,
+        avklaringsbehovene: Avklaringsbehovene
+    ): StegResultat? {
+        if (harIngenBehandlingsgrunnlag(kontekst, avklaringsbehovene)) return Fullført
+
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
+
+        if (kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()) {
+            return when {
+                avklaringsbehov == null -> FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
+                !avklaringsbehov.harAvsluttetStatusIHistorikken() -> FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
+                else -> Fullført
+            }
+        }
+
+        if (erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene)) {
+            return FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
+        }
+
+        if (avklaringsbehov?.erÅpent() == true) {
+            avklaringsbehovene.avbryt(Definisjon.AVKLAR_SYKDOM)
+        }
+        return null
+    }
+
+    private fun harIngenBehandlingsgrunnlag(
+        kontekst: FlytKontekstMedPerioder,
+        avklaringsbehovene: Avklaringsbehovene
+    ): Boolean {
+        if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
+            log.info("Tidligere vurderinger gir ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.SYKDOMSVILKÅRET} for behandlingId ${kontekst.behandlingId}")
+            avklaringsbehovene.avbrytForSteg(type())
+            return true
+        }
+        return false
+    }
+
+    private fun håndterÅpentAvklaringsbehov(
+        avklaringsbehovene: Avklaringsbehovene,
+        studentVurdering: StudentVurdering?
+    ) {
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
+        if (avklaringsbehov?.erÅpent() == true && studentVurdering?.erOppfylt() == true) {
+            avklaringsbehovene.avbryt(Definisjon.AVKLAR_SYKDOM)
+        }
     }
 
     private fun erIkkeVurdertTidligereIBehandlingen(

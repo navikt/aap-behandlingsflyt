@@ -44,8 +44,8 @@ class KansellerRevurderingService (
             IKKE_ENDRET
     }
 
-    fun RevurderingErKansellert(behandlingId: BehandlingId): Boolean {
-        return kansellerRevurderingRepository.hentKansellertRevurderingGrunnlag(behandlingId)?.vurdering != null;
+    fun revurderingErKansellert(behandlingId: BehandlingId): Boolean {
+        return kansellerRevurderingRepository.hentHvisEksisterer(behandlingId)?.vurdering != null;
     }
 
     companion object : Informasjonskravkonstruktør {

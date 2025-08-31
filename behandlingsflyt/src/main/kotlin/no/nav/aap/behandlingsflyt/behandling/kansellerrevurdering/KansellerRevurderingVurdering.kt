@@ -20,6 +20,5 @@ enum class KansellerRevurderingÅrsak {
 fun KansellerRevurderingVurdering.tilDto(): KansellerRevurderingVurderingDto =
     KansellerRevurderingVurderingDto(
         årsak = this.årsak?.let { KansellerRevurderingÅrsakDto.valueOf(it.name) },
-        begrunnelse = this.begrunnelse,
-        vurdertAv = this.vurdertAv.ident
+        begrunnelse = this.begrunnelse
     )

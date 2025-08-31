@@ -28,13 +28,13 @@ class KansellerRevurderingLøser(
         val behandling = behandlingRepository.hent(kontekst.behandlingId())
 
         require(behandling.typeBehandling() == TypeBehandling.Revurdering) {
-            "kan kun kansellere søknader i revurdering"
+            "kan kun kansellere revurdering i en revurdering behandling"
         }
         require(behandling.status() in listOf(Status.OPPRETTET, Status.UTREDES)) {
             "kan kun kansellere revurdering som utredes"
         }
 
-        kansellerRevurderingRepository.lagreKansellerRevurderingVurdering(
+        kansellerRevurderingRepository.lagre(
             behandlingId = kontekst.behandlingId(),
             vurdering = KansellerRevurderingVurdering(
                 årsak = løsning.vurdering.årsak?.name?.let { KansellerRevurderingÅrsak.valueOf(it) },

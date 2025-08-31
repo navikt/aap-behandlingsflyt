@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.innsendingType
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.kansellerrevurdering.KansellerRevurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -42,6 +43,7 @@ class AktivitetspliktInformasjonskravTest {
         .register<TrukketSøknadRepositoryImpl>()
         .register<VilkårsresultatRepositoryImpl>()
         .register<AktivitetspliktRepositoryImpl>()
+        .register<KansellerRevurderingRepositoryImpl>()
 
     @Test
     fun `detekterer nye dokumenter og legger dem til i grunnlaget`() {

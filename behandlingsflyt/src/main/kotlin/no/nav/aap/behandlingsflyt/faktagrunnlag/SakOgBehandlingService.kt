@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
+import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -29,6 +30,7 @@ class SakOgBehandlingService(
     private val behandlingRepository: BehandlingRepository,
     private val trukketSøknadService: TrukketSøknadService,
     private val unleashGateway: UnleashGateway,
+    private val kansellerRevurderingService: KansellerRevurderingService,
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
@@ -39,6 +41,7 @@ class SakOgBehandlingService(
         behandlingRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         unleashGateway = gatewayProvider.provide(),
+        kansellerRevurderingService = KansellerRevurderingService(repositoryProvider),
     )
 
     fun finnBehandling(behandlingReferanse: BehandlingReferanse): Behandling {
@@ -59,12 +62,19 @@ class SakOgBehandlingService(
         )
         val nesteId = mutableMapOf<BehandlingId, BehandlingId>()
         for (behandling in ytelsesbehandlinger) {
+            // Hopp over hvis behandlingen er kansellert
+            if (kansellerRevurderingService.revurderingErKansellert(behandling.id)) {
+                continue
+            }
+
             if (behandling.forrigeBehandlingId != null) {
                 nesteId[behandling.forrigeBehandlingId] = behandling.id
             }
         }
 
-        var behandling = ytelsesbehandlinger.firstOrNull()?.id ?: return null
+        var behandling =
+            ytelsesbehandlinger.firstOrNull { !kansellerRevurderingService.revurderingErKansellert(it.id) }?.id
+                ?: return null
 
         while (nesteId[behandling] != null) {
             behandling = nesteId[behandling]!!
@@ -120,8 +130,19 @@ class SakOgBehandlingService(
 
         return when {
             mottokKlage -> Ordinær(opprettKlagebehandling(sisteYtelsesbehandling, vurderingsbehovOgÅrsak))
-            mottokKabalHendelse -> Ordinær(opprettSvarFraKlageenhetBehandling(sisteYtelsesbehandling, vurderingsbehovOgÅrsak))
-            mottokOppfølgingsOppgave -> Ordinær(opprettOppfølgingsbehandling(sisteYtelsesbehandling!!, vurderingsbehovOgÅrsak))
+            mottokKabalHendelse -> Ordinær(
+                opprettSvarFraKlageenhetBehandling(
+                    sisteYtelsesbehandling,
+                    vurderingsbehovOgÅrsak
+                )
+            )
+
+            mottokOppfølgingsOppgave -> Ordinær(
+                opprettOppfølgingsbehandling(
+                    sisteYtelsesbehandling!!,
+                    vurderingsbehovOgÅrsak
+                )
+            )
 
             /* Tilbakekreving kommer kanskje som et case her ... */
 
@@ -188,7 +209,10 @@ class SakOgBehandlingService(
         )
     }
 
-    private fun opprettOppfølgingsbehandling(sisteYtelsesbehandling: Behandling, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): Behandling {
+    private fun opprettOppfølgingsbehandling(
+        sisteYtelsesbehandling: Behandling,
+        vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
+    ): Behandling {
         requireNotNull(sisteYtelsesbehandling) {
             "Mottok oppfølgingsbehandling, men det finnes ingen eksisterende behandling. Behandling-ID: ${sisteYtelsesbehandling.id}"
         }
@@ -280,13 +304,19 @@ class SakOgBehandlingService(
         return sisteYtelsesbehandling
     }
 
-    fun finnEllerOpprettOrdinærBehandling(saksnummer: Saksnummer, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): Behandling {
+    fun finnEllerOpprettOrdinærBehandling(
+        saksnummer: Saksnummer,
+        vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
+    ): Behandling {
         val sak = sakRepository.hent(saksnummer)
 
         return finnEllerOpprettOrdinærBehandling(sak.id, vurderingsbehovOgÅrsak)
     }
 
-    fun finnEllerOpprettBehandling(saksnummer: Saksnummer, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): OpprettetBehandling {
+    fun finnEllerOpprettBehandling(
+        saksnummer: Saksnummer,
+        vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
+    ): OpprettetBehandling {
         val sak = sakRepository.hent(saksnummer)
 
         return finnEllerOpprettBehandling(sak.id, vurderingsbehovOgÅrsak)

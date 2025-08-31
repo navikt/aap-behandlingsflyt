@@ -52,11 +52,8 @@ class BeregnTilkjentYtelseSteg private constructor(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING &&
-            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
-                kontekst,
-                type()
-            )
+        if ((kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()))
+            || (kontekst.vurderingType == VurderingType.REVURDERING && tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()))
         ) {
             return Fullført
         }
@@ -92,7 +89,10 @@ class BeregnTilkjentYtelseSteg private constructor(
 
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return BeregnTilkjentYtelseSteg(repositoryProvider)
         }
 

@@ -44,15 +44,11 @@ class FastsettGrunnlagSteg(
         val rettighetsperiode = kontekst.rettighetsperiode
 
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING -> {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     vilkårService.ingenNyeVurderinger(kontekst, Vilkårtype.GRUNNLAGET, "mangler behandlingsgrunnlag")
                     return Fullført
                 }
-                vurderVilkåret(kontekst, vilkår, rettighetsperiode, vilkårsresultat)
-            }
-
-            VurderingType.REVURDERING -> {
                 vurderVilkåret(kontekst, vilkår, rettighetsperiode, vilkårsresultat)
             }
 

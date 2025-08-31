@@ -29,18 +29,12 @@ class VurderStudentSteg private constructor(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING -> {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     avklaringsbehovService.avbrytForSteg(kontekst.behandlingId, type())
                     return Fullført
                 }
 
-                val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
-                if (studentGrunnlag != null && !studentGrunnlag.erKonsistent()) {
-                    return FantAvklaringsbehov(Definisjon.AVKLAR_STUDENT)
-                }
-            }
-            VurderingType.REVURDERING -> {
                 val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
                 if (studentGrunnlag != null && !studentGrunnlag.erKonsistent()) {
                     return FantAvklaringsbehov(Definisjon.AVKLAR_STUDENT)

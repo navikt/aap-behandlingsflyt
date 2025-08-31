@@ -66,7 +66,7 @@ class VurderBistandsbehovSteg private constructor(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING -> {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     log.info("Ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.BISTANDSVILKÅRET} for behandlingId ${kontekst.behandlingId}. Avbryter steg.")
                     avklaringsbehovene.avbrytForSteg(type())
@@ -94,30 +94,6 @@ class VurderBistandsbehovSteg private constructor(
                 }
 
                 // Vurder vilkår
-                vurderVilkårForPeriode(
-                    kontekst.rettighetsperiode,
-                    bistandsGrunnlag,
-                    studentGrunnlag,
-                    vilkårsresultat
-                )
-            }
-
-            VurderingType.REVURDERING -> {
-                // sjekk behovet for avklaring for periode
-                if (erBehovForAvklarForPerioden(
-                        kontekst.rettighetsperiode,
-                        studentGrunnlag,
-                        sykdomsvurderinger,
-                        bistandsGrunnlag,
-                        vilkårsresultat,
-                        avklaringsbehovene,
-                        TypeBehandling.Revurdering
-                    )
-                ) {
-                    return FantAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV)
-                }
-
-                // Vurder vilkår for periode
                 vurderVilkårForPeriode(
                     kontekst.rettighetsperiode,
                     bistandsGrunnlag,

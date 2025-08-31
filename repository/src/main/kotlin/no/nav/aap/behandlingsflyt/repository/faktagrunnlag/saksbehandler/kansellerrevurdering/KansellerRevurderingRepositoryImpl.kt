@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.kansellerrevurdering
 
 import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingRepository
@@ -12,7 +12,7 @@ class KansellerRevurderingRepositoryImpl(
     private val connection: DBConnection,
 ) : KansellerRevurderingRepository {
 
-    override fun lagreKansellerRevurderingVurdering(
+    override fun lagre(
         behandlingId: BehandlingId,
         vurdering: KansellerRevurderingVurdering
     ) {
@@ -21,7 +21,7 @@ class KansellerRevurderingRepositoryImpl(
         lagreGrunnlag(behandlingId, vurderingId)
     }
 
-    override fun hentKansellertRevurderingGrunnlag(behandlingId: BehandlingId): KansellerRevurderingGrunnlag? {
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): KansellerRevurderingGrunnlag? {
         return connection.queryFirstOrNull<KansellerRevurderingGrunnlag>(
             """
                 select *

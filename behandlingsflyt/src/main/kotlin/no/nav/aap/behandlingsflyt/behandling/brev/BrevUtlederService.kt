@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse.GrunnlagBeregning.InntektPerÅr
+import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
@@ -42,6 +43,7 @@ class BrevUtlederService(
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val unleashGateway: UnleashGateway,
+    private val kansellerRevurderingService: KansellerRevurderingService
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -52,6 +54,7 @@ class BrevUtlederService(
         beregningVurderingRepository = repositoryProvider.provide(),
         tilkjentYtelseRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
+        kansellerRevurderingService = KansellerRevurderingService(repositoryProvider)
     )
 
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov? {
@@ -71,6 +74,9 @@ class BrevUtlederService(
             TypeBehandling.Revurdering -> {
                 val vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet()
                 if (setOf(MOTTATT_MELDEKORT, FASTSATT_PERIODE_PASSERT).containsAll(vurderingsbehov)) {
+                    return null
+                }
+                if (kansellerRevurderingService.revurderingErKansellert(behandlingId)) {
                     return null
                 }
                 return VedtakEndring

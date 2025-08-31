@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevur
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.KansellerRevurderingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.kansellerrevurdering.KansellerRevurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -53,8 +53,8 @@ class KansellerRevurderingRepositoryImplTest {
                 vurdertAv = Bruker(ident = "12345"),
             )
 
-            kansellerRevurderingRepository.lagreKansellerRevurderingVurdering(revurderingBehandling.id, vurdering)
-            val grunnlag = kansellerRevurderingRepository.hentKansellertRevurderingGrunnlag(revurderingBehandling.id)!!
+            kansellerRevurderingRepository.lagre(revurderingBehandling.id, vurdering)
+            val grunnlag = kansellerRevurderingRepository.hentHvisEksisterer(revurderingBehandling.id)!!
             assertEqualVurdering(grunnlag.vurdering, vurdering)
         }
     }
@@ -81,9 +81,9 @@ class KansellerRevurderingRepositoryImplTest {
                 vurdertAv = Bruker(ident = "54321"),
             )
 
-            kansellerRevurderingRepository.lagreKansellerRevurderingVurdering(revurderingBehandling.id, vurdering1)
-            kansellerRevurderingRepository.lagreKansellerRevurderingVurdering(revurderingBehandling.id, vurdering2)
-            val grunnlag = kansellerRevurderingRepository.hentKansellertRevurderingGrunnlag(revurderingBehandling.id)!!
+            kansellerRevurderingRepository.lagre(revurderingBehandling.id, vurdering1)
+            kansellerRevurderingRepository.lagre(revurderingBehandling.id, vurdering2)
+            val grunnlag = kansellerRevurderingRepository.hentHvisEksisterer(revurderingBehandling.id)!!
             assertEqualVurdering(grunnlag.vurdering, vurdering2)
         }
     }

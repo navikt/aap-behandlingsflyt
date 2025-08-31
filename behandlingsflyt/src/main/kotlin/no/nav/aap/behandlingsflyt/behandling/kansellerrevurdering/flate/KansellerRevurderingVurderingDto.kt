@@ -2,9 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.flate
 
 data class KansellerRevurderingVurderingDto(
     val årsak: KansellerRevurderingÅrsakDto?,
-    val begrunnelse: String,
-    val vurdertAv: String
-
+    val begrunnelse: String
 )
 
 enum class KansellerRevurderingÅrsakDto {

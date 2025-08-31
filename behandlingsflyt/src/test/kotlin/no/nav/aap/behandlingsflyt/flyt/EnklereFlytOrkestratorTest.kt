@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyBehandlingHendelseService
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyInformasjonskravGrunnlag
@@ -17,6 +16,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_SYKDOM
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.FASTSETT_MELDEPERIODER
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.FATTE_VEDTAK
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.IVERKSETT_VEDTAK
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.KANSELLER_REVURDERING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.OPPRETT_REVURDERING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SEND_FORVALTNINGSMELDING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.START_BEHANDLING
@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -285,6 +286,7 @@ class EnklereFlytOrkestratorTest {
             listOf(
                 START_BEHANDLING,
                 SEND_FORVALTNINGSMELDING,
+                KANSELLER_REVURDERING,
                 SØKNAD,
                 VURDER_RETTIGHETSPERIODE,
                 VURDER_LOVVALG,
@@ -307,6 +309,7 @@ class EnklereFlytOrkestratorTest {
             listOf(
                 START_BEHANDLING,
                 SEND_FORVALTNINGSMELDING,
+                KANSELLER_REVURDERING,
                 SØKNAD,
                 VURDER_RETTIGHETSPERIODE,
                 VURDER_LOVVALG,
@@ -404,6 +407,30 @@ class EnklereFlytOrkestratorTest {
                 ),
                 StegTilstand(
                     stegType = SEND_FORVALTNINGSMELDING,
+                    stegStatus = StegStatus.AVSLUTTER,
+                    aktiv = false
+                ),StegTilstand(
+                    stegType = KANSELLER_REVURDERING,
+                    stegStatus = StegStatus.START,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = KANSELLER_REVURDERING,
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = KANSELLER_REVURDERING,
+                    stegStatus = StegStatus.UTFØRER,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = KANSELLER_REVURDERING,
+                    stegStatus = StegStatus.AVKLARINGSPUNKT,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = KANSELLER_REVURDERING,
                     stegStatus = StegStatus.AVSLUTTER,
                     aktiv = false
                 ),
@@ -553,6 +580,31 @@ class EnklereFlytOrkestratorTest {
                 ),
                 StegTilstand(
                     stegType = SEND_FORVALTNINGSMELDING,
+                    stegStatus = StegStatus.AVSLUTTER,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = KANSELLER_REVURDERING,
+                    stegStatus = StegStatus.START,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = KANSELLER_REVURDERING,
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = KANSELLER_REVURDERING,
+                    stegStatus = StegStatus.UTFØRER,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = KANSELLER_REVURDERING,
+                    stegStatus = StegStatus.AVKLARINGSPUNKT,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = KANSELLER_REVURDERING,
                     stegStatus = StegStatus.AVSLUTTER,
                     aktiv = false
                 ),

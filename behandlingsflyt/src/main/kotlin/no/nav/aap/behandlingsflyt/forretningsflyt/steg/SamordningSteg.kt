@@ -56,6 +56,12 @@ class SamordningSteg(
             }
 
             VurderingType.REVURDERING -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+                        .avbrytForSteg(type())
+                    return Fullført
+                }
+
                 val forrigeBehandlingId =
                     requireNotNull(kontekst.forrigeBehandlingId) { "En revurdering har alltid en forrige behandling." }
 

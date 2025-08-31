@@ -53,9 +53,7 @@ class BeregningAvklarFaktaSteg private constructor(
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
-                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-                    avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-                        .avbrytForSteg(type())
+                if (skalAvbryteForStegPgaIngenBehandlingsgrunnlag(kontekst)) {
                     return Fullført
                 }
 
@@ -75,6 +73,10 @@ class BeregningAvklarFaktaSteg private constructor(
             }
 
             VurderingType.REVURDERING -> {
+                if (skalAvbryteForStegPgaIngenBehandlingsgrunnlag(kontekst)) {
+                    return Fullført
+                }
+
                 val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
 
                 val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
@@ -148,6 +150,15 @@ class BeregningAvklarFaktaSteg private constructor(
             return false
         }
         return !relevanteSaker.all { sak -> vurderteSaker.any { it.referanse == sak } }
+    }
+
+    private fun skalAvbryteForStegPgaIngenBehandlingsgrunnlag(kontekst: FlytKontekstMedPerioder): Boolean {
+        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+            avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+                .avbrytForSteg(type())
+            return true
+        }
+        return false
     }
 
     companion object : FlytSteg {

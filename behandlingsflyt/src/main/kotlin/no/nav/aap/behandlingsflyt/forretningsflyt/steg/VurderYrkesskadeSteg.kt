@@ -48,22 +48,13 @@ class VurderYrkesskadeSteg private constructor(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING -> {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
                         .avbrytForSteg(type())
                     return Fullført
                 }
 
-                val erBehovForAvklaring = erBehovForAvklaring(vilkårsresultat, yrkesskader, sykdomsvurderingTidslinje)
-                if (erBehovForAvklaring && sykdomsgrunnlag?.yrkesskadevurdering == null) {
-                    return FantAvklaringsbehov(Definisjon.AVKLAR_YRKESSKADE)
-                } else if (!erBehovForAvklaring && avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_YRKESSKADE) != null) {
-                    avklaringsbehovene.avbryt(Definisjon.AVKLAR_YRKESSKADE)
-                }
-            }
-
-            VurderingType.REVURDERING -> {
                 val erBehovForAvklaring = erBehovForAvklaring(vilkårsresultat, yrkesskader, sykdomsvurderingTidslinje)
                 if (erBehovForAvklaring && sykdomsgrunnlag?.yrkesskadevurdering == null) {
                     return FantAvklaringsbehov(Definisjon.AVKLAR_YRKESSKADE)
