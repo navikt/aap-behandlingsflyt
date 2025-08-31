@@ -117,6 +117,7 @@ public fun Melding.innsendingType(): InnsendingType = when (this) {
     is KabalHendelse -> InnsendingType.KABAL_HENDELSE
     is Oppfølgingsoppgave -> InnsendingType.OPPFØLGINGSOPPGAVE
     is OmgjøringKlageRevurdering -> InnsendingType.OMGJØRING_KLAGE_REVURDERING
+
 }
 
 /**
