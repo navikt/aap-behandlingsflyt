@@ -262,27 +262,27 @@ class VilkårsresultatTest {
             val v = tomVurdering()
             val nå = LocalDate.now()
 
-            val sykepengerPeriode = nå.plusDays(5)
-            v.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGARBEIDVILKÅRET).leggTilVurdering(
+            val sykepengerPeriode = nå.plusDays(30)
+            v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
                     Periode(nå, sykepengerPeriode),
                     utfall = Utfall.OPPFYLT,
-                    begrunnelse = null,
+                    begrunnelse = null
                 )
             )
-            val andrePeriode = Periode(nå.plusDays(6), nå.plusDays(30))
             v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
-                    andrePeriode,
+                    Periode(nå, sykepengerPeriode),
                     utfall = Utfall.IKKE_RELEVANT,
                     begrunnelse = null,
                 )
             )
-            v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGARBEIDVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
-                    andrePeriode,
+                    Periode(nå, sykepengerPeriode),
                     utfall = Utfall.OPPFYLT,
-                    begrunnelse = null
+                    innvilgelsesårsak = Innvilgelsesårsak.ARBEIDSSØKER,
+                    begrunnelse = null,
                 )
             )
 
@@ -293,7 +293,7 @@ class VilkårsresultatTest {
                     assertThat(it).isEqualTo(RettighetsType.ARBEIDSSØKER)
                 },
 
-            )
+                )
         }
 
         @Test
@@ -301,7 +301,15 @@ class VilkårsresultatTest {
             val v = tomVurdering()
             val nå = LocalDate.now()
 
-            val sykepengerPeriode = nå.plusDays(5)
+            val sykepengerPeriode = nå.plusDays(30)
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGUFØREVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(nå, sykepengerPeriode),
+                    utfall = Utfall.OPPFYLT,
+                    begrunnelse = null,
+                    innvilgelsesårsak = Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD
+                )
+            )
 
             v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
@@ -310,19 +318,11 @@ class VilkårsresultatTest {
                     begrunnelse = null,
                 )
             )
-            val andrePeriode = Periode(nå.plusDays(6), nå.plusDays(30))
-            v.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGUFØREVILKÅRET).leggTilVurdering(
-                Vilkårsperiode(
-                    andrePeriode,
-                    utfall = Utfall.OPPFYLT,
-                    begrunnelse = null,
-                )
-            )
             v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
-                    andrePeriode,
+                    Periode(nå, sykepengerPeriode),
                     utfall = Utfall.OPPFYLT,
-                    begrunnelse = null
+                    begrunnelse = null,
                 )
             )
 
@@ -332,7 +332,8 @@ class VilkårsresultatTest {
                 Periode(nå, sykepengerPeriode) to {
                     assertThat(it).isEqualTo(RettighetsType.VURDERES_FOR_UFØRETRYGD)
                 },
-            )
+
+                )
         }
     }
 }

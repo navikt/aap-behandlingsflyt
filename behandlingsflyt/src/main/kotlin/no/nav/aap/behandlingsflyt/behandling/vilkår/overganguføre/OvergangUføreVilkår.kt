@@ -56,7 +56,7 @@ class OvergangUføreVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
         if (overgangUføreVurdering == null) {
             utfall = Utfall.IKKE_OPPFYLT
             avslagsårsak = Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING
-        } else if (overgangUføreVurdering.virkningsDato != null && overgangUføreVurdering.brukerSoktUforetrygd && overgangUføreVurdering.brukerVedtakUforetrygd != UføreSøknadVedtak.JA_AVSLAG.verdi && overgangUføreVurdering.brukerRettPaaAAP == true) {
+        } else if (overgangUføreVurdering.virkningsDato != null && overgangUføreVurdering.brukerSoktUforetrygd && overgangUføreVurdering.brukerVedtakUforetrygd === UføreSøknadVedtak.NEI.verdi && overgangUføreVurdering.brukerRettPaaAAP == true) {
 
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD

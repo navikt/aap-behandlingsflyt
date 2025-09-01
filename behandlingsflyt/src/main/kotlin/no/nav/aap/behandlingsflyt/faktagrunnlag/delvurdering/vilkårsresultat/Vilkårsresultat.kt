@@ -140,7 +140,7 @@ class Vilkårsresultat(
             vilkårPar.any {
                 it.first == Vilkårtype.OVERGANGARBEIDVILKÅRET
                         && it.second.utfall == Utfall.OPPFYLT
-                        && it.second.innvilgelsesårsak == Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD
+                        && it.second.innvilgelsesårsak == Innvilgelsesårsak.ARBEIDSSØKER
             }
         if (harOppfyltVilkårForOvergangArbeid) {
             return RettighetsType.ARBEIDSSØKER
