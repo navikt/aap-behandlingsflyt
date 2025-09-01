@@ -22,8 +22,8 @@ class UføreServiceTest {
             Uføre(nå.plusDays(2), Prosent.`30_PROSENT`),
             Uføre(nå, Prosent.`50_PROSENT`),
         )
-
-        //assertFalse(UføreService.harEndringerUføre(eksisterendeGrunnlag, ny))
+        
+        assertFalse(UføreService.harEndringerUføre(eksisterendeGrunnlag, ny))
 
     }
 
