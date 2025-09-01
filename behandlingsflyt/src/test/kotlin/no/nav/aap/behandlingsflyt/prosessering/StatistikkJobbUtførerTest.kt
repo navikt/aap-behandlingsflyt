@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
@@ -73,6 +74,7 @@ import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKansellerRevurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
@@ -132,8 +134,10 @@ class StatistikkJobbUtførerTest {
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(
-                        no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD)
+                    vurderingsbehov = listOf(
+                        VurderingsbehovMedPeriode(
+                            no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD
+                        )
                     ),
                     årsak = ÅrsakTilOpprettelse.SØKNAD
                 )
@@ -144,8 +148,10 @@ class StatistikkJobbUtførerTest {
                 typeBehandling = TypeBehandling.Revurdering,
                 forrigeBehandlingId = opprettetBehandling.id,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(
-                        no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD)
+                    vurderingsbehov = listOf(
+                        VurderingsbehovMedPeriode(
+                            no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD
+                        )
                     ),
                     årsak = ÅrsakTilOpprettelse.SØKNAD
                 )
@@ -209,7 +215,8 @@ class StatistikkJobbUtførerTest {
                 underveisRepository = UnderveisRepositoryImpl(connection),
                 trukketSøknadService = TrukketSøknadService(postgresRepositoryRegistry.provider(connection)),
                 klageresultatUtleder = KlageresultatUtleder(postgresRepositoryRegistry.provider(connection)),
-                statistikkGateway = StatistikkGatewayImpl()
+                statistikkGateway = StatistikkGatewayImpl(),
+                kansellerRevurderingService = KansellerRevurderingService(postgresRepositoryRegistry.provider(connection))
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -409,6 +416,7 @@ class StatistikkJobbUtførerTest {
                 trukketSøknadService = TrukketSøknadService(postgresRepositoryRegistry.provider(connection)),
                 klageresultatUtleder = KlageresultatUtleder(postgresRepositoryRegistry.provider(connection)),
                 statistikkGateway = StatistikkGatewayImpl(),
+                kansellerRevurderingService = KansellerRevurderingService(postgresRepositoryRegistry.provider(connection))
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -485,10 +493,12 @@ class StatistikkJobbUtførerTest {
             typeBehandling = TypeBehandling.Klage,
             forrigeBehandlingId = null,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(
-                    type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD,
-                    periode = Periode(LocalDate.now(), LocalDate.now().plusDays(1))
-                )),
+                vurderingsbehov = listOf(
+                    VurderingsbehovMedPeriode(
+                        type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD,
+                        periode = Periode(LocalDate.now(), LocalDate.now().plusDays(1))
+                    )
+                ),
                 årsak = ÅrsakTilOpprettelse.SØKNAD
             )
         )
@@ -596,6 +606,10 @@ class StatistikkJobbUtførerTest {
                 ),
                 klageresultatUtleder = DummyKlageresultatUtleder(),
                 statistikkGateway = StatistikkGatewayImpl(),
+                kansellerRevurderingService = KansellerRevurderingService(
+                    InMemoryAvklaringsbehovRepository,
+                    InMemoryKansellerRevurderingRepository
+                )
             )
 
         val avklaringsbehov = listOf(

@@ -12,4 +12,5 @@ data class UtvidetSaksinfoDTO(
     val behandlinger: List<BehandlinginfoDTO>,
     val ident: String,
     val søknadErTrukket: Boolean? = null,
+    val revurderingErKansellert: Boolean? = null
 )

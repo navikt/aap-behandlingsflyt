@@ -4,7 +4,6 @@ import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
-import com.papsign.ktor.openapigen.route.path.normal.route
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
@@ -12,12 +11,7 @@ import no.nav.aap.behandlingsflyt.Azp
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_STUDENT_KODE
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.OPPRETT_HENDELSE_PÅ_SAK_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_BRUDD_11_7_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -85,7 +79,7 @@ fun NormalOpenAPIRoute.saksApi(
                         } else null
 
                         val resultat = if (førstegangsbehandling != null) {
-                            resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
+                            resultatUtleder.utledResultatFørstegangOgRevurderingsBehandling(førstegangsbehandling)
                         } else null
 
                         SaksinfoDTO(
@@ -98,6 +92,7 @@ fun NormalOpenAPIRoute.saksApi(
                                     Resultat.INNVILGELSE -> ResultatKode.INNVILGET
                                     Resultat.AVSLAG -> ResultatKode.AVSLAG
                                     Resultat.TRUKKET -> ResultatKode.TRUKKET
+                                    Resultat.KANSELLERT -> ResultatKode.KANSELLERT
                                     null -> null
                                 }
                             })
@@ -183,7 +178,7 @@ fun NormalOpenAPIRoute.saksApi(
                         } else null
 
                         val resultat = if (førstegangsbehandling != null) {
-                            resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
+                            resultatUtleder.utledResultatFørstegangOgRevurderingsBehandling(førstegangsbehandling)
                         } else null
 
                         SaksinfoDTO(
@@ -196,6 +191,7 @@ fun NormalOpenAPIRoute.saksApi(
                                     Resultat.INNVILGELSE -> ResultatKode.INNVILGET
                                     Resultat.AVSLAG -> ResultatKode.AVSLAG
                                     Resultat.TRUKKET -> ResultatKode.TRUKKET
+                                    Resultat.KANSELLERT -> ResultatKode.KANSELLERT
                                     null -> null
                                 }
                             })
@@ -324,6 +320,7 @@ fun NormalOpenAPIRoute.saksApi(
             ) { req ->
                 val saksnummer = req.saksnummer
                 var søknadErTrukket: Boolean? = null
+                var revurderingErKansellert: Boolean? = null
                 val (sak, behandlinger) = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val resultatUtleder = ResultatUtleder(repositoryProvider)
@@ -333,7 +330,11 @@ fun NormalOpenAPIRoute.saksApi(
                         repositoryProvider.provide<BehandlingRepository>().hentAlleFor(sak.id).map { behandling ->
                             if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
                                 søknadErTrukket =
-                                    resultatUtleder.utledResultatFørstegangsBehandling(behandling) == Resultat.TRUKKET
+                                    resultatUtleder.utledResultatFørstegangOgRevurderingsBehandling(behandling) == Resultat.TRUKKET
+                            }
+                            if (behandling.typeBehandling() == TypeBehandling.Revurdering) {
+                                revurderingErKansellert =
+                                    resultatUtleder.utledResultatFørstegangOgRevurderingsBehandling(behandling) == Resultat.KANSELLERT
                             }
                             val vurderingsbehov = behandling.vurderingsbehov().map(VurderingsbehovMedPeriode::type)
                             BehandlinginfoDTO(
@@ -357,7 +358,8 @@ fun NormalOpenAPIRoute.saksApi(
                         ident = sak.person.aktivIdent().identifikator,
                         behandlinger = behandlinger,
                         status = sak.status(),
-                        søknadErTrukket = søknadErTrukket
+                        søknadErTrukket = søknadErTrukket,
+                        revurderingErKansellert = revurderingErKansellert
                     )
                 )
             }

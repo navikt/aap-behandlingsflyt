@@ -68,6 +68,7 @@ class BrevUtlederService(
                     Resultat.INNVILGELSE -> brevBehovInnvilgelse(behandling)
                     Resultat.AVSLAG -> Avslag
                     Resultat.TRUKKET -> null
+                    Resultat.KANSELLERT -> null
                 }
             }
 

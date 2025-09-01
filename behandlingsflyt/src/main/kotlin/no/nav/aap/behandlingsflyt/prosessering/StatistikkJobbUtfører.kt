@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
@@ -71,9 +72,11 @@ class StatistikkJobbUtfører(
     private val trukketSøknadService: TrukketSøknadService,
     private val klageresultatUtleder: IKlageresultatUtleder,
     private val statistikkGateway: StatistikkGateway,
+    private val kansellerRevurderingService: KansellerRevurderingService
 ) : JobbUtfører {
 
-    private val resultatUtleder = ResultatUtleder(underveisRepository, behandlingRepository, trukketSøknadService)
+    private val resultatUtleder =
+        ResultatUtleder(underveisRepository, behandlingRepository, trukketSøknadService, kansellerRevurderingService)
 
     private val log = LoggerFactory.getLogger(javaClass)
     override fun utfør(input: JobbInput) {
@@ -307,6 +310,7 @@ class StatistikkJobbUtfører(
                         Resultat.INNVILGELSE -> ResultatKode.INNVILGET
                         Resultat.AVSLAG -> ResultatKode.AVSLAG
                         Resultat.TRUKKET -> ResultatKode.TRUKKET
+                        Resultat.KANSELLERT -> ResultatKode.KANSELLERT
                     }
                 }
             }
@@ -420,6 +424,7 @@ class StatistikkJobbUtfører(
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
                 klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
                 statistikkGateway = gatewayProvider.provide(),
+                kansellerRevurderingService = KansellerRevurderingService(repositoryProvider)
             )
         }
 
