@@ -55,14 +55,14 @@ class OvergangUføreVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
 
         if (overgangUføreVurdering == null) {
             utfall = Utfall.IKKE_OPPFYLT
-            avslagsårsak = Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING
+            avslagsårsak = Avslagsårsak.MANGLENDE_DOKUMENTASJON
         } else if (overgangUføreVurdering.virkningsDato != null && overgangUføreVurdering.brukerSoktUforetrygd && overgangUføreVurdering.brukerVedtakUforetrygd === UføreSøknadVedtak.NEI.verdi && overgangUføreVurdering.brukerRettPaaAAP == true) {
 
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD
         } else {
             utfall = Utfall.IKKE_OPPFYLT
-            avslagsårsak = Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING
+            avslagsårsak = Avslagsårsak.MANGLENDE_DOKUMENTASJON
         }
 
         return Vilkårsvurdering(

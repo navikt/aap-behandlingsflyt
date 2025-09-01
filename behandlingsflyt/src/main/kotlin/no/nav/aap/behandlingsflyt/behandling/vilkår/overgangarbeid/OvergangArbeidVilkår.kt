@@ -54,7 +54,7 @@ class OvergangArbeidVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
 
         if (overgangArbeidVurdering == null) {
             utfall = Utfall.IKKE_OPPFYLT
-            avslagsårsak = Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING
+            avslagsårsak = Avslagsårsak.MANGLENDE_DOKUMENTASJON
         } else if (overgangArbeidVurdering.virkningsDato != null &&
             overgangArbeidVurdering.brukerRettPaaAAP == true
         ) {
@@ -63,7 +63,7 @@ class OvergangArbeidVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
             innvilgelsesårsak = Innvilgelsesårsak.ARBEIDSSØKER
         } else {
             utfall = Utfall.IKKE_OPPFYLT
-            avslagsårsak = Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING
+            avslagsårsak = Avslagsårsak.MANGLENDE_DOKUMENTASJON
         }
 
         return Vilkårsvurdering(
