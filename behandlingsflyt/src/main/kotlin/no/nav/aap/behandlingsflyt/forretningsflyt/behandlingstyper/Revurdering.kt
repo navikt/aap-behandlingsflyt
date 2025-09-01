@@ -37,6 +37,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.IverksettVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ManglendeLigningGrunnlagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.NyVurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OpprettRevurderingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RefusjonkravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RettighetsperiodeSteg
@@ -62,6 +63,8 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeSteg
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.komponenter.miljo.Miljø
+import no.nav.aap.komponenter.miljo.MiljøKode
 
 object Revurdering : BehandlingType {
     override fun flyt(): BehandlingFlyt {
@@ -102,7 +105,7 @@ object Revurdering : BehandlingType {
             .medSteg(steg = VurderAlderSteg)
             .medSteg(steg = VurderStudentSteg)
             .medSteg(
-                steg = VurderSykdomSteg,
+                steg = if (Miljø.erProd()) VurderSykdomSteg else NyVurderSykdomSteg,
                 // UføreService trengs her for å trigge ytterligere nedsatt arbeidsevne-vurdering
                 informasjonskrav = listOf(YrkesskadeService, LegeerklæringService, UføreService),
                 vurderingsbehovRelevanteForSteg = listOf(
