@@ -75,28 +75,32 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
     override fun lagreManuellVurdering(
         behandlingId: BehandlingId,
-        manuellVurdering: ManuellVurderingForLovvalgMedlemskap
+        manuellVurdering: ManuellVurderingForLovvalgMedlemskap?
     ) {
         val grunnlagOppslag = hentGrunnlag(behandlingId)
-        val eksisterendeManuellVurdering = hentManuellVurdering(grunnlagOppslag?.manuellVurderingId)
-        val overstyrt = manuellVurdering.overstyrt || eksisterendeManuellVurdering?.overstyrt == true
-
         if (grunnlagOppslag != null) {
             deaktiverGrunnlag(behandlingId)
         }
 
-        val manuellVurderingQuery = """
-            INSERT INTO LOVVALG_MEDLEMSKAP_MANUELL_VURDERING (tekstvurdering_lovvalg, lovvalgs_land, tekstvurdering_medlemskap, var_medlem_i_folketrygden, overstyrt, vurdert_av) VALUES (?, ?, ?, ?, ?, ?)
-        """.trimIndent()
+        val manuellVurderingId = if (manuellVurdering == null) {
+            null
+        } else {
+            val eksisterendeManuellVurdering = hentManuellVurdering(grunnlagOppslag?.manuellVurderingId)
+            val overstyrt = manuellVurdering.overstyrt || eksisterendeManuellVurdering?.overstyrt == true
 
-        val manuellVurderingId = connection.executeReturnKey(manuellVurderingQuery) {
-            setParams {
-                setString(1, manuellVurdering.lovvalgVedSøknadsTidspunkt.begrunnelse)
-                setEnumName(2, manuellVurdering.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLand)
-                setString(3, manuellVurdering.medlemskapVedSøknadsTidspunkt?.begrunnelse)
-                setBoolean(4, manuellVurdering.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd)
-                setBoolean(5, overstyrt)
-                setString(6, manuellVurdering.vurdertAv)
+            val manuellVurderingQuery = """
+                INSERT INTO LOVVALG_MEDLEMSKAP_MANUELL_VURDERING (tekstvurdering_lovvalg, lovvalgs_land, tekstvurdering_medlemskap, var_medlem_i_folketrygden, overstyrt, vurdert_av) VALUES (?, ?, ?, ?, ?, ?)
+            """.trimIndent()
+
+            connection.executeReturnKey(manuellVurderingQuery) {
+                setParams {
+                    setString(1, manuellVurdering.lovvalgVedSøknadsTidspunkt.begrunnelse)
+                    setEnumName(2, manuellVurdering.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLand)
+                    setString(3, manuellVurdering.medlemskapVedSøknadsTidspunkt?.begrunnelse)
+                    setBoolean(4, manuellVurdering.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd)
+                    setBoolean(5, overstyrt)
+                    setString(6, manuellVurdering.vurdertAv)
+                }
             }
         }
 

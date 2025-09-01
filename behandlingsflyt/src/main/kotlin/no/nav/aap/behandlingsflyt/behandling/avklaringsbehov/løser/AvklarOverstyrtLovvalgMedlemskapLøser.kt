@@ -40,6 +40,11 @@ class AvklarOverstyrtLovvalgMedlemskapLøser(
             )
         )
 
+        /* Spørsmål: Hvorfor må vi vurdere medlemskap her? Blir ikke jobben prosesserBehandling trigget,
+         * som fører til at vilkåret vurderes på nytt? Ser det er en annen variant av
+         * vurder-metoden som kjøres, men steget kan jo bli kjørt flere ganger når flyten
+         * dras tilbake, og da burde vel steget regne ut samme resultat som det under?
+         */
         val sak = sakRepository.hent(kontekst.kontekst.sakId)
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId())
         val brukerPersonopplysning =
