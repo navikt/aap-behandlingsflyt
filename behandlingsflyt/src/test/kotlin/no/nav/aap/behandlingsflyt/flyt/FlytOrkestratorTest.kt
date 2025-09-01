@@ -1316,10 +1316,10 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 AvklarOvergangUføreLøsning(
                     OvergangUføreVurderingLøsningDto(
                         begrunnelse = "Løsning",
-                        brukerSoktUforetrygd = false,
-                        brukerVedtakUforetrygd = null,
-                        brukerRettPaaAAP = false,
-                        virkningsDato = null,
+                        brukerSoktUforetrygd = true,
+                        brukerVedtakUforetrygd = "NEI",
+                        brukerRettPaaAAP = true,
+                        virkningsDato = LocalDate.now(),
                         overgangBegrunnelse = null
                     )
                 )
