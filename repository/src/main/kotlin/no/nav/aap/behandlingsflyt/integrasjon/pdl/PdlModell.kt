@@ -50,7 +50,7 @@ data class HentPerson(
 
 data class PdlNavnData(
     val ident: String?,
-    val navn: List<PdlNavn>?
+    val navn: List<PdlNavn>
 )
 
 data class PdlNavnDataBolk(
@@ -63,9 +63,9 @@ data class PdlPersonBolk(
 )
 
 data class PdlNavn(
-    val fornavn: String?,
+    val fornavn: String,
     val mellomnavn: String?,
-    val etternavn: String?
+    val etternavn: String
 )
 
 data class PdlRelasjonData(
@@ -79,7 +79,7 @@ data class HentPersonBolkResult(
 )
 
 data class PdlPersoninfo(
-    val forelderBarnRelasjon: List<PdlRelasjon>? = null,
+    val forelderBarnRelasjon: List<ForelderBarnRelasjon>? = null,
     val foedselsdato: List<PdlFoedsel>? = null,
     val doedsfall: Set<PDLDødsfall>? = null,
     val statsborgerskap: Set<PdlStatsborgerskap>? = null,
@@ -150,8 +150,15 @@ data class PdlFoedsel(
     val foedselAar: String?
 )
 
-data class PdlRelasjon(
-    val relatertPersonsIdent: String?
+data class ForelderBarnRelasjon(
+    val relatertPersonsIdent: String?,
+    val relatertPersonUtenFolkeregisteridentifikator: RelatertBiPerson? = null
+)
+
+data class RelatertBiPerson(
+    val foedselsdato: LocalDate?,
+    val statsborgerskap: String?,
+    val navn: PdlNavn?
 )
 
 data class PdlPersoninfoData(
@@ -178,6 +185,7 @@ enum class PdlGruppe {
     NPID,
 }
 
+@Suppress("EnumEntryName")
 enum class PersonStatus {
     bosatt,
     utflyttet,
