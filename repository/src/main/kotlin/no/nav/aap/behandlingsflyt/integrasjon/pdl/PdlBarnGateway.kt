@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.gateway.Factory
@@ -21,26 +23,46 @@ class PdlBarnGateway : BarnGateway {
 
     override fun hentBarn(person: Person, oppgitteBarnIdenter: List<Ident>): BarnInnhentingRespons {
         val barnRelasjoner = hentBarnRelasjoner(person)
-        val registerBarn = hentBarn(barnRelasjoner)
+
+        val barnIdenter = barnRelasjoner.filterIsInstance<BarnIdentifikator.BarnIdent>().map { it.ident }
+        val barnUtenIdent = barnRelasjoner.filterIsInstance<BarnIdentifikator.NavnOgFødselsdato>().map {
+            Barn(
+                ident = it,
+                fødselsdato = it.fødselsdato,
+                dødsdato = null,
+                navn = it.navn
+            )
+        }
+
+        val registerBarn = hentBarn(barnIdenter)
         val oppgitteBarn = hentBarn(oppgitteBarnIdenter)
-        return BarnInnhentingRespons(registerBarn, oppgitteBarn)
+        return BarnInnhentingRespons(registerBarn + barnUtenIdent, oppgitteBarn)
     }
 
-    private fun hentBarnRelasjoner(person: Person): List<Ident> {
+    private fun hentBarnRelasjoner(person: Person): List<BarnIdentifikator> {
         val request = PdlRequest(BARN_RELASJON_QUERY, IdentVariables(person.aktivIdent().identifikator))
         val response = PdlGateway.query<PdlRelasjonDataResponse>(request)
 
         val relasjoner = response.data?.hentPerson?.forelderBarnRelasjon ?: return emptyList()
 
-        return relasjoner.map {
-            if (it.relatertPersonsIdent == null) {
+        return relasjoner.map { relasjon ->
+            if (relasjon.relatertPersonsIdent == null) {
                 val harNavnOgFodselsdato =
-                    it.relatertPersonUtenFolkeregisteridentifikator?.foedselsdato != null && it.relatertPersonUtenFolkeregisteridentifikator.navn != null
+                    relasjon.relatertPersonUtenFolkeregisteridentifikator?.foedselsdato != null && relasjon.relatertPersonUtenFolkeregisteridentifikator.navn != null
                 log.info("Barn har ingen ident. Har navn og fodselsdato: $harNavnOgFodselsdato")
+                if (harNavnOgFodselsdato) {
+                    BarnIdentifikator.NavnOgFødselsdato(
+                        relasjon.relatertPersonUtenFolkeregisteridentifikator.navn.let { it.fornavn + " " + it.etternavn },
+                        Fødselsdato(relasjon.relatertPersonUtenFolkeregisteridentifikator.foedselsdato)
+                    )
+                } else {
+                    error("Barn mangler både ident og kombinasjonen navn+fødselsdato.")
+                }
+            } else {
+                BarnIdentifikator.BarnIdent(
+                    requireNotNull(relasjon.relatertPersonsIdent) { "Vi støtter ikke per nå at denne er null fra PDL " }
+                )
             }
-            Ident(
-                requireNotNull(it.relatertPersonsIdent) { "Vi støtter ikke per nå at denne er null fra PDL " }
-            )
         }
     }
 
@@ -59,7 +81,7 @@ class PdlBarnGateway : BarnGateway {
                 person.foedselsdato?.let { foedsel ->
                     val fødselsdato = PdlParser.utledFødselsdato(foedsel)
                     Barn(
-                        ident = Ident(res.ident),
+                        ident = BarnIdentifikator.BarnIdent(res.ident),
                         fødselsdato = requireNotNull(fødselsdato) { "Barn i PDL manglet fødselsdato. " },
                         dødsdato = person.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) })
                 }

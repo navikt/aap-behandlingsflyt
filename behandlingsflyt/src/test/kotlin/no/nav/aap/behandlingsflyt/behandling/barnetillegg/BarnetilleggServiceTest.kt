@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
@@ -15,6 +14,7 @@ import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -68,12 +68,12 @@ class BarnetilleggServiceTest {
         val fødseldatoUngtBarn = LocalDate.now().minusYears(5)
 
         val gammeltBarn = Barn(
-            ident = genererIdent(fødselsdatoGammeltBarn),
+            ident = BarnIdentifikator.BarnIdent(genererIdent(fødselsdatoGammeltBarn)),
             fødselsdato = Fødselsdato(fødselsdatoGammeltBarn)
         )
 
         val ungtBarn = Barn(
-            ident = genererIdent(fødseldatoUngtBarn),
+            ident = BarnIdentifikator.BarnIdent(genererIdent(fødseldatoUngtBarn)),
             fødselsdato = Fødselsdato(fødseldatoUngtBarn)
         )
 
@@ -180,7 +180,7 @@ class BarnetilleggServiceTest {
     ) {
         InMemoryBarnRepository.lagreRegisterBarn(
             behandling.id,
-            barn.associateWith { InMemoryPersonRepository.finnEllerOpprett(listOf(it.ident)).id }
+            barn.associateWith { InMemoryPersonRepository.finnEllerOpprett(listOf((it.ident as BarnIdentifikator.BarnIdent).ident)).id }
         )
         opprettVilkårsresultat(behandling, sak.rettighetsperiode)
     }

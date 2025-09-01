@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import kotlinx.coroutines.runBlocking
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
@@ -20,6 +19,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.Fakes
@@ -116,10 +116,10 @@ class PipTest {
                 behandling.id,
                 listOf(
                     Barn(
-                        ident = Ident("regbarn"),
+                        ident = BarnIdentifikator.BarnIdent("regbarn"),
                         Fødselsdato(LocalDate.now())
                     )
-                ).associateWith { personRepository.finnEllerOpprett(listOf(it.ident)).id }
+                ).associateWith { personRepository.finnEllerOpprett(listOf((it.ident as BarnIdentifikator.BarnIdent).ident)).id }
             )
             barnRepository.lagreOppgitteBarn(
                 behandling.id,
@@ -184,14 +184,14 @@ class PipTest {
                 behandling.id,
                 listOf(
                     Barn(
-                        ident = Ident("regbarn"),
+                        ident = BarnIdentifikator.BarnIdent("regbarn"),
                         Fødselsdato(LocalDate.now())
                     ),
                     Barn(
-                        ident = Ident("regbarn2"),
+                        ident = BarnIdentifikator.BarnIdent("regbarn2"),
                         Fødselsdato(LocalDate.now().minusYears(1))
                     )
-                ).associateWith { personRepository.finnEllerOpprett(listOf(it.ident)).id }
+                ).associateWith { personRepository.finnEllerOpprett(listOf((it.ident as BarnIdentifikator.BarnIdent).ident)).id }
             )
             // Lagrer ett oppgitt barn med ident og ett uten
             barnRepository.lagreOppgitteBarn(
@@ -231,8 +231,8 @@ class PipTest {
             barnRepository.lagreRegisterBarn(
                 behandling2.id,
                 listOf(
-                    Barn(ident = Ident("regbar2"), Fødselsdato(LocalDate.now()))
-                ).associateWith { personRepository.finnEllerOpprett(listOf(it.ident)).id }
+                    Barn(ident = BarnIdentifikator.BarnIdent("regbar2"), Fødselsdato(LocalDate.now()))
+                ).associateWith { personRepository.finnEllerOpprett(listOf((it.ident as BarnIdentifikator.BarnIdent).ident)).id }
             )
             barnRepository.lagreOppgitteBarn(
                 behandling.id,

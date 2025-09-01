@@ -396,6 +396,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                     andelAvNedsettelsen = row.getIntOrNull("ANDEL_AV_NEDSETTELSE")?.let(::Prosent),
                     relevanteSaker = hentRelevanteSaker(id),
                     vurdertAv = row.getString("VURDERT_AV"),
+                    // sjekk dette tidsssonemessig
                     vurdertTidspunkt = row.getLocalDateTime("OPPRETTET_TID"),
                 )
             }
