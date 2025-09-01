@@ -8,8 +8,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.gateway.Factory
 import org.intellij.lang.annotations.Language
+import org.slf4j.LoggerFactory
 
 class PdlBarnGateway : BarnGateway {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<BarnGateway> {
         override fun konstruer(): BarnGateway {
             return PdlBarnGateway()
@@ -27,9 +30,14 @@ class PdlBarnGateway : BarnGateway {
         val request = PdlRequest(BARN_RELASJON_QUERY, IdentVariables(person.aktivIdent().identifikator))
         val response = PdlGateway.query<PdlRelasjonDataResponse>(request)
 
-        val relasjoner = (response.data?.hentPerson?.forelderBarnRelasjon ?: return emptyList())
+        val relasjoner = response.data?.hentPerson?.forelderBarnRelasjon ?: return emptyList()
 
         return relasjoner.map {
+            if (it.relatertPersonsIdent == null) {
+                val harNavnOgFodselsdato =
+                    it.relatertPersonUtenFolkeregisteridentifikator?.foedselsdato != null && it.relatertPersonUtenFolkeregisteridentifikator.navn != null
+                log.info("Barn har ingen ident. Har navn og fodselsdato: $harNavnOgFodselsdato")
+            }
             Ident(
                 requireNotNull(it.relatertPersonsIdent) { "Vi støtter ikke per nå at denne er null fra PDL " }
             )
@@ -66,6 +74,15 @@ val BARN_RELASJON_QUERY = $$"""
         hentPerson(ident: $ident) {
             forelderBarnRelasjon {
                 relatertPersonsIdent
+                relatertPersonUtenFolkeregisteridentifikator {
+                  foedselsdato
+                  navn {
+                    etternavn
+                    fornavn
+                    mellomnavn
+                  }
+                 statsborgerskap
+               }
             }
         }
     }

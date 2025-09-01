@@ -47,7 +47,7 @@ class SamordningUføreSteg(
 
                 if (erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene) || !harVurdertAllePerioder(kontekst.behandlingId)) {
                     val uføreGrunnlag = uføreRepository.hentHvisEksisterer(kontekst.behandlingId)
-                    if (uføreGrunnlag != null) {
+                    if (uføreGrunnlag != null && uføreGrunnlag.vurderinger.isNotEmpty()) {
                         return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_UFØRE)
                     }
                 }
@@ -75,7 +75,8 @@ class SamordningUføreSteg(
             }
 
             VurderingType.MELDEKORT,
-            VurderingType.IKKE_RELEVANT -> {}
+            VurderingType.IKKE_RELEVANT -> {
+            }
         }
         return Fullført
     }
@@ -96,7 +97,10 @@ class SamordningUføreSteg(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return SamordningUføreSteg(repositoryProvider)
         }
 

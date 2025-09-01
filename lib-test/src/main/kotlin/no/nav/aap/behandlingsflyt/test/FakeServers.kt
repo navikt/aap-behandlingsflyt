@@ -70,7 +70,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonNavnDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersoninfo
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersoninfoData
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersoninfoDataResponse
-import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRelasjon
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.ForelderBarnRelasjon
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRelasjonData
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRelasjonDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRequest
@@ -1483,7 +1483,7 @@ object FakeServers : AutoCloseable {
             data = PdlRelasjonData(
                 hentPerson = PdlPersoninfo(
                     forelderBarnRelasjon = testPerson.barn
-                        .map { PdlRelasjon(it.identer.first().identifikator) }
+                        .map { ForelderBarnRelasjon(it.identer.first().identifikator) }
                         .toList(),
                     statsborgerskap = setOf(PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), LocalDate.now())),
                     folkeregisterpersonstatus = setOf(PdlFolkeregisterPersonStatus(PersonStatus.bosatt, null))
