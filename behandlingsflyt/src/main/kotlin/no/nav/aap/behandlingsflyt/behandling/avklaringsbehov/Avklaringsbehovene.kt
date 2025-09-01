@@ -153,6 +153,12 @@ class Avklaringsbehovene(
         }
     }
 
+    fun avslutt(definisjon: Definisjon) {
+        val avklaringsbehov = alle().single { it.definisjon == definisjon }
+        avklaringsbehov.avslutt()
+        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
+    }
+
     fun avbrytÅpneAvklaringsbehov() {
         val avklaringsbehovSomSkalAvbrytes =
             alle().filter { it.erÅpent() && !(it.erVentepunkt() || it.erBrevVentebehov()) }
