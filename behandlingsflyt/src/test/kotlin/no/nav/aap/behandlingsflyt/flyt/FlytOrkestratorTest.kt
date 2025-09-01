@@ -146,6 +146,7 @@ import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.FakePersoner
@@ -946,11 +947,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         assertThat(behandling.forrigeBehandlingId).isNull()
         assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
-    }
-
-    @Test // TODO Thao
-    fun `Teste KansellerRevurderingFlyt`() {
-        TODO("Implementer test for KansellerRevurderingFlyt")
     }
 
     @Test
@@ -4339,5 +4335,173 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 manueltBarnIdent.identifikator,
             )
         }
+    }
+
+    @Test // TODO Thao
+    fun `Teste KansellerRevurderingFlyt`() {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val person = TestPersoner.STANDARD_PERSON()
+        val ident = person.aktivIdent()
+
+        // Førstegangsbehandling
+        val sak = happyCaseFørstegangsbehandling()
+        val førstegangsbehandling = hentNyesteBehandlingForSak(sak.id);
+
+        // Revurdering 1 - skal bli kansellert
+        var revurdering1 = opprettManuellRevurdering(
+            sak,
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+        )
+            .medKontekst {
+                assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .løsSykdom()
+            .løsBistand()
+
+        assertThat(revurdering1.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+        assertThat(revurdering1.forrigeBehandlingId).isEqualTo(førstegangsbehandling.id)
+
+        // Kanseller revurdering 1
+        leggTilVurderingsbehovForBehandling(
+            revurdering1,
+            listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDERING_KANSELLERT)),
+            ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+        )
+        assertThat(hentAlleAvklaringsbehov(revurdering1)).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erÅpent() && avklaringsbehov.definisjon == Definisjon.KANSELLER_REVURDERING).isTrue() }
+
+        løsAvklaringsBehov(
+            revurdering1,
+            KansellerRevurderingLøsning(
+                vurdering = KansellerRevurderingVurderingDto(
+                    årsak = KansellerRevurderingÅrsakDto.REVURDERING_ER_IKKE_LENGER_AKTUELL,
+                    begrunnelse = "Kansellerer revurdering fordi den ikke er aktuell lenger"
+                ),
+            )
+        )
+
+        assertThat(revurdering1.status()).isEqualTo(Status.AVSLUTTET)
+
+        // Revurdering 2 - skal kopiere data fra førstegangsbehandling
+        var revurdering2 = sendInnDokument(
+            ident,
+            DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("123123"),
+                mottattTidspunkt = LocalDateTime.now(),
+                innsendingType = InnsendingType.MANUELL_REVURDERING,
+                strukturertDokument = StrukturertDokument(
+                    ManuellRevurderingV0(
+                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+                        beskrivelse = "Test revurdering 2"
+                    )
+                ),
+                periode = periode
+            ),
+        )
+
+        assertThat(revurdering2.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+        assertThat(revurdering2.forrigeBehandlingId).isEqualTo(førstegangsbehandling.id)
+
+        // Verifiser at data er kopiert fra førstegangsbehandling
+        val vilkårsresultat1 = hentVilkårsresultat(førstegangsbehandling.id)
+        val vilkårsresultat2 = hentVilkårsresultat(revurdering2.id)
+
+        assertThat(vilkårsresultat2).usingRecursiveComparison()
+            .ignoringFields("id", "behandlingId")
+            .isEqualTo(vilkårsresultat1)
+    }
+
+    fun `Teste KansellerRevurderingFlyt2`() {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val ident = person.aktivIdent()
+
+        // Sender inn en søknad
+        var behandling = sendInnSøknad(ident, periode, TestSøknader.STANDARD_SØKNAD)
+        assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
+
+        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+
+        behandling = løsAvklaringsBehov(
+            behandling,
+            AvklarSykdomLøsning(
+                sykdomsvurderinger = listOf(
+                    SykdomsvurderingLøsningDto(
+                        begrunnelse = "Førstegangsbehandling sykdom begrunnelse",
+                        dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                        harSkadeSykdomEllerLyte = true,
+                        erSkadeSykdomEllerLyteVesentligdel = true,
+                        erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                        erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                        erArbeidsevnenNedsatt = true,
+                        yrkesskadeBegrunnelse = null,
+                        vurderingenGjelderFra = null,
+                    )
+                )
+            ),
+        )
+
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    bistandsVurdering = BistandVurderingLøsningDto(
+                        begrunnelse = "Førstegangsbehandling bistandsbehov begrunnelse",
+                        erBehovForAktivBehandling = true,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = null,
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null
+                    ),
+                )
+            ).løsAvklaringsBehov(
+                RefusjonkravLøsning(
+                    listOf(
+                        RefusjonkravVurderingDto(
+                            harKrav = true,
+                            fom = LocalDate.now(),
+                            tom = null,
+                            navKontor = "",
+                        )
+                    )
+                )
+            )
+
+        behandling = løsSykdomsvurderingBrev(behandling)
+
+        behandling = kvalitetssikreOk(behandling)
+
+        behandling = løsAvklaringsBehov(
+            behandling,
+            FastsettBeregningstidspunktLøsning(
+                beregningVurdering = BeregningstidspunktVurderingDto(
+                    begrunnelse = "Førstegangsbehandling beregningstidspunkt begrunnelse",
+                    nedsattArbeidsevneDato = LocalDate.now(),
+                    ytterligereNedsattArbeidsevneDato = null,
+                    ytterligereNedsattBegrunnelse = null
+                ),
+            ),
+        )
+            .løsForutgåendeMedlemskap()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtakEllerSendRetur()
+
+        assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
+
+        var resultat =
+            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
+        assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
+
+        behandling = behandling.løsVedtaksbrev()
+
+        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
+
+        // Saken er avsluttet, så det skal ikke være flere åpne avklaringsbehov
+        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        assertThat(åpneAvklaringsbehov).isEmpty()
+
+        // Starter en revurdering som skal kanselleres
+
     }
 }
