@@ -31,6 +31,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.math.RoundingMode
 import java.time.LocalDate
 
 class BrevUtlederService(
@@ -181,10 +182,16 @@ class BrevUtlederService(
     }
 
     private fun utledDagsats(behandlingId: BehandlingId, virkningstidspunkt: LocalDate): Beløp? {
-        // Henter dagsats fra første periode. Kan variere basert på minste årlig ytelse, alder og grunnbeløp
+        /** Henter dagsats fra første periode. Kan variere basert på minste årlig ytelse, alder og grunnbeløp.
+         * Tar høyde for gradering, men inkluderer ikke barnetillegg ref.
+         * [no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent.redusertDagsats].
+         */
         return tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)?.tilTidslinje()
             ?.segment(virkningstidspunkt)?.verdi?.let { tilkjent ->
-                tilkjent.dagsats.multiplisert(tilkjent.gradering.endeligGradering)
+                Beløp(
+                    tilkjent.dagsats.multiplisert(tilkjent.gradering.endeligGradering).verdi()
+                        .setScale(0, RoundingMode.HALF_UP)
+                )
             }
     }
 
