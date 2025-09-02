@@ -11,8 +11,18 @@ sealed class BrevBehov(val typeBrev: TypeBrev)
 data class Innvilgelse(
     val virkningstidspunkt: LocalDate,
     val grunnlagBeregning: GrunnlagBeregning?,
-    val dagsats: Beløp?,
+    val tilkjentYtelse: TilkjentYtelse?,
 ) : BrevBehov(TypeBrev.VEDTAK_INNVILGELSE) {
+    data class TilkjentYtelse(
+        val dagsats: Beløp,
+        val gradertDagsats: Beløp,
+        val barnetillegg: Beløp,
+        val gradertBarnetillegg: Beløp,
+        val gradertDagsatsInkludertBarnetillegg: Beløp,
+        val antallBarn: Int,
+        val barnetilleggsats: Beløp
+    )
+
     data class GrunnlagBeregning(
         val beregningstidspunkt: LocalDate?,
         val inntekterPerÅr: List<InntektPerÅr>,
