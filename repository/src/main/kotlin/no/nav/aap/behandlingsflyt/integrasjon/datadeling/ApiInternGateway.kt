@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.datadeling.RettighetsTypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisDTO
 import no.nav.aap.behandlingsflyt.prometheus
+import no.nav.aap.behandlingsflyt.prosessering.DetaljertMeldekortInfo
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -128,5 +129,9 @@ class ApiInternGatewayImpl() : ApiInternGateway {
             ),
             mapper = { _, _ ->
             })
+    }
+
+    override fun sendDetaljertMeldekort(meldekortDetaljer: DetaljertMeldekortInfo) {
+        TODO("Not yet implemented")
     }
 }
