@@ -1,12 +1,14 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BehandlingOgMeldekortService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BehandlingOgMeldekortServiceImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -34,18 +36,18 @@ import java.time.LocalDateTime
 data class DetaljertMeldekortInfo(
     val person: Person,
     val saksnummer: Saksnummer,
-    val meldePeriode: Periode,
+    val meldePeriode: Periode?,
     val mottattTidspunkt: LocalDateTime,
     val timerArbeidPerPeriode: Set<ArbeidIPeriode>,
     val årsakTilOpprettelse: ÅrsakTilOpprettelse?,
     val vurderingsBehov: VurderingsbehovMedPeriode?,
-    val harIkkeværtAktivitetIDetSiste: Boolean
+    val meldepliktStatus: MeldepliktStatus?
 )
 
 class MeldekortTilApiInternUtfører(
     private val behandlingOgMeldekortService: BehandlingOgMeldekortService,
-    private val meldeperiodeRepository: MeldeperiodeRepository,
     private val saksRepository: SakRepository,
+    private val underveisRepository: UnderveisRepository,
     private val apiInternGateway: ApiInternGateway,
 ) : JobbUtfører {
 
@@ -59,27 +61,31 @@ class MeldekortTilApiInternUtfører(
         val person = sak.person
 
         val meldekortOgBehandling = behandlingOgMeldekortService.hentAlle(sak)
-        // TODO filter på behandlingId?
+        // TODO filter på behandlingId hvis det passer for Jobben?
         meldekortOgBehandling.forEach { (behandling, meldekortListe) ->
-            // meldeperioder skal alltid finnes når det finnes mottatte meldekort på en behandling
-            val meldeperioder = meldeperiodeRepository.hent(behandling.id)
-            require(meldeperioder.isNotEmpty(), { "Fikk ikke meldeperioder for behandling=${behandling.id}" })
+            val underveisGrunnlag = underveisRepository.hent(behandling.id)
 
             val detaljertMeldekortInfoListe = meldekortListe.map { meldekort ->
-                val aktuellMeldeperiode = finnAktuellMeldePeriode(meldekort, meldeperioder)
-                    ?: error("Fant ikke meldekortets meldeperiode på behandling=${behandling.id}, meldekort=${meldekort}")
+                // Underveisperiode har mye informasjon som kan være nyttig å sende med
+                val underveisPeriode = finnUnderveisperiodeHvisEksisterer(meldekort, underveisGrunnlag.perioder)
+                val meldePeriode = underveisPeriode?.meldePeriode
+                val meldepliktStatus = underveisPeriode?.meldepliktStatus
 
+                // Vi kan også sjekke for fritak fra meldeplikt, og rimelig grunn for å ikke oppfylle meldeplikt
+
+                val vurderingsBehovForPerioden = behandling.vurderingsbehov().find {
+                    (it.periode != null && meldePeriode?.overlapper(it.periode) == true) || it.periode == null
+                }
                 DetaljertMeldekortInfo(
                     person = person,
                     saksnummer = sak.saksnummer,
-                    meldePeriode = aktuellMeldeperiode,
+                    meldePeriode = meldePeriode,
                     mottattTidspunkt = meldekort.mottattTidspunkt,
                     timerArbeidPerPeriode = meldekort.timerArbeidPerPeriode,
                     // TODO vurder om de nedenfor skal med, eller om de er unødvendige:
                     årsakTilOpprettelse = behandling.årsakTilOpprettelse,
-                    vurderingsBehov = behandling.vurderingsbehov()
-                        .find { it.periode != null && it.periode.overlapper(aktuellMeldeperiode) },
-                    harIkkeværtAktivitetIDetSiste = behandling.harIkkeVærtAktivitetIDetSiste()
+                    vurderingsBehov = vurderingsBehovForPerioden,
+                    meldepliktStatus = meldepliktStatus,
                 )
 
             }
@@ -90,27 +96,33 @@ class MeldekortTilApiInternUtfører(
                 }
             } catch (e: Exception) {
                 log.error(
-                    "Feil ved sending av meldekort til API-intern for sak=${sakId}, " +
-                            "behandling=${behandling.id}", e
+                    "Feil ved sending av meldekort til API-intern for sak=${sakId}," + " behandling=${behandling.id}", e
                 )
                 throw e
             }
         }
     }
 
-    private fun finnAktuellMeldePeriode(
-        meldekort: Meldekort,
-        meldeperioder: List<Periode>
-    ): Periode? {
+    private fun finnUnderveisperiodeHvisEksisterer(
+        meldekort: Meldekort, underveisPerioder: List<Underveisperiode>
+    ): Underveisperiode? {
+        val arbeidsperiode = arbeidsperiodeFraMeldekort(meldekort)
+        return underveisPerioder.firstOrNull {
+            // alle arbeidsperiodene i meldekortet må være innenfor en og samme underveisperiode
+            it.meldePeriode.inneholder(arbeidsperiode)
+        }
+    }
+
+    /**
+    @return Tidsperioden meldekortet inneholder arbeidstimer for.
+    Merk at det kan være dager i perioden meldekortet gjelder for som det ikke er rapportert timer på.
+    @param meldekort -
+     **/
+    private fun arbeidsperiodeFraMeldekort(meldekort: Meldekort): Periode {
         val arbeidPerioder = meldekort.timerArbeidPerPeriode.map { it.periode }
         val arbeidsPerioderStart = arbeidPerioder.minBy { it.fom }.fom
         val arbeidsPerioderSlutt = arbeidPerioder.maxBy { it.tom }.tom
-        val arbeidsPeriodeFraMeldekort = Periode(arbeidsPerioderStart, arbeidsPerioderSlutt)
-
-        val aktuellMeldeperiode =
-            meldeperioder.firstOrNull { periode -> periode.inneholder(arbeidsPeriodeFraMeldekort) }
-
-        return aktuellMeldeperiode
+        return Periode(arbeidsPerioderStart, arbeidsPerioderSlutt)
     }
 
 
@@ -122,7 +134,6 @@ class MeldekortTilApiInternUtfører(
                 """.trimIndent()
 
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
-            val meldeperiodeRepository = repositoryProvider.provide<MeldeperiodeRepository>()
             val sakRepository = repositoryProvider.provide<SakRepository>()
 
             val service = BehandlingOgMeldekortServiceImpl(
@@ -138,20 +149,18 @@ class MeldekortTilApiInternUtfører(
             )
             return MeldekortTilApiInternUtfører(
                 behandlingOgMeldekortService = service,
-                apiInternGateway = gatewayProvider.provide(
-                    ApiInternGateway::class
-                ), meldeperiodeRepository = meldeperiodeRepository,
-                saksRepository = sakRepository
+                apiInternGateway = gatewayProvider.provide(ApiInternGateway::class),
+                saksRepository = sakRepository,
+                underveisRepository = repositoryProvider.provide<UnderveisRepository>(),
             )
         }
 
         fun nyJobb(
             sakId: SakId,
             behandlingId: BehandlingId,
-        ) = JobbInput(MeldekortTilApiInternUtfører)
-            .apply {
-                forBehandling(sakId.toLong(), behandlingId.toLong())
-            }
+        ) = JobbInput(MeldekortTilApiInternUtfører).apply {
+            forBehandling(sakId.toLong(), behandlingId.toLong())
+        }
     }
 
 
