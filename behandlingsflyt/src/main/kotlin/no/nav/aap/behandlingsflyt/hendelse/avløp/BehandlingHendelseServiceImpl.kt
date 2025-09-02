@@ -94,31 +94,33 @@ class BehandlingHendelseServiceImpl(
             årsakerTilBehandling = vurderingsbehov.map { it.type.name },
             vurderingsbehov = vurderingsbehov.map { it.type.name },
             årsakTilOpprettelse = behandling.årsakTilOpprettelse?.name ?: "Ukjent årsak",
-            avklaringsbehov = avklaringsbehovene.alle().map { avklaringsbehov ->
-                val brevbestilling = if (avklaringsbehov.definisjon == Definisjon.SKRIV_BREV) {
-                    brevbestillingRepository.hent(behandling.id)
-                        .firstOrNull { it.status == Status.FORHÅNDSVISNING_KLAR }
-                } else {
-                    null
-                }
-                AvklaringsbehovHendelseDto(
-                    avklaringsbehovDefinisjon = avklaringsbehov.definisjon,
-                    status = avklaringsbehov.status(),
-                    endringer = avklaringsbehov.historikk.map { endring ->
-                        EndringDTO(
-                            status = endring.status,
-                            tidsstempel = endring.tidsstempel,
-                            endretAv = endring.endretAv,
-                            frist = endring.frist,
-                            årsakTilSattPåVent = endring.grunn?.oversettTilKontrakt(),
-                            begrunnelse = endring.begrunnelse,
-                            årsakTilRetur = endring.årsakTilRetur.map {
-                                ÅrsakTilRetur(it.oversettTilKontrakt())
-                            })
-                    },
-                    typeBrev = brevbestilling?.typeBrev?.oversettTilKontrakt()
-                )
-            },
+            avklaringsbehov = avklaringsbehovene.alle()
+                .sortedWith(compareBy(behandling.flyt().stegComparator) { it.funnetISteg })
+                .map { avklaringsbehov ->
+                    val brevbestilling = if (avklaringsbehov.definisjon == Definisjon.SKRIV_BREV) {
+                        brevbestillingRepository.hent(behandling.id)
+                            .firstOrNull { it.status == Status.FORHÅNDSVISNING_KLAR }
+                    } else {
+                        null
+                    }
+                    AvklaringsbehovHendelseDto(
+                        avklaringsbehovDefinisjon = avklaringsbehov.definisjon,
+                        status = avklaringsbehov.status(),
+                        endringer = avklaringsbehov.historikk.map { endring ->
+                            EndringDTO(
+                                status = endring.status,
+                                tidsstempel = endring.tidsstempel,
+                                endretAv = endring.endretAv,
+                                frist = endring.frist,
+                                årsakTilSattPåVent = endring.grunn?.oversettTilKontrakt(),
+                                begrunnelse = endring.begrunnelse,
+                                årsakTilRetur = endring.årsakTilRetur.map {
+                                    ÅrsakTilRetur(it.oversettTilKontrakt())
+                                })
+                        },
+                        typeBrev = brevbestilling?.typeBrev?.oversettTilKontrakt()
+                    )
+                },
             relevanteIdenterPåBehandling = pipRepository.finnIdenterPåBehandling(behandling.referanse).map { it.ident },
             erPåVent = erPåVent,
             mottattDokumenter = mottattDokumenter,
