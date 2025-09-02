@@ -48,11 +48,13 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
         return response
             .saker
             .orEmpty()
-            .map { yrkesskade -> Yrkesskade(
-                ref = yrkesskade.saksreferanse,
-                saksnummer = yrkesskade.saksnr,
-                kildesystem = yrkesskade.kildesystem,
-                skadedato = yrkesskade.skadedato
-            ) }
+            .map { yrkesskade ->
+                Yrkesskade(
+                    ref = yrkesskade.saksreferanse,
+                    saksnummer = yrkesskade.saksnr,
+                    kildesystem = yrkesskade.kildesystem,
+                    skadedato = requireNotNull(yrkesskade.skadedato)
+                )
+            }
     }
 }
