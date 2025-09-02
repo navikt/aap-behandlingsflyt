@@ -54,7 +54,6 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                     val barnetilleggService = BarnetilleggService(
                         sakOgBehandlingService,
                         barnRepository,
-                        vilkårsresultatRepository,
                     )
                     val barnetilleggTidslinje = barnetilleggService.beregn(behandling.id)
 

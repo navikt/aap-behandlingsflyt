@@ -1,9 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.barnetillegg
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
@@ -24,7 +20,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBarnRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
@@ -39,13 +34,12 @@ class BarnetilleggServiceTest {
     fun `ingen barn gir ingen rett til barnetillegg`() {
         val service = BarnetilleggService(
             sakOgBehandlingService = InMemorySakOgBehandlingService,
-            barnRepository = InMemoryBarnRepository,
-            vilkårsresultatRepository = InMemoryVilkårsresultatRepository
+            barnRepository = InMemoryBarnRepository
         )
 
         val (sak, behandling) = opprettPersonBehandlingOgSak()
 
-        lagreRegisterOpplysninger(behandling, emptyList(), sak)
+        lagreRegisterOpplysninger(behandling, emptyList())
 
         val res = service.beregn(behandlingId = behandling.id)
 
@@ -58,8 +52,7 @@ class BarnetilleggServiceTest {
     fun `tidslinjen stopper når barnet blir 18 år`() {
         val service = BarnetilleggService(
             sakOgBehandlingService = InMemorySakOgBehandlingService,
-            barnRepository = InMemoryBarnRepository,
-            vilkårsresultatRepository = InMemoryVilkårsresultatRepository
+            barnRepository = InMemoryBarnRepository
         )
 
         val (sak, behandling) = opprettPersonBehandlingOgSak()
@@ -79,8 +72,7 @@ class BarnetilleggServiceTest {
 
         lagreRegisterOpplysninger(
             behandling,
-            listOf(gammeltBarn, ungtBarn),
-            sak
+            listOf(gammeltBarn, ungtBarn)
         )
 
         val res = service.beregn(behandlingId = behandling.id)
@@ -99,12 +91,10 @@ class BarnetilleggServiceTest {
     fun `avklarer manuelt barn, får barnetillegg fram til 18 år`() {
         val service = BarnetilleggService(
             sakOgBehandlingService = InMemorySakOgBehandlingService,
-            barnRepository = InMemoryBarnRepository,
-            vilkårsresultatRepository = InMemoryVilkårsresultatRepository
+            barnRepository = InMemoryBarnRepository
         )
 
         val (sak, behandling) = opprettPersonBehandlingOgSak()
-        opprettVilkårsresultat(behandling, sak.rettighetsperiode)
 
         // 17 år, så skal bare ha ett år med barnetillegg
         val fødselsdato = Fødselsdato(LocalDate.now().minusYears(17))
@@ -175,33 +165,12 @@ class BarnetilleggServiceTest {
 
     private fun lagreRegisterOpplysninger(
         behandling: Behandling,
-        barn: List<Barn>,
-        sak: Sak
+        barn: List<Barn>
     ) {
         InMemoryBarnRepository.lagreRegisterBarn(
             behandling.id,
             barn.associateWith { InMemoryPersonRepository.finnEllerOpprett(listOf((it.ident as BarnIdentifikator.BarnIdent).ident)).id }
         )
-        opprettVilkårsresultat(behandling, sak.rettighetsperiode)
-    }
-
-    private fun opprettVilkårsresultat(behandling: Behandling, periode: Periode) {
-        val vilkårsresultat = Vilkårsresultat()
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET).leggTilVurdering(
-            Vilkårsperiode(
-                periode = periode,
-                utfall = Utfall.OPPFYLT,
-                begrunnelse = "TODO()",
-            )
-        )
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET).leggTilVurdering(
-            Vilkårsperiode(
-                periode = periode,
-                utfall = Utfall.OPPFYLT,
-                begrunnelse = "TODO()",
-            )
-        )
-        InMemoryVilkårsresultatRepository.lagre(behandling.id, vilkårsresultat)
     }
 
     private fun opprettPersonBehandlingOgSak(): Pair<Sak, Behandling> {

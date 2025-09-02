@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.barnetillegg
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.IBarn
@@ -14,30 +12,21 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.outerJoin
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 
 class BarnetilleggService(
     private val sakOgBehandlingService: SakOgBehandlingService,
-    private val barnRepository: BarnRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository
+    private val barnRepository: BarnRepository
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
         barnRepository = repositoryProvider.provide(),
-        vilkårsresultatRepository = repositoryProvider.provide(),
     )
 
     fun beregn(behandlingId: BehandlingId): Tidslinje<RettTilBarnetillegg> {
         val sak = sakOgBehandlingService.hentSakFor(behandlingId)
         var resultat: Tidslinje<RettTilBarnetillegg> =
             Tidslinje(listOf(Segment(sak.rettighetsperiode, RettTilBarnetillegg())))
-
-        if (skalIkkeBeregneBarnetillegg(behandlingId)) {
-            log.info("Behandling $behandlingId har ikke rett til barnetillegg, returnerer tom tidslinje.")
-            return resultat
-        }
 
         val barnGrunnlag = barnRepository.hent(behandlingId)
         val folkeregisterBarn =
@@ -90,14 +79,6 @@ class BarnetilleggService(
         }
 
         return resultat.begrensetTil(sak.rettighetsperiode)
-    }
-
-    private fun skalIkkeBeregneBarnetillegg(behandlingId: BehandlingId): Boolean {
-        val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
-        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-        val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-
-        return !(sykdomsvilkåret.harPerioderSomErOppfylt() && bistandsvilkåret.harPerioderSomErOppfylt())
     }
 
     private fun tilTidslinje(barna: List<IBarn>): Tidslinje<Set<BarnIdentifikator>> {
