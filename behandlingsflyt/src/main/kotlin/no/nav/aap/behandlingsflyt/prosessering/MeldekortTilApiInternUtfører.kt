@@ -4,6 +4,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BehandlingOgMeldekortService
@@ -39,9 +40,8 @@ data class DetaljertMeldekortInfo(
     val meldePeriode: Periode?,
     val mottattTidspunkt: LocalDateTime,
     val timerArbeidPerPeriode: Set<ArbeidIPeriode>,
-    val årsakTilOpprettelse: ÅrsakTilOpprettelse?,
-    val vurderingsBehov: VurderingsbehovMedPeriode?,
-    val meldepliktStatus: MeldepliktStatus?
+    val meldepliktStatus: MeldepliktStatus?,
+    val rettighetsType: RettighetsType?
 )
 
 class MeldekortTilApiInternUtfører(
@@ -66,26 +66,26 @@ class MeldekortTilApiInternUtfører(
             val underveisGrunnlag = underveisRepository.hent(behandling.id)
 
             val detaljertMeldekortInfoListe = meldekortListe.map { meldekort ->
-                // Underveisperiode har mye informasjon som kan være nyttig å sende med
+
                 val underveisPeriode = finnUnderveisperiodeHvisEksisterer(meldekort, underveisGrunnlag.perioder)
                 val meldePeriode = underveisPeriode?.meldePeriode
                 val meldepliktStatus = underveisPeriode?.meldepliktStatus
+                val rettighetsType = underveisPeriode?.rettighetsType
 
+                // TODO: vurder sammen med NKS om vi har mer relevant info å sende med
+                // Underveisperiode har mye informasjon som kan være nyttig å sende med
+                // Behandling har også noen kandidater
                 // Vi kan også sjekke for fritak fra meldeplikt, og rimelig grunn for å ikke oppfylle meldeplikt
+                // men denne koden skrives om pt. så best å vente.
 
-                val vurderingsBehovForPerioden = behandling.vurderingsbehov().find {
-                    (it.periode != null && meldePeriode?.overlapper(it.periode) == true) || it.periode == null
-                }
                 DetaljertMeldekortInfo(
                     person = person,
                     saksnummer = sak.saksnummer,
                     meldePeriode = meldePeriode,
                     mottattTidspunkt = meldekort.mottattTidspunkt,
                     timerArbeidPerPeriode = meldekort.timerArbeidPerPeriode,
-                    // TODO vurder om de nedenfor skal med, eller om de er unødvendige:
-                    årsakTilOpprettelse = behandling.årsakTilOpprettelse,
-                    vurderingsBehov = vurderingsBehovForPerioden,
                     meldepliktStatus = meldepliktStatus,
+                    rettighetsType = rettighetsType,
                 )
 
             }
