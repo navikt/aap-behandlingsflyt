@@ -46,7 +46,7 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
 
         //FIXME: Kan denne være null?? Når da? Ser ut som at yrkesskade-saker alltid returnerer en liste med mindre det er en feil i responsen
         return response
-            .skader
+            .saker
             .orEmpty()
             .map { yrkesskade -> Yrkesskade(
                 ref = yrkesskade.saksreferanse,
