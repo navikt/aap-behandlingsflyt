@@ -121,6 +121,7 @@ class FlytKontekstMedPeriodeService(
                 IKKE_RELEVANT // TODO: Verifiser at dette er korrekt.
             Vurderingsbehov.OPPFØLGINGSOPPGAVE -> IKKE_RELEVANT
             Vurderingsbehov.AKTIVITETSPLIKT_11_7 -> IKKE_RELEVANT
+            Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT -> EFFEKTUER_AKTIVITETSPLIKT
         }
     }
 }

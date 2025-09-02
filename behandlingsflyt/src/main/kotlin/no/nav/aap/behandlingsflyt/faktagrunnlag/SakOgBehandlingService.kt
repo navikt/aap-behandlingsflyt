@@ -104,7 +104,7 @@ class SakOgBehandlingService(
         Vurderingsbehov.FRITAK_MELDEPLIKT,
         Vurderingsbehov.MOTTATT_MELDEKORT,
         Vurderingsbehov.FASTSATT_PERIODE_PASSERT,
-        Vurderingsbehov.AKTIVITETSPLIKT_11_7
+        Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
     )
 
     fun finnEllerOpprettBehandling(sakId: SakId, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): OpprettetBehandling {

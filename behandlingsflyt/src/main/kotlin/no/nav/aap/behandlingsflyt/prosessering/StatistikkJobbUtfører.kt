@@ -162,6 +162,7 @@ class StatistikkJobbUtfører(
                 Vurderingsbehov.OPPFØLGINGSOPPGAVE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OPPFØLGINGSOPPGAVE
                 Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN
                 Vurderingsbehov.AKTIVITETSPLIKT_11_7 -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.AKTIVITETSPLIKT_11_7
+                Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
             }
         }.distinct()
 
