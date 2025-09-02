@@ -1408,7 +1408,7 @@ object FakeServers : AutoCloseable {
 
                 call.respond(
                     Yrkesskader(
-                        skader = person.flatMap { it.yrkesskade }
+                        saker = person.flatMap { it.yrkesskade }
                             .map {
                                 YrkesskadeModell(
                                     kommunenr = "1234",
