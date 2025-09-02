@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDateTime
@@ -17,3 +18,7 @@ data class Meldekort(
         }.toList())
     }
 }
+/**
+ * Representerer arbeid i en periode på et meldekort, typisk på ett døgn
+ */
+data class ArbeidIPeriode(val periode: Periode, val timerArbeid: TimerArbeid)
