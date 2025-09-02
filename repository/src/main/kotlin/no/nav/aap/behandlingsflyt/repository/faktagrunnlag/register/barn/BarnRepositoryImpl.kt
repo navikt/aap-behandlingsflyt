@@ -150,7 +150,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
     private fun hentVurderinger(vurdertBarnId: Long): List<VurderingAvForeldreAnsvar> {
         return connection.queryList(
             """
-                SELECT periode, HAR_FORELDREANSVAR, BEGRUNNELSE
+                SELECT periode, HAR_FORELDREANSVAR, BEGRUNNELSE, ER_FOSTERFORELDER
                 FROM BARN_VURDERING_PERIODE
                 WHERE BARN_VURDERING_ID = ?
             """.trimIndent()
@@ -162,7 +162,8 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                 VurderingAvForeldreAnsvar(
                     row.getPeriode("periode").fom,
                     row.getBoolean("HAR_FORELDREANSVAR"),
-                    row.getString("BEGRUNNELSE")
+                    row.getString("BEGRUNNELSE"),
+                    row.getBooleanOrNull("ER_FOSTERFORELDER"),
                 )
             }
         }
@@ -322,7 +323,7 @@ VALUES (?, ?, ?, ?)"""
                 }
             connection.executeBatch(
                 """
-                INSERT INTO BARN_VURDERING_PERIODE (BARN_VURDERING_ID, PERIODE, BEGRUNNELSE, HAR_FORELDREANSVAR) VALUES (?, ?::daterange, ?, ?)
+                INSERT INTO BARN_VURDERING_PERIODE (BARN_VURDERING_ID, PERIODE, BEGRUNNELSE, HAR_FORELDREANSVAR, ER_FOSTERFORELDER) VALUES (?, ?::daterange, ?, ?, ?)
             """.trimIndent(), barn.vurderinger
             ) {
                 setParams {
@@ -330,6 +331,7 @@ VALUES (?, ?, ?, ?)"""
                     setPeriode(2, Periode(it.fraDato, it.fraDato))
                     setString(3, it.begrunnelse)
                     setBoolean(4, it.harForeldreAnsvar)
+                    setBoolean(5, it.erFosterForelder)
                 }
             }
         }

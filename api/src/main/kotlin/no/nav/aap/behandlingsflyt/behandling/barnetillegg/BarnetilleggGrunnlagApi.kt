@@ -85,7 +85,8 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                                         VurderingAvForeldreAnsvarDto(
                                             it.fraDato,
                                             it.harForeldreAnsvar,
-                                            it.begrunnelse
+                                            it.erFosterForelder,
+                                            it.begrunnelse,
                                         )
                                     },
                                     hentBarn(
@@ -100,6 +101,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                                         VurderingAvForeldreAnsvarDto(
                                             it.fraDato,
                                             it.harForeldreAnsvar,
+                                            it.erFosterForelder,
                                             it.begrunnelse
                                         )
                                     },

@@ -33,6 +33,7 @@ class AvklarBarnetilleggLøserTest {
                             VurderingAvForeldreAnsvarDto(
                                 LocalDate.now().minusMonths(1),
                                 false,
+                                null,
                                 "neida"
                             )
                         ),

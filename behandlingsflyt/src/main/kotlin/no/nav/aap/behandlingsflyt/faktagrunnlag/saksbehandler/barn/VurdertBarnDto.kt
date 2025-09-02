@@ -7,9 +7,14 @@ import java.time.LocalDate
 data class VurderingAvForeldreAnsvarDto(
     val fraDato: LocalDate,
     val harForeldreAnsvar: Boolean,
+    val erFosterForelder: Boolean? = null,
     val begrunnelse: String
 ) {
-    fun tilVurderingAvForeldreAnsvar() = VurderingAvForeldreAnsvar(fraDato, harForeldreAnsvar, begrunnelse)
+    fun tilVurderingAvForeldreAnsvar() = VurderingAvForeldreAnsvar(
+        fraDato = fraDato,
+        harForeldreAnsvar = harForeldreAnsvar,
+        erFosterForelder = erFosterForelder,
+        begrunnelse = begrunnelse)
 }
 
 open class VurdertBarnDto(
