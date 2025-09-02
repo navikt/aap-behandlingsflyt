@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator.BarnIdent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvarDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -142,11 +143,11 @@ fun hentBarn(ident: BarnIdentifikator, barnGrunnlag: BarnGrunnlag?): Identifiser
     val oppgitteBarn = barnGrunnlag?.oppgitteBarn?.oppgitteBarn.orEmpty()
 
     return when (ident) {
-        is BarnIdentifikator.BarnIdent -> {
-            val barn = registerBarn.singleOrNull { it.ident == ident.ident }
+        is BarnIdent -> {
+            val barn = registerBarn.singleOrNull { it.ident == ident }
             val oppgittBarn = oppgitteBarn.singleOrNull { it.ident == ident.ident }
 
-            if (barn != null && oppgittBarn != null && barn.ident != oppgittBarn.ident) {
+            if (barn != null && oppgittBarn != null && barn.ident != oppgittBarn.ident?.let(::BarnIdent)?.ident) {
                 log.warn("Mismatch mellom ident for registerbarn og oppgitte barn for ident ${ident.ident}.")
             }
 
