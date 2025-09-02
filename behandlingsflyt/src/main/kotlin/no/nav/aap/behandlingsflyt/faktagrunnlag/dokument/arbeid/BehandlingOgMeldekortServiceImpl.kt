@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -46,23 +45,8 @@ class BehandlingOgMeldekortServiceImpl(
             emptyList()
         }
         return alleSakerForIdent.maxByOrNull { sak -> sak.opprettetTidspunkt }?.let { nyesteSak ->
-            hentAlle(nyesteSak, fraOgMed)
-        } ?: emptyList() // ingen saker finnes for denne ident
-    }
-
-    override fun hentAlle(
-        behandlingId: BehandlingId,
-        fraOgMed: LocalDate?,
-        tilOgMed: LocalDate?
-    ): List<Meldekort> {
-        val detSisteHalvåret = LocalDate.now().minusMonths(6)
-        val fraOgMedDato = fraOgMed ?: detSisteHalvåret
-        val tilOgMedDato = tilOgMed ?: LocalDate.now().plusDays(1)
-
-        return meldekortRepository.hent(behandlingId).meldekort().filter {
-            it.mottattTidspunkt.isAfter(fraOgMedDato.atStartOfDay()) &&
-                    it.mottattTidspunkt.isBefore(tilOgMedDato.atStartOfDay())
-        }
+                hentAlle(nyesteSak, fraOgMed)
+            } ?: emptyList() // ingen saker finnes for denne ident
     }
 
     override fun hentAlle(sak: Sak, fraOgMed: LocalDate?): List<Pair<Behandling, List<Meldekort>>> {
@@ -72,20 +56,21 @@ class BehandlingOgMeldekortServiceImpl(
         val behandlingerMedMotatteMeldekort =
             mottattDokumentRepository.hentDokumenterAvType(sak.id, InnsendingType.MELDEKORT)
                 .filter { it.mottattTidspunkt.isAfter(fraOgMedDato.atStartOfDay()) }
-                // Meldekort er initielt uten behandlingId når de først lagres i db, de regnes her som ikke klare
-                .mapNotNull { it.behandlingId }
-                .toSet() // Det kan være flere meldekort på samme behandlingId
+                // TODO Meldekort er initielt uten behandlingId når de først lagres i db.
+                // Skal vi ignorere disse, og regne dem som ikke fullstendig mottatt?
+                .mapNotNull { it.behandlingId }.toSet() // Det kan være flere meldekort på samme behandlingId?
                 .map { id -> behandlingRepository.hent(id) }
                 .sortedByDescending { behandling -> behandling.opprettetTidspunkt } // nyeste behandling først
 
+        // TODO MottattDokument har også en status (Mottatt | Behandlet), skal vi bruke den til noe?
         // Vi kan også få tak i når meldeperiode_grunnlag ble opprettet, skal vi bruke den til noe?
-        // Det er når behandlingen ble opprettet i databasen vår.
         // Er dette samme tidspunkt som når meldekortet ble tilgjengelig for bruker?
+        // Er det kanskje bare det samme som når behandlingen ble opprettet i databasen vår?
 
         return behandlingerMedMotatteMeldekort.map { behandling ->
-            val meldekortGrunnlag = meldekortRepository.hent(behandling.id) // må finnes
-            Pair(behandling, meldekortGrunnlag.meldekort())
-        }
+                val meldekortGrunnlag = meldekortRepository.hent(behandling.id) // må finnes
+                Pair(behandling, meldekortGrunnlag.meldekort())
+            }
 
     }
 }

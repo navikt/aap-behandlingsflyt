@@ -7,11 +7,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DatadelingDTO
-import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.RettighetsTypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisDTO
 import no.nav.aap.behandlingsflyt.prometheus
+import no.nav.aap.behandlingsflyt.prosessering.DetaljertMeldekortInfo
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -131,16 +131,7 @@ class ApiInternGatewayImpl() : ApiInternGateway {
             })
     }
 
-    override fun sendDetaljertMeldekort(meldekortDetaljer: DetaljertMeldekortDTO) {
-        log.info(
-            "Meldekort-detaljer for sak=${meldekortDetaljer.saksnummer}, " +
-                    "meldeperiode=${meldekortDetaljer.meldeperiodeFom}-${meldekortDetaljer.meldeperiodeFom}"
-        )
-        restClient.post(
-            uri = uri.resolve("/api/insert/meldekort-detaljer"),
-            request = PostRequest(body = meldekortDetaljer),
-            mapper = { _, _ ->
-            })
+    override fun sendDetaljertMeldekort(meldekortDetaljer: DetaljertMeldekortInfo) {
+        TODO("Not yet implemented")
     }
-
 }
