@@ -95,6 +95,7 @@ class BeregningAvklarFaktaSteg private constructor(
             }
 
             VurderingType.MELDEKORT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.IKKE_RELEVANT -> {
                 // Always do nothing
             }
@@ -151,7 +152,10 @@ class BeregningAvklarFaktaSteg private constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return BeregningAvklarFaktaSteg(repositoryProvider)
         }
 

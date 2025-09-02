@@ -53,7 +53,7 @@ class RettighetsperiodeSteg private constructor(
                 }
             }
 
-            VurderingType.IKKE_RELEVANT, VurderingType.MELDEKORT -> {
+            VurderingType.IKKE_RELEVANT, VurderingType.MELDEKORT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> {
                 // Ikke relevant
             }
         }

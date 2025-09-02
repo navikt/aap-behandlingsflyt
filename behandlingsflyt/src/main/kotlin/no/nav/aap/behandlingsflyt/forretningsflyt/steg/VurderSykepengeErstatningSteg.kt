@@ -70,7 +70,7 @@ class VurderSykepengeErstatningSteg private constructor(
                 vurder(kontekst)
             }
 
-            VurderingType.MELDEKORT, VurderingType.IKKE_RELEVANT -> {
+            VurderingType.MELDEKORT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT, VurderingType.IKKE_RELEVANT -> {
                 log.info("Vurderingtype ${kontekst.vurderingType} ikke relevant for steg ${type()} for behandlingId ${kontekst.behandlingId}, fullfører steg.")
                 // Do nothing
                 Fullført
@@ -84,7 +84,7 @@ class VurderSykepengeErstatningSteg private constructor(
 
         val sykdomsvurderinger =
             sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.sykdomsvurderinger.orEmpty()
-        
+
         val behandlingsType = kontekst.behandlingType
         val kravDato = kontekst.rettighetsperiode.fom
 
@@ -142,7 +142,10 @@ class VurderSykepengeErstatningSteg private constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return VurderSykepengeErstatningSteg(repositoryProvider)
         }
 
