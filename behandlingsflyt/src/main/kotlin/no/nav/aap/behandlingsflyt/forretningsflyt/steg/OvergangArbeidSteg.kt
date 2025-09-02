@@ -6,15 +6,12 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.overgangarbeid.OvergangArbeidFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.overgangarbeid.OvergangArbeidVilkår
-import no.nav.aap.behandlingsflyt.behandling.vilkår.overganguføre.OvergangUføreFaktagrunnlag
-import no.nav.aap.behandlingsflyt.behandling.vilkår.overganguføre.OvergangUføreVilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -52,6 +49,7 @@ class OvergangArbeidSteg private constructor(
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val overgangArbeidGrunnlag = overgangArbeidRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_ARBEID)
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 return Fullført
@@ -75,7 +73,9 @@ class OvergangArbeidSteg private constructor(
                 ) {
                     return FantAvklaringsbehov(Definisjon.AVKLAR_OVERGANG_ARBEID)
                 } else {
-
+                    if (avklaringsbehov != null && avklaringsbehov.erÅpent()) {
+                        avklaringsbehovene.avbryt(Definisjon.AVKLAR_OVERGANG_ARBEID)
+                    }
                     vurderVilkårForPeriode(
                         kontekst.rettighetsperiode,
                         overgangArbeidGrunnlag,

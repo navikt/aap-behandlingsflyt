@@ -1269,7 +1269,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     }
 
     @Test
-    fun `avslag på 11-6 er også inngang til 11-13`() {
+    fun `avslag på 11-6 er også inngang til 11-13 og 11-18`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val person = TestPersoner.STANDARD_PERSON()
 
