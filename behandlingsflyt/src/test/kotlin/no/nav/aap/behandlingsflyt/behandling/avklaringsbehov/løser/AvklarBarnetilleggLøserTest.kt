@@ -31,10 +31,10 @@ class AvklarBarnetilleggLøserTest {
                         fødselsdato = null,
                         vurderinger = listOf(
                             VurderingAvForeldreAnsvarDto(
-                                LocalDate.now().minusMonths(1),
-                                false,
-                                null,
-                                "neida"
+                               fraDato =  LocalDate.now().minusMonths(1),
+                                harForeldreAnsvar = false,
+                                begrunnelse = "neida",
+                                erFosterForelder = null,
                             )
                         ),
                         navn = null,
