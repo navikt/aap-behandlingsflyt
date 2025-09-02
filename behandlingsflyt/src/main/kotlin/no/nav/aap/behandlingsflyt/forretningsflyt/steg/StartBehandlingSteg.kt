@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 
 class StartBehandlingSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -47,15 +48,16 @@ class StartBehandlingSteg private constructor(
                 val eksisterendeSamordningsvurdering =
                     samordningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
                 if (eksisterendeSamordningsvurdering != null && eksisterendeSamordningsvurdering.fristNyRevurdering != null) {
-                    logger.info("Fant samordningdato, setter på vent.")
-                    return FantVentebehov(
-                        Ventebehov(
-                            definisjon = Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT,
-                            grunn = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER,
-                            frist = eksisterendeSamordningsvurdering.fristNyRevurdering
+                    if (eksisterendeSamordningsvurdering.fristNyRevurdering.isAfter(LocalDate.now())) {
+                        logger.info("Fant samordningdato, setter på vent.")
+                        return FantVentebehov(
+                            Ventebehov(
+                                definisjon = Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT,
+                                grunn = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER,
+                                frist = eksisterendeSamordningsvurdering.fristNyRevurdering
+                            )
                         )
-                    )
-
+                    }
                 }
             }
         }
@@ -66,7 +68,10 @@ class StartBehandlingSteg private constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return StartBehandlingSteg(
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),
