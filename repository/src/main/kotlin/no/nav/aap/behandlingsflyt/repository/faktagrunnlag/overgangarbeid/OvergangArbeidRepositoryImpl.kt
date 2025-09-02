@@ -158,7 +158,7 @@ class OvergangArbeidRepositoryImpl(private val connection: DBConnection) : Overg
                 setLocalDate(3, vurdering.virkningsDato)
                 setString(4, vurdering.vurdertAv)
                 setLong(5, overgangarbeidvurderingerId)
-                setLocalDate(6, null)
+                setLocalDate(6, vurdering.vurderingenGjelderFra)
             }
         }
 

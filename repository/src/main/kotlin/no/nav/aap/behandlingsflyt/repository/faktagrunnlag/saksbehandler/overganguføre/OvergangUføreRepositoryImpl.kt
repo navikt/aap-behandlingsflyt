@@ -163,7 +163,7 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
                 setLocalDate(5, vurdering.virkningsDato)
                 setString(6, vurdering.vurdertAv)
                 setLong(7, overganguforevurderingerId)
-                setLocalDate(8, null)
+                setLocalDate(8, vurdering.vurderingenGjelderFra)
             }
         }
 

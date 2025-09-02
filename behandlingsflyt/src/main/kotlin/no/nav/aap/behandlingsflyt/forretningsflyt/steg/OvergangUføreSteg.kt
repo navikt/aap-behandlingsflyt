@@ -54,7 +54,12 @@ class OvergangUføreSteg private constructor(
         val overgangUføreGrunnlag = overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_UFORE)
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
+            //TODO fiks når debugging er ferdig, flytt denne when ned til neste
+            VurderingType.FØRSTEGANGSBEHANDLING -> {
+                return Fullført
+            }
+
+            VurderingType.REVURDERING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     log.info("Ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.OVERGANGUFØREVILKÅRET} for behandlingId ${kontekst.behandlingId}. Avbryter steg.")
                     avklaringsbehovene.avbrytForSteg(type())

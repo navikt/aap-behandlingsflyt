@@ -30,8 +30,6 @@ class AvklarOvergangArbeidLøser(
         løsning: AvklarOvergangArbeidLøsning
     ): LøsningsResultat {
 
-        løsning.overgangArbeidVurdering.valider()
-
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
         val nyesteSykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)

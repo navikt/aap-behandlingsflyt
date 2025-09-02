@@ -6,7 +6,10 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.overgangarbeid.OvergangArbeidFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.overgangarbeid.OvergangArbeidVilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -51,11 +54,7 @@ class OvergangArbeidSteg private constructor(
         val overgangArbeidGrunnlag = overgangArbeidRepository.hentHvisEksisterer(kontekst.behandlingId)
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_ARBEID)
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING -> {
-                return Fullført
-            }
-
-            VurderingType.REVURDERING -> {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     log.info("Ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.OVERGANGARBEIDVILKÅRET} for behandlingId ${kontekst.behandlingId}. Avbryter steg.")
                     avklaringsbehovene.avbrytForSteg(type())
@@ -71,6 +70,7 @@ class OvergangArbeidSteg private constructor(
                         avklaringsbehovene
                     )
                 ) {
+                    settBistandsBehovTilIkkeRelevant(kontekst)
                     return FantAvklaringsbehov(Definisjon.AVKLAR_OVERGANG_ARBEID)
                 } else {
                     if (avklaringsbehov != null && avklaringsbehov.erÅpent()) {
@@ -112,6 +112,25 @@ class OvergangArbeidSteg private constructor(
     private fun harIkkeVurdert_11_17_tidligere(avklaringsbehovene: Avklaringsbehovene): Boolean {
         return !avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.AVKLAR_OVERGANG_ARBEID)
     }
+
+
+    private fun settBistandsBehovTilIkkeRelevant(kontekst: FlytKontekstMedPerioder): StegResultat {
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET).leggTilVurdering(
+            Vilkårsperiode(
+                periode = Periode(kontekst.rettighetsperiode.fom, kontekst.rettighetsperiode.tom),
+                utfall = Utfall.IKKE_RELEVANT,
+                begrunnelse = null,
+                versjon = ApplikasjonsVersjon.versjon
+            )
+        )
+        log.info("Merket bistand som ikke relevant pga innvilget overgang uføre - vilkår.")
+        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+
+
+        return Fullført
+    }
+
 
     private fun vurderVilkårForPeriode(
         periode: Periode,

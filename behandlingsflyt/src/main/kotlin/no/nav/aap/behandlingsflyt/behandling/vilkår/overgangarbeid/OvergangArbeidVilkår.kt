@@ -58,7 +58,6 @@ class OvergangArbeidVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
         } else if (overgangArbeidVurdering.virkningsDato != null &&
             overgangArbeidVurdering.brukerRettPaaAAP == true
         ) {
-
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.ARBEIDSSØKER
         } else {
