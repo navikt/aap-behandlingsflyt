@@ -26,7 +26,7 @@ class SamordningSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         samordningService = SamordningService(repositoryProvider),
         samordningRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
@@ -69,7 +69,7 @@ class SamordningSteg(
                 }
             }
 
-            VurderingType.MELDEKORT, VurderingType.IKKE_RELEVANT -> Fullført
+            VurderingType.MELDEKORT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT, VurderingType.IKKE_RELEVANT -> Fullført
         }
     }
 
@@ -107,7 +107,10 @@ class SamordningSteg(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return SamordningSteg(repositoryProvider)
         }
 
