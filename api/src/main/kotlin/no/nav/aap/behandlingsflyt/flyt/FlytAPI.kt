@@ -5,6 +5,8 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
+import no.nav.aap.behandlingsflyt.behandling.Resultat
+import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
@@ -71,6 +73,7 @@ fun NormalOpenAPIRoute.flytApi(
             ) { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
+                    val resultatUtleder = ResultatUtleder(repositoryProvider)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val vilkårsresultatRepository =
                         repositoryProvider.provide<VilkårsresultatRepository>()
@@ -126,6 +129,12 @@ fun NormalOpenAPIRoute.flytApi(
                         utledVurdertGruppe(prosessering, aktivtSteg, flyt, avklaringsbehovene)
                     val vilkårsresultat = vilkårResultat(vilkårsresultatRepository, behandling.id)
                     val alleAvklaringsbehov = alleAvklaringsbehovInkludertFrivillige.alle()
+                    val revurderingErKansellert = when {
+                        behandling.typeBehandling() == TypeBehandling.Revurdering ->
+                            resultatUtleder.utledResultatFørstegangOgRevurderingsBehandling(behandling) == Resultat.KANSELLERT
+
+                        else -> false
+                    }
 
                     LoggingKontekst(
                         repositoryProvider,
@@ -183,7 +192,8 @@ fun NormalOpenAPIRoute.flytApi(
                             avklaringsbehov = alleAvklaringsbehov,
                             bruker = bruker(),
                             behandlingStatus = behandling.status(),
-                            unleashGateway = unleashGateway
+                            unleashGateway = unleashGateway,
+                            revurderingErKansellert
                         )
                     )
                 }
@@ -364,7 +374,8 @@ private fun utledVisning(
     avklaringsbehov: List<Avklaringsbehov>,
     bruker: Bruker,
     behandlingStatus: Status,
-    unleashGateway: UnleashGateway
+    unleashGateway: UnleashGateway,
+    revurderingErKansellert: Boolean
 ): Visning {
     val brukerHarIngenValidering = unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)
 
@@ -413,7 +424,8 @@ private fun utledVisning(
             visBrevkort = false,
             typeBehandling = typeBehandling,
             brukerHarBesluttet = brukerHarBesluttet,
-            brukerHarKvalitetssikret = brukerHarKvalitetssikret
+            brukerHarKvalitetssikret = brukerHarKvalitetssikret,
+            revurderingErKansellert = revurderingErKansellert
         )
     } else {
         return Visning(
@@ -434,7 +446,8 @@ private fun utledVisning(
                 false
             } else {
                 brukerHarKvalitetssikret
-            }
+            },
+            revurderingErKansellert = revurderingErKansellert
         )
     }
 }

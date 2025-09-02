@@ -320,7 +320,6 @@ fun NormalOpenAPIRoute.saksApi(
             ) { req ->
                 val saksnummer = req.saksnummer
                 var søknadErTrukket: Boolean? = null
-                var revurderingErKansellert: Boolean? = null
                 val (sak, behandlinger) = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val resultatUtleder = ResultatUtleder(repositoryProvider)
@@ -331,10 +330,6 @@ fun NormalOpenAPIRoute.saksApi(
                             if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
                                 søknadErTrukket =
                                     resultatUtleder.utledResultatFørstegangOgRevurderingsBehandling(behandling) == Resultat.TRUKKET
-                            }
-                            if (behandling.typeBehandling() == TypeBehandling.Revurdering) {
-                                revurderingErKansellert =
-                                    resultatUtleder.utledResultatFørstegangOgRevurderingsBehandling(behandling) == Resultat.KANSELLERT
                             }
                             val vurderingsbehov = behandling.vurderingsbehov().map(VurderingsbehovMedPeriode::type)
                             BehandlinginfoDTO(
@@ -358,8 +353,7 @@ fun NormalOpenAPIRoute.saksApi(
                         ident = sak.person.aktivIdent().identifikator,
                         behandlinger = behandlinger,
                         status = sak.status(),
-                        søknadErTrukket = søknadErTrukket,
-                        revurderingErKansellert = revurderingErKansellert
+                        søknadErTrukket = søknadErTrukket
                     )
                 )
             }

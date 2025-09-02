@@ -12,5 +12,6 @@ data class Visning(
     val visVentekort: Boolean,
     val visBrevkort: Boolean,
     val visKvalitetssikringKort: Boolean,
-    val typeBehandling: TypeBehandling
+    val typeBehandling: TypeBehandling,
+    val revurderingErKansellert: Boolean
 )
