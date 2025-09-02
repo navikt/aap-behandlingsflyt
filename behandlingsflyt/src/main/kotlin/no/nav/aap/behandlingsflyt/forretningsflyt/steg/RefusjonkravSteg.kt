@@ -69,11 +69,7 @@ class RefusjonkravSteg private constructor(
                 }
             }
 
-            VurderingType.MELDEKORT -> {
-                // Do nothing
-            }
-
-            VurderingType.IKKE_RELEVANT -> {
+            VurderingType.MELDEKORT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT, VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
             }
         }
@@ -94,13 +90,16 @@ class RefusjonkravSteg private constructor(
         }
 
         return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()
-             && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
-             && sykdomsvurderinger.any { it.erOppfyltSettBortIfraVissVarighet() }
-             && bistandsvilkåretErOppfyltEllerIkkeVissVarighet
+                && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
+                && sykdomsvurderinger.any { it.erOppfyltSettBortIfraVissVarighet() }
+                && bistandsvilkåretErOppfyltEllerIkkeVissVarighet
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return RefusjonkravSteg(repositoryProvider)
         }
 

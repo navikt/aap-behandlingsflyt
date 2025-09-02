@@ -59,6 +59,9 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                     val barnetilleggTidslinje = barnetilleggService.beregn(behandling.id)
 
                     val folkeregister = barnetilleggTidslinje.map { it.verdi.registerBarn() }.flatten().toSet()
+
+                    log.info("Fant ${folkeregister.size} folkeregister-barn for behandling ${behandling.referanse}.")
+
                     val uavklarteBarn = barnetilleggTidslinje.map { it.verdi.barnTilAvklaring() }.flatten().toSet()
 
                     val vurderteBarn = barnRepository.hentVurderteBarnHvisEksisterer(behandling.id)
@@ -77,8 +80,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                             )
                         },
                         vurderteBarn = vurderteBarn?.barn.orEmpty().map {
-                            val vurdertBartIdent = it.ident
-                            when (vurdertBartIdent) {
+                            when (val vurdertBartIdent = it.ident) {
                                 is BarnIdentifikator.BarnIdent -> ExtendedVurdertBarnDto(
                                     vurdertBartIdent.ident.identifikator, null,
                                     it.vurderinger.map {

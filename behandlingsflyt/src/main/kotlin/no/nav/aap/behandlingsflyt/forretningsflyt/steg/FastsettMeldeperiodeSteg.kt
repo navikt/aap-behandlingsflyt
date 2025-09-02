@@ -40,6 +40,7 @@ class FastsettMeldeperiodeSteg(
             }
 
             VurderingType.MELDEKORT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.IKKE_RELEVANT -> {
                 return Fullført
             }
@@ -57,7 +58,10 @@ class FastsettMeldeperiodeSteg(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return FastsettMeldeperiodeSteg(repositoryProvider)
         }
 

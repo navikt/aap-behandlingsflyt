@@ -36,10 +36,13 @@ class SykdomsvurderingBrevSteg internal constructor(
 
                 return vurder(kontekst)
             }
+
             VurderingType.REVURDERING -> {
                 return vurder(kontekst)
             }
+
             VurderingType.MELDEKORT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.IKKE_RELEVANT -> {
                 return Fullført
             }

@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
@@ -30,7 +31,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_M
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -43,6 +47,7 @@ class BrevUtlederService(
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
+    private val underveisRepository: UnderveisRepository,
     private val unleashGateway: UnleashGateway,
     private val kansellerRevurderingService: KansellerRevurderingService
 ) {
@@ -54,6 +59,7 @@ class BrevUtlederService(
         beregningsgrunnlagRepository = repositoryProvider.provide(),
         beregningVurderingRepository = repositoryProvider.provide(),
         tilkjentYtelseRepository = repositoryProvider.provide(),
+        underveisRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
         kansellerRevurderingService = KansellerRevurderingService(repositoryProvider)
     )
@@ -190,16 +196,31 @@ class BrevUtlederService(
 
     private fun utledDagsats(behandlingId: BehandlingId, virkningstidspunkt: LocalDate): Beløp? {
         /** Henter dagsats fra første periode. Kan variere basert på minste årlig ytelse, alder og grunnbeløp.
-         * Tar høyde for gradering, men inkluderer ikke barnetillegg ref.
-         * [no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent.redusertDagsats].
+         * Tar høyde for gradering inkludert fastsatt arbeidsevne, men ikke timer arbeidet (derfor benyttes ikke
+         * [no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent.gradering.arbeidGradering]).
+         * Inkluderer ikke barnetillegg slik som
+         * [no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent.redusertDagsats] siden barnetillegg skilles ut
+         * i brevet.
          */
-        return tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)?.tilTidslinje()
-            ?.segment(virkningstidspunkt)?.verdi?.let { tilkjent ->
-                Beløp(
-                    tilkjent.dagsats.multiplisert(tilkjent.gradering.endeligGradering).verdi()
-                        .setScale(0, RoundingMode.HALF_UP)
-                )
-            }
+
+        val tilkjentYtelseTidslinje =
+            tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)?.tilTidslinje() ?: return null
+        val underveisTidslinje =
+            Tidslinje(underveisRepository.hent(behandlingId).perioder.map { Segment(it.periode, it) })
+
+        return tilkjentYtelseTidslinje.innerJoin(underveisTidslinje) { _, tilkjent, underveisperiode ->
+            val gradering = Prosent.`100_PROSENT`
+                .minus(tilkjent.gradering.samordningGradering ?: Prosent.`0_PROSENT`)
+                .minus(tilkjent.gradering.institusjonGradering ?: Prosent.`0_PROSENT`)
+                .minus(tilkjent.gradering.samordningUføregradering ?: Prosent.`0_PROSENT`)
+                .minus(tilkjent.gradering.samordningArbeidsgiverGradering ?: Prosent.`0_PROSENT`)
+                .minus(underveisperiode.arbeidsgradering.fastsattArbeidsevne)
+
+            Beløp(
+                tilkjent.dagsats.multiplisert(gradering).verdi()
+                    .setScale(0, RoundingMode.HALF_UP)
+            )
+        }.segment(virkningstidspunkt)?.verdi
     }
 
     private fun utledBeregningstidspunktUføre(

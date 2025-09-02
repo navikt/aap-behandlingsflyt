@@ -47,7 +47,7 @@ object InMemoryBarnRepository : BarnRepository {
         }
     }
 
-    override fun hentVurderteBarnHvisEksisterer(behandlingId: BehandlingId): VurderteBarn? {
+    override fun hentVurderteBarnHvisEksisterer(behandlingId: BehandlingId): VurderteBarn {
         TODO("Not yet implemented")
     }
 
@@ -67,7 +67,7 @@ object InMemoryBarnRepository : BarnRepository {
 
     override fun lagreRegisterBarn(
         behandlingId: BehandlingId,
-        barn: Map<Barn, PersonId>
+        barn: Map<Barn, PersonId?>
     ) {
         synchronized(lock) {
             if (barn.isNotEmpty()) {

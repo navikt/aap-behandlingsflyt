@@ -77,6 +77,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             }
 
             VurderingType.MELDEKORT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
             }

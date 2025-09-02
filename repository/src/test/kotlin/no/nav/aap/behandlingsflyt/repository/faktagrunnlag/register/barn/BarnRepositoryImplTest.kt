@@ -55,28 +55,34 @@ internal class BarnRepositoryImplTest {
     fun `Lagrer og henter barn`() {
         val vurderteBarn = listOf(
             VurdertBarn(
-                ident = BarnIdentifikator.BarnIdent("12345"),
-                vurderinger = listOf(
+                ident = BarnIdentifikator.BarnIdent("12345"), vurderinger = listOf(
                     VurderingAvForeldreAnsvar(
-                        fraDato = LocalDate.now(),
-                        harForeldreAnsvar = true,
-                        begrunnelse = "fsdf"
+                        fraDato = LocalDate.now(), harForeldreAnsvar = true, begrunnelse = "fsdf"
                     )
                 )
-            ),
-            VurdertBarn(
+            ), VurdertBarn(
                 ident = BarnIdentifikator.NavnOgFødselsdato("Olof Olof", Fødselsdato(LocalDate.now().minusYears(10))),
                 vurderinger = listOf(
                     VurderingAvForeldreAnsvar(
-                        fraDato = LocalDate.now(),
-                        harForeldreAnsvar = true,
-                        begrunnelse = "fsdf"
+                        fraDato = LocalDate.now(), harForeldreAnsvar = true, begrunnelse = "fsdf"
                     )
                 )
             )
         )
-        val barnListe =
-            listOf(Ident("12345678910"), Ident("12345")).map { Barn(it, Fødselsdato(LocalDate.now().minusYears(10))) }
+        val barnListe = listOf(
+            BarnIdentifikator.BarnIdent("12345678910"), BarnIdentifikator.BarnIdent("12345"),
+        ).map {
+            Barn(
+                it, Fødselsdato(LocalDate.now().minusYears(10))
+            )
+        } + listOf(
+            Barn(
+                BarnIdentifikator.NavnOgFødselsdato("Gorgo Grog", Fødselsdato(LocalDate.now().minusYears(10))),
+                Fødselsdato(LocalDate.now().minusYears(10)),
+                navn = "Gorgo Grog",
+            )
+        )
+
 
         val oppgittBarn = OppgitteBarn.OppgittBarn(
             Ident("1"),
@@ -94,11 +100,15 @@ internal class BarnRepositoryImplTest {
 
             barnRepository.lagreRegisterBarn(
                 behandling.id,
-                barnListe.associateWith { PersonRepositoryImpl(connection).finnEllerOpprett(listOf(it.ident)).id }
-            )
+                barnListe.associateWith {
+                    val ident = it.ident
+                    when (ident) {
+                        is BarnIdentifikator.BarnIdent -> PersonRepositoryImpl(connection).finnEllerOpprett(listOf(ident.ident)).id
+                        is BarnIdentifikator.NavnOgFødselsdato -> null
+                    }
+                })
             barnRepository.lagreOppgitteBarn(
-                behandling.id,
-                OppgitteBarn(oppgitteBarn = listOf(oppgittBarn))
+                behandling.id, OppgitteBarn(oppgitteBarn = listOf(oppgittBarn))
             )
             barnRepository.lagreVurderinger(behandling.id, "ident", vurderteBarn)
             behandling
@@ -130,12 +140,16 @@ internal class BarnRepositoryImplTest {
             finnEllerOpprettBehandling(connection, sak)
         }
         val barnListe =
-            listOf(Ident("12"), Ident("32323")).map { Barn(it, Fødselsdato(LocalDate.now().minusYears(10))) }
+            listOf(Ident("12"), Ident("32323")).map {
+                Barn(
+                    BarnIdentifikator.BarnIdent(it),
+                    Fødselsdato(LocalDate.now().minusYears(10))
+                )
+            }
         dataSource.transaction { connection ->
             BarnRepositoryImpl(connection).lagreRegisterBarn(
                 behandling.id,
-                barnListe.associateWith { PersonRepositoryImpl(connection).finnEllerOpprett(listOf(it.ident)).id }
-            )
+                barnListe.associateWith { PersonRepositoryImpl(connection).finnEllerOpprett(listOf((it.ident as BarnIdentifikator.BarnIdent).ident)).id })
         }
 
         val uthentet = dataSource.transaction {
@@ -160,8 +174,7 @@ internal class BarnRepositoryImplTest {
 
         dataSource.transaction {
             BarnRepositoryImpl(it).lagreOppgitteBarn(
-                behandling.id,
-                OppgitteBarn(oppgitteBarn = listOf(oppgittBarn))
+                behandling.id, OppgitteBarn(oppgitteBarn = listOf(oppgittBarn))
             )
         }
 
@@ -215,12 +228,9 @@ internal class BarnRepositoryImplTest {
 
     private fun sak(connection: DBConnection): Sak {
         return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
+            FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection)
         ).finnEllerOpprett(
-            ident(),
-            periode
+            ident(), periode
         )
     }
 }

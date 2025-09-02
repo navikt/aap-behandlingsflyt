@@ -64,6 +64,7 @@ class VurderYrkesskadeSteg private constructor(
             }
 
             VurderingType.MELDEKORT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
             }
@@ -91,7 +92,10 @@ class VurderYrkesskadeSteg private constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return VurderYrkesskadeSteg(repositoryProvider)
         }
 
