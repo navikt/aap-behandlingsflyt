@@ -77,8 +77,12 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
         fraBehandling: BehandlingId,
         tilBehandling: BehandlingId
     ) {
-        // TODO: Avgjør om vi trenger dette. Gjør ingenting inntil videre
-        log.warn("Forsøkte å kopiere aktivitetsplikt-grunnlag, men kopiering er ikke implementert")
+        log.info("Kopierer aktivitetsplikt 11-7-grunnlag fra behandling $fraBehandling til $tilBehandling")
+        val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandling)
+        if (eksisterendeGrunnlag == null) {
+            return
+        }
+        lagre(tilBehandling, eksisterendeGrunnlag)
     }
 
     override fun slett(behandlingId: BehandlingId) {

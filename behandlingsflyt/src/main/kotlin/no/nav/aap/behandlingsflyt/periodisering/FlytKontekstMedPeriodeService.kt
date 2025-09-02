@@ -79,7 +79,6 @@ class FlytKontekstMedPeriodeService(
                 FØRSTEGANGSBEHANDLING
 
             Vurderingsbehov.HELHETLIG_VURDERING,
-            Vurderingsbehov.MOTTATT_AKTIVITETSMELDING,
             Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
             Vurderingsbehov.MOTTATT_AVVIST_LEGEERKLÆRING,
             Vurderingsbehov.MOTTATT_DIALOGMELDING,
@@ -121,6 +120,7 @@ class FlytKontekstMedPeriodeService(
                 IKKE_RELEVANT // TODO: Verifiser at dette er korrekt.
             Vurderingsbehov.OPPFØLGINGSOPPGAVE -> IKKE_RELEVANT
             Vurderingsbehov.AKTIVITETSPLIKT_11_7 -> IKKE_RELEVANT
+            Vurderingsbehov.MOTTATT_AKTIVITETSMELDING -> AKTIVITETSPLIKT
         }
     }
 }

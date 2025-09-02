@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7RepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -27,7 +28,14 @@ class FasttrackAktivitetspliktFlytTest :
 
         assertThat(åpenBehandling.vurderingsbehov().map { it.type })
             .hasSameElementsAs(listOf(Vurderingsbehov.MOTTATT_SØKNAD))
-        val aktivtStegFørMeldekort = åpenBehandling.aktivtSteg()
+
+        dataSource.transaction { connection ->
+            assertThat(
+                Aktivitetsplikt11_7RepositoryImpl(connection)
+                    .hentHvisEksisterer(åpenBehandling.id)
+            ).isNull()
+        }
+        val aktivtStegFørAktivitetspliktbehandling = åpenBehandling.aktivtSteg()
 
         // TODO: Denne skal opprettes fra aktivitetsplikt-behandling 
         var effektuer11_7behandling = opprettRevurderingMedAktivitetsbrudd(sak.id)
@@ -47,11 +55,11 @@ class FasttrackAktivitetspliktFlytTest :
             // Åpen behandling skal forbli i samme steg
             assertThat(effektuer11_7behandling.åpenBehandling?.id).isEqualTo(åpenBehandling.id)
                 .describedAs { "Fasttrack-behandling har korrekt referanse til åpen behandling" }
-            
+
             åpenBehandling = BehandlingRepositoryImpl(connection).hent(åpenBehandling.id)
             assertThat(åpenBehandling.aktivtSteg())
                 .describedAs("Prosessering av aktivitetsmelding skal ikke endre steg for åpen behandling, dersom den åpne behandlingen står i steg før informasjonskravet for aktivitetsmelding")
-                .isEqualTo(aktivtStegFørMeldekort)
+                .isEqualTo(aktivtStegFørAktivitetspliktbehandling)
 
             // Den åpne behandlingen skal ha fått aktivitetsbruddene
             // TODO: Prosesser aktivitetsbrudd og flett inn i åpen behandling
