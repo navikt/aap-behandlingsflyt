@@ -118,8 +118,19 @@ class PipTest {
                     Barn(
                         ident = BarnIdentifikator.BarnIdent("regbarn"),
                         Fødselsdato(LocalDate.now())
-                    )
-                ).associateWith { personRepository.finnEllerOpprett(listOf((it.ident as BarnIdentifikator.BarnIdent).ident)).id }
+                    ),
+                    Barn(
+                        ident = BarnIdentifikator.NavnOgFødselsdato("xxxx", Fødselsdato(LocalDate.now())),
+                        fødselsdato = Fødselsdato(LocalDate.now()),
+                        navn = "navn",
+                    ),
+                ).associateWith {
+                    (it.ident as? BarnIdentifikator.BarnIdent)?.let { ident ->
+                        personRepository.finnEllerOpprett(
+                            listOf((ident).ident)
+                        ).id
+                    }
+                }
             )
             barnRepository.lagreOppgitteBarn(
                 behandling.id,
@@ -148,10 +159,10 @@ class PipTest {
         Assertions.assertThat(pipIdenter).isNotNull
         Assertions.assertThat(pipIdenter?.søker)
             .isNotEmpty
-            .contains("ident", "gammelident", "endaeldreident")
+            .containsExactlyInAnyOrder("ident", "gammelident", "endaeldreident")
         Assertions.assertThat(pipIdenter?.barn)
             .isNotEmpty
-            .contains("regbarn", "oppgittbarn", "vurdertbarn")
+            .containsExactlyInAnyOrder("regbarn", "oppgittbarn", "vurdertbarn")
     }
 
     @Test
