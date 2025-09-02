@@ -119,8 +119,11 @@ class BehandlingFlyt private constructor(
         return aIndex < bIndex
     }
 
-    fun compareable(): StegComparator {
-        return StegComparator(flyt)
+    /** Sorter avklaringsbehov i samme rekkefølgen som stegene behovet løses i.
+     * Steg som løses i ukjente steg, plasseres bakerst. */
+    val stegComparator: Comparator<StegType> by lazy {
+        val rekkefølge = flyt.mapIndexed { i, steg -> steg.steg.type() to i }.toMap()
+        compareBy { rekkefølge[it] ?: rekkefølge.size }
     }
 
     internal fun erStegFørEllerLik(stegA: StegType, stegB: StegType): Boolean {
@@ -161,7 +164,7 @@ class BehandlingFlyt private constructor(
     }
 
     fun skalTilStegForBehov(avklaringsbehov: List<Avklaringsbehov>): StegType? {
-        return avklaringsbehov.map { it.løsesISteg() }.minWithOrNull(compareable())
+        return avklaringsbehov.map { it.løsesISteg() }.minWithOrNull(stegComparator)
     }
 
     internal fun skalTilStegForBehov(avklaringsbehov: Avklaringsbehov?): StegType? {
@@ -179,15 +182,15 @@ class BehandlingFlyt private constructor(
             nyeVurderingsbehov?.flatMap { vurderingsbehov[it].orEmpty() }
                 // Skal ikke kunne flyttes tilbake til steg med status OPPRETTET
                 ?.minus(StegType.entries.filter { it.status == Status.OPPRETTET })
-                ?.minWithOrNull(compareable())
+                ?.minWithOrNull(stegComparator)
 
         val skalTilSteg =
             flyt.filter { it.kravliste.any { at -> oppdaterteGrunnlagstype.contains(at) } }
                 .map { it.steg.type() }
                 .minus(StegType.entries.filter { it.status == Status.OPPRETTET })
-                .minWithOrNull(compareable())
+                .minWithOrNull(stegComparator)
 
-        val tidligsteSteg = listOfNotNull(tidligsteStegForVurderingsbehov, skalTilSteg).minWithOrNull(compareable())
+        val tidligsteSteg = listOfNotNull(tidligsteStegForVurderingsbehov, skalTilSteg).minWithOrNull(stegComparator)
 
         return utledTilbakeflytTilSteg(tidligsteSteg)
     }
@@ -264,14 +267,6 @@ class BehandlingFlyt private constructor(
     }
 }
 
-class StegComparator(private var flyt: List<BehandlingFlyt.Behandlingsflytsteg>) : Comparator<StegType> {
-    override fun compare(stegA: StegType?, stegB: StegType?): Int {
-        val aIndex = flyt.indexOfFirst { it.steg.type() == stegA }
-        val bIndex = flyt.indexOfFirst { it.steg.type() == stegB }
-
-        return aIndex.compareTo(bIndex)
-    }
-}
 
 class BehandlingFlytBuilder {
     private val flyt: MutableList<BehandlingFlyt.Behandlingsflytsteg> = mutableListOf()
