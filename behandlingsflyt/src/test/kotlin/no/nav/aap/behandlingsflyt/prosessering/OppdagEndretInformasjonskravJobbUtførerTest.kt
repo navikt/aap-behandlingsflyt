@@ -46,7 +46,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackMeldekort
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -120,7 +119,6 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
     }
 
     private val gatewayProvider = createGatewayProvider {
-        register<FakeUnleashFasttrackMeldekort>()
         register<FakeBarnGateway>()
         register<FakePdlGateway>()
         register<FakeForeldrepengerGateway>()

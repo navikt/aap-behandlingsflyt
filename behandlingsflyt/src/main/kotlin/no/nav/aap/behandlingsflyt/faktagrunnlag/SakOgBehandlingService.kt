@@ -15,20 +15,16 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
-import java.util.UUID
 
 class SakOgBehandlingService(
     private val grunnlagKopierer: GrunnlagKopierer,
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository,
     private val trukketSøknadService: TrukketSøknadService,
-    private val unleashGateway: UnleashGateway,
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
@@ -38,7 +34,6 @@ class SakOgBehandlingService(
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
-        unleashGateway = gatewayProvider.provide(),
     )
 
     fun finnBehandling(behandlingReferanse: BehandlingReferanse): Behandling {
@@ -112,7 +107,6 @@ class SakOgBehandlingService(
         val vurderingsbehov = vurderingsbehovOgÅrsak.vurderingsbehov
         val fasttrackkandidat = vurderingsbehov.isNotEmpty()
                 && vurderingsbehov.all { it.type in fasttrackKandidater }
-                && unleashGateway.isEnabled(BehandlingsflytFeature.FasttrackMeldekort)
         val mottokKabalHendelse = vurderingsbehov.any { it.type == Vurderingsbehov.MOTTATT_KABAL_HENDELSE }
         val mottokKlage = vurderingsbehov.any { it.type == Vurderingsbehov.MOTATT_KLAGE }
 

@@ -9,14 +9,14 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackMeldekort
+import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackAktivitetsplikt
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import kotlin.reflect.KClass
 
 class AktivitetspliktFlytTest :
-    AbstraktFlytOrkestratorTest(FakeUnleashFasttrackMeldekort::class as KClass<UnleashGateway>) {
+    AbstraktFlytOrkestratorTest(FakeUnleashFasttrackAktivitetsplikt::class as KClass<UnleashGateway>) {
 
     @Test
     fun `Happy-case flyt for aktivitetsplikt 11_7`() {
