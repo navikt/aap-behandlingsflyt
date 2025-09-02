@@ -73,7 +73,7 @@ class VurderYrkesskadeSteg private constructor(
             }
 
             VurderingType.MELDEKORT,
-            VurderingType.AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
             }

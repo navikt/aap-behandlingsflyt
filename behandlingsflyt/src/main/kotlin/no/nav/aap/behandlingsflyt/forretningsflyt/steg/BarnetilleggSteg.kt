@@ -51,7 +51,7 @@ class BarnetilleggSteg(
         }
 
         VurderingType.MELDEKORT,
-        VurderingType.AKTIVITETSPLIKT,
+        VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
         VurderingType.IKKE_RELEVANT -> {
             /* do nothing */
             Fullført

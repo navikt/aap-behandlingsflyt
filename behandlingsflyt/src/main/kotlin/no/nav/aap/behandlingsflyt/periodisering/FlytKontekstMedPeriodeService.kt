@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.FØRSTEGANG
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.IKKE_RELEVANT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.AKTIVITETSPLIKT
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.EFFEKTUER_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -68,7 +68,7 @@ class FlytKontekstMedPeriodeService(
             FØRSTEGANGSBEHANDLING in vurderingTyper -> FØRSTEGANGSBEHANDLING
             REVURDERING in vurderingTyper -> REVURDERING
             MELDEKORT in vurderingTyper -> MELDEKORT
-            AKTIVITETSPLIKT in vurderingTyper -> AKTIVITETSPLIKT
+            EFFEKTUER_AKTIVITETSPLIKT in vurderingTyper -> EFFEKTUER_AKTIVITETSPLIKT
             else -> IKKE_RELEVANT
         }
     }
@@ -120,7 +120,7 @@ class FlytKontekstMedPeriodeService(
                 IKKE_RELEVANT // TODO: Verifiser at dette er korrekt.
             Vurderingsbehov.OPPFØLGINGSOPPGAVE -> IKKE_RELEVANT
             Vurderingsbehov.AKTIVITETSPLIKT_11_7 -> IKKE_RELEVANT
-            Vurderingsbehov.MOTTATT_AKTIVITETSMELDING -> AKTIVITETSPLIKT
+            Vurderingsbehov.MOTTATT_AKTIVITETSMELDING -> EFFEKTUER_AKTIVITETSPLIKT
         }
     }
 }

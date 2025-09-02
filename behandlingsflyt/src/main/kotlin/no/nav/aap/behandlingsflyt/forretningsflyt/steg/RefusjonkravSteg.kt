@@ -66,7 +66,7 @@ class RefusjonkravSteg private constructor(
                 //refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId) ?: return FantAvklaringsbehov(Definisjon.REFUSJON_KRAV)
             }
 
-            VurderingType.MELDEKORT, VurderingType.AKTIVITETSPLIKT, VurderingType.IKKE_RELEVANT -> {
+            VurderingType.MELDEKORT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT, VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
             }
         }

@@ -48,7 +48,7 @@ class TjenestepensjonRefusjonskravSteg private constructor(
                 )
             }
 
-            VurderingType.REVURDERING, VurderingType.MELDEKORT, VurderingType.AKTIVITETSPLIKT, VurderingType.IKKE_RELEVANT -> {
+            VurderingType.REVURDERING, VurderingType.MELDEKORT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT, VurderingType.IKKE_RELEVANT -> {
                 //Do nothing
             }
         }

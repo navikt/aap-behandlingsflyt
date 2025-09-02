@@ -69,7 +69,7 @@ class SamordningSteg(
                 }
             }
 
-            VurderingType.MELDEKORT, VurderingType.AKTIVITETSPLIKT, VurderingType.IKKE_RELEVANT -> Fullført
+            VurderingType.MELDEKORT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT, VurderingType.IKKE_RELEVANT -> Fullført
         }
     }
 

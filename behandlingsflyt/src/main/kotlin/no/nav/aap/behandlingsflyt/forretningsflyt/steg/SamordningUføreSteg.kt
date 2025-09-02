@@ -70,7 +70,7 @@ class SamordningUføreSteg(
             }
 
             VurderingType.MELDEKORT,
-            VurderingType.AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.IKKE_RELEVANT -> {
             }
         }

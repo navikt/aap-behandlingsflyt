@@ -65,7 +65,7 @@ class OpprettRevurderingSteg(
                 return Fullført
             }
 
-            VurderingType.REVURDERING, VurderingType.MELDEKORT, VurderingType.AKTIVITETSPLIKT, VurderingType.IKKE_RELEVANT -> {
+            VurderingType.REVURDERING, VurderingType.MELDEKORT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT, VurderingType.IKKE_RELEVANT -> {
                 Fullført
             }
         }

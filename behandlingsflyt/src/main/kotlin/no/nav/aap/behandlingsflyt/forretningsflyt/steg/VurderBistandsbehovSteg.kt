@@ -127,7 +127,7 @@ class VurderBistandsbehovSteg private constructor(
             }
 
             VurderingType.MELDEKORT,
-            VurderingType.AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.IKKE_RELEVANT -> {
                 // Skal ikke gjøre noe
             }

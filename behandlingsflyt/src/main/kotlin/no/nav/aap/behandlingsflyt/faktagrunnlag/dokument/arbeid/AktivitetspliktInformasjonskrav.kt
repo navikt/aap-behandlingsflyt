@@ -45,19 +45,19 @@ class AktivitetspliktInformasjonskrav(
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return kontekst.vurderingType in listOf(VurderingType.REVURDERING, VurderingType.AKTIVITETSPLIKT) &&
+        return kontekst.vurderingType in listOf(VurderingType.REVURDERING, VurderingType.EFFEKTUER_AKTIVITETSPLIKT) &&
                 !tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, steg)
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
-        if (kontekst.vurderingType == VurderingType.AKTIVITETSPLIKT) {
+        if (kontekst.vurderingType == VurderingType.EFFEKTUER_AKTIVITETSPLIKT) {
             val nyesteIverksatteAktivitetspliktBehandling =
                 behandlingRepository
                     .hentAlleFor(kontekst.sakId, listOf(TypeBehandling.Aktivitetsplikt))
                     .filter { it.status().erAvsluttet() }
                     .maxByOrNull { it.opprettetTidspunkt }
             requireNotNull(nyesteIverksatteAktivitetspliktBehandling) {
-                "Fant ingen iverksatte aktivitetspliktbehandlinger for sak ${kontekst.sakId}, men vurderingstype er ${VurderingType.AKTIVITETSPLIKT}"
+                "Fant ingen iverksatte aktivitetspliktbehandlinger for sak ${kontekst.sakId}, men vurderingstype er ${VurderingType.EFFEKTUER_AKTIVITETSPLIKT}"
             }
             aktivitetsplikt11_7Repository.kopier(nyesteIverksatteAktivitetspliktBehandling.id, kontekst.behandlingId)
             return IKKE_ENDRET
