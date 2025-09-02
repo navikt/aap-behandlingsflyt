@@ -41,12 +41,12 @@ data class VurdertBarn(val ident: BarnIdentifikator, val vurderinger: List<Vurde
         return vurderinger.sortedBy { it.fraDato }.map {
             Tidslinje(
                 Periode(it.fraDato, til),
-                ForeldreansvarVurdering(it.harForeldreAnsvar, it.begrunnelse)
+                ForeldreansvarVurdering(it.harForeldreAnsvar, it.begrunnelse, it.erFosterForelder)
             )
         }.fold(Tidslinje<ForeldreansvarVurdering>()) { eksisterende, vurdering ->
             eksisterende.kombiner(vurdering, StandardSammenslåere.prioriterHøyreSideCrossJoin())
         }.komprimer()
     }
 
-    data class ForeldreansvarVurdering(val harForeldreAnsvar: Boolean, val begrunnelse: String)
+    data class ForeldreansvarVurdering(val harForeldreAnsvar: Boolean, val begrunnelse: String, val erFosterforelder: Boolean? = null)
 }

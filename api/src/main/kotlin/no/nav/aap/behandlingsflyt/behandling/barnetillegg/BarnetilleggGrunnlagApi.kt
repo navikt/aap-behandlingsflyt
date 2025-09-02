@@ -85,9 +85,10 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                                     vurdertBartIdent.ident.identifikator, null,
                                     it.vurderinger.map {
                                         VurderingAvForeldreAnsvarDto(
-                                            it.fraDato,
-                                            it.harForeldreAnsvar,
-                                            it.begrunnelse
+                                            fraDato = it.fraDato,
+                                            harForeldreAnsvar = it.harForeldreAnsvar,
+                                            begrunnelse = it.begrunnelse,
+                                            erFosterForelder = it.erFosterForelder,
                                         )
                                     },
                                     hentBarn(
@@ -100,9 +101,10 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                                     ident = null,
                                     vurderinger = it.vurderinger.map {
                                         VurderingAvForeldreAnsvarDto(
-                                            it.fraDato,
-                                            it.harForeldreAnsvar,
-                                            it.begrunnelse
+                                            fraDato = it.fraDato,
+                                            harForeldreAnsvar = it.harForeldreAnsvar,
+                                            begrunnelse = it.begrunnelse,
+                                            erFosterForelder = it.erFosterForelder,
                                         )
                                     },
                                     navn = vurdertBartIdent.navn,
@@ -163,15 +165,20 @@ fun hentBarn(ident: BarnIdentifikator, barnGrunnlag: BarnGrunnlag?): Identifiser
                 ident = ident.ident,
                 fodselsDato = fødselsdato?.toLocalDate(),
                 navn = oppgittBarn?.navn,
-                forsorgerPeriode = fødselsdato?.let { Barn.periodeMedRettTil(fødselsdato) }
+                forsorgerPeriode = fødselsdato?.let { Barn.periodeMedRettTil(fødselsdato) },
+                oppgittForeldreRelasjon = oppgittBarn?.relasjon
             )
         }
 
-        is BarnIdentifikator.NavnOgFødselsdato -> IdentifiserteBarnDto(
-            ident = null,
-            fodselsDato = ident.fødselsdato.toLocalDate(),
-            navn = ident.navn,
-            forsorgerPeriode = Barn.periodeMedRettTil(ident.fødselsdato),
-        )
+        is BarnIdentifikator.NavnOgFødselsdato -> {
+            val oppgittBarn = oppgitteBarn.singleOrNull { it.fødselsdato == ident.fødselsdato && it.navn == ident.navn }
+            IdentifiserteBarnDto(
+                ident = null,
+                fodselsDato = ident.fødselsdato.toLocalDate(),
+                navn = ident.navn,
+                forsorgerPeriode = Barn.periodeMedRettTil(ident.fødselsdato),
+                oppgittForeldreRelasjon = oppgittBarn?.relasjon
+            )
+        }
     }
 }
