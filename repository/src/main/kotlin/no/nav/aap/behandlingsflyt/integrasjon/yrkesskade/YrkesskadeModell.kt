@@ -11,10 +11,10 @@ data class YrkesskadeModell(
     val mottattdato: LocalDate,
     val resultat: String,
     val resultattekst: String,
-    val vedtaksdato: LocalDate,
+    val vedtaksdato: LocalDate?,
     val skadeart: String,
     val diagnose: String,
-    val skadedato: LocalDate,
+    val skadedato: LocalDate?,
     val kildetabell: String,
     val kildesystem: String,
     val saksreferanse: String
