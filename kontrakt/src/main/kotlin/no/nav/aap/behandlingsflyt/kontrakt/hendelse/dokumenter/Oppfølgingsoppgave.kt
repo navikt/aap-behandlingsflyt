@@ -15,6 +15,9 @@ public enum class HvemSkalFølgeOpp {
     NasjonalEnhet,
     Lokalkontor
 }
+public data class Opprinnelse(val behandlingsreferanse: String?,
+                              val avklaringsbehovKode: String)
+
 
 /**
  * @param hvemSkalFølgeOpp Ident til bruker som skal følge opp
@@ -25,5 +28,6 @@ public data class OppfølgingsoppgaveV0(
     public val datoForOppfølging: LocalDate,
     public val hvemSkalFølgeOpp: HvemSkalFølgeOpp,
     public val reserverTilBruker: String?,
-    public val hvaSkalFølgesOpp: String
+    public val hvaSkalFølgesOpp: String,
+    public val opprinnelse: Opprinnelse?
 ) : Oppfølgingsoppgave

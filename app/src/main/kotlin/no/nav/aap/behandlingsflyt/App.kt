@@ -50,6 +50,7 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.lovvalgM
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskapAPI
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.mellomlagretVurderingApi
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.avklarOppfolgingsoppgaveGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.oppfølgningOppgaveApi
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringAPI
 import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
@@ -202,6 +203,7 @@ internal fun Application.server(
                 svarFraAndreinstansGrunnlagApi(dataSource, repositoryRegistry)
                 // Oppfølgingsbehandling
                 avklarOppfolgingsoppgaveGrunnlag(dataSource, repositoryRegistry)
+                oppfølgningOppgaveApi(dataSource, repositoryRegistry)
                 // Aktivitetsplikt
                 aktivitetsplikt11_7GrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 // Flytt
