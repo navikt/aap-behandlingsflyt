@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg.Companion.type
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.AVBRUTT
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.AVSLUTTET
@@ -10,6 +9,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.OPPRETTET
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_BESLUTTER
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.TOTRINNS_VURDERT
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 
 fun oppdaterAvklaringsbehov(
     avklaringsbehovene: Avklaringsbehovene,
@@ -18,6 +18,7 @@ fun oppdaterAvklaringsbehov(
     erTilstrekkeligVurdert: () -> Boolean,
     tilbakestillGrunnlag: () -> Unit,
 ) {
+    require(definisjon.løsesISteg != StegType.UDEFINERT)
     val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
 
     if (vedtakBehøverVurdering()) {
@@ -28,7 +29,7 @@ fun oppdaterAvklaringsbehov(
                 }
 
                 null, AVBRUTT ->
-                    avklaringsbehovene.leggTil(listOf(definisjon), type())
+                    avklaringsbehovene.leggTil(listOf(definisjon), definisjon.løsesISteg)
 
                 TOTRINNS_VURDERT,
                 SENDT_TILBAKE_FRA_BESLUTTER,
@@ -62,7 +63,7 @@ fun oppdaterAvklaringsbehov(
                 KVALITETSSIKRET,
                 SENDT_TILBAKE_FRA_KVALITETSSIKRER,
                 AVBRUTT -> {
-                    avklaringsbehovene.leggTil(listOf(definisjon), type())
+                    avklaringsbehovene.leggTil(listOf(definisjon), definisjon.løsesISteg)
                 }
             }
         }
