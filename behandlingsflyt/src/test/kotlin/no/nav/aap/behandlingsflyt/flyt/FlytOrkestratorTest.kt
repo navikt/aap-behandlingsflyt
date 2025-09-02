@@ -80,6 +80,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.RegisterBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvarDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingerForBarnetillegg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarnDto
@@ -457,7 +458,10 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .ignoringCollectionOrder()
             .isEqualTo(
                 BarnGrunnlag(
-                    registerbarn = RegisterBarn(id = -1, barn = listOf(Barn(barnIdent, Fødselsdato(barnfødseldato)))),
+                    registerbarn = RegisterBarn(
+                        id = -1,
+                        barn = listOf(Barn(BarnIdentifikator.BarnIdent(barnIdent), Fødselsdato(barnfødseldato)))
+                    ),
                     oppgitteBarn = null,
                     vurderteBarn = null
                 )
@@ -535,7 +539,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 BarnGrunnlag(
                     registerbarn = RegisterBarn(
                         id = -1,
-                        barn = person.barn.map { Barn(it.aktivIdent(), it.fødselsdato) }),
+                        barn = person.barn.map { Barn(BarnIdentifikator.BarnIdent(it.aktivIdent()), it.fødselsdato) }),
                     oppgitteBarn = null,
                     vurderteBarn = null
                 )
