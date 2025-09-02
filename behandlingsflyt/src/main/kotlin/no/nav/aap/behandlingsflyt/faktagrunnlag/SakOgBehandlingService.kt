@@ -15,6 +15,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -25,6 +27,7 @@ class SakOgBehandlingService(
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository,
     private val trukketSøknadService: TrukketSøknadService,
+    private val unleashGateway: UnleashGateway,
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
@@ -34,6 +37,7 @@ class SakOgBehandlingService(
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     fun finnBehandling(behandlingReferanse: BehandlingReferanse): Behandling {
@@ -107,6 +111,10 @@ class SakOgBehandlingService(
         val vurderingsbehov = vurderingsbehovOgÅrsak.vurderingsbehov
         val fasttrackkandidat = vurderingsbehov.isNotEmpty()
                 && vurderingsbehov.all { it.type in fasttrackKandidater }
+                && (vurderingsbehov.none { it.type == Vurderingsbehov.MOTTATT_AKTIVITETSMELDING } || unleashGateway.isEnabled(
+            BehandlingsflytFeature.Aktivitetsplikt11_7
+        ))
+
         val mottokKabalHendelse = vurderingsbehov.any { it.type == Vurderingsbehov.MOTTATT_KABAL_HENDELSE }
         val mottokKlage = vurderingsbehov.any { it.type == Vurderingsbehov.MOTATT_KLAGE }
 
@@ -114,8 +122,19 @@ class SakOgBehandlingService(
 
         return when {
             mottokKlage -> Ordinær(opprettKlagebehandling(sisteYtelsesbehandling, vurderingsbehovOgÅrsak))
-            mottokKabalHendelse -> Ordinær(opprettSvarFraKlageenhetBehandling(sisteYtelsesbehandling, vurderingsbehovOgÅrsak))
-            mottokOppfølgingsOppgave -> Ordinær(opprettOppfølgingsbehandling(sisteYtelsesbehandling!!, vurderingsbehovOgÅrsak))
+            mottokKabalHendelse -> Ordinær(
+                opprettSvarFraKlageenhetBehandling(
+                    sisteYtelsesbehandling,
+                    vurderingsbehovOgÅrsak
+                )
+            )
+
+            mottokOppfølgingsOppgave -> Ordinær(
+                opprettOppfølgingsbehandling(
+                    sisteYtelsesbehandling!!,
+                    vurderingsbehovOgÅrsak
+                )
+            )
 
             /* Tilbakekreving kommer kanskje som et case her ... */
 
@@ -182,7 +201,10 @@ class SakOgBehandlingService(
         )
     }
 
-    private fun opprettOppfølgingsbehandling(sisteYtelsesbehandling: Behandling, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): Behandling {
+    private fun opprettOppfølgingsbehandling(
+        sisteYtelsesbehandling: Behandling,
+        vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
+    ): Behandling {
         requireNotNull(sisteYtelsesbehandling) {
             "Mottok oppfølgingsbehandling, men det finnes ingen eksisterende behandling. Behandling-ID: ${sisteYtelsesbehandling.id}"
         }
@@ -274,13 +296,19 @@ class SakOgBehandlingService(
         return sisteYtelsesbehandling
     }
 
-    fun finnEllerOpprettOrdinærBehandling(saksnummer: Saksnummer, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): Behandling {
+    fun finnEllerOpprettOrdinærBehandling(
+        saksnummer: Saksnummer,
+        vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
+    ): Behandling {
         val sak = sakRepository.hent(saksnummer)
 
         return finnEllerOpprettOrdinærBehandling(sak.id, vurderingsbehovOgÅrsak)
     }
 
-    fun finnEllerOpprettBehandling(saksnummer: Saksnummer, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): OpprettetBehandling {
+    fun finnEllerOpprettBehandling(
+        saksnummer: Saksnummer,
+        vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
+    ): OpprettetBehandling {
         val sak = sakRepository.hent(saksnummer)
 
         return finnEllerOpprettBehandling(sak.id, vurderingsbehovOgÅrsak)
