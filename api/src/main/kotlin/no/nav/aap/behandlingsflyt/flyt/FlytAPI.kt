@@ -39,6 +39,8 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.exception.IkkeTillattException
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -53,6 +55,7 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.LoggerFactory
+import java.util.UUID
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("flytApi")
@@ -222,7 +225,7 @@ fun NormalOpenAPIRoute.flytApi(
                     avklaringsbehovKode = MANUELT_SATT_PÅ_VENT_KODE
                 )
             ) { request, body ->
-                val sattePåVent = dataSource.transaction { connection ->
+                dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     LoggingKontekst(
                         repositoryProvider,
@@ -240,20 +243,10 @@ fun NormalOpenAPIRoute.flytApi(
                         )
                         val avklaringsbehovRepository =
                             repositoryProvider.provide<AvklaringsbehovRepository>()
-                        val alleAvklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling(behandlingRepository, request).id)
-                        val åpentAvklaringsbehov = alleAvklaringsbehov.åpne().first().definisjon
-
-                        val harTilgang = if (unleashGateway.isEnabled(BehandlingsflytFeature.TilgangssjekkSettPaaVent)) {
-                            tilgangGateway.sjekkTilgangTilBehandling(
-                                request.referanse,
-                                åpentAvklaringsbehov,
-                                token()
-                            )
-                        } else {
-                            true
-                        }
-                        if (!harTilgang) {
-                            return@transaction false
+                        val behandlingId = behandling(behandlingRepository, request).id
+                        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
+                        if (unleashGateway.isEnabled(BehandlingsflytFeature.TilgangssjekkSettPaaVent)) {
+                            sjekkTilgangTilSettPåVent(avklaringsbehovene, tilgangGateway, request.referanse, token())
                         }
 
                         val taSkriveLåsRepository =
@@ -270,10 +263,10 @@ fun NormalOpenAPIRoute.flytApi(
                                 )
                             )
                         taSkriveLåsRepository.verifiserSkrivelås(lås)
-                        true
+
                     }
                 }
-                respondWithStatus(if (sattePåVent) HttpStatusCode.NoContent else HttpStatusCode.Unauthorized)
+                respondWithStatus(HttpStatusCode.NoContent)
             }
         }
         route("/{referanse}/vente-informasjon") {
@@ -314,6 +307,20 @@ fun NormalOpenAPIRoute.flytApi(
                 }
             }
         }
+    }
+}
+
+private fun sjekkTilgangTilSettPåVent(avklaringsbehovene: Avklaringsbehovene, tilgangGateway: TilgangGateway, behandlingsreferanse: UUID, token: OidcToken) {
+    val åpentAvklaringsbehov = avklaringsbehovene.åpne().first().definisjon
+    val harTilgang =
+        tilgangGateway.sjekkTilgangTilBehandling(
+            behandlingsreferanse,
+            åpentAvklaringsbehov,
+            token
+        )
+
+    if (!harTilgang) {
+        throw IkkeTillattException("Mangler tilgang til å sette sak på vent i avklaringsbehov $åpentAvklaringsbehov")
     }
 }
 
