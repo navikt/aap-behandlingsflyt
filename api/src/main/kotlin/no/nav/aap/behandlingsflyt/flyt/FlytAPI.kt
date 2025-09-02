@@ -320,7 +320,7 @@ private fun sjekkTilgangTilSettPåVent(avklaringsbehovene: Avklaringsbehovene, t
         )
 
     if (!harTilgang) {
-        throw IkkeTillattException("Mangler tilgang til å sette sak på vent i avklaringsbehov $åpentAvklaringsbehov")
+        throw IkkeTillattException("Ikke tilgang til å sette behandlingen på vent.")
     }
 }
 
