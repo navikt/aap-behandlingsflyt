@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FASTSATT_PERIODE_PASSERT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_MELDEKORT
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -77,7 +78,10 @@ class BrevUtlederService(
 
             TypeBehandling.Revurdering -> {
                 val vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet()
-                if (setOf(MOTTATT_MELDEKORT, FASTSATT_PERIODE_PASSERT).containsAll(vurderingsbehov)) {
+                if (setOf(MOTTATT_MELDEKORT, FASTSATT_PERIODE_PASSERT, EFFEKTUER_AKTIVITETSPLIKT).containsAll(
+                        vurderingsbehov
+                    )
+                ) {
                     return null
                 }
                 return VedtakEndring
