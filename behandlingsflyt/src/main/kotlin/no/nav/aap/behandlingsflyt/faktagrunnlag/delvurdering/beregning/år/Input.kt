@@ -25,10 +25,8 @@ data class Input(
 ) {
 
     fun datoerForInnhenting(): Set<LocalDate> {
-        val ytterligereNedsattArbeidsevneDato = beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
-        if (ytterligereNedsattArbeidsevneDato == null) {
-            return setOf(nedsettelsesDato)
-        }
+        val ytterligereNedsattArbeidsevneDato =
+            beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato ?: return setOf(nedsettelsesDato)
 
         return setOf(nedsettelsesDato, ytterligereNedsattArbeidsevneDato)
     }
