@@ -46,6 +46,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -127,6 +128,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         register<FakeUføreRegisterGateway>()
         register<FakeInstitusjonsoppholdGateway>()
         register<FakePersonopplysningGateway>()
+        register<FakeUnleash>()
     }
 
     @TestDatabase
