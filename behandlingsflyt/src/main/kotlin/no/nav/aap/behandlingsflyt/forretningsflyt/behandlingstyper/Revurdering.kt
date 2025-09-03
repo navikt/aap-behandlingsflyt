@@ -147,7 +147,7 @@ object Revurdering : BehandlingType {
                 // TODO legges kun ut i dev i første runde
                 if (Miljø.erDev() || Miljø.erLokal()) {
                     medSteg(
-                        steg = OvergangArbeidSteg,
+                        steg = OvergangUføreSteg,
                         vurderingsbehovRelevanteForSteg = listOf(
                             Vurderingsbehov.MOTTATT_SØKNAD,
                             Vurderingsbehov.MOTTATT_DIALOGMELDING,
@@ -162,7 +162,7 @@ object Revurdering : BehandlingType {
                 // TODO legges kun ut i dev i første runde
                 if (Miljø.erDev() || Miljø.erLokal()) {
                     medSteg(
-                        steg = OvergangUføreSteg,
+                        steg = OvergangArbeidSteg,
                         vurderingsbehovRelevanteForSteg = listOf(
                             Vurderingsbehov.MOTTATT_SØKNAD,
                             Vurderingsbehov.MOTTATT_DIALOGMELDING,

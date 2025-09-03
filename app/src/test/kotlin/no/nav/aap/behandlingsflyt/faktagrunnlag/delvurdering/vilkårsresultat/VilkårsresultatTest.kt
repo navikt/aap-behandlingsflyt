@@ -107,9 +107,7 @@ class VilkårsresultatTest {
             val førstePeriode = Periode(dagensDato.minusDays(5), dagensDato)
             v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
-                    førstePeriode,
-                    utfall = Utfall.IKKE_RELEVANT,
-                    begrunnelse = null
+                    førstePeriode, utfall = Utfall.IKKE_RELEVANT, begrunnelse = null
                 )
             )
             v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
@@ -140,15 +138,13 @@ class VilkårsresultatTest {
 
             val res = v.rettighetstypeTidslinje()
             assertTidslinje(
-                res,
-                førstePeriode to {
+                res, førstePeriode to {
                     assertThat(it).`as`(dagensDato.toString()).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
                 },
 
                 andrePeriode to {
                     assertThat(it).isEqualTo(RettighetsType.STUDENT)
-                }
-            )
+                })
         }
 
 
@@ -158,9 +154,7 @@ class VilkårsresultatTest {
             val nå = LocalDate.now()
             v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
-                    Periode(nå.minusDays(5), nå.plusDays(15)),
-                    utfall = Utfall.OPPFYLT,
-                    begrunnelse = null
+                    Periode(nå.minusDays(5), nå.plusDays(15)), utfall = Utfall.OPPFYLT, begrunnelse = null
                 )
             )
             v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
@@ -192,16 +186,14 @@ class VilkårsresultatTest {
             // Kun sykepengererstatning først
             assertThat(res.segmenter().first().periode).isEqualTo(
                 Periode(
-                    nå.minusDays(5),
-                    nå.minusDays(3)
+                    nå.minusDays(5), nå.minusDays(3)
                 )
             )
             // Student-hjemmel får prioritet
             assertThat(res.segmenter().toList()[1].verdi).isEqualTo(RettighetsType.BISTANDSBEHOV)
             assertThat(res.segmenter().toList()[1].periode).isEqualTo(
                 Periode(
-                    nå.plusDays(1),
-                    nå.plusDays(15)
+                    nå.plusDays(1), nå.plusDays(15)
                 )
             )
         }
@@ -237,23 +229,19 @@ class VilkårsresultatTest {
             )
             v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
-                    andrePeriode,
-                    utfall = Utfall.OPPFYLT,
-                    begrunnelse = null
+                    andrePeriode, utfall = Utfall.OPPFYLT, begrunnelse = null
                 )
             )
 
             val res = v.rettighetstypeTidslinje().komprimer()
             assertTidslinje(
-                res,
-                Periode(nå, sykepengerPeriode) to {
+                res, Periode(nå, sykepengerPeriode) to {
                     assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
                 },
 
                 andrePeriode to {
                     assertThat(it).isEqualTo(RettighetsType.BISTANDSBEHOV)
-                }
-            )
+                })
         }
 
 
@@ -265,9 +253,7 @@ class VilkårsresultatTest {
             val sykepengerPeriode = nå.plusDays(30)
             v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
-                    Periode(nå, sykepengerPeriode),
-                    utfall = Utfall.OPPFYLT,
-                    begrunnelse = null
+                    Periode(nå, sykepengerPeriode), utfall = Utfall.OPPFYLT, begrunnelse = null
                 )
             )
             v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
@@ -292,8 +278,7 @@ class VilkårsresultatTest {
                 Periode(nå, sykepengerPeriode) to {
                     assertThat(it).isEqualTo(RettighetsType.ARBEIDSSØKER)
                 },
-
-                )
+            )
         }
 
         @Test
