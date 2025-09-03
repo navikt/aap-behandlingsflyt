@@ -67,18 +67,15 @@ public data class TilkjentDTO(
 public data class ArbeidIPeriodeDTO(
     val periodeFom: LocalDate,
     val periodeTom: LocalDate,
-    val timerArbeidet: BigDecimal
-)
+    val timerArbeidet: BigDecimal)
 
 public data class DetaljertMeldekortDTO(
     val personIdent: String,
-    val saksnummer: Saksnummer,
-    val behandlingId: Long,
+    val saksnummer: String,
     val meldeperiodeFom: LocalDate,
     val meldeperiodeTom: LocalDate,
     val mottattTidspunkt: LocalDateTime,
     val timerArbeidPerPeriode: List<ArbeidIPeriodeDTO>,
     val meldepliktStatusKode: String?,
-    val rettighetsTypeKode: String?,
-    val avslagsårsakKode: String?
+    val rettighetsTypeKode: String?
 )

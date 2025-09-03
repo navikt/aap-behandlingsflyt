@@ -1,24 +1,19 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BehandlingOgMeldekortService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BehandlingOgMeldekortServiceImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidIPeriodeDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -30,19 +25,6 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
-
-
-// midlertidig klasse, skal ta i bruk datatyper fra kontrakt når de er klare
-data class DetaljertMeldekortInfo(
-    val person: Person,
-    val saksnummer: Saksnummer,
-    val meldePeriode: Periode?,
-    val mottattTidspunkt: LocalDateTime,
-    val timerArbeidPerPeriode: Set<ArbeidIPeriode>,
-    val meldepliktStatus: MeldepliktStatus?,
-    val rettighetsType: RettighetsType?
-)
 
 class MeldekortTilApiInternUtfører(
     private val behandlingOgMeldekortService: BehandlingOgMeldekortService,
@@ -65,33 +47,39 @@ class MeldekortTilApiInternUtfører(
         meldekortOgBehandling.forEach { (behandling, meldekortListe) ->
             val underveisGrunnlag = underveisRepository.hent(behandling.id)
 
-            val detaljertMeldekortInfoListe = meldekortListe.map { meldekort ->
+            val detaljertMeldekortDTOListe = meldekortListe.map { meldekort ->
 
-                val underveisPeriode = finnUnderveisperiodeHvisEksisterer(meldekort, underveisGrunnlag.perioder)
-                val meldePeriode = underveisPeriode?.meldePeriode
-                val meldepliktStatus = underveisPeriode?.meldepliktStatus
-                val rettighetsType = underveisPeriode?.rettighetsType
+                val underveisPeriode = finnUnderveisperiode(meldekort, underveisGrunnlag.perioder)
+                val meldePeriode = underveisPeriode.meldePeriode
+                val meldepliktStatus = underveisPeriode.meldepliktStatus
+                val rettighetsType = underveisPeriode.rettighetsType
 
                 // TODO: vurder sammen med NKS om vi har mer relevant info å sende med
                 // Underveisperiode har mye informasjon som kan være nyttig å sende med
                 // Behandling har også noen kandidater
                 // Vi kan også sjekke for fritak fra meldeplikt, og rimelig grunn for å ikke oppfylle meldeplikt
                 // men denne koden skrives om pt. så best å vente.
-
-                DetaljertMeldekortInfo(
-                    person = person,
-                    saksnummer = sak.saksnummer,
-                    meldePeriode = meldePeriode,
+                DetaljertMeldekortDTO(
+                    personIdent = person.aktivIdent().identifikator,
+                    saksnummer = sak.saksnummer.toString(),
+                    meldeperiodeFom = meldePeriode.fom,
+                    meldeperiodeTom = meldePeriode.fom,
                     mottattTidspunkt = meldekort.mottattTidspunkt,
-                    timerArbeidPerPeriode = meldekort.timerArbeidPerPeriode,
-                    meldepliktStatus = meldepliktStatus,
-                    rettighetsType = rettighetsType,
+                    timerArbeidPerPeriode = meldekort.timerArbeidPerPeriode.map {
+                        ArbeidIPeriodeDTO(
+                            it.periode.fom,
+                            it.periode.tom,
+                            it.timerArbeid.antallTimer
+                        )
+                    },
+                    meldepliktStatusKode = meldepliktStatus?.name,
+                    rettighetsTypeKode = rettighetsType?.name,
                 )
 
             }
 
             try {
-                detaljertMeldekortInfoListe.map {
+                detaljertMeldekortDTOListe.map {
                     apiInternGateway.sendDetaljertMeldekort(it)
                 }
             } catch (e: Exception) {
@@ -103,11 +91,11 @@ class MeldekortTilApiInternUtfører(
         }
     }
 
-    private fun finnUnderveisperiodeHvisEksisterer(
+    private fun finnUnderveisperiode(
         meldekort: Meldekort, underveisPerioder: List<Underveisperiode>
-    ): Underveisperiode? {
+    ): Underveisperiode {
         val arbeidsperiode = arbeidsperiodeFraMeldekort(meldekort)
-        return underveisPerioder.firstOrNull {
+        return underveisPerioder.first {
             // alle arbeidsperiodene i meldekortet må være innenfor en og samme underveisperiode
             it.meldePeriode.inneholder(arbeidsperiode)
         }
@@ -127,8 +115,8 @@ class MeldekortTilApiInternUtfører(
 
 
     companion object : ProvidersJobbSpesifikasjon {
-        override val navn = "TBD"
-        override val type = "TBD"
+        override val navn = "Meldekort til API-intern"
+        override val type = "kelvin.meldekort.til.apiintern"
         override val beskrivelse = """
                 Push informasjon til API-intern slik at NKS kan hente den.
                 """.trimIndent()
