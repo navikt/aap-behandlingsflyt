@@ -41,6 +41,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.SumPi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.integrasjon.ident.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
+import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonoppholdRequest
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapRequest
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomData
@@ -1297,13 +1298,17 @@ object FakeServers : AutoCloseable {
             }
         }
         routing {
-            get {
-                val ident = requireNotNull(call.request.header("Nav-Personident"))
-                val person = hentEllerGenererTestPerson(ident)
+            post {
+                val body = call.receive<InstitusjonoppholdRequest>()
+                val ident = body.personident
 
-                val opphold = person.institusjonsopphold
+                val fakePerson = FakePersoner.hentPerson(ident)
 
-                call.respond(opphold)
+                if (fakePerson != null) {
+                    call.respond(fakePerson.institusjonsopphold)
+                } else {
+                    call.respond<List<InstitusjonoppholdRequest>>(emptyList())
+                }
             }
         }
     }

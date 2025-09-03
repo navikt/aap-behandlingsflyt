@@ -141,7 +141,7 @@ spec:
     - name: INTEGRASJON_YRKESSKADE_SCOPE
       value: api://prod-gcp.yrkesskade.yrkesskade-saker/.default
     - name: INTEGRASJON_INSTITUSJONSOPPHOLD_URL
-      value: https://inst2.prod-fss-pub.nais.io/api/v1/person/institusjonsopphold
+      value: https://inst2.prod-fss-pub.nais.io/api/v1/person/institusjonsopphold/soek
     - name: INTEGRASJON_INSTITUSJONSOPPHOLD_SCOPE
       value: api://prod-fss.team-rocket.inst2/.default
     - name: INTEGRASJON_INNTEKT_URL
