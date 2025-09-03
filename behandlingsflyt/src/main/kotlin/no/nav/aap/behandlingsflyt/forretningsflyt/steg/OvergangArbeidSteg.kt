@@ -34,7 +34,7 @@ import kotlin.collections.orEmpty
 class OvergangArbeidSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val overgangArbeidRepository : OvergangArbeidRepository,
+    private val overgangArbeidRepository: OvergangArbeidRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårService: VilkårService,
 ) : BehandlingSteg {
@@ -54,7 +54,10 @@ class OvergangArbeidSteg private constructor(
         val overgangArbeidGrunnlag = overgangArbeidRepository.hentHvisEksisterer(kontekst.behandlingId)
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_ARBEID)
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
+            VurderingType.FØRSTEGANGSBEHANDLING -> {
+                return Fullført
+            }
+            VurderingType.REVURDERING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     log.info("Ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.OVERGANGARBEIDVILKÅRET} for behandlingId ${kontekst.behandlingId}. Avbryter steg.")
                     avklaringsbehovene.avbrytForSteg(type())
@@ -81,8 +84,6 @@ class OvergangArbeidSteg private constructor(
                         overgangArbeidGrunnlag,
                         vilkårsresultat
                     )
-
-                    return Fullført
                 }
             }
 
@@ -125,7 +126,7 @@ class OvergangArbeidSteg private constructor(
                 versjon = ApplikasjonsVersjon.versjon
             )
         )
-        log.info("Merket bistand som ikke relevant pga innvilget overgang uføre - vilkår.")
+        log.info("Merket bistand som ikke relevant pga innvilget arbeidssøker - vilkår.")
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
 
 

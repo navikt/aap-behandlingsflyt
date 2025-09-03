@@ -42,6 +42,7 @@ class OvergangArbeidVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
             )
         }
         vilkår.leggTilVurderinger(tidslinje)
+
     }
 
     private fun opprettVilkårsvurdering(

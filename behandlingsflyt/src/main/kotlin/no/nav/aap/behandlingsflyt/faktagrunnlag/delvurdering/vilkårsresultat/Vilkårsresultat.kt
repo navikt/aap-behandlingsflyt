@@ -9,7 +9,6 @@ class Vilkårsresultat(
     vilkår: List<Vilkår> = emptyList()
 ) {
     private val vilkår: MutableList<Vilkår> = vilkår.toMutableList()
-
     fun leggTilHvisIkkeEksisterer(vilkårtype: Vilkårtype): Vilkår {
         if (vilkår.none { it.type == vilkårtype }) {
             this.vilkår.add(Vilkår(type = vilkårtype))
