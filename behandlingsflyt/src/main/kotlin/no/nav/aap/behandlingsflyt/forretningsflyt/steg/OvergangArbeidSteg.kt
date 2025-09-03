@@ -69,11 +69,12 @@ class OvergangArbeidSteg private constructor(
                     )
                     return Fullført
                 }
-                if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && harIkkeVurdert_11_17_tidligere(
+                if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && !sykdomsVilkårErOppfylt(kontekst.behandlingId) && harIkkeVurdert_11_17_tidligere(
                         avklaringsbehovene
                     )
                 ) {
                     settBistandsBehovTilIkkeRelevant(kontekst)
+                    settSykdomsVilkårTilIkkeRelevant(kontekst)
                     return FantAvklaringsbehov(Definisjon.AVKLAR_OVERGANG_ARBEID)
                 } else {
                     if (avklaringsbehov != null && avklaringsbehov.erÅpent()) {
@@ -111,6 +112,13 @@ class OvergangArbeidSteg private constructor(
         return alleBistandsVilkårOppfylt
     }
 
+    private fun sykdomsVilkårErOppfylt(behandlingId: BehandlingId): Boolean {
+        val alleSykdomsVilkårOppfylt =
+            vilkårsresultatRepository.hent(behandlingId).finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).vilkårsperioder()
+                .all { it.erOppfylt() }
+        return alleSykdomsVilkårOppfylt
+    }
+
     private fun harIkkeVurdert_11_17_tidligere(avklaringsbehovene: Avklaringsbehovene): Boolean {
         return !avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.AVKLAR_OVERGANG_ARBEID)
     }
@@ -127,6 +135,23 @@ class OvergangArbeidSteg private constructor(
             )
         )
         log.info("Merket bistand som ikke relevant pga innvilget arbeidssøker - vilkår.")
+        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+
+
+        return Fullført
+    }
+
+    private fun settSykdomsVilkårTilIkkeRelevant(kontekst: FlytKontekstMedPerioder): StegResultat {
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).leggTilVurdering(
+            Vilkårsperiode(
+                periode = Periode(kontekst.rettighetsperiode.fom, kontekst.rettighetsperiode.tom),
+                utfall = Utfall.IKKE_RELEVANT,
+                begrunnelse = null,
+                versjon = ApplikasjonsVersjon.versjon
+            )
+        )
+        log.info("Merket sykdom som ikke relevant pga innvilget arbeidssøker - vilkår.")
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
 
 

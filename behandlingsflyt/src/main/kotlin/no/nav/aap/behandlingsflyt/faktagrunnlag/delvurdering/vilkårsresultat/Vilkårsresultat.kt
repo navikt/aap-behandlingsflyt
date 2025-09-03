@@ -120,6 +120,16 @@ class Vilkårsresultat(
 
         }
 
+        val harOppfyltVilkårForOvergangArbeid =
+            vilkårPar.any {
+                it.first == Vilkårtype.OVERGANGARBEIDVILKÅRET
+                        && it.second.utfall == Utfall.OPPFYLT
+                        && it.second.innvilgelsesårsak == Innvilgelsesårsak.ARBEIDSSØKER
+            }
+        if (harOppfyltVilkårForOvergangArbeid) {
+            return RettighetsType.ARBEIDSSØKER
+        }
+
         // Vi har tatt hånd om sykepengervilkåret, og da må vi anta at 11-5 er oppfylt.
         require(sykdomsUtfall == Utfall.OPPFYLT) {
             "Sykepengeerstatning må være oppfylt om ikke 11-5 er oppfylt."
@@ -135,15 +145,7 @@ class Vilkårsresultat(
         if (harOppfyltVilkårForOvergangUføre) {
             return RettighetsType.VURDERES_FOR_UFØRETRYGD
         }
-        val harOppfyltVilkårForOvergangArbeid =
-            vilkårPar.any {
-                it.first == Vilkårtype.OVERGANGARBEIDVILKÅRET
-                        && it.second.utfall == Utfall.OPPFYLT
-                        && it.second.innvilgelsesårsak == Innvilgelsesårsak.ARBEIDSSØKER
-            }
-        if (harOppfyltVilkårForOvergangArbeid) {
-            return RettighetsType.ARBEIDSSØKER
-        }
+
 
         val bistandsvurderingInnvilgelsesårsak = bistandsvurderingen.innvilgelsesårsak
 

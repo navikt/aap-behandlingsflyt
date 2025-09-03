@@ -253,7 +253,9 @@ class VilkårsresultatTest {
             val sykepengerPeriode = nå.plusDays(30)
             v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
-                    Periode(nå, sykepengerPeriode), utfall = Utfall.OPPFYLT, begrunnelse = null
+                    Periode(nå, sykepengerPeriode),
+                    utfall = Utfall.IKKE_RELEVANT,
+                    begrunnelse = null
                 )
             )
             v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
