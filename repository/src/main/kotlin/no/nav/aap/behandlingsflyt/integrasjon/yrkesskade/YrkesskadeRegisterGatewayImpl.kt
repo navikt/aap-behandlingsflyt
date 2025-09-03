@@ -13,6 +13,8 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.komponenter.miljo.Miljø
+import org.slf4j.LoggerFactory
 import java.net.URI
 
 /**
@@ -30,6 +32,9 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
         prometheus = prometheus
     )
 
+    private val log = LoggerFactory.getLogger(javaClass)
+
+
     override fun innhent(person: Person, fødselsdato: Fødselsdato): List<Yrkesskade> {
         val identer = person.identer().map(Ident::identifikator)
         //TODO: fra når skal yrkesskade hentes
@@ -37,6 +42,10 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
         val httpRequest = PostRequest(body = request)
         val response = client.post(uri = url, request = httpRequest) { body, _ ->
             DefaultJsonMapper.fromJson<Yrkesskader?>(body)
+        }
+
+        if (Miljø.erDev()) {
+            log.debug("Response fra API for yrkesskade", response)
         }
 
         if (response == null) {
