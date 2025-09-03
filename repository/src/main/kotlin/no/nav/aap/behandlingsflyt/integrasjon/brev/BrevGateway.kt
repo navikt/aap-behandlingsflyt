@@ -254,7 +254,6 @@ class BrevGateway : BrevbestillingGateway {
                     if (brevBehov.grunnlagBeregning != null) {
                         add(
                             Faktagrunnlag.GrunnlagBeregning(
-                                dagsats = brevBehov.tilkjentYtelse?.gradertDagsats?.verdi,
                                 beregningstidspunkt = brevBehov.grunnlagBeregning?.beregningstidspunkt,
                                 beregningsgrunnlag = brevBehov.grunnlagBeregning?.beregningsgrunnlag?.verdi,
                                 inntekterPerÅr = brevBehov.grunnlagBeregning?.inntekterPerÅr?.map {

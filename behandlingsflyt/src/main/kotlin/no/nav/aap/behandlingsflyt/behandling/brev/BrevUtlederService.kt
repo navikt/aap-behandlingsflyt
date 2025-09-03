@@ -227,7 +227,7 @@ class BrevUtlederService(
                 )
 
             Innvilgelse.TilkjentYtelse(
-                dagsats = gradertDagsats, // TODO endre til `dagsats` etter brevmal endrer bruk til gradertDagsats
+                dagsats = tilkjent.dagsats,
                 gradertDagsats = gradertDagsats,
                 barnetillegg = tilkjent.barnetillegg,
                 gradertBarnetillegg = gradertBarnetillegg,
