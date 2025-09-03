@@ -111,7 +111,7 @@ class SakOgBehandlingService(
         val vurderingsbehov = vurderingsbehovOgÅrsak.vurderingsbehov
         val fasttrackkandidat = vurderingsbehov.isNotEmpty()
                 && vurderingsbehov.all { it.type in fasttrackKandidater }
-                && (vurderingsbehov.none { it.type == Vurderingsbehov.MOTTATT_AKTIVITETSMELDING } || unleashGateway.isEnabled(
+                && (vurderingsbehov.none { it.type == Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT } || unleashGateway.isEnabled(
             BehandlingsflytFeature.Aktivitetsplikt11_7
         ))
 

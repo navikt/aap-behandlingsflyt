@@ -8,64 +8,76 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_END
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class AktivitetspliktInformasjonskrav (
-    private val mottaDokumentService: MottaDokumentService,
-    private val aktivitetspliktRepository: AktivitetspliktRepository,
+class AktivitetspliktInformasjonskrav(
     private val tidligereVurderinger: TidligereVurderinger,
+    private val behandlingRepository: BehandlingRepository,
+    private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
+    private val unleashGateway: UnleashGateway
 ) : Informasjonskrav {
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.AKTIVITETSPLIKT
 
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): AktivitetspliktInformasjonskrav {
-            val mottattDokumentRepository =
-                repositoryProvider.provide<MottattDokumentRepository>()
-
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): AktivitetspliktInformasjonskrav {
             return AktivitetspliktInformasjonskrav(
-                MottaDokumentService(mottattDokumentRepository),
-                repositoryProvider.provide(),
                 TidligereVurderingerImpl(repositoryProvider),
+                repositoryProvider.provide(),
+                repositoryProvider.provide(),
+                gatewayProvider.provide()
             )
         }
     }
 
     override val navn = Companion.navn
 
-    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
-        return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
-                !tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, steg)
+    override fun erRelevant(
+        kontekst: FlytKontekstMedPerioder,
+        steg: StegType,
+        oppdatert: InformasjonskravOppdatert?
+    ): Boolean {
+        return unleashGateway.isEnabled(BehandlingsflytFeature.Aktivitetsplikt11_7)
+                && kontekst.vurderingType in listOf(VurderingType.REVURDERING, VurderingType.EFFEKTUER_AKTIVITETSPLIKT)
+                && !tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, steg)
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
-        val aktivitetskortSomIkkeErBehandlet = mottaDokumentService.aktivitetskortSomIkkeErBehandlet(kontekst.sakId)
-        if (aktivitetskortSomIkkeErBehandlet.isEmpty()) {
+        if (kontekst.vurderingType == VurderingType.EFFEKTUER_AKTIVITETSPLIKT) {
+            val nyesteIverksatteAktivitetspliktBehandling =
+                behandlingRepository
+                    .hentAlleFor(kontekst.sakId, listOf(TypeBehandling.Aktivitetsplikt))
+                    .filter { it.status().erAvsluttet() }
+                    .maxByOrNull { it.opprettetTidspunkt }
+            requireNotNull(nyesteIverksatteAktivitetspliktBehandling) {
+                "Fant ingen iverksatte aktivitetspliktbehandlinger for sak ${kontekst.sakId}, men vurderingstype er ${VurderingType.EFFEKTUER_AKTIVITETSPLIKT}"
+            }
+            aktivitetsplikt11_7Repository.kopier(nyesteIverksatteAktivitetspliktBehandling.id, kontekst.behandlingId)
             return IKKE_ENDRET
         }
+        return IKKE_ENDRET
+    }
 
-        val eksisterendeBrudd = aktivitetspliktRepository.hentGrunnlagHvisEksisterer(kontekst.behandlingId)
-            ?.bruddene
-            .orEmpty()
-
-        val alleBrudd = HashSet<AktivitetspliktDokument>(eksisterendeBrudd)
-
-        for (ubehandletInnsendingId in aktivitetskortSomIkkeErBehandlet) {
-            val nyeBrudd = aktivitetspliktRepository.hentBruddForInnsending(ubehandletInnsendingId)
-            alleBrudd.addAll(nyeBrudd)
-            mottaDokumentService.markerSomBehandlet(
-                sakId = kontekst.sakId,
-                behandlingId = kontekst.behandlingId,
-                referanse = InnsendingReferanse(ubehandletInnsendingId),
-            )
+    override fun flettOpplysningerFraAtomærBehandling(kontekst: FlytKontekst): Informasjonskrav.Endret {
+        val grunnlag = aktivitetsplikt11_7Repository.hentHvisEksisterer(kontekst.behandlingId)
+        val forrigeGrunnlag =
+            kontekst.forrigeBehandlingId.let { aktivitetsplikt11_7Repository.hentHvisEksisterer(it!!) }
+        if (grunnlag != forrigeGrunnlag) {
+            aktivitetsplikt11_7Repository.kopier(kontekst.forrigeBehandlingId!!, kontekst.behandlingId)
+            return ENDRET
         }
-
-        aktivitetspliktRepository.nyttGrunnlag(behandlingId = kontekst.behandlingId, brudd = alleBrudd)
-        return ENDRET
+        return IKKE_ENDRET
     }
 }
