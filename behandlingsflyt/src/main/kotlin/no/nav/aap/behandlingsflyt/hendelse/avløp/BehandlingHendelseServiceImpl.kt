@@ -47,6 +47,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
@@ -72,17 +73,85 @@ class BehandlingHendelseServiceImpl(
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
-
     override fun stoppet(
         behandling: Behandling,
         avklaringsbehovene: Avklaringsbehovene
     ) {
         val sak = sakService.hent(behandling.sakId)
+        val hendelse = hendelse(sak, behandling, avklaringsbehovene)
+        leggTilJobber(sak, behandling, hendelse)
+    }
+
+    override fun stoppetMedReservasjon(
+        behandling: Behandling,
+        avklaringsbehovene: Avklaringsbehovene,
+        reserverTil: String?
+    ) {
+        val sak = sakService.hent(behandling.sakId)
+        val hendelse = hendelse(sak, behandling, avklaringsbehovene, reserverTil)
+        leggTilJobber(sak, behandling, hendelse)
+    }
+
+    private fun hentReservertTil(behandlingId: BehandlingId): String? {
+        val oppfølgingsoppgavedokument =
+            MottaDokumentService(dokumentRepository).hentOppfølgingsBehandlingDokument(behandlingId) ?: return null
+
+        return oppfølgingsoppgavedokument.reserverTilBruker
+    }
+
+    private fun leggTilJobber(sak: Sak, behandling: Behandling, hendelse: BehandlingFlytStoppetHendelse) {
+        log.info("Legger til flytjobber til statistikk og stoppethendelse for behandling: ${behandling.id}")
+        flytJobbRepository.leggTil(
+            JobbInput(jobb = StoppetHendelseJobbUtfører).medPayload(hendelse)
+                .forBehandling(sak.id.id, behandling.id.id)
+        )
+        flytJobbRepository.leggTil(
+            JobbInput(jobb = StatistikkJobbUtfører).medPayload(hendelse)
+                .forBehandling(sak.id.id, behandling.id.id)
+        )
+        flytJobbRepository.leggTil(
+            JobbInput(jobb = DatadelingMeldePerioderOgSakStatusJobbUtfører).medPayload(hendelse)
+                .forBehandling(sak.id.id, behandling.id.id)
+        )
+
+        if (behandling.typeBehandling() in listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)) {
+            flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, behandling.id))
+        }
+    }
+
+    private fun hentMottattDokumenter(
+        vurderingsbehov: List<VurderingsbehovMedPeriode>,
+        behandling: Behandling
+    ): List<MottattDokumentDto> {
+        // Sender kun med dokumenter ved følgende behandlingsårsaker
+        val gyldigeÅrsaker = listOf(
+            Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+            Vurderingsbehov.MOTTATT_AVVIST_LEGEERKLÆRING,
+            Vurderingsbehov.MOTTATT_DIALOGMELDING
+        )
+
+        return if (vurderingsbehov.any { it.type in gyldigeÅrsaker }) {
+            val gyldigeDokumenter = listOf(
+                InnsendingType.LEGEERKLÆRING,
+                InnsendingType.LEGEERKLÆRING_AVVIST,
+                InnsendingType.DIALOGMELDING,
+            )
+
+            dokumentRepository
+                .hentDokumenterAvType(behandling.id, gyldigeDokumenter)
+                .map { it.tilMottattDokumentDto() }
+                .toList()
+        } else {
+            emptyList()
+        }
+    }
+
+    private fun hendelse(sak: Sak, behandling: Behandling, avklaringsbehovene: Avklaringsbehovene, reserverTil: String? =  null): BehandlingFlytStoppetHendelse {
         val erPåVent = avklaringsbehovene.hentÅpneVentebehov().isNotEmpty()
         val vurderingsbehov = behandling.vurderingsbehov()
         val mottattDokumenter = hentMottattDokumenter(vurderingsbehov, behandling)
 
-        val hendelse = BehandlingFlytStoppetHendelse(
+        return BehandlingFlytStoppetHendelse(
             personIdent = sak.person.aktivIdent().identifikator,
             saksnummer = sak.saksnummer,
             referanse = behandling.referanse,
@@ -120,63 +189,11 @@ class BehandlingHendelseServiceImpl(
             relevanteIdenterPåBehandling = pipRepository.finnIdenterPåBehandling(behandling.referanse).map { it.ident },
             erPåVent = erPåVent,
             mottattDokumenter = mottattDokumenter,
-            reserverTil = hentReservertTil(behandling.id),
+            reserverTil = reserverTil ?: hentReservertTil(behandling.id),
             opprettetTidspunkt = behandling.opprettetTidspunkt,
             hendelsesTidspunkt = LocalDateTime.now(),
             versjon = ApplikasjonsVersjon.versjon
         )
-
-        log.info("Legger til flytjobber til statistikk og stoppethendelse for behandling: ${behandling.id}")
-        flytJobbRepository.leggTil(
-            JobbInput(jobb = StoppetHendelseJobbUtfører).medPayload(hendelse)
-                .forBehandling(sak.id.id, behandling.id.id)
-        )
-        flytJobbRepository.leggTil(
-            JobbInput(jobb = StatistikkJobbUtfører).medPayload(hendelse)
-                .forBehandling(sak.id.id, behandling.id.id)
-        )
-        flytJobbRepository.leggTil(
-            JobbInput(jobb = DatadelingMeldePerioderOgSakStatusJobbUtfører).medPayload(hendelse)
-                .forBehandling(sak.id.id, behandling.id.id)
-        )
-
-        if (behandling.typeBehandling() in listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)) {
-            flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, behandling.id))
-        }
-    }
-
-    private fun hentReservertTil(behandlingId: BehandlingId): String? {
-        val oppfølgingsoppgavedokument =
-            MottaDokumentService(dokumentRepository).hentOppfølgingsBehandlingDokument(behandlingId) ?: return null
-
-        return oppfølgingsoppgavedokument.reserverTilBruker
-    }
-
-    private fun hentMottattDokumenter(
-        vurderingsbehov: List<VurderingsbehovMedPeriode>,
-        behandling: Behandling
-    ): List<MottattDokumentDto> {
-        // Sender kun med dokumenter ved følgende behandlingsårsaker
-        val gyldigeÅrsaker = listOf(
-            Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
-            Vurderingsbehov.MOTTATT_AVVIST_LEGEERKLÆRING,
-            Vurderingsbehov.MOTTATT_DIALOGMELDING
-        )
-
-        return if (vurderingsbehov.any { it.type in gyldigeÅrsaker }) {
-            val gyldigeDokumenter = listOf(
-                InnsendingType.LEGEERKLÆRING,
-                InnsendingType.LEGEERKLÆRING_AVVIST,
-                InnsendingType.DIALOGMELDING,
-            )
-
-            dokumentRepository
-                .hentDokumenterAvType(behandling.id, gyldigeDokumenter)
-                .map { it.tilMottattDokumentDto() }
-                .toList()
-        } else {
-            emptyList()
-        }
     }
 
     private fun DomeneÅrsakTilRetur.oversettTilKontrakt(): ÅrsakTilReturKodeKontrakt {

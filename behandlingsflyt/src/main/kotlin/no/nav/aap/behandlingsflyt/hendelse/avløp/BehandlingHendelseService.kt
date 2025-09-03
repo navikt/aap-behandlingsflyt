@@ -5,4 +5,5 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 
 interface BehandlingHendelseService {
     fun stoppet(behandling: Behandling, avklaringsbehovene: Avklaringsbehovene)
+    fun stoppetMedReservasjon(behandling: Behandling, avklaringsbehovene: Avklaringsbehovene, reserverTil: String? = null)
 }

@@ -11,4 +11,11 @@ object DummyBehandlingHendelseService : BehandlingHendelseService {
     ) {
 
     }
+    override fun stoppetMedReservasjon(
+        behandling: Behandling,
+        avklaringsbehovene: Avklaringsbehovene,
+        reserverTil: String?
+    ) {
+
+    }
 }

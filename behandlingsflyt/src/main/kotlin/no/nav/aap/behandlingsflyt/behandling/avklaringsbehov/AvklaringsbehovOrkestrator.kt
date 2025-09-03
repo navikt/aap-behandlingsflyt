@@ -136,7 +136,7 @@ class AvklaringsbehovOrkestrator(
 
         avklaringsbehovene.validateTilstand(behandling = behandling)
         avklaringsbehovene.validerPlassering(behandling = behandling)
-        behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
+        behandlingHendelseService.stoppetMedReservasjon(behandling, avklaringsbehovene, hendelse.bruker.ident)
     }
 
     fun settPåVentMensVentePåMedisinskeOpplysninger(behandlingId: BehandlingId, bruker: Bruker) {
@@ -155,6 +155,6 @@ class AvklaringsbehovOrkestrator(
         avklaringsbehovene.validateTilstand(behandling = behandling)
         avklaringsbehovene.validerPlassering(behandling = behandling)
 
-        behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
+        behandlingHendelseService.stoppetMedReservasjon(behandling, avklaringsbehovene, bruker.ident)
     }
 }

@@ -221,6 +221,13 @@ class EnklereFlytOrkestratorTest {
             override fun stoppet(behandling: Behandling, avklaringsbehovene: Avklaringsbehovene) {
                 hendelser.add(Pair(behandling, avklaringsbehovene))
             }
+            override fun stoppetMedReservasjon(
+                behandling: Behandling,
+                avklaringsbehovene: Avklaringsbehovene,
+                reserverTil: String?
+            ) {
+                hendelser.add(Pair(behandling, avklaringsbehovene))
+            }
         }
         val flytOrkestrator = FlytOrkestrator(
             flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(
