@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.ident
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
@@ -42,7 +41,6 @@ class ResultatUtlederTest {
         underveisRepository = InMemoryUnderveisRepository,
         InMemoryBehandlingRepository,
         trukketSøknadService = TrukketSøknadService(
-            InMemoryAvklaringsbehovRepository,
             InMemoryTrukketSøknadRepository,
         )
     )
@@ -144,7 +142,10 @@ class ResultatUtlederTest {
     private fun opprettBehandling(sak: Sak): Behandling {
         return InMemorySakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
             sak.saksnummer,
-            VurderingsbehovOgÅrsak(listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)), ÅrsakTilOpprettelse.SØKNAD)
+            VurderingsbehovOgÅrsak(
+                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                ÅrsakTilOpprettelse.SØKNAD
+            )
         )
     }
 }

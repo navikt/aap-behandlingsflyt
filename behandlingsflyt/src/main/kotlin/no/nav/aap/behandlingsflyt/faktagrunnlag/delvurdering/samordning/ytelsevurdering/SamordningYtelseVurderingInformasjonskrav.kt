@@ -30,7 +30,7 @@ import java.time.Duration
 import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse as ForeldrePengerYtelse
 
-class SamordningYtelseVurderingService(
+class SamordningYtelseVurderingInformasjonskrav(
     private val samordningYtelseRepository: SamordningYtelseRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val fpGateway: ForeldrepengerGateway,
@@ -165,8 +165,8 @@ class SamordningYtelseVurderingService(
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
-        ): SamordningYtelseVurderingService {
-            return SamordningYtelseVurderingService(
+        ): SamordningYtelseVurderingInformasjonskrav {
+            return SamordningYtelseVurderingInformasjonskrav(
                 repositoryProvider.provide(),
                 TidligereVurderingerImpl(repositoryProvider),
                 gatewayProvider.provide(),

@@ -21,7 +21,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway as IInstitusjonsoppholdGateway
 
-class InstitusjonsoppholdService private constructor(
+class InstitusjonsoppholdInformasjonskrav private constructor(
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val institusjonsoppholdRegisterGateway: IInstitusjonsoppholdGateway,
@@ -74,8 +74,8 @@ class InstitusjonsoppholdService private constructor(
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
-        ): InstitusjonsoppholdService {
-            return InstitusjonsoppholdService(
+        ): InstitusjonsoppholdInformasjonskrav {
+            return InstitusjonsoppholdInformasjonskrav(
                 SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 repositoryProvider.provide(),
                 gatewayProvider.provide(),

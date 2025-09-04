@@ -417,7 +417,7 @@ class StatistikkJobbUtfører(
                 dokumentRepository = repositoryProvider.provide(),
                 sykdomRepository = repositoryProvider.provide(),
                 underveisRepository = repositoryProvider.provide(),
-                trukketSøknadService = TrukketSøknadService(repositoryProvider),
+                trukketSøknadService = TrukketSøknadService(repositoryProvider.provide()),
                 klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
                 statistikkGateway = gatewayProvider.provide(),
             )
