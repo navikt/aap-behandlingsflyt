@@ -46,7 +46,7 @@ class ProsesserBehandlingService(
         }
     }
 
-    fun triggProsesserBehandling(behandling: Behandling, parameters: List<Pair<String, String>>) {
+    fun triggProsesserBehandling(behandling: Behandling, parameters: List<Pair<String, String>> = emptyList()) {
         triggProsesserBehandling(behandling.sakId, behandling.id, parameters)
     }
 
