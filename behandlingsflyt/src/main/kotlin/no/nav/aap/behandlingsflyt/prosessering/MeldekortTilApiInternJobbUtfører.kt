@@ -43,9 +43,16 @@ class MeldekortTilApiInternJobbUtfører(
         val behandlingId = BehandlingId(input.behandlingId())
 
         val sak = saksRepository.hent(sakId)
-
         val meldekortOgBehandling = behandlingOgMeldekortService.hentAlle(sak)
+
         // TODO filter på behandlingId hvis det passer for Jobben?
+/*        val meldekortene = behandlingOgMeldekortService.hentAlle(behandlingId)
+          val kontraktObjekter = meldekortene.map { meldekort ->
+              val behandling = behandlingRepository.hent(behandlingId)
+              val underveisGrunnlag = underveisRepository.hent(behandling.id)
+
+              tilKontrakt(sak, behandling, meldekort, underveisGrunnlag)
+        }*/
 
         val kontraktObjekter: List<DetaljertMeldekortDTO> =
             meldekortOgBehandling.flatMap { (behandling, meldekortListe) ->
