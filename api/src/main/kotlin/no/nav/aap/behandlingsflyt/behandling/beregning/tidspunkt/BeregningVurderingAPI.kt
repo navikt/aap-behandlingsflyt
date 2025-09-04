@@ -99,12 +99,14 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         skalVurderes =
                             sakerMedDato.filterNotNull().map {
+                                // TODO her må alternativt skadedato hentes fra yrkesskadevurdering når denne får funksjonalitet for å manuelt overstyre skadedato
+                                val skadedato = requireNotNull(it.skadedato)
                                 YrkesskadeTilVurderingResponse(
                                     it.ref,
                                     it.saksnummer,
                                     it.kildesystem,
-                                    it.skadedato,
-                                    Grunnbeløp.finnGUnit(it.skadedato, Beløp(1)).beløp
+                                    skadedato,
+                                    Grunnbeløp.finnGUnit(skadedato, Beløp(1)).beløp
                                 )
                             },
                         vurderinger =

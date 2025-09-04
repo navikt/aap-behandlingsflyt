@@ -6,5 +6,5 @@ data class Yrkesskade(
     val ref: String,
     val saksnummer: Int?,
     val kildesystem: String,
-    val skadedato: LocalDate
+    val skadedato: LocalDate?
 )

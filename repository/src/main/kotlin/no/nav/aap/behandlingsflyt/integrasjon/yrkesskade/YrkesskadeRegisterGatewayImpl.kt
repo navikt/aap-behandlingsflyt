@@ -60,7 +60,7 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
                     ref = yrkesskade.saksreferanse,
                     saksnummer = yrkesskade.saksnr,
                     kildesystem = yrkesskade.kildesystem,
-                    skadedato = requireNotNull(yrkesskade.skadedato)
+                    skadedato = yrkesskade.skadedato
                 )
             }
     }
