@@ -17,7 +17,9 @@ enum class BehandlingsflytFeature : FeatureToggle {
     SosialHjelpFlereKontorer,
     BrevBeregningsgrunnlag,
     Aktivitetsplikt11_7,
-    TilgangssjekkSettPaaVent;
+    TilgangssjekkSettPaaVent,
+    OverforingsdatoNullForAvregning
+    ;
 
     override fun key(): String = name
 }

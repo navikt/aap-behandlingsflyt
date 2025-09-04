@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDetaljerDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
@@ -34,6 +35,7 @@ class UtbetalingService(
     private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
     private val samordningArbeidsgiverRepository: SamordningArbeidsgiverRepository,
     private val underveisRepository: UnderveisRepository,
+    private val unleashGateway: UnleashGateway,
 ) {
 
     fun lagTilkjentYtelseForUtbetaling(sakId: SakId, behandlingId: BehandlingId, simulering: Boolean = false): TilkjentYtelseDto? {
@@ -65,8 +67,14 @@ class UtbetalingService(
             }
             val avventUtbetaling = if (tilkjentYtelse.isNotEmpty()) {
                 val førsteVedtaksdato = finnFørsteVedtaksdato(sakId) ?: LocalDate.now()
-                AvventUtbetalingService(refusjonskravRepository, tjenestepensjonRefusjonsKravVurderingRepository, samordningAndreStatligeYtelserRepository, samordningArbeidsgiverRepository).
-                    finnEventuellAvventUtbetaling(behandlingId, førsteVedtaksdato, tilkjentYtelse.finnHelePerioden())
+                val avventUtbetalingService = AvventUtbetalingService(
+                    refusjonskravRepository = refusjonskravRepository,
+                    tjenestepensjonRefusjonsKravVurderingRepository = tjenestepensjonRefusjonsKravVurderingRepository,
+                    samordningAndreStatligeYtelserRepository = samordningAndreStatligeYtelserRepository,
+                    samordningArbeidsgiverYtelserRepository = samordningArbeidsgiverRepository,
+                    unleashGateway = unleashGateway,
+                )
+                avventUtbetalingService.finnEventuellAvventUtbetaling(behandlingId, førsteVedtaksdato, tilkjentYtelse.finnHelePerioden())
             } else {
                 null
             }
