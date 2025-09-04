@@ -47,14 +47,15 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
             return emptyList()
         }
 
-        secureLogger.info("Response fra API for yrkesskade: " + response)
+        secureLogger.info("Response fra API for yrkesskade: " + response.saker)
+
+        val gyldigeStatuser = listOf("GODKJENT", "INNVILGELSE", "DELVIS_INNVILGET", "DELVIS_GODKJENT")
 
         //FIXME: Kan denne være null?? Når da? Ser ut som at yrkesskade-saker alltid returnerer en liste med mindre det er en feil i responsen
         return response
             .saker
             .orEmpty()
-            // TODO legge på filter når vi har blitt enige om hva som skal filtreres
-            //.filter { it.resultat in listOf("GODKJENT")}
+            //.filter { it.resultat in gyldigeStatuser}
             .map { yrkesskade ->
                 Yrkesskade(
                     ref = yrkesskade.saksreferanse,
