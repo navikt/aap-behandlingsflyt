@@ -111,8 +111,6 @@ class MeldekortTilApiInternUtfører(
     @param meldekort -
      **/
     private fun arbeidsperiodeFraMeldekort(meldekort: Meldekort): Periode {
-        // TODO kan timerArbeidetPerPeriode reelt være tom, eller er det alltid en bug hvis det skjer?
-        // Altså at ingen dager har timetall?
         val arbeidPerioder = meldekort.timerArbeidPerPeriode.map { it.periode }
         val arbeidsPerioderStart = arbeidPerioder.minBy { it.fom }.fom
         val arbeidsPerioderSlutt = arbeidPerioder.maxBy { it.tom }.tom
