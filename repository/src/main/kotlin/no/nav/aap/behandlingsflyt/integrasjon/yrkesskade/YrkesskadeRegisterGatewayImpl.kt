@@ -13,7 +13,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.komponenter.miljo.Miljø
 import org.slf4j.LoggerFactory
 import java.net.URI
 
@@ -32,8 +31,7 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
         prometheus = prometheus
     )
 
-    private val log = LoggerFactory.getLogger(javaClass)
-
+    private val secureLogger = LoggerFactory.getLogger("secureLog")
 
     override fun innhent(person: Person, fødselsdato: Fødselsdato): List<Yrkesskade> {
         val identer = person.identer().map(Ident::identifikator)
@@ -44,19 +42,19 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
             DefaultJsonMapper.fromJson<Yrkesskader?>(body)
         }
 
-        if (Miljø.erDev()) {
-            log.debug("Response fra API for yrkesskade", response)
-        }
 
         if (response == null) {
             return emptyList()
         }
 
+        secureLogger.info("Response fra API for yrkesskade: " + response)
 
         //FIXME: Kan denne være null?? Når da? Ser ut som at yrkesskade-saker alltid returnerer en liste med mindre det er en feil i responsen
         return response
             .saker
             .orEmpty()
+            // TODO legge på filter når vi har blitt enige om hva som skal filtreres
+            //.filter { it.resultat in listOf("GODKJENT")}
             .map { yrkesskade ->
                 Yrkesskade(
                     ref = yrkesskade.saksreferanse,
