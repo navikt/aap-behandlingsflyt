@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
@@ -11,10 +12,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortReposit
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidIPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
@@ -26,7 +29,7 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 
-class MeldekortTilApiInternUtfører(
+class MeldekortTilApiInternJobbUtfører(
     private val behandlingOgMeldekortService: BehandlingOgMeldekortService,
     private val saksRepository: SakRepository,
     private val underveisRepository: UnderveisRepository,
@@ -40,59 +43,70 @@ class MeldekortTilApiInternUtfører(
         val behandlingId = BehandlingId(input.behandlingId())
 
         val sak = saksRepository.hent(sakId)
-        val person = sak.person
 
         val meldekortOgBehandling = behandlingOgMeldekortService.hentAlle(sak)
         // TODO filter på behandlingId hvis det passer for Jobben?
-        meldekortOgBehandling.forEach { (behandling, meldekortListe) ->
-            val underveisGrunnlag = underveisRepository.hent(behandling.id)
 
-            val detaljertMeldekortDTOListe = meldekortListe.map { meldekort ->
+        val kontraktObjekter: List<DetaljertMeldekortDTO> =
+            meldekortOgBehandling.flatMap { (behandling, meldekortListe) ->
+                val underveisGrunnlag = underveisRepository.hent(behandling.id)
 
-                val underveisPeriode = finnUnderveisperiode(meldekort, underveisGrunnlag.perioder)
-                val meldePeriode = underveisPeriode.meldePeriode
-                val meldepliktStatus = underveisPeriode.meldepliktStatus
-                val rettighetsType = underveisPeriode.rettighetsType
-                val avslagsårsak = underveisPeriode.avslagsårsak
-
-                // TODO: vurder sammen med NKS om vi har mer relevant info å sende med
-                // Underveisperiode har informasjon som kan være nyttig å sende med
-                // Behandling har også noen kandidater
-                // Vi kan også sjekke for fritak fra meldeplikt, og rimelig grunn for å ikke oppfylle meldeplikt
-                // men denne koden skrives om pt. så best å vente.
-
-                DetaljertMeldekortDTO(
-                    personIdent = person.aktivIdent().identifikator,
-                    saksnummer = sak.saksnummer,
-                    behandlingId = behandling.id.toLong(),
-                    meldeperiodeFom = meldePeriode.fom,
-                    meldeperiodeTom = meldePeriode.fom,
-                    mottattTidspunkt = meldekort.mottattTidspunkt,
-                    timerArbeidPerPeriode = meldekort.timerArbeidPerPeriode.map {
-                        ArbeidIPeriodeDTO(
-                            it.periode.fom,
-                            it.periode.tom,
-                            it.timerArbeid.antallTimer
-                        )
-                    },
-                    meldepliktStatusKode = meldepliktStatus?.name,
-                    rettighetsTypeKode = rettighetsType?.name,
-                    avslagsårsakKode = avslagsårsak?.name
-                )
-
-            }
-
-            try {
-                detaljertMeldekortDTOListe.map {
-                    apiInternGateway.sendDetaljertMeldekort(it)
+                meldekortListe.map { meldekort ->
+                    tilKontrakt(sak, behandling, meldekort, underveisGrunnlag)
                 }
-            } catch (e: Exception) {
-                log.error(
-                    "Feil ved sending av meldekort til API-intern for sak=${sakId}," + " behandling=${behandling.id}", e
-                )
-                throw e
             }
+
+        try {
+            kontraktObjekter.forEach {
+                // TODO er det bedre å sende en liste? Potensielt mange (100 stk?)
+                apiInternGateway.sendDetaljertMeldekort(it)
+            }
+        } catch (e: Exception) {
+            log.error(
+                "Feil ved sending av meldekort til API-intern for sak=${sakId}," + " behandling=${behandlingId}", e
+            )
+            throw e
         }
+    }
+
+    private fun tilKontrakt(
+        sak: Sak,
+        behandling: Behandling,
+        meldekort: Meldekort,
+        underveisGrunnlag: UnderveisGrunnlag
+    ): DetaljertMeldekortDTO {
+
+        val underveisPeriode = finnUnderveisperiode(meldekort, underveisGrunnlag.perioder)
+        val meldePeriode = underveisPeriode.meldePeriode
+        val meldepliktStatus = underveisPeriode.meldepliktStatus
+        val rettighetsType = underveisPeriode.rettighetsType
+        val avslagsårsak = underveisPeriode.avslagsårsak
+        val personIdent = sak.person.aktivIdent()
+
+        // TODO: vurder sammen med NKS om vi har mer relevant info å sende med
+        // Underveisperiode har informasjon som kan være nyttig å sende med
+        // Behandling har også noen kandidater
+        // Vi kan også sjekke for fritak fra meldeplikt, og rimelig grunn for å ikke oppfylle meldeplikt
+        // men denne koden skrives om pt. så best å vente.
+
+        return DetaljertMeldekortDTO(
+            personIdent = personIdent.identifikator,
+            saksnummer = sak.saksnummer,
+            behandlingId = behandling.id.toLong(),
+            meldeperiodeFom = meldePeriode.fom,
+            meldeperiodeTom = meldePeriode.fom,
+            mottattTidspunkt = meldekort.mottattTidspunkt,
+            timerArbeidPerPeriode = meldekort.timerArbeidPerPeriode.map {
+                ArbeidIPeriodeDTO(
+                    it.periode.fom,
+                    it.periode.tom,
+                    it.timerArbeid.antallTimer
+                )
+            },
+            meldepliktStatusKode = meldepliktStatus?.name,
+            rettighetsTypeKode = rettighetsType?.name,
+            avslagsårsakKode = avslagsårsak?.name
+        )
     }
 
     private fun finnUnderveisperiode(
@@ -140,7 +154,7 @@ class MeldekortTilApiInternUtfører(
                 )
 
             )
-            return MeldekortTilApiInternUtfører(
+            return MeldekortTilApiInternJobbUtfører(
                 behandlingOgMeldekortService = service,
                 apiInternGateway = gatewayProvider.provide(ApiInternGateway::class),
                 saksRepository = sakRepository,
@@ -151,7 +165,7 @@ class MeldekortTilApiInternUtfører(
         fun nyJobb(
             sakId: SakId,
             behandlingId: BehandlingId,
-        ) = JobbInput(MeldekortTilApiInternUtfører).apply {
+        ) = JobbInput(MeldekortTilApiInternJobbUtfører).apply {
             forBehandling(sakId.toLong(), behandlingId.toLong())
         }
     }
