@@ -9,7 +9,6 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
 
 class OvergangUføreRepositoryImpl(private val connection: DBConnection) : OvergangUføreRepository {
 
@@ -57,11 +56,11 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
     private fun overgangUforevurderingRowMapper(row: Row): OvergangUføreVurdering {
         return OvergangUføreVurdering(
             begrunnelse = row.getString("BEGRUNNELSE"),
-            brukerSoktUforetrygd = row.getBoolean("BRUKER_SOKT_UFORETRYGD"),
-            brukerVedtakUforetrygd = row.getStringOrNull("BRUKER_VEDTAK_UFORETRYGD"),
-            brukerRettPaaAAP = row.getBooleanOrNull("BRUKER_RETT_PAA_AAP"),
+            brukerHarSøktOmUføretrygd = row.getBoolean("BRUKER_SOKT_UFORETRYGD"),
+            brukerHarFåttVedtakOmUføretrygd = row.getStringOrNull("BRUKER_VEDTAK_UFORETRYGD"),
+            brukerRettPåAAP = row.getBooleanOrNull("BRUKER_RETT_PAA_AAP"),
             vurderingenGjelderFra = row.getLocalDateOrNull("VURDERINGEN_GJELDER_FRA"),
-            virkningsDato = row.getLocalDateOrNull("VIRKNINGSDATO"),
+            virkningsdato = row.getLocalDateOrNull("VIRKNINGSDATO"),
             vurdertAv = row.getString("VURDERT_AV"),
             opprettet = row.getInstant("OPPRETTET_TID")
         )
@@ -157,10 +156,10 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
         ) {
             setParams { vurdering ->
                 setString(1, vurdering.begrunnelse)
-                setBoolean(2, vurdering.brukerSoktUforetrygd)
-                setString(3, vurdering.brukerVedtakUforetrygd)
-                setBoolean(4, vurdering.brukerRettPaaAAP)
-                setLocalDate(5, vurdering.virkningsDato)
+                setBoolean(2, vurdering.brukerHarSøktOmUføretrygd)
+                setString(3, vurdering.brukerHarFåttVedtakOmUføretrygd)
+                setBoolean(4, vurdering.brukerRettPåAAP)
+                setLocalDate(5, vurdering.virkningsdato)
                 setString(6, vurdering.vurdertAv)
                 setLong(7, overganguforevurderingerId)
                 setLocalDate(8, vurdering.vurderingenGjelderFra)

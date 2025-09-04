@@ -7,15 +7,15 @@ import java.time.LocalDate
 
 data class OvergangArbeidVurderingLøsningDto(
     val begrunnelse: String,
-    val brukerRettPaaAAP: Boolean?,
-    val virkningsDato: LocalDate?,
+    val brukerRettPåAAP: Boolean?,
+    val virkningsdato: LocalDate?,
     val overgangBegrunnelse: String?,
 ) {
     fun tilOvergangArbeidVurdering(bruker: Bruker, vurderingenGjelderFra: LocalDate?) = OvergangArbeidVurdering(
         begrunnelse = begrunnelse,
-        brukerRettPaaAAP = brukerRettPaaAAP,
+        brukerRettPåAAP = brukerRettPåAAP,
         vurderingenGjelderFra = vurderingenGjelderFra,
-        virkningsDato = virkningsDato,
+        virkningsdato = virkningsdato,
         vurdertAv = bruker.ident
     )
 }

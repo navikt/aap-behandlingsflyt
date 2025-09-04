@@ -6,19 +6,19 @@ import java.time.LocalDate
 
 data class OvergangUføreVurderingLøsningDto(
     val begrunnelse: String,
-    val brukerSoktUforetrygd: Boolean,
-    val brukerVedtakUforetrygd: String?,
-    val brukerRettPaaAAP: Boolean?,
-    val virkningsDato: LocalDate?,
+    val brukerHarSøktOmUføretrygd: Boolean,
+    val brukerHarFåttVedtakOmUføretrygd: String?,
+    val brukerRettPåAAP: Boolean?,
+    val virkningsdato: LocalDate?,
     val overgangBegrunnelse: String?,
 ) {
     fun tilOvergangUføreVurdering(bruker: Bruker, vurderingenGjelderFra: LocalDate?) = OvergangUføreVurdering(
         begrunnelse = begrunnelse,
-        brukerSoktUforetrygd = brukerSoktUforetrygd,
-        brukerVedtakUforetrygd = brukerVedtakUforetrygd,
-        brukerRettPaaAAP = brukerRettPaaAAP,
+        brukerHarSøktOmUføretrygd = brukerHarSøktOmUføretrygd,
+        brukerHarFåttVedtakOmUføretrygd = brukerHarFåttVedtakOmUføretrygd,
+        brukerRettPåAAP = brukerRettPåAAP,
         vurderingenGjelderFra = vurderingenGjelderFra,
-        virkningsDato = virkningsDato,
+        virkningsdato = virkningsdato,
         vurdertAv = bruker.ident
     )
 

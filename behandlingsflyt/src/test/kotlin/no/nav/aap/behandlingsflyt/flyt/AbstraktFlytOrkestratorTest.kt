@@ -584,10 +584,10 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
                 AvklarOvergangUføreLøsning(
                     OvergangUføreVurderingLøsningDto(
                         begrunnelse = "Løsning",
-                        brukerSoktUforetrygd = false,
-                        brukerVedtakUforetrygd = null,
-                        brukerRettPaaAAP = false,
-                        virkningsDato = null,
+                        brukerHarSøktOmUføretrygd = false,
+                        brukerHarFåttVedtakOmUføretrygd = null,
+                        brukerRettPåAAP = false,
+                        virkningsdato = null,
                         overgangBegrunnelse = null
                     )
                 )
@@ -647,8 +647,8 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
                 AvklarOvergangArbeidLøsning(
                     OvergangArbeidVurderingLøsningDto(
                         begrunnelse = "Løsning",
-                        brukerRettPaaAAP = true,
-                        virkningsDato = null,
+                        brukerRettPåAAP = true,
+                        virkningsdato = null,
                         overgangBegrunnelse = null
                     )
                 )

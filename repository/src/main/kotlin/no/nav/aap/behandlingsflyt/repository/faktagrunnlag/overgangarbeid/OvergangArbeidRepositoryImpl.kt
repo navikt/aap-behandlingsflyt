@@ -56,9 +56,9 @@ class OvergangArbeidRepositoryImpl(private val connection: DBConnection) : Overg
     private fun overgangArbeidvurderingRowMapper(row: Row): OvergangArbeidVurdering {
         return OvergangArbeidVurdering(
             begrunnelse = row.getString("BEGRUNNELSE"),
-            brukerRettPaaAAP = row.getBooleanOrNull("BRUKER_RETT_PAA_AAP"),
+            brukerRettPåAAP = row.getBooleanOrNull("BRUKER_RETT_PAA_AAP"),
             vurderingenGjelderFra = row.getLocalDateOrNull("VURDERINGEN_GJELDER_FRA"),
-            virkningsDato = row.getLocalDateOrNull("VIRKNINGSDATO"),
+            virkningsdato = row.getLocalDateOrNull("VIRKNINGSDATO"),
             vurdertAv = row.getString("VURDERT_AV"),
             opprettet = row.getInstant("OPPRETTET_TID")
         )
@@ -154,8 +154,8 @@ class OvergangArbeidRepositoryImpl(private val connection: DBConnection) : Overg
         ) {
             setParams { vurdering ->
                 setString(1, vurdering.begrunnelse)
-                setBoolean(2, vurdering.brukerRettPaaAAP)
-                setLocalDate(3, vurdering.virkningsDato)
+                setBoolean(2, vurdering.brukerRettPåAAP)
+                setLocalDate(3, vurdering.virkningsdato)
                 setString(4, vurdering.vurdertAv)
                 setLong(5, overgangarbeidvurderingerId)
                 setLocalDate(6, vurdering.vurderingenGjelderFra)

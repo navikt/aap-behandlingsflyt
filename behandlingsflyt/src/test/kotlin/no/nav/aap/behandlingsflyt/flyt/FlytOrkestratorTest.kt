@@ -168,7 +168,6 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
@@ -1316,10 +1315,10 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 AvklarOvergangUføreLøsning(
                     OvergangUføreVurderingLøsningDto(
                         begrunnelse = "Løsning",
-                        brukerSoktUforetrygd = true,
-                        brukerVedtakUforetrygd = "NEI",
-                        brukerRettPaaAAP = true,
-                        virkningsDato = LocalDate.now(),
+                        brukerHarSøktOmUføretrygd = true,
+                        brukerHarFåttVedtakOmUføretrygd = "NEI",
+                        brukerRettPåAAP = true,
+                        virkningsdato = LocalDate.now(),
                         overgangBegrunnelse = null
                     )
                 )

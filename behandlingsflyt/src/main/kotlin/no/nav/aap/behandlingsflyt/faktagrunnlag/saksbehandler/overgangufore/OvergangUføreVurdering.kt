@@ -5,10 +5,10 @@ import java.time.LocalDate
 
 data class OvergangUføreVurdering(
     val begrunnelse: String,
-    val brukerSoktUforetrygd: Boolean,
-    val brukerVedtakUforetrygd: String?,
-    val brukerRettPaaAAP: Boolean?,
-    val virkningsDato: LocalDate?,
+    val brukerHarSøktOmUføretrygd: Boolean,
+    val brukerHarFåttVedtakOmUføretrygd: String?,
+    val brukerRettPåAAP: Boolean?,
+    val virkningsdato: LocalDate?,
     val vurdertAv: String,
     val vurderingenGjelderFra: LocalDate?,
     val opprettet: Instant? = null

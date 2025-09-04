@@ -56,8 +56,8 @@ class OvergangArbeidVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
         if (overgangArbeidVurdering == null) {
             utfall = Utfall.IKKE_OPPFYLT
             avslagsårsak = Avslagsårsak.MANGLENDE_DOKUMENTASJON
-        } else if (overgangArbeidVurdering.virkningsDato != null &&
-            overgangArbeidVurdering.brukerRettPaaAAP == true
+        } else if (overgangArbeidVurdering.virkningsdato != null &&
+            overgangArbeidVurdering.brukerRettPåAAP == true
         ) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.ARBEIDSSØKER
