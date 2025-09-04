@@ -39,9 +39,8 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
         val request = YrkesskadeRequest(identer, fødselsdato.toLocalDate())
         val httpRequest = PostRequest(body = request)
         val response = client.post(uri = url, request = httpRequest) { body, _ ->
-            DefaultJsonMapper.fromJson<Yrkesskader?>(body)
+            DefaultJsonMapper.fromJson<Yrkesskader>(body)
         }
-
 
         if (response == null) {
             return emptyList()
@@ -49,13 +48,13 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
 
         secureLogger.info("Response fra API for yrkesskade: " + response.saker)
 
-        val gyldigeStatuser = listOf("GODKJENT", "INNVILGELSE", "DELVIS_INNVILGET", "DELVIS_GODKJENT")
+        // https://github.com/navikt/yrkesskade/blob/main/libs/model-sakoversikt/src/main/kotlin/no/nav/yrkesskade/saksoversikt/model/SakerResultat.kt
+        // Kun saker med status GODKJENT eller DELVIS_GODKJENT er yrkesskadesaker som skal med i vurderingen
+        val gyldigeStatuser = listOf("GODKJENT", "DELVIS_GODKJENT")
 
-        //FIXME: Kan denne være null?? Når da? Ser ut som at yrkesskade-saker alltid returnerer en liste med mindre det er en feil i responsen
         return response
             .saker
-            .orEmpty()
-            //.filter { it.resultat in gyldigeStatuser}
+            .filter { it.resultat in gyldigeStatuser}
             .map { yrkesskade ->
                 Yrkesskade(
                     ref = yrkesskade.saksreferanse,
