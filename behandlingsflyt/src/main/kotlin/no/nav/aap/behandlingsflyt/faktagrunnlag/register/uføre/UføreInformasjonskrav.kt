@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger
+package no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre
 
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -16,18 +16,23 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
 
-class PersonopplysningService private constructor(
+class UføreInformasjonskrav(
     private val sakOgBehandlingService: SakOgBehandlingService,
-    private val personopplysningRepository: PersonopplysningRepository,
-    private val personopplysningGateway: PersonopplysningGateway,
+    private val uføreRepository: UføreRepository,
+    private val uføreRegisterGateway: UføreRegisterGateway,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav, KanTriggeRevurdering {
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+        uføreRepository = repositoryProvider.provide(),
+        uføreRegisterGateway = gatewayProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+    )
+
     override val navn = Companion.navn
 
     override fun erRelevant(
@@ -41,47 +46,49 @@ class PersonopplysningService private constructor(
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
-        val personopplysninger = hentPersonopplysninger(kontekst.behandlingId)
-        val eksisterendeData =
-            personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)
+        val behandlingId = kontekst.behandlingId
+        val uføregrader = hentUføregrader(behandlingId)
+        val eksisterendeGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
 
-        if (personopplysninger != eksisterendeData) {
-            personopplysningRepository.lagre(kontekst.behandlingId, personopplysninger)
+        if (harEndringerUføre(eksisterendeGrunnlag, uføregrader)) {
+            uføreRepository.lagre(behandlingId, uføregrader)
             return ENDRET
         }
+
         return IKKE_ENDRET
     }
 
+    private fun hentUføregrader(behandlingId: BehandlingId): List<Uføre> {
+        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
+        return uføreRegisterGateway.innhentMedHistorikk(sak.person, sak.rettighetsperiode.fom)
+    }
+
     override fun behovForRevurdering(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
-        val eksisterendeData =
-            personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(behandlingId)
-        val personopplysninger = hentPersonopplysninger(behandlingId)
-        return if (personopplysninger != eksisterendeData) {
-            listOf(
-                VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_LOVVALG)
-            )
+        val uføregrader = hentUføregrader(behandlingId)
+        val eksisterendeGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
+
+        // Ønsker ikke trigge revurdering automatisk i dette tilfellet enn så lenge
+        val gikkFraNullTilTomtGrunnlag = uføregrader.isEmpty() && eksisterendeGrunnlag == null
+        
+        return if (harEndringerUføre(eksisterendeGrunnlag, uføregrader) && !gikkFraNullTilTomtGrunnlag) {
+            listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING))
         } else {
             emptyList()
         }
     }
-    
-    private fun hentPersonopplysninger(behandlingId: BehandlingId): Personopplysning {
-        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
-        return personopplysningGateway.innhent(sak.person)
-    }
 
     companion object : Informasjonskravkonstruktør {
-        override val navn = InformasjonskravNavn.PERSONOPPLYSNING
+        override val navn = InformasjonskravNavn.UFØRE
 
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): PersonopplysningService {
-            val personopplysningRepository =
-                repositoryProvider.provide<PersonopplysningRepository>()
-            return PersonopplysningService(
-                SakOgBehandlingService(repositoryProvider, gatewayProvider),
-                personopplysningRepository,
-                gatewayProvider.provide(),
-                TidligereVurderingerImpl(repositoryProvider),
-            )
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): UføreInformasjonskrav {
+            return UføreInformasjonskrav(repositoryProvider, gatewayProvider)
+        }
+
+        fun harEndringerUføre(
+            eksisterende: UføreGrunnlag?,
+            uføregrader: List<Uføre>
+        ): Boolean {
+            return eksisterende == null || uføregrader.toSet() != eksisterende.vurderinger.toSet()
         }
     }
 }

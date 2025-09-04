@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -29,7 +28,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
 
-class YrkesskadeService private constructor(
+class YrkesskadeInformasjonskrav private constructor(
     private val sakService: SakService,
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val personopplysningRepository: PersonopplysningRepository,
@@ -93,8 +92,7 @@ class YrkesskadeService private constructor(
 
     private fun harOppgittYrkesskade(mottattDokumenter: Set<MottattDokument>): Boolean {
         return mottattDokumenter.any { dokument ->
-            val data = dokument.strukturerteData<Søknad>()?.data
-            val yrkesskadeString = when (data) {
+            val yrkesskadeString = when (val data = dokument.strukturerteData<Søknad>()?.data) {
                 is SøknadV0 -> data.yrkesskade.uppercase()
                 null -> error("Søknad kan ikke være null")
             }
@@ -116,20 +114,19 @@ class YrkesskadeService private constructor(
         )
     }
 
-    fun hentHvisEksisterer(behandlingId: BehandlingId): YrkesskadeGrunnlag? {
-        return yrkesskadeRepository.hentHvisEksisterer(behandlingId)
-    }
-
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.YRKESSKADE
 
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): YrkesskadeService {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): YrkesskadeInformasjonskrav {
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val personopplysningRepository =
                 repositoryProvider.provide<PersonopplysningRepository>()
             val mottattDokumentRepository =
                 repositoryProvider.provide<MottattDokumentRepository>()
-            return YrkesskadeService(
+            return YrkesskadeInformasjonskrav(
                 SakService(sakRepository),
                 repositoryProvider.provide(),
                 personopplysningRepository,

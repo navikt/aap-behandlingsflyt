@@ -2,11 +2,11 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjonskrav
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -35,11 +35,11 @@ class OppdagEndretInformasjonskravJobbUtfører(
     fun utfør(sakId: SakId, behandlingId: BehandlingId) {
         val relevanteInformasjonskrav: List<KanTriggeRevurdering> = listOf(
             //BarnService.konstruer(repositoryProvider, gatewayProvider), Vente på avklaring fra departementet
-            SamordningYtelseVurderingService.konstruer(repositoryProvider, gatewayProvider),
-            TjenestePensjonService.konstruer(repositoryProvider, gatewayProvider),
-            UføreService.konstruer(repositoryProvider, gatewayProvider),
-            InstitusjonsoppholdService.konstruer(repositoryProvider, gatewayProvider),
-            PersonopplysningService.konstruer(repositoryProvider, gatewayProvider),
+            SamordningYtelseVurderingInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
+            TjenestePensjonInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
+            UføreInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
+            InstitusjonsoppholdInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
+            PersonopplysningInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
         )
 
 

@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
@@ -63,6 +62,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -70,7 +70,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.Fakes
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
@@ -79,6 +78,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseReposi
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -132,8 +132,10 @@ class StatistikkJobbUtførerTest {
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(
-                        no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD)
+                    vurderingsbehov = listOf(
+                        VurderingsbehovMedPeriode(
+                            no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD
+                        )
                     ),
                     årsak = ÅrsakTilOpprettelse.SØKNAD
                 )
@@ -144,8 +146,10 @@ class StatistikkJobbUtførerTest {
                 typeBehandling = TypeBehandling.Revurdering,
                 forrigeBehandlingId = opprettetBehandling.id,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(
-                        no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD)
+                    vurderingsbehov = listOf(
+                        VurderingsbehovMedPeriode(
+                            no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD
+                        )
                     ),
                     årsak = ÅrsakTilOpprettelse.SØKNAD
                 )
@@ -263,8 +267,10 @@ class StatistikkJobbUtførerTest {
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                     årsak = ÅrsakTilOpprettelse.SØKNAD,
-                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(
-                        no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD)
+                    vurderingsbehov = listOf(
+                        VurderingsbehovMedPeriode(
+                            no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD
+                        )
                     ),
                 ),
             )
@@ -313,22 +319,24 @@ class StatistikkJobbUtførerTest {
             )
 
             SykdomRepositoryImpl(connection).lagre(
-                behandlingId = opprettetBehandling.id, Sykdomsvurdering(
-                    begrunnelse = "123",
-                    dokumenterBruktIVurdering = emptyList(),
-                    harSkadeSykdomEllerLyte = true,
-                    erSkadeSykdomEllerLyteVesentligdel = true,
-                    erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                    erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                    erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
-                    yrkesskadeBegrunnelse = "begr",
-                    erArbeidsevnenNedsatt = true,
-                    kodeverk = "KODEVERK",
-                    hoveddiagnose = "PEST",
-                    bidiagnoser = listOf("KOLERA"),
-                    vurderingenGjelderFra = null,
-                    vurdertAv = Bruker("Z0000"),
-                    opprettet = Instant.now(),
+                behandlingId = opprettetBehandling.id, listOf(
+                    Sykdomsvurdering(
+                        begrunnelse = "123",
+                        dokumenterBruktIVurdering = emptyList(),
+                        harSkadeSykdomEllerLyte = true,
+                        erSkadeSykdomEllerLyteVesentligdel = true,
+                        erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                        erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+                        yrkesskadeBegrunnelse = "begr",
+                        erArbeidsevnenNedsatt = true,
+                        kodeverk = "KODEVERK",
+                        hoveddiagnose = "PEST",
+                        bidiagnoser = listOf("KOLERA"),
+                        vurderingenGjelderFra = null,
+                        vurdertAv = Bruker("Z0000"),
+                        opprettet = Instant.now(),
+                    )
                 )
             )
 
@@ -485,10 +493,12 @@ class StatistikkJobbUtførerTest {
             typeBehandling = TypeBehandling.Klage,
             forrigeBehandlingId = null,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(
-                    type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD,
-                    periode = Periode(LocalDate.now(), LocalDate.now().plusDays(1))
-                )),
+                vurderingsbehov = listOf(
+                    VurderingsbehovMedPeriode(
+                        type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD,
+                        periode = Periode(LocalDate.now(), LocalDate.now().plusDays(1))
+                    )
+                ),
                 årsak = ÅrsakTilOpprettelse.SØKNAD
             )
         )
@@ -591,7 +601,6 @@ class StatistikkJobbUtførerTest {
                 sykdomRepository = sykdomRepository,
                 underveisRepository = InMemoryUnderveisRepository,
                 trukketSøknadService = TrukketSøknadService(
-                    InMemoryAvklaringsbehovRepository,
                     InMemoryTrukketSøknadRepository
                 ),
                 klageresultatUtleder = DummyKlageresultatUtleder(),

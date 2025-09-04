@@ -23,7 +23,7 @@ class UføreServiceTest {
             Uføre(nå, Prosent.`50_PROSENT`),
         )
         
-        assertFalse(UføreService.harEndringerUføre(eksisterendeGrunnlag, ny))
+        assertFalse(UføreInformasjonskrav.harEndringerUføre(eksisterendeGrunnlag, ny))
 
     }
 

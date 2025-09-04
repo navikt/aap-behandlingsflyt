@@ -19,7 +19,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class MeldekortService private constructor(
+class MeldekortInformasjonskrav private constructor(
     private val mottaDokumentService: MottaDokumentService,
     private val meldekortRepository: MeldekortRepository,
     private val tidligereVurderinger: TidligereVurderinger,
@@ -29,8 +29,8 @@ class MeldekortService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.MELDEKORT
 
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): MeldekortService {
-            return MeldekortService(
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): MeldekortInformasjonskrav {
+            return MeldekortInformasjonskrav(
                 MottaDokumentService(repositoryProvider),
                 repositoryProvider.provide<MeldekortRepository>(),
                 TidligereVurderingerImpl(repositoryProvider),
