@@ -106,5 +106,5 @@ dependencies {
     }
     testImplementation(kotlin("test"))
     testImplementation("org.testcontainers:kafka:1.21.3")
-    testImplementation("org.apache.kafka:kafka-clients:4.0.0")
+    testImplementation("org.apache.kafka:kafka-clients:4.1.0")
 }
