@@ -16,6 +16,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
+import org.slf4j.LoggerFactory
 
 class OppdagEndretInformasjonskravJobbUtfører(
     private val repositoryProvider: RepositoryProvider,
@@ -23,6 +24,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
     private val sakOgBehandlingService: SakOgBehandlingService
 ) : JobbUtfører {
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
@@ -42,7 +44,10 @@ class OppdagEndretInformasjonskravJobbUtfører(
 
 
         val vurderingsbehov = relevanteInformasjonskrav
-            .flatMap { it.behovForRevurdering(behandlingId) }
+            .flatMap {
+                it.behovForRevurdering(behandlingId)
+                    .also { behov -> if (behov.isNotEmpty()) log.info("Fant endringer i ${it.javaClass.simpleName}") }
+            }
             .toSet().toList() // Fjern duplikater
 
         if (vurderingsbehov.isNotEmpty()) {
@@ -63,7 +68,10 @@ class OppdagEndretInformasjonskravJobbUtfører(
         override val navn = "Oppdag endringer i informasjonskrav"
         override val beskrivelse = "Oppdag endringer i informasjonskrav og opprett revurdering ved behov"
 
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): OppdagEndretInformasjonskravJobbUtfører {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): OppdagEndretInformasjonskravJobbUtfører {
             return OppdagEndretInformasjonskravJobbUtfører(
                 repositoryProvider,
                 gatewayProvider,
