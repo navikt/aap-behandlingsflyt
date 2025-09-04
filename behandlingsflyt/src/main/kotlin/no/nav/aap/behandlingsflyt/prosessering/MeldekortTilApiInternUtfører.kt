@@ -9,8 +9,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BehandlingOgMeld
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
-import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidIPeriodeDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
@@ -60,9 +60,11 @@ class MeldekortTilApiInternUtfører(
                 // Behandling har også noen kandidater
                 // Vi kan også sjekke for fritak fra meldeplikt, og rimelig grunn for å ikke oppfylle meldeplikt
                 // men denne koden skrives om pt. så best å vente.
+
                 DetaljertMeldekortDTO(
                     personIdent = person.aktivIdent().identifikator,
-                    saksnummer = sak.saksnummer.toString(),
+                    saksnummer = sak.saksnummer,
+                    behandlingId = behandling.id.toLong(),
                     meldeperiodeFom = meldePeriode.fom,
                     meldeperiodeTom = meldePeriode.fom,
                     mottattTidspunkt = meldekort.mottattTidspunkt,
@@ -109,9 +111,12 @@ class MeldekortTilApiInternUtfører(
     @param meldekort -
      **/
     private fun arbeidsperiodeFraMeldekort(meldekort: Meldekort): Periode {
+        // TODO kan timerArbeidetPerPeriode reelt være tom, eller er det alltid en bug hvis det skjer?
+        // Altså at ingen dager har timetall?
         val arbeidPerioder = meldekort.timerArbeidPerPeriode.map { it.periode }
         val arbeidsPerioderStart = arbeidPerioder.minBy { it.fom }.fom
         val arbeidsPerioderSlutt = arbeidPerioder.maxBy { it.tom }.tom
+
         return Periode(arbeidsPerioderStart, arbeidsPerioderSlutt)
     }
 
