@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.utbetal.kodeverk.AvventÅrsak
 import org.assertj.core.api.Assertions.assertThat
@@ -45,7 +46,8 @@ class AvventUtbetalingServiceTest {
             refusjonkravRepositoryMock,
             tjenestepensjonRefusjonsKravVurderingRepositoryMock,
             samordningAndreStatligeYtelserRepositoryMock,
-            samordningArbeidsgiverRepositoryMock
+            samordningArbeidsgiverRepositoryMock,
+            FakeUnleash
         )
 
         val avventUtbetaling = service.finnEventuellAvventUtbetaling(
@@ -80,7 +82,8 @@ class AvventUtbetalingServiceTest {
             refusjonkravRepositoryMock,
             tjenestepensjonRefusjonsKravVurderingRepositoryMock,
             samordningAndreStatligeYtelserRepositoryMock,
-            samordningArbeidsgiverRepositoryMock
+            samordningArbeidsgiverRepositoryMock,
+            FakeUnleash
         )
 
         val avventUtbetaling = service.finnEventuellAvventUtbetaling(
@@ -108,7 +111,8 @@ class AvventUtbetalingServiceTest {
             refusjonkravRepositoryMock,
             tjenestepensjonRefusjonsKravVurderingRepositoryMock,
             samordningAndreStatligeYtelserRepositoryMock,
-            samordningArbeidsgiverRepositoryMock
+            samordningArbeidsgiverRepositoryMock,
+            FakeUnleash
         )
 
         val avventUtbetaling = service.finnEventuellAvventUtbetaling(
@@ -146,7 +150,8 @@ class AvventUtbetalingServiceTest {
             refusjonkravRepositoryMock,
             tjenestepensjonRefusjonsKravVurderingRepositoryMock,
             samordningAndreStatligeYtelserRepositoryMock,
-            samordningArbeidsgiverRepositoryMock
+            samordningArbeidsgiverRepositoryMock,
+            FakeUnleash
         )
 
         val avventUtbetaling = service.finnEventuellAvventUtbetaling(
@@ -190,7 +195,8 @@ class AvventUtbetalingServiceTest {
             refusjonkravRepositoryMock,
             tjenestepensjonRefusjonsKravVurderingRepositoryMock,
             samordningAndreStatligeYtelserRepositoryMock,
-            samordningArbeidsgiverRepositoryMock
+            samordningArbeidsgiverRepositoryMock,
+            FakeUnleash
         )
 
         val avventUtbetaling = service.finnEventuellAvventUtbetaling(
@@ -202,7 +208,7 @@ class AvventUtbetalingServiceTest {
         assertNotNull(avventUtbetaling)
         assertThat(avventUtbetaling?.fom).isEqualTo(LocalDate.parse("2025-01-04"))
         assertThat(avventUtbetaling?.tom).isEqualTo(LocalDate.parse("2025-01-12"))
-        assertThat(avventUtbetaling?.overføres).isEqualTo(LocalDate.parse("2025-01-15").plusDays(42))
+        assertThat(avventUtbetaling?.overføres).isNull()
         assertThat(avventUtbetaling?.årsak).isEqualTo(AvventÅrsak.AVVENT_AVREGNING)
         assertThat(avventUtbetaling?.feilregistrering).isFalse()
     }
@@ -228,7 +234,8 @@ class AvventUtbetalingServiceTest {
             refusjonkravRepositoryMock,
             tjenestepensjonRefusjonsKravVurderingRepositoryMock,
             samordningAndreStatligeYtelserRepositoryMock,
-            samordningArbeidsgiverRepositoryMock
+            samordningArbeidsgiverRepositoryMock,
+            FakeUnleash
         )
 
         val avventUtbetaling = service.finnEventuellAvventUtbetaling(
@@ -240,7 +247,7 @@ class AvventUtbetalingServiceTest {
         assertNotNull(avventUtbetaling)
         assertThat(avventUtbetaling?.fom).isEqualTo(LocalDate.parse("2025-01-04"))
         assertThat(avventUtbetaling?.tom).isEqualTo(LocalDate.parse("2025-01-12"))
-        assertThat(avventUtbetaling?.overføres).isEqualTo(LocalDate.parse("2025-01-15").plusDays(42))
+        assertThat(avventUtbetaling?.overføres).isNull()
         assertThat(avventUtbetaling?.årsak).isEqualTo(AvventÅrsak.AVVENT_AVREGNING)
         assertThat(avventUtbetaling?.feilregistrering).isFalse()
     }
