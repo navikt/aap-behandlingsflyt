@@ -72,7 +72,11 @@ class UføreService(
     override fun behovForRevurdering(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
         val uføregrader = hentUføregrader(behandlingId)
         val eksisterendeGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
-        return if (harEndringerUføre(eksisterendeGrunnlag, uføregrader)) {
+
+        // Ønsker ikke trigge revurdering automatisk i dette tilfellet enn så lenge
+        val gikkFraNullTilTomtGrunnlag = uføregrader.isEmpty() && eksisterendeGrunnlag == null
+        
+        return if (harEndringerUføre(eksisterendeGrunnlag, uføregrader) && !gikkFraNullTilTomtGrunnlag) {
             listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING))
         } else {
             emptyList()
