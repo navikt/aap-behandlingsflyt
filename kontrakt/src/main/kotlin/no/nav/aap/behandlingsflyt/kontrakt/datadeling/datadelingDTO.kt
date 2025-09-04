@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.kontrakt.datadeling
 
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -66,11 +67,13 @@ public data class TilkjentDTO(
 public data class ArbeidIPeriodeDTO(
     val periodeFom: LocalDate,
     val periodeTom: LocalDate,
-    val timerArbeidet: BigDecimal)
+    val timerArbeidet: BigDecimal
+)
 
 public data class DetaljertMeldekortDTO(
     val personIdent: String,
-    val saksnummer: String,
+    val saksnummer: Saksnummer,
+    val behandlingId: Long,
     val meldeperiodeFom: LocalDate,
     val meldeperiodeTom: LocalDate,
     val mottattTidspunkt: LocalDateTime,
