@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.kontrakt.datadeling
 
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -77,5 +76,6 @@ public data class DetaljertMeldekortDTO(
     val mottattTidspunkt: LocalDateTime,
     val timerArbeidPerPeriode: List<ArbeidIPeriodeDTO>,
     val meldepliktStatusKode: String?,
-    val rettighetsTypeKode: String?
+    val rettighetsTypeKode: String?,
+    val avslagsårsakKode: String?
 )

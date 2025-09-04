@@ -53,9 +53,10 @@ class MeldekortTilApiInternUtfører(
                 val meldePeriode = underveisPeriode.meldePeriode
                 val meldepliktStatus = underveisPeriode.meldepliktStatus
                 val rettighetsType = underveisPeriode.rettighetsType
+                val avslagsårsak = underveisPeriode.avslagsårsak
 
                 // TODO: vurder sammen med NKS om vi har mer relevant info å sende med
-                // Underveisperiode har mye informasjon som kan være nyttig å sende med
+                // Underveisperiode har informasjon som kan være nyttig å sende med
                 // Behandling har også noen kandidater
                 // Vi kan også sjekke for fritak fra meldeplikt, og rimelig grunn for å ikke oppfylle meldeplikt
                 // men denne koden skrives om pt. så best å vente.
@@ -74,6 +75,7 @@ class MeldekortTilApiInternUtfører(
                     },
                     meldepliktStatusKode = meldepliktStatus?.name,
                     rettighetsTypeKode = rettighetsType?.name,
+                    avslagsårsakKode = avslagsårsak?.name
                 )
 
             }
