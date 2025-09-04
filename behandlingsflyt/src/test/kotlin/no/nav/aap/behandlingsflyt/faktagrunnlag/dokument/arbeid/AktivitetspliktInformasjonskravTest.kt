@@ -127,20 +127,22 @@ class AktivitetspliktInformasjonskravTest {
                 .describedAs { "Skal kopiere grunnlag fra nyeste iverksatte aktivitetspliktbehandling" }
                 .isEqualTo(
                     Aktivitetsplikt11_7Grunnlag(
-                        Aktivitetsplikt11_7Vurdering(
-                            begrunnelse = "Begrunnelse 2",
-                            erOppfylt = false,
-                            utfall = Utfall.OPPHØR,
-                            gjelderFra = sak.rettighetsperiode.fom.plusMonths(3),
-                            vurdertAv = "Saksbehandler",
-                            opprettet = sak.rettighetsperiode.fom.plusMonths(3).plusWeeks(1).atStartOfDay()
-                                .toInstant(ZoneOffset.UTC)
+                        listOf(
+                            Aktivitetsplikt11_7Vurdering(
+                                begrunnelse = "Begrunnelse 2",
+                                erOppfylt = false,
+                                utfall = Utfall.OPPHØR,
+                                gjelderFra = sak.rettighetsperiode.fom.plusMonths(3),
+                                vurdertAv = "Saksbehandler",
+                                opprettet = sak.rettighetsperiode.fom.plusMonths(3).plusWeeks(1).atStartOfDay()
+                                    .toInstant(ZoneOffset.UTC)
+                            )
                         )
                     )
                 )
         }
     }
-    
+
     private fun flytKontekstMedPerioder(behandling: Behandling, sak: Sak) =
         FlytKontekstMedPerioder(
             sakId = behandling.sakId,
@@ -166,7 +168,7 @@ class AktivitetspliktInformasjonskravTest {
             val behandling = opprettAktivitetspliktBehandling(repositoryProvider, sak, forrige)
 
             Aktivitetsplikt11_7Repository.lagre(
-                behandling.id, vurdering
+                behandling.id, listOf(vurdering)
             )
             behandlingRepository.oppdaterBehandlingStatus(behandling.id, status)
             behandling
