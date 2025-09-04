@@ -66,11 +66,11 @@ class Vilkårsresultat(
                     return@outerJoinNotNull null
                 }
 
-                val sykdomsvilkåretErIkkeVurdert = vurderinger.none { (vilkår, vurdering) ->
-                    vilkår.type == Vilkårtype.SYKDOMSVILKÅRET && vurdering.erVurdert()
+                val sykdomsvilkåretErIkkeOppfylt = vurderinger.none { (vilkår, vurdering) ->
+                    vilkår.type == Vilkårtype.SYKDOMSVILKÅRET && (vurdering.erOppfylt() || vurdering.erIkkeRelevant())
                 }
 
-                if (sykdomsvilkåretErIkkeVurdert) {
+                if (sykdomsvilkåretErIkkeOppfylt) {
                     return@outerJoinNotNull null
                 }
 
