@@ -1421,7 +1421,7 @@ object FakeServers : AutoCloseable {
                                     saksnr = 1234,
                                     sakstype = "Yrkesskade",
                                     mottattdato = LocalDate.now(),
-                                    resultat = "Godkjent",
+                                    resultat = "GODKJENT",
                                     resultattekst = "Godkjent",
                                     vedtaksdato = LocalDate.now(),
                                     skadeart = "Arbeidsulykke",
