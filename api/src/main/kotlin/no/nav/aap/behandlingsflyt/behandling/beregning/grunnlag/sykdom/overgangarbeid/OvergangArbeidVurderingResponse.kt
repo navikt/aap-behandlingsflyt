@@ -5,8 +5,8 @@ import java.time.LocalDate
 
 data class OvergangArbeidVurderingResponse(
     val begrunnelse: String,
-    val brukerRettPaaAAP: Boolean?,
-    val virkningsDato: LocalDate?,
+    val brukerRettPåAAP: Boolean?,
+    val virkningsdato: LocalDate?,
     val vurdertAv: VurdertAvResponse,
     val vurderingenGjelderFra: LocalDate?,
     val erGjeldende: Boolean?

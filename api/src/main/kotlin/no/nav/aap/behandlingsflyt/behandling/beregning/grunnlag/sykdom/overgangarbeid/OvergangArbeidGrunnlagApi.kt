@@ -78,9 +78,9 @@ private fun OvergangArbeidVurdering.tilResponse(erGjeldende: Boolean? = false, a
     val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv)
     return OvergangArbeidVurderingResponse(
         begrunnelse = begrunnelse,
-        brukerRettPaaAAP = brukerRettPåAAP,
+        brukerRettPåAAP = brukerRettPåAAP,
         vurderingenGjelderFra = vurderingenGjelderFra,
-        virkningsDato = virkningsdato,
+        virkningsdato = virkningsdato,
         vurdertAv = VurdertAvResponse(
             ident = vurdertAv,
             dato = opprettet?.atZone(ZoneId.of("Europe/Oslo"))?.toLocalDate()

@@ -78,11 +78,11 @@ private fun OvergangUføreVurdering.tilResponse(erGjeldende: Boolean? = false, a
     val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv)
     return OvergangUføreVurderingResponse(
         begrunnelse = begrunnelse,
-        brukerSoktUforetrygd = brukerHarSøktOmUføretrygd,
-        brukerVedtakUforetrygd = brukerHarFåttVedtakOmUføretrygd,
-        brukerRettPaaAAP = brukerRettPåAAP,
+        brukerHarSøktUføretrygd = brukerHarSøktOmUføretrygd,
+        brukerHarFåttVedtakOmUføretrygd = brukerHarFåttVedtakOmUføretrygd,
+        brukerRettPåAAP = brukerRettPåAAP,
         vurderingenGjelderFra = vurderingenGjelderFra,
-        virkningsDato = virkningsdato,
+        virkningsdato = virkningsdato,
         vurdertAv = VurdertAvResponse(
             ident = vurdertAv,
             dato = opprettet?.atZone(ZoneId.of("Europe/Oslo"))?.toLocalDate()
