@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -47,6 +48,21 @@ class BehandlingOgMeldekortServiceImpl(
         return alleSakerForIdent.maxByOrNull { sak -> sak.opprettetTidspunkt }?.let { nyesteSak ->
             hentAlle(nyesteSak, fraOgMed)
         } ?: emptyList() // ingen saker finnes for denne ident
+    }
+
+    override fun hentAlle(
+        behandlingId: BehandlingId,
+        fraOgMed: LocalDate?,
+        tilOgMed: LocalDate?
+    ): List<Meldekort> {
+        val detSisteHalvåret = LocalDate.now().minusMonths(6)
+        val fraOgMedDato = fraOgMed ?: detSisteHalvåret
+        val tilOgMedDato = tilOgMed ?: LocalDate.now().plusDays(1)
+
+        return meldekortRepository.hent(behandlingId).meldekort().filter {
+            it.mottattTidspunkt.isAfter(fraOgMedDato.atStartOfDay()) &&
+                    it.mottattTidspunkt.isBefore(tilOgMedDato.atStartOfDay())
+        }
     }
 
     override fun hentAlle(sak: Sak, fraOgMed: LocalDate?): List<Pair<Behandling, List<Meldekort>>> {
