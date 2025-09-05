@@ -13,7 +13,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import org.slf4j.LoggerFactory
 import java.net.URI
 
 /**
@@ -31,8 +30,6 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
         prometheus = prometheus
     )
 
-    private val secureLogger = LoggerFactory.getLogger("secureLog")
-
     override fun innhent(person: Person, fødselsdato: Fødselsdato): List<Yrkesskade> {
         val identer = person.identer().map(Ident::identifikator)
         //TODO: fra når skal yrkesskade hentes
@@ -45,8 +42,6 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
         if (response == null) {
             return emptyList()
         }
-
-        secureLogger.info("Response fra API for yrkesskade: " + response.saker)
 
         // https://github.com/navikt/yrkesskade/blob/main/libs/model-sakoversikt/src/main/kotlin/no/nav/yrkesskade/saksoversikt/model/SakerResultat.kt
         // Kun saker med status GODKJENT eller DELVIS_GODKJENT er yrkesskadesaker som skal med i vurderingen
