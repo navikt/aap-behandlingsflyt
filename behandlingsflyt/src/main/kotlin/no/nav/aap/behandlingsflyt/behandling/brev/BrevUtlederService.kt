@@ -26,6 +26,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FASTSATT_PERIODE_PASSERT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_MELDEKORT
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -81,7 +82,10 @@ class BrevUtlederService(
 
             TypeBehandling.Revurdering -> {
                 val vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet()
-                if (setOf(MOTTATT_MELDEKORT, FASTSATT_PERIODE_PASSERT).containsAll(vurderingsbehov)) {
+                if (setOf(MOTTATT_MELDEKORT, FASTSATT_PERIODE_PASSERT, EFFEKTUER_AKTIVITETSPLIKT).containsAll(
+                        vurderingsbehov
+                    )
+                ) {
                     return null
                 }
                 if (kansellerRevurderingService.revurderingErKansellert(behandlingId)) {
@@ -117,7 +121,7 @@ class BrevUtlederService(
             null
         }
 
-        val dagsats = if (unleashGateway.isEnabled(BehandlingsflytFeature.BrevBeregningsgrunnlag)) {
+        val tilkjentYtelse = if (unleashGateway.isEnabled(BehandlingsflytFeature.BrevBeregningsgrunnlag)) {
             utledDagsats(behandling.id, vedtak.virkningstidspunkt)
         } else {
             null
@@ -126,7 +130,7 @@ class BrevUtlederService(
         return Innvilgelse(
             virkningstidspunkt = vedtak.virkningstidspunkt,
             grunnlagBeregning = grunnlagBeregning,
-            dagsats = dagsats
+            tilkjentYtelse = tilkjentYtelse,
         )
     }
 
@@ -194,13 +198,9 @@ class BrevUtlederService(
         )
     }
 
-    private fun utledDagsats(behandlingId: BehandlingId, virkningstidspunkt: LocalDate): Beløp? {
-        /** Henter dagsats fra første periode. Kan variere basert på minste årlig ytelse, alder og grunnbeløp.
-         * Tar høyde for gradering inkludert fastsatt arbeidsevne, men ikke timer arbeidet (derfor benyttes ikke
-         * [no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent.gradering.arbeidGradering]).
-         * Inkluderer ikke barnetillegg slik som
-         * [no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent.redusertDagsats] siden barnetillegg skilles ut
-         * i brevet.
+    private fun utledDagsats(behandlingId: BehandlingId, virkningstidspunkt: LocalDate): Innvilgelse.TilkjentYtelse? {
+        /**
+         * Henter data basert på virkningstidspunkt.
          */
 
         val tilkjentYtelseTidslinje =
@@ -209,6 +209,14 @@ class BrevUtlederService(
             Tidslinje(underveisRepository.hent(behandlingId).perioder.map { Segment(it.periode, it) })
 
         return tilkjentYtelseTidslinje.innerJoin(underveisTidslinje) { _, tilkjent, underveisperiode ->
+
+            /**
+             * Gradering tar høyde for fastsatt arbeidsevne, men ikke timer arbeidet (derfor benyttes ikke
+             * [no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent.gradering.arbeidGradering]).
+             * Inkluderer ikke barnetillegg slik som
+             * [no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent.redusertDagsats] siden barnetillegg skilles ut
+             * i brevet.
+             */
             val gradering = Prosent.`100_PROSENT`
                 .minus(tilkjent.gradering.samordningGradering ?: Prosent.`0_PROSENT`)
                 .minus(tilkjent.gradering.institusjonGradering ?: Prosent.`0_PROSENT`)
@@ -216,9 +224,27 @@ class BrevUtlederService(
                 .minus(tilkjent.gradering.samordningArbeidsgiverGradering ?: Prosent.`0_PROSENT`)
                 .minus(underveisperiode.arbeidsgradering.fastsattArbeidsevne)
 
-            Beløp(
-                tilkjent.dagsats.multiplisert(gradering).verdi()
-                    .setScale(0, RoundingMode.HALF_UP)
+            /**
+             * Dagsats kan variere basert på minste årlig ytelse, alder og grunnbeløp.
+             */
+            val gradertDagsats =
+                Beløp(tilkjent.dagsats.multiplisert(gradering).verdi().setScale(0, RoundingMode.HALF_UP))
+            val gradertBarnetillegg =
+                Beløp(tilkjent.barnetillegg.multiplisert(gradering).verdi().setScale(0, RoundingMode.HALF_UP))
+            val gradertDagsatsInkludertBarnetillegg =
+                Beløp(
+                    tilkjent.dagsats.pluss(tilkjent.barnetillegg).multiplisert(gradering).verdi()
+                        .setScale(0, RoundingMode.HALF_UP)
+                )
+
+            Innvilgelse.TilkjentYtelse(
+                dagsats = tilkjent.dagsats,
+                gradertDagsats = gradertDagsats,
+                barnetillegg = tilkjent.barnetillegg,
+                gradertBarnetillegg = gradertBarnetillegg,
+                gradertDagsatsInkludertBarnetillegg = gradertDagsatsInkludertBarnetillegg,
+                antallBarn = tilkjent.antallBarn,
+                barnetilleggsats = tilkjent.barnetilleggsats
             )
         }.segment(virkningstidspunkt)?.verdi
     }
@@ -250,6 +276,8 @@ class BrevUtlederService(
     }
 
     private fun beregnBeregningsgrunnlagBeløp(grunnlag: Beregningsgrunnlag?, virkningstidspunkt: LocalDate): Beløp? {
-        return grunnlag?.grunnlaget()?.multiplisert(Grunnbeløp.finnGrunnbeløp(virkningstidspunkt))
+        val grunnlaget = grunnlag?.grunnlaget() ?: return null
+        val grunnlagetBeløp = grunnlaget.multiplisert(Grunnbeløp.finnGrunnbeløp(virkningstidspunkt))
+        return Beløp(grunnlagetBeløp.verdi.setScale(0, RoundingMode.HALF_UP))
     }
 }

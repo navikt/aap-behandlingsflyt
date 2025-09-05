@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.trekkklage
+package no.nav.aap.behandlingsflyt.behandling.rettighetsperiode
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
@@ -14,40 +14,40 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class TrekkKlageInformasjonskravService (
+class VurderRettighetsperiodeInformasjonskrav(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val trekkKlageRepository: TrekkKlageRepository,
 ) : Informasjonskrav {
     constructor(repositoryProvider: RepositoryProvider) : this(
-        avklaringsbehovRepository = repositoryProvider.provide(),
-        trekkKlageRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide()
     )
 
-    override val navn = Companion.navn
+    override val navn = VurderRettighetsperiodeInformasjonskrav.navn
 
     override fun erRelevant(
-        kontekst: FlytKontekstMedPerioder,
-        steg: StegType,
-        oppdatert: InformasjonskravOppdatert?
+        kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return Vurderingsbehov.KLAGE_TRUKKET in kontekst.vurderingsbehovRelevanteForSteg
+        return Vurderingsbehov.VURDER_RETTIGHETSPERIODE in kontekst.vurderingsbehovRelevanteForSteg
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        val vurderTrekkAvklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VURDER_TREKK_AV_KLAGE)
+        val relevantAvklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VURDER_RETTIGHETSPERIODE)
 
-        return if (vurderTrekkAvklaringsbehov == null)
+        return if (relevantAvklaringsbehov == null)
             ENDRET
         else
             IKKE_ENDRET
     }
 
-    companion object : Informasjonskravkonstruktør {
-        override val navn = InformasjonskravNavn.TRUKKET_KLAGE
 
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): Informasjonskrav {
-            return TrekkKlageInformasjonskravService(repositoryProvider)
+    companion object : Informasjonskravkonstruktør {
+        override val navn = InformasjonskravNavn.RETTIGHETSPERIODE
+
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): Informasjonskrav {
+            return VurderRettighetsperiodeInformasjonskrav(repositoryProvider)
         }
     }
 }

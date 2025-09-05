@@ -34,7 +34,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
@@ -58,7 +57,6 @@ class EnklereFlytOrkestratorTest {
         flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(
             sakService = sakService,
             behandlingRepository = behandlingRepository,
-            FakeUnleash,
         ),
         sakOgBehandlingService = InMemorySakOgBehandlingService,
         informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
@@ -79,7 +77,6 @@ class EnklereFlytOrkestratorTest {
         flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(
             sakService = sakService,
             behandlingRepository = behandlingRepository,
-            FakeUnleash,
         ),
         sakOgBehandlingService = InMemorySakOgBehandlingService,
         informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
@@ -230,7 +227,6 @@ class EnklereFlytOrkestratorTest {
             flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(
                 sakService = sakService,
                 behandlingRepository = behandlingRepository,
-                FakeUnleash,
             ),
             informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
             behandlingRepository = behandlingRepository,

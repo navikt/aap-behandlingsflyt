@@ -21,7 +21,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.Duration
 
-class TjenestePensjonService(
+class TjenestePensjonInformasjonskrav(
     private val tjenestePensjonRepository: TjenestePensjonRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val tpGateway: TjenestePensjonGateway,
@@ -35,10 +35,10 @@ class TjenestePensjonService(
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
-        ): TjenestePensjonService {
+        ): TjenestePensjonInformasjonskrav {
             val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
 
-            return TjenestePensjonService(
+            return TjenestePensjonInformasjonskrav(
                 tjenestePensjonRepository = tjenestePensjonRepository,
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
                 gatewayProvider.provide(),

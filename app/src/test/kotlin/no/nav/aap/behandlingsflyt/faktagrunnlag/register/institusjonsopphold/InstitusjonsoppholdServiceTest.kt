@@ -51,7 +51,7 @@ class InstitusjonsoppholdServiceTest {
             )
         )
 
-        assertFalse(InstitusjonsoppholdService.erEndret(eksisterendeGrunnlag, ny))
+        assertFalse(InstitusjonsoppholdInformasjonskrav.erEndret(eksisterendeGrunnlag, ny))
     }
 
 }

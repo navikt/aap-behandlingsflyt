@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 
 class VurderLovvalgSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -48,6 +49,7 @@ class VurderLovvalgSteg private constructor(
         vilkårService = VilkårService(repositoryProvider),
     )
 
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         when (kontekst.vurderingType) {
@@ -59,6 +61,7 @@ class VurderLovvalgSteg private constructor(
                         Vilkårtype.LOVVALG,
                         "mangler behandlingsgrunnlag",
                     )
+                    log.info("Gir avslag eller ingen behandlingsgrunnlag. Avbryter.")
                     return Fullført
                 }
                 return vurderVilkår(kontekst)
@@ -133,7 +136,17 @@ class VurderLovvalgSteg private constructor(
         if (!alleVilkårOppfylt && manuellVurdering == null
             || spesifiktTriggetRevurderLovvalgUtenManuellVurdering(kontekst, avklaringsbehovene)
         ) {
+            log.info("Stopper opp i lovvalg. Alle vilkår oppfylt: $alleVilkårOppfylt. Manuell vurdering: ${manuellVurdering == null}.")
             return FantAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
+        }
+
+        if (alleVilkårOppfylt
+            && manuellVurdering == null
+            && !spesifiktTriggetRevurderLovvalgUtenManuellVurdering(kontekst, avklaringsbehovene)
+            && avklaringsbehovene.åpne().any { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP }
+        ) {
+            log.info("Burde ikke skje. Finnes åpent avklaringsbehov selv om alle vilkår er oppfylt og er ikke overstyrt.")
+            avklaringsbehovService.avbrytForSteg(kontekst.behandlingId, type())
         }
         return Fullført
     }

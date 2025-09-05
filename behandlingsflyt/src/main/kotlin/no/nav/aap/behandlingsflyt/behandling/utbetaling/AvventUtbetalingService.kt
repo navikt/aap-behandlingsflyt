@@ -5,6 +5,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.utbetal.kodeverk.AvventÅrsak
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseAvventDto
@@ -14,7 +16,8 @@ class AvventUtbetalingService(
     private val refusjonskravRepository: RefusjonkravRepository,
     private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository,
     private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
-    private val samordningArbeidsgiverYtelserRepository: SamordningArbeidsgiverRepository
+    private val samordningArbeidsgiverYtelserRepository: SamordningArbeidsgiverRepository,
+    private val unleashGateway: UnleashGateway,
 ) {
 
     fun finnEventuellAvventUtbetaling(behandlingId: BehandlingId, førsteVedtaksdato: LocalDate, tilkjentYtelseHelePerioden: Periode): TilkjentYtelseAvventDto? {
@@ -85,10 +88,16 @@ class AvventUtbetalingService(
         }
         val fom = samordningAndreStatligeYtelser.vurdering.vurderingPerioder.minOf {it.periode.fom}
         val tom = samordningAndreStatligeYtelser.vurdering.vurderingPerioder.maxOf {it.periode.tom}
+
+        val overføres = if (unleashGateway.isEnabled(BehandlingsflytFeature.OverforingsdatoNullForAvregning)) {
+            null
+        } else {
+            førsteVedtaksdato.plusDays(42)
+        }
         return TilkjentYtelseAvventDto(
             fom = fom,
             tom = tom,
-            overføres = førsteVedtaksdato.plusDays(42),
+            overføres = overføres,
             årsak = AvventÅrsak.AVVENT_AVREGNING,
             feilregistrering = false
         )
@@ -100,10 +109,15 @@ class AvventUtbetalingService(
             return null
         }
 
+        val overføres = if (unleashGateway.isEnabled(BehandlingsflytFeature.OverforingsdatoNullForAvregning)) {
+            null
+        } else {
+            førsteVedtaksdato.plusDays(42)
+        }
         return TilkjentYtelseAvventDto(
             fom = samordningArbeidsgiverYtelser.vurdering.fom,
             tom = samordningArbeidsgiverYtelser.vurdering.tom,
-            overføres = førsteVedtaksdato.plusDays(42),
+            overføres = overføres,
             årsak = AvventÅrsak.AVVENT_AVREGNING,
             feilregistrering = false
         )

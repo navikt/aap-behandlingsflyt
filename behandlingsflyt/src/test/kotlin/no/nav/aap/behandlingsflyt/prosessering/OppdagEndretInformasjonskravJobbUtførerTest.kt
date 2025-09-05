@@ -2,9 +2,9 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerResponse
@@ -12,11 +12,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
@@ -24,10 +24,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikk
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjonskrav
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
@@ -46,7 +46,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackMeldekort
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -120,7 +120,6 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
     }
 
     private val gatewayProvider = createGatewayProvider {
-        register<FakeUnleashFasttrackMeldekort>()
         register<FakeBarnGateway>()
         register<FakePdlGateway>()
         register<FakeForeldrepengerGateway>()
@@ -129,6 +128,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         register<FakeUføreRegisterGateway>()
         register<FakeInstitusjonsoppholdGateway>()
         register<FakePersonopplysningGateway>()
+        register<FakeUnleash>()
     }
 
     @TestDatabase
@@ -231,12 +231,12 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                 rettighetsperiode = sak.rettighetsperiode,
                 vurderingsbehovRelevanteForSteg = emptySet()
             )
-            BarnService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
-            SamordningYtelseVurderingService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
-            TjenestePensjonService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
-            UføreService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
-            InstitusjonsoppholdService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
-            PersonopplysningService.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
+            BarnInformasjonskrav.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
+            SamordningYtelseVurderingInformasjonskrav.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
+            TjenestePensjonInformasjonskrav.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
+            UføreInformasjonskrav.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
+            InstitusjonsoppholdInformasjonskrav.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
+            PersonopplysningInformasjonskrav.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
 
             repositoryProvider.provide<BehandlingRepository>()
                 .oppdaterBehandlingStatus(førstegangsbehandlingen.id, Status.AVSLUTTET)

@@ -17,15 +17,18 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
 
-class LegeerklæringService private constructor(
+class LegeerklæringInformasjonskrav private constructor(
     private val mottaDokumentService: MottaDokumentService,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav {
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.LEGEERKLÆRING
 
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): LegeerklæringService {
-            return LegeerklæringService(
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): LegeerklæringInformasjonskrav {
+            return LegeerklæringInformasjonskrav(
                 MottaDokumentService(repositoryProvider),
                 TidligereVurderingerImpl(repositoryProvider)
             )
@@ -34,7 +37,11 @@ class LegeerklæringService private constructor(
 
     override val navn = Companion.navn
 
-    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+    override fun erRelevant(
+        kontekst: FlytKontekstMedPerioder,
+        steg: StegType,
+        oppdatert: InformasjonskravOppdatert?
+    ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
                 oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)

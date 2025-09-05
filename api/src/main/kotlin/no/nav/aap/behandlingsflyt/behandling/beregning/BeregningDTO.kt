@@ -10,7 +10,7 @@ enum class BeregningstypeDTO {
     YRKESSKADE_UFØRE
 }
 
-class BeregningDTO(
+data class BeregningDTO(
     val beregningstypeDTO: BeregningstypeDTO,
     val grunnlag11_19: Grunnlag11_19DTO? = null,
     val grunnlagYrkesskade: YrkesskadeGrunnlagDTO? = null,
@@ -19,12 +19,12 @@ class BeregningDTO(
     val gjeldendeGrunnbeløp: GjeldendeGrunnbeløpDTO,
 )
 
-class GjeldendeGrunnbeløpDTO(
+data class GjeldendeGrunnbeløpDTO(
     val grunnbeløp: BigDecimal,
     val dato: LocalDate,
 )
 
-class Grunnlag11_19DTO(
+data class Grunnlag11_19DTO(
     val nedsattArbeidsevneÅr: String,
     val inntekter: List<InntektDTO>,
     val gjennomsnittligInntektSiste3år: BigDecimal,
@@ -39,7 +39,7 @@ class InntektDTO(
     val justertTilMaks6G: BigDecimal
 )
 
-class YrkesskadeGrunnlagDTO(
+data class YrkesskadeGrunnlagDTO(
     val inntekter: List<InntektDTO>,
     val yrkesskadeinntekt: YrkesskadeInntektDTO,
     val standardBeregning: StandardBeregningDTO,
@@ -52,7 +52,7 @@ class YrkesskadeGrunnlagDTO(
     val grunnlag: BigDecimal
 )
 
-class YrkesskadeInntektDTO(
+data class YrkesskadeInntektDTO(
     val prosentVekting: Int,
     val antattÅrligInntektIKronerYrkesskadeTidspunktet: BigDecimal,
     val andelGangerInntekt: BigDecimal,
@@ -61,14 +61,14 @@ class YrkesskadeInntektDTO(
     val justertTilMaks6G: BigDecimal
 )
 
-class StandardBeregningDTO(
+data class StandardBeregningDTO(
     val prosentVekting: Int,
     val inntektIG: BigDecimal,
     val andelGangerInntekt: BigDecimal,
     val andelGangerInntektIG: BigDecimal,
 )
 
-class StandardYrkesskadeDTO(
+data class StandardYrkesskadeDTO(
     val prosentVekting: Int,
     val inntektIG: BigDecimal,
     val andelGangerInntekt: BigDecimal,

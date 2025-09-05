@@ -6,6 +6,5 @@ import no.nav.aap.lookup.repository.Repository
 
 interface Aktivitetsplikt11_7Repository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): Aktivitetsplikt11_7Grunnlag?
-    fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<Aktivitetsplikt11_7Vurdering>
-    fun lagre(behandlingId: BehandlingId, vurdering: Aktivitetsplikt11_7Vurdering)
+    fun lagre(behandlingId: BehandlingId, vurderinger: List<Aktivitetsplikt11_7Vurdering>)
 }

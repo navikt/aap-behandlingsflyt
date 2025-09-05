@@ -21,7 +21,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.ident
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKansellerRevurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
@@ -44,11 +43,9 @@ class ResultatUtlederTest {
         underveisRepository = InMemoryUnderveisRepository,
         InMemoryBehandlingRepository,
         trukketSøknadService = TrukketSøknadService(
-            InMemoryAvklaringsbehovRepository,
             InMemoryTrukketSøknadRepository
         ),
         kansellerRevurderingService = KansellerRevurderingService(
-            InMemoryAvklaringsbehovRepository,
             InMemoryKansellerRevurderingRepository
         )
     )

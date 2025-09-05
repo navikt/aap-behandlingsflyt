@@ -48,6 +48,6 @@ class OpprettJobbForFritakMeldepliktJobbUtfører(
 
         override val beskrivelse = "Start jobb for å sjekke behov for revurdering pga fritak meldeplikt."
 
-        override val cron = CronExpression.createWithoutSeconds("10 2 * * 1")
+        override val cron = CronExpression.createWithoutSeconds("10 2 * * 3")
     }
 }

@@ -9,7 +9,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -25,13 +27,12 @@ import java.time.LocalDate
 @MockKExtension.CheckUnnecessaryStub
 class VurderBrudd11_7LøserTest {
     private val aktivitetsplikt11_7Repository = mockk<Aktivitetsplikt11_7Repository>()
+    private val behandlingRepository = mockk<BehandlingRepository>()
 
     @ParameterizedTest
     @MethodSource("ugyldigeLøsninger")
     fun `Skal kaste ugyldig forespørsel-exception dersom innsendt løsning er ugyldig`(løsning: VurderBrudd11_7Løsning) {
-        every { aktivitetsplikt11_7Repository.lagre(any(), any()) } returns Unit
-
-        val løser = VurderBrudd11_7Løser(aktivitetsplikt11_7Repository)
+        val løser = VurderBrudd11_7Løser(aktivitetsplikt11_7Repository, behandlingRepository)
 
         val exception = assertThrows<UgyldigForespørselException> {
             løser.løs(
@@ -47,8 +48,9 @@ class VurderBrudd11_7LøserTest {
     @MethodSource("gyldigeLøsninger")
     fun `Gydlig løsning skal validere`(løsning: VurderBrudd11_7Løsning) {
         every { aktivitetsplikt11_7Repository.lagre(any(), any()) } returns Unit
+        every { behandlingRepository.hent(any() as BehandlingId).forrigeBehandlingId } returns null
 
-        val løser = VurderBrudd11_7Løser(aktivitetsplikt11_7Repository)
+        val løser = VurderBrudd11_7Løser(aktivitetsplikt11_7Repository, behandlingRepository)
 
         val resultat = løser.løs(
             kontekst = lagAvklaringsvehovKontekst(),

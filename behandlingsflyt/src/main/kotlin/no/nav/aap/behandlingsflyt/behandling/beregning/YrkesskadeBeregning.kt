@@ -30,7 +30,7 @@ class YrkesskadeBeregning(
         // arbeidsinntekten på skadetidspunktet:
         val grunnlagForBeregningAvYrkesskadeandel = maxOf(grunnlagFra11_19, antattÅrligInntektGUnits)
 
-        // Om nedsettelsesgraden er større enn eller lik 70%, oppjusteres den til 100%.
+        // Om nedsettelsesgraden er større enn 70%, oppjusteres den til 100%.
         // (§11-22, andre ledd)
         val andelForBeregning = andelAvNedsettelsenSomSkyldesYrkesskaden.justertFor(TERSKELVERDI_FOR_YRKESSKADE)
 

@@ -25,7 +25,6 @@ import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.dbtest.TestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -45,7 +44,7 @@ class SamordningYtelseVurderingServiceTest {
         dataSource.transaction { connection ->
             val ytelseRepo = SamordningYtelseRepositoryImpl(connection)
             val repo = SamordningVurderingRepositoryImpl(connection)
-            val service = SamordningYtelseVurderingService(
+            val service = SamordningYtelseVurderingInformasjonskrav(
                 SamordningYtelseRepositoryImpl(connection),
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
@@ -141,7 +140,7 @@ class SamordningYtelseVurderingServiceTest {
         )
 
         assertThat(
-            SamordningYtelseVurderingService.harEndringerIYtelser(
+            SamordningYtelseVurderingInformasjonskrav.harEndringerIYtelser(
                 eksisterendeGrunnlag, ny
             )
         ).isFalse()

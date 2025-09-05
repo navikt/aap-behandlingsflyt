@@ -59,9 +59,10 @@ internal fun oppdaterTilstandBasertPåNyeVurderinger(
             ident = identifikator,
             vurderinger = tidslinje.segmenter().map {
                 VurderingAvForeldreAnsvar(
-                    it.periode.fom,
-                    it.verdi.harForeldreAnsvar,
-                    it.verdi.begrunnelse
+                    fraDato = it.periode.fom,
+                    harForeldreAnsvar = it.verdi.harForeldreAnsvar,
+                    erFosterForelder = it.verdi.erFosterforelder,
+                    begrunnelse = it.verdi.begrunnelse
                 )
             })
     }

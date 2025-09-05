@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator.BarnIdent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvarDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -54,7 +55,6 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                     val barnetilleggService = BarnetilleggService(
                         sakOgBehandlingService,
                         barnRepository,
-                        vilkårsresultatRepository,
                     )
                     val barnetilleggTidslinje = barnetilleggService.beregn(behandling.id)
 
@@ -85,9 +85,10 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                                     vurdertBartIdent.ident.identifikator, null,
                                     it.vurderinger.map {
                                         VurderingAvForeldreAnsvarDto(
-                                            it.fraDato,
-                                            it.harForeldreAnsvar,
-                                            it.begrunnelse
+                                            fraDato = it.fraDato,
+                                            harForeldreAnsvar = it.harForeldreAnsvar,
+                                            begrunnelse = it.begrunnelse,
+                                            erFosterForelder = it.erFosterForelder,
                                         )
                                     },
                                     hentBarn(
@@ -100,9 +101,10 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                                     ident = null,
                                     vurderinger = it.vurderinger.map {
                                         VurderingAvForeldreAnsvarDto(
-                                            it.fraDato,
-                                            it.harForeldreAnsvar,
-                                            it.begrunnelse
+                                            fraDato = it.fraDato,
+                                            harForeldreAnsvar = it.harForeldreAnsvar,
+                                            begrunnelse = it.begrunnelse,
+                                            erFosterForelder = it.erFosterForelder,
                                         )
                                     },
                                     navn = vurdertBartIdent.navn,
@@ -141,11 +143,11 @@ fun hentBarn(ident: BarnIdentifikator, barnGrunnlag: BarnGrunnlag?): Identifiser
     val oppgitteBarn = barnGrunnlag?.oppgitteBarn?.oppgitteBarn.orEmpty()
 
     return when (ident) {
-        is BarnIdentifikator.BarnIdent -> {
-            val barn = registerBarn.singleOrNull { it.ident == ident.ident }
+        is BarnIdent -> {
+            val barn = registerBarn.singleOrNull { it.ident == ident }
             val oppgittBarn = oppgitteBarn.singleOrNull { it.ident == ident.ident }
 
-            if (barn != null && oppgittBarn != null && barn.ident != oppgittBarn.ident) {
+            if (barn != null && oppgittBarn != null && barn.ident != oppgittBarn.ident?.let(::BarnIdent)?.ident) {
                 log.warn("Mismatch mellom ident for registerbarn og oppgitte barn for ident ${ident.ident}.")
             }
 
@@ -163,15 +165,20 @@ fun hentBarn(ident: BarnIdentifikator, barnGrunnlag: BarnGrunnlag?): Identifiser
                 ident = ident.ident,
                 fodselsDato = fødselsdato?.toLocalDate(),
                 navn = oppgittBarn?.navn,
-                forsorgerPeriode = fødselsdato?.let { Barn.periodeMedRettTil(fødselsdato) }
+                forsorgerPeriode = fødselsdato?.let { Barn.periodeMedRettTil(fødselsdato) },
+                oppgittForeldreRelasjon = oppgittBarn?.relasjon
             )
         }
 
-        is BarnIdentifikator.NavnOgFødselsdato -> IdentifiserteBarnDto(
-            ident = null,
-            fodselsDato = ident.fødselsdato.toLocalDate(),
-            navn = ident.navn,
-            forsorgerPeriode = Barn.periodeMedRettTil(ident.fødselsdato),
-        )
+        is BarnIdentifikator.NavnOgFødselsdato -> {
+            val oppgittBarn = oppgitteBarn.singleOrNull { it.fødselsdato == ident.fødselsdato && it.navn == ident.navn }
+            IdentifiserteBarnDto(
+                ident = null,
+                fodselsDato = ident.fødselsdato.toLocalDate(),
+                navn = ident.navn,
+                forsorgerPeriode = Barn.periodeMedRettTil(ident.fødselsdato),
+                oppgittForeldreRelasjon = oppgittBarn?.relasjon
+            )
+        }
     }
 }

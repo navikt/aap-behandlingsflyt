@@ -20,7 +20,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Duration
 
-class PersonopplysningForutgåendeService private constructor(
+class PersonopplysningForutgåendeInformasjonskrav private constructor(
     private val sakService: SakService,
     private val personopplysningForutgåendeRepository: PersonopplysningForutgåendeRepository,
     private val personopplysningGateway: PersonopplysningGateway,
@@ -64,11 +64,11 @@ class PersonopplysningForutgåendeService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.PERSONOPPLYSNING_FORUTGÅENDE
 
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): PersonopplysningForutgåendeService {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): PersonopplysningForutgåendeInformasjonskrav {
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val personopplysningRepository = repositoryProvider.provide<PersonopplysningForutgåendeRepository>()
             val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
-            return PersonopplysningForutgåendeService(
+            return PersonopplysningForutgåendeInformasjonskrav(
                 SakService(sakRepository),
                 personopplysningRepository,
                 gatewayProvider.provide(),

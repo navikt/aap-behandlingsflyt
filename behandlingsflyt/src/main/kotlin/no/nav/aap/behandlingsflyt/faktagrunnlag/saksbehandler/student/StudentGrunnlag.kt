@@ -25,3 +25,7 @@ class StudentGrunnlag(
         return studentvurdering?.hashCode() ?: 0
     }
 }
+
+fun StudentGrunnlag?.vilkårIkkeOppfylt(): Boolean {
+    return this?.studentvurdering == null || !studentvurdering.erOppfylt()
+}

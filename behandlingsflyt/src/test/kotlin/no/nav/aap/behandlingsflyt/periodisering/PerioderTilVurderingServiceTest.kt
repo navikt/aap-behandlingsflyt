@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.komponenter.type.Periode
@@ -48,7 +47,6 @@ class PerioderTilVurderingServiceTest {
                 sakRepository = InMemorySakRepository
             ),
             behandlingRepository = InMemoryBehandlingRepository,
-            FakeUnleash
         )
 
         val res = flytKontekstMedPeriodeService.utled(

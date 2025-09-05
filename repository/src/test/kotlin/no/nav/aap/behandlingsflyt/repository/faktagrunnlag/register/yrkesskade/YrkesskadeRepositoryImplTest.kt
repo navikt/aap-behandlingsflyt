@@ -67,6 +67,25 @@ class YrkesskadeRepositoryImplTest {
     }
 
     @Test
+    fun `Lagrer og henter yrkesskadeopplysninger med manglende skadedato`() {
+        source.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+
+            val yrkesskade = Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = null)
+            val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
+            yrkesskadeRepository.lagre(
+                behandling.id,
+                Yrkesskader(listOf(yrkesskade))
+            )
+            val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
+            assertThat(yrkesskadeGrunnlag?.yrkesskader).isEqualTo(
+                Yrkesskader(listOf(yrkesskade))
+            )
+        }
+    }
+
+    @Test
     fun `Lagrer ikke like opplysninger flere ganger`() {
         source.transaction { connection ->
             val sak = sak(connection)

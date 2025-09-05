@@ -89,7 +89,10 @@ class IverksettVedtakSteg private constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val refusjonskravRepository = repositoryProvider.provide<RefusjonkravRepository>()
@@ -101,6 +104,7 @@ class IverksettVedtakSteg private constructor(
             val samordningArbeidsgiverRepository =
                 repositoryProvider.provide<SamordningArbeidsgiverRepository>()
             val utbetalingGateway = gatewayProvider.provide<UtbetalingGateway>()
+            val unleashGateway = gatewayProvider.provide<UnleashGateway>()
             val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
             val virkningstidspunktUtlederService = VirkningstidspunktUtleder(
                 vilkårsresultatRepository = repositoryProvider.provide(),
@@ -122,6 +126,7 @@ class IverksettVedtakSteg private constructor(
                     samordningAndreStatligeYtelserRepository = samordningAndreStatligeYtelserRepository,
                     samordningArbeidsgiverRepository = samordningArbeidsgiverRepository,
                     underveisRepository = underveisRepository,
+                    unleashGateway = unleashGateway,
                 ),
                 vedtakService = VedtakService(vedtakRepository, behandlingRepository),
                 utbetalingGateway = utbetalingGateway,
