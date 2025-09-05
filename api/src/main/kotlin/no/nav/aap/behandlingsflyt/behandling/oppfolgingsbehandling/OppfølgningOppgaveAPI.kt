@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.BehandlingReferanseMedAvklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingResponse
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepository
@@ -25,15 +26,6 @@ import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
 
-public data class OppfølgningOppgaveOpprinnselseDto(
-    val behandlingReferanse: String,
-    val opprinnelse: Opprinnelse
-)
-
-public data class OppfølgningOppgaveOpprinnselseResponse(
-    val data :List<OppfølgningOppgaveOpprinnselseDto>
-)
-
 fun NormalOpenAPIRoute.oppfølgningOppgaveApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling").tag(Tags.Behandling) {
         route("/oppfølgningOppgaveOpprinselse/{referanse}/{avklaringsbehovKode}") {
@@ -46,12 +38,9 @@ fun NormalOpenAPIRoute.oppfølgningOppgaveApi(dataSource: DataSource, repository
                 val behandlingsreferanse = BehandlingReferanse(params.referanse)
                 val avklaringsbehovKode = AvklaringsbehovKode.valueOf(params.avklaringsbehovKode)
 
-
-                println("Go")
                 val respons = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-
 
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(behandlingsreferanse)
 
@@ -73,10 +62,9 @@ fun NormalOpenAPIRoute.oppfølgningOppgaveApi(dataSource: DataSource, repository
                     }
                 }
 
-
                 val relevanteOppfølgningOppgaver = respons.filter {
                     it.second.opprinnelse != null
-                            && it.second.opprinnelse!!.avklaringsbehovKode == avklaringsbehovKode.toString()
+                            && it.second.opprinnelse!!.avklaringsbehovKode == avklaringsbehovKode.name
                             && it.second.opprinnelse!!.behandlingsreferanse == behandlingsreferanse.referanse.toString()
                 }
 
@@ -90,25 +78,11 @@ fun NormalOpenAPIRoute.oppfølgningOppgaveApi(dataSource: DataSource, repository
                     )
 
                 }
-                println(respondList.joinToString("\n"))
 
                 respond(OppfølgningOppgaveOpprinnselseResponse( respondList))
 
-                /**
-                 * hent sak
-                 * hent behandlinger på sak
-                 * filtrer på type
-                 * filtrer på opprinselse
-                 *
-                 * returner behandling id på den oppfølgning oppgaven?
-                 */
-
-
             }
-
-
         }
-
 
     }
 }
