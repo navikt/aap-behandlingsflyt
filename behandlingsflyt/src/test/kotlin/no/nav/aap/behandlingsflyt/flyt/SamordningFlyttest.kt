@@ -215,7 +215,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class as KCl
         val behandlingReferanse = behandling.referanse
         behandling = behandling.løsVedtaksbrev()
 
-        var revurdering = hentNyesteBehandlingForSak(behandling.sakId)
+        var revurdering = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
 
         // Siden samordning overlappet, skal en revurdering opprettes med en gang
         assertThat(revurdering.referanse).isNotEqualTo(behandlingReferanse)
@@ -489,7 +489,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class as KCl
         assertThat(periodeMedFullSamordning.tom).isEqualTo(periode.tom)
         behandling = behandling.løsVedtaksbrev()
 
-        val nyesteBehandling = hentNyesteBehandlingForSak(behandling.sakId)
+        val nyesteBehandling = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
         val behandlingReferanse = behandling.referanse
 
         // Siden samordning overlappet, skal en revurdering opprettes med en gang
