@@ -144,7 +144,8 @@ class VilkårsresultatTest {
 
                 andrePeriode to {
                     assertThat(it).isEqualTo(RettighetsType.STUDENT)
-                })
+                }
+            )
         }
 
 
@@ -241,7 +242,8 @@ class VilkårsresultatTest {
 
                 andrePeriode to {
                     assertThat(it).isEqualTo(RettighetsType.BISTANDSBEHOV)
-                })
+                }
+            )
         }
 
 
@@ -319,8 +321,7 @@ class VilkårsresultatTest {
                 Periode(nå, sykepengerPeriode) to {
                     assertThat(it).isEqualTo(RettighetsType.VURDERES_FOR_UFØRETRYGD)
                 },
-
-                )
+            )
         }
     }
 }

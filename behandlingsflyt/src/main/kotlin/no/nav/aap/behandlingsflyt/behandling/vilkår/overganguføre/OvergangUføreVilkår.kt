@@ -21,33 +21,27 @@ class OvergangUføreVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
 
         val overgangUføreVurderinger = grunnlag.vurderinger
 
-        val overgangUføreTidslinje = overgangUføreVurderinger
-            .sortedBy { it.opprettet }
-            .map { vurdering ->
-                Tidslinje(
-                    Periode(
-                        fom = vurdering.vurderingenGjelderFra ?: grunnlag.vurderingsdato,
-                        tom = grunnlag.sisteDagMedMuligYtelse
-                    ),
-                    vurdering
-                )
-            }
-            .fold(Tidslinje<OvergangUføreVurdering>()) { t1, t2 ->
-                t1.kombiner(t2, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-            }
+        val overgangUføreTidslinje = overgangUføreVurderinger.sortedBy { it.opprettet }.map { vurdering ->
+            Tidslinje(
+                Periode(
+                    fom = vurdering.vurderingenGjelderFra ?: grunnlag.vurderingsdato,
+                    tom = grunnlag.sisteDagMedMuligYtelse
+                ), vurdering
+            )
+        }.fold(Tidslinje<OvergangUføreVurdering>()) { t1, t2 ->
+            t1.kombiner(t2, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+        }
 
         val tidslinje = overgangUføreTidslinje.mapValue { overganguførevurdering ->
             opprettVilkårsvurdering(
-                overganguførevurdering,
-                grunnlag
+                overganguførevurdering, grunnlag
             )
         }
         vilkår.leggTilVurderinger(tidslinje)
     }
 
     private fun opprettVilkårsvurdering(
-        overgangUføreVurdering: OvergangUføreVurdering?,
-        grunnlag: OvergangUføreFaktagrunnlag
+        overgangUføreVurdering: OvergangUføreVurdering?, grunnlag: OvergangUføreFaktagrunnlag
     ): Vilkårsvurdering {
         val utfall: Utfall
         var avslagsårsak: Avslagsårsak? = null
@@ -55,14 +49,17 @@ class OvergangUføreVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
 
         if (overgangUføreVurdering == null) {
             utfall = Utfall.IKKE_OPPFYLT
-            avslagsårsak = Avslagsårsak.MANGLENDE_DOKUMENTASJON
-        } else if (overgangUføreVurdering.virkningsdato != null && overgangUføreVurdering.brukerHarSøktOmUføretrygd && overgangUføreVurdering.brukerHarFåttVedtakOmUføretrygd == UføreSøknadVedtak.NEI.verdi && overgangUføreVurdering.brukerRettPåAAP == true) {
+            avslagsårsak = Avslagsårsak.IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE
+        } else if (overgangUføreVurdering.virkningsdato != null && overgangUføreVurdering.brukerHarSøktOmUføretrygd &&
+                    overgangUføreVurdering.brukerHarFåttVedtakOmUføretrygd == UføreSøknadVedtak.NEI.verdi
+                    && overgangUføreVurdering.brukerRettPåAAP == true
+        ) {
 
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD
         } else {
             utfall = Utfall.IKKE_OPPFYLT
-            avslagsårsak = Avslagsårsak.MANGLENDE_DOKUMENTASJON
+            avslagsårsak = Avslagsårsak.IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE
         }
 
         return Vilkårsvurdering(
