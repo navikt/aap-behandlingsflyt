@@ -333,7 +333,7 @@ class StatistikkJobbUtfører(
     private fun hentDiagnose(behandling: Behandling): Diagnoser? {
         val sykdomsvurdering =
             sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger.orEmpty()
-                .sortedBy { it.vurderingenGjelderFra }.lastOrNull()
+                .maxByOrNull { it.opprettet }
 
         if (sykdomsvurdering == null) {
             log.info("Fant ikke sykdomsvurdering for behandling ${behandling.referanse} (id: ${behandling.id})")

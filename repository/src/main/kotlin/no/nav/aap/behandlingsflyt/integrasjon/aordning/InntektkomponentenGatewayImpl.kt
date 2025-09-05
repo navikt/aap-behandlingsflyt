@@ -19,7 +19,7 @@ class InntektkomponentenGatewayImpl : InntektkomponentenGateway {
     private val config =
         ClientConfig(scope = requiredConfigForKey("integrasjon.inntektskomponenten.scope"))
 
-    private val client = RestClient.Companion.withDefaultResponseHandler(
+    private val client = RestClient.withDefaultResponseHandler(
         config = config,
         tokenProvider = ClientCredentialsTokenProvider,
         prometheus = prometheus
