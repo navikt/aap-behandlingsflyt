@@ -269,6 +269,8 @@ class BrevUtlederService(
     }
 
     private fun beregnBeregningsgrunnlagBeløp(grunnlag: Beregningsgrunnlag?, virkningstidspunkt: LocalDate): Beløp? {
-        return grunnlag?.grunnlaget()?.multiplisert(Grunnbeløp.finnGrunnbeløp(virkningstidspunkt))
+        val grunnlaget = grunnlag?.grunnlaget() ?: return null
+        val grunnlagetBeløp = grunnlaget.multiplisert(Grunnbeløp.finnGrunnbeløp(virkningstidspunkt))
+        return Beløp(grunnlagetBeløp.verdi.setScale(0, RoundingMode.HALF_UP))
     }
 }
