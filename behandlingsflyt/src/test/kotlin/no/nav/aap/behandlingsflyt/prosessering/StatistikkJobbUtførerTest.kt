@@ -610,7 +610,6 @@ class StatistikkJobbUtførerTest {
                 klageresultatUtleder = DummyKlageresultatUtleder(),
                 statistikkGateway = StatistikkGatewayImpl(),
                 kansellerRevurderingService = KansellerRevurderingService(
-                    InMemoryAvklaringsbehovRepository,
                     InMemoryKansellerRevurderingRepository
                 )
             )

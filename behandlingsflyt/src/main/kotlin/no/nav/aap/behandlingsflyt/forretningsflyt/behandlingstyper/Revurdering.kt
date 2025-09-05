@@ -1,8 +1,9 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 
-import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingService
+import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgInformasjonskrav
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeInformasjonskrav
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktInformasjonskrav
@@ -83,7 +84,7 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = KansellerRevurderingSteg,
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.REVURDERING_KANSELLERT),
-                informasjonskrav = listOf(KansellerRevurderingService) //FIXME Thao
+                informasjonskrav = listOf(KansellerRevurderingInformasjonskrav)
             )
             .medSteg(
                 steg = SøknadSteg,

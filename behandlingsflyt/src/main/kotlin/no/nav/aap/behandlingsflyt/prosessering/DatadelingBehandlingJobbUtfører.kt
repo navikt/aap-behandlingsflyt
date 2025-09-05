@@ -87,7 +87,7 @@ class DatadelingBehandlingJobbUtfører(
         override val type = "flyt.DatadelingBehandlingsdata"
 
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
-            return DatadelingBehandlingJobbUtfører( //TODO Thao: Sjekk om jeg trenger å logge i statistikk for kanseller revurdering
+            return DatadelingBehandlingJobbUtfører(
                 apiInternGateway = gatewayProvider.provide(),
                 sakRepository = repositoryProvider.provide(),
                 behandlingRepository = repositoryProvider.provide(),
