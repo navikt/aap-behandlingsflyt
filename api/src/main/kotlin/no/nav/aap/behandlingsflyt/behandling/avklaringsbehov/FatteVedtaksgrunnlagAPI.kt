@@ -43,7 +43,7 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(
         route("/{referanse}/grunnlag/fatte-vedtak") {
             getGrunnlag<BehandlingReferanse, FatteVedtakGrunnlagDto>(
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = FATTE_VEDTAK_KODE,
+                avklaringsbehovKode = FATTE_VEDTAK_KODE
             ) { req ->
 
                 val dto = dataSource.transaction(readOnly = true) { connection ->
