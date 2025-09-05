@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -31,7 +32,7 @@ class AvklarYrkesskadeLøser(
         løsning.yrkesskadesvurdering.relevanteSaker.forEach { sakRef ->
             yrkesskadeGrunnlag?.yrkesskader?.yrkesskader?.forEach { ys ->
                 if (sakRef == ys.ref && ys.skadedato == null) {
-                    throw IllegalArgumentException("Skadedato må være satt for yrkesskade med referanse $sakRef - dette er ikke støttet enda")
+                    throw UgyldigForespørselException("Skadedato må være satt for yrkesskade med referanse $sakRef - dette er ikke støttet enda")
                 }
             }
         }
