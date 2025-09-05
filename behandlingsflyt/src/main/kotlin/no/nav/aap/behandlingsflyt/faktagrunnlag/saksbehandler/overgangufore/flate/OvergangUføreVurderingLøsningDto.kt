@@ -21,8 +21,4 @@ data class OvergangUføreVurderingLøsningDto(
         virkningsdato = virkningsdato,
         vurdertAv = bruker.ident
     )
-
-    fun valider() {
-        // TODO: Legge til sjekk på om 11-6 er oppfylt, da skal ikke denne oppfylles
-    }
 }

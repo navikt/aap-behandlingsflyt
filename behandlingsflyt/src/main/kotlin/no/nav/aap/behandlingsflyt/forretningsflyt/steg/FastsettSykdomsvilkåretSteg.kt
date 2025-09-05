@@ -83,7 +83,7 @@ class FastsettSykdomsvilkåretSteg private constructor(
             sykdomsGrunnlag?.yrkesskadevurdering,
             sykepengerErstatningGrunnlag?.vurdering,
             sykdomsGrunnlag?.sykdomsvurderinger.orEmpty(),
-            studentGrunnlag?.studentvurdering,
+            studentGrunnlag?.studentvurdering
         )
         Sykdomsvilkår(vilkårResultat).vurder(faktagrunnlag)
 
