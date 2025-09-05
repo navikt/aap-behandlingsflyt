@@ -15,5 +15,5 @@ class SykdomsFaktagrunnlag(
     val yrkesskadevurdering: Yrkesskadevurdering?,
     val sykepengerErstatningFaktagrunnlag: SykepengerVurdering?,
     val sykdomsvurderinger: List<Sykdomsvurdering>,
-    val studentvurdering: StudentVurdering?,
+    val studentvurdering: StudentVurdering?
 ) : Faktagrunnlag
