@@ -4,21 +4,17 @@ import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
-import com.papsign.ktor.openapigen.route.path.normal.route
 import com.papsign.ktor.openapigen.route.response.respond
+import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
+import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.Azp
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_STUDENT_KODE
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.OPPRETT_HENDELSE_PÅ_SAK_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_BRUDD_11_7_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -366,6 +362,50 @@ fun NormalOpenAPIRoute.saksApi(
                         behandlinger = behandlinger,
                         status = sak.status(),
                         søknadErTrukket = søknadErTrukket
+                    )
+                )
+            }
+        }
+
+        @Suppress("UnauthorizedGet") // Søkeresultat skal vises uansett tilgang
+        route("/sok/{soketekst}").get<SøkDto, SøkPåSakDTO> { søkDto ->
+            val søketekst = søkDto.søketekst
+            val skalSøkePåSaksnummer = søketekst.length == 7
+            val skalSøkePåIdent = søketekst.length == 11
+
+            if (!skalSøkePåIdent && !skalSøkePåSaksnummer) {
+                throw UgyldigForespørselException("Søketekst må være en ident eller et saksnummer")
+            }
+
+            val sak = dataSource.transaction(readOnly = true) { connection ->
+                val repositoryProvider = repositoryRegistry.provider(connection)
+                val sakRepository = repositoryProvider.provide<SakRepository>()
+                if (skalSøkePåSaksnummer) {
+                    sakRepository.hentHvisFinnes(Saksnummer(søketekst))
+                } else {
+                    val personRepository = repositoryProvider.provide<PersonRepository>()
+                    val person = personRepository.finn(Ident(søketekst))
+                    if (person != null) {
+                        sakRepository.finnSakerFor(person).firstOrNull()
+                    } else {
+                        throw VerdiIkkeFunnetException("Fant ingen saker på denne brukeren")
+                    }
+                }
+            }
+
+            if (sak == null) {
+                respondWithStatus(HttpStatusCode.NotFound)
+            } else {
+                val aktivIdent = sak.person.aktivIdent()
+                val pdlGateway = gatewayProvider.provide<PersoninfoGateway>()
+                val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
+                respond(
+                    SøkPåSakDTO(
+                        ident = aktivIdent.identifikator,
+                        navn = pdlGateway.hentPersoninfoForIdent(aktivIdent, token()).fulltNavn(),
+                        saksnummer = sak.saksnummer,
+                        opprettetTidspunkt = sak.opprettetTidspunkt.toLocalDate(),
+                        harTilgang = tilgangGateway.sjekkTilgangTilSak(saksnummer = sak.saksnummer, token(), Operasjon.SE)
                     )
                 )
             }
