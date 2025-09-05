@@ -77,6 +77,10 @@ class AktivitetspliktFlytTest :
 
         prosesserBehandling(aktivitetspliktBehandling)
 
+        val aktivtStegFørEffektueringsbehandling = åpenBehandling.aktivtSteg()
+
+        val bruddFom = sak.rettighetsperiode.fom.plusWeeks(20)
+
         aktivitetspliktBehandling = hentBehandling(aktivitetspliktBehandling.referanse)
             .medKontekst {
                 assertThat(this.behandling).extracting { it.aktivtSteg() }
@@ -90,90 +94,64 @@ class AktivitetspliktFlytTest :
                         begrunnelse = "Brudd",
                         erOppfylt = false,
                         utfall = Utfall.STANS,
-                        gjelderFra = sak.rettighetsperiode.fom.plusWeeks(20)
+                        gjelderFra = bruddFom
                     )
                 )
             ).medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
-            }.fattVedtakEllerSendRetur().medKontekst {
-                assertThat(this.behandling).extracting { it.aktivtSteg() }
-                    .isEqualTo(StegType.IVERKSETT_BRUDD)
-                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
 
-        val grunnlagIAktivitetspliktBehandling = dataSource.transaction { connection ->
-            Aktivitetsplikt11_7RepositoryImpl(connection)
-                .hentHvisEksisterer(aktivitetspliktBehandling.id)
-
-        }
-        assertThat(grunnlagIAktivitetspliktBehandling).isNotNull
-
-        val aktivtStegFørEffektueringsbehandling = åpenBehandling.aktivtSteg()
-
-        // TODO: Mekanisme for opprettelse og automatisk prosessering
-        val opprettetEffektueringsbehandling = dataSource.transaction { connection ->
-            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-            SakOgBehandlingService(repositoryProvider, gatewayProvider).finnEllerOpprettBehandling(
-                sak.id,
-                VurderingsbehovOgÅrsak(
-                    årsak = ÅrsakTilOpprettelse.AKTIVITETSPLIKT, vurderingsbehov = listOf(
-                        VurderingsbehovMedPeriode(
-                            Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT,
-                            periode = sak.rettighetsperiode
-                        )
-                    )
-                )
-            )
-        }
-        assertThat(opprettetEffektueringsbehandling is SakOgBehandlingService.MåBehandlesAtomært)
-        val atomærBehandling = opprettetEffektueringsbehandling as SakOgBehandlingService.MåBehandlesAtomært
-        assertThat(atomærBehandling.nyBehandling.typeBehandling() == TypeBehandling.Revurdering)
-        assertThat(atomærBehandling.åpenBehandling!!.id).isEqualTo(åpenBehandling.id)
-
-        val underveisÅpenFørEffektuering = dataSource.transaction { connection ->
-            val grunnlagIEffektueringsbehandling = Aktivitetsplikt11_7RepositoryImpl(connection)
-                .hentHvisEksisterer(atomærBehandling.nyBehandling.id)
-            val grunnlagIÅpenBehandling = Aktivitetsplikt11_7RepositoryImpl(connection)
-                .hentHvisEksisterer(atomærBehandling.åpenBehandling.id)
-
-            assertThat(grunnlagIEffektueringsbehandling).isNull()
-            assertThat(grunnlagIÅpenBehandling).isNull()
-
-            UnderveisRepositoryImpl(connection).hentHvisEksisterer(åpenBehandling.id)
-        }
-
-
         dataSource.transaction { connection ->
-            ProsesserBehandlingService(
-                postgresRepositoryRegistry.provider(connection),
-                gatewayProvider
-            ).triggProsesserBehandling(
-                opprettetEffektueringsbehandling
-            )
-        }
-        motor.kjørJobber()
+            val grunnlagIAktivitetspliktBehandling = Aktivitetsplikt11_7RepositoryImpl(connection)
+                .hentHvisEksisterer(aktivitetspliktBehandling.id)
+            val grunnlagIÅpenBehandling = Aktivitetsplikt11_7RepositoryImpl(connection)
+                .hentHvisEksisterer(åpenBehandling.id)
 
-        val effektueringsbehandling = hentBehandling(atomærBehandling.nyBehandling.referanse)
+            assertThat(grunnlagIAktivitetspliktBehandling).isNotNull
+            assertThat(grunnlagIÅpenBehandling).isNull()
+        }
+
+        aktivitetspliktBehandling.fattVedtakEllerSendRetur().medKontekst {
+            assertThat(this.behandling).extracting { it.aktivtSteg() }
+                .isEqualTo(StegType.IVERKSETT_BRUDD)
+            assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+        }
+
+        var effektueringsbehandling = dataSource.transaction { connection ->
+            BehandlingRepositoryImpl(connection).finnSisteOpprettedeBehandlingFor(
+                sak.id,
+                listOf(TypeBehandling.Revurdering)
+            )
+        }!!
+
+        effektueringsbehandling = hentBehandling(effektueringsbehandling.referanse)
+        assertThat(effektueringsbehandling.typeBehandling() == TypeBehandling.Revurdering)
         assertThat(effektueringsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+        assertThat(effektueringsbehandling.forrigeBehandlingId).isEqualTo(åpenBehandling.forrigeBehandlingId)
+
+        åpenBehandling =
+            dataSource.transaction { connection -> BehandlingRepositoryImpl(connection).hent(åpenBehandling.id) }
+        assertThat(åpenBehandling.forrigeBehandlingId).isEqualTo(effektueringsbehandling.id)
 
         dataSource.transaction { connection ->
             val grunnlagIEffektueringsbehandling =
-                Aktivitetsplikt11_7RepositoryImpl(connection)
-                    .hentHvisEksisterer(atomærBehandling.nyBehandling.id)
-
-
+                Aktivitetsplikt11_7RepositoryImpl(connection).hentHvisEksisterer(effektueringsbehandling.id)
             val grunnlagIÅpenBehandling =
-                Aktivitetsplikt11_7RepositoryImpl(connection)
-                    .hentHvisEksisterer(opprettetEffektueringsbehandling.åpenBehandling!!.id)
-
+                Aktivitetsplikt11_7RepositoryImpl(connection).hentHvisEksisterer(åpenBehandling.id)
 
             assertThat(grunnlagIEffektueringsbehandling).isNotNull
             assertThat(grunnlagIÅpenBehandling).isEqualTo(grunnlagIEffektueringsbehandling)
 
+            val underveisFørstegang =
+                UnderveisRepositoryImpl(connection).hentHvisEksisterer(effektueringsbehandling.forrigeBehandlingId!!)
+
             val underveisÅpenEtterEffektuering = UnderveisRepositoryImpl(connection)
                 .hentHvisEksisterer(åpenBehandling.id)
-            assertThat(underveisÅpenEtterEffektuering).isEqualTo(underveisÅpenFørEffektuering)
+            assertThat(underveisFørstegang!!.perioder).isEqualTo(underveisÅpenEtterEffektuering!!.perioder)
+                .describedAs {
+                    "Underveissteget har ikke kjørt enda da åpen behandling er lenger bak  flyten"
+                }
         }
 
         åpenBehandling =
@@ -181,6 +159,65 @@ class AktivitetspliktFlytTest :
         assertThat(åpenBehandling.aktivtSteg())
             .describedAs("Effektuering av aktivitetsplikt skal ikke endre steg for åpen behandling, dersom den åpne behandlingen står i steg før informasjonskravet")
             .isEqualTo(aktivtStegFørEffektueringsbehandling)
+
+        åpenBehandling.løsAvklaringsBehov(
+            AvklarBistandsbehovLøsning(
+                bistandsVurdering = BistandVurderingLøsningDto(
+                    begrunnelse = "Trenger hjelp fra nav",
+                    erBehovForAktivBehandling = true,
+                    erBehovForArbeidsrettetTiltak = false,
+                    erBehovForAnnenOppfølging = null,
+                    skalVurdereAapIOvergangTilUføre = null,
+                    skalVurdereAapIOvergangTilArbeid = null,
+                    overgangBegrunnelse = null
+                ),
+            )
+        )
+            .medKontekst {
+                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
+            }
+            .løsAvklaringsBehov(
+                SykdomsvurderingForBrevLøsning(
+                    vurdering = "Begrunnelse"
+                ),
+            )
+            .løsAvklaringsBehov(
+                AvklarSykepengerErstatningLøsning(
+                    sykepengeerstatningVurdering = SykepengerVurderingDto(
+                        begrunnelse = "...",
+                        dokumenterBruktIVurdering = emptyList(),
+                        harRettPå = false,
+                    ),
+                ),
+            )
+            .medKontekst {
+                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
+            }
+
+        val underveisÅpenTidslinje = dataSource.transaction { connection ->
+            UnderveisRepositoryImpl(connection).hent(åpenBehandling.id)
+                .let { segment ->
+                    Tidslinje(segment.perioder.map { Segment(it.periode, it) }).mapValue {
+                        Pair(
+                            it.utfall,
+                            it.avslagsårsak
+                        )
+                    }
+                }
+        }
+
+        underveisÅpenTidslinje.komprimer().assertTidslinje(
+            Segment(Periode(sak.rettighetsperiode.fom, bruddFom.minusDays(1))) {
+                assertEquals(VilkårsresultatUtfall.OPPFYLT, it.first)
+                assertEquals(null, it.second)
+            },
+            Segment(Periode(bruddFom, sak.rettighetsperiode.tom)) {
+                assertEquals(VilkårsresultatUtfall.IKKE_OPPFYLT, it.first)
+                assertEquals(UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS, it.second)
+            }
+        )
     }
 
     @Test
@@ -231,7 +268,12 @@ class AktivitetspliktFlytTest :
         val underveisTidslinjeFørEffekuering = dataSource.transaction { connection ->
             UnderveisRepositoryImpl(connection).hent(åpenBehandling.id)
         }.let { segment ->
-            Tidslinje(segment.perioder.map { Segment(it.periode, it) }).mapValue({ Pair(it.utfall, it.avslagsårsak) })
+            Tidslinje(segment.perioder.map { Segment(it.periode, it) }).mapValue({
+                Pair(
+                    it.utfall,
+                    it.avslagsårsak
+                )
+            })
                 .komprimer()
         }
 
@@ -290,7 +332,12 @@ class AktivitetspliktFlytTest :
         val underveisTidslinjeEtterEffektuering = dataSource.transaction { connection ->
             UnderveisRepositoryImpl(connection).hent(åpenBehandling.id)
         }.let { segment ->
-            Tidslinje(segment.perioder.map { Segment(it.periode, it) }).mapValue { Pair(it.utfall, it.avslagsårsak) }
+            Tidslinje(segment.perioder.map { Segment(it.periode, it) }).mapValue {
+                Pair(
+                    it.utfall,
+                    it.avslagsårsak
+                )
+            }
         }.komprimer()
 
         assertThat(underveisTidslinjeEtterEffektuering).isNotEqualTo(underveisTidslinjeFørEffekuering)

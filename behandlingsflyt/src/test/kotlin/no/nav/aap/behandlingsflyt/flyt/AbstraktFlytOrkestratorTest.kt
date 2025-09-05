@@ -710,12 +710,18 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
         }
     }
 
-    protected fun hentNyesteBehandlingForSak(
+    /**
+     * Denne må brukes med omhu, da siste opprettede behandling ikke nødvendigvis er siste behandling
+     * i den lenkede listen av behandlinger. Ref. fasttrack/atomære behandlinger
+     * 
+     * Bruk i stedet: [SakOgBehandlingService.finnSisteYtelsesbehandlingFor]
+     */
+    protected fun hentSisteOpprettedeBehandlingForSak(
         sakId: SakId,
         typeBehandling: List<TypeBehandling> = TypeBehandling.entries
     ): Behandling {
         return dataSource.transaction(readOnly = true) { connection ->
-            val finnSisteBehandlingFor = BehandlingRepositoryImpl(connection).finnSisteBehandlingFor(
+            val finnSisteBehandlingFor = BehandlingRepositoryImpl(connection).finnSisteOpprettedeBehandlingFor(
                 sakId,
                 typeBehandling
             )
@@ -801,7 +807,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
         hendelsesMottak.håndtere(ident, dokumentMottattPersonHendelse)
         motor.kjørJobber()
         val sak = hentSak(ident, dokumentMottattPersonHendelse.periode)
-        val behandling = hentNyesteBehandlingForSak(sak.id)
+        val behandling = hentSisteOpprettedeBehandlingForSak(sak.id)
         return behandling
     }
 
