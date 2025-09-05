@@ -4,12 +4,10 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.SykdomsvurderingResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -23,6 +21,7 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.time.ZoneId
 import javax.sql.DataSource
+import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.utils.tilResponse
 
 fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
     dataSource: DataSource, repositoryRegistry: RepositoryRegistry,
@@ -49,11 +48,11 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                         overgangUforeRepository.hentHistoriskeOvergangUforeVurderinger(behandling.sakId, behandling.id)
                     val grunnlag = overgangUforeRepository.hentHvisEksisterer(behandling.id)
                     val nåTilstand = grunnlag?.vurderinger.orEmpty()
-                    val vedtatteBistandsvurderinger = behandling.forrigeBehandlingId
+                    val vedtatteOvergangUførevurderinger = behandling.forrigeBehandlingId
                         ?.let { overgangUforeRepository.hentHvisEksisterer(it) }
                         ?.vurderinger.orEmpty()
                     val vurdering = nåTilstand
-                        .filterNot { it in vedtatteBistandsvurderinger }
+                        .filterNot { it in vedtatteOvergangUførevurderinger }
                         .singleOrNull()
 
                     val gjeldendeSykdomsvurderinger =
@@ -62,7 +61,7 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                     OvergangUføreGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = vurdering?.tilResponse(ansattInfoService = ansattInfoService),
-                        gjeldendeVedtatteVurderinger = vedtatteBistandsvurderinger.map { it.tilResponse(ansattInfoService = ansattInfoService) },
+                        gjeldendeVedtatteVurderinger = vedtatteOvergangUførevurderinger.map { it.tilResponse(ansattInfoService = ansattInfoService) },
                         historiskeVurderinger = historiskeVurderinger.map { it.tilResponse(ansattInfoService = ansattInfoService) },
                         gjeldendeSykdsomsvurderinger = gjeldendeSykdomsvurderinger.map { it.tilResponse(ansattInfoService) },
                     )
@@ -94,27 +93,3 @@ private fun OvergangUføreVurdering.tilResponse(erGjeldende: Boolean? = false, a
     )
 }
 
-private fun Sykdomsvurdering.tilResponse(ansattInfoService: AnsattInfoService): SykdomsvurderingResponse {
-    val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv.ident)
-    return SykdomsvurderingResponse(
-        begrunnelse = begrunnelse,
-        vurderingenGjelderFra = vurderingenGjelderFra,
-        dokumenterBruktIVurdering = dokumenterBruktIVurdering,
-        erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
-        harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
-        erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
-        erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
-        erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
-        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
-        yrkesskadeBegrunnelse = yrkesskadeBegrunnelse,
-        kodeverk = kodeverk,
-        hoveddiagnose = hoveddiagnose,
-        bidiagnoser = bidiagnoser,
-        vurdertAv = VurdertAvResponse(
-            ident = vurdertAv.ident,
-            dato = opprettet.atZone(ZoneId.of("Europe/Oslo")).toLocalDate(),
-            ansattnavn = navnOgEnhet?.navn,
-            enhetsnavn = navnOgEnhet?.enhet,
-        )
-    )
-}

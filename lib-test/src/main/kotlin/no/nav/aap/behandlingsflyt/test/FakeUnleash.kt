@@ -39,7 +39,6 @@ object FakeUnleashFasttrackAktivitetsplikt : UnleashGateway {
         BehandlingsflytFeature.SosialHjelpFlereKontorer to false,
         BehandlingsflytFeature.BrevBeregningsgrunnlag to true,
         BehandlingsflytFeature.Aktivitetsplikt11_7 to true,
-
     )
 
     override fun isEnabled(featureToggle: FeatureToggle) = requireNotNull(flags[featureToggle]) {

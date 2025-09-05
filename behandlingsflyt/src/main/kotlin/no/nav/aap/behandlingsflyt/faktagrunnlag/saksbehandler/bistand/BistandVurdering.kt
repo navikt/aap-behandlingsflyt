@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand
 import java.time.Instant
 import java.time.LocalDate
 
-data class BistandVurdering(
+class BistandVurdering(
     val begrunnelse: String,
     val erBehovForAktivBehandling: Boolean,
     val erBehovForArbeidsrettetTiltak: Boolean,

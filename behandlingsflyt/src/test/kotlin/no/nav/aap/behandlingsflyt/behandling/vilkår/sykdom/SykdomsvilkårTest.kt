@@ -36,7 +36,7 @@ class SykdomsvilkårTest {
                     sykdomsvurdering()
                 ),
                 studentvurdering = null,
-                sykepengerErstatningFaktagrunnlag = null,
+                sykepengerErstatningFaktagrunnlag = null
             )
         )
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
@@ -53,7 +53,7 @@ class SykdomsvilkårTest {
                     sykdomsvurdering(erNedsettelseIArbeidsevneMerEnnHalvparten = false)
                 ),
                 studentvurdering = null,
-                sykepengerErstatningFaktagrunnlag = null,
+                sykepengerErstatningFaktagrunnlag = null
             )
         )
 
@@ -81,7 +81,7 @@ class SykdomsvilkårTest {
                     )
                 ),
                 studentvurdering = null,
-                sykepengerErstatningFaktagrunnlag = null,
+                sykepengerErstatningFaktagrunnlag = null
             )
         )
 
@@ -120,7 +120,7 @@ class SykdomsvilkårTest {
                     )
                 ),
                 studentvurdering = null,
-                sykepengerErstatningFaktagrunnlag = null,
+                sykepengerErstatningFaktagrunnlag = null
             )
         )
 
@@ -159,7 +159,7 @@ class SykdomsvilkårTest {
                     )
                 ),
                 studentvurdering = null,
-                sykepengerErstatningFaktagrunnlag = null,
+                sykepengerErstatningFaktagrunnlag = null
             )
         )
 
