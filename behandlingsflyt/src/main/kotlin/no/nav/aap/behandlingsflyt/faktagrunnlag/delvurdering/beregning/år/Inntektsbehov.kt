@@ -95,7 +95,7 @@ class Inntektsbehov(private val input: Input) {
         return sakerMedDato.filterNotNull().map { sak ->
             YrkesskadeBeregning(
                 sak.ref,
-                sak.skadedato,
+                requireNotNull(sak.skadedato), // TODO her må alternativt skadedato hentes fra yrkesskadevurdering når denne får funksjonalitet for å manuelt overstyre skadedato
                 input.beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger?.first { it.referanse == sak.ref }?.antattÅrligInntekt!!
             )
         }
