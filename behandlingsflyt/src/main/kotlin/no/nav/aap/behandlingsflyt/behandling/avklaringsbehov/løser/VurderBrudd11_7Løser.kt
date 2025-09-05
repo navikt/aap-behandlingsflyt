@@ -25,10 +25,12 @@ class VurderBrudd11_7Løser(
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: VurderBrudd11_7Løsning): LøsningsResultat {
+        løsning.valider()
+
         val vurdering = løsning.aktivitetsplikt11_7Vurdering.tilVurdering(kontekst.bruker, LocalDateTime.now())
 
         val forrigeBehandlingId = behandlingRepository.hent(kontekst.kontekst.behandlingId).forrigeBehandlingId
-        
+
         val gjeldendeVedtatte = forrigeBehandlingId
             ?.let { aktivitetsplikt11_7Repository.hentHvisEksisterer(it) }
             ?.tidslinje() ?: Tidslinje()
@@ -44,25 +46,18 @@ class VurderBrudd11_7Løser(
             vurderinger = nyGjeldende.toList().map { it.verdi }
         )
 
-        return when (val validatedLøsning = løsning.valider()) {
-            is Validation.Invalid -> throw UgyldigForespørselException(validatedLøsning.errorMessage)
-            is Validation.Valid -> {
-                LøsningsResultat(begrunnelse = løsning.aktivitetsplikt11_7Vurdering.begrunnelse)
-            }
-        }
+        return LøsningsResultat(begrunnelse = løsning.aktivitetsplikt11_7Vurdering.begrunnelse)
     }
 
     override fun forBehov(): Definisjon {
         return Definisjon.VURDER_BRUDD_11_7
     }
 
-    private fun VurderBrudd11_7Løsning.valider(): Validation<VurderBrudd11_7Løsning> {
+    private fun VurderBrudd11_7Løsning.valider() {
         if (aktivitetsplikt11_7Vurdering.erOppfylt xor (aktivitetsplikt11_7Vurdering.utfall == null)) {
-            return Validation.Invalid(
-                this,
+            throw UgyldigForespørselException(
                 "Utfallet skal være satt hvis, og bare hvis, aktivitetsplikten ikke er oppfylt"
             )
         }
-        return Validation.Valid(this)
     }
 }
