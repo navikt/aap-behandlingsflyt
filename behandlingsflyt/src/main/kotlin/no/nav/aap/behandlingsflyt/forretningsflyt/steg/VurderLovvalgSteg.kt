@@ -126,6 +126,13 @@ class VurderLovvalgSteg private constructor(
         ) {
             return FantAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
         }
+
+        if (alleVilkårOppfylt
+            && manuellVurdering == null
+            && !spesifiktTriggetRevurderLovvalgUtenManuellVurdering(kontekst, avklaringsbehovene)
+        ) {
+            avklaringsbehovService.avbrytForSteg(kontekst.behandlingId, type())
+        }
         return Fullført
     }
 
