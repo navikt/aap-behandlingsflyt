@@ -210,29 +210,29 @@ private fun yrkesskadeGrunnlagDTO(
     return YrkesskadeGrunnlagDTO(
         inntekter = inntekterDTO,
         yrkesskadeinntekt = YrkesskadeInntektDTO(
-            prosentVekting = beregning.andelYrkesskade().prosentverdi(),
+            prosentVekting = beregning.benyttetAndelForYrkesskade().prosentverdi(),
             antattÅrligInntektIKronerYrkesskadeTidspunktet = beregning.antattÅrligInntektYrkesskadeTidspunktet()
                 .verdi(),
             antattÅrligInntektIGYrkesskadeTidspunktet = beregning.yrkesskadeinntektIG().verdi(),
             justertTilMaks6G = beregning.yrkesskadeinntektIG()
                 .verdi(),
             andelGangerInntekt = beregning.antattÅrligInntektYrkesskadeTidspunktet()
-                .multiplisert(beregning.andelYrkesskade()).verdi(),
-            andelGangerInntektIG = beregning.yrkesskadeinntektIG().multiplisert(beregning.andelYrkesskade()).verdi()
+                .multiplisert(beregning.benyttetAndelForYrkesskade()).verdi(),
+            andelGangerInntektIG = beregning.yrkesskadeinntektIG().multiplisert(beregning.benyttetAndelForYrkesskade()).verdi()
         ),
         standardBeregning = StandardBeregningDTO(
-            prosentVekting = beregning.andelYrkesskade().komplement().prosentverdi(),
+            prosentVekting = beregning.benyttetAndelForYrkesskade().komplement().prosentverdi(),
             inntektIG = underliggende.grunnlaget().verdi(),
-            andelGangerInntekt = underliggende.grunnlaget().multiplisert(beregning.andelYrkesskade().komplement())
+            andelGangerInntekt = underliggende.grunnlaget().multiplisert(beregning.benyttetAndelForYrkesskade().komplement())
                 .verdi(),
-            andelGangerInntektIG = underliggende.grunnlaget().multiplisert(beregning.andelYrkesskade().komplement())
+            andelGangerInntektIG = underliggende.grunnlaget().multiplisert(beregning.benyttetAndelForYrkesskade().komplement())
                 .verdi(),
         ),
         standardYrkesskade = StandardYrkesskadeDTO(
-            prosentVekting = beregning.andelYrkesskade().prosentverdi(),
+            prosentVekting = beregning.benyttetAndelForYrkesskade().prosentverdi(),
             inntektIG = underliggende.grunnlaget().verdi(),
-            andelGangerInntekt = underliggende.grunnlaget().multiplisert(beregning.andelYrkesskade()).verdi(),
-            andelGangerInntektIG = underliggende.grunnlaget().multiplisert(beregning.andelYrkesskade()).verdi(),
+            andelGangerInntekt = underliggende.grunnlaget().multiplisert(beregning.benyttetAndelForYrkesskade()).verdi(),
+            andelGangerInntektIG = underliggende.grunnlaget().multiplisert(beregning.benyttetAndelForYrkesskade()).verdi(),
         ),
         gjennomsnittligInntektSiste3år = gjennomsnittligInntektIG,
         inntektSisteÅr = inntekterDTO.maxBy(InntektDTO::år),
