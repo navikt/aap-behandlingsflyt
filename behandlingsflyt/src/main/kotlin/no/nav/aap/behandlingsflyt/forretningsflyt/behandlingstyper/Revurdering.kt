@@ -1,22 +1,22 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgService
-import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeService
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingService
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgInformasjonskrav
+import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeInformasjonskrav
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktInformasjonskrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningForutgåendeService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningForutgåendeInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeInformasjonskrav
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
 import no.nav.aap.behandlingsflyt.flyt.BehandlingType
@@ -65,14 +65,13 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatning
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeSteg
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.miljo.Miljø
-import no.nav.aap.komponenter.miljo.MiljøKode
 
 object Revurdering : BehandlingType {
     override fun flyt(): BehandlingFlyt {
         return BehandlingFlytBuilder()
             .medSteg(
                 steg = StartBehandlingSteg,
-                informasjonskrav = listOf(SøknadService, BarnService),
+                informasjonskrav = listOf(SøknadInformasjonskrav, BarnInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle()
             )
             .medSteg(
@@ -83,17 +82,17 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = SøknadSteg,
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.SØKNAD_TRUKKET),
-                informasjonskrav = listOf(TrukketSøknadService),
+                informasjonskrav = listOf(TrukketSøknadInformasjonskrav),
             )
             .medSteg(
                 steg = RettighetsperiodeSteg,
-                informasjonskrav = listOf(VurderRettighetsperiodeService),
+                informasjonskrav = listOf(VurderRettighetsperiodeInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
             )
             .medSteg(
             steg = if (Miljø.erProd()) VurderLovvalgSteg else NyVurderLovvalgSteg,
-                informasjonskrav = listOf(PersonopplysningService, LovvalgService),
+                informasjonskrav = listOf(PersonopplysningInformasjonskrav, LovvalgInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.REVURDER_LOVVALG,
@@ -108,7 +107,7 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = if (Miljø.erProd()) VurderSykdomSteg else NyVurderSykdomSteg,
                 // UføreService trengs her for å trigge ytterligere nedsatt arbeidsevne-vurdering
-                informasjonskrav = listOf(YrkesskadeService, LegeerklæringService, UføreService),
+                informasjonskrav = listOf(YrkesskadeInformasjonskrav, LegeerklæringInformasjonskrav, UføreInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
@@ -192,7 +191,7 @@ object Revurdering : BehandlingType {
             .medSteg(steg = VisGrunnlagSteg)
             .medSteg(
                 steg = ManglendeLigningGrunnlagSteg,
-                informasjonskrav = listOf(InntektService),
+                informasjonskrav = listOf(InntektInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.REVURDER_BEREGNING,
@@ -212,7 +211,7 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = VurderForutgåendeMedlemskapSteg,
-                informasjonskrav = listOf(PersonopplysningForutgåendeService, ForutgåendeMedlemskapService),
+                informasjonskrav = listOf(PersonopplysningForutgåendeInformasjonskrav, ForutgåendeMedlemskapInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.REVURDER_MEDLEMSKAP,
@@ -224,7 +223,7 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 // TODO: Midlertidig duplikat av BarnService, skal på sikt kun være i StartBehandlingSteg
-                informasjonskrav = listOf(BarnService),
+                informasjonskrav = listOf(BarnInformasjonskrav),
                 steg = BarnetilleggSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
@@ -235,20 +234,20 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = EtAnnetStedSteg,
-                informasjonskrav = listOf(InstitusjonsoppholdService),
+                informasjonskrav = listOf(InstitusjonsoppholdInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.INSTITUSJONSOPPHOLD)
             )
             .medSteg(
                 steg = SamordningSteg,
-                informasjonskrav = listOf(SamordningYtelseVurderingService),
+                informasjonskrav = listOf(SamordningYtelseVurderingInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.SAMORDNING_OG_AVREGNING,
                     Vurderingsbehov.REVURDER_SAMORDNING,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 ),
             )
-            .medSteg(steg = SamordningUføreSteg, informasjonskrav = listOf(UføreService))
-            .medSteg(steg = TjenestepensjonRefusjonskravSteg, informasjonskrav = listOf(TjenestePensjonService))
+            .medSteg(steg = SamordningUføreSteg, informasjonskrav = listOf(UføreInformasjonskrav))
+            .medSteg(steg = TjenestepensjonRefusjonskravSteg, informasjonskrav = listOf(TjenestePensjonInformasjonskrav))
             .medSteg(
                 steg = SamordningAndreStatligeYtelserSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
@@ -264,7 +263,7 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = IkkeOppfyltMeldepliktSteg,
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering(),
-                informasjonskrav = listOf(MeldekortService, AktivitetspliktInformasjonskrav)
+                informasjonskrav = listOf(MeldekortInformasjonskrav, AktivitetspliktInformasjonskrav)
             )
             .medSteg(steg = UnderveisSteg)
             .medSteg(steg = Effektuer11_7Steg)

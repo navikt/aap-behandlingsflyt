@@ -281,7 +281,7 @@ class AktivitetspliktFlytTest :
             val behandling = opprettAktivitetspliktBehandling(repositoryProvider, sak, forrige)
 
             Aktivitetsplikt11_7Repository.lagre(
-                behandling.id, vurdering
+                behandling.id, listOf(vurdering)
             )
             behandlingRepository.oppdaterBehandlingStatus(behandling.id, status)
             behandling

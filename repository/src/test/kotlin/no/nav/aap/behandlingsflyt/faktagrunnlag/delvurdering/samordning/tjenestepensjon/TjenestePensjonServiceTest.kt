@@ -41,7 +41,7 @@ class TjenestePensjonServiceTest {
         )
 
 
-        assertFalse(TjenestePensjonService.harEndringerITjenestePensjon(eksisterende, ny))
+        assertFalse(TjenestePensjonInformasjonskrav.harEndringerITjenestePensjon(eksisterende, ny))
     }
 
 }

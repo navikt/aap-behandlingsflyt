@@ -1,14 +1,14 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgService
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeInformasjonskrav
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.integrasjon.aordning.InntektkomponentenGatewayImpl
@@ -122,16 +122,16 @@ class InformasjonskravGrunnlagTest {
             )
 
             val initiell = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(StegType.VURDER_YRKESSKADE to YrkesskadeService),
+                listOf(StegType.VURDER_YRKESSKADE to YrkesskadeInformasjonskrav),
                 kontekst
             )
 
             assertThat(initiell)
                 .hasSize(1)
-                .allMatch { it === YrkesskadeService }
+                .allMatch { it === YrkesskadeInformasjonskrav }
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(StegType.VURDER_YRKESSKADE to YrkesskadeService),
+                listOf(StegType.VURDER_YRKESSKADE to YrkesskadeInformasjonskrav),
                 kontekst
             )
 
@@ -156,13 +156,13 @@ class InformasjonskravGrunnlagTest {
             )
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(StegType.VURDER_YRKESSKADE to YrkesskadeService),
+                listOf(StegType.VURDER_YRKESSKADE to YrkesskadeInformasjonskrav),
                 kontekst
             )
 
             assertThat(erOppdatert)
                 .hasSize(1)
-                .allMatch { it === YrkesskadeService }
+                .allMatch { it === YrkesskadeInformasjonskrav }
         }
     }
 
@@ -175,7 +175,7 @@ class InformasjonskravGrunnlagTest {
             )
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(StegType.VURDER_YRKESSKADE to YrkesskadeService),
+                listOf(StegType.VURDER_YRKESSKADE to YrkesskadeInformasjonskrav),
                 kontekst
             )
 
@@ -200,16 +200,16 @@ class InformasjonskravGrunnlagTest {
             )
 
             val initiell = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(StegType.VURDER_LOVVALG to LovvalgService),
+                listOf(StegType.VURDER_LOVVALG to LovvalgInformasjonskrav),
                 kontekst
             )
 
             assertThat(initiell)
                 .hasSize(1)
-                .allMatch { it === LovvalgService }
+                .allMatch { it === LovvalgInformasjonskrav }
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(StegType.VURDER_LOVVALG to LovvalgService),
+                listOf(StegType.VURDER_LOVVALG to LovvalgInformasjonskrav),
                 kontekst
             )
 
@@ -226,7 +226,7 @@ class InformasjonskravGrunnlagTest {
                 repositoryRegistry.provider(connection),
                 gatewayProvider
             )
-            val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnService)
+            val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnInformasjonskrav)
 
             leggTilBarnPåPerson(ident)
 
@@ -234,7 +234,7 @@ class InformasjonskravGrunnlagTest {
 
             assertThat(initiell)
                 .hasSize(1)
-                .allMatch { it === BarnService }
+                .allMatch { it === BarnInformasjonskrav }
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(kravKonstruktører, kontekst)
 
@@ -255,7 +255,7 @@ class InformasjonskravGrunnlagTest {
                 repositoryRegistry.provider(connection),
                 gatewayProvider
             )
-            val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnService)
+            val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnInformasjonskrav)
 
             leggTilBarnPåPerson(ident)
 
@@ -263,7 +263,7 @@ class InformasjonskravGrunnlagTest {
 
             assertThat(initiell)
                 .hasSize(1)
-                .allMatch { it === BarnService }
+                .allMatch { it === BarnInformasjonskrav }
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(kravKonstruktører, kontekst)
 
@@ -284,7 +284,7 @@ class InformasjonskravGrunnlagTest {
                 repositoryRegistry.provider(connection),
                 gatewayProvider
             )
-            val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnService)
+            val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnInformasjonskrav)
 
             leggTilBarnPåPerson(ident)
 

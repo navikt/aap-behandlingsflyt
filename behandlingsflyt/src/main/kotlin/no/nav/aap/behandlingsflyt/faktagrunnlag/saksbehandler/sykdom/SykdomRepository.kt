@@ -12,13 +12,6 @@ interface SykdomRepository : Repository {
 
     fun lagre(
         behandlingId: BehandlingId,
-        sykdomsvurdering: Sykdomsvurdering,
-    ) {
-        lagre(behandlingId, listOf(sykdomsvurdering))
-    }
-
-    fun lagre(
-        behandlingId: BehandlingId,
         yrkesskadevurdering: Yrkesskadevurdering?
     )
 

@@ -22,6 +22,7 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDate
 import javax.sql.DataSource
+import kotlin.collections.orEmpty
 
 fun NormalOpenAPIRoute.aktivitetsplikt11_7GrunnlagApi(
     dataSource: DataSource,
@@ -42,14 +43,29 @@ fun NormalOpenAPIRoute.aktivitetsplikt11_7GrunnlagApi(
 
                 val behandling: Behandling =
                     BehandlingReferanseService(behandlingRepository).behandling(req)
+                
+                val grunnlag = aktivitetsplikt11_7Repository.hentHvisEksisterer(behandling.id)
+                
+                if (grunnlag == null) {
+                    Aktivitetsplikt11_7GrunnlagDto(
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle()
+                    )
+                }
+                
+                val nåTilstand = grunnlag?.vurderinger.orEmpty()
 
-                val historiskeVurderinger = aktivitetsplikt11_7Repository.hentHistoriskeVurderinger(
-                    sakId = behandling.sakId,
-                    behandlingId = behandling.id
-                )
-                aktivitetsplikt11_7Repository.hentHvisEksisterer(behandling.id)
-                    ?.tilDto(kanSaksbehandle(), ansattInfoService, historiskeVurderinger)
-                    ?: Aktivitetsplikt11_7GrunnlagDto(harTilgangTilÅSaksbehandle = kanSaksbehandle())
+                val vedtatteVurderinger = behandling.forrigeBehandlingId
+                    ?.let { aktivitetsplikt11_7Repository.hentHvisEksisterer(it) }
+                    ?.vurderinger.orEmpty()
+                val vurdering = nåTilstand
+                    .filterNot { it in vedtatteVurderinger }
+                    .singleOrNull()
+                
+                Aktivitetsplikt11_7GrunnlagDto(
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(), 
+                        vurdering = vurdering?.tilDto(ansattInfoService),
+                        vedtatteVurderinger = vedtatteVurderinger.map{it.tilDto(ansattInfoService)}
+                    )
             }
             respond(respons)
         }
@@ -58,7 +74,7 @@ fun NormalOpenAPIRoute.aktivitetsplikt11_7GrunnlagApi(
 
 data class Aktivitetsplikt11_7GrunnlagDto(
     val vurdering: Aktivitetsplikt11_7VurderingDto? = null,
-    val historiskeVurderinger: List<Aktivitetsplikt11_7VurderingDto> = emptyList(),
+    val vedtatteVurderinger: List<Aktivitetsplikt11_7VurderingDto> = emptyList(),
     val harTilgangTilÅSaksbehandle: Boolean
 )
 
@@ -79,13 +95,3 @@ internal fun Aktivitetsplikt11_7Vurdering.tilDto(ansattInfoService: AnsattInfoSe
         vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet, ansattInfoService),
     )
 }
-
-internal fun Aktivitetsplikt11_7Grunnlag.tilDto(
-    harTilgangTilÅSaksbehandle: Boolean,
-    ansattInfoService: AnsattInfoService,
-    historiskeVurderinger: List<Aktivitetsplikt11_7Vurdering>
-) = Aktivitetsplikt11_7GrunnlagDto(
-    vurdering = vurdering.tilDto(ansattInfoService),
-    historiskeVurderinger = historiskeVurderinger.map { it.tilDto(ansattInfoService) },
-    harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle
-)

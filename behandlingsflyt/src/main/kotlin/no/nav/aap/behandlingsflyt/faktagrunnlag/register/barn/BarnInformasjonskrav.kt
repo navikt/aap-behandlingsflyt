@@ -26,7 +26,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.Duration
 
-class BarnService private constructor(
+class BarnInformasjonskrav private constructor(
     private val barnRepository: BarnRepository,
     private val personRepository: PersonRepository,
     private val barnGateway: BarnGateway,
@@ -125,8 +125,8 @@ class BarnService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.BARN
 
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BarnService {
-            return BarnService(
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BarnInformasjonskrav {
+            return BarnInformasjonskrav(
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),
                 gatewayProvider.provide(),
