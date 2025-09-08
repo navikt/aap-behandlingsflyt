@@ -13,7 +13,7 @@ data class BehandletOppfølgingsOppgave(
     val hvemSkalFølgeOpp: HvemSkalFølgeOpp,
     val hvaSkalFølgesOpp: String,
     val reserverTilBruker: String?,
-    val opprinnelse: Opprinnelse?
+    val opprinnelse: Opprinnelse? = null
 ) {
     companion object {
         fun fraDokument(dokument: Oppfølgingsoppgave): BehandletOppfølgingsOppgave {

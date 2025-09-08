@@ -31,5 +31,5 @@ public data class OppfølgingsoppgaveV0(
     public val hvemSkalFølgeOpp: HvemSkalFølgeOpp,
     public val reserverTilBruker: String?,
     public val hvaSkalFølgesOpp: String,
-    public val opprinnelse: Opprinnelse?
+    public val opprinnelse: Opprinnelse? = null,
 ) : Oppfølgingsoppgave
