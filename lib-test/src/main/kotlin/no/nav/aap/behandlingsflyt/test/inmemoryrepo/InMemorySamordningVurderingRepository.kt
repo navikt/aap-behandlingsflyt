@@ -18,7 +18,9 @@ object InMemorySamordningVurderingRepository : SamordningVurderingRepository {
         sakId: SakId,
         behandlingId: BehandlingId
     ): List<SamordningVurderingGrunnlag> {
-        TODO("Not yet implemented")
+        synchronized(lock) {
+            return emptyList()
+        }
     }
 
     override fun lagreVurderinger(behandlingId: BehandlingId, samordningVurderinger: SamordningVurderingGrunnlag) {
