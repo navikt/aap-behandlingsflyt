@@ -122,7 +122,7 @@ class AktivitetspliktFlytTest :
         val atomærBehandling = opprettetEffektueringsbehandling as SakOgBehandlingService.MåBehandlesAtomært
         assertThat(atomærBehandling.nyBehandling.typeBehandling() == TypeBehandling.Revurdering)
         assertThat(atomærBehandling.åpenBehandling!!.id).isEqualTo(åpenBehandling.id)
-        
+
         var (grunnlagIEffektueringsbehandling, grunnlagIÅpenBehandling) = dataSource.transaction { connection ->
             Pair(
                 Aktivitetsplikt11_7RepositoryImpl(connection)
@@ -144,10 +144,10 @@ class AktivitetspliktFlytTest :
             )
         }
         motor.kjørJobber()
-        
+
         val effektueringsbehandling = hentBehandling(atomærBehandling.nyBehandling.referanse)
         assertThat(effektueringsbehandling.status()).isEqualTo(Status.AVSLUTTET)
-        
+
         grunnlagIEffektueringsbehandling = dataSource.transaction { connection ->
             Aktivitetsplikt11_7RepositoryImpl(connection)
                 .hentHvisEksisterer(atomærBehandling.nyBehandling.id)
@@ -216,16 +216,19 @@ class AktivitetspliktFlytTest :
 
         opprettAktivitetspliktBehandlingMedVurdering(
             sak,
-            Status.AVSLUTTET,
+            Status.AVSLUTTET) { behandlingId ->
             Aktivitetsplikt11_7Vurdering(
                 begrunnelse = "Brudd",
                 erOppfylt = false,
                 utfall = Utfall.STANS,
                 gjelderFra = sak.rettighetsperiode.fom.plusWeeks(18),
                 vurdertAv = "Saksbehandler",
-                opprettet = sak.rettighetsperiode.fom.plusWeeks(20).atStartOfDay().toInstant(ZoneOffset.UTC)
+                opprettet = sak.rettighetsperiode.fom.plusWeeks(20).atStartOfDay().toInstant(ZoneOffset.UTC),
+                vurdertIBehandling = behandlingId,
+                skalIgnorereVarselFrist = false
             )
-        )
+        }
+
 
         val effektueringsbehandling = dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
@@ -255,9 +258,9 @@ class AktivitetspliktFlytTest :
         åpenBehandling =
             dataSource.transaction { connection -> BehandlingRepositoryImpl(connection).hent(åpenBehandling.id) }
         assertThat(åpenBehandling.aktivtSteg())
-            .describedAs{"Skal trekkes tilbake til steget informasjonskravet står på"}
+            .describedAs { "Skal trekkes tilbake til steget informasjonskravet står på" }
             .isEqualTo(StegType.IKKE_OPPFYLT_MELDEPLIKT)
-        
+
         motor.kjørJobber()
         åpenBehandling =
             dataSource.transaction { connection -> BehandlingRepositoryImpl(connection).hent(åpenBehandling.id) }
@@ -269,8 +272,8 @@ class AktivitetspliktFlytTest :
     private fun opprettAktivitetspliktBehandlingMedVurdering(
         sak: Sak,
         status: Status,
-        vurdering: Aktivitetsplikt11_7Vurdering,
         forrige: BehandlingId? = null,
+        vurdering: (behandlingId: BehandlingId) -> Aktivitetsplikt11_7Vurdering,
     ): Behandling {
         return dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
@@ -281,7 +284,7 @@ class AktivitetspliktFlytTest :
             val behandling = opprettAktivitetspliktBehandling(repositoryProvider, sak, forrige)
 
             Aktivitetsplikt11_7Repository.lagre(
-                behandling.id, listOf(vurdering)
+                behandling.id, listOf(vurdering(behandling.id))
             )
             behandlingRepository.oppdaterBehandlingStatus(behandling.id, status)
             behandling

@@ -45,12 +45,13 @@ class VurderAktivitetsplikt11_7Steg(
         }
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val grunnlag = aktivitetsplikt11_7Repository.hentHvisEksisterer(kontekst.behandlingId)
-        if (!avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.VURDER_BRUDD_11_7) || grunnlag == null) {
+        val vurderingForBehandling = grunnlag?.vurderinger?.firstOrNull { it.vurdertIBehandling == kontekst.behandlingId }
+        if (!avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.VURDER_BRUDD_11_7) || vurderingForBehandling == null) {
             return FantAvklaringsbehov(Definisjon.VURDER_BRUDD_11_7)
         }
 
         // Hvis aktivitetsplikten er oppfyllt skal vi bare gå videre til neste steg
-        if (grunnlag.vurdering.erOppfylt) {
+        if (vurderingForBehandling.erOppfylt) {
             slettForhåndsvarselbrevSomIkkeErSendt(kontekst.behandlingId)
             return Fullført
         }
@@ -83,10 +84,11 @@ class VurderAktivitetsplikt11_7Steg(
         // Er vi innenfor fristen på forhåndsvarselet og aktivitetsplikten ikke er oppfylt har bruker rett til
         // å uttale seg fram til fristen. Saken settes derfor på vent. Om man er etter fristen går vi videre til neste steg
         val venteBehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT)
-        val varslingstidpunkt = grunnlag.varsel?.sendtDato ?: throw IllegalStateException("Fant ikke varslingstidspunkt")
-        val frist = grunnlag.varsel.svarfrist ?: throw IllegalStateException("Fant ikke frist")
+        val varsel = aktivitetsplikt11_7Repository.hentVarselHvisEksisterer(kontekst.behandlingId)
+        val varslingstidpunkt = varsel?.sendtDato ?: throw IllegalStateException("Fant ikke varslingstidspunkt")
+        val frist = varsel.svarfrist ?: throw IllegalStateException("Fant ikke frist")
 
-        if (!grunnlag.vurdering.erOppfylt && LocalDate.now() <= frist && grunnlag.varsel.overstyrtVarsel == null) {
+        if (LocalDate.now() <= frist && !vurderingForBehandling.skalIgnorereVarselFrist) {
             if (skalVentePåSvar(venteBehov, varslingstidpunkt)) {
                 return FantVentebehov(
                     Ventebehov(

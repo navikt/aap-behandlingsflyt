@@ -4,12 +4,14 @@ import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderBrudd11_7Løsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7LøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
@@ -28,11 +30,13 @@ import java.time.LocalDate
 class VurderBrudd11_7LøserTest {
     private val aktivitetsplikt11_7Repository = mockk<Aktivitetsplikt11_7Repository>()
     private val behandlingRepository = mockk<BehandlingRepository>()
+    private val avklaringsbehovRepository = mockk<AvklaringsbehovRepository>()
+    private val avklaringsbehovOperasjonerRepository = mockk<AvklaringsbehovOperasjonerRepository>()
 
     @ParameterizedTest
     @MethodSource("ugyldigeLøsninger")
     fun `Skal kaste ugyldig forespørsel-exception dersom innsendt løsning er ugyldig`(løsning: VurderBrudd11_7Løsning) {
-        val løser = VurderBrudd11_7Løser(aktivitetsplikt11_7Repository, behandlingRepository)
+        val løser = VurderBrudd11_7Løser(aktivitetsplikt11_7Repository, behandlingRepository, avklaringsbehovRepository)
 
         val exception = assertThrows<UgyldigForespørselException> {
             løser.løs(
@@ -49,8 +53,13 @@ class VurderBrudd11_7LøserTest {
     fun `Gydlig løsning skal validere`(løsning: VurderBrudd11_7Løsning) {
         every { aktivitetsplikt11_7Repository.lagre(any(), any()) } returns Unit
         every { behandlingRepository.hent(any() as BehandlingId).forrigeBehandlingId } returns null
+        every { avklaringsbehovOperasjonerRepository.hent(any()) } returns emptyList()
+        every { avklaringsbehovRepository.hentAvklaringsbehovene(any()) } returns Avklaringsbehovene(
+            avklaringsbehovOperasjonerRepository,
+            BehandlingId(1L)
+        )
 
-        val løser = VurderBrudd11_7Løser(aktivitetsplikt11_7Repository, behandlingRepository)
+        val løser = VurderBrudd11_7Løser(aktivitetsplikt11_7Repository, behandlingRepository, avklaringsbehovRepository)
 
         val resultat = løser.løs(
             kontekst = lagAvklaringsvehovKontekst(),

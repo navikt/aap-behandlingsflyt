@@ -9,9 +9,8 @@ import java.time.LocalDate
 interface Aktivitetsplikt11_7Repository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): Aktivitetsplikt11_7Grunnlag?
     fun lagre(behandlingId: BehandlingId, vurderinger: List<Aktivitetsplikt11_7Vurdering>)
-    fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<Aktivitetsplikt11_7Vurdering>
-    fun lagre(behandlingId: BehandlingId, vurdering: Aktivitetsplikt11_7Vurdering)
+
     fun lagreVarsel(behandlingId: BehandlingId, varsel: BrevbestillingReferanse)
     fun lagreFrist(behandlingId: BehandlingId, datoVarslet: LocalDate, svarfrist: LocalDate)
-    fun lagreOverstyrtVarsel(behandlingId: BehandlingId, overstyrtVarsel: Aktivitetsplikt11_7OverstyrtVarsel)
+    fun hentVarselHvisEksisterer(behandlingId: BehandlingId): Aktivitetsplikt11_7Varsel?
 }

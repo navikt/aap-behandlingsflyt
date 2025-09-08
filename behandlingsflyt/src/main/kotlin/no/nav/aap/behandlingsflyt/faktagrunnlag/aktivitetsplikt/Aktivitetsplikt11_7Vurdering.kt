@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.Instant
 import java.time.LocalDate
 
@@ -10,7 +11,9 @@ data class Aktivitetsplikt11_7Vurdering(
     val utfall: Utfall? = null,
     val vurdertAv: String,
     val gjelderFra: LocalDate,
-    val opprettet: Instant
+    val opprettet: Instant,
+    val vurdertIBehandling: BehandlingId,
+    val skalIgnorereVarselFrist: Boolean
 )
 
 enum class Utfall {
@@ -21,11 +24,4 @@ data class Aktivitetsplikt11_7Varsel(
     val varselId: BrevbestillingReferanse,
     val sendtDato: LocalDate? = null,
     val svarfrist: LocalDate? = null,
-    val overstyrtVarsel: Aktivitetsplikt11_7OverstyrtVarsel? = null,
-)
-
-data class Aktivitetsplikt11_7OverstyrtVarsel(
-    val begrunnelse: String,
-    val opprettet: Instant,
-    val vurdertAv: String,
 )

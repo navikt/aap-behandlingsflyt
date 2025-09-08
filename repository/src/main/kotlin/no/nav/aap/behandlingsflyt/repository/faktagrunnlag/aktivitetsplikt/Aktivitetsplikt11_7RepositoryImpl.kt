@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.aktivitetsplikt
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7OverstyrtVarsel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Varsel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -94,22 +94,18 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
         }
     }
 
-    override fun lagreOverstyrtVarsel(
-        behandlingId: BehandlingId,
-        overstyrtVarsel: Aktivitetsplikt11_7OverstyrtVarsel
-    ) {
+    override fun hentVarselHvisEksisterer(behandlingId: BehandlingId): Aktivitetsplikt11_7Varsel? {
         val query = """
-            INSERT INTO aktivitetsplikt_11_7_overstyrt_varsel (behandling_id, brev_referanse) 
-            VALUES (?, ?)
+            select * 
+            from aktivitetsplikt_11_7_varsel
+            where behandling_id = ?
         """.trimIndent()
 
-        connection.execute(query) {
+        return connection.queryFirstOrNull(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
-                setString(2, overstyrtVarsel.begrunnelse)
-                setString(3, overstyrtVarsel.vurdertAv)
-                setInstant(4, overstyrtVarsel.opprettet)
             }
+            setRowMapper(::mapVarsel)
         }
     }
 
@@ -160,8 +156,8 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
 
         val query = """
             INSERT INTO aktivitetsplikt_11_7_vurdering 
-            (begrunnelse, er_oppfylt, utfall, vurdert_av, vurderingen_gjelder_fra, opprettet_tid, vurderinger_id) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            (begrunnelse, er_oppfylt, utfall, vurdert_av, vurderingen_gjelder_fra, opprettet_tid, vurderinger_id, vurdert_i_behandling, skal_ignorere_varsel_frist) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         connection.executeBatch(query, vurderinger) {
@@ -173,6 +169,8 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
                 setLocalDate(5, vurdering.gjelderFra)
                 setInstant(6, vurdering.opprettet)
                 setLong(7, vurderingerId)
+                setLong(8, vurdering.vurdertIBehandling.toLong())
+                setBoolean(9, vurdering.skalIgnorereVarselFrist)
             }
         }
 
@@ -197,7 +195,17 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
             utfall = row.getStringOrNull("utfall")?.let { Utfall.valueOf(it) },
             vurdertAv = row.getString("vurdert_av"),
             gjelderFra = row.getLocalDate("vurderingen_gjelder_fra"),
-            opprettet = row.getInstant("opprettet_tid")
+            opprettet = row.getInstant("opprettet_tid"),
+            vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
+            skalIgnorereVarselFrist = row.getBoolean("skal_ignorere_varsel_frist"),
+        )
+    }
+
+    private fun mapVarsel(row: Row): Aktivitetsplikt11_7Varsel {
+        return Aktivitetsplikt11_7Varsel(
+            varselId = BrevbestillingReferanse(row.getUUID("brev_referanse")),
+            sendtDato = row.getLocalDate("dato_varslet"),
+            svarfrist = row.getLocalDate("frist")
         )
     }
 }

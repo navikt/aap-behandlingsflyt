@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -19,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
@@ -50,7 +50,8 @@ class AktivitetspliktInformasjonskravTest {
         val sak = dataSource.transaction { connection -> nySak(connection) }
 
         val aktivitetspliktBehandling1 = opprettAktivitetspliktBehandlingMedVurdering(
-            sak, status = Status.AVSLUTTET,
+            sak, status = Status.AVSLUTTET
+        ) { behandlingId ->
             Aktivitetsplikt11_7Vurdering(
                 begrunnelse = "Begrunnelse 1",
                 erOppfylt = false,
@@ -58,12 +59,15 @@ class AktivitetspliktInformasjonskravTest {
                 gjelderFra = sak.rettighetsperiode.fom.plusMonths(2),
                 vurdertAv = "Saksbehandler",
                 opprettet = sak.rettighetsperiode.fom.plusMonths(2).plusWeeks(1).atStartOfDay()
-                    .toInstant(ZoneOffset.UTC)
+                    .toInstant(ZoneOffset.UTC),
+                vurdertIBehandling = behandlingId,
+                skalIgnorereVarselFrist = false
             )
-        )
+        }
 
         val aktivitetspliktBehandling2 = opprettAktivitetspliktBehandlingMedVurdering(
-            sak, status = Status.IVERKSETTES,
+            sak, status = Status.IVERKSETTES, forrige = aktivitetspliktBehandling1.id
+        ) { behandlingId ->
             Aktivitetsplikt11_7Vurdering(
                 begrunnelse = "Begrunnelse 2",
                 erOppfylt = false,
@@ -71,23 +75,29 @@ class AktivitetspliktInformasjonskravTest {
                 gjelderFra = sak.rettighetsperiode.fom.plusMonths(3),
                 vurdertAv = "Saksbehandler",
                 opprettet = sak.rettighetsperiode.fom.plusMonths(3).plusWeeks(1).atStartOfDay()
-                    .toInstant(ZoneOffset.UTC)
-            ),
-            forrige = aktivitetspliktBehandling1.id
-        )
+                    .toInstant(ZoneOffset.UTC),
+                vurdertIBehandling = behandlingId,
+                skalIgnorereVarselFrist = false
+            )
+        }
+
 
         opprettAktivitetspliktBehandlingMedVurdering(
             sak, status = Status.UTREDES,
+            forrige = aktivitetspliktBehandling2.id
+        ) { behandlingId ->
             Aktivitetsplikt11_7Vurdering(
                 begrunnelse = "Begrunnelse 3",
                 erOppfylt = true,
                 gjelderFra = sak.rettighetsperiode.fom.plusMonths(3),
                 vurdertAv = "Saksbehandler",
                 opprettet = sak.rettighetsperiode.fom.plusMonths(3).plusWeeks(1).atStartOfDay()
-                    .toInstant(ZoneOffset.UTC)
-            ),
-            forrige = aktivitetspliktBehandling2.id
-        )
+                    .toInstant(ZoneOffset.UTC),
+                vurdertIBehandling = behandlingId,
+                skalIgnorereVarselFrist = false
+            )
+        }
+
 
         dataSource.transaction { connection ->
             val effektueringsbehandling = BehandlingRepositoryImpl(connection).opprettBehandling(
@@ -135,7 +145,9 @@ class AktivitetspliktInformasjonskravTest {
                                 gjelderFra = sak.rettighetsperiode.fom.plusMonths(3),
                                 vurdertAv = "Saksbehandler",
                                 opprettet = sak.rettighetsperiode.fom.plusMonths(3).plusWeeks(1).atStartOfDay()
-                                    .toInstant(ZoneOffset.UTC)
+                                    .toInstant(ZoneOffset.UTC),
+                                vurdertIBehandling = aktivitetspliktBehandling2.id,
+                                skalIgnorereVarselFrist = false
                             )
                         )
                     )
@@ -157,8 +169,8 @@ class AktivitetspliktInformasjonskravTest {
     private fun opprettAktivitetspliktBehandlingMedVurdering(
         sak: Sak,
         status: Status,
-        vurdering: Aktivitetsplikt11_7Vurdering,
         forrige: BehandlingId? = null,
+        vurdering: (behandlingId: BehandlingId) -> Aktivitetsplikt11_7Vurdering,
     ): Behandling {
         return dataSource.transaction { connection ->
             val repositoryProvider = repositoryRegistry.provider(connection)
@@ -168,7 +180,7 @@ class AktivitetspliktInformasjonskravTest {
             val behandling = opprettAktivitetspliktBehandling(repositoryProvider, sak, forrige)
 
             Aktivitetsplikt11_7Repository.lagre(
-                behandling.id, listOf(vurdering)
+                behandling.id, listOf(vurdering(behandling.id))
             )
             behandlingRepository.oppdaterBehandlingStatus(behandling.id, status)
             behandling

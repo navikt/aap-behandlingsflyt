@@ -8,7 +8,6 @@ import java.util.Objects
 
 data class Aktivitetsplikt11_7Grunnlag(
     val vurderinger: List<Aktivitetsplikt11_7Vurdering>,
-    val varsel: Aktivitetsplikt11_7Varsel? = null
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -18,13 +17,12 @@ data class Aktivitetsplikt11_7Grunnlag(
         other as Aktivitetsplikt11_7Grunnlag
 
         if (vurderinger != other.vurderinger) return false
-        if (varsel != other.varsel) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        return Objects.hash(vurderinger.toSet(), varsel)
+        return Objects.hash(vurderinger.toSet())
     }
 
     fun tidslinje(): Tidslinje<Aktivitetsplikt11_7Vurdering> {
