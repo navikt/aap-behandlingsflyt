@@ -15,6 +15,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -35,6 +37,7 @@ class OvergangArbeidSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val overgangArbeidRepository: OvergangArbeidRepository,
+    private val sykdomRepository: SykdomRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårService: VilkårService,
 ) : BehandlingSteg {
@@ -42,6 +45,7 @@ class OvergangArbeidSteg private constructor(
         vilkårsresultatRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         overgangArbeidRepository = repositoryProvider.provide(),
+        sykdomRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         vilkårService = VilkårService(repositoryProvider),
     )
@@ -52,11 +56,13 @@ class OvergangArbeidSteg private constructor(
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val overgangArbeidGrunnlag = overgangArbeidRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val sykdomgrunnlag = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_ARBEID)
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 return Fullført
             }
+
             VurderingType.REVURDERING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     log.info("Ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.OVERGANGARBEIDVILKÅRET} for behandlingId ${kontekst.behandlingId}. Avbryter steg.")
@@ -69,7 +75,8 @@ class OvergangArbeidSteg private constructor(
                     )
                     return Fullført
                 }
-                if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && !sykdomsVilkårErOppfylt(kontekst.behandlingId) && harIkkeVurdert_11_17_tidligere(
+                if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && !brukerHarTilstrekkeligNedsattArbeidsevne(
+                        sykdomgrunnlag) && harIkkeVurdert_11_17_tidligere(
                         avklaringsbehovene
                     )
                 ) {
@@ -112,11 +119,17 @@ class OvergangArbeidSteg private constructor(
         return alleBistandsVilkårOppfylt
     }
 
-    private fun sykdomsVilkårErOppfylt(behandlingId: BehandlingId): Boolean {
-        val alleSykdomsVilkårOppfylt =
-            vilkårsresultatRepository.hent(behandlingId).finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).vilkårsperioder()
-                .all { it.erOppfylt() }
-        return alleSykdomsVilkårOppfylt
+    private fun brukerHarTilstrekkeligNedsattArbeidsevne(sykdomGrunnlag: SykdomGrunnlag?): Boolean {
+        if (sykdomGrunnlag == null) return false
+        val sisteSykdomsvurdering = sykdomGrunnlag.sykdomsvurderinger.maxByOrNull { it.opprettet }
+        if (sisteSykdomsvurdering == null) {
+            return false
+        } else {
+            if (sisteSykdomsvurdering.erNedsettelseIArbeidsevneAvEnVissVarighet == true) {
+                return true
+            } else
+                return false
+        }
     }
 
     private fun harIkkeVurdert_11_17_tidligere(avklaringsbehovene: Avklaringsbehovene): Boolean {
