@@ -70,6 +70,10 @@ public enum class AvklaringsbehovKode {
      * [VURDER_BRUDD_11_7_KODE]
      */
     `4101`,
+    /**
+     * [VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT]
+     */
+    `4102`,
 
     /**
      * [AVKLAR_STUDENT_KODE]

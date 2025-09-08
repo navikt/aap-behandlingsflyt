@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.aktivitetsplikt
 
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7OverstyrtVarsel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
@@ -10,6 +12,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 
 class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : Aktivitetsplikt11_7Repository {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -70,6 +73,60 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
                 deaktiverEksisterende(behandlingId)
             }
             lagre(behandlingId, nyttGrunnlag)
+        }
+    }
+
+    override fun lagreVarsel(
+        behandlingId: BehandlingId,
+        varsel: BrevbestillingReferanse
+    ) {
+        val query = """
+            INSERT INTO aktivitetsplikt_11_7_varsel (behandling_id, brev_referanse) 
+            VALUES (?, ?)
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setUUID(2, varsel.brevbestillingReferanse)
+            }
+        }
+    }
+
+    override fun lagreFrist(
+        behandlingId: BehandlingId,
+        datoVarslet: LocalDate,
+        svarfrist: LocalDate
+    ) {
+        val query = """
+            UPDATE aktivitetsplikt_11_7_varsel SET dato_varslet=?, frist=? WHERE behandling_id=?
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setLocalDate(1, datoVarslet)
+                setLocalDate(2, svarfrist)
+                setLong(3, behandlingId.toLong())
+            }
+        }
+    }
+
+    override fun lagreOverstyrtVarsel(
+        behandlingId: BehandlingId,
+        overstyrtVarsel: Aktivitetsplikt11_7OverstyrtVarsel
+    ) {
+        val query = """
+            INSERT INTO aktivitetsplikt_11_7_overstyrt_varsel (behandling_id, brev_referanse) 
+            VALUES (?, ?)
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setString(2, overstyrtVarsel.begrunnelse)
+                setString(3, overstyrtVarsel.vurdertAv)
+                setInstant(4, overstyrtVarsel.opprettet)
+            }
         }
     }
 
