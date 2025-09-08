@@ -105,7 +105,10 @@ class TjenestePensjonInformasjonskrav(
         val tjenestePensjon = hentTjenestePensjon(behandlingId)
         val eksisterendeData = tjenestePensjonRepository.hentHvisEksisterer(behandlingId)
 
-        return if (harEndringerITjenestePensjon(eksisterendeData, tjenestePensjon)) {
+        // Ønsker ikke trigge revurdering automatisk i dette tilfellet enn så lenge
+        val gikkFraNullTilTomtGrunnlag = tjenestePensjon.isEmpty() && eksisterendeData == null
+
+        return if (!gikkFraNullTilTomtGrunnlag && harEndringerITjenestePensjon(eksisterendeData, tjenestePensjon)) {
             listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING))
         } else {
             emptyList()

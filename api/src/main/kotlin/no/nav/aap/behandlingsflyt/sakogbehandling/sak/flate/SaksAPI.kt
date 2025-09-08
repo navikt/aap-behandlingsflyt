@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.Azp
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_BRUDD_11_7_KODE
@@ -49,7 +48,10 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
+import org.slf4j.LoggerFactory
 import javax.sql.DataSource
+
+private val log = LoggerFactory.getLogger("api.sak")
 
 fun NormalOpenAPIRoute.saksApi(
     dataSource: DataSource,
@@ -246,18 +248,27 @@ fun NormalOpenAPIRoute.saksApi(
                     if (person == null) {
                         null
                     } else {
-                        val sak = repositoryProvider.provide<SakRepository>().finnSakerFor(person).filter { sak ->
+                        val sakerForPerson = repositoryProvider.provide<SakRepository>().finnSakerFor(person)
+
+                        log.info("Fant ${sakerForPerson.size} saker for person. Mottattidspunkt: ${dto.mottattTidspunkt}")
+
+                        val sak = sakerForPerson.filter { sak ->
                             sak.rettighetsperiode.inneholder(dto.mottattTidspunkt) && sak.status() != Status.AVSLUTTET
-                        }.minByOrNull { it.opprettetTidspunkt }!!
+                        }.minByOrNull { it.opprettetTidspunkt }
 
-                        val behandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+                        if (sak == null) {
+                            log.info("Fant ingen aktive saker for person. Rettighetsperioder: ${sakerForPerson.map { it.rettighetsperiode }}")
+                            null
+                        } else {
+                            val behandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
 
-                        SakOgBehandlingDTO(
-                            personIdent = sak.person.aktivIdent().toString(),
-                            saksnummer = sak.saksnummer.toString(),
-                            status = sak.status().toString(),
-                            sisteBehandlingStatus = behandling?.status().toString()
-                        )
+                            SakOgBehandlingDTO(
+                                personIdent = sak.person.aktivIdent().toString(),
+                                saksnummer = sak.saksnummer.toString(),
+                                status = sak.status().toString(),
+                                sisteBehandlingStatus = behandling?.status().toString()
+                            )
+                        }
                     }
                 }
                 respond(NullableSakOgBehandlingDTO(behandlinger))
