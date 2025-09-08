@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import java.util.concurrent.ConcurrentHashMap
 
 object InMemorySamordningVurderingRepository : SamordningVurderingRepository {
@@ -11,6 +12,13 @@ object InMemorySamordningVurderingRepository : SamordningVurderingRepository {
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningVurderingGrunnlag? {
         synchronized(lock) { return vurderinger[behandlingId] }
+    }
+
+    override fun hentHistoriskeVurderinger(
+        sakId: SakId,
+        behandlingId: BehandlingId
+    ): List<SamordningVurderingGrunnlag> {
+        TODO("Not yet implemented")
     }
 
     override fun lagreVurderinger(behandlingId: BehandlingId, samordningVurderinger: SamordningVurderingGrunnlag) {
