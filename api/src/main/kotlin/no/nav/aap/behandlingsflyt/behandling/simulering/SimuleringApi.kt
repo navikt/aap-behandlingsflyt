@@ -54,6 +54,7 @@ fun NormalOpenAPIRoute.simuleringAPI(
                         samordningAndreStatligeYtelserRepository = repositoryFactory.provide<SamordningAndreStatligeYtelserRepository>(),
                         samordningArbeidsgiverRepository = repositoryFactory.provide<SamordningArbeidsgiverRepository>(),
                         underveisRepository = repositoryFactory.provide<UnderveisRepository>(),
+                        unleashGateway = gatewayProvider.provide()
                     )
                     val behandling = behandlingRepo.hent(req)
                     utbetalingService.lagTilkjentYtelseForUtbetaling(behandling.sakId, behandling.id, simulering = true)

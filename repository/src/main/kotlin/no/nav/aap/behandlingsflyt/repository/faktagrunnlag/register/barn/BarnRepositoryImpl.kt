@@ -150,7 +150,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
     private fun hentVurderinger(vurdertBarnId: Long): List<VurderingAvForeldreAnsvar> {
         return connection.queryList(
             """
-                SELECT periode, HAR_FORELDREANSVAR, BEGRUNNELSE
+                SELECT periode, HAR_FORELDREANSVAR, BEGRUNNELSE, ER_FOSTERFORELDER
                 FROM BARN_VURDERING_PERIODE
                 WHERE BARN_VURDERING_ID = ?
             """.trimIndent()
@@ -162,7 +162,8 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                 VurderingAvForeldreAnsvar(
                     row.getPeriode("periode").fom,
                     row.getBoolean("HAR_FORELDREANSVAR"),
-                    row.getString("BEGRUNNELSE")
+                    row.getString("BEGRUNNELSE"),
+                    row.getBooleanOrNull("ER_FOSTERFORELDER"),
                 )
             }
         }
@@ -172,7 +173,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         return RegisterBarn(
             id = id, barn = connection.queryList(
                 """
-                SELECT p.IDENT, fodselsdato, dodsdato
+                SELECT p.IDENT, fodselsdato, dodsdato, navn
                 FROM BARNOPPLYSNING p
                 WHERE p.bgb_id = ?
             """.trimIndent()
@@ -181,10 +182,21 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                     setLong(1, id)
                 }
                 setRowMapper { row ->
+                    val fødselsdato = Fødselsdato(row.getLocalDate("fodselsdato"))
+
+                    val identifikator = if (row.getStringOrNull("IDENT") != null) {
+                        BarnIdentifikator.BarnIdent(Ident(row.getString("IDENT")))
+                    } else if (row.getStringOrNull("navn") != null) {
+                        BarnIdentifikator.NavnOgFødselsdato(row.getString("navn"), fødselsdato)
+                    } else {
+                        throw IllegalStateException("Krever enten ident eller navn+fødselsdato for registerbarn.")
+                    }
+
                     Barn(
-                        ident = Ident(row.getString("ident")),
-                        fødselsdato = Fødselsdato(row.getLocalDate("fodselsdato")),
-                        dødsdato = row.getLocalDateOrNull("dodsdato")?.let(::Dødsdato)
+                        ident = identifikator,
+                        fødselsdato = fødselsdato,
+                        dødsdato = row.getLocalDateOrNull("dodsdato")?.let(::Dødsdato),
+                        navn = row.getStringOrNull("navn")
                     )
                 }
             })
@@ -235,7 +247,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         }
     }
 
-    override fun lagreRegisterBarn(behandlingId: BehandlingId, barn: Map<Barn, PersonId>) {
+    override fun lagreRegisterBarn(behandlingId: BehandlingId, barn: Map<Barn, PersonId?>) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
         if (eksisterendeGrunnlag != null) {
@@ -246,17 +258,22 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
 
         connection.executeBatch(
             """
-                INSERT INTO BARNOPPLYSNING (IDENT, BGB_ID, fodselsdato, dodsdato, person_id) VALUES (?, ?, ?, ?, ?)
+                INSERT INTO BARNOPPLYSNING (IDENT, BGB_ID, fodselsdato, dodsdato, person_id, navn)
+                VALUES (?, ?, ?, ?, ?, ?)
             """.trimIndent(),
             barn.entries
         ) {
             setParams { barnet ->
                 val (barn, personId) = barnet
-                setString(1, barn.ident.identifikator)
+                setString(
+                    1,
+                    (barn.ident as? BarnIdentifikator.BarnIdent)?.ident?.identifikator
+                )
                 setLong(2, bgbId)
                 setLocalDate(3, barn.fødselsdato.toLocalDate())
                 setLocalDate(4, barn.dødsdato?.toLocalDate())
-                setLong(5, personId.id)
+                setLong(5, personId?.id)
+                setString(6, barn.navn)
             }
         }
 
@@ -322,7 +339,7 @@ VALUES (?, ?, ?, ?)"""
                 }
             connection.executeBatch(
                 """
-                INSERT INTO BARN_VURDERING_PERIODE (BARN_VURDERING_ID, PERIODE, BEGRUNNELSE, HAR_FORELDREANSVAR) VALUES (?, ?::daterange, ?, ?)
+                INSERT INTO BARN_VURDERING_PERIODE (BARN_VURDERING_ID, PERIODE, BEGRUNNELSE, HAR_FORELDREANSVAR, ER_FOSTERFORELDER) VALUES (?, ?::daterange, ?, ?, ?)
             """.trimIndent(), barn.vurderinger
             ) {
                 setParams {
@@ -330,6 +347,7 @@ VALUES (?, ?, ?, ?)"""
                     setPeriode(2, Periode(it.fraDato, it.fraDato))
                     setString(3, it.begrunnelse)
                     setBoolean(4, it.harForeldreAnsvar)
+                    setBoolean(5, it.erFosterForelder)
                 }
             }
         }

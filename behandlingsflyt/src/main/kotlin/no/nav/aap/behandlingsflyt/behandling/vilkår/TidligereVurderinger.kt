@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory
 /** Når kan vi definitivt si at det er avslag, slik
  * at vi ikke trenger å vurdere flere vilkår.
  *
- * Ved revurdering, er det viktig at vi kun ser fram til aktivt steg,
+ * Det er viktig at vi kun ser fram til aktivt steg,
  * fordi selv om det er avslag på et steg senere i flyten, så kan det være
  * at den vurderingen endres slik at det ikke lenger er et avslag.
  */
@@ -32,6 +32,10 @@ interface TidligereVurderinger {
     fun girAvslag(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean
 
     fun girIngenBehandlingsgrunnlag(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean
+
+    fun muligMedRettTilAAP(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean {
+        return !girAvslagEllerIngenBehandlingsgrunnlag(kontekst, førSteg)
+    }
 }
 
 class TidligereVurderingerImpl(

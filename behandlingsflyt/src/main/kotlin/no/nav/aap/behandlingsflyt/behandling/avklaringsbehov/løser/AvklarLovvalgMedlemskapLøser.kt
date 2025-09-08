@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDate
 
 class AvklarLovvalgMedlemskapLøser(
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,

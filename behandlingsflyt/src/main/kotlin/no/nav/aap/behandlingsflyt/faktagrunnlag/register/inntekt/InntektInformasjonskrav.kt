@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDate
 
-class InntektService private constructor(
+class InntektInformasjonskrav private constructor(
     private val sakService: SakService,
     private val inntektGrunnlagRepository: InntektGrunnlagRepository,
     private val sykdomRepository: SykdomRepository,
@@ -117,11 +117,11 @@ class InntektService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.INNTEKT
 
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): InntektService {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): InntektInformasjonskrav {
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
 
-            return InntektService(
+            return InntektInformasjonskrav(
                 sakService = SakService(sakRepository),
                 inntektGrunnlagRepository = repositoryProvider.provide(),
                 sykdomRepository = repositoryProvider.provide(),

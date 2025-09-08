@@ -238,10 +238,22 @@ class BrevGateway : BrevbestillingGateway {
             is Innvilgelse ->
                 buildSet {
                     add(Faktagrunnlag.AapFomDato(brevBehov.virkningstidspunkt))
+                    if (brevBehov.tilkjentYtelse != null) {
+                        add(
+                            Faktagrunnlag.TilkjentYtelse(
+                                dagsats = brevBehov.tilkjentYtelse?.dagsats?.verdi,
+                                gradertDagsats = brevBehov.tilkjentYtelse?.gradertDagsats?.verdi,
+                                barnetilleggSats = brevBehov.tilkjentYtelse?.barnetilleggsats?.verdi,
+                                gradertBarnetillegg = brevBehov.tilkjentYtelse?.gradertBarnetillegg?.verdi,
+                                gradertDagsatsInkludertBarnetillegg = brevBehov.tilkjentYtelse?.gradertDagsatsInkludertBarnetillegg?.verdi,
+                                barnetillegg = brevBehov.tilkjentYtelse?.barnetillegg?.verdi,
+                                antallBarn = brevBehov.tilkjentYtelse?.antallBarn,
+                            )
+                        )
+                    }
                     if (brevBehov.grunnlagBeregning != null) {
                         add(
                             Faktagrunnlag.GrunnlagBeregning(
-                                dagsats = brevBehov.grunnlagBeregning?.dagsats?.verdi,
                                 beregningstidspunkt = brevBehov.grunnlagBeregning?.beregningstidspunkt,
                                 beregningsgrunnlag = brevBehov.grunnlagBeregning?.beregningsgrunnlag?.verdi,
                                 inntekterPerÅr = brevBehov.grunnlagBeregning?.inntekterPerÅr?.map {

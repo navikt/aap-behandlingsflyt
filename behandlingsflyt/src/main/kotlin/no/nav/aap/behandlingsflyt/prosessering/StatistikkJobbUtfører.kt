@@ -162,6 +162,7 @@ class StatistikkJobbUtfører(
                 Vurderingsbehov.OPPFØLGINGSOPPGAVE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OPPFØLGINGSOPPGAVE
                 Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN
                 Vurderingsbehov.AKTIVITETSPLIKT_11_7 -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.AKTIVITETSPLIKT_11_7
+                Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
             }
         }.distinct()
 
@@ -332,7 +333,7 @@ class StatistikkJobbUtfører(
     private fun hentDiagnose(behandling: Behandling): Diagnoser? {
         val sykdomsvurdering =
             sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger.orEmpty()
-                .sortedBy { it.vurderingenGjelderFra }.lastOrNull()
+                .maxByOrNull { it.opprettet }
 
         if (sykdomsvurdering == null) {
             log.info("Fant ikke sykdomsvurdering for behandling ${behandling.referanse} (id: ${behandling.id})")
@@ -416,7 +417,7 @@ class StatistikkJobbUtfører(
                 dokumentRepository = repositoryProvider.provide(),
                 sykdomRepository = repositoryProvider.provide(),
                 underveisRepository = repositoryProvider.provide(),
-                trukketSøknadService = TrukketSøknadService(repositoryProvider),
+                trukketSøknadService = TrukketSøknadService(repositoryProvider.provide()),
                 klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
                 statistikkGateway = gatewayProvider.provide(),
             )

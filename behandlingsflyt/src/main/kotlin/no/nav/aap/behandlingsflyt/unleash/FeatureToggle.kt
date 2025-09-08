@@ -8,7 +8,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     // Eksempel på feature toggle. Kan fjernes når det legges til nye.
     // Se: https://aap-unleash-web.iap.nav.cloud.nais.io/projects/default
     DummyFeature,
-    FasttrackMeldekort,
     OverstyrStarttidspunkt,
     FritakMeldeplikt,
     IngenValidering,
@@ -17,7 +16,10 @@ enum class BehandlingsflytFeature : FeatureToggle {
     SendForvaltningsmelding,
     SosialHjelpFlereKontorer,
     BrevBeregningsgrunnlag,
-    Aktivitetsplikt11_7;
+    Aktivitetsplikt11_7,
+    TilgangssjekkSettPaaVent,
+    OverforingsdatoNullForAvregning
+    ;
 
     override fun key(): String = name
 }

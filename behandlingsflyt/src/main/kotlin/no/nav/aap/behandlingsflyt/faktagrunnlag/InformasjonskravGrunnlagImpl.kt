@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.SpanKind
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadInformasjonskrav
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -51,15 +51,15 @@ class InformasjonskravGrunnlagImpl(
 
         // TODO: Finn en bedre måde å forhindre race conditions når async informasjonskrav avghenger av hverandre
         // Når SøknadService er relevant, må denne kjøre før de andre for å forhindre race conditions
-        val søknadService = informasjonskravene.find { it.second.navn == SøknadService.navn }
-        val søknadInformasjonRelevantOgEndret = if (SøknadService.navn in relevanteInformasjonskrav.map { it.second.navn }) {
-            val span = tracer.spanBuilder("informasjonskrav ${SøknadService.navn}")
+        val søknadInformasjonskrav = informasjonskravene.find { it.second.navn == SøknadInformasjonskrav.navn }
+        val søknadInformasjonRelevantOgEndret = if (SøknadInformasjonskrav.navn in relevanteInformasjonskrav.map { it.second.navn }) {
+            val span = tracer.spanBuilder("informasjonskrav ${SøknadInformasjonskrav.navn}")
                 .setSpanKind(SpanKind.INTERNAL)
-                .setAttribute("informasjonskrav", SøknadService.navn.toString())
+                .setAttribute("informasjonskrav", SøknadInformasjonskrav.navn.toString())
                 .startSpan()
             try {
                 span.makeCurrent().use {
-                    søknadService?.second?.oppdater(kontekst) == Informasjonskrav.Endret.ENDRET
+                    søknadInformasjonskrav?.second?.oppdater(kontekst) == Informasjonskrav.Endret.ENDRET
                 }
             } finally {
                 span.end()
@@ -69,7 +69,7 @@ class InformasjonskravGrunnlagImpl(
         }
 
         val informasjonskravFutures = relevanteInformasjonskrav
-            .filter { !it.second.equals(SøknadService) } // ikke kjør SøknadService dobbelt
+            .filter { !it.second.equals(SøknadInformasjonskrav) } // ikke kjør SøknadService dobbelt
             .map { triple ->
                 CompletableFuture.supplyAsync({
                     val krav = triple.second
@@ -92,8 +92,8 @@ class InformasjonskravGrunnlagImpl(
             .map { it.first }
 
         val endredeInformasjonskrav =
-            if (søknadInformasjonRelevantOgEndret && søknadService != null) {
-                endredeAsyncInformasjonskrav + søknadService
+            if (søknadInformasjonRelevantOgEndret && søknadInformasjonskrav != null) {
+                endredeAsyncInformasjonskrav + søknadInformasjonskrav
             } else {
                 endredeAsyncInformasjonskrav
             }

@@ -80,6 +80,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.RegisterBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvarDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingerForBarnetillegg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarnDto
@@ -127,9 +128,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UtenlandsPeriodeDto
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_STUDENT
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_SYKDOM
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.FASTSETT_MELDEPERIODER
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SEND_FORVALTNINGSMELDING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.START_BEHANDLING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SØKNAD
@@ -149,7 +147,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
-import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackMeldekort
+import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackAktivitetsplikt
 import no.nav.aap.behandlingsflyt.test.PersonNavn
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -193,7 +191,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         fun testData(): List<Arguments> {
             return listOf(
                 Arguments.of(FakeUnleash::class),
-                Arguments.of(FakeUnleashFasttrackMeldekort::class),
+                Arguments.of(FakeUnleashFasttrackAktivitetsplikt::class),
             )
         }
     }
@@ -457,7 +455,10 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .ignoringCollectionOrder()
             .isEqualTo(
                 BarnGrunnlag(
-                    registerbarn = RegisterBarn(id = -1, barn = listOf(Barn(barnIdent, Fødselsdato(barnfødseldato)))),
+                    registerbarn = RegisterBarn(
+                        id = -1,
+                        barn = listOf(Barn(BarnIdentifikator.BarnIdent(barnIdent), Fødselsdato(barnfødseldato)))
+                    ),
                     oppgitteBarn = null,
                     vurderteBarn = null
                 )
@@ -535,7 +536,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 BarnGrunnlag(
                     registerbarn = RegisterBarn(
                         id = -1,
-                        barn = person.barn.map { Barn(it.aktivIdent(), it.fødselsdato) }),
+                        barn = person.barn.map { Barn(BarnIdentifikator.BarnIdent(it.aktivIdent()), it.fødselsdato) }),
                     oppgitteBarn = null,
                     vurderteBarn = null
                 )

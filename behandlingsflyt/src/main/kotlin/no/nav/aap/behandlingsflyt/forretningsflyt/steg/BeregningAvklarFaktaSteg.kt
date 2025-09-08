@@ -69,7 +69,7 @@ class BeregningAvklarFaktaSteg private constructor(
                 val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
                 if (erBehovForÅAvklareYrkesskade(behandlingId, beregningVurdering)) {
                     return FantAvklaringsbehov(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
-                } else if (avklaringsbehov != null) {
+                } else if (avklaringsbehov != null && avklaringsbehov.erÅpent()) {
                     avklaringsbehovene.avbryt(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
                 }
             }
@@ -89,12 +89,13 @@ class BeregningAvklarFaktaSteg private constructor(
                 val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
                 if (erBehovForÅAvklareYrkesskadeRevurdering(behandlingId, beregningVurdering, avklaringsbehovene)) {
                     return FantAvklaringsbehov(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
-                } else if (avklaringsbehov != null) {
+                } else if (avklaringsbehov != null && avklaringsbehov.erÅpent()) {
                     avklaringsbehovene.avbryt(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
                 }
             }
 
             VurderingType.MELDEKORT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.IKKE_RELEVANT -> {
                 // Always do nothing
             }
@@ -151,7 +152,10 @@ class BeregningAvklarFaktaSteg private constructor(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return BeregningAvklarFaktaSteg(repositoryProvider)
         }
 

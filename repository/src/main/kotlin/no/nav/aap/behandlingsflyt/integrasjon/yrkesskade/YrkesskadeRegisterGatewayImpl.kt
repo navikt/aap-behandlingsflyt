@@ -36,23 +36,27 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
         val request = YrkesskadeRequest(identer, fødselsdato.toLocalDate())
         val httpRequest = PostRequest(body = request)
         val response = client.post(uri = url, request = httpRequest) { body, _ ->
-            DefaultJsonMapper.fromJson<Yrkesskader?>(body)
+            DefaultJsonMapper.fromJson<Yrkesskader>(body)
         }
 
         if (response == null) {
             return emptyList()
         }
 
+        // https://github.com/navikt/yrkesskade/blob/main/libs/model-sakoversikt/src/main/kotlin/no/nav/yrkesskade/saksoversikt/model/SakerResultat.kt
+        // Kun saker med status GODKJENT eller DELVIS_GODKJENT er yrkesskadesaker som skal med i vurderingen
+        val gyldigeStatuser = listOf("GODKJENT", "DELVIS_GODKJENT")
 
-        //FIXME: Kan denne være null?? Når da? Ser ut som at yrkesskade-saker alltid returnerer en liste med mindre det er en feil i responsen
         return response
-            .skader
-            .orEmpty()
-            .map { yrkesskade -> Yrkesskade(
-                ref = yrkesskade.saksreferanse,
-                saksnummer = yrkesskade.saksnr,
-                kildesystem = yrkesskade.kildesystem,
-                skadedato = yrkesskade.skadedato
-            ) }
+            .saker
+            .filter { it.resultat in gyldigeStatuser}
+            .map { yrkesskade ->
+                Yrkesskade(
+                    ref = yrkesskade.saksreferanse,
+                    saksnummer = yrkesskade.saksnr,
+                    kildesystem = yrkesskade.kildesystem,
+                    skadedato = yrkesskade.skadedato
+                )
+            }
     }
 }

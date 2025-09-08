@@ -34,13 +34,17 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.exception.IkkeTillattException
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.server.auth.token
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbStatus
@@ -51,6 +55,7 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.LoggerFactory
+import java.util.UUID
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("flytApi")
@@ -61,6 +66,7 @@ fun NormalOpenAPIRoute.flytApi(
     gatewayProvider: GatewayProvider,
 ) {
     val unleashGateway = gatewayProvider.provide<UnleashGateway>()
+    val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
 
     route("/api/behandling") {
         route("/{referanse}/flyt") {
@@ -225,10 +231,6 @@ fun NormalOpenAPIRoute.flytApi(
                         repositoryProvider,
                         LogKontekst(referanse = BehandlingReferanse(request.referanse))
                     ).use {
-                        val taSkriveLåsRepository =
-                            repositoryProvider.provide<TaSkriveLåsRepository>()
-                        val lås = taSkriveLåsRepository.lås(request.referanse)
-
                         val behandlingRepository =
                             repositoryProvider.provide<BehandlingRepository>()
                         val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
@@ -239,7 +241,17 @@ fun NormalOpenAPIRoute.flytApi(
                             request,
                             body.behandlingVersjon
                         )
+                        val avklaringsbehovRepository =
+                            repositoryProvider.provide<AvklaringsbehovRepository>()
+                        val behandlingId = behandling(behandlingRepository, request).id
+                        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
+                        if (unleashGateway.isEnabled(BehandlingsflytFeature.TilgangssjekkSettPaaVent)) {
+                            sjekkTilgangTilSettPåVent(avklaringsbehovene, tilgangGateway, request.referanse, token())
+                        }
 
+                        val taSkriveLåsRepository =
+                            repositoryProvider.provide<TaSkriveLåsRepository>()
+                        val lås = taSkriveLåsRepository.lås(request.referanse)
                         AvklaringsbehovOrkestrator(repositoryProvider, gatewayProvider)
                             .settBehandlingPåVent(
                                 lås.behandlingSkrivelås.id, BehandlingSattPåVent(
@@ -251,6 +263,7 @@ fun NormalOpenAPIRoute.flytApi(
                                 )
                             )
                         taSkriveLåsRepository.verifiserSkrivelås(lås)
+
                     }
                 }
                 respondWithStatus(HttpStatusCode.NoContent)
@@ -294,6 +307,20 @@ fun NormalOpenAPIRoute.flytApi(
                 }
             }
         }
+    }
+}
+
+private fun sjekkTilgangTilSettPåVent(avklaringsbehovene: Avklaringsbehovene, tilgangGateway: TilgangGateway, behandlingsreferanse: UUID, token: OidcToken) {
+    val åpentAvklaringsbehov = avklaringsbehovene.åpne().first().definisjon
+    val harTilgang =
+        tilgangGateway.sjekkTilgangTilBehandling(
+            behandlingsreferanse,
+            åpentAvklaringsbehov,
+            token
+        )
+
+    if (!harTilgang) {
+        throw IkkeTillattException("Ikke tilgang til å sette behandlingen på vent.")
     }
 }
 

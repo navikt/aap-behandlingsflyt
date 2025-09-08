@@ -54,7 +54,7 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
                     ref = row.getString("REFERANSE"),
                     saksnummer = row.getIntOrNull("YRKESSKADE_SAKSNUMMER"),
                     kildesystem = row.getStringOrNull("KILDESYSTEM") ?: "UKJENT",
-                    skadedato = row.getLocalDate("SKADEDATO")
+                    skadedato = row.getLocalDateOrNull("SKADEDATO")
                 )
             }
         }.grupperOgMapTilGrunnlag(behandlingId)
@@ -66,7 +66,7 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
         val ref: String,
         val saksnummer: Int?,
         val kildesystem: String,
-        val skadedato: LocalDate
+        val skadedato: LocalDate?
     )
 
     private fun Iterable<YrkesskadeInternal>.grupperOgMapTilGrunnlag(behandlingId: BehandlingId): List<YrkesskadeGrunnlag> {

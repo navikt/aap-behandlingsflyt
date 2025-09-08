@@ -10,22 +10,19 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.FØRSTEGANG
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.IKKE_RELEVANT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.EFFEKTUER_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class FlytKontekstMedPeriodeService(
     private val sakService: SakService,
     private val behandlingRepository: BehandlingRepository,
-    private val unleashGateway: UnleashGateway,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide(),
     )
 
     fun utled(kontekst: FlytKontekst, stegType: StegType): FlytKontekstMedPerioder {
@@ -67,6 +64,7 @@ class FlytKontekstMedPeriodeService(
             FØRSTEGANGSBEHANDLING in vurderingTyper -> FØRSTEGANGSBEHANDLING
             REVURDERING in vurderingTyper -> REVURDERING
             MELDEKORT in vurderingTyper -> MELDEKORT
+            EFFEKTUER_AKTIVITETSPLIKT in vurderingTyper -> EFFEKTUER_AKTIVITETSPLIKT
             else -> IKKE_RELEVANT
         }
     }
@@ -102,23 +100,15 @@ class FlytKontekstMedPeriodeService(
                 REVURDERING
 
             Vurderingsbehov.MOTTATT_MELDEKORT,
-            Vurderingsbehov.FASTSATT_PERIODE_PASSERT ->
-                if (unleashGateway.isEnabled(BehandlingsflytFeature.FasttrackMeldekort))
-                    MELDEKORT
-                else
-                    REVURDERING
-
-            Vurderingsbehov.FRITAK_MELDEPLIKT ->
-                if (unleashGateway.isEnabled(BehandlingsflytFeature.FasttrackMeldekort))
-                    MELDEKORT
-                else
-                    REVURDERING
+            Vurderingsbehov.FASTSATT_PERIODE_PASSERT,
+            Vurderingsbehov.FRITAK_MELDEPLIKT -> MELDEKORT
 
             Vurderingsbehov.MOTATT_KLAGE,
             Vurderingsbehov.KLAGE_TRUKKET, Vurderingsbehov.MOTTATT_KABAL_HENDELSE ->
                 IKKE_RELEVANT // TODO: Verifiser at dette er korrekt.
             Vurderingsbehov.OPPFØLGINGSOPPGAVE -> IKKE_RELEVANT
             Vurderingsbehov.AKTIVITETSPLIKT_11_7 -> IKKE_RELEVANT
+            Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT -> EFFEKTUER_AKTIVITETSPLIKT
         }
     }
 }

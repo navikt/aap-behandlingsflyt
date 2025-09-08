@@ -121,4 +121,12 @@ class Vilkår(
     override fun toString(): String {
         return "Vilkår(type=$type, vilkårTidslinje=$vilkårTidslinje)"
     }
+
+    fun automatisertVurdering(): Boolean {
+        return vilkårsperioder().all { !it.manuellVurdering }
+    }
+
+    fun harPerioderSomIkkeErOppfylt(): Boolean {
+        return vilkårsperioder().any { ! it.erOppfylt() }
+    }
 }

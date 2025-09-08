@@ -78,7 +78,7 @@ class StegOrkestrator(
 
 
                 while (true) {
-                    val statusSpan = tracer.spanBuilder("steg status ${gjeldendeStegStatus.name}")
+                    val statusSpan = tracer.spanBuilder("steg status ${gjeldendeStegStatus.name}. Steg: ${aktivtSteg.type().name}")
                         .startSpan()
                     try {
                         MDC.putCloseable("stegStatus", gjeldendeStegStatus.name).use {

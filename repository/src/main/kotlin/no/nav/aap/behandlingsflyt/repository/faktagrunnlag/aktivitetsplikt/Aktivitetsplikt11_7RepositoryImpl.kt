@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
@@ -25,48 +24,32 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): Aktivitetsplikt11_7Grunnlag? {
         val query = """
-            select * from aktivitetsplikt_11_7_vurdering v
-            left join aktivitetsplikt_11_7_grunnlag g on v.id = g.vurdering_id
+            select v.* 
+            from aktivitetsplikt_11_7_grunnlag g
+            inner join aktivitetsplikt_11_7_vurderinger vs on g.vurderinger_id = vs.id
+            inner join aktivitetsplikt_11_7_vurdering v  on vs.id = v.vurderinger_id
             where g.aktiv = true and g.behandling_id = ?
         """.trimIndent()
 
-        return connection.queryFirstOrNull(query) {
+        val vurderinger = connection.queryList(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
-            setRowMapper(::mapGrunnlag)
-        }
-    }
-
-    override fun hentHistoriskeVurderinger(
-        sakId: SakId,
-        behandlingId: BehandlingId
-    ): List<Aktivitetsplikt11_7Vurdering> {
-        val query = """
-            select v.* 
-            from aktivitetsplikt_11_7_vurdering v
-            inner join aktivitetsplikt_11_7_grunnlag g on v.id = g.vurdering_id
-            inner join behandling b on g.behandling_id = b.id
-            where g.aktiv 
-            and b.sak_id = ?
-            and b.opprettet_tid < (select a.opprettet_tid from behandling a where id = ?)
-        """.trimIndent()
-
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, sakId.toLong())
-                setLong(2, behandlingId.toLong())
-            }
             setRowMapper(::mapVurdering)
+        }
+        return if (vurderinger.isEmpty()) {
+            null
+        } else {
+            Aktivitetsplikt11_7Grunnlag(vurderinger = vurderinger)
         }
     }
 
     override fun lagre(
         behandlingId: BehandlingId,
-        vurdering: Aktivitetsplikt11_7Vurdering
+        vurderinger: List<Aktivitetsplikt11_7Vurdering>
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
-        val nyttGrunnlag = Aktivitetsplikt11_7Grunnlag(vurdering = vurdering)
+        val nyttGrunnlag = Aktivitetsplikt11_7Grunnlag(vurderinger = vurderinger)
 
         if (eksisterendeGrunnlag != nyttGrunnlag) {
             eksisterendeGrunnlag?.let {
@@ -134,8 +117,18 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
         fraBehandling: BehandlingId,
         tilBehandling: BehandlingId
     ) {
-        // TODO: Avgjør om vi trenger dette. Gjør ingenting inntil videre
-        log.warn("Forsøkte å kopiere aktivitetsplikt-grunnlag, men kopiering er ikke implementert")
+        val query = """
+            insert into aktivitetsplikt_11_7_grunnlag (behandling_id, vurderinger_id, aktiv)
+            select ?, vurderinger_id, true
+            from aktivitetsplikt_11_7_grunnlag
+            where behandling_id = ? and aktiv
+        """.trimIndent()
+        connection.execute(query) {
+            setParams{
+                setLong(1, tilBehandling.toLong())
+                setLong(2, fraBehandling.toLong())
+            }
+        }
     }
 
     override fun slett(behandlingId: BehandlingId) {
@@ -144,40 +137,46 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
     }
 
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: Aktivitetsplikt11_7Grunnlag) {
-        val vurderingId = lagreVurdering(nyttGrunnlag.vurdering)
+        val vurderingerId = lagreVurderinger(nyttGrunnlag.vurderinger)
         val query = """
             insert into aktivitetsplikt_11_7_grunnlag 
-            (behandling_id, vurdering_id, aktiv) 
+            (behandling_id, vurderinger_id, aktiv) 
             values (?, ?, true)
         """.trimIndent()
         connection.execute(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
-                setLong(2, vurderingId)
+                setLong(2, vurderingerId)
             }
         }
     }
 
-    private fun lagreVurdering(vurdering: Aktivitetsplikt11_7Vurdering): Long {
+    private fun lagreVurderinger(vurderinger: List<Aktivitetsplikt11_7Vurdering>): Long {
+        val vurderingerId = connection.executeReturnKey(
+            """
+            insert into aktivitetsplikt_11_7_vurderinger default values
+        """.trimIndent()
+        )
+
         val query = """
             INSERT INTO aktivitetsplikt_11_7_vurdering 
-            (begrunnelse, er_oppfylt, utfall, vurdert_av, vurderingen_gjelder_fra, opprettet_tid) 
-            VALUES (?, ?, ?, ?, ?, ?)
+            (begrunnelse, er_oppfylt, utfall, vurdert_av, vurderingen_gjelder_fra, opprettet_tid, vurderinger_id) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
-        return connection.executeReturnKey(query) {
-            setParams {
+        connection.executeBatch(query, vurderinger) {
+            setParams { vurdering ->
                 setString(1, vurdering.begrunnelse)
                 setBoolean(2, vurdering.erOppfylt)
                 setEnumName(3, vurdering.utfall)
                 setString(4, vurdering.vurdertAv)
                 setLocalDate(5, vurdering.gjelderFra)
                 setInstant(6, vurdering.opprettet)
-            }
-            setResultValidator { rowsUpdated ->
-                require(rowsUpdated == 1)
+                setLong(7, vurderingerId)
             }
         }
+
+        return vurderingerId
     }
 
     private fun deaktiverEksisterende(behandlingId: BehandlingId) {
@@ -189,12 +188,6 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
                 require(rowsUpdated == 1)
             }
         }
-    }
-
-    private fun mapGrunnlag(row: Row): Aktivitetsplikt11_7Grunnlag {
-        return Aktivitetsplikt11_7Grunnlag(
-            vurdering = mapVurdering(row)
-        )
     }
 
     private fun mapVurdering(row: Row): Aktivitetsplikt11_7Vurdering {

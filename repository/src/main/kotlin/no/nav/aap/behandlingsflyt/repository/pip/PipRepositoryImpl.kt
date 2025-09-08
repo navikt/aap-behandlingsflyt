@@ -28,7 +28,7 @@ class PipRepositoryImpl(private val connection: DBConnection) : PipRepository {
             INNER JOIN BARNOPPLYSNING_GRUNNLAG g ON bo.bgb_id = g.register_barn_id
             INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
             INNER JOIN SAK s ON b.SAK_ID = s.ID
-            WHERE s.SAKSNUMMER = ?
+            WHERE s.SAKSNUMMER = ? AND bo.ident is not null
             UNION 
             SELECT ob.IDENT as IDENT, '${IdentPåSak.Opprinnelse.BARN}' AS OPPRINNELSE
             FROM OPPGITT_BARN ob
@@ -79,7 +79,7 @@ class PipRepositoryImpl(private val connection: DBConnection) : PipRepository {
                      join barnopplysning_grunnlag bg on bg.register_barn_id = bgb.id
                      join behandling b on bg.behandling_id = b.id
                      join behandling bRef on b.sak_id = bRef.sak_id
-            WHERE bRef.referanse = ? and aktiv = true
+            WHERE bRef.referanse = ? and aktiv = true and bo.ident is not null
             UNION
             SELECT ob.IDENT as IDENT, '${IdentPåSak.Opprinnelse.BARN}' AS OPPRINNELSE
             FROM OPPGITT_BARN ob

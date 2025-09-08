@@ -22,12 +22,11 @@ import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentY
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackMeldekort
+import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackAktivitetsplikt
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -46,7 +45,7 @@ import kotlin.reflect.KClass
 import kotlin.test.Test
 
 class FasttrackMeldekortFlytTest :
-    AbstraktFlytOrkestratorTest(FakeUnleashFasttrackMeldekort::class as KClass<UnleashGateway>) {
+    AbstraktFlytOrkestratorTest(FakeUnleashFasttrackAktivitetsplikt::class as KClass<UnleashGateway>) {
 
     @Test
     fun `Meldekortgrunnlag skal flettes inn i åpen behandling før UnderveisSteg`() {

@@ -51,7 +51,7 @@ class InMemoryBarnRepositoryTest {
         )
         val barnListe = listOf(Ident("12345678910"), Ident("12345")).map {
             no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn(
-                it,
+                BarnIdentifikator.BarnIdent(it),
                 Fødselsdato(LocalDate.now().minusYears(18))
             )
         }
@@ -62,7 +62,15 @@ class InMemoryBarnRepositoryTest {
 
         barnRepository.lagreRegisterBarn(
             behandling.id,
-            barnListe.associateWith { InMemoryPersonRepository.finnEllerOpprett(listOf(it.ident)).id })
+            barnListe.associateWith {
+                when (it.ident) {
+                    is BarnIdentifikator.BarnIdent -> InMemoryPersonRepository.finnEllerOpprett(
+                        listOf((it.ident as BarnIdentifikator.BarnIdent).ident)
+                    ).id
+                    is BarnIdentifikator.NavnOgFødselsdato -> TODO()
+                }
+
+            })
         barnRepository.lagreOppgitteBarn(
             behandling.id,
             OppgitteBarn(oppgitteBarn = listOf(OppgitteBarn.OppgittBarn(Ident("1"))))

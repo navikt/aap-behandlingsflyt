@@ -11,14 +11,14 @@ interface BarnRepository : Repository {
     fun hent(behandlingId: BehandlingId): BarnGrunnlag
 
     /**
-     * Oppgitte barn er barn som er oppgitt i søknaden. De lagres når behandlingen opprettes. Se [no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadService].
+     * Oppgitte barn er barn som er oppgitt i søknaden. De lagres når behandlingen opprettes. Se [no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadInformasjonskrav].
      */
     fun lagreOppgitteBarn(behandlingId: BehandlingId, oppgitteBarn: OppgitteBarn)
 
     /**
-     * Lagre registerbarn. Dette er barn som vi også finner i PDL (enten automatisk, eller oppgitt). Se [no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnService].
+     * Lagre registerbarn. Dette er barn som vi også finner i PDL (enten automatisk, eller oppgitt). Se [no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnInformasjonskrav].
      */
-    fun lagreRegisterBarn(behandlingId: BehandlingId, barn: Map<Barn, PersonId>)
+    fun lagreRegisterBarn(behandlingId: BehandlingId, barn: Map<Barn, PersonId?>)
 
     /**
      * Lagre vurderinger på barn. Gjøres i løseren, [no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarBarnetilleggLøser].

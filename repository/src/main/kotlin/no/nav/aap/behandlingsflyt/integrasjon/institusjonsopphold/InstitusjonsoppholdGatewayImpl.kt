@@ -11,6 +11,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
+import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import java.net.URI
@@ -18,7 +19,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class InstitusjonoppholdRequest(
-    val foedselsnumre: String
+    val personident: String
 )
 
 /**
@@ -71,17 +72,17 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
     )
 
     /**
-     * https://inst2-q2.dev.intern.nav.no/swagger-ui/index.html#/institusjonsopphold/institusjonsopphold
+     * https://inst2-q2.dev.intern.nav.no/swagger-ui/index.html#/institusjonsopphold/institusjonsopphold/soek
      */
     private fun query(request: InstitusjonoppholdRequest): List<InstitusjonsoppholdJSON> {
-        val httpRequest = GetRequest(
+        val httpRequest = PostRequest(
+            body = request,
             additionalHeaders = listOf(
-                Header("Nav-Personident", request.foedselsnumre),
                 Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
                 Header("Accept", "application/json")
             )
         )
-        return requireNotNull(client.get(uri = url, request = httpRequest, mapper = { body, _ ->
+        return requireNotNull(client.post(uri = url, request = httpRequest, mapper = { body, _ ->
             DefaultJsonMapper.fromJson(body)
         }))
     }

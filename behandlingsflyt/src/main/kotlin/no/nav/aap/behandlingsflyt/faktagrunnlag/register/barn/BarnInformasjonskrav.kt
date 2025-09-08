@@ -5,13 +5,14 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
-import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -25,7 +26,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.Duration
 
-class BarnService private constructor(
+class BarnInformasjonskrav private constructor(
     private val barnRepository: BarnRepository,
     private val personRepository: PersonRepository,
     private val barnGateway: BarnGateway,
@@ -70,14 +71,19 @@ class BarnService private constructor(
         return IKKE_ENDRET
     }
 
-    private fun oppdaterPersonIdenter(barn: List<Barn>): Map<Barn, PersonId> {
+    private fun oppdaterPersonIdenter(barn: List<Barn>): Map<Barn, PersonId?> {
         return barn.associateWith { barn ->
-            val identliste = identGateway.hentAlleIdenterForPerson(barn.ident)
-            if (identliste.isEmpty()) {
-                throw IllegalStateException("Fikk ingen treff på ident i PDL.")
+            if (barn.ident is BarnIdentifikator.BarnIdent) {
+                val identliste = identGateway.hentAlleIdenterForPerson(barn.ident.ident)
+                if (identliste.isEmpty()) {
+                    throw IllegalStateException("Fikk ingen treff på ident i PDL.")
+                }
+
+                personRepository.finnEllerOpprett(identliste).id
+            } else {
+                null
             }
 
-            personRepository.finnEllerOpprett(identliste).id
         }
     }
 
@@ -119,8 +125,8 @@ class BarnService private constructor(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.BARN
 
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BarnService {
-            return BarnService(
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BarnInformasjonskrav {
+            return BarnInformasjonskrav(
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),
                 gatewayProvider.provide(),

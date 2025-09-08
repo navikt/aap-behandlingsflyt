@@ -4,7 +4,6 @@ import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
-import com.papsign.ktor.openapigen.route.path.normal.route
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
@@ -12,18 +11,15 @@ import no.nav.aap.behandlingsflyt.Azp
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_STUDENT_KODE
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.OPPRETT_HENDELSE_PÅ_SAK_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_BRUDD_11_7_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
 import no.nav.aap.behandlingsflyt.medAzureTokenGen
+import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -52,7 +48,10 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
+import org.slf4j.LoggerFactory
 import javax.sql.DataSource
+
+private val log = LoggerFactory.getLogger("api.sak")
 
 fun NormalOpenAPIRoute.saksApi(
     dataSource: DataSource,
@@ -109,56 +108,62 @@ fun NormalOpenAPIRoute.saksApi(
         }
         route("/{saksnummer}/opprettAktivitetspliktBehandling")
             .authorizedPost<SaksnummerParameter, BehandlingAvTypeDTO, Unit>(
-            routeConfig = AuthorizationParamPathConfig(
-                sakPathParam = SakPathParam("saksnummer"),
-                operasjon = Operasjon.SAKSBEHANDLE,
-                avklaringsbehovKode = VURDER_BRUDD_11_7_KODE
+                routeConfig = AuthorizationParamPathConfig(
+                    sakPathParam = SakPathParam("saksnummer"),
+                    operasjon = Operasjon.SAKSBEHANDLE,
+                    avklaringsbehovKode = VURDER_BRUDD_11_7_KODE
 
-            )
-        ) { req, _ ->
-
-            if (Miljø.erProd()) {
-                throw UgyldigForespørselException("Ikke produksjon enda")
-            }
-            val dto = dataSource.transaction { connection ->
-                val repositoryProvider = repositoryRegistry.provider(connection)
-
-                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-
-                val sakRepository = repositoryProvider.provide<SakRepository>()
-                val sakId = sakRepository.hent(Saksnummer(req.saksnummer)).id
-
-                val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
-
-                val sisteYtelseBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId)
-
-                if (sisteYtelseBehandling == null) {
-                    throw UgyldigForespørselException("Kan ikke opprette aktiviterspliktbehandling uten en ytelsebehandling")
+                )
+            ) { req, _ ->
+                if (Miljø.erProd()) {
+                    throw UgyldigForespørselException("Ikke produksjon enda")
                 }
-                val aktivitetspliktBehandlinger = behandlingRepository.hentAlleFor(
-                    sakId = sakId,
-                    behandlingstypeFilter = listOf(TypeBehandling.Aktivitetsplikt)
-                )
+                val dto = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
 
-                val åpenAktivitetspliktBehandling = aktivitetspliktBehandlinger.filter { it.status().erÅpen() }
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val sakId = sakRepository.hent(Saksnummer(req.saksnummer)).id
+
+                    val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
+
+                    val sisteYtelseBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId)
+
+                    if (sisteYtelseBehandling == null) {
+                        throw UgyldigForespørselException("Kan ikke opprette aktiviterspliktbehandling uten en ytelsebehandling")
+                    }
+                    val aktivitetspliktBehandlinger = behandlingRepository.hentAlleFor(
+                        sakId = sakId,
+                        behandlingstypeFilter = listOf(TypeBehandling.Aktivitetsplikt)
+                    )
+                    val forrige = aktivitetspliktBehandlinger.firstOrNull()?.id
+
+                    val åpenAktivitetspliktBehandling = aktivitetspliktBehandlinger.filter { it.status().erÅpen() }
 
 
-                if (åpenAktivitetspliktBehandling.isNotEmpty()) {
-                    throw UgyldigForespørselException("Finnes allerede en åpen behandling for aktivitetsplikt")
+                    if (åpenAktivitetspliktBehandling.isNotEmpty()) {
+                        throw UgyldigForespørselException("Finnes allerede en åpen behandling for aktivitetsplikt")
+                    }
+
+                    val behandling = sakOgBehandlingService.opprettAktivitetsPliktBehandling(
+                        sakId, VurderingsbehovOgÅrsak(
+                            vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.AKTIVITETSPLIKT_11_7)),
+                            årsak = ÅrsakTilOpprettelse.AKTIVITETSPLIKT
+                        ), forrigeBehandlingId = forrige
+                    ).also { behandling ->
+                        forrige?.let { GrunnlagKopiererImpl(repositoryProvider).overfør(it, behandling.id) }
+                    }
+
+                    ProsesserBehandlingService(repositoryProvider, gatewayProvider).triggProsesserBehandling(behandling)
+
+                    BehandlingAvTypeDTO(
+                        behandlingsReferanse = behandling.referanse.referanse,
+                        opprettetDato = behandling.opprettetTidspunkt
+                    )
                 }
-
-                val behandling = sakOgBehandlingService.opprettAktivitetsPliktBehandling(
-                    sakId, VurderingsbehovOgÅrsak(
-                        vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.AKTIVITETSPLIKT_11_7)),
-                        årsak = ÅrsakTilOpprettelse.AKTIVITETSPLIKT
-                    ), forrigeBehandlingId = aktivitetspliktBehandlinger.firstOrNull()?.id
-                )
-                BehandlingAvTypeDTO(
-                    behandlingsReferanse = behandling.referanse.referanse, opprettetDato = behandling.opprettetTidspunkt
-                )
+                respond(dto)
             }
-            respond(dto)
-        }
 
 
         @Suppress("UnauthorizedPost") route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
@@ -241,18 +246,27 @@ fun NormalOpenAPIRoute.saksApi(
                     if (person == null) {
                         null
                     } else {
-                        val sak = repositoryProvider.provide<SakRepository>().finnSakerFor(person).filter { sak ->
+                        val sakerForPerson = repositoryProvider.provide<SakRepository>().finnSakerFor(person)
+
+                        log.info("Fant ${sakerForPerson.size} saker for person. Mottattidspunkt: ${dto.mottattTidspunkt}")
+
+                        val sak = sakerForPerson.filter { sak ->
                             sak.rettighetsperiode.inneholder(dto.mottattTidspunkt) && sak.status() != Status.AVSLUTTET
-                        }.minByOrNull { it.opprettetTidspunkt }!!
+                        }.minByOrNull { it.opprettetTidspunkt }
 
-                        val behandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+                        if (sak == null) {
+                            log.info("Fant ingen aktive saker for person. Rettighetsperioder: ${sakerForPerson.map { it.rettighetsperiode }}")
+                            null
+                        } else {
+                            val behandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
 
-                        SakOgBehandlingDTO(
-                            personIdent = sak.person.aktivIdent().toString(),
-                            saksnummer = sak.saksnummer.toString(),
-                            status = sak.status().toString(),
-                            sisteBehandlingStatus = behandling?.status().toString()
-                        )
+                            SakOgBehandlingDTO(
+                                personIdent = sak.person.aktivIdent().toString(),
+                                saksnummer = sak.saksnummer.toString(),
+                                status = sak.status().toString(),
+                                sisteBehandlingStatus = behandling?.status().toString()
+                            )
+                        }
                     }
                 }
                 respond(NullableSakOgBehandlingDTO(behandlinger))
