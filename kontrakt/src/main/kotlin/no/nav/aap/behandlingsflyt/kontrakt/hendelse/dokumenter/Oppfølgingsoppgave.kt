@@ -16,8 +16,10 @@ public enum class HvemSkalFølgeOpp {
     NasjonalEnhet,
     Lokalkontor
 }
-public data class Opprinnelse(val behandlingsreferanse: String?,
-                              val avklaringsbehovKode: String?
+
+public data class Opprinnelse(
+    val behandlingsreferanse: String?,
+    val avklaringsbehovKode: String?
 )
 
 

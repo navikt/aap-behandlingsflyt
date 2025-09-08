@@ -9,9 +9,13 @@ import java.util.UUID
 
 
 data class OppfølgningOppgaveOpprinnselseResponse(
-    val data :List<OppfølgningOppgaveOpprinnselseDto>
+    val data: List<OppfølgningOppgaveOpprinnselseDto>
 )
-data class BehandlingReferanseMedSteg(@param:PathParam("referanse") val referanse: UUID, @param:PathParam("avklaringsbehovKode") val avklaringsbehovKode: String)
+
+data class BehandlingReferanseMedSteg(
+    @param:PathParam("referanse") val referanse: UUID,
+    @param:PathParam("avklaringsbehovKode") val avklaringsbehovKode: String
+)
 
 data class OppfølgningOppgaveOpprinnselseDto(
     val behandlingReferanse: String,

@@ -26,7 +26,7 @@ import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
 
-fun NormalOpenAPIRoute.oppfølgningOppgaveApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.oppfølgingsOppgaveApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling").tag(Tags.Behandling) {
         route("/oppfølgningOppgaveOpprinselse/{referanse}/{avklaringsbehovKode}") {
             authorizedGet<BehandlingReferanseMedSteg, OppfølgningOppgaveOpprinnselseResponse>(
@@ -44,21 +44,16 @@ fun NormalOpenAPIRoute.oppfølgningOppgaveApi(dataSource: DataSource, repository
 
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(behandlingsreferanse)
 
-                    val alleBehandlingPåSak = behandlingRepository.hentAlleFor(
+                    val alleBehandlingerPåSak = behandlingRepository.hentAlleFor(
                         sakId = behandling.sakId, behandlingstypeFilter = listOf(
                             TypeBehandling.OppfølgingsBehandling
                         )
                     )
 
-                    alleBehandlingPåSak.mapNotNull { behandling ->
-                        val dokument = MottaDokumentService(repositoryProvider.provide())
+                    alleBehandlingerPåSak.mapNotNull { behandling ->
+                        MottaDokumentService(repositoryProvider.provide())
                             .hentOppfølgingsBehandlingDokument(behandlingId = behandling.id)
-
-                        if (dokument != null) {
-                            Pair(behandling.id, dokument)
-                        } else {
-                            null
-                        }
+                            ?.let { Pair(behandling.id, it) }
                     }
                 }
 

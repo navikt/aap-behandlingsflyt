@@ -99,7 +99,7 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::
     }
 
     @Test
-    fun `Opprett oppfølgningsoppgave med opprinselse`() {
+    fun `Opprett oppfølgningsoppgave med opprinnelse`() {
 
         val sak = happyCaseFørstegangsbehandling()
         val førstegangsbehandling = hentNyesteBehandlingForSak(sak.id)
