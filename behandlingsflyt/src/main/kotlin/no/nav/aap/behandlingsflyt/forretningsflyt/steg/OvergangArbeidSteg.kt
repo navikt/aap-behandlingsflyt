@@ -75,12 +75,11 @@ class OvergangArbeidSteg private constructor(
                     )
                     return Fullført
                 }
-                if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && !brukerHarTilstrekkeligNedsattArbeidsevne(
+                if (harVurdertBistandsVilkår(avklaringsbehovene) && bistandsVilkårErOppfylt(kontekst.behandlingId) && !brukerHarTilstrekkeligNedsattArbeidsevne(
                         sykdomgrunnlag) && harIkkeVurdert_11_17_tidligere(
                         avklaringsbehovene
                     )
                 ) {
-                    settBistandsBehovTilIkkeRelevant(kontekst)
                     settSykdomsVilkårTilIkkeRelevant(kontekst)
                     return FantAvklaringsbehov(Definisjon.AVKLAR_OVERGANG_ARBEID)
                 } else {
@@ -125,7 +124,7 @@ class OvergangArbeidSteg private constructor(
         if (sisteSykdomsvurdering == null) {
             return false
         } else {
-            if (sisteSykdomsvurdering.erNedsettelseIArbeidsevneAvEnVissVarighet == true) {
+            if (sisteSykdomsvurdering.erArbeidsevnenNedsatt == true) {
                 return true
             } else
                 return false
@@ -134,24 +133,6 @@ class OvergangArbeidSteg private constructor(
 
     private fun harIkkeVurdert_11_17_tidligere(avklaringsbehovene: Avklaringsbehovene): Boolean {
         return !avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.AVKLAR_OVERGANG_ARBEID)
-    }
-
-
-    private fun settBistandsBehovTilIkkeRelevant(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET).leggTilVurdering(
-            Vilkårsperiode(
-                periode = Periode(kontekst.rettighetsperiode.fom, kontekst.rettighetsperiode.tom),
-                utfall = Utfall.IKKE_RELEVANT,
-                begrunnelse = null,
-                versjon = ApplikasjonsVersjon.versjon
-            )
-        )
-        log.info("Merket bistand som ikke relevant pga innvilget arbeidssøker - vilkår.")
-        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
-
-
-        return Fullført
     }
 
     private fun settSykdomsVilkårTilIkkeRelevant(kontekst: FlytKontekstMedPerioder): StegResultat {
