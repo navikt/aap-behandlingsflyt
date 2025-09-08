@@ -32,14 +32,14 @@ class SykdomGrunnlag(
         other as SykdomGrunnlag
 
         if (yrkesskadevurdering != other.yrkesskadevurdering) return false
-        if (sykdomsvurderinger != other.sykdomsvurderinger) return false
+        if (sykdomsvurderinger.toSet() != other.sykdomsvurderinger.toSet()) return false
 
         return true
     }
 
     override fun hashCode(): Int {
         var result = yrkesskadevurdering?.hashCode() ?: 0
-        result = 31 * result + sykdomsvurderinger.hashCode()
+        result = 31 * result + sykdomsvurderinger.toSet().hashCode()
         return result
     }
 

@@ -68,6 +68,48 @@ data class Sykdomsvurdering(
         }
         return true
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Sykdomsvurdering
+
+        if (begrunnelse != other.begrunnelse) return false
+        if (vurderingenGjelderFra != other.vurderingenGjelderFra) return false
+        if (dokumenterBruktIVurdering != other.dokumenterBruktIVurdering) return false
+        if (harSkadeSykdomEllerLyte != other.harSkadeSykdomEllerLyte) return false
+        if (erSkadeSykdomEllerLyteVesentligdel != other.erSkadeSykdomEllerLyteVesentligdel) return false
+        if (erNedsettelseIArbeidsevneAvEnVissVarighet != other.erNedsettelseIArbeidsevneAvEnVissVarighet) return false
+        if (erNedsettelseIArbeidsevneMerEnnHalvparten != other.erNedsettelseIArbeidsevneMerEnnHalvparten) return false
+        if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != other.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense) return false
+        if (yrkesskadeBegrunnelse != other.yrkesskadeBegrunnelse) return false
+        if (erArbeidsevnenNedsatt != other.erArbeidsevnenNedsatt) return false
+        if (kodeverk != other.kodeverk) return false
+        if (hoveddiagnose != other.hoveddiagnose) return false
+        if (bidiagnoser?.toSet() != other.bidiagnoser?.toSet()) return false
+        if (vurdertAv != other.vurdertAv) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = begrunnelse.hashCode()
+        result = 31 * result + (vurderingenGjelderFra?.hashCode() ?: 0)
+        result = 31 * result + dokumenterBruktIVurdering.hashCode()
+        result = 31 * result + harSkadeSykdomEllerLyte.hashCode()
+        result = 31 * result + (erSkadeSykdomEllerLyteVesentligdel?.hashCode() ?: 0)
+        result = 31 * result + (erNedsettelseIArbeidsevneAvEnVissVarighet?.hashCode() ?: 0)
+        result = 31 * result + (erNedsettelseIArbeidsevneMerEnnHalvparten?.hashCode() ?: 0)
+        result = 31 * result + (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense?.hashCode() ?: 0)
+        result = 31 * result + (yrkesskadeBegrunnelse?.hashCode() ?: 0)
+        result = 31 * result + (erArbeidsevnenNedsatt?.hashCode() ?: 0)
+        result = 31 * result + (kodeverk?.hashCode() ?: 0)
+        result = 31 * result + (hoveddiagnose?.hashCode() ?: 0)
+        result = 31 * result + (bidiagnoser?.toSet()?.hashCode() ?: 0)
+        result = 31 * result + vurdertAv.hashCode()
+        return result
+    }
 }
 
 data class Yrkesskadevurdering(
