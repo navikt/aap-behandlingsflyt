@@ -99,47 +99,44 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::
     }
 
     @Test
-    fun `Opprett oppfølgningsoppgave med opprinselse`(){
+    fun `Opprett oppfølgningsoppgave med opprinselse`() {
 
-    val sak = happyCaseFørstegangsbehandling()
-    val førstegangsbehandling = hentNyesteBehandlingForSak(sak.id)
+        val sak = happyCaseFørstegangsbehandling()
+        val førstegangsbehandling = hentNyesteBehandlingForSak(sak.id)
 
-    val ident = sak.person.aktivIdent()
-    val periode = sak.rettighetsperiode
+        val ident = sak.person.aktivIdent()
+        val periode = sak.rettighetsperiode
         sendInnDokument(
-        ident, DokumentMottattPersonHendelse(
-            referanse = InnsendingReferanse(
-                InnsendingReferanse.Type.BEHANDLING_REFERANSE,
-                UUID.randomUUID().toString(),
-            ),
-            mottattTidspunkt = LocalDateTime.now().minusMonths(3),
-            strukturertDokument = StrukturertDokument(
-                OppfølgingsoppgaveV0(
-                    datoForOppfølging = LocalDate.now().plusDays(1),
-                    hvaSkalFølgesOpp = "noe",
-                    hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet,
-                    reserverTilBruker = "MEGSELV",
-                    opprinnelse = Opprinnelse(
-                        behandlingsreferanse = førstegangsbehandling.referanse.toString(),
-                        avklaringsbehovKode = AvklaringsbehovKode.`5028`.toString()
+            ident, DokumentMottattPersonHendelse(
+                referanse = InnsendingReferanse(
+                    InnsendingReferanse.Type.BEHANDLING_REFERANSE,
+                    UUID.randomUUID().toString(),
+                ),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+                strukturertDokument = StrukturertDokument(
+                    OppfølgingsoppgaveV0(
+                        datoForOppfølging = LocalDate.now().plusDays(1),
+                        hvaSkalFølgesOpp = "noe",
+                        hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet,
+                        reserverTilBruker = "MEGSELV",
+                        opprinnelse = Opprinnelse(
+                            behandlingsreferanse = førstegangsbehandling.referanse.toString(),
+                            avklaringsbehovKode = AvklaringsbehovKode.`5028`.toString()
+                        )
                     )
-                )
-            ),
-            periode = periode
+                ),
+                periode = periode
+            )
         )
-    )
+        val oppretteOppfølgingsoppgave = dataSource.transaction { connection ->
 
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
 
+            val alleBehandlinger =
+                behandlingRepository.hentAlleFor(sak.id, listOf(TypeBehandling.OppfølgingsBehandling))
 
-
-        val oppretteOppfølgingsoppgave =  dataSource.transaction { connection ->
-
-        val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-
-         val alleBehandlinger = behandlingRepository.hentAlleFor(sak.id,listOf(TypeBehandling.OppfølgingsBehandling))
-
-           alleBehandlinger.mapNotNull { behandling ->
+            alleBehandlinger.mapNotNull { behandling ->
                 val dokument = MottaDokumentService(repositoryProvider.provide())
                     .hentOppfølgingsBehandlingDokument(behandlingId = behandling.id)
 
@@ -149,25 +146,16 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::
                     null
                 }
             }
-
-
-
         }
-
         assertThat(oppretteOppfølgingsoppgave.size).isEqualTo(1)
-
         assertThat(oppretteOppfølgingsoppgave.first().second.opprinnelse).isNotNull
+        assertThat(oppretteOppfølgingsoppgave.first().second.opprinnelse!!.behandlingsreferanse).isEqualTo(
+            førstegangsbehandling.referanse.toString()
+        )
+        assertThat(oppretteOppfølgingsoppgave.first().second.opprinnelse!!.avklaringsbehovKode).isEqualTo(
+            AvklaringsbehovKode.`5028`.toString()
+        )
 
-        assertThat(oppretteOppfølgingsoppgave.first().second.opprinnelse!!.behandlingsreferanse).isEqualTo(førstegangsbehandling.referanse.toString())
-
-        assertThat(oppretteOppfølgingsoppgave.first().second.opprinnelse!!.avklaringsbehovKode).isEqualTo(AvklaringsbehovKode.`5028`.toString())
-
-
-
-
-
-}
-
-
+    }
 
 }
