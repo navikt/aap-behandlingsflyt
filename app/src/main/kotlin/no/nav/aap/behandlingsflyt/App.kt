@@ -269,7 +269,7 @@ fun Application.startMotor(
 fun Application.startKabalKonsument(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry
-): KafkaKonsument? {
+): KafkaKonsument {
     val konsument = KabalKafkaKonsument(
         config = KafkaConsumerConfig(),
         dataSource = dataSource,

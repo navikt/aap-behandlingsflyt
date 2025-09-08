@@ -643,7 +643,7 @@ object FakeServers : AutoCloseable {
                         ytelser = listOf(
                             Ytelse(
                                 ytelse = Ytelser.FORELDREPENGER,
-                                saksnummer = 352017890,
+                                saksnummer = "352017890",
                                 kildesystem = "FPSAK",
                                 ytelseStatus = "UNDER_BEHANDLING", // burde kanskje være LØPENDE?
                                 vedtattTidspunkt = LocalDate.now().minusMonths(2),
