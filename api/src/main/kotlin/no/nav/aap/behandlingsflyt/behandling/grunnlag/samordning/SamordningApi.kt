@@ -10,18 +10,19 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonOrdning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UførePeriodeMedEndringStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UførePeriodeSammenligner
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -46,6 +47,7 @@ data class SamordningYtelseVurderingGrunnlagDTO(
     val harTilgangTilÅSaksbehandle: Boolean,
     val ytelser: List<SamordningYtelseDTO>,
     val vurdering: SamordningYtelseVurderingDTO?,
+    val historiskeVurderinger: List<SamordningYtelseVurderingDTO>,
     val tpYtelser: List<TjenestePensjonForhold>?,
 )
 
@@ -146,6 +148,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
     gatewayProvider: GatewayProvider,
 ) {
     val ansattInfoService = AnsattInfoService(gatewayProvider)
+
     route("/api/behandling") {
         route("/{referanse}/grunnlag/samordning-ufore") {
             getGrunnlag<BehandlingReferanse, SamordningUføreVurderingGrunnlagDTO>(
@@ -230,7 +233,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_SAMORDNING_GRADERING.kode.toString()
             ) { req ->
-                val (registerYtelser, samordning, tp) =
+                val (registerYtelser, samordningPair, tp) =
                     dataSource.transaction { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val samordningRepository = repositoryProvider.provide<SamordningVurderingRepository>()
@@ -243,6 +246,8 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                             ).behandling(req)
 
                         val samordning = samordningRepository.hentHvisEksisterer(behandling.id)
+                        val historiskeVurderinger =
+                            samordningRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
 
                         val perioderMedEndringer =
                             SamordningPeriodeSammenligner(samordningYtelseRepository).hentPerioderMarkertMedEndringer(
@@ -251,11 +256,10 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
 
                         val tp = tjenestePensjonRepository.hentHvisEksisterer(behandling.id)
 
-                        Triple(perioderMedEndringer, samordning, tp)
+                        Triple(perioderMedEndringer, Pair(samordning, historiskeVurderinger), tp)
                     }
 
-                val ansattNavnOgEnhet =
-                    samordning?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv) }
+                val (samordning, historiskeVurderinger) = samordningPair
 
                 respond(
                     SamordningYtelseVurderingGrunnlagDTO(
@@ -272,31 +276,11 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                                     endringStatus = ytelse.endringStatus
                                 )
                             },
-                        vurdering = samordning?.let { samordning ->
-                            SamordningYtelseVurderingDTO(
-                                begrunnelse = samordning.begrunnelse,
-                                fristNyRevurdering = samordning.fristNyRevurdering,
-                                maksDatoEndelig = samordning.maksDatoEndelig,
-                                vurderinger = samordning.vurderinger.flatMap { vurdering ->
-                                    vurdering.vurderingPerioder.map {
-                                        SamordningVurderingDTO(
-                                            ytelseType = vurdering.ytelseType,
-                                            gradering = it.gradering?.prosentverdi(),
-                                            periode = it.periode,
-                                            kronesum = it.kronesum?.toInt(),
-                                            manuell = it.manuell
-                                        )
-                                    }
-                                },
-                                vurdertAv = VurdertAvResponse(
-                                    ident = samordning.vurdertAv,
-                                    dato = requireNotNull(
-                                        samordning.vurdertTidspunkt?.toLocalDate()
-                                    ) { "Fant ikke vurderingstidspunkt for yrkesskadevurdering" },
-                                    ansattnavn = ansattNavnOgEnhet?.navn,
-                                    enhetsnavn = ansattNavnOgEnhet?.enhet
-                                )
-                            )
+                        vurdering = samordning?.let {
+                            mapSamordningVurdering(it, ansattInfoService)
+                        },
+                        historiskeVurderinger = historiskeVurderinger.map {
+                            mapSamordningVurdering(it, ansattInfoService)
                         },
                         tpYtelser = tp,
                     )
@@ -410,6 +394,38 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
             }
         }
     }
+}
+
+private fun mapSamordningVurdering(
+    samordning: SamordningVurderingGrunnlag,
+    ansattInfoService: AnsattInfoService
+): SamordningYtelseVurderingDTO {
+    val ansattNavnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(samordning.vurdertAv)
+
+    return SamordningYtelseVurderingDTO(
+        begrunnelse = samordning.begrunnelse,
+        fristNyRevurdering = samordning.fristNyRevurdering,
+        maksDatoEndelig = samordning.maksDatoEndelig,
+        vurderinger = samordning.vurderinger.flatMap { vurdering ->
+            vurdering.vurderingPerioder.map {
+                SamordningVurderingDTO(
+                    ytelseType = vurdering.ytelseType,
+                    gradering = it.gradering?.prosentverdi(),
+                    periode = it.periode,
+                    kronesum = it.kronesum?.toInt(),
+                    manuell = it.manuell
+                )
+            }
+        },
+        vurdertAv = VurdertAvResponse(
+            ident = samordning.vurdertAv,
+            dato = requireNotNull(samordning.vurdertTidspunkt?.toLocalDate()) {
+                "Fant ikke vurderingstidspunkt for yrkesskadevurdering"
+            },
+            ansattnavn = ansattNavnOgEnhet?.navn,
+            enhetsnavn = ansattNavnOgEnhet?.enhet
+        ),
+    )
 }
 
 private fun mapSamordningUføreVurdering(
