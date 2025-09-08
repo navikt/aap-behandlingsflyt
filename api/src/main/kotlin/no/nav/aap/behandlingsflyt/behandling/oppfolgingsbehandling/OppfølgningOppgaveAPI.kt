@@ -28,8 +28,8 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.oppfølgingsOppgaveApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling").tag(Tags.Behandling) {
-        route("/oppfølgningOppgaveOpprinselse/{referanse}/{avklaringsbehovKode}") {
-            authorizedGet<BehandlingReferanseMedSteg, OppfølgningOppgaveOpprinnselseResponse>(
+        route("/oppfølgningOppgaveOpprinnelse/{referanse}/{avklaringsbehovKode}") {
+            authorizedGet<BehandlingReferanseMedSteg, OppfølgningOppgaveOpprinnelseResponse>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
@@ -74,7 +74,7 @@ fun NormalOpenAPIRoute.oppfølgingsOppgaveApi(dataSource: DataSource, repository
 
                 }
 
-                respond(OppfølgningOppgaveOpprinnselseResponse( respondList))
+                respond(OppfølgningOppgaveOpprinnelseResponse( respondList))
 
             }
         }

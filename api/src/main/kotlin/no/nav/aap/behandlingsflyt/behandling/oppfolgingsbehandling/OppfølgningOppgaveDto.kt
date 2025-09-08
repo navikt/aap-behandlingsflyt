@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 
-data class OppfølgningOppgaveOpprinnselseResponse(
+data class OppfølgningOppgaveOpprinnelseResponse(
     val data: List<OppfølgningOppgaveOpprinnselseDto>
 )
 
