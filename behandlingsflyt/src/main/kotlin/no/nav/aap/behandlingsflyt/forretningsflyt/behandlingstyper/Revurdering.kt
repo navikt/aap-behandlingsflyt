@@ -37,7 +37,6 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.IverksettVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ManglendeLigningGrunnlagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.NyVurderLovvalgSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.NyVurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OpprettRevurderingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RefusjonkravSteg
@@ -91,7 +90,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
             )
             .medSteg(
-            steg = if (Miljø.erProd()) VurderLovvalgSteg else NyVurderLovvalgSteg,
+            steg = VurderLovvalgSteg,
                 informasjonskrav = listOf(PersonopplysningInformasjonskrav, LovvalgInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
