@@ -42,6 +42,7 @@ class SoningRegelTest {
         val periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 1))
         val vurderingFraTidligereResultat = Vurdering(
             RettighetsType.BISTANDSBEHOV, MeldepliktVurdering.Fritak,
+            null,
             ArbeidsGradering(
                 totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),
                 andelArbeid = Prosent(0),
