@@ -3,19 +3,29 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppfølgingNAYLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentPåOppfølgingLøsning
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging
+import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepository
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsoppgaveGrunnlagDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Opprinnelse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -87,4 +97,65 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::
             assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.AVKLAR_SYKDOM)
         }
     }
+
+    @Test
+    fun `Opprett oppfølgningsoppgave med opprinnelse`() {
+
+        val sak = happyCaseFørstegangsbehandling()
+        val førstegangsbehandling = hentNyesteBehandlingForSak(sak.id)
+
+        val ident = sak.person.aktivIdent()
+        val periode = sak.rettighetsperiode
+        sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                referanse = InnsendingReferanse(
+                    InnsendingReferanse.Type.BEHANDLING_REFERANSE,
+                    UUID.randomUUID().toString(),
+                ),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+                strukturertDokument = StrukturertDokument(
+                    OppfølgingsoppgaveV0(
+                        datoForOppfølging = LocalDate.now().plusDays(1),
+                        hvaSkalFølgesOpp = "noe",
+                        hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet,
+                        reserverTilBruker = "MEGSELV",
+                        opprinnelse = Opprinnelse(
+                            behandlingsreferanse = førstegangsbehandling.referanse.toString(),
+                            avklaringsbehovKode = AvklaringsbehovKode.`5028`.toString()
+                        )
+                    )
+                ),
+                periode = periode
+            )
+        )
+        val oppretteOppfølgingsoppgave = dataSource.transaction { connection ->
+
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+
+            val alleBehandlinger =
+                behandlingRepository.hentAlleFor(sak.id, listOf(TypeBehandling.OppfølgingsBehandling))
+
+            alleBehandlinger.mapNotNull { behandling ->
+                val dokument = MottaDokumentService(repositoryProvider.provide())
+                    .hentOppfølgingsBehandlingDokument(behandlingId = behandling.id)
+
+                if (dokument != null) {
+                    Pair(behandling.id, dokument)
+                } else {
+                    null
+                }
+            }
+        }
+        assertThat(oppretteOppfølgingsoppgave.size).isEqualTo(1)
+        assertThat(oppretteOppfølgingsoppgave.first().second.opprinnelse).isNotNull
+        assertThat(oppretteOppfølgingsoppgave.first().second.opprinnelse!!.behandlingsreferanse).isEqualTo(
+            førstegangsbehandling.referanse.toString()
+        )
+        assertThat(oppretteOppfølgingsoppgave.first().second.opprinnelse!!.avklaringsbehovKode).isEqualTo(
+            AvklaringsbehovKode.`5028`.toString()
+        )
+
+    }
+
 }
