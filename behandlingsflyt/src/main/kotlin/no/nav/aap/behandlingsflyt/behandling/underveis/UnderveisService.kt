@@ -25,8 +25,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeid
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRimeligGrunnGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRimeligGrunnRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -45,7 +45,7 @@ class UnderveisService(
     private val etAnnetStedUtlederService: EtAnnetStedUtlederService,
     private val arbeidsevneRepository: ArbeidsevneRepository,
     private val meldepliktRepository: MeldepliktRepository,
-    private val meldepliktRimeligGrunnRepository: MeldepliktRimeligGrunnRepository,
+    private val overstyringMeldepliktRepository: OverstyringMeldepliktRepository,
     private val meldeperiodeRepository: MeldeperiodeRepository,
     private val vedtakService: VedtakService,
 ) {
@@ -59,7 +59,7 @@ class UnderveisService(
         arbeidsevneRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
         meldeperiodeRepository = repositoryProvider.provide(),
-        meldepliktRimeligGrunnRepository = repositoryProvider.provide(),
+        overstyringMeldepliktRepository = repositoryProvider.provide(),
         vedtakService = VedtakService(repositoryProvider),
     )
 
@@ -152,8 +152,8 @@ class UnderveisService(
         val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandlingId)
             ?: MeldepliktGrunnlag(vurderinger = emptyList())
 
-        val meldepliktRimeligGrunnGrunnlag = meldepliktRimeligGrunnRepository.hentHvisEksisterer(behandlingId)
-            ?: MeldepliktRimeligGrunnGrunnlag(vurderinger = emptyList())
+        val overstyringMeldepliktGrunnlag = overstyringMeldepliktRepository.hentHvisEksisterer(behandlingId)
+            ?: OverstyringMeldepliktGrunnlag(vurderinger = emptyList())
 
         val meldeperioder = meldeperiodeRepository.hent(behandlingId)
 
@@ -170,7 +170,7 @@ class UnderveisService(
             etAnnetSted = etAnnetSted,
             arbeidsevneGrunnlag = arbeidsevneGrunnlag,
             meldepliktGrunnlag = meldepliktGrunnlag,
-            meldepliktRimeligGrunnGrunnlag = meldepliktRimeligGrunnGrunnlag,
+            overstyringMeldepliktGrunnlag = overstyringMeldepliktGrunnlag,
             meldeperioder = meldeperioder,
             vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
         )
