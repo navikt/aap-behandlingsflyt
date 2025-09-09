@@ -1,8 +1,10 @@
 package no.nav.aap.behandlingsflyt.test
 
 import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.nimbusds.jwt.JWTParser
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
@@ -50,6 +52,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgEnhet
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.OrgEnhet
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.OrgTilknytning
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.BARN_RELASJON_QUERY
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.ForelderBarnRelasjon
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.HentPerson
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.HentPersonBolkResult
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PDLDødsfall
@@ -71,7 +74,6 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonNavnDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersoninfo
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersoninfoData
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersoninfoDataResponse
-import no.nav.aap.behandlingsflyt.integrasjon.pdl.ForelderBarnRelasjon
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRelasjonData
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRelasjonDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRequest
@@ -125,6 +127,7 @@ import java.util.concurrent.atomic.AtomicInteger
 object FakeServers : AutoCloseable {
     private val log = LoggerFactory.getLogger(javaClass)
     private val azure = embeddedServer(Netty, port = AzurePortHolder.getPort(), module = { azureFake() })
+    private val texas = embeddedServer(Netty, port = 0, module = { texasFakes() })
     private val brev = embeddedServer(Netty, port = 0, module = { brevFake() })
     private val pdl = embeddedServer(Netty, port = 0, module = { pdlFake() })
     private val yrkesskade = embeddedServer(Netty, port = 0, module = { yrkesskadeFake() })
@@ -1654,6 +1657,34 @@ object FakeServers : AutoCloseable {
         }
     }
 
+    private fun Application.texasFakes() {
+        install(ContentNegotiation) {
+            jackson()
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@texasFakes.log.info("TEXAS :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                call.respond(
+                    status = HttpStatusCode.InternalServerError,
+                    message = ErrorRespons(cause.message)
+                )
+            }
+        }
+        routing {
+            post("/token") {
+                val body = call.receive<JsonNode>()
+                val NAVident = JWTParser.parse(body["user_token"].asText())
+                    .jwtClaimsSet
+                    .getClaimAsString("NAVident")
+                val token = AzureTokenGen(
+                    issuer = body["identity_provider"].asText(),
+                    audience = body["target"].asText(),
+                ).generate(false, azp = "behandlingsflyt", NAVident)
+                call.respond(TestToken(access_token = token))
+            }
+        }
+    }
+
     private fun Application.utbetalFake() {
         install(ContentNegotiation) {
             jackson {
@@ -1915,6 +1946,7 @@ object FakeServers : AutoCloseable {
 
         azure.start()
         setAzureProperties()
+        texas.start()
         brev.start()
         yrkesskade.start()
         pdl.start()
@@ -2079,6 +2111,9 @@ object FakeServers : AutoCloseable {
         // Gosys
         System.setProperty("integrasjon.gosys.url", "http://localhost:${gosys.port()}")
         System.setProperty("integrasjon.gosys.scope", "scope")
+
+        // Texas
+        System.setProperty("nais.token.exchange.endpoint", "http://localhost:${texas.port()}/token")
     }
 
     override fun close() {
@@ -2089,6 +2124,7 @@ object FakeServers : AutoCloseable {
         yrkesskade.stop(0L, 0L)
         pdl.stop(0L, 0L)
         azure.stop(0L, 0L)
+        texas.stop(0L, 0L)
         brev.stop(0L, 0L)
         inntekt.stop(0L, 0L)
         oppgavestyring.stop(0L, 0L)
