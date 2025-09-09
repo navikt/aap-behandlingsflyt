@@ -64,10 +64,7 @@ class MeldekortTilApiInternJobbUtfører(
             }
 
         try {
-            kontraktObjekter.forEach {
-                // TODO er det bedre å sende en liste? Potensielt mange (100 stk?)
-                apiInternGateway.sendDetaljertMeldekort(it)
-            }
+            apiInternGateway.sendDetaljertMeldekort(kontraktObjekter)
         } catch (e: Exception) {
             log.error(
                 "Feil ved sending av meldekort til API-intern for sak=${sakId}," + " behandling=${behandlingId}", e
