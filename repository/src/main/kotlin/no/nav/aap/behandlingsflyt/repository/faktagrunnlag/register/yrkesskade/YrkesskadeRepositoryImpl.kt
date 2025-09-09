@@ -110,15 +110,16 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
             return
         }
 
-        yrkesskader.yrkesskader.forEach { yrkesskade ->
-            connection.execute("INSERT INTO YRKESSKADE_DATO (YRKESSKADE_ID, REFERANSE, YRKESSKADE_SAKSNUMMER, KILDESYSTEM, SKADEDATO) VALUES (?, ?, ?, ?, ?)") {
-                setParams {
-                    setLong(1, yrkesskadeId)
-                    setString(2, yrkesskade.ref)
-                    setInt(3, yrkesskade.saksnummer)
-                    setString(4, yrkesskade.kildesystem)
-                    setLocalDate(5, yrkesskade.skadedato)
-                }
+        connection.executeBatch(
+            "INSERT INTO YRKESSKADE_DATO (YRKESSKADE_ID, REFERANSE, YRKESSKADE_SAKSNUMMER, KILDESYSTEM, SKADEDATO) VALUES (?, ?, ?, ?, ?)",
+            yrkesskader.yrkesskader
+        ) {
+            setParams { yrkesskade ->
+                setLong(1, yrkesskadeId)
+                setString(2, yrkesskade.ref)
+                setInt(3, yrkesskade.saksnummer)
+                setString(4, yrkesskade.kildesystem)
+                setLocalDate(5, yrkesskade.skadedato)
             }
         }
     }
