@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidReg
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonoppholdTilRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SammenstiltAktivitetspliktRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SoningRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel
@@ -18,8 +17,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.Meldep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
@@ -41,7 +38,6 @@ class UnderveisService(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val meldekortRepository: MeldekortRepository,
     private val underveisRepository: UnderveisRepository,
-    private val aktivitetspliktRepository: AktivitetspliktRepository,
     private val etAnnetStedUtlederService: EtAnnetStedUtlederService,
     private val arbeidsevneRepository: ArbeidsevneRepository,
     private val meldepliktRepository: MeldepliktRepository,
@@ -54,7 +50,6 @@ class UnderveisService(
         vilkårsresultatRepository = repositoryProvider.provide(),
         meldekortRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
-        aktivitetspliktRepository = repositoryProvider.provide(),
         etAnnetStedUtlederService = EtAnnetStedUtlederService(repositoryProvider),
         arbeidsevneRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
@@ -72,7 +67,6 @@ class UnderveisService(
             InstitusjonRegel(),
             SoningRegel(),
             MeldepliktRegel(),
-            SammenstiltAktivitetspliktRegel(),
             GraderingArbeidRegel(),
             VarighetRegel(),
         )
@@ -89,10 +83,10 @@ class UnderveisService(
             }
 
             sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = MeldepliktRegel::class)
-            sjekkAvhengighet(
-                forventetFør = UtledMeldeperiodeRegel::class,
-                forventetEtter = SammenstiltAktivitetspliktRegel::class
-            )
+//            sjekkAvhengighet(
+//                forventetFør = UtledMeldeperiodeRegel::class,
+//                forventetEtter = SammenstiltAktivitetspliktRegel::class
+//            )
             sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = GraderingArbeidRegel::class)
         }
     }
@@ -115,7 +109,6 @@ class UnderveisService(
                         arbeidsgradering = it.verdi.arbeidsgradering(),
                         trekk = if (it.verdi.skalReduseresDagsatser()) Dagsatser(1) else Dagsatser(0),
                         brukerAvKvoter = it.verdi.varighetVurdering?.brukerAvKvoter.orEmpty(),
-                        bruddAktivitetspliktId = it.verdi.aktivitetspliktVurdering?.dokument?.metadata?.id,
                         institusjonsoppholdReduksjon = if (it.verdi.institusjonVurdering?.skalReduseres == true) Prosent.`50_PROSENT` else Prosent.`0_PROSENT`,
                         meldepliktStatus = it.verdi.meldepliktVurdering?.status,
                     )
@@ -143,9 +136,6 @@ class UnderveisService(
 
         val etAnnetSted = MapInstitusjonoppholdTilRegel.map(utlederResultat)
 
-        val aktivitetspliktGrunnlag = aktivitetspliktRepository.hentGrunnlagHvisEksisterer(behandlingId)
-            ?: AktivitetspliktGrunnlag(bruddene = setOf())
-
         val arbeidsevneGrunnlag = arbeidsevneRepository.hentHvisEksisterer(behandlingId)
             ?: ArbeidsevneGrunnlag(vurderinger = emptyList())
 
@@ -166,7 +156,6 @@ class UnderveisService(
             meldekort = meldekort,
             innsendingsTidspunkt = innsendingsTidspunkt,
             kvoter = kvote,
-            aktivitetspliktGrunnlag = aktivitetspliktGrunnlag,
             etAnnetSted = etAnnetSted,
             arbeidsevneGrunnlag = arbeidsevneGrunnlag,
             meldepliktGrunnlag = meldepliktGrunnlag,

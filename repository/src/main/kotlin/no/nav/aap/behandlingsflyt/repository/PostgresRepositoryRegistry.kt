@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.repository
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.forretningsflyt.gjenopptak.GjenopptakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
@@ -77,7 +76,6 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<BeregningsgrunnlagRepositoryImpl>()
     .register<PersonopplysningRepositoryImpl>()
     .register<TilkjentYtelseRepositoryImpl>()
-    .register<AktivitetspliktRepositoryImpl>()
     .register<BrevbestillingRepositoryImpl>()
     .register<SamordningRepositoryImpl>()
     .register<MottattDokumentRepositoryImpl>()

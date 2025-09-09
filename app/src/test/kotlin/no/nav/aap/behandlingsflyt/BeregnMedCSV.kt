@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisperiodeId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
@@ -137,7 +136,6 @@ fun beregnForInput(input: Input, fødselsdato: Fødselsdato): Triple<Year, GUnit
                     ),
                     trekk = Dagsatser(0),
                     brukerAvKvoter = emptySet(),
-                    bruddAktivitetspliktId = BruddAktivitetspliktId(0),
                     id = UnderveisperiodeId(0),
                     institusjonsoppholdReduksjon = Prosent(0),
                     meldepliktStatus = null,
