@@ -135,7 +135,7 @@ class Vilkårsresultat(
             "Sykepengeerstatning må være oppfylt om ikke 11-5 er oppfylt."
         }
 
-        // Sjekker på overgang uføre og overgang arbeid før bistandsvurderingen
+        // Sjekker på overgang uføre før bistandsvurderingen
         val harOppfyltVilkårForOvergangUføre =
             vilkårPar.any {
                 it.first == Vilkårtype.OVERGANGUFØREVILKÅRET

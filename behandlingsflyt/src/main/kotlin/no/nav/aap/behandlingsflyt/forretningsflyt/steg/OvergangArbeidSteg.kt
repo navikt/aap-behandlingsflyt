@@ -75,8 +75,9 @@ class OvergangArbeidSteg private constructor(
                     )
                     return Fullført
                 }
-                if (harVurdertBistandsVilkår(avklaringsbehovene) && bistandsVilkårErOppfylt(kontekst.behandlingId) && !brukerHarTilstrekkeligNedsattArbeidsevne(
-                        sykdomgrunnlag) && harIkkeVurdert_11_17_tidligere(
+                if (harVurdertBistandsVilkår(avklaringsbehovene) && bistandsVilkårErOppfylt(kontekst.behandlingId) && brukerHarTilstrekkeligNedsattArbeidsevne(
+                        sykdomgrunnlag
+                    ) && harIkkeVurdert_11_17_tidligere(
                         avklaringsbehovene
                     )
                 ) {
@@ -124,7 +125,7 @@ class OvergangArbeidSteg private constructor(
         if (sisteSykdomsvurdering == null) {
             return false
         } else {
-            if (sisteSykdomsvurdering.erArbeidsevnenNedsatt == true) {
+            if (sisteSykdomsvurdering.harSkadeSykdomEllerLyte == false || sisteSykdomsvurdering.erArbeidsevnenNedsatt == false || sisteSykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel == false) {
                 return true
             } else
                 return false
