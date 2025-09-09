@@ -70,7 +70,7 @@ class VurderBrudd11_7Løser(
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
         val ventebehov = avklaringsbehov.hentBehovForDefinisjon(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT)
 
-        if (ventebehov != null && !ventebehov.fristUtløpt() && !vurdering.erOppfylt && !vurdering.skalIgnorereVarselFrist) { // TODO: Sjekk om vurderingen er overstyrt
+        if (ventebehov != null && !ventebehov.fristUtløpt() && !vurdering.erOppfylt && !vurdering.skalIgnorereVarselFrist) {
             avklaringsbehov.reåpne(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV)
         }
     }

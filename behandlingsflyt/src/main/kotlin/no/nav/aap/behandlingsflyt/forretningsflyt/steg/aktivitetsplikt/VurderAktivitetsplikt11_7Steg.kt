@@ -70,7 +70,7 @@ class VurderAktivitetsplikt11_7Steg(
             return FantAvklaringsbehov(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
         }
 
-        // Brevet av avbrutt, dette skjer om det er besillt et brev og så endrer man avklaringsbehovene så det ikke trengs
+        // Brevet avbrutt, dette skjer om det er besillt et brev og så endrer man avklaringsbehovene så det ikke trengs
         // før det ble sendt. Vi må da bare gjenåpne brevet.
         if (brevbestilling.status == Status.AVBRUTT) {
             brevbestillingService.oppdaterStatus(
