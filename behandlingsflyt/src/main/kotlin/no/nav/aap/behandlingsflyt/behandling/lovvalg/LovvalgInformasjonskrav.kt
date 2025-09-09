@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.YearMonth
 import java.util.concurrent.CompletableFuture
@@ -44,6 +45,8 @@ class LovvalgInformasjonskrav private constructor(
     private val enhetsregisteretGateway: EnhetsregisteretGateway,
     private val inntektskomponentenGateway: InntektkomponentenGateway
 ) : Informasjonskrav {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     override val navn = Companion.navn
 
     override fun erRelevant(
@@ -121,6 +124,9 @@ class LovvalgInformasjonskrav private constructor(
         inntektGrunnlag: List<ArbeidsInntektMaaned>,
         enhetGrunnlag: List<EnhetGrunnlag>,
     ) {
+        val perioder = medlemskapGrunnlag.map { Pair(it.fraOgMed, it.tilOgMed) }
+
+        log.info("Lagrer medlemskap, arbeidsforhold og inntekt for behandling $behandlingId. Perioder: $perioder")
         val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapRepository.lagreUnntakMedlemskap(
             behandlingId,
             medlemskapGrunnlag
