@@ -27,6 +27,7 @@ class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRep
             SELECT * 
             FROM formkrav_vurdering fv
             LEFT JOIN formkrav_grunnlag fg ON fv.id = fg.vurdering_id
+            LEFT JOIN avvist_formkrav_varsel afv ON afv.behandling_id = fg.behandling_id
             WHERE fg.aktiv = true AND fg.behandling_id = ?
 
         """.trimIndent()

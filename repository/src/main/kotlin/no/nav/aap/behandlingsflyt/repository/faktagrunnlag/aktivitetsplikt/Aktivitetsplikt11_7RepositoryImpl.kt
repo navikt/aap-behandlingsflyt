@@ -120,7 +120,7 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
             where behandling_id = ? and aktiv
         """.trimIndent()
         connection.execute(query) {
-            setParams{
+            setParams {
                 setLong(1, tilBehandling.toLong())
                 setLong(2, fraBehandling.toLong())
             }
@@ -201,11 +201,14 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
         )
     }
 
-    private fun mapVarsel(row: Row): Aktivitetsplikt11_7Varsel {
-        return Aktivitetsplikt11_7Varsel(
-            varselId = BrevbestillingReferanse(row.getUUID("brev_referanse")),
-            sendtDato = row.getLocalDate("dato_varslet"),
-            svarfrist = row.getLocalDate("frist")
-        )
+    private fun mapVarsel(row: Row): Aktivitetsplikt11_7Varsel? {
+        val varselUuid = row.getUUIDOrNull("brev_referanse")
+        return varselUuid?.let {
+            Aktivitetsplikt11_7Varsel(
+                varselId = BrevbestillingReferanse(row.getUUID("brev_referanse")),
+                sendtDato = row.getLocalDateOrNull("dato_varslet"),
+                svarfrist = row.getLocalDateOrNull("frist")
+            )
+        }
     }
 }

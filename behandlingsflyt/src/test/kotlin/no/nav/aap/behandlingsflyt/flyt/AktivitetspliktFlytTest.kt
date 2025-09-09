@@ -1,8 +1,12 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykepengerErstatningLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivForhåndsvarselBruddAktivitetspliktBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentePåFristForhåndsvarselAktivitetsplikt11_7Løsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderBrudd11_7Løsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7LøsningDto
@@ -87,8 +91,36 @@ class AktivitetspliktFlytTest :
                 )
             ).medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
-                    .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
-            }.fattVedtakEllerSendRetur().medKontekst {
+                    .containsExactlyInAnyOrder(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
+                val brevbestillingReferanse = dataSource.transaction { connection ->
+                    val aktivitetsplikt11_7Repository = Aktivitetsplikt11_7RepositoryImpl(connection)
+                    aktivitetsplikt11_7Repository.hentVarselHvisEksisterer(aktivitetspliktBehandling.id)?.varselId
+                        ?: error("Fant ikke varsel")
+
+                }
+                aktivitetspliktBehandling.løsAvklaringsBehov(
+                    SkrivForhåndsvarselBruddAktivitetspliktBrevLøsning(
+                        brevbestillingReferanse = brevbestillingReferanse.brevbestillingReferanse,
+                        handling = SkrivBrevAvklaringsbehovLøsning.Handling.FERDIGSTILL,
+                        behovstype = Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV.kode
+                    )
+                )
+            }
+            .medKontekst {
+                assertThat(this.åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                    .isEqualTo(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT)
+            }
+            .løsAvklaringsBehov(avklaringsBehovLøsning = VentePåFristForhåndsvarselAktivitetsplikt11_7Løsning())
+            .løsAvklaringsBehov(VurderBrudd11_7Løsning(
+                aktivitetsplikt11_7Vurdering = Aktivitetsplikt11_7LøsningDto(
+                    begrunnelse = "Brudd",
+                    erOppfylt = false,
+                    utfall = Utfall.STANS,
+                    gjelderFra = sak.rettighetsperiode.fom.plusWeeks(20),
+                    skalIgnorereVarselFrist = true
+                )
+            ))
+            .fattVedtakEllerSendRetur().medKontekst {
                 assertThat(this.behandling).extracting { it.aktivtSteg() }
                     .isEqualTo(StegType.IVERKSETT_BRUDD)
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
@@ -216,7 +248,8 @@ class AktivitetspliktFlytTest :
 
         opprettAktivitetspliktBehandlingMedVurdering(
             sak,
-            Status.AVSLUTTET) { behandlingId ->
+            Status.AVSLUTTET
+        ) { behandlingId ->
             Aktivitetsplikt11_7Vurdering(
                 begrunnelse = "Brudd",
                 erOppfylt = false,
