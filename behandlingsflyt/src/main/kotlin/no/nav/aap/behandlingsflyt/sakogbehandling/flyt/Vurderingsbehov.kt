@@ -35,7 +35,9 @@ enum class Vurderingsbehov {
     MOTTATT_KABAL_HENDELSE,
     OPPFØLGINGSOPPGAVE,
     AKTIVITETSPLIKT_11_7,
-    EFFEKTUER_AKTIVITETSPLIKT;
+    EFFEKTUER_AKTIVITETSPLIKT,
+    OVERGANG_UFORE,
+    OVERGANG_ARBEID;
 
     companion object {
         /**
@@ -92,4 +94,6 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.REVURDER_MELDEPLIKT_RIMELIG_GRUNN -> Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN
         EksponertÅrsak.AKTIVITETSPLIKT_11_7 -> Vurderingsbehov.AKTIVITETSPLIKT_11_7
         EksponertÅrsak.EFFEKTUER_AKTIVITETSPLIKT -> Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
+        EksponertÅrsak.OVERGANG_UFORE -> Vurderingsbehov.OVERGANG_UFORE
+        EksponertÅrsak.OVERGANG_ARBEID -> Vurderingsbehov.OVERGANG_ARBEID
     }

@@ -26,6 +26,9 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder.aldersGrun
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt.meldepliktsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon.refusjonGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.bistand.bistandsgrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangufore.overgangUforeGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangarbeid.overgangArbeidGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangarbeid.overgangArbeidGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepengergrunnlag.sykepengerGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt.manglendeGrunnlagApi
@@ -169,6 +172,7 @@ internal fun Application.server(
                 meldepliktsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 meldepliktOverstyringGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 arbeidsevneGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                overgangUforeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 medlemskapsgrunnlagApi(dataSource, repositoryRegistry)
                 studentgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykdomsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -217,7 +221,7 @@ internal fun Application.server(
                 forutgåendeMedlemskapAPI(dataSource, repositoryRegistry, gatewayProvider)
                 driftAPI(dataSource, repositoryRegistry, gatewayProvider)
                 simuleringAPI(dataSource, repositoryRegistry, gatewayProvider)
-
+                overgangArbeidGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 // Endepunkter kun tilgjengelig lokalt og i test
                 if (!Miljø.erProd()) {
                     opprettDummySakApi(dataSource, repositoryRegistry, gatewayProvider)

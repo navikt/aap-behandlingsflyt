@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.Totri
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangArbeidLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
@@ -36,6 +38,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
@@ -303,9 +307,9 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
                         erBehovForAktivBehandling = true,
                         erBehovForArbeidsrettetTiltak = false,
                         erBehovForAnnenOppfølging = null,
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null
+                        overgangBegrunnelse = null,
+                        skalVurdereAapIOvergangTilUføre = null,
                     ),
                 )
             ).løsAvklaringsBehov(
@@ -487,10 +491,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilUføre = null,
                     skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null
-                ),
+                    overgangBegrunnelse = null,
+                    skalVurdereAapIOvergangTilUføre = null,
+
+                    ),
             ),
         )
 
@@ -558,11 +563,34 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilUføre = null,
                     skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null
+                    overgangBegrunnelse = null,
+                    skalVurdereAapIOvergangTilUføre = null,
                 )
             )
+        )
+    }
+
+
+    @JvmName("løsOvergangUføreExt")
+    protected fun Behandling.løsOvergangUføre(): Behandling {
+        return løsOvergangUføre(this)
+    }
+
+    protected fun løsOvergangUføre(behandling: Behandling): Behandling {
+        return løsAvklaringsBehov(
+            behandling = behandling,
+            avklaringsBehovLøsning =
+                AvklarOvergangUføreLøsning(
+                    OvergangUføreVurderingLøsningDto(
+                        begrunnelse = "Løsning",
+                        brukerHarSøktOmUføretrygd = false,
+                        brukerHarFåttVedtakOmUføretrygd = null,
+                        brukerRettPåAAP = false,
+                        virkningsdato = null,
+                        overgangBegrunnelse = null
+                    )
+                )
         )
     }
 
@@ -604,6 +632,26 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
             avklaringsBehovLøsning = SykdomsvurderingForBrevLøsning(
                 vurdering = "Denne vurderingen skal vises i brev"
             )
+        )
+    }
+
+    @JvmName("løsOvergangArbeidExt")
+    protected fun Behandling.løsOvergangArbeid(): Behandling {
+        return løsOvergangArbeid(this)
+    }
+
+    protected fun løsOvergangArbeid(behandling: Behandling): Behandling {
+        return løsAvklaringsBehov(
+            behandling = behandling,
+            avklaringsBehovLøsning =
+                AvklarOvergangArbeidLøsning(
+                    OvergangArbeidVurderingLøsningDto(
+                        begrunnelse = "Løsning",
+                        brukerRettPåAAP = true,
+                        virkningsdato = null,
+                        overgangBegrunnelse = null
+                    )
+                )
         )
     }
 

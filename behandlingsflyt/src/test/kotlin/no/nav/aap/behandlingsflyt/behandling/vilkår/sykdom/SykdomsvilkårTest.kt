@@ -206,8 +206,8 @@ class SykdomsvilkårTest {
                         harRettPå = true,
                         grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
                         vurdertAv = "abc123",
-                        vurdertTidspunkt = LocalDateTime.now()
-                    )
+                        vurdertTidspunkt = LocalDateTime.now(),
+                    ),
 
             )
         )
