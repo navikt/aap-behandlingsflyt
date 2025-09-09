@@ -50,13 +50,14 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.lovvalgM
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskapAPI
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.mellomlagretVurderingApi
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.avklarOppfolgingsoppgaveGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.oppfølgingsOppgaveApi
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringAPI
 import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseAPI
-import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktRimeligGrunnGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerAPI
 import no.nav.aap.behandlingsflyt.drift.driftAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
@@ -166,7 +167,7 @@ internal fun Application.server(
                 kvalitetssikringTilgangAPI(dataSource, repositoryRegistry)
                 bistandsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 meldepliktsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                meldepliktRimeligGrunnGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                meldepliktOverstyringGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 arbeidsevneGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 medlemskapsgrunnlagApi(dataSource, repositoryRegistry)
                 studentgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -202,6 +203,7 @@ internal fun Application.server(
                 svarFraAndreinstansGrunnlagApi(dataSource, repositoryRegistry)
                 // Oppfølgingsbehandling
                 avklarOppfolgingsoppgaveGrunnlag(dataSource, repositoryRegistry)
+                oppfølgingsOppgaveApi(dataSource, repositoryRegistry)
                 // Aktivitetsplikt
                 aktivitetsplikt11_7GrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 // Flytt
@@ -269,7 +271,7 @@ fun Application.startMotor(
 fun Application.startKabalKonsument(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry
-): KafkaKonsument? {
+): KafkaKonsument {
     val konsument = KabalKafkaKonsument(
         config = KafkaConsumerConfig(),
         dataSource = dataSource,

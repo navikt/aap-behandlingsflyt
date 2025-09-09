@@ -152,7 +152,10 @@ class SamordningYtelseVurderingInformasjonskrav(
         val eksisterendeData = samordningYtelseRepository.hentHvisEksisterer(behandlingId)
         val samordningYtelser = hentRegisterdata(behandlingId)
 
-        return if (harEndringerIYtelser(eksisterendeData, samordningYtelser))
+        // Ønsker ikke trigge revurdering automatisk i dette tilfellet enn så lenge
+        val gikkFraNullTilTomtGrunnlag = samordningYtelser.isEmpty() && eksisterendeData == null
+
+        return if (!gikkFraNullTilTomtGrunnlag && harEndringerIYtelser(eksisterendeData, samordningYtelser))
             listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING))
         else
             emptyList()

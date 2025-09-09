@@ -79,9 +79,15 @@ interface MeldepliktVurdering {
         override val status = FREMTIDIG_OPPFYLT
     }
     
-    data object RimeligGrunn: MeldepliktVurdering {
+    data object RimeligGrunnOverstyring: MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
         override val årsak = null
         override val status = MeldepliktStatus.RIMELIG_GRUNN
+    }
+
+    data object MeldtSegOverstyring: MeldepliktVurdering {
+        override val utfall = Utfall.OPPFYLT
+        override val årsak = null
+        override val status = MELDT_SEG
     }
 }

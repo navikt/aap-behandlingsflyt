@@ -41,27 +41,23 @@ class MedlemskapRepositoryImpl(private val connection: DBConnection) : Medlemska
             }
         }
 
-        unntak.forEach {
-            connection.execute(
-                """
-                INSERT INTO MEDLEMSKAP_UNNTAK (
+        connection.executeBatch("""
+            INSERT INTO MEDLEMSKAP_UNNTAK (
                 STATUS, STATUS_ARSAK, MEDLEM, PERIODE, GRUNNLAG, LOVVALG, HELSEDEL, MEDLEMSKAP_UNNTAK_PERSON_ID, LOVVALGSLAND, KILDESYSTEM, KILDENAVN
                 ) VALUES (?, ?, ?, ?::daterange ,?, ?, ?, ?, ?, ?, ?)
-            """.trimIndent()
-            ) {
-                setParams {
-                    setString(1, it.status)
-                    setString(2, it.statusaarsak)
-                    setBoolean(3, it.medlem)
-                    setPeriode(4, Periode(LocalDate.parse(it.fraOgMed), LocalDate.parse(it.tilOgMed)))
-                    setString(5, it.grunnlag)
-                    setString(6, it.lovvalg)
-                    setBoolean(7, it.helsedel)
-                    setLong(8, medlemskapUnntakPersonId)
-                    setString(9, it.lovvalgsland)
-                    setEnumName(10, it.kilde?.kildesystemKode)
-                    setString(11, it.kilde?.kildeNavn)
-                }
+        """.trimIndent(), unntak) {
+            setParams {
+                setString(1, it.status)
+                setString(2, it.statusaarsak)
+                setBoolean(3, it.medlem)
+                setPeriode(4, Periode(LocalDate.parse(it.fraOgMed), LocalDate.parse(it.tilOgMed)))
+                setString(5, it.grunnlag)
+                setString(6, it.lovvalg)
+                setBoolean(7, it.helsedel)
+                setLong(8, medlemskapUnntakPersonId)
+                setString(9, it.lovvalgsland)
+                setEnumName(10, it.kilde?.kildesystemKode)
+                setString(11, it.kilde?.kildeNavn)
             }
         }
         return medlemskapUnntakPersonId

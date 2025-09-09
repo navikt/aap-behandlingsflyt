@@ -6,7 +6,6 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.BaseApiTest
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.SamordningYtelseDTO
-import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.SamordningYtelseVurderingDTO
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.SamordningYtelseVurderingGrunnlagDTO
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
@@ -94,6 +93,7 @@ class SamordningApiKtTest : BaseApiTest() {
                     ),
                     vurdering = null,
                     tpYtelser = null,
+                    historiskeVurderinger = emptyList(),
                 )
             )
         }
