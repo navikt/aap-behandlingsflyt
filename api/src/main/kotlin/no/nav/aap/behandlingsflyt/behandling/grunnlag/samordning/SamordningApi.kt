@@ -312,33 +312,35 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)
                 }
 
+                val vurdering = samordningAndreStatligeYtelserVurdering?.let { vurdering ->
+                    SamordningAndreStatligeYtelserVurderingDTO(
+                        begrunnelse = vurdering.begrunnelse,
+                        vurderingPerioder =
+                            vurdering.vurderingPerioder
+                                .map {
+                                    SamordningAndreStatligeYtelserVurderingPeriodeDTO(
+                                        periode = it.periode,
+                                        ytelse = it.ytelse,
+                                    )
+                                },
+                        vurdertAv =
+                            vurdering.let {
+                                VurdertAvResponse(
+                                    ident = it.vurdertAv,
+                                    dato =
+                                        requireNotNull(it.vurdertTidspunkt?.toLocalDate()) {
+                                            "Fant ikke vurdert tidspunkt for samordningAndreStatligeYtelserVurdering"
+                                        },
+                                    ansattnavn = navnOgEnhet?.navn,
+                                    enhetsnavn = navnOgEnhet?.enhet
+                                )
+                            })
+                }
+
                 respond(
                     SamordningAndreStatligeYtelserGrunnlagDTO(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        vurdering =
-                            SamordningAndreStatligeYtelserVurderingDTO(
-                                begrunnelse = samordningAndreStatligeYtelserVurdering?.begrunnelse ?: "",
-                                vurderingPerioder =
-                                    samordningAndreStatligeYtelserVurdering?.vurderingPerioder
-                                        ?.map {
-                                            SamordningAndreStatligeYtelserVurderingPeriodeDTO(
-                                                periode = it.periode,
-                                                ytelse = it.ytelse,
-                                            )
-                                        }.orEmpty(),
-                                vurdertAv =
-                                    samordningAndreStatligeYtelserVurdering?.let {
-                                        VurdertAvResponse(
-                                            ident = it.vurdertAv,
-                                            dato =
-                                                requireNotNull(it.vurdertTidspunkt?.toLocalDate()) {
-                                                    "Fant ikke vurdert tidspunkt for samordningAndreStatligeYtelserVurdering"
-                                                },
-                                            ansattnavn = navnOgEnhet?.navn,
-                                            enhetsnavn = navnOgEnhet?.enhet
-                                        )
-                                    }
-                            )
+                        vurdering = vurdering
                     )
                 )
             }
