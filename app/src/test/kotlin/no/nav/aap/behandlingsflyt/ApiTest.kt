@@ -10,8 +10,6 @@ import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.MedlemskapGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl

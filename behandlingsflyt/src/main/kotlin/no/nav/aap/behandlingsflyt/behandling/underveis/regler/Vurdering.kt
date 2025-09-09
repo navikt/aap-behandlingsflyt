@@ -1,9 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivitetspliktVurdering.Vilkårsvurdering.AKTIVT_BIDRAG_IKKE_OPPFYLT
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Utfall.STANS
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Utfall.UNNTAK
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.VILKÅR_FOR_REDUKSJON_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
@@ -18,9 +14,6 @@ import no.nav.aap.komponenter.verdityper.Prosent
 data class Vurdering(
     internal val fårAapEtter: RettighetsType? = null,
     internal val meldepliktVurdering: MeldepliktVurdering? = null,
-    internal val fraværFastsattAktivitetVurdering: FraværFastsattAktivitetVurdering? = null,
-    internal val reduksjonAktivitetspliktVurdering: ReduksjonAktivitetspliktVurdering? = null,
-    internal val aktivitetspliktVurdering: AktivitetspliktVurdering? = null,
     private val gradering: ArbeidsGradering? = null,
     private val samordningProsent: Prosent? = null,
     private val grenseverdi: Prosent? = null,
@@ -41,14 +34,6 @@ data class Vurdering(
         return copy(meldepliktVurdering = meldepliktVurdering)
     }
 
-    fun leggTilBruddPåNærmereBestemteAktivitetsplikter(vurdering: ReduksjonAktivitetspliktVurdering): Vurdering {
-        return copy(reduksjonAktivitetspliktVurdering = vurdering)
-    }
-
-    fun leggTilAktivitetspliktVurdering(fraværFastsattAktivitetVurdering: FraværFastsattAktivitetVurdering): Vurdering {
-        return copy(fraværFastsattAktivitetVurdering = fraværFastsattAktivitetVurdering)
-    }
-
     fun leggTilGrenseverdi(grenseverdi: Prosent): Vurdering {
         return copy(grenseverdi = grenseverdi)
     }
@@ -61,10 +46,6 @@ data class Vurdering(
         return copy(soningsVurdering = vurdering)
     }
 
-    fun leggTilAktivtBidragVurdering(vurdering: AktivitetspliktVurdering): Vurdering {
-        return copy(aktivitetspliktVurdering = vurdering)
-    }
-
     fun leggTilMeldeperiode(meldeperiode: Periode): Vurdering {
         return copy(meldeperiode = meldeperiode)
     }
@@ -72,22 +53,12 @@ data class Vurdering(
     fun leggTilVarighetVurdering(varighetVurdering: VarighetVurdering): Vurdering {
         return copy(varighetVurdering = varighetVurdering)
     }
-
-    private fun bryterAktivitetsplikt(): Boolean {
-        return aktivitetspliktVurdering?.vilkårsvurdering == AKTIVT_BIDRAG_IKKE_OPPFYLT
-    }
-
-    private fun fraværFastsattAktivitet(): Boolean {
-        return fraværFastsattAktivitetVurdering?.utfall == STANS
-    }
-
+    
     fun harRett(): Boolean {
         return fårAapEtter != null &&
                 arbeiderMindreEnnGrenseverdi() &&
                 harOverholdtMeldeplikten() &&
                 sonerIkke() &&
-                !bryterAktivitetsplikt() &&
-                !fraværFastsattAktivitet() &&
                 varighetsvurderingOppfylt()
     }
 
@@ -147,10 +118,6 @@ data class Vurdering(
             return UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
         } else if (!sonerIkke()) {
             return UnderveisÅrsak.SONER_STRAFF
-        } else if (bryterAktivitetsplikt()) {
-            return UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT
-        } else if (fraværFastsattAktivitet()) {
-            return UnderveisÅrsak.FRAVÆR_FASTSATT_AKTIVITET
         } else if (!arbeiderMindreEnnGrenseverdi()) {
             return UnderveisÅrsak.ARBEIDER_MER_ENN_GRENSEVERDI
         } else if (!harOverholdtMeldeplikten()) {
@@ -162,10 +129,8 @@ data class Vurdering(
     }
 
     fun skalReduseresDagsatser(): Boolean {
-        if (!harRett() || fraværFastsattAktivitetVurdering?.utfall == UNNTAK) {
-            return false
-        }
-        return reduksjonAktivitetspliktVurdering?.vilkårsvurdering == VILKÅR_FOR_REDUKSJON_OPPFYLT
+        // TODO: Aktivitetspliktvurdering
+        return false
     }
 
     override fun toString(): String {
@@ -174,7 +139,6 @@ data class Vurdering(
             harRett=${harRett()},
             meldeplikt=${meldepliktVurdering},
             gradering=${gradering?.gradering ?: Prosent(0)},
-            bruddAktivitetsplikt=${fraværFastsattAktivitetVurdering}
             institusjonVurdering=${institusjonVurdering}
             grenseverdi=${grenseverdi}
             )""".trimIndent().replace("\n", "")

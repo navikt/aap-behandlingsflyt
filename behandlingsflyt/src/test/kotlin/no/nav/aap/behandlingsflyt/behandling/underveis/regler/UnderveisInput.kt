@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
@@ -37,7 +36,6 @@ fun tomUnderveisInput(
     meldekort: List<Meldekort> = emptyList(),
     innsendingsTidspunkt: Map<LocalDate, JournalpostId> = emptyMap(),
     kvoter: Kvoter = tomKvoter,
-    aktivitetspliktGrunnlag: AktivitetspliktGrunnlag = AktivitetspliktGrunnlag(emptySet()),
     etAnnetSted: List<EtAnnetSted> = emptyList(),
     arbeidsevneGrunnlag: ArbeidsevneGrunnlag = ArbeidsevneGrunnlag(emptyList()),
     meldepliktGrunnlag: MeldepliktGrunnlag = MeldepliktGrunnlag(emptyList()),
@@ -52,7 +50,6 @@ fun tomUnderveisInput(
         meldekort = meldekort,
         innsendingsTidspunkt = innsendingsTidspunkt,
         kvoter = kvoter,
-        aktivitetspliktGrunnlag = aktivitetspliktGrunnlag,
         etAnnetSted = etAnnetSted,
         arbeidsevneGrunnlag = arbeidsevneGrunnlag,
         meldepliktGrunnlag = meldepliktGrunnlag,

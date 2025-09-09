@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.test.august
@@ -835,7 +834,6 @@ class BeregnTilkjentYtelseServiceTest {
                     ),
                     trekk = Dagsatser(0),
                     brukerAvKvoter = setOf(Kvote.ORDINÆR),
-                    bruddAktivitetspliktId = BruddAktivitetspliktId(1),
                     institusjonsoppholdReduksjon = institusjonsOppholdReduksjon,
                     meldepliktStatus = MeldepliktStatus.MELDT_SEG,
                 )
