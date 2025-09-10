@@ -110,9 +110,7 @@ fun NormalOpenAPIRoute.saksApi(
             .authorizedPost<SaksnummerParameter, BehandlingAvTypeDTO, Unit>(
                 routeConfig = AuthorizationParamPathConfig(
                     sakPathParam = SakPathParam("saksnummer"),
-                    operasjon = Operasjon.SAKSBEHANDLE,
-                    avklaringsbehovKode = VURDER_BRUDD_11_7_KODE
-
+                    operasjon = Operasjon.SE, // TODO: Skriveoperasjon krever behandlingsreferanse - bruker 'SE' enn så lenge
                 )
             ) { req, _ ->
                 if (Miljø.erProd()) {
