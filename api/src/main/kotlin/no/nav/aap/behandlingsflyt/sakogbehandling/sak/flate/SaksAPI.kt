@@ -5,10 +5,8 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
-import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
-import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.Azp
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.Resultat
@@ -369,45 +367,31 @@ fun NormalOpenAPIRoute.saksApi(
 
         @Suppress("UnauthorizedPost") // Søkeresultat skal vises uansett tilgang
         route("/sok").post<Unit, SøkPåSakDTO, SøkDto> { _, søkDto ->
-            val søketekst = søkDto.søketekst
-            val skalSøkePåSaksnummer = søketekst.length == 7
-            val skalSøkePåIdent = søketekst.length == 11
-
-            if (!skalSøkePåIdent && !skalSøkePåSaksnummer) {
-                throw UgyldigForespørselException("Søketekst må være en ident eller et saksnummer")
-            }
+            val pdlGateway = gatewayProvider.provide<PersoninfoGateway>()
+            val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
 
             val sak = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
-                val sakRepository = repositoryProvider.provide<SakRepository>()
-                if (skalSøkePåSaksnummer) {
-                    sakRepository.hentHvisFinnes(Saksnummer(søketekst))
-                } else {
-                    val personRepository = repositoryProvider.provide<PersonRepository>()
-                    val person = personRepository.finn(Ident(søketekst))
-                    if (person != null) {
-                        sakRepository.finnSakerFor(person).firstOrNull()
-                    } else {
-                        throw VerdiIkkeFunnetException("Fant ingen saker på denne brukeren")
-                    }
-                }
+                SøkPåSakService(repositoryProvider).søkEtterSak(søkDto.søketekst)
             }
 
-            if (sak == null) {
-                respondWithStatus(HttpStatusCode.NotFound)
-            } else {
+            if (sak != null) {
                 val aktivIdent = sak.person.aktivIdent()
-                val pdlGateway = gatewayProvider.provide<PersoninfoGateway>()
-                val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
                 respond(
                     SøkPåSakDTO(
                         ident = aktivIdent.identifikator,
                         navn = pdlGateway.hentPersoninfoForIdent(aktivIdent, token()).fulltNavn(),
                         saksnummer = sak.saksnummer,
                         opprettetTidspunkt = sak.opprettetTidspunkt.toLocalDate(),
-                        harTilgang = tilgangGateway.sjekkTilgangTilSak(saksnummer = sak.saksnummer, token(), Operasjon.SE)
+                        harTilgang = tilgangGateway.sjekkTilgangTilSak(
+                            saksnummer = sak.saksnummer,
+                            token(),
+                            Operasjon.SE
+                        )
                     )
                 )
+            } else {
+                throw VerdiIkkeFunnetException("Fant ingen saker knyttet til søketeksten.")
             }
         }
 
