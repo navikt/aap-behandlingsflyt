@@ -27,7 +27,7 @@ class SignaturService(
 
         return when (brevbestilling.typeBrev) {
             TypeBrev.VEDTAK_AVSLAG, TypeBrev.VEDTAK_INNVILGELSE, TypeBrev.VEDTAK_ENDRING,
-            TypeBrev.KLAGE_AVVIST, TypeBrev.KLAGE_OPPRETTHOLDELSE, TypeBrev.KLAGE_TRUKKET -> {
+            TypeBrev.KLAGE_AVVIST, TypeBrev.KLAGE_OPPRETTHOLDELSE, TypeBrev.KLAGE_TRUKKET, TypeBrev.VEDTAK_11_18 -> {
 
                 val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(brevbestilling.behandlingId)
                 listOfNotNull(
@@ -44,7 +44,6 @@ class SignaturService(
 
             // Automatiske brev
             TypeBrev.VARSEL_OM_BESTILLING, TypeBrev.FORVALTNINGSMELDING -> emptyList()
-            TypeBrev.VEDTAK_VURDERES_FOR_UFØRETRYGD -> TODO()
         }.distinctBy { it.navIdent }
     }
 

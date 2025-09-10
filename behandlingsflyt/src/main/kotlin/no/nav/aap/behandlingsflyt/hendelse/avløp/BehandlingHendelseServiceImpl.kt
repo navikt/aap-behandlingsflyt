@@ -206,7 +206,7 @@ class BehandlingHendelseServiceImpl(
             KLAGE_TRUKKET -> TypeBrev.KLAGE_TRUKKET
             FORHÅNDSVARSEL_KLAGE_FORMKRAV -> TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV
             FORVALTNINGSMELDING -> TypeBrev.FORVALTNINGSMELDING
-            VEDTAK_VURDERES_FOR_UFØRETRYGD -> TODO()
+            VEDTAK_11_18 -> TypeBrev.VEDTAK_11_18
         }
     }
 

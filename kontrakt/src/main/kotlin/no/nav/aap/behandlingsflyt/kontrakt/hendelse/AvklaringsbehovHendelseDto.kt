@@ -21,6 +21,7 @@ public data class AvklaringsbehovHendelseDto(
 public enum class TypeBrev {
     VEDTAK_AVSLAG,
     VEDTAK_INNVILGELSE,
+    VEDTAK_11_18,
     VEDTAK_ENDRING,
     VARSEL_OM_BESTILLING,
     FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT,
