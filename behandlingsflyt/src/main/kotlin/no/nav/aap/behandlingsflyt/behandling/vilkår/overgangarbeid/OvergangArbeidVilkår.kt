@@ -16,7 +16,7 @@ import no.nav.aap.komponenter.type.Periode
 
 
 class OvergangArbeidVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<OvergangArbeidFaktagrunnlag> {
-    private val vilkår: Vilkår = vilkårsresultat.finnVilkår(Vilkårtype.OVERGANGARBEIDVILKÅRET)
+    private val vilkår: Vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGARBEIDVILKÅRET)
     override fun vurder(grunnlag: OvergangArbeidFaktagrunnlag) {
         val overgangArbeidVurderinger = grunnlag.vurderinger
 

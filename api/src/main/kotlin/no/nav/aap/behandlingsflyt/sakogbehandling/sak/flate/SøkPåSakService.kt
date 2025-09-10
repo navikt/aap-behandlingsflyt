@@ -10,7 +10,7 @@ import no.nav.aap.komponenter.repository.RepositoryProvider
 class SøkPåSakService(
     val repositoryProvider: RepositoryProvider
 ) {
-    fun søkEtterSak(søketekst: String): Sak? {
+    fun søkEtterSaker(søketekst: String): List<Sak> {
         val skalSøkePåSaksnummer = søketekst.length == 7
         val skalSøkePåIdent = søketekst.length == 11
 
@@ -19,23 +19,23 @@ class SøkPåSakService(
         } else if (skalSøkePåIdent) {
             søkPåPersonIdent(søketekst)
         } else {
-            null
+            emptyList()
         }
     }
 
-    private fun søkPåSaksnummer(saksnummer: Saksnummer): Sak? {
+    private fun søkPåSaksnummer(saksnummer: Saksnummer): List<Sak> {
         val sakRepository = repositoryProvider.provide<SakRepository>()
-        return sakRepository.hentHvisFinnes(
-            saksnummer = saksnummer)
+        val sak = sakRepository.hentHvisFinnes(saksnummer)
+        return listOfNotNull(sak)
     }
 
-    private fun søkPåPersonIdent(personIdent: String): Sak? {
+    private fun søkPåPersonIdent(personIdent: String): List<Sak> {
         val personRepository = repositoryProvider.provide<PersonRepository>()
         val sakRepository = repositoryProvider.provide<SakRepository>()
         val person = personRepository.finn(Ident(personIdent))
         if (person == null) {
-            return null
+            return emptyList()
         }
-        return sakRepository.finnSakerFor(person).firstOrNull()
+        return sakRepository.finnSakerFor(person)
     }
 }
