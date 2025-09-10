@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class KansellerRevurderingLøser(
@@ -27,11 +28,11 @@ class KansellerRevurderingLøser(
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.behandlingId())
 
-        require(behandling.typeBehandling() == TypeBehandling.Revurdering) {
-            "kan kun kansellere revurdering i en revurdering behandling"
+        if (behandling.typeBehandling() != TypeBehandling.Revurdering) {
+            throw UgyldigForespørselException("kan kun kansellere revurdering i en revurdering behandling")
         }
-        require(behandling.status() in listOf(Status.OPPRETTET, Status.UTREDES)) {
-            "kan kun kansellere revurdering som utredes"
+        if (behandling.status() !in listOf(Status.OPPRETTET, Status.UTREDES)) {
+            throw UgyldigForespørselException("kan kun kansellere revurdering som utredes")
         }
 
         kansellerRevurderingRepository.lagre(

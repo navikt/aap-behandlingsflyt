@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse.GrunnlagBeregning.InntektPerÅr
-import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
@@ -49,8 +48,7 @@ class BrevUtlederService(
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val underveisRepository: UnderveisRepository,
-    private val unleashGateway: UnleashGateway,
-    private val kansellerRevurderingService: KansellerRevurderingService
+    private val unleashGateway: UnleashGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -61,16 +59,15 @@ class BrevUtlederService(
         beregningVurderingRepository = repositoryProvider.provide(),
         tilkjentYtelseRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide(),
-        kansellerRevurderingService = KansellerRevurderingService(repositoryProvider)
+        unleashGateway = gatewayProvider.provide()
     )
 
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov? {
         val behandling = behandlingRepository.hent(behandlingId)
+        val resultat = resultatUtleder.utledResultat(behandlingId)
 
         when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> {
-                val resultat = resultatUtleder.utledResultat(behandlingId)
 
                 return when (resultat) {
                     Resultat.INNVILGELSE -> brevBehovInnvilgelse(behandling)
@@ -88,7 +85,7 @@ class BrevUtlederService(
                 ) {
                     return null
                 }
-                if (kansellerRevurderingService.revurderingErKansellert(behandlingId)) {
+                if (resultat == Resultat.KANSELLERT) {
                     return null
                 }
                 return VedtakEndring
