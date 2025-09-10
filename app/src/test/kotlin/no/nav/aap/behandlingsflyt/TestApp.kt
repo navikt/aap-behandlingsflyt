@@ -124,7 +124,6 @@ private fun genererBarn(dto: TestBarn): TestPerson {
     return TestPerson(
         identer = setOf(ident),
         fødselsdato = Fødselsdato(dto.fodselsdato),
-        yrkesskade = emptyList()
     )
 }
 
@@ -167,7 +166,10 @@ private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak
         TestPerson(
             identer = setOf(ident),
             fødselsdato = Fødselsdato(dto.fødselsdato),
-            yrkesskade = if (dto.yrkesskade) listOf(TestYrkesskade()) else emptyList(),
+            yrkesskade = if (dto.yrkesskade) listOf(
+                TestYrkesskade(),
+                TestYrkesskade(skadedato = null, saksreferanse = "ABCDE")
+            ) else emptyList(),
             uføre = dto.uføre?.let(::Prosent),
             barn = barn,
             institusjonsopphold = listOfNotNull(

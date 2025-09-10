@@ -41,6 +41,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentePåFr
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderFormkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKlageKontorLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKlageNayLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadeSakDto
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
@@ -96,7 +98,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.Samordn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.svarfraandreinstans.SvarFraAndreinstansKonsekvens
@@ -186,7 +187,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as Avklaringsb
 @Tag("motor")
 @ParameterizedClass
 @MethodSource("testData")
-class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
+class FlytOrkestratorTest(unleashGateway: KClass< UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
     companion object {
         @Suppress("unused")
         @JvmStatic
@@ -751,6 +752,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "Ikke årsakssammenheng",
                         relevanteSaker = emptyList(),
+                        relevanteYrkesskadeSaker = emptyList(),
                         andelAvNedsettelsen = null,
                         erÅrsakssammenheng = false
                     )
@@ -786,6 +788,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "Ikke årsakssammenheng",
                         relevanteSaker = emptyList(),
+                        relevanteYrkesskadeSaker = emptyList(),
                         andelAvNedsettelsen = null,
                         erÅrsakssammenheng = false
                     )
@@ -1010,6 +1013,12 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 yrkesskadesvurdering = YrkesskadevurderingDto(
                     begrunnelse = "Veldig relevante",
                     relevanteSaker = person.yrkesskade.map { it.saksreferanse },
+                    relevanteYrkesskadeSaker = person.yrkesskade.map {
+                        YrkesskadeSakDto(
+                            it.saksreferanse,
+                            null,
+                        )
+                    },
                     andelAvNedsettelsen = 50,
                     erÅrsakssammenheng = true
                 )
@@ -1594,6 +1603,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "",
                         relevanteSaker = emptyList(),
+                        relevanteYrkesskadeSaker = emptyList(),
                         andelAvNedsettelsen = null,
                         erÅrsakssammenheng = false
                     )
@@ -2518,15 +2528,13 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        var behandling = sendInnSøknad(
+        val behandling = sendInnSøknad(
             ident, periode, SøknadV0(
                 student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
             )
-        )
-
-        behandling = løsAvklaringsBehov(
-            behandling, AvklarOverstyrtLovvalgMedlemskapLøsning(
+        ).løsAvklaringsBehov(
+            AvklarOverstyrtLovvalgMedlemskapLøsning(
                 manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
                     LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", EØSLand.NOR),
                     MedlemskapVedSøknadsTidspunktDto("crazy medlemskap vurdering", true)
@@ -2734,7 +2742,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             )
 
             // Validér avklaring
-            assertThat(behandlingRepo.hent(behandlingId).aktivtSteg()).isEqualTo(StegType.START_BEHANDLING)
+            assertThat(behandlingRepo.hent(behandlingId).aktivtSteg()).isEqualTo(START_BEHANDLING)
         }
 
         motor.kjørJobber()
@@ -2960,7 +2968,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         dataSource.transaction { connection ->
             val behandlingRepo = BehandlingRepositoryImpl(connection)
-            assertThat(behandlingRepo.hent(revurdering.id).aktivtSteg()).isEqualTo(StegType.VURDER_RETTIGHETSPERIODE)
+            assertThat(behandlingRepo.hent(revurdering.id).aktivtSteg()).isEqualTo(VURDER_RETTIGHETSPERIODE)
 
             assertThat(behandlingRepo.hentStegHistorikk(revurdering.id).map { tilstand -> tilstand.steg() }
                 .distinct()).containsExactlyElementsOf(

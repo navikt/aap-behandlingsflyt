@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRe
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -141,14 +142,14 @@ class BeregningAvklarFaktaSteg private constructor(
     }
 
     private fun harIkkeFastsattBeløpForAlle(
-        relevanteSaker: List<String>,
+        relevanteSaker: List<YrkesskadeSak>,
         beregningGrunnlag: BeregningGrunnlag?
     ): Boolean {
         val vurderteSaker = beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger.orEmpty()
         if (relevanteSaker.isEmpty()) {
             return false
         }
-        return !relevanteSaker.all { sak -> vurderteSaker.any { it.referanse == sak } }
+        return !relevanteSaker.all { sak -> vurderteSaker.any { it.referanse == sak.referanse } }
     }
 
     companion object : FlytSteg {

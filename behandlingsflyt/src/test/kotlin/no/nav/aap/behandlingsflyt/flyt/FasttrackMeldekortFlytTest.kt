@@ -28,7 +28,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackAktivitetsplikt
 import no.nav.aap.behandlingsflyt.test.august
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -41,11 +40,10 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import java.time.LocalDate
 import java.time.LocalDateTime
-import kotlin.reflect.KClass
 import kotlin.test.Test
 
 class FasttrackMeldekortFlytTest :
-    AbstraktFlytOrkestratorTest(FakeUnleashFasttrackAktivitetsplikt::class as KClass<UnleashGateway>) {
+    AbstraktFlytOrkestratorTest(FakeUnleashFasttrackAktivitetsplikt::class) {
 
     @Test
     fun `Meldekortgrunnlag skal flettes inn i åpen behandling før UnderveisSteg`() {
