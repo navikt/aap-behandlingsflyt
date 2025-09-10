@@ -182,7 +182,6 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
         ),
         trekk = Dagsatser(0),
         brukerAvKvoter = emptySet(),
-        bruddAktivitetspliktId = null,
         meldepliktStatus = meldepliktStatus,
         id = UnderveisperiodeId(id.also { id += 1 }),
     )

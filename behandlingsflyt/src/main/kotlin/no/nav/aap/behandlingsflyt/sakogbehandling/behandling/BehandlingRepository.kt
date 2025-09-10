@@ -17,7 +17,7 @@ interface BehandlingRepository : Repository {
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
     ): Behandling
 
-    fun finnSisteBehandlingFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): Behandling?
+    fun finnSisteOpprettedeBehandlingFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): Behandling?
 
     fun hentStegHistorikk(behandlingId: BehandlingId): List<StegTilstand>
 

@@ -51,13 +51,13 @@ fun NormalOpenAPIRoute.meldepliktOverstyringGrunnlagApi(
 
                     val gjeldendeVedtatteVurdertePerioder = grunnlag
                         ?.vurderinger
-                        ?.filter { it.vurdertIBehandling.referanse != behandling.referanse }
+                        ?.filter { it.vurdertIBehandling != behandling.referanse }
                         ?.tilTidslinje()
                         ?.tilVurderingResponse(ansattInfoService) ?: emptyList()
 
                     val overstyringerFraDenneBehandlingen = grunnlag
                         ?.vurderinger
-                        ?.filter { it.vurdertIBehandling.referanse == behandling.referanse }
+                        ?.filter { it.vurdertIBehandling == behandling.referanse }
                         ?.tilTidslinje()
                         ?.tilVurderingResponse(ansattInfoService) ?: emptyList()
 

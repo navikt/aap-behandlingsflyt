@@ -113,7 +113,7 @@ class ResultatUtlederTest {
         rettighetsType = RettighetsType.BISTANDSBEHOV,
         avslagsårsak = when (utfall) {
             Utfall.OPPFYLT -> null
-            Utfall.IKKE_OPPFYLT -> UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT
+            Utfall.IKKE_OPPFYLT -> UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS
             else -> null
         },
         grenseverdi = Prosent.`100_PROSENT`,
@@ -126,7 +126,6 @@ class ResultatUtlederTest {
         ),
         trekk = Dagsatser(0),
         brukerAvKvoter = emptySet(),
-        bruddAktivitetspliktId = null,
         institusjonsoppholdReduksjon = Prosent.`0_PROSENT`,
         meldepliktStatus = MeldepliktStatus.MELDT_SEG,
     )

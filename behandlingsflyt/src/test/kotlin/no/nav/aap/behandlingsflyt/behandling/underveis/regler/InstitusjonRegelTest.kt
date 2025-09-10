@@ -43,8 +43,6 @@ class InstitusjonRegelTest {
             RettighetsType.BISTANDSBEHOV,
             MeldepliktVurdering.Fritak,
             null,
-            null,
-            null,
             ArbeidsGradering(
                 totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),
                 andelArbeid = Prosent(0),

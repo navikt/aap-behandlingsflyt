@@ -37,7 +37,7 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::
     @Test
     fun `opprette oppfølgingsbehandling`() {
         val sak = happyCaseFørstegangsbehandling()
-        val førstegangsbehandling = hentNyesteBehandlingForSak(sak.id)
+        val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
         val ident = sak.person.aktivIdent()
         val periode = sak.rettighetsperiode
@@ -85,7 +85,7 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::
             }
 
         val opprettetBehandling =
-            hentNyesteBehandlingForSak(
+            hentSisteOpprettedeBehandlingForSak(
                 oppfølgingsbehandling.sakId,
                 listOf(TypeBehandling.Revurdering)
             )
@@ -102,7 +102,7 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::
     fun `Opprett oppfølgningsoppgave med opprinnelse`() {
 
         val sak = happyCaseFørstegangsbehandling()
-        val førstegangsbehandling = hentNyesteBehandlingForSak(sak.id)
+        val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
         val ident = sak.person.aktivIdent()
         val periode = sak.rettighetsperiode
