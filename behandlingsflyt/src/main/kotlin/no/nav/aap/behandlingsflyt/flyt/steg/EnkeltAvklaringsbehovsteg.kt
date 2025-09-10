@@ -57,7 +57,7 @@ fun oppdaterAvklaringsbehov(
      *
      * - Du burde ikke rydde opp for andre steg eller avklaringsbehov.
      * - Hvis register-data og menneskelige vurderinger er lagret i samme grunnlag, så pass
-     *   på at du ikke tilbakestill register-dataen!
+     *   på at du ikke tilbakestiller register-dataen!
       */
     tilbakestillGrunnlag: () -> Unit,
 ) {
