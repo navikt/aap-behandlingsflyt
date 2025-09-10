@@ -367,8 +367,8 @@ fun NormalOpenAPIRoute.saksApi(
             }
         }
 
-        @Suppress("UnauthorizedGet") // Søkeresultat skal vises uansett tilgang
-        route("/sok/{soketekst}").get<SøkDto, SøkPåSakDTO> { søkDto ->
+        @Suppress("UnauthorizedPost") // Søkeresultat skal vises uansett tilgang
+        route("/sok").post<Unit, SøkPåSakDTO, SøkDto> { _, søkDto ->
             val søketekst = søkDto.søketekst
             val skalSøkePåSaksnummer = søketekst.length == 7
             val skalSøkePåIdent = søketekst.length == 11
