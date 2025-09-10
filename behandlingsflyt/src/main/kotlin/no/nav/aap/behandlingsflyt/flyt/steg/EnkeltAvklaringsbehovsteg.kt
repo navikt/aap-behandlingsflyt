@@ -29,7 +29,7 @@ fun oppdaterAvklaringsbehov(
     /** Skal vedtaket inneholde en menneskelig vurdering av [definisjon]?
      *
      * Det er viktig å svare på det mer generelle spørsmålet *om vedtaket*
-     * skal inneholde en mennesklig vurdering. Ikke om nå-tilstanden av behandlingen
+     * skal inneholde en menneskelig vurdering. Ikke om nå-tilstanden av behandlingen
      * har behov for en menneskelig vurdering. Grunnen er at det vil være behov for totrinnskontroll hvis vedtaket inneholder
      * en menneskelige vurderingen, selv om siste gjennomkjøring av steget
      * ikke løftet avklaringsbehovet.
