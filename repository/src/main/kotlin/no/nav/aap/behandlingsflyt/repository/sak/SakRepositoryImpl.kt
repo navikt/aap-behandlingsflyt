@@ -160,6 +160,17 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         }
     }
 
+    override fun hentHvisFinnes(saksnummer: Saksnummer): Sak? {
+        return connection.queryFirstOrNull("SELECT * FROM SAK WHERE saksnummer = ?") {
+            setParams {
+                setString(1, saksnummer.toString())
+            }
+            setRowMapper { row ->
+                mapSak(row)
+            }
+        }
+    }
+
     override fun finnPersonId(sakId: SakId): PersonId {
         return connection.queryFirst(
             """SELECT person_id FROM SAK WHERE id = ?"""

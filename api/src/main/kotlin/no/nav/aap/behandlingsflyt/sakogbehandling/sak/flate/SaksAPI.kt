@@ -377,6 +377,36 @@ fun NormalOpenAPIRoute.saksApi(
             }
         }
 
+        @Suppress("UnauthorizedPost") // Søkeresultat skal vises uansett tilgang
+        route("/sok").post<Unit, SøkPåSakDTO, SøkDto> { _, søkDto ->
+            val pdlGateway = gatewayProvider.provide<PersoninfoGateway>()
+            val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
+
+            val sak = dataSource.transaction(readOnly = true) { connection ->
+                val repositoryProvider = repositoryRegistry.provider(connection)
+                SøkPåSakService(repositoryProvider).søkEtterSak(søkDto.søketekst)
+            }
+
+            if (sak != null) {
+                val aktivIdent = sak.person.aktivIdent()
+                respond(
+                    SøkPåSakDTO(
+                        ident = aktivIdent.identifikator,
+                        navn = pdlGateway.hentPersoninfoForIdent(aktivIdent, token()).fulltNavn(),
+                        saksnummer = sak.saksnummer,
+                        opprettetTidspunkt = sak.opprettetTidspunkt.toLocalDate(),
+                        harTilgang = tilgangGateway.sjekkTilgangTilSak(
+                            saksnummer = sak.saksnummer,
+                            token(),
+                            Operasjon.SE
+                        )
+                    )
+                )
+            } else {
+                throw VerdiIkkeFunnetException("Fant ingen saker knyttet til søketeksten.")
+            }
+        }
+
         route("/{saksnummer}/finnBehandlingerAvType") {
             authorizedPost<SaksnummerParameter, List<BehandlingAvTypeDTO>, TypeBehandling>(
                 routeConfig = AuthorizationMachineToMachineConfig(
