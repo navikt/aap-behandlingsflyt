@@ -16,7 +16,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     SendForvaltningsmelding,
     SosialHjelpFlereKontorer,
     BrevBeregningsgrunnlag,
-    BrevVurderesForUføretrygd,
+    NyBrevtype11_18,
     Aktivitetsplikt11_7,
     TilgangssjekkSettPaaVent,
     OverforingsdatoNullForAvregning,

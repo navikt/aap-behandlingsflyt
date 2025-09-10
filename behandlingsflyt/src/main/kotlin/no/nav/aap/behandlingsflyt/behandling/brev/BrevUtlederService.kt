@@ -77,7 +77,7 @@ class BrevUtlederService(
                             .orEmpty()
                             .any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
                         if (vurderesForUføretrygd &&
-                            unleashGateway.isEnabled(BehandlingsflytFeature.BrevVurderesForUføretrygd)) {
+                            unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18)) {
                             VurderesForUføretrygd
                         } else {
                             brevBehovInnvilgelse(behandling)
