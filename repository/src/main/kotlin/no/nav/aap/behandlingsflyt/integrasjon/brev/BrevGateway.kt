@@ -231,6 +231,7 @@ class BrevGateway : BrevbestillingGateway {
         TypeBrev.KLAGE_TRUKKET -> Brevtype.KLAGE_TRUKKET
         TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV -> Brevtype.FORHÅNDSVARSEL_KLAGE_FORMKRAV
         TypeBrev.FORVALTNINGSMELDING -> Brevtype.FORVALTNINGSMELDING
+        TypeBrev.VEDTAK_VURDERES_FOR_UFØRETRYGD -> TODO()
     }
 
     private fun mapFaktagrunnlag(brevBehov: BrevBehov): Set<Faktagrunnlag> {

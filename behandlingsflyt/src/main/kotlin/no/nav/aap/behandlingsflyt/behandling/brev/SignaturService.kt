@@ -44,6 +44,7 @@ class SignaturService(
 
             // Automatiske brev
             TypeBrev.VARSEL_OM_BESTILLING, TypeBrev.FORVALTNINGSMELDING -> emptyList()
+            TypeBrev.VEDTAK_VURDERES_FOR_UFØRETRYGD -> TODO()
         }.distinctBy { it.navIdent }
     }
 

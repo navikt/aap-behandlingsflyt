@@ -14,16 +14,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSet
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_VURDERING_AV_ROL
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.FORVALTNINGSMELDING
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.KLAGE_AVVIST
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.KLAGE_OPPRETTHOLDELSE
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.KLAGE_TRUKKET
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VARSEL_OM_BESTILLING
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_AVSLAG
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_ENDRING
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_INNVILGELSE
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
@@ -215,6 +206,7 @@ class BehandlingHendelseServiceImpl(
             KLAGE_TRUKKET -> TypeBrev.KLAGE_TRUKKET
             FORHÅNDSVARSEL_KLAGE_FORMKRAV -> TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV
             FORVALTNINGSMELDING -> TypeBrev.FORVALTNINGSMELDING
+            VEDTAK_VURDERES_FOR_UFØRETRYGD -> TODO()
         }
     }
 
