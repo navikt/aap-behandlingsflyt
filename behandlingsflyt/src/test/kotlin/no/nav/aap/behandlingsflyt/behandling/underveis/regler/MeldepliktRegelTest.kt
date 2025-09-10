@@ -2,9 +2,12 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType.BISTANDSBEHOV
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktOverstyringStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRimeligGrunnGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.RimeligGrunnVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktVurderingPeriode
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
@@ -1061,20 +1064,19 @@ Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
         )
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
-            meldepliktRimeligGrunnGrunnlag = MeldepliktRimeligGrunnGrunnlag(
+            overstyringMeldepliktGrunnlag = OverstyringMeldepliktGrunnlag(
                 listOf(
-                    RimeligGrunnVurdering(
-                        harRimeligGrunn = true,
-                        fraDato = 4 mai 2020,
-                        begrunnelse = "kan ikke",
+                    OverstyringMeldepliktVurdering(
+                        perioder = listOf(
+                            OverstyringMeldepliktVurderingPeriode(
+                                fom = 4 mai 2020,
+                                tom = 17 mai 2020,
+                                begrunnelse = "kan ikke",
+                                meldepliktOverstyringStatus = MeldepliktOverstyringStatus.RIMELIG_GRUNN
+                            )
+                        ),
                         vurdertAv = "saksbehandler",
-                        opprettetTid = rettighetsperiode.fom.atStartOfDay(),
-                    ),
-                    RimeligGrunnVurdering(
-                        harRimeligGrunn = false,
-                        fraDato = 18 mai 2020,
-                        begrunnelse = "kan",
-                        vurdertAv = "saksbehandler",
+                        vurdertIBehandling = BehandlingReferanse(),
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
                     )
                 )
@@ -1093,7 +1095,7 @@ Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
             Forventer(
                 fom = 4 mai 2020,
                 tom = 17 mai 2020,
-                vurdering = MeldepliktVurdering.RimeligGrunn,
+                vurdering = MeldepliktVurdering.RimeligGrunnOverstyring,
             ),
             Forventer(
                 fom = 18 mai 2020,

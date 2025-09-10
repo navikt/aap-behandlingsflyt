@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
-import no.nav.aap.meldekort.kontrakt.Periode
 import java.time.LocalDateTime
 
 class BehandlingRepositoryImpl(private val connection: DBConnection) : BehandlingRepository {
@@ -84,7 +83,11 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         return hent(BehandlingId(behandlingId))
     }
 
-    override fun finnSisteBehandlingFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): Behandling? {
+    /**
+     * Denne må brukes med omhu, da siste opprettede behandling ikke nødvendigvis er siste behandling
+     * i den lenkede listen av behandlinger. Ref. fasttrack/atomære behandlinger
+     */
+    override fun finnSisteOpprettedeBehandlingFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): Behandling? {
         val query = """
             SELECT * FROM BEHANDLING WHERE sak_id = ? AND type = ANY(?::text[]) ORDER BY opprettet_tid DESC LIMIT 1
             """.trimIndent()

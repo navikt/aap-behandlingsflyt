@@ -29,3 +29,7 @@ class StudentGrunnlag(
 fun StudentGrunnlag?.vilkårIkkeOppfylt(): Boolean {
     return this?.studentvurdering == null || !studentvurdering.erOppfylt()
 }
+
+fun StudentGrunnlag?.søkerOppgirStudentstatus(): Boolean {
+    return this?.oppgittStudent?.erStudent() == true
+}

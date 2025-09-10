@@ -107,9 +107,7 @@ class VilkårsresultatTest {
             val førstePeriode = Periode(dagensDato.minusDays(5), dagensDato)
             v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
-                    førstePeriode,
-                    utfall = Utfall.IKKE_RELEVANT,
-                    begrunnelse = null
+                    førstePeriode, utfall = Utfall.IKKE_RELEVANT, begrunnelse = null
                 )
             )
             v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
@@ -140,8 +138,7 @@ class VilkårsresultatTest {
 
             val res = v.rettighetstypeTidslinje()
             assertTidslinje(
-                res,
-                førstePeriode to {
+                res, førstePeriode to {
                     assertThat(it).`as`(dagensDato.toString()).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
                 },
 
@@ -158,9 +155,7 @@ class VilkårsresultatTest {
             val nå = LocalDate.now()
             v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
-                    Periode(nå.minusDays(5), nå.plusDays(15)),
-                    utfall = Utfall.OPPFYLT,
-                    begrunnelse = null
+                    Periode(nå.minusDays(5), nå.plusDays(15)), utfall = Utfall.OPPFYLT, begrunnelse = null
                 )
             )
             v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
@@ -192,16 +187,14 @@ class VilkårsresultatTest {
             // Kun sykepengererstatning først
             assertThat(res.segmenter().first().periode).isEqualTo(
                 Periode(
-                    nå.minusDays(5),
-                    nå.minusDays(3)
+                    nå.minusDays(5), nå.minusDays(3)
                 )
             )
             // Student-hjemmel får prioritet
             assertThat(res.segmenter().toList()[1].verdi).isEqualTo(RettighetsType.BISTANDSBEHOV)
             assertThat(res.segmenter().toList()[1].periode).isEqualTo(
                 Periode(
-                    nå.plusDays(1),
-                    nå.plusDays(15)
+                    nå.plusDays(1), nå.plusDays(15)
                 )
             )
         }
@@ -237,9 +230,49 @@ class VilkårsresultatTest {
             )
             v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
-                    andrePeriode,
-                    utfall = Utfall.OPPFYLT,
+                    andrePeriode, utfall = Utfall.OPPFYLT, begrunnelse = null
+                )
+            )
+
+            val res = v.rettighetstypeTidslinje().komprimer()
+            assertTidslinje(
+                res, Periode(nå, sykepengerPeriode) to {
+                    assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
+                },
+
+                andrePeriode to {
+                    assertThat(it).isEqualTo(RettighetsType.BISTANDSBEHOV)
+                }
+            )
+        }
+
+
+        @Test
+        fun `om 11-5 ikke er oppfylt, kan man likevel få innvilgelse etter 11-17`() {
+            val v = tomVurdering()
+            val nå = LocalDate.now()
+
+            val sykepengerPeriode = nå.plusDays(30)
+            v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(nå, sykepengerPeriode),
+                    utfall = Utfall.IKKE_RELEVANT,
                     begrunnelse = null
+                )
+            )
+            v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(nå, sykepengerPeriode),
+                    utfall = Utfall.IKKE_RELEVANT,
+                    begrunnelse = null,
+                )
+            )
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGARBEIDVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(nå, sykepengerPeriode),
+                    utfall = Utfall.OPPFYLT,
+                    innvilgelsesårsak = Innvilgelsesårsak.ARBEIDSSØKER,
+                    begrunnelse = null,
                 )
             )
 
@@ -247,12 +280,47 @@ class VilkårsresultatTest {
             assertTidslinje(
                 res,
                 Periode(nå, sykepengerPeriode) to {
-                    assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
+                    assertThat(it).isEqualTo(RettighetsType.ARBEIDSSØKER)
                 },
+            )
+        }
 
-                andrePeriode to {
-                    assertThat(it).isEqualTo(RettighetsType.BISTANDSBEHOV)
-                }
+        @Test
+        fun `om 11-5 ikke er oppfylt, kan man likevel få innvilgelse etter 11-18`() {
+            val v = tomVurdering()
+            val nå = LocalDate.now()
+
+            val sykepengerPeriode = nå.plusDays(30)
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGUFØREVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(nå, sykepengerPeriode),
+                    utfall = Utfall.OPPFYLT,
+                    begrunnelse = null,
+                    innvilgelsesårsak = Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD
+                )
+            )
+
+            v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(nå, sykepengerPeriode),
+                    utfall = Utfall.IKKE_RELEVANT,
+                    begrunnelse = null,
+                )
+            )
+            v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(nå, sykepengerPeriode),
+                    utfall = Utfall.OPPFYLT,
+                    begrunnelse = null,
+                )
+            )
+
+            val res = v.rettighetstypeTidslinje().komprimer()
+            assertTidslinje(
+                res,
+                Periode(nå, sykepengerPeriode) to {
+                    assertThat(it).isEqualTo(RettighetsType.VURDERES_FOR_UFØRETRYGD)
+                },
             )
         }
     }

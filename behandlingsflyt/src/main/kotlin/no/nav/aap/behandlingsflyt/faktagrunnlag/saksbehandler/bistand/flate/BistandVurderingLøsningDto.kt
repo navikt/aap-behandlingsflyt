@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.komponenter.miljo.Miljø
 import java.time.LocalDate
 
 data class BistandVurderingLøsningDto(
@@ -20,25 +21,18 @@ data class BistandVurderingLøsningDto(
         erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
         erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
         vurderingenGjelderFra = vurderingenGjelderFra,
-        overgangBegrunnelse = overgangBegrunnelse,
         skalVurdereAapIOvergangTilUføre = skalVurdereAapIOvergangTilUføre,
+        overgangBegrunnelse = overgangBegrunnelse,
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
         vurdertAv = bruker.ident
     )
 
     fun valider() {
-        val gyldigAnnenOppfølging =
-            (erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak) xor (erBehovForAnnenOppfølging != null)
-        if (!gyldigAnnenOppfølging) throw UgyldigForespørselException(
-            "erBehovForAnnenOppfølging kan bare bli besvart hvis erBehovForAktivBehandling og erBehovForArbeidsrettetTiltak er besvart med nei"
-        )
-
-        val harOppfølgingsbehov =
-            (erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak || erBehovForAnnenOppfølging == true)
-        val erGydlig = (harOppfølgingsbehov) xor (skalVurdereAapIOvergangTilUføre != null)
-        if (!erGydlig) {
-            throw UgyldigForespørselException(
-                "skalVurdereAapIOvergangTilUføre skal besvares hvis og bare hvis oppfølgingsbehov er vurdert til nei"
+        if (Miljø.erProd()) {
+            val gyldigAnnenOppfølging =
+                (erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak) xor (erBehovForAnnenOppfølging != null)
+            if (!gyldigAnnenOppfølging) throw UgyldigForespørselException(
+                "erBehovForAnnenOppfølging kan bare bli besvart hvis erBehovForAktivBehandling og erBehovForArbeidsrettetTiltak er besvart med nei"
             )
         }
     }

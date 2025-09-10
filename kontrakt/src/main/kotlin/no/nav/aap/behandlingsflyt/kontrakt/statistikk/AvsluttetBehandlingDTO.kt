@@ -77,6 +77,8 @@ public enum class Vilkårtype {
     MEDLEMSKAP,
     LOVVALG,
     GRUNNLAGET,
+    OVERGANGARBEIDVILKÅRET,
+    OVERGANGUFØREVILKÅRET,
 
     @Deprecated("Skal fases ut.")
     SYKEPENGEERSTATNING,

@@ -14,19 +14,19 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRimeligGrunnGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRimeligGrunnRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -41,11 +41,11 @@ class UnderveisService(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val meldekortRepository: MeldekortRepository,
     private val underveisRepository: UnderveisRepository,
-    private val aktivitetspliktRepository: AktivitetspliktRepository,
+    private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
     private val etAnnetStedUtlederService: EtAnnetStedUtlederService,
     private val arbeidsevneRepository: ArbeidsevneRepository,
     private val meldepliktRepository: MeldepliktRepository,
-    private val meldepliktRimeligGrunnRepository: MeldepliktRimeligGrunnRepository,
+    private val overstyringMeldepliktRepository: OverstyringMeldepliktRepository,
     private val meldeperiodeRepository: MeldeperiodeRepository,
     private val vedtakService: VedtakService,
 ) {
@@ -54,12 +54,12 @@ class UnderveisService(
         vilkårsresultatRepository = repositoryProvider.provide(),
         meldekortRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
-        aktivitetspliktRepository = repositoryProvider.provide(),
+        aktivitetsplikt11_7Repository = repositoryProvider.provide(),
         etAnnetStedUtlederService = EtAnnetStedUtlederService(repositoryProvider),
         arbeidsevneRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
         meldeperiodeRepository = repositoryProvider.provide(),
-        meldepliktRimeligGrunnRepository = repositoryProvider.provide(),
+        overstyringMeldepliktRepository = repositoryProvider.provide(),
         vedtakService = VedtakService(repositoryProvider),
     )
 
@@ -115,7 +115,6 @@ class UnderveisService(
                         arbeidsgradering = it.verdi.arbeidsgradering(),
                         trekk = if (it.verdi.skalReduseresDagsatser()) Dagsatser(1) else Dagsatser(0),
                         brukerAvKvoter = it.verdi.varighetVurdering?.brukerAvKvoter.orEmpty(),
-                        bruddAktivitetspliktId = it.verdi.aktivitetspliktVurdering?.dokument?.metadata?.id,
                         institusjonsoppholdReduksjon = if (it.verdi.institusjonVurdering?.skalReduseres == true) Prosent.`50_PROSENT` else Prosent.`0_PROSENT`,
                         meldepliktStatus = it.verdi.meldepliktVurdering?.status,
                     )
@@ -143,8 +142,8 @@ class UnderveisService(
 
         val etAnnetSted = MapInstitusjonoppholdTilRegel.map(utlederResultat)
 
-        val aktivitetspliktGrunnlag = aktivitetspliktRepository.hentGrunnlagHvisEksisterer(behandlingId)
-            ?: AktivitetspliktGrunnlag(bruddene = setOf())
+        val aktivitetsplikt11_7Grunnlag = aktivitetsplikt11_7Repository.hentHvisEksisterer(behandlingId)
+            ?: Aktivitetsplikt11_7Grunnlag(vurderinger = emptyList())
 
         val arbeidsevneGrunnlag = arbeidsevneRepository.hentHvisEksisterer(behandlingId)
             ?: ArbeidsevneGrunnlag(vurderinger = emptyList())
@@ -152,8 +151,8 @@ class UnderveisService(
         val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandlingId)
             ?: MeldepliktGrunnlag(vurderinger = emptyList())
 
-        val meldepliktRimeligGrunnGrunnlag = meldepliktRimeligGrunnRepository.hentHvisEksisterer(behandlingId)
-            ?: MeldepliktRimeligGrunnGrunnlag(vurderinger = emptyList())
+        val overstyringMeldepliktGrunnlag = overstyringMeldepliktRepository.hentHvisEksisterer(behandlingId)
+            ?: OverstyringMeldepliktGrunnlag(vurderinger = emptyList())
 
         val meldeperioder = meldeperiodeRepository.hent(behandlingId)
 
@@ -166,11 +165,11 @@ class UnderveisService(
             meldekort = meldekort,
             innsendingsTidspunkt = innsendingsTidspunkt,
             kvoter = kvote,
-            aktivitetspliktGrunnlag = aktivitetspliktGrunnlag,
+            aktivitetsplikt11_7Grunnlag = aktivitetsplikt11_7Grunnlag,
             etAnnetSted = etAnnetSted,
             arbeidsevneGrunnlag = arbeidsevneGrunnlag,
             meldepliktGrunnlag = meldepliktGrunnlag,
-            meldepliktRimeligGrunnGrunnlag = meldepliktRimeligGrunnGrunnlag,
+            overstyringMeldepliktGrunnlag = overstyringMeldepliktGrunnlag,
             meldeperioder = meldeperioder,
             vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
         )

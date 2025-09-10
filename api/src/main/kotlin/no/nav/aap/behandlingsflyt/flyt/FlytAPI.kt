@@ -555,6 +555,12 @@ private fun hentUtRelevantVilkårForSteg(vilkårsresultat: Vilkårsresultat, ste
     if (stegType == StegType.VURDER_MEDLEMSKAP) {
         vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.MEDLEMSKAP)
     }
+    if (stegType == StegType.OVERGANG_ARBEID) {
+        vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.OVERGANGARBEIDVILKÅRET)
+    }
+    if (stegType == StegType.OVERGANG_UFORE) {
+        vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)
+    }
     if (vilkår == null) {
         return null
     }

@@ -3,7 +3,8 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.RimeligGrunnVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktOverstyringStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktData
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
@@ -21,7 +22,7 @@ class MeldepliktRegel(
 ) : UnderveisRegel {
     data class MeldepliktData(
         val fritaksvurdering: Fritaksvurdering.FritaksvurderingData? = null,
-        val rimeligGrunnVurdering: RimeligGrunnVurdering.RimeligGrunnVurderingData? = null,
+        val overstyringMeldeplikt: OverstyringMeldepliktData? = null,
         val meldekort: JournalpostId? = null,
         val førVedtak: Boolean = false,
         val utenRett: Boolean = false,
@@ -31,7 +32,7 @@ class MeldepliktRegel(
             fun merge(left: MeldepliktData?, right: MeldepliktData?): MeldepliktData {
                 return MeldepliktData(
                     fritaksvurdering = left?.fritaksvurdering ?: right?.fritaksvurdering,
-                    rimeligGrunnVurdering = left?.rimeligGrunnVurdering ?: right?.rimeligGrunnVurdering,
+                    overstyringMeldeplikt = left?.overstyringMeldeplikt ?: right?.overstyringMeldeplikt,
                     meldekort = left?.meldekort ?: right?.meldekort,
                     førVedtak = (left?.førVedtak ?: false) || (right?.førVedtak ?: false),
                     utenRett = (left?.utenRett ?: false) || (right?.utenRett ?: false),
@@ -52,7 +53,7 @@ class MeldepliktRegel(
             Tidslinje(input.rettighetsperiode, MeldepliktData())
                 .outerJoin(meldekortTidslinje(input), MeldepliktData.Companion::merge)
                 .outerJoin(fritaksvurderingTidslinje(input), MeldepliktData.Companion::merge)
-                .outerJoin(rimeligGrunnVurderingTidslinje(input), MeldepliktData.Companion::merge)
+                .outerJoin(overstyringMeldepliktVurderingTidslinje(input), MeldepliktData.Companion::merge)
                 .outerJoin(førVedtakTidslinje(input), MeldepliktData.Companion::merge)
                 .outerJoin(førsteDagMedRettTidslinje(resultat), MeldepliktData.Companion::merge)
                 .outerJoin(utenRettTidslinje(resultat), MeldepliktData.Companion::merge)
@@ -136,8 +137,10 @@ class MeldepliktRegel(
         return input.meldepliktGrunnlag.tilTidslinje().mapValue { MeldepliktData(fritaksvurdering = it) }
     }
     
-    private fun rimeligGrunnVurderingTidslinje(input: UnderveisInput): Tidslinje<MeldepliktData> {
-        return input.meldepliktRimeligGrunnGrunnlag.tilTidslinje().mapValue { MeldepliktData(rimeligGrunnVurdering = it) }
+    private fun overstyringMeldepliktVurderingTidslinje(input: UnderveisInput): Tidslinje<MeldepliktData> {
+        return input.overstyringMeldepliktGrunnlag.tilTidslinje().mapValue {
+            MeldepliktData(overstyringMeldeplikt = it)
+        }
     }
 
     private fun førVedtakTidslinje(input: UnderveisInput): Tidslinje<MeldepliktData> {
@@ -193,8 +196,10 @@ class MeldepliktRegel(
                 )
 
                 it.verdi.fritaksvurdering?.harFritak == true -> Segment(it.periode, MeldepliktVurdering.Fritak)
-                it.verdi.rimeligGrunnVurdering?.harRimeligGrunn == true ->
-                    Segment(it.periode, MeldepliktVurdering.RimeligGrunn)
+                it.verdi.overstyringMeldeplikt?.meldepliktOverstyringStatus == MeldepliktOverstyringStatus.RIMELIG_GRUNN ->
+                    Segment(it.periode, MeldepliktVurdering.RimeligGrunnOverstyring)
+                it.verdi.overstyringMeldeplikt?.meldepliktOverstyringStatus == MeldepliktOverstyringStatus.HAR_MELDT_SEG ->
+                    Segment(it.periode, MeldepliktVurdering.MeldtSegOverstyring)
                 innsending != null -> Segment(it.periode, MeldepliktVurdering.MeldtSeg(innsending))
                 else -> null
             }

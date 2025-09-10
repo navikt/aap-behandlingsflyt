@@ -34,7 +34,9 @@ public const val AVKLAR_SAMORDNING_ANDRE_STATLIGE_YTELSER_KODE: String = "5027"
 public const val VURDER_TREKK_AV_SØKNAD_KODE: String = "5028"
 public const val VURDER_RETTIGHETSPERIODE_KODE: String = "5029"
 public const val AVKLAR_SAMORDNING_ARBEIDSGIVER_KODE: String = "5030"
-public const val KANSELLER_REVURDERING_KODE: String = "5031"
+public const val AVKLAR_OVERGANG_UFORE: String = "5031"
+public const val AVKLAR_OVERGANG_ARBEID: String = "5032"
+public const val KANSELLER_REVURDERING_KODE: String = "5033"
 public const val SKRIV_BREV_KODE: String = "5050"
 public const val SKRIV_VEDTAKSBREV_KODE: String = "5051"
 public const val SKRIV_FORHÅNDSVARSEL_AKTIVITETSPLIKT_BREV_KODE: String = "5052"
@@ -223,9 +225,19 @@ public enum class AvklaringsbehovKode {
     `5030`,
 
     /**
-     * [KANSELLER_REVURDERING_KODE]
+     * [AVKLAR_OVERGANG_UFORE]
      */
     `5031`,
+
+    /**
+     * [AVKLAR_OVERGANG_ARBEID]
+     */
+    `5032`,
+
+    /**
+     * [KANSELLER_REVURDERING_KODE]
+     */
+    `5033`,
 
     /**
      * [SKRIV_BREV_KODE]

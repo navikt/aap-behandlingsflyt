@@ -9,6 +9,9 @@ data class BeregningYrkeskaderBeløpVurdering(
     val vurderinger: List<YrkesskadeBeløpVurdering>
 )
 
+/**
+ * Referanse svarer til saksnummeret til yrkesskaden fra registeret.
+ */
 data class YrkesskadeBeløpVurdering(
     val antattÅrligInntekt: Beløp,
     val referanse: String,

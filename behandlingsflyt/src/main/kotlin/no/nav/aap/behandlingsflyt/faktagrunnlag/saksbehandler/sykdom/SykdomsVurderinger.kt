@@ -70,21 +70,22 @@ data class Sykdomsvurdering(
     }
 }
 
+/**
+ * @param relevanteSaker Liste over saksnumre til yrkesskadesaker fra register.
+ */
 data class Yrkesskadevurdering(
     val id: Long? = null,
     val begrunnelse: String,
-    val relevanteSaker: List<String>,
+    val relevanteSaker: List<YrkesskadeSak>,
     val erÅrsakssammenheng: Boolean,
     val andelAvNedsettelsen: Prosent?,
     val vurdertAv: String,
     val vurdertTidspunkt: LocalDateTime? = null,
 )
 
-data class YrkesskadevurderingDto(
-    val begrunnelse: String,
-    val relevanteSaker: List<String>,
-    val andelAvNedsettelsen: Int?,
-    val erÅrsakssammenheng: Boolean
+data class YrkesskadeSak(
+    val referanse: String,
+    val manuellYrkesskadeDato: LocalDate?,
 )
 
 

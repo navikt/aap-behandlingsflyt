@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.repository
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.forretningsflyt.gjenopptak.GjenopptakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
@@ -51,7 +50,9 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeids
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRimeligGrunnRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.overganguføre.OvergangUføreRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.overganguføre.OvergangArbeidRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.rettighetsperiode.VurderRettighetsperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
@@ -78,7 +79,6 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<BeregningsgrunnlagRepositoryImpl>()
     .register<PersonopplysningRepositoryImpl>()
     .register<TilkjentYtelseRepositoryImpl>()
-    .register<AktivitetspliktRepositoryImpl>()
     .register<BrevbestillingRepositoryImpl>()
     .register<SamordningRepositoryImpl>()
     .register<MottattDokumentRepositoryImpl>()
@@ -130,8 +130,11 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<SvarFraAndreinstansRepositoryImpl>()
     .register<FullmektigRepositoryImpl>()
     .register<OppfølgingsBehandlingRepositoryImpl>()
-    .register<MeldepliktRimeligGrunnRepositoryImpl>()
+    .register<OverstyringMeldepliktRepositoryImpl>()
     .register<SykdomsvurderingForBrevRepositoryImpl>()
     .register<MellomlagretVurderingRepositoryImpl>()
     .register<Aktivitetsplikt11_7RepositoryImpl>()
+    .register<OvergangUføreRepositoryImpl>()
+    .register<OvergangArbeidRepositoryImpl>()
     .register<KansellerRevurderingRepositoryImpl>()
+

@@ -9,7 +9,6 @@ class Vilkårsresultat(
     vilkår: List<Vilkår> = emptyList()
 ) {
     private val vilkår: MutableList<Vilkår> = vilkår.toMutableList()
-
     fun leggTilHvisIkkeEksisterer(vilkårtype: Vilkårtype): Vilkår {
         if (vilkår.none { it.type == vilkårtype }) {
             this.vilkår.add(Vilkår(type = vilkårtype))
@@ -67,11 +66,11 @@ class Vilkårsresultat(
                     return@outerJoinNotNull null
                 }
 
-                val sykdomsvilkåretErIkkeVurdert = vurderinger.none { (vilkår, vurdering) ->
-                    vilkår.type == Vilkårtype.SYKDOMSVILKÅRET && vurdering.erVurdert()
+                val sykdomsvilkåretErIkkeOppfylt = vurderinger.none { (vilkår, vurdering) ->
+                    vilkår.type == Vilkårtype.SYKDOMSVILKÅRET && (vurdering.erOppfylt() || vurdering.erIkkeRelevant())
                 }
 
-                if (sykdomsvilkåretErIkkeVurdert) {
+                if (sykdomsvilkåretErIkkeOppfylt) {
                     return@outerJoinNotNull null
                 }
 
@@ -106,7 +105,7 @@ class Vilkårsresultat(
         val (_, vilkårsVurdering) = requireNotNull(vilkårPar.firstOrNull { it.first == Vilkårtype.SYKDOMSVILKÅRET })
         val sykdomsUtfall = vilkårsVurdering.utfall
 
-        // Hvis bistandsvurderingen ikke er relevant, kan det være fordi det er sykepengeerstatning
+        // Hvis bistandsvurderingen ikke er relevant, kan det være fordi det er sykepengeerstatning, eller at 11-18 er oppfylt.
         if (bistandsvurderingen.erIkkeRelevant()) {
             val sykepengerErstatning =
                 vilkårPar.find {
@@ -118,12 +117,35 @@ class Vilkårsresultat(
             if (sykepengerErstatning != null) {
                 return RettighetsType.SYKEPENGEERSTATNING
             }
+
+        }
+
+        val harOppfyltVilkårForOvergangArbeid =
+            vilkårPar.any {
+                it.first == Vilkårtype.OVERGANGARBEIDVILKÅRET
+                        && it.second.utfall == Utfall.OPPFYLT
+                        && it.second.innvilgelsesårsak == Innvilgelsesårsak.ARBEIDSSØKER
+            }
+        if (harOppfyltVilkårForOvergangArbeid) {
+            return RettighetsType.ARBEIDSSØKER
         }
 
         // Vi har tatt hånd om sykepengervilkåret, og da må vi anta at 11-5 er oppfylt.
         require(sykdomsUtfall == Utfall.OPPFYLT) {
             "Sykepengeerstatning må være oppfylt om ikke 11-5 er oppfylt."
         }
+
+        // Sjekker på overgang uføre før bistandsvurderingen
+        val harOppfyltVilkårForOvergangUføre =
+            vilkårPar.any {
+                it.first == Vilkårtype.OVERGANGUFØREVILKÅRET
+                        && it.second.utfall == Utfall.OPPFYLT
+                        && it.second.innvilgelsesårsak == Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD
+            }
+        if (harOppfyltVilkårForOvergangUføre) {
+            return RettighetsType.VURDERES_FOR_UFØRETRYGD
+        }
+
 
         val bistandsvurderingInnvilgelsesårsak = bistandsvurderingen.innvilgelsesårsak
 

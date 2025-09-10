@@ -52,7 +52,11 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
         val sykepengerVurdering = grunnlag.sykepengerErstatningFaktagrunnlag
 
         val tidslinje =
-            Tidslinje.zip3(studentVurderingTidslinje, yrkesskadeVurderingTidslinje, sykdomsvurderingTidslinje)
+            Tidslinje.zip3(
+                studentVurderingTidslinje,
+                yrkesskadeVurderingTidslinje,
+                sykdomsvurderingTidslinje,
+            )
                 .mapValue { (studentVurdering, yrkesskadeVurdering, sykdomVurdering) ->
                     opprettVilkårsvurdering(
                         studentVurdering,
@@ -94,7 +98,11 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
                 Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
             } else if (sykdomVurdering?.erNedsettelseIArbeidsevneMerEnnHalvparten == false && sykdomVurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != true) {
                 Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
-            } else if (sykdomVurdering?.erNedsettelseIArbeidsevneAvEnVissVarighet == false && relevantÅVurdereSykepengerErstatning(grunnlag, sykdomVurdering)) {
+            } else if (sykdomVurdering?.erNedsettelseIArbeidsevneAvEnVissVarighet == false && relevantÅVurdereSykepengerErstatning(
+                    grunnlag,
+                    sykdomVurdering
+                )
+            ) {
                 Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET
             } else {
                 // TODO: dekk alle muligheter for nei her
@@ -139,10 +147,8 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
         }
         return sykdomsvurdering.run {
             erSkadeSykdomEllerLyteVesentligdel == true &&
-                    erArbeidsevnenNedsatt == true &&
-                    (erNedsettelseIArbeidsevneAvEnVissVarighet == null || erNedsettelseIArbeidsevneAvEnVissVarighet == true) &&
-                    (erNedsettelseIArbeidsevneMerEnnHalvparten == true ||
-                            (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true && yrkesskadevurdering?.erÅrsakssammenheng == true))
+                    erArbeidsevnenNedsatt == true && (erNedsettelseIArbeidsevneAvEnVissVarighet == null || erNedsettelseIArbeidsevneAvEnVissVarighet) && (erNedsettelseIArbeidsevneMerEnnHalvparten == true ||
+                    (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true && yrkesskadevurdering?.erÅrsakssammenheng == true))
         }
     }
 }

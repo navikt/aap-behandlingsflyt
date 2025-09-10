@@ -148,7 +148,6 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
                     ),
                     trekk = Dagsatser(0),
                     brukerAvKvoter = emptySet(),
-                    bruddAktivitetspliktId = null,
                     meldepliktStatus = if (fritak) MeldepliktStatus.FRITAK else MeldepliktStatus.IKKE_MELDT_SEG,
                     id = UnderveisperiodeId(3)
                 )

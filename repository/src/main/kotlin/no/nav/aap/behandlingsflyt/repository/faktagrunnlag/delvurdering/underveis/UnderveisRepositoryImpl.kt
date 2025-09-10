@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisperiodeId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
@@ -99,7 +98,6 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
             arbeidsgradering = arbeidsGradering,
             trekk = Dagsatser(it.getInt("trekk_dagsatser")),
             brukerAvKvoter = it.getArray("bruker_av_kvoter", String::class).map { Kvote.valueOf(it) }.toSet(),
-            bruddAktivitetspliktId = it.getLongOrNull("brudd_aktivitetsplikt_id")?.let { BruddAktivitetspliktId(it) },
             id = UnderveisperiodeId(it.getLong("id")),
             institusjonsoppholdReduksjon = Prosent(it.getInt("institusjonsoppholdreduksjon")),
             meldepliktStatus = it.getEnumOrNull("meldeplikt_status"),
@@ -186,9 +184,9 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         val query = """
             INSERT INTO UNDERVEIS_PERIODE (perioder_id, periode, utfall, rettighetstype, avslagsarsak,
                                            grenseverdi, timer_arbeid, gradering, meldeperiode, trekk_dagsatser,
-                                           andel_arbeidsevne, bruker_av_kvoter, brudd_aktivitetsplikt_id, institusjonsoppholdreduksjon,
+                                           andel_arbeidsevne, bruker_av_kvoter, institusjonsoppholdreduksjon,
                                            meldeplikt_status, meldekort_mottatt)
-            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?::daterange, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?::daterange, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
         connection.executeBatch(query, underveisperioder) {
             setParams { periode ->
@@ -204,10 +202,9 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
                 setInt(10, periode.trekk.antall)
                 setInt(11, periode.arbeidsgradering.fastsattArbeidsevne.prosentverdi())
                 setArray(12, periode.brukerAvKvoter.map { it.name })
-                setLong(13, periode.bruddAktivitetspliktId?.id)
-                setInt(14, periode.institusjonsoppholdReduksjon.prosentverdi())
-                setEnumName(15, periode.meldepliktStatus)
-                setLocalDate(16, periode.arbeidsgradering.opplysningerMottatt)
+                setInt(13, periode.institusjonsoppholdReduksjon.prosentverdi())
+                setEnumName(14, periode.meldepliktStatus)
+                setLocalDate(15, periode.arbeidsgradering.opplysningerMottatt)
             }
         }
 
