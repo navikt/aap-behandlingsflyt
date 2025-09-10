@@ -119,6 +119,7 @@ class MeldekortTilApiInternJobbUtfører(
         val arbeidsperiode = arbeidsperiodeFraMeldekort(meldekort)
         return underveisPerioder.first {
             // alle arbeidsperiodene i meldekortet må være innenfor en og samme underveisperiode
+            // underveisperioder skal ikke overlappe
             it.meldePeriode.inneholder(arbeidsperiode)
         }
     }

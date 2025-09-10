@@ -131,10 +131,11 @@ class ApiInternGatewayImpl() : ApiInternGateway {
             })
     }
 
-    override fun sendDetaljertMeldekort(meldekortDetaljer: List<DetaljertMeldekortDTO>) {
+
+    override fun sendDetaljertMeldekort(meldekortDetaljer: DetaljertMeldekortDTO) {
         log.info(
-            "Meldekort-detaljer for sak=${meldekortDetaljer.first().saksnummer}, " +
-                    "meldeperiode=${meldekortDetaljer.first().meldeperiodeFom}-${meldekortDetaljer.last().meldeperiodeFom}"
+            "Meldekort-detaljer for sak=${meldekortDetaljer.saksnummer}, " +
+                    "meldeperiode=${meldekortDetaljer.meldeperiodeFom}-${meldekortDetaljer.meldeperiodeFom}"
         )
         restClient.post(
             uri = uri.resolve("/api/insert/meldekort-detaljer"),

@@ -33,6 +33,6 @@ interface ApiInternGateway : Gateway {
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>
     )
 
-    fun sendDetaljertMeldekort(meldekortDetaljer: List<DetaljertMeldekortDTO>)
+    fun sendDetaljertMeldekort(meldekortDetaljer: DetaljertMeldekortDTO)
 }
 
