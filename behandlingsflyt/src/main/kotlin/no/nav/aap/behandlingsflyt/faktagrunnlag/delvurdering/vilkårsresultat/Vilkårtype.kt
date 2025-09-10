@@ -65,6 +65,7 @@ enum class Vilkårtype(
         ),
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON,
+            Avslagsårsak.IKKE_RETT_PA_AAP_I_PERIODE_SOM_ARBEIDSSOKER
         ),
         hjemmel = "§ 11-17"
     ),
@@ -75,6 +76,7 @@ enum class Vilkårtype(
         ),
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON,
+            Avslagsårsak.IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE
         ),
         hjemmel = "§ 11-18"
     ),
