@@ -378,29 +378,30 @@ fun NormalOpenAPIRoute.saksApi(
         }
 
         @Suppress("UnauthorizedPost") // Søkeresultat skal vises uansett tilgang
-        route("/sok").post<Unit, SøkPåSakDTO, SøkDto> { _, søkDto ->
+        route("/sok").post<Unit, List<SøkPåSakDTO>, SøkDto> { _, søkDto ->
             val pdlGateway = gatewayProvider.provide<PersoninfoGateway>()
             val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
 
-            val sak = dataSource.transaction(readOnly = true) { connection ->
+            val saker = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
-                SøkPåSakService(repositoryProvider).søkEtterSak(søkDto.søketekst)
+                SøkPåSakService(repositoryProvider).søkEtterSaker(søkDto.søketekst)
             }
 
-            if (sak != null) {
-                val aktivIdent = sak.person.aktivIdent()
+            if (saker.isNotEmpty()) {
                 respond(
-                    SøkPåSakDTO(
-                        ident = aktivIdent.identifikator,
-                        navn = pdlGateway.hentPersoninfoForIdent(aktivIdent, token()).fulltNavn(),
-                        saksnummer = sak.saksnummer,
-                        opprettetTidspunkt = sak.opprettetTidspunkt.toLocalDate(),
-                        harTilgang = tilgangGateway.sjekkTilgangTilSak(
+                    saker.map { sak ->
+                        SøkPåSakDTO(
+                            ident = sak.person.aktivIdent().identifikator,
+                            navn = pdlGateway.hentPersoninfoForIdent(sak.person.aktivIdent(), token()).fulltNavn(),
                             saksnummer = sak.saksnummer,
-                            token(),
-                            Operasjon.SE
+                            opprettetTidspunkt = sak.opprettetTidspunkt.toLocalDate(),
+                            harTilgang = tilgangGateway.sjekkTilgangTilSak(
+                                saksnummer = sak.saksnummer,
+                                token(),
+                                Operasjon.SE
+                            )
                         )
-                    )
+                    }
                 )
             } else {
                 throw VerdiIkkeFunnetException("Fant ingen saker knyttet til søketeksten.")
