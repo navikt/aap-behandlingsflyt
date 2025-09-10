@@ -94,6 +94,7 @@ class MeldekortTilApiInternJobbUtfører(
         // men denne koden skrives om pt. så best å vente.
 
         return DetaljertMeldekortDTO(
+            // TODO ta med journalpostId?
             personIdent = personIdent.identifikator,
             saksnummer = sak.saksnummer,
             behandlingId = behandling.id.toLong(),
@@ -140,7 +141,7 @@ class MeldekortTilApiInternJobbUtfører(
 
     companion object : ProvidersJobbSpesifikasjon {
         override val navn = "Meldekort til API-intern"
-        override val type = "kelvin.meldekort.til.apiintern"
+        override val type = "kelvin.meldekort.til.api.intern"
         override val beskrivelse = """
                 Push informasjon til API-intern slik at NKS kan hente den.
                 """.trimIndent()

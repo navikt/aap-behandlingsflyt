@@ -72,7 +72,7 @@ class BehandlingOgMeldekortServiceImpl(
         val behandlingerMedMotatteMeldekort =
             mottattDokumentRepository.hentDokumenterAvType(sak.id, InnsendingType.MELDEKORT)
                 .filter { it.mottattTidspunkt.isAfter(fraOgMedDato.atStartOfDay()) }
-                // Meldekort er initielt uten behandlingId når de først lagres i db, de regnes her som ikke klare
+                // Meldekort er initielt uten behandlingId når de først lagres i db. Disse regnes her som ikke klare.
                 .mapNotNull { it.behandlingId }
                 .toSet() // Det kan være flere meldekort på samme behandlingId
                 .map { id -> behandlingRepository.hent(id) }
