@@ -39,7 +39,7 @@ fun oppdaterAvklaringsbehov(
      * (avklaringsbehovet)[definisjon], så er fortsatt `vedtakBehøverVurdering() == true`.
      *
      * @return Skal returnere `true` hvis behandlingen kommer til å inneholde
-     * en mennesklig vurdering av [definisjon].
+     * en menneskelig vurdering av [definisjon].
      */
     vedtakBehøverVurdering: () -> Boolean,
 
