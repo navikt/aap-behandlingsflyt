@@ -19,7 +19,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
  * ivaretar man det.
  *
  * For at flyten skal bli riktig hvis man beveger seg fram og tilbake i flyten,
- * så er det viktig at et steg rydde opp etter seg når det viser seg at steget
+ * så er det viktig at et steg rydder opp etter seg når det viser seg at steget
  * ikke er relevant allikevel. Denne funksjonen hjelper også med det.
  */
 fun oppdaterAvklaringsbehov(
