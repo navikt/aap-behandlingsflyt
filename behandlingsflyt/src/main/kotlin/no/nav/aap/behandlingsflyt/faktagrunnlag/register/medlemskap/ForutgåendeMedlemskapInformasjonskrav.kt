@@ -60,13 +60,18 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
 
-        val medlemskapPerioder = medlemskapGateway.innhent(
+        val medlemskapPerioderFuture = CompletableFuture.supplyAsync({ medlemskapGateway.innhent(
             sak.person,
             Periode(sak.rettighetsperiode.fom.minusYears(5), sak.rettighetsperiode.fom)
-        )
-        val arbeidGrunnlag = innhentAARegisterGrunnlag5år(sak)
-        val inntektGrunnlag = innhentAInntektGrunnlag5år(sak)
+        ) }, executor)
+        val arbeidGrunnlagFuture = CompletableFuture.supplyAsync({ innhentAARegisterGrunnlag5år(sak) }, executor)
+        val inntektGrunnlagFuture = CompletableFuture.supplyAsync({ innhentAInntektGrunnlag5år(sak) }, executor)
+
+        val medlemskapPerioder = medlemskapPerioderFuture.get()
+        val arbeidGrunnlag = arbeidGrunnlagFuture.get()
+        val inntektGrunnlag = inntektGrunnlagFuture.get()
         val enhetGrunnlag = innhentEREGGrunnlag(inntektGrunnlag)
+
         val eksisterendeData = grunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
         lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag)
 
@@ -136,6 +141,8 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
     }
 
     companion object : Informasjonskravkonstruktør {
+        private val executor = Executors.newVirtualThreadPerTaskExecutor()
+
         override val navn = InformasjonskravNavn.FORUTGÅENDE_MEDLEMSKAP
 
         override fun konstruer(

@@ -63,10 +63,13 @@ class LovvalgInformasjonskrav private constructor(
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
 
-        val medlemskapPerioder =
-            medlemskapGateway.innhent(sak.person, sak.rettighetsperiode)
-        val arbeidGrunnlag = innhentAARegisterGrunnlag(sak)
-        val inntektGrunnlag = innhentAInntektGrunnlag(sak)
+        val medlemskapPerioderFuture = CompletableFuture.supplyAsync({ medlemskapGateway.innhent(sak.person, sak.rettighetsperiode) }, executor)
+        val arbeidGrunnlagFuture = CompletableFuture.supplyAsync({ innhentAARegisterGrunnlag(sak) }, executor)
+        val inntektGrunnlagFuture = CompletableFuture.supplyAsync({ innhentAInntektGrunnlag(sak) }, executor)
+
+        val medlemskapPerioder = medlemskapPerioderFuture.get()
+        val arbeidGrunnlag = arbeidGrunnlagFuture.get()
+        val inntektGrunnlag = inntektGrunnlagFuture.get()
         val enhetGrunnlag = innhentEREGGrunnlag(inntektGrunnlag)
 
         val eksisterendeData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
@@ -94,7 +97,6 @@ class LovvalgInformasjonskrav private constructor(
         }.toSet()
 
         // EREG har ikke batch-oppslag
-        val executor = Executors.newVirtualThreadPerTaskExecutor()
         val futures = orgnumre.map { orgnummer ->
             CompletableFuture.supplyAsync({
                 val response = enhetsregisteretGateway.hentEREGData(Organisasjonsnummer(orgnummer))
@@ -142,6 +144,8 @@ class LovvalgInformasjonskrav private constructor(
     }
 
     companion object : Informasjonskravkonstruktør {
+        private val executor = Executors.newVirtualThreadPerTaskExecutor()
+
         override val navn = InformasjonskravNavn.LOVVALG
 
         override fun konstruer(
