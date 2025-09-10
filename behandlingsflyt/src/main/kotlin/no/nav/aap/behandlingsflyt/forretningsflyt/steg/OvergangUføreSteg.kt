@@ -137,8 +137,7 @@ class OvergangUføreSteg private constructor(
         vilkårsresultat: Vilkårsresultat
     ) {
         val grunnlag = OvergangUføreFaktagrunnlag(
-            periode.fom,
-            periode.tom,
+            rettighetsperiode = periode,
             overgangUføreGrunnlag?.vurderinger.orEmpty(),
         )
         OvergangUføreVilkår(vilkårsresultat).vurder(grunnlag = grunnlag)
