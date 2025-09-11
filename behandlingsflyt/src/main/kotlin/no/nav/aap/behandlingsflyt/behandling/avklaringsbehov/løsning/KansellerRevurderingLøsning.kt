@@ -14,7 +14,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonTypeName(value = KANSELLER_REVURDERING_KODE)
 class KansellerRevurderingLøsning(
     @param:JsonProperty("behovstype", required = true, defaultValue = KANSELLER_REVURDERING_KODE)
-    val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5031`,
+    val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5033`,
     val vurdering: KansellerRevurderingVurderingDto
 ) : AvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {

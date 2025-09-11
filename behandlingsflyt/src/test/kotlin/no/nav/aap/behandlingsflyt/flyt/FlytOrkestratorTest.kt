@@ -4371,7 +4371,7 @@ class FlytOrkestratorTest(unleashGateway: KClass< UnleashGateway>) : AbstraktFly
 
         // Førstegangsbehandling
         val sak = happyCaseFørstegangsbehandling()
-        val førstegangsbehandling = hentNyesteBehandlingForSak(sak.id)
+        val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
         // Revurdering 1 - skal bli kansellert
         var revurdering1 = opprettManuellRevurdering(
@@ -4404,7 +4404,7 @@ class FlytOrkestratorTest(unleashGateway: KClass< UnleashGateway>) : AbstraktFly
             revurdering1,
             KansellerRevurderingLøsning(
                 vurdering = KansellerRevurderingVurderingDto(
-                    årsak = KansellerRevurderingÅrsakDto.REVURDERING_ER_IKKE_LENGER_AKTUELL,
+                    årsak = KansellerRevurderingÅrsakDto.REVURDERINGEN_ER_FEILREGISTRERT,
                     begrunnelse = "Fordi den ikke er aktuell lenger"
                 ),
             )

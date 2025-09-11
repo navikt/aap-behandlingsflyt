@@ -54,7 +54,7 @@ public enum class Definisjon(
         ),
     ),
     KANSELLER_REVURDERING(
-        kode = AvklaringsbehovKode.`5031`,
+        kode = AvklaringsbehovKode.`5033`,
         løsesISteg = StegType.KANSELLER_REVURDERING,
         type = BehovType.MANUELT_PÅKREVD,
         løsesAv = listOf(
