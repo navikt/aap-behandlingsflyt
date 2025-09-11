@@ -87,7 +87,6 @@ class ManglendeLigningGrunnlagStegTest {
             every { hentHvisEksisterer(behandling.id) } returns null
         }
         tidligereVurderinger = mockk {
-            every { muligMedRettTilAAP(any(), any()) } returns true
             every { girAvslagEllerIngenBehandlingsgrunnlag(any(), any()) } returns false
         }
 
@@ -187,7 +186,7 @@ class ManglendeLigningGrunnlagStegTest {
     fun `ingen avklaringsbehov hvis tidligere vurdering tilsier ingen rett til AAP`() {
         // Vil i utgangspunktet opprette avklaringsbehov dersom ingen inntekter finnes
         every { inntektGrunnlagRepository.hentHvisEksisterer(behandling.id) } returns InntektGrunnlag(emptySet())
-        every { tidligereVurderinger.muligMedRettTilAAP(any(), any()) } returns false
+        every { tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(any(), any()) } returns true
 
         val resultat = steg.utfør(flytKontekst)
 

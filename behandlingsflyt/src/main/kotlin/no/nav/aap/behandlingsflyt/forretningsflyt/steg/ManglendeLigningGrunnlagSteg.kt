@@ -4,8 +4,12 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -17,6 +21,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.Year
 
 class ManglendeLigningGrunnlagSteg internal constructor(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
@@ -34,25 +39,9 @@ class ManglendeLigningGrunnlagSteg internal constructor(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
-            return Fullført
-        }
-
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-
-        // Hent ut det siste året i beregningsperioden (det er kun dette året som pr nå sjekkes for manglende inntekt)
-        val relevantBeregningsPeriode = beregningService.utledRelevanteBeregningsÅr(kontekst.behandlingId)
-        val sisteRelevanteÅr = relevantBeregningsPeriode.max()
-
-        val inntektGrunnlag =
-            requireNotNull(inntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId))
-            { "Forventet å finne inntektsgrunnlag siden dette lagres i informasjonskravet." }
-
-       // Grunnlag fra register for siste år
-        val sisteÅrInntektGrunnlag = inntektGrunnlag.inntekter.firstOrNull { it.år == sisteRelevanteÅr }
-
-        // Manuelt inntektsgrunnlag hvis overstyrt
         val manuellInntektGrunnlag = manuellInntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
@@ -60,8 +49,17 @@ class ManglendeLigningGrunnlagSteg internal constructor(
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
                     VurderingType.FØRSTEGANGSBEHANDLING,
-                    VurderingType.REVURDERING ->
-                        tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) && sisteÅrInntektGrunnlag == null
+                    VurderingType.REVURDERING -> {
+                        if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
+                            false
+                        } else {
+                            val sisteRelevanteÅr = hentSisteRelevanteÅr(kontekst)
+                            val sisteÅrInntektGrunnlag = hentInntektGrunnlag(inntektGrunnlag, sisteRelevanteÅr)
+
+                            // Behøver vurdering dersom inntekt for siste år mangler fra register
+                            sisteÅrInntektGrunnlag == null
+                        }
+                    }
 
                     VurderingType.MELDEKORT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
@@ -70,10 +68,12 @@ class ManglendeLigningGrunnlagSteg internal constructor(
                 }
             },
             erTilstrekkeligVurdert = {
-                val harManuellInntektPåManglendeÅr =
-                    manuellInntektGrunnlag?.manuelleInntekter?.firstOrNull { sisteRelevanteÅr == it.år }
+                val sisteRelevanteÅr = hentSisteRelevanteÅr(kontekst)
+                val inntektGrunnlagSisteRelevanteÅr = hentInntektGrunnlag(inntektGrunnlag, sisteRelevanteÅr)
+                val manuellInntektVurderingSisteRelevanteÅr = hentManuellInntektVurdering(manuellInntektGrunnlag, sisteRelevanteÅr)
 
-                sisteÅrInntektGrunnlag != null || harManuellInntektPåManglendeÅr != null
+                // Har enten inntekt fra register eller manuelt satt inntekt for siste relevante år
+                inntektGrunnlagSisteRelevanteÅr != null || manuellInntektVurderingSisteRelevanteÅr != null
             },
             tilbakestillGrunnlag = {
                 val forrigeManuelleInntekter = kontekst.forrigeBehandlingId?.let { forrigeBehandlingId ->
@@ -86,6 +86,21 @@ class ManglendeLigningGrunnlagSteg internal constructor(
             }
         )
         return Fullført
+    }
+
+    private fun hentManuellInntektVurdering(manuellInntektGrunnlag: ManuellInntektGrunnlag?, sisteRelevanteÅr: Year): ManuellInntektVurdering? {
+        return manuellInntektGrunnlag?.manuelleInntekter?.firstOrNull { it.år == sisteRelevanteÅr}
+    }
+
+    private fun hentInntektGrunnlag(inntektGrunnlag: InntektGrunnlag?, sisteRelevanteÅr: Year): InntektPerÅr? {
+        checkNotNull(inntektGrunnlag) { "Forventet å finne inntektsgrunnlag siden dette lagres i informasjonskravet." }
+
+        return inntektGrunnlag.inntekter.firstOrNull { it.år == sisteRelevanteÅr }
+    }
+
+    private fun hentSisteRelevanteÅr(kontekst: FlytKontekstMedPerioder): Year {
+        val relevantBeregningsPeriode = beregningService.utledRelevanteBeregningsÅr(kontekst.behandlingId)
+        return relevantBeregningsPeriode.max()
     }
 
     companion object : FlytSteg {
