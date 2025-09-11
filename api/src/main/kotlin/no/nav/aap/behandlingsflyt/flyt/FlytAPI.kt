@@ -137,9 +137,9 @@ fun NormalOpenAPIRoute.flytApi(
                     val alleAvklaringsbehov = alleAvklaringsbehovInkludertFrivillige.alle()
                     val revurderingErKansellert = when {
                         behandling.typeBehandling() == TypeBehandling.Revurdering ->
-                            resultatUtleder.utledResultatRevurderingsBehandling(behandling) == Resultat.KANSELLERT
+                            resultatUtleder.utledResultatRevurderingsBehandling(behandling)
 
-                        else -> false
+                        else -> null
                     }
 
                     LoggingKontekst(
@@ -402,7 +402,7 @@ private fun utledVisning(
     bruker: Bruker,
     behandlingStatus: Status,
     unleashGateway: UnleashGateway,
-    revurderingErKansellert: Boolean
+    revurderingErKansellert: Resultat?
 ): Visning {
     val brukerHarIngenValidering = unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)
 
