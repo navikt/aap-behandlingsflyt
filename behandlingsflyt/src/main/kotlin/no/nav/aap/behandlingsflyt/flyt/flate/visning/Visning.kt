@@ -14,5 +14,5 @@ data class Visning(
     val visBrevkort: Boolean,
     val visKvalitetssikringKort: Boolean,
     val typeBehandling: TypeBehandling,
-    val revurderingErKansellert: ResultatKode?
+    val resultatKode: ResultatKode?
 )
