@@ -55,11 +55,16 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
             lagre(behandlingId, nyttGrunnlag)
         }
     }
-
+    
     override fun kopier(
         fraBehandling: BehandlingId,
         tilBehandling: BehandlingId
     ) {
+        val eksisterendeGrunnlag = hentHvisEksisterer(tilBehandling)
+        if (eksisterendeGrunnlag != null) {
+            deaktiverEksisterende(tilBehandling)
+        }
+        
         val query = """
             insert into aktivitetsplikt_11_7_grunnlag (behandling_id, vurderinger_id, aktiv)
             select ?, vurderinger_id, true

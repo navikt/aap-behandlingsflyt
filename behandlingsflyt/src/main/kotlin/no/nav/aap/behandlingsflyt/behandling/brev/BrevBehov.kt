@@ -32,6 +32,7 @@ data class Innvilgelse(
     }
 }
 
+object VurderesForUføretrygd : BrevBehov(TypeBrev.VEDTAK_11_18)
 object Avslag : BrevBehov(TypeBrev.VEDTAK_AVSLAG)
 object VedtakEndring : BrevBehov(TypeBrev.VEDTAK_ENDRING)
 object VarselOmBestilling : BrevBehov(TypeBrev.VARSEL_OM_BESTILLING)
