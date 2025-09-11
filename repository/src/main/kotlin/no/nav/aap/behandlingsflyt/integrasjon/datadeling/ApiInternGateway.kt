@@ -131,17 +131,24 @@ class ApiInternGatewayImpl() : ApiInternGateway {
             })
     }
 
+    override fun sendDetaljertMeldekortListe(detaljertMeldekortListe: List<DetaljertMeldekortDTO>) {
+        if (detaljertMeldekortListe.isEmpty()) {
+            log.info("Ingen meldekort-detaljer å sende")
+            return
+        }
 
-    override fun sendDetaljertMeldekort(meldekortDetaljer: DetaljertMeldekortDTO) {
-        log.info(
-            "Meldekort-detaljer for sak=${meldekortDetaljer.saksnummer}, " +
-                    "meldeperiode=${meldekortDetaljer.meldeperiodeFom}-${meldekortDetaljer.meldeperiodeFom}"
-        )
+        if (log.isInfoEnabled) {
+            val meldekort = detaljertMeldekortListe.first()
+            val saksnummer = meldekort.saksnummer
+            val fom = meldekort.meldeperiodeFom
+            val tom = meldekort.meldeperiodeTom
+            log.info("Sender meldekort-detaljer for sak=${saksnummer}, meldeperiode=${fom}-${tom}-")
+        }
+
         restClient.post(
             uri = uri.resolve("/api/insert/meldekort-detaljer"),
-            request = PostRequest(body = meldekortDetaljer),
+            request = PostRequest(body = detaljertMeldekortListe),
             mapper = { _, _ ->
             })
     }
-
 }

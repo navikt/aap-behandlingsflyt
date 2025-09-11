@@ -41,6 +41,6 @@ class FakeApiInternGateway : ApiInternGateway {
     ) {
     }
 
-    override fun sendDetaljertMeldekort(meldekortDetaljer: DetaljertMeldekortDTO) {
+    override fun sendDetaljertMeldekortListe(detaljertMeldekortListe: List<DetaljertMeldekortDTO>){
     }
 }

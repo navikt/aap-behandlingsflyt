@@ -67,14 +67,14 @@ class MeldekortInformasjonskrav private constructor(
                 timerArbeidPerPeriode = ubehandletMeldekort.timerArbeidPerPeriode,
                 mottattTidspunkt = ubehandletMeldekort.mottattTidspunkt
             )
-            // TODO en og en er ineffektivt, lagre i batch heller?
+            // FIXME prematur markering som behandlet over, er jo ikke lagret enda? Hva om lagring feiler?
+            // rulles alt tilbake isåfall? Hva er transaction boundary vi bruker her?
+            // FIXME en og en er ineffektivt, kan være 100 kall, oppdater i batch heller?
             mottaDokumentService.markerSomBehandlet(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
                 referanse = InnsendingReferanse(ubehandletMeldekort.journalpostId)
             )
-            // TODO prematur markering som behandlet, er jo ikke lagret enda? Hva om lagring feiler?
-            // rulles alt tilbake isåfall? Hva er transaction boundary vi bruker her?
 
             allePlussNye.add(nyttMeldekort)
         }
@@ -89,11 +89,9 @@ class MeldekortInformasjonskrav private constructor(
 
     private fun triggOppdateringAvMeldekortHosAndreApper(sakId: SakId, behandlingId: BehandlingId) {
         // Sende nye meldekort til API-intern
-        // TODO Alle meldekort er lagret OK? Ikke async lagring? ser ut som lagre-kallet blokkerer til db er ferdig
-        // TODO trenger vi også å gi beskjed til API-intern om at kontekst.forrigeBehandlingId sine meldekort er utdaterte og skal slettes?
-        // eller kan vi først slette alle meldekort for samme (saksnummer og meldeperiode) når vi mottar nye der? Tror det
         val sendOppdaterteMeldekortJobb = MeldekortTilApiInternJobbUtfører.nyJobb(sakId, behandlingId)
-        flytJobbRepository.leggTil(sendOppdaterteMeldekortJobb)
+        // TODO skru på jobben når API-intern er klar til å motta
+        // flytJobbRepository.leggTil(sendOppdaterteMeldekortJobb)
     }
 
     override fun flettOpplysningerFraAtomærBehandling(kontekst: FlytKontekst): Informasjonskrav.Endret {

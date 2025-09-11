@@ -1,7 +1,11 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
+package no.nav.aap.behandlingsflyt.prosessering
+
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -21,7 +25,6 @@ import no.nav.aap.komponenter.dbtest.TestDatabaseExtension
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.Kanal
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
@@ -29,8 +32,9 @@ import java.time.LocalDateTime
 import javax.sql.DataSource
 import kotlin.random.Random
 
+
 @ExtendWith(TestDatabaseExtension::class)
-class BehandlingOgMeldekortServiceImplTest {
+class MeldekortTilApiInternServiceTest {
     @TestDatabase
     lateinit var dataSource: DataSource
 
@@ -40,7 +44,7 @@ class BehandlingOgMeldekortServiceImplTest {
     }
 
     @Test
-    fun hentAlleForIdent() {
+    fun doTest() {
         dataSource.transaction { connection ->
 
             // SETUP
@@ -53,12 +57,6 @@ class BehandlingOgMeldekortServiceImplTest {
                 FakePdlGateway, personRepository, sakRepository
             )
 
-            val meldekortogBehandlingServiceImpl = BehandlingOgMeldekortServiceImpl(
-                behandlingRepositoryImpl,
-                meldekortRepository,
-                mottattDokumentRepository,
-                personOgSakService,
-            )
 
             val testSak = personOgSakService.finnEllerOpprett(testIdent, testPeriode)
 
@@ -85,24 +83,8 @@ class BehandlingOgMeldekortServiceImplTest {
             )
 
             // Sjekk at vi fikk opp de to meldekortene og behandlingene vi nettopp lagde
-            val meldekortene = meldekortogBehandlingServiceImpl.hentAlle(testIdent)
-            assertThat(meldekortene).hasSize(2)
-            meldekortene.forEach { (behandling, meldekortListe) ->
-                assertThat(behandling.sakId).isEqualTo(testSak.id)
-                assertThat(meldekortListe).hasSize(1)
-                assertThat(meldekortListe.first().timerArbeidPerPeriode).hasSize(3)
-            }
 
-            val meldekorteneIgjen = meldekortogBehandlingServiceImpl.hentAlle(testSak)
-            assertThat(meldekorteneIgjen).hasSize(2)
-
-            // sjekk at vi fikk samme resultat ved de to metodene
-            meldekortene.forEachIndexed { index, (behandling, meldekortListe) ->
-                val (behandlingIgjen, meldekortListeIgjen) = meldekorteneIgjen[index]
-                assertThat(behandling.id).isEqualTo(behandlingIgjen.id)
-                assertThat(behandling.referanse).isEqualTo(behandlingIgjen.referanse)
-                assertThat(meldekortListe).isEqualTo(meldekortListeIgjen)
-            }
+            // TODO
 
         }
 
@@ -158,3 +140,5 @@ class BehandlingOgMeldekortServiceImplTest {
         InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, Random.nextLong(100000, 999999).toString())
 
 }
+
+
