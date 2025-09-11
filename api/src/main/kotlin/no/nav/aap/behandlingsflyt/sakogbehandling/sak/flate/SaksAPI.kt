@@ -84,7 +84,7 @@ fun NormalOpenAPIRoute.saksApi(
                         } else null
 
                         val resultat = if (førstegangsbehandling != null) {
-                            resultatUtleder.utledResultatFørstegangOgRevurderingsBehandling(førstegangsbehandling)
+                            resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
                         } else null
 
                         SaksinfoDTO(
@@ -187,7 +187,7 @@ fun NormalOpenAPIRoute.saksApi(
                         } else null
 
                         val resultat = if (førstegangsbehandling != null) {
-                            resultatUtleder.utledResultatFørstegangOgRevurderingsBehandling(førstegangsbehandling)
+                            resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
                         } else null
 
                         SaksinfoDTO(
@@ -347,7 +347,7 @@ fun NormalOpenAPIRoute.saksApi(
                         repositoryProvider.provide<BehandlingRepository>().hentAlleFor(sak.id).map { behandling ->
                             if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
                                 søknadErTrukket =
-                                    resultatUtleder.utledResultatFørstegangOgRevurderingsBehandling(behandling) == Resultat.TRUKKET
+                                    resultatUtleder.utledResultatFørstegangsBehandling(behandling) == Resultat.TRUKKET
                             }
                             val vurderingsbehov = behandling.vurderingsbehov().map(VurderingsbehovMedPeriode::type)
                             BehandlinginfoDTO(

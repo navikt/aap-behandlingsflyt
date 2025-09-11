@@ -137,7 +137,7 @@ fun NormalOpenAPIRoute.flytApi(
                     val alleAvklaringsbehov = alleAvklaringsbehovInkludertFrivillige.alle()
                     val revurderingErKansellert = when {
                         behandling.typeBehandling() == TypeBehandling.Revurdering ->
-                            resultatUtleder.utledResultatFørstegangOgRevurderingsBehandling(behandling) == Resultat.KANSELLERT
+                            resultatUtleder.utledResultatFørstegangsBehandling(behandling) == Resultat.KANSELLERT
 
                         else -> false
                     }

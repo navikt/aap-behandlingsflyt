@@ -331,7 +331,16 @@ class StatistikkJobbUtfører(
                 }
             }
 
-            TypeBehandling.Revurdering, TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling, TypeBehandling.Aktivitetsplikt -> {
+            TypeBehandling.Revurdering -> {
+                resultatUtleder.utledRevurderingResultat(behandling.id).let {
+                    when (it) {
+                        Resultat.KANSELLERT -> ResultatKode.KANSELLERT
+                        else -> null
+                    }
+                }
+            }
+
+            TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling, TypeBehandling.Aktivitetsplikt -> {
                 null
             }
         }

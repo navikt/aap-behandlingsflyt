@@ -69,6 +69,7 @@ class TidligereVurderingerImpl(
     )
 
     private val definerteSjekkerForRevurdering = listOf(
+        // NB! Pass på hvis du utvide denne listen med noe som gjør avslag, at alle steg håndtere avslag i revurdering.
         Sjekk(StegType.KANSELLER_REVURDERING) { _, kontekst ->
             Tidslinje(
                 kontekst.rettighetsperiode,

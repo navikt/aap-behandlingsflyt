@@ -64,10 +64,10 @@ class BrevUtlederService(
 
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov? {
         val behandling = behandlingRepository.hent(behandlingId)
-        val resultat = resultatUtleder.utledResultat(behandlingId)
 
         when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> {
+                val resultat = resultatUtleder.utledResultat(behandlingId)
 
                 return when (resultat) {
                     Resultat.INNVILGELSE -> brevBehovInnvilgelse(behandling)
@@ -78,6 +78,7 @@ class BrevUtlederService(
             }
 
             TypeBehandling.Revurdering -> {
+                val resultat = resultatUtleder.utledRevurderingResultat(behandlingId)
                 val vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet()
                 if (setOf(MOTTATT_MELDEKORT, FASTSATT_PERIODE_PASSERT, EFFEKTUER_AKTIVITETSPLIKT).containsAll(
                         vurderingsbehov

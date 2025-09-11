@@ -33,21 +33,34 @@ class ResultatUtleder(
 
     fun utledResultat(behandlingId: BehandlingId): Resultat {
         val behandling = behandlingRepository.hent(behandlingId)
-        return utledResultatFørstegangOgRevurderingsBehandling(behandling)
+        return utledResultatFørstegangsBehandling(behandling)
     }
 
-    fun utledResultatFørstegangOgRevurderingsBehandling(behandling: Behandling): Resultat {
+    fun utledRevurderingResultat(behandlingId: BehandlingId): Resultat? {
+        val behandling = behandlingRepository.hent(behandlingId)
+        return utledResultatRevurderingsBehandling(behandling)
+    }
 
-        require(behandling.typeBehandling() in listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)) {
+    private fun utledResultatRevurderingsBehandling(behandling: Behandling): Resultat? {
+        require(behandling.typeBehandling() == TypeBehandling.Revurdering) {
+            "Kan ikke utlede resultat for ${behandling.typeBehandling()} ennå."
+        }
+
+        if (kansellerRevurderingService.revurderingErKansellert(behandling.id)) {
+            return Resultat.KANSELLERT
+        }
+
+        return null
+    }
+
+    fun utledResultatFørstegangsBehandling(behandling: Behandling): Resultat {
+
+        require(behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
             "Kan ikke utlede resultat for ${behandling.typeBehandling()} ennå."
         }
 
         if (trukketSøknadService.søknadErTrukket(behandling.id)) {
             return Resultat.TRUKKET
-        }
-
-        if (kansellerRevurderingService.revurderingErKansellert(behandling.id)) {
-            return Resultat.KANSELLERT
         }
 
         val harOppfyltPeriode = underveisRepository.hentHvisEksisterer(behandling.id)
