@@ -73,7 +73,7 @@ class VurderStudentSteg private constructor(
 
     private fun gammelAdferd(kontekst: FlytKontekstMedPerioder): StegResultat {
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING -> {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     avklaringsbehovService.avbrytForSteg(kontekst.behandlingId, type())
                     return Fullført

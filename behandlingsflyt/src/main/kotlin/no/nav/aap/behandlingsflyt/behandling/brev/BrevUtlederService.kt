@@ -49,7 +49,7 @@ class BrevUtlederService(
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val underveisRepository: UnderveisRepository,
-    private val unleashGateway: UnleashGateway,
+    private val unleashGateway: UnleashGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -60,7 +60,7 @@ class BrevUtlederService(
         beregningVurderingRepository = repositoryProvider.provide(),
         tilkjentYtelseRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide(),
+        unleashGateway = gatewayProvider.provide()
     )
 
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov? {
@@ -86,15 +86,20 @@ class BrevUtlederService(
 
                     Resultat.AVSLAG -> Avslag
                     Resultat.TRUKKET -> null
+                    Resultat.KANSELLERT -> null
                 }
             }
 
             TypeBehandling.Revurdering -> {
+                val resultat = resultatUtleder.utledRevurderingResultat(behandlingId)
                 val vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet()
                 if (setOf(MOTTATT_MELDEKORT, FASTSATT_PERIODE_PASSERT, EFFEKTUER_AKTIVITETSPLIKT).containsAll(
                         vurderingsbehov
                     )
                 ) {
+                    return null
+                }
+                if (resultat == Resultat.KANSELLERT) {
                     return null
                 }
                 return VedtakEndring

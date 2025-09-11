@@ -7,6 +7,7 @@ public enum class StegGruppe(public val skalVises: Boolean, public val obligator
     SEND_FORVALTNINGSMELDING(false, true),
     RETTIGHETSPERIODE(true, false),
     SØKNAD(true, false),
+    KANSELLER_REVURDERING(true, false),
     ALDER(true, true),
     LOVVALG(true, true),
     MEDLEMSKAP(true, true),

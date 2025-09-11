@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
@@ -72,6 +73,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKansellerRevurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
@@ -213,7 +215,8 @@ class StatistikkJobbUtførerTest {
                 underveisRepository = UnderveisRepositoryImpl(connection),
                 trukketSøknadService = TrukketSøknadService(postgresRepositoryRegistry.provider(connection)),
                 klageresultatUtleder = KlageresultatUtleder(postgresRepositoryRegistry.provider(connection)),
-                statistikkGateway = StatistikkGatewayImpl()
+                statistikkGateway = StatistikkGatewayImpl(),
+                kansellerRevurderingService = KansellerRevurderingService(postgresRepositoryRegistry.provider(connection))
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -416,6 +419,7 @@ class StatistikkJobbUtførerTest {
                 trukketSøknadService = TrukketSøknadService(postgresRepositoryRegistry.provider(connection)),
                 klageresultatUtleder = KlageresultatUtleder(postgresRepositoryRegistry.provider(connection)),
                 statistikkGateway = StatistikkGatewayImpl(),
+                kansellerRevurderingService = KansellerRevurderingService(postgresRepositoryRegistry.provider(connection))
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -604,6 +608,9 @@ class StatistikkJobbUtførerTest {
                 ),
                 klageresultatUtleder = DummyKlageresultatUtleder(),
                 statistikkGateway = StatistikkGatewayImpl(),
+                kansellerRevurderingService = KansellerRevurderingService(
+                    InMemoryKansellerRevurderingRepository
+                )
             )
 
         val avklaringsbehov = listOf(

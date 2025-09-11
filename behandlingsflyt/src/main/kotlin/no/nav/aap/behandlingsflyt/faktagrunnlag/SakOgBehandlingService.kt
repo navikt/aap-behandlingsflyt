@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
+import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -28,6 +29,7 @@ class SakOgBehandlingService(
     private val behandlingRepository: BehandlingRepository,
     private val trukketSøknadService: TrukketSøknadService,
     private val unleashGateway: UnleashGateway,
+    private val kansellerRevurderingService: KansellerRevurderingService,
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
@@ -38,6 +40,7 @@ class SakOgBehandlingService(
         behandlingRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         unleashGateway = gatewayProvider.provide(),
+        kansellerRevurderingService = KansellerRevurderingService(repositoryProvider),
     )
 
     fun finnBehandling(behandlingReferanse: BehandlingReferanse): Behandling {
@@ -58,12 +61,19 @@ class SakOgBehandlingService(
         )
         val nesteId = mutableMapOf<BehandlingId, BehandlingId>()
         for (behandling in ytelsesbehandlinger) {
+            // Hopp over hvis behandlingen er kansellert
+            if (kansellerRevurderingService.revurderingErKansellert(behandling.id)) {
+                continue
+            }
+
             if (behandling.forrigeBehandlingId != null) {
                 nesteId[behandling.forrigeBehandlingId] = behandling.id
             }
         }
 
-        var behandling = ytelsesbehandlinger.firstOrNull()?.id ?: return null
+        var behandling =
+            ytelsesbehandlinger.firstOrNull { !kansellerRevurderingService.revurderingErKansellert(it.id) }?.id
+                ?: return null
 
         while (nesteId[behandling] != null) {
             behandling = nesteId[behandling]!!

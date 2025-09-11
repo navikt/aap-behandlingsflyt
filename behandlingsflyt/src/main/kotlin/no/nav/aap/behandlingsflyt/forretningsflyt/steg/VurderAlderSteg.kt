@@ -34,7 +34,7 @@ class VurderAlderSteg private constructor(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING -> {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     vilkårService.ingenNyeVurderinger(
                         kontekst.behandlingId,
@@ -45,10 +45,6 @@ class VurderAlderSteg private constructor(
                 } else {
                     vurderVilkår(kontekst)
                 }
-            }
-
-            VurderingType.REVURDERING -> {
-                vurderVilkår(kontekst)
             }
 
             VurderingType.MELDEKORT,

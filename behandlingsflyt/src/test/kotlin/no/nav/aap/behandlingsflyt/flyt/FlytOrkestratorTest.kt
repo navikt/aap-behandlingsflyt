@@ -32,6 +32,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FullmektigLøsningDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.HåndterSvarFraAndreinstansLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.HåndterSvarFraAndreinstansLøsningDto
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KansellerRevurderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivForhåndsvarselKlageFormkravBrevLøsning
@@ -45,6 +46,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Yrkesskade
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.flate.KansellerRevurderingVurderingDto
+import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.flate.KansellerRevurderingÅrsakDto
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.flate.TrekkKlageVurderingDto
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.flate.TrekkKlageÅrsakDto
@@ -131,6 +134,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UtenlandsPeriodeDto
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.KANSELLER_REVURDERING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SEND_FORVALTNINGSMELDING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.START_BEHANDLING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SØKNAD
@@ -2973,7 +2977,7 @@ class FlytOrkestratorTest(unleashGateway: KClass< UnleashGateway>) : AbstraktFly
             assertThat(behandlingRepo.hentStegHistorikk(revurdering.id).map { tilstand -> tilstand.steg() }
                 .distinct()).containsExactlyElementsOf(
                 listOf(
-                    START_BEHANDLING, SEND_FORVALTNINGSMELDING, SØKNAD, VURDER_RETTIGHETSPERIODE
+                    START_BEHANDLING, SEND_FORVALTNINGSMELDING, KANSELLER_REVURDERING, SØKNAD, VURDER_RETTIGHETSPERIODE
                 )
             )
 
@@ -4358,5 +4362,98 @@ class FlytOrkestratorTest(unleashGateway: KClass< UnleashGateway>) : AbstraktFly
                 manueltBarnIdent.identifikator,
             )
         }
+    }
+
+    @Test
+    fun `Teste KansellerRevurderingFlyt`() {
+        val person = TestPersoner.STANDARD_PERSON()
+        val ident = person.aktivIdent()
+
+        // Førstegangsbehandling
+        val sak = happyCaseFørstegangsbehandling()
+        val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
+
+        // Revurdering 1 - skal bli kansellert
+        var revurdering1 = opprettManuellRevurdering(
+            sak,
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+        )
+            .medKontekst {
+                assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .løsSykdom()
+
+        assertThat(revurdering1.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+        assertThat(revurdering1.forrigeBehandlingId).isEqualTo(førstegangsbehandling.id)
+
+        // Kanseller revurdering 1
+        sendInnDokument(
+            ident,
+            NyÅrsakTilBehandlingHendelse(
+                LocalDateTime.now(),
+                InnsendingType.NY_ÅRSAK_TIL_BEHANDLING,
+                InnsendingReferanse(InnsendingReferanse.Type.BEHANDLING_REFERANSE, revurdering1.referanse.toString()),
+                StrukturertDokument(NyÅrsakTilBehandlingV0(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_KANSELLERT))),
+                sak.rettighetsperiode
+            )
+        )
+        assertThat(hentAlleAvklaringsbehov(revurdering1)).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erÅpent() && avklaringsbehov.definisjon == Definisjon.KANSELLER_REVURDERING).isTrue() }
+
+        løsAvklaringsBehov(
+            revurdering1,
+            KansellerRevurderingLøsning(
+                vurdering = KansellerRevurderingVurderingDto(
+                    årsak = KansellerRevurderingÅrsakDto.REVURDERINGEN_ER_FEILREGISTRERT,
+                    begrunnelse = "Fordi den ikke er aktuell lenger"
+                ),
+            )
+        )
+
+        val avklaringsbehovene: List<Avklaringsbehov> = hentAlleAvklaringsbehov(revurdering1)
+        var revurdering1FraRepo = hentBehandling(revurdering1.referanse)
+        assertThat(revurdering1FraRepo.status()).isEqualTo(Status.AVSLUTTET)
+        assertThat(avklaringsbehovene.none { it.erÅpent() }).isTrue()
+        assertStatusForDefinisjon(avklaringsbehovene, Definisjon.KANSELLER_REVURDERING, AvklaringsbehovStatus.AVSLUTTET)
+        assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVKLAR_SYKDOM, AvklaringsbehovStatus.AVBRUTT)
+        assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVKLAR_BISTANDSBEHOV, AvklaringsbehovStatus.AVBRUTT)
+
+        // Revurdering 2 - skal ikke kopiere data fra revurdering1 men fra førstegangsbehandling
+        var revurdering2 = opprettManuellRevurdering(
+            sak,
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP)
+        )
+            .medKontekst {
+                assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
+
+        assertThat(revurdering2.forrigeBehandlingId).isEqualTo(førstegangsbehandling.id)
+
+        // Verifiser at data er kopiert fra førstegangsbehandling
+        val vilkårsresultat1 = hentVilkårsresultat(førstegangsbehandling.id)
+        val vilkårsresultat2 = hentVilkårsresultat(revurdering2.id)
+
+        assertThat(vilkårsresultat2).usingRecursiveComparison()
+                .ignoringFields(
+                    "id",
+                    "faktagrunnlag",
+                    "vilkår.vilkårTidslinje",
+                    "vilkår.vurdertTidspunkt",
+                    "vilkår.faktagrunnlag",
+                    "vilkår.vilkårTidslinje",
+                    "vilkår.vurdertTidspunkt"
+                )
+                .isEqualTo(vilkårsresultat1)
+    }
+
+    fun assertStatusForDefinisjon(
+        avklaringsbehov: List<Avklaringsbehov>,
+        definisjon: Definisjon,
+        forventetStatus: AvklaringsbehovStatus
+    ) {
+        assertThat(avklaringsbehov.filter { it.definisjon == definisjon }
+            .map { it.status() })
+            .containsExactly(forventetStatus)
     }
 }
