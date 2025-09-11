@@ -41,7 +41,7 @@ class ResultatUtleder(
         return utledResultatRevurderingsBehandling(behandling)
     }
 
-    private fun utledResultatRevurderingsBehandling(behandling: Behandling): Resultat? {
+    fun utledResultatRevurderingsBehandling(behandling: Behandling): Resultat? {
         require(behandling.typeBehandling() == TypeBehandling.Revurdering) {
             "Kan ikke utlede resultat for ${behandling.typeBehandling()} ennå."
         }
