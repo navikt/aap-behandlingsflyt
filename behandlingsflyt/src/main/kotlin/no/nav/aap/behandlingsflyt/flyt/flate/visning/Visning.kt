@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt.flate.visning
 
-import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
 
 data class Visning(
     val saksbehandlerReadOnly: Boolean,
@@ -14,5 +14,5 @@ data class Visning(
     val visBrevkort: Boolean,
     val visKvalitetssikringKort: Boolean,
     val typeBehandling: TypeBehandling,
-    val revurderingErKansellert: Resultat?
+    val revurderingErKansellert: ResultatKode?
 )
