@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagU
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
@@ -70,7 +71,19 @@ class BrevUtlederService(
                 val resultat = resultatUtleder.utledResultat(behandlingId)
 
                 return when (resultat) {
-                    Resultat.INNVILGELSE -> brevBehovInnvilgelse(behandling)
+                    Resultat.INNVILGELSE -> {
+                        val vurderesForUføretrygd = underveisRepository.hentHvisEksisterer(behandling.id)
+                            ?.perioder
+                            .orEmpty()
+                            .any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
+                        if (vurderesForUføretrygd &&
+                            unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18)) {
+                            VurderesForUføretrygd
+                        } else {
+                            brevBehovInnvilgelse(behandling)
+                        }
+                    }
+
                     Resultat.AVSLAG -> Avslag
                     Resultat.TRUKKET -> null
                 }
