@@ -57,6 +57,7 @@ class MeldekortTilApiInternService(
             personIdent = personIdent.identifikator,
             saksnummer = sak.saksnummer,
             behandlingId = behandlingId.id,
+            journalpostId = meldekort.journalpostId.identifikator,
             meldeperiodeFom = meldePeriode.fom,
             meldeperiodeTom = meldePeriode.fom,
             mottattTidspunkt = meldekort.mottattTidspunkt,

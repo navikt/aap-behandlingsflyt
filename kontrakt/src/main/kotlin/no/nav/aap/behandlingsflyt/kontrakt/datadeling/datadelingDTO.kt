@@ -74,6 +74,7 @@ public data class DetaljertMeldekortDTO(
     val personIdent: String,
     val saksnummer: Saksnummer,
     val behandlingId: Long,
+    val journalpostId: String,
     val meldeperiodeFom: LocalDate,
     val meldeperiodeTom: LocalDate,
     val mottattTidspunkt: LocalDateTime,
