@@ -22,19 +22,21 @@ class DatadelingMeldePerioderOgSakStatusJobbUtfører(
         val hendelse = input.payload<BehandlingFlytStoppetHendelse>()
         val behandling = behandlingRepository.hent(hendelse.referanse)
         val sak = sakRepository.hent(behandling.sakId)
-        val personIdent = sak.person.aktivIdent().identifikator
+        val personIdent = sak.person.aktivIdent()
 
         val perioder = meldeperiodeRepository.hent(behandling.id)
-        // TODO: slå sammen til ett endepunkt i apiinterngateway
-        apiInternGateway.sendPerioder(personIdent, perioder)
+        apiInternGateway.sendPerioder(personIdent.identifikator, perioder)
+
         apiInternGateway.sendSakStatus(
-            sak.person.aktivIdent().identifikator,
+            personIdent.identifikator,
             SakStatus.fromKelvin(sak.saksnummer.toString(), sak.status(), sak.rettighetsperiode)
         )
+
+        // TODO flytt inn her
     }
 
     companion object : ProvidersJobbSpesifikasjon {
-        override val beskrivelse = "Sender meldekort perioder og vedtaksdata til api-intern."
+        override val beskrivelse = "Sender meldekort, meldekortperioder, og vedtaksdata til api-intern."
         override val navn = "DatadelingMeldePerioderJobbUtfører"
         override val type = "flyt.DatadelingMeldePerioder"
 

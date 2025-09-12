@@ -18,6 +18,7 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -145,10 +146,16 @@ class ApiInternGatewayImpl() : ApiInternGateway {
             log.info("Sender meldekort-detaljer for sak=${saksnummer}, meldeperiode=${fom}-${tom}-")
         }
 
-        restClient.post(
-            uri = uri.resolve("/api/insert/meldekort-detaljer"),
-            request = PostRequest(body = detaljertMeldekortListe),
-            mapper = { _, _ ->
-            })
+        try {
+            restClient.post(
+                uri.resolve("/api/insert/meldekort-detaljer"),
+                PostRequest(body = detaljertMeldekortListe),
+            )
+        } catch (e: Exception) {
+            log.warn("Klarte ikke sende meldekort-detaljer. Feil:", e)
+            throw e
+        }
+
+
     }
 }

@@ -11,25 +11,20 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.prosessering.MeldekortTilApiInternJobbUtfører
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.FØRSTEGANGSBEHANDLING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
-import no.nav.aap.motor.FlytJobbRepository
 
 class MeldekortInformasjonskrav private constructor(
     private val mottaDokumentService: MottaDokumentService,
     private val meldekortRepository: MeldekortRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val flytJobbRepository: FlytJobbRepository,
 
-) : Informasjonskrav {
+    ) : Informasjonskrav {
     override val navn = Companion.navn
 
     companion object : Informasjonskravkonstruktør {
@@ -40,7 +35,6 @@ class MeldekortInformasjonskrav private constructor(
                 MottaDokumentService(repositoryProvider),
                 repositoryProvider.provide<MeldekortRepository>(),
                 TidligereVurderingerImpl(repositoryProvider),
-                repositoryProvider.provide<FlytJobbRepository>(),
             )
         }
     }
@@ -67,9 +61,7 @@ class MeldekortInformasjonskrav private constructor(
                 timerArbeidPerPeriode = ubehandletMeldekort.timerArbeidPerPeriode,
                 mottattTidspunkt = ubehandletMeldekort.mottattTidspunkt
             )
-            // FIXME prematur markering som behandlet over, er jo ikke lagret enda? Hva om lagring feiler?
-            // rulles alt tilbake isåfall? Hva er transaction boundary vi bruker her?
-            // FIXME en og en er ineffektivt, kan være 100 kall, oppdater i batch heller?
+            // TODO en og en er ineffektivt, kan være 100 kall, oppdater i pulje heller
             mottaDokumentService.markerSomBehandlet(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
@@ -80,18 +72,7 @@ class MeldekortInformasjonskrav private constructor(
         }
 
         meldekortRepository.lagre(behandlingId = kontekst.behandlingId, meldekortene = allePlussNye)
-
-        triggOppdateringAvMeldekortHosAndreApper(kontekst.sakId, kontekst.behandlingId)
-
         return ENDRET // Antar her at alle nye kort gir en endring vi må ta hensyn til
-    }
-
-
-    private fun triggOppdateringAvMeldekortHosAndreApper(sakId: SakId, behandlingId: BehandlingId) {
-        // Sende nye meldekort til API-intern
-        val sendOppdaterteMeldekortJobb = MeldekortTilApiInternJobbUtfører.nyJobb(sakId, behandlingId)
-        // TODO skru på jobben når API-intern er klar til å motta
-        // flytJobbRepository.leggTil(sendOppdaterteMeldekortJobb)
     }
 
     override fun flettOpplysningerFraAtomærBehandling(kontekst: FlytKontekst): Informasjonskrav.Endret {
@@ -115,9 +96,6 @@ class MeldekortInformasjonskrav private constructor(
             return IKKE_ENDRET
         } else {
             meldekortRepository.lagre(kontekst.behandlingId, meldekortIBehandling + nyeMeldekort)
-
-            triggOppdateringAvMeldekortHosAndreApper(kontekst.sakId, kontekst.behandlingId)
-
             return ENDRET
         }
     }
