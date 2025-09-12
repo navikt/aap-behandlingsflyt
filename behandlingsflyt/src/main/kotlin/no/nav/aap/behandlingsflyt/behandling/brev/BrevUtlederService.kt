@@ -114,7 +114,11 @@ class BrevUtlederService(
                 }
             }
 
-            TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling, TypeBehandling.Aktivitetsplikt ->
+            TypeBehandling.Aktivitetsplikt -> {
+                return VedtakAktivitetsplikt11_7
+            }
+
+            TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling ->
                 return null // TODO
         }
     }
