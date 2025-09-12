@@ -31,20 +31,19 @@ class VurderBrudd11_7Løser(
 
         val forrigeBehandlingId = behandlingRepository.hent(kontekst.kontekst.behandlingId).forrigeBehandlingId
 
-        val gjeldendeVedtatte = forrigeBehandlingId
-            ?.let { aktivitetsplikt11_7Repository.hentHvisEksisterer(it) }
-            ?.tidslinje() ?: Tidslinje()
+        val gjeldendeVedtatte =
+            forrigeBehandlingId?.let { aktivitetsplikt11_7Repository.hentHvisEksisterer(it) }?.tidslinje()
+                ?: Tidslinje()
 
         val ny = Tidslinje(
             Periode(vurdering.gjelderFra, LocalDate.MAX), vurdering
         )
 
         val nyGjeldende = gjeldendeVedtatte.kombiner(ny, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+            .komprimer()
 
         aktivitetsplikt11_7Repository.lagre(
-            kontekst.kontekst.behandlingId,
-            vurderinger = nyGjeldende.toList().map { it.verdi }
-        )
+            kontekst.kontekst.behandlingId, vurderinger = nyGjeldende.toList().map { it.verdi })
 
         return LøsningsResultat(begrunnelse = løsning.aktivitetsplikt11_7Vurdering.begrunnelse)
     }
