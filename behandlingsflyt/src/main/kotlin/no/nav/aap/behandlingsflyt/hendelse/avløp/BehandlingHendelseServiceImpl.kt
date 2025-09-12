@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.KLAGE_OPPR
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.KLAGE_TRUKKET
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VARSEL_OM_BESTILLING
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_11_18
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_11_7
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_AVSLAG
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_ENDRING
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_INNVILGELSE
@@ -217,6 +218,7 @@ class BehandlingHendelseServiceImpl(
             FORHÅNDSVARSEL_KLAGE_FORMKRAV -> TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV
             FORVALTNINGSMELDING -> TypeBrev.FORVALTNINGSMELDING
             VEDTAK_11_18 -> TypeBrev.VEDTAK_11_18
+            VEDTAK_11_7 -> TypeBrev.VEDTAK_11_7
         }
     }
 
