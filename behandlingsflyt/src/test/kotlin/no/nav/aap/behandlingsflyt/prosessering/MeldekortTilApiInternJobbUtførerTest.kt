@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
 
 class MeldekortTilApiInternJobbUtførerTest {
 
