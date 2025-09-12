@@ -38,6 +38,9 @@ class SykdomsvurderingBrevSteg internal constructor(
             }
 
             VurderingType.REVURDERING -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    return Fullført
+                }
                 return vurder(kontekst)
             }
 

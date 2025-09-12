@@ -11,11 +11,54 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.TOTRINNS_VURDERT
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 
+/** Oppdater tilstanden på avklaringsbehovet [definisjon], slik at kvalitetssikring,
+ * to-trinnskontroll og tilbakeflyt blir riktig.
+ *
+ * For at kvalitetssikring og totrinnskontroll vises for riktig steg, så er det
+ * viktig at avklaringsbehovet har rett status. Ved å bruke denne funksjonen
+ * ivaretar man det.
+ *
+ * For at flyten skal bli riktig hvis man beveger seg fram og tilbake i flyten,
+ * så er det viktig at et steg rydder opp etter seg når det viser seg at steget
+ * ikke er relevant allikevel. Denne funksjonen hjelper også med det.
+ */
 fun oppdaterAvklaringsbehov(
     avklaringsbehovene: Avklaringsbehovene,
     definisjon: Definisjon,
+
+    /** Skal vedtaket inneholde en menneskelig vurdering av [definisjon]?
+     *
+     * Det er viktig å svare på det mer generelle spørsmålet *om vedtaket*
+     * skal inneholde en menneskelig vurdering. Ikke om nå-tilstanden av behandlingen
+     * har behov for en menneskelig vurdering. Grunnen er at det vil være behov for totrinnskontroll hvis vedtaket inneholder
+     * en menneskelig vurdering, selv om siste gjennomkjøring av steget
+     * ikke løftet avklaringsbehovet.
+     *
+     * En egenskap denne funksjonen må ha:
+     * Hvis `vedtakBehøverVurdering() == true` og noen løser
+     * (avklaringsbehovet)[definisjon], så er fortsatt `vedtakBehøverVurdering() == true`.
+     *
+     * @return Skal returnere `true` hvis behandlingen kommer til å inneholde
+     * en menneskelig vurdering av [definisjon].
+     */
     vedtakBehøverVurdering: () -> Boolean,
+
+
+    /** Er avklaringsbehovet [definisjon] tilstrekkelig vurdert for å fortsette behandlingen?
+     *
+     * Denne funksjonen kalles kun om `vedtakBehøverVurdering() == true` og avklaringsbehovet
+     * [definisjon] allerede har en løsning. Merk at selv om definisjonen allerede har en løsning,
+     * så kan den løsningen ha blitt rullet tilbake (se [tilbakestillGrunnlag]).
+     */
     erTilstrekkeligVurdert: () -> Boolean,
+
+    /** Rydd opp manuelle vurderinger introdusert i denne behandlingen på grunn av løsninger
+     * av avklaringsbehovet [definisjon].
+     *
+     * - Du burde ikke rydde opp for andre steg eller avklaringsbehov.
+     * - Hvis register-data og menneskelige vurderinger er lagret i samme grunnlag, så pass
+     *   på at du ikke tilbakestiller register-dataen!
+      */
     tilbakestillGrunnlag: () -> Unit,
 ) {
     require(definisjon.løsesISteg != StegType.UDEFINERT)

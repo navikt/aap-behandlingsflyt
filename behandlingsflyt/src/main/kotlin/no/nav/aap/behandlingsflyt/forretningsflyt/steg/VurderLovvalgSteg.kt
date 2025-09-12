@@ -53,7 +53,7 @@ class VurderLovvalgSteg private constructor(
             avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, grunnlag, avklaringsbehovene) },
-            erTilstrekkeligVurdert = { true },
+            erTilstrekkeligVurdert = { grunnlag.value.medlemskapArbeidInntektGrunnlag?.manuellVurdering != null },
             tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst, grunnlag.value) },
         )
 

@@ -35,7 +35,7 @@ enum class Vilkårtype(
         spesielleInnvilgelsesÅrsaker = listOf(
             Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG,
             Innvilgelsesårsak.STUDENT,
-            Innvilgelsesårsak.SYKEPENGEERSTATNING
+            Innvilgelsesårsak.SYKEPENGEERSTATNING,
         ),
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON,
@@ -57,6 +57,28 @@ enum class Vilkårtype(
             Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING
         ),
         hjemmel = "§ 11-6"
+    ),
+    OVERGANGARBEIDVILKÅRET(
+        kode = "AAP-17",
+        spesielleInnvilgelsesÅrsaker = listOf(
+            Innvilgelsesårsak.ARBEIDSSØKER,
+        ),
+        avslagsårsaker = listOf(
+            Avslagsårsak.MANGLENDE_DOKUMENTASJON,
+            Avslagsårsak.IKKE_RETT_PA_AAP_I_PERIODE_SOM_ARBEIDSSOKER
+        ),
+        hjemmel = "§ 11-17"
+    ),
+    OVERGANGUFØREVILKÅRET(
+        kode = "AAP-18",
+        spesielleInnvilgelsesÅrsaker = listOf(
+            Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD,
+        ),
+        avslagsårsaker = listOf(
+            Avslagsårsak.MANGLENDE_DOKUMENTASJON,
+            Avslagsårsak.IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE
+        ),
+        hjemmel = "§ 11-18"
     ),
     MEDLEMSKAP(
         kode = "AAP-2",

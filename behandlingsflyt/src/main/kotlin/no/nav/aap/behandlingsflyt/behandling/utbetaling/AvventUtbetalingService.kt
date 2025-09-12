@@ -40,12 +40,12 @@ class AvventUtbetalingService(
         if (harKrav) {
 
             val periodeMedKravFom = perioderMedKrav
-                .map {it.fom}
-                .filter {it != null}
+                .map { it.fom }
+                .filter { it != null }
                 .minOfOrNull { it!! }
             val periodeMedKravTom = perioderMedKrav
-                .map {it.tom}
-                .filter {it != null}
+                .map { it.tom }
+                .filter { it != null }
                 .minOfOrNull { it!! }
             val fom = periodeMedKravFom!!
             val tom = periodeMedKravTom ?: førsteVedtaksdato.minusDays(1).coerceAtLeast(fom)

@@ -74,6 +74,7 @@ public enum class Vurderingsbehov {
     UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT, // Utenlandsopphold før søknadstidspunkt
     VURDER_RETTIGHETSPERIODE, // Må ta stilling til rettighetsperioden
     SØKNAD_TRUKKET,
+    REVURDERING_KANSELLERT,
     FRITAK_MELDEPLIKT,
     KLAGE_TRUKKET,
     REVURDER_MANUELL_INNTEKT,   // Manuell inntekt
@@ -82,6 +83,8 @@ public enum class Vurderingsbehov {
     HELHETLIG_VURDERING,
     REVURDER_MELDEPLIKT_RIMELIG_GRUNN,
     AKTIVITETSPLIKT_11_7,
+    OVERGANG_UFORE,
+    OVERGANG_ARBEID,
     EFFEKTUER_AKTIVITETSPLIKT;
 }
 

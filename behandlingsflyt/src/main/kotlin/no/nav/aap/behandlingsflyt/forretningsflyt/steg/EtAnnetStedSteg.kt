@@ -34,11 +34,18 @@ class EtAnnetStedSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
-            if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
-                avklaringsbehovene.avbrytForSteg(type())
-                return Fullført
-            }
+        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING &&
+            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())
+        ) {
+            avklaringsbehovene.avbrytForSteg(type())
+            return Fullført
+        }
+
+        if (kontekst.vurderingType == VurderingType.REVURDERING &&
+            tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())
+        ) {
+            avklaringsbehovene.avbrytForSteg(type())
+            return Fullført
         }
 
         val avklaringsbehov = mutableListOf<Definisjon>()

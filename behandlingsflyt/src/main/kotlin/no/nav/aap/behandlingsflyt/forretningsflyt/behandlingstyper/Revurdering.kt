@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 
+import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgInformasjonskrav
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeInformasjonskrav
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadInformasjonskrav
@@ -34,11 +35,14 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ForeslåVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FritakMeldepliktSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.IkkeOppfyltMeldepliktSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.IverksettVedtakSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KansellerRevurderingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ManglendeLigningGrunnlagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OpprettRevurderingSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OvergangUføreSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OvergangArbeidSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RefusjonkravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RettighetsperiodeSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningAndreStatligeYtelserSteg
@@ -62,6 +66,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderStudentSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeSteg
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.komponenter.miljo.Miljø
 
 object Revurdering : BehandlingType {
     override fun flyt(): BehandlingFlyt {
@@ -75,6 +80,11 @@ object Revurdering : BehandlingType {
                 steg = SendForvaltningsmeldingSteg,
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTTATT_SØKNAD),
                 informasjonskrav = emptyList()
+            )
+            .medSteg(
+                steg = KansellerRevurderingSteg,
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.REVURDERING_KANSELLERT),
+                informasjonskrav = listOf(KansellerRevurderingInformasjonskrav)
             )
             .medSteg(
                 steg = SøknadSteg,
@@ -141,6 +151,36 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 )
             )
+            .apply {
+                // TODO legges kun ut i dev i første runde
+                if (Miljø.erDev() || Miljø.erLokal()) {
+                    medSteg(
+                        steg = OvergangUføreSteg,
+                        vurderingsbehovRelevanteForSteg = listOf(
+                            Vurderingsbehov.MOTTATT_SØKNAD,
+                            Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                            Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+                            Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                            Vurderingsbehov.HELHETLIG_VURDERING,
+                        )
+                    )
+                }
+            }
+            .apply {
+                // TODO legges kun ut i dev i første runde
+                if (Miljø.erDev() || Miljø.erLokal()) {
+                    medSteg(
+                        steg = OvergangArbeidSteg,
+                        vurderingsbehovRelevanteForSteg = listOf(
+                            Vurderingsbehov.MOTTATT_SØKNAD,
+                            Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                            Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+                            Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                            Vurderingsbehov.HELHETLIG_VURDERING,
+                        )
+                    )
+                }
+            }
             .medSteg(
                 steg = RefusjonkravSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
@@ -296,3 +336,4 @@ object Revurdering : BehandlingType {
     }
 
 }
+

@@ -24,7 +24,8 @@ public enum class ResultatKode {
     KLAGE_OMGJØRES,
     KLAGE_DELVIS_OMGJØRES,
     KLAGE_AVSLÅTT,
-    KLAGE_TRUKKET
+    KLAGE_TRUKKET,
+    KANSELLERT
 }
 
 public data class Diagnoser(
@@ -76,6 +77,8 @@ public enum class Vilkårtype {
     MEDLEMSKAP,
     LOVVALG,
     GRUNNLAGET,
+    OVERGANGARBEIDVILKÅRET,
+    OVERGANGUFØREVILKÅRET,
 
     @Deprecated("Skal fases ut.")
     SYKEPENGEERSTATNING,

@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagU
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
@@ -48,7 +49,7 @@ class BrevUtlederService(
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val underveisRepository: UnderveisRepository,
-    private val unleashGateway: UnleashGateway,
+    private val unleashGateway: UnleashGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -59,7 +60,7 @@ class BrevUtlederService(
         beregningVurderingRepository = repositoryProvider.provide(),
         tilkjentYtelseRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide(),
+        unleashGateway = gatewayProvider.provide()
     )
 
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov? {
@@ -70,18 +71,35 @@ class BrevUtlederService(
                 val resultat = resultatUtleder.utledResultat(behandlingId)
 
                 return when (resultat) {
-                    Resultat.INNVILGELSE -> brevBehovInnvilgelse(behandling)
+                    Resultat.INNVILGELSE -> {
+                        val vurderesForUføretrygd = underveisRepository.hentHvisEksisterer(behandling.id)
+                            ?.perioder
+                            .orEmpty()
+                            .any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
+                        if (vurderesForUføretrygd &&
+                            unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18)) {
+                            VurderesForUføretrygd
+                        } else {
+                            brevBehovInnvilgelse(behandling)
+                        }
+                    }
+
                     Resultat.AVSLAG -> Avslag
                     Resultat.TRUKKET -> null
+                    Resultat.KANSELLERT -> null
                 }
             }
 
             TypeBehandling.Revurdering -> {
+                val resultat = resultatUtleder.utledRevurderingResultat(behandlingId)
                 val vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet()
                 if (setOf(MOTTATT_MELDEKORT, FASTSATT_PERIODE_PASSERT, EFFEKTUER_AKTIVITETSPLIKT).containsAll(
                         vurderingsbehov
                     )
                 ) {
+                    return null
+                }
+                if (resultat == Resultat.KANSELLERT) {
                     return null
                 }
                 return VedtakEndring
@@ -96,7 +114,11 @@ class BrevUtlederService(
                 }
             }
 
-            TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling, TypeBehandling.Aktivitetsplikt ->
+            TypeBehandling.Aktivitetsplikt -> {
+                return VedtakAktivitetsplikt11_7
+            }
+
+            TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling ->
                 return null // TODO
         }
     }

@@ -7,7 +7,9 @@ import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.tilTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -17,6 +19,7 @@ import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
@@ -44,21 +47,19 @@ fun NormalOpenAPIRoute.meldepliktOverstyringGrunnlagApi(
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
 
-                    val gjeldendeVurdertePerioder = overstyringMeldepliktRepository
-                        .hentHvisEksisterer(behandling.id)
+                    val grunnlag = overstyringMeldepliktRepository.hentHvisEksisterer(behandling.id)
+
+                    val gjeldendeVedtatteVurdertePerioder = grunnlag
+                        ?.vurderinger
+                        ?.filter { it.vurdertIBehandling != behandling.referanse }
                         ?.tilTidslinje()
-                        ?.segmenter()
-                        ?.map { segment ->
-                            MeldepliktOverstyringVurderingResponse(
-                                begrunnelse = segment.verdi.begrunnelse,
-                                vurderingsTidspunkt = segment.verdi.opprettetTid,
-                                vurdertIBehandling = segment.verdi.vurdertIBehandling,
-                                meldepliktOverstyringStatus = segment.verdi.meldepliktOverstyringStatus,
-                                fraDato = segment.periode.fom,
-                                tilDato = segment.periode.tom,
-                                vurdertAv = VurdertAvResponse.fraIdent(segment.verdi.vurdertAv, segment.verdi.opprettetTid.toLocalDate(), ansattInfoService)
-                            )
-                        } ?: emptyList()
+                        ?.tilVurderingResponse(ansattInfoService) ?: emptyList()
+
+                    val overstyringerFraDenneBehandlingen = grunnlag
+                        ?.vurderinger
+                        ?.filter { it.vurdertIBehandling == behandling.referanse }
+                        ?.tilTidslinje()
+                        ?.tilVurderingResponse(ansattInfoService) ?: emptyList()
 
                     // Grunnlaget vil være tomt til underveis har kjørt, 
                     // men siden det er frivillig overstyring der steget automatisk returnerer Fullført, er dette greit
@@ -70,12 +71,27 @@ fun NormalOpenAPIRoute.meldepliktOverstyringGrunnlagApi(
                             ?.filter { it.meldepliktStatus == MeldepliktStatus.IKKE_MELDT_SEG }
                             ?.map { it.meldePeriode }
                             ?: emptyList(),
-                        gjeldendeVedtatteOversyringsvurderinger = gjeldendeVurdertePerioder.filter { it.vurdertIBehandling != behandling.referanse },
-                        overstyringsvurderinger =  gjeldendeVurdertePerioder.filter { it.vurdertIBehandling == behandling.referanse }
+                        gjeldendeVedtatteOversyringsvurderinger = gjeldendeVedtatteVurdertePerioder,
+                        overstyringsvurderinger = overstyringerFraDenneBehandlingen
                     )
                 }
 
             respond(meldepliktGrunnlag)
         }
     }
+}
+
+private fun Tidslinje<OverstyringMeldepliktData>.tilVurderingResponse(ansattInfoService: AnsattInfoService): List<MeldepliktOverstyringVurderingResponse> {
+    return this.segmenter()
+        .map { segment ->
+            MeldepliktOverstyringVurderingResponse(
+                begrunnelse = segment.verdi.begrunnelse,
+                vurderingsTidspunkt = segment.verdi.opprettetTid,
+                vurdertIBehandling = segment.verdi.vurdertIBehandling,
+                meldepliktOverstyringStatus = segment.verdi.meldepliktOverstyringStatus,
+                fraDato = segment.periode.fom,
+                tilDato = segment.periode.tom,
+                vurdertAv = VurdertAvResponse.fraIdent(segment.verdi.vurdertAv, segment.verdi.opprettetTid.toLocalDate(), ansattInfoService)
+            )
+        }
 }

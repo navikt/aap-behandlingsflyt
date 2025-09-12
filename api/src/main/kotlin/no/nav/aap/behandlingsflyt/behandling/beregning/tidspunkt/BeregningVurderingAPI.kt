@@ -93,14 +93,16 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(
 
                     val relevanteSaker = yrkesskadevurdering?.relevanteSaker.orEmpty()
                     val sakerMedDato =
-                        relevanteSaker.map { sak -> registerYrkeskade.singleOrNull { it.ref == sak } }
+                        relevanteSaker.map { sak -> registerYrkeskade.singleOrNull { it.ref == sak.referanse } }
 
                     BeregningYrkesskadeAvklaringResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         skalVurderes =
                             sakerMedDato.filterNotNull().map {
-                                // TODO her må alternativt skadedato hentes fra yrkesskadevurdering når denne får funksjonalitet for å manuelt overstyre skadedato
-                                val skadedato = requireNotNull(it.skadedato)
+                                val skadedato = requireNotNull(
+                                    it.skadedato
+                                        ?: yrkesskadevurdering?.relevanteSaker?.firstOrNull { sak -> sak.referanse == it.ref }?.manuellYrkesskadeDato
+                                )
                                 YrkesskadeTilVurderingResponse(
                                     it.ref,
                                     it.saksnummer,
@@ -118,7 +120,8 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(
                                     vurdering.toResponse(
                                         ansattInfoService.hentAnsattNavnOgEnhet(
                                             vurdering.vurdertAv
-                                        ))
+                                        )
+                                    )
                                 }
                                 .orEmpty(),
                         historiskeVurderinger = historiskeVurderinger

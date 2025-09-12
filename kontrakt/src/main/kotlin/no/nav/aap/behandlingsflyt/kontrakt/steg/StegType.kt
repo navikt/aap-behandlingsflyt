@@ -47,6 +47,14 @@ public enum class StegType(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
+    OVERGANG_UFORE(
+        gruppe = StegGruppe.SYKDOM,
+        status = Status.UTREDES
+    ),
+    OVERGANG_ARBEID(
+        gruppe = StegGruppe.SYKDOM,
+        status = Status.UTREDES
+    ),
     VURDER_SYKEPENGEERSTATNING(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
@@ -167,6 +175,10 @@ public enum class StegType(
     OPPRETT_REVURDERING(
         gruppe = StegGruppe.IVERKSETT_VEDTAK,
         status = Status.IVERKSETTES
+    ),
+    KANSELLER_REVURDERING(
+        gruppe = StegGruppe.KANSELLER_REVURDERING,
+        status = Status.UTREDES
     ),
     BREV(
         gruppe = StegGruppe.BREV,

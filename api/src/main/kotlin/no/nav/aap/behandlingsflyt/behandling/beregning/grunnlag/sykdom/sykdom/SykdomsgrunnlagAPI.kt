@@ -113,8 +113,6 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                         yrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
                     val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId = behandling.id)
 
-                    yrkesskadeGrunnlag to sykdomGrunnlag
-
                     val innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader.orEmpty()
                         .map { yrkesskade -> RegistrertYrkesskade(yrkesskade) }
 
@@ -138,7 +136,8 @@ private fun Yrkesskadevurdering.toResponse(ansattInfoService: AnsattInfoService)
     val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv)
     return YrkesskadevurderingResponse(
         begrunnelse = begrunnelse,
-        relevanteSaker = relevanteSaker,
+        relevanteSaker = relevanteSaker.map { it.referanse },
+        relevanteYrkesskadeSaker = relevanteSaker.map { YrkesskadeSakResponse(it.referanse, it.manuellYrkesskadeDato) },
         andelAvNedsettelsen = andelAvNedsettelsen?.prosentverdi(),
         erÅrsakssammenheng = erÅrsakssammenheng,
         vurdertAv = VurdertAvResponse(

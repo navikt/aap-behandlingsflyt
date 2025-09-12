@@ -3,12 +3,12 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetSted
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.tomKvoter
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
@@ -37,7 +37,7 @@ fun tomUnderveisInput(
     meldekort: List<Meldekort> = emptyList(),
     innsendingsTidspunkt: Map<LocalDate, JournalpostId> = emptyMap(),
     kvoter: Kvoter = tomKvoter,
-    aktivitetspliktGrunnlag: AktivitetspliktGrunnlag = AktivitetspliktGrunnlag(emptySet()),
+    aktivitetsplikt11_7Grunnlag: Aktivitetsplikt11_7Grunnlag = Aktivitetsplikt11_7Grunnlag(emptyList()),
     etAnnetSted: List<EtAnnetSted> = emptyList(),
     arbeidsevneGrunnlag: ArbeidsevneGrunnlag = ArbeidsevneGrunnlag(emptyList()),
     meldepliktGrunnlag: MeldepliktGrunnlag = MeldepliktGrunnlag(emptyList()),
@@ -52,7 +52,7 @@ fun tomUnderveisInput(
         meldekort = meldekort,
         innsendingsTidspunkt = innsendingsTidspunkt,
         kvoter = kvoter,
-        aktivitetspliktGrunnlag = aktivitetspliktGrunnlag,
+        aktivitetsplikt11_7Grunnlag = aktivitetsplikt11_7Grunnlag,
         etAnnetSted = etAnnetSted,
         arbeidsevneGrunnlag = arbeidsevneGrunnlag,
         meldepliktGrunnlag = meldepliktGrunnlag,

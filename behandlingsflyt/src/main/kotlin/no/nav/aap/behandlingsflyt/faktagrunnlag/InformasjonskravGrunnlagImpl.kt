@@ -13,7 +13,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 
 class InformasjonskravGrunnlagImpl(
-    private val informasjonskravRepository: InformasjonkskravRepository,
+    private val informasjonskravRepository: InformasjonskravRepository,
     private val repositoryProvider: RepositoryProvider,
     private val gatewayProvider: GatewayProvider,
 ) : InformasjonskravGrunnlag {

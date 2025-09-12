@@ -1,6 +1,9 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -20,12 +23,15 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 internal class SykdomRepositoryImplTest {
     private val dataSource = InitTestDatabase.freshDatabase()
@@ -63,6 +69,33 @@ internal class SykdomRepositoryImplTest {
 
             repo.lagre(behandling.id, listOf(sykdomsvurdering1, sykdomsvurdering2))
             assertEquals(listOf(sykdomsvurdering1, sykdomsvurdering2), repo.hent(behandling.id).sykdomsvurderinger)
+        }
+    }
+
+    @Test
+    fun `lagre og hente ned yrkesskade-vurdering`() {
+        dataSource.transaction { connection ->
+            val repo = SykdomRepositoryImpl(connection)
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+
+            val vurdering = Yrkesskadevurdering(
+                begrunnelse = "begr",
+                relevanteSaker = listOf(
+                    YrkesskadeSak(
+                        referanse = "gokk",
+                        manuellYrkesskadeDato = LocalDate.now()
+                    )
+                ),
+                erÅrsakssammenheng = true,
+                andelAvNedsettelsen = Prosent(70),
+                vurdertAv = "Grokki Grokk",
+                vurdertTidspunkt = LocalDateTime.now()
+            )
+            repo.lagre(behandling.id, vurdering)
+            assertThat(repo.hent(behandling.id).yrkesskadevurdering)
+                .usingRecursiveComparison().ignoringFields("id", "vurdertTidspunkt")
+                .isEqualTo(vurdering)
         }
     }
 
