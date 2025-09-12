@@ -71,7 +71,7 @@ class VurderBrudd11_7Løser(
         val ventebehov = avklaringsbehov.hentBehovForDefinisjon(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT)
 
         if (ventebehov != null && !ventebehov.fristUtløpt() && !vurdering.erOppfylt && !vurdering.skalIgnorereVarselFrist) {
-            avklaringsbehov.reåpne(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV)
+            avklaringsbehov.reåpne(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT)
         }
     }
 
