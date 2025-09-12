@@ -11,10 +11,8 @@ data class KansellerRevurderingVurdering(
 )
 
 enum class KansellerRevurderingÅrsak {
-    REVURDERING_ER_IKKE_LENGER_AKTUELL,
-    REVURDERINGEN_ER_FEILREGISTRERT,
-    REVURDERINGEN_ER_AVBRUTT_PÅ_GRUNN_AV_FEIL,
-    ANNET
+    FEILREGISTRERING,
+    START_REVURDERING_PAA_NYTT
 }
 
 fun KansellerRevurderingVurdering.tilDto(): KansellerRevurderingVurderingDto =

@@ -48,7 +48,7 @@ class KansellerRevurderingRepositoryImplTest {
 
             val kansellerRevurderingRepository = KansellerRevurderingRepositoryImpl(connection)
             val vurdering = KansellerRevurderingVurdering(
-                årsak = KansellerRevurderingÅrsak.REVURDERINGEN_ER_FEILREGISTRERT,
+                årsak = KansellerRevurderingÅrsak.FEILREGISTRERING,
                 begrunnelse = "En begrunnelse",
                 vurdertAv = Bruker(ident = "12345"),
             )
@@ -70,13 +70,13 @@ class KansellerRevurderingRepositoryImplTest {
 
             val kansellerRevurderingRepository = KansellerRevurderingRepositoryImpl(connection)
             val vurdering1 = KansellerRevurderingVurdering(
-                årsak = KansellerRevurderingÅrsak.REVURDERINGEN_ER_FEILREGISTRERT,
+                årsak = KansellerRevurderingÅrsak.FEILREGISTRERING,
                 begrunnelse = "En begrunnelse",
                 vurdertAv = Bruker(ident = "12345"),
             )
 
             val vurdering2 = KansellerRevurderingVurdering(
-                årsak = KansellerRevurderingÅrsak.REVURDERING_ER_IKKE_LENGER_AKTUELL,
+                årsak = KansellerRevurderingÅrsak.START_REVURDERING_PAA_NYTT,
                 begrunnelse = "Begrunnelse2",
                 vurdertAv = Bruker(ident = "54321"),
             )

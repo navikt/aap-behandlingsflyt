@@ -6,6 +6,6 @@ data class KansellerRevurderingVurderingDto(
 )
 
 enum class KansellerRevurderingÅrsakDto {
-    REVURDERINGEN_ER_FEILREGISTRERT,
-    REVURDERINGEN_ER_AVBRUTT_PÅ_GRUNN_AV_FEIL
+    FEILREGISTRERING,
+    START_REVURDERING_PAA_NYTT
 }

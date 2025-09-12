@@ -4535,7 +4535,7 @@ class FlytOrkestratorTest(unleashGateway: KClass< UnleashGateway>) : AbstraktFly
             revurdering1,
             KansellerRevurderingLøsning(
                 vurdering = KansellerRevurderingVurderingDto(
-                    årsak = KansellerRevurderingÅrsakDto.REVURDERINGEN_ER_FEILREGISTRERT,
+                    årsak = KansellerRevurderingÅrsakDto.FEILREGISTRERING,
                     begrunnelse = "Fordi den ikke er aktuell lenger"
                 ),
             )
