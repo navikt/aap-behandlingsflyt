@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.AdresseType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
@@ -22,7 +23,7 @@ data class TilhørighetVurdering(
     val manglerStatsborgerskapGrunnlag: List<ManglerStatsborgerskapGrunnlag>? = null,
     val oppgittJobbetIUtlandGrunnlag: List<OppgittJobbetIUtlandGrunnlag>? = null,
     val oppgittUtenlandsOppholdGrunnlag: List<OppgittUtenlandsOppholdGrunnlag>? = null,
-    val utenlandsAddresserGrunnlag: List<UtenlandsAdresseGrunnlag>? = null,
+    val utenlandsAddresserGrunnlag: UtenlandsAdresserGrunnlag? = null,
 )
 
 data class VedtakIMEDLGrunnlag(
@@ -63,7 +64,18 @@ data class OppgittUtenlandsOppholdGrunnlag(
     val fraDato: LocalDate?
 )
 
-data class UtenlandsAdresseGrunnlag(
+data class UtenlandsAdresserGrunnlag(
+    val adresser: List<UtenlandskAdresseDto>?,
+    val personStatus: List<FolkeregisterStatusDto>?
+)
+
+data class FolkeregisterStatusDto(
+    val status: PersonStatus,
+    val gyldighetstidspunkt: LocalDate?,
+    val opphoerstidspunkt: LocalDate?
+)
+
+data class UtenlandskAdresseDto(
     val gyldigFraOgMed: LocalDate?,
     val gyldigTilOgMed: LocalDate?,
     val adresseNavn: String?,
