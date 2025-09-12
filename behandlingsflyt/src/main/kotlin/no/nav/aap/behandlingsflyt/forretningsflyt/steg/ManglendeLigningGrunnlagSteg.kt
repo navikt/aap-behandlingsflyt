@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Year
@@ -50,14 +51,17 @@ class ManglendeLigningGrunnlagSteg internal constructor(
                 when (kontekst.vurderingType) {
                     VurderingType.FØRSTEGANGSBEHANDLING,
                     VurderingType.REVURDERING -> {
-                        if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
-                            false
-                        } else {
-                            val sisteRelevanteÅr = hentSisteRelevanteÅr(kontekst)
-                            val sisteÅrInntektGrunnlag = hentInntektGrunnlag(inntektGrunnlag, sisteRelevanteÅr)
+                        when {
+                            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                            kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
+                            manueltTriggetVurderingsbehov(kontekst) -> true
+                            else -> {
+                                val sisteRelevanteÅr = hentSisteRelevanteÅr(kontekst)
+                                val sisteÅrInntektGrunnlag = hentInntektGrunnlag(inntektGrunnlag, sisteRelevanteÅr)
 
-                            // Behøver vurdering dersom inntekt for siste år mangler fra register
-                            sisteÅrInntektGrunnlag == null
+                                // Behøver vurdering dersom inntekt for siste år mangler fra register
+                                sisteÅrInntektGrunnlag == null
+                            }
                         }
                     }
 
@@ -86,6 +90,10 @@ class ManglendeLigningGrunnlagSteg internal constructor(
             }
         )
         return Fullført
+    }
+
+    private fun manueltTriggetVurderingsbehov(kontekst: FlytKontekstMedPerioder): Boolean {
+        return kontekst.vurderingsbehovRelevanteForSteg.any { it == Vurderingsbehov.REVURDER_MANUELL_INNTEKT }
     }
 
     private fun hentManuellInntektVurdering(manuellInntektGrunnlag: ManuellInntektGrunnlag?, sisteRelevanteÅr: Year): ManuellInntektVurdering? {
