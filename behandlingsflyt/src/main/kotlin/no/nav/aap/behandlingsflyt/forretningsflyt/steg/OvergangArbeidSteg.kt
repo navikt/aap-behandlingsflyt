@@ -75,7 +75,7 @@ class OvergangArbeidSteg private constructor(
                     )
                     return Fullført
                 }
-                if (harVurdertBistandsVilkår(avklaringsbehovene) && bistandsVilkårErOppfylt(kontekst.behandlingId) && brukerHarTilstrekkeligNedsattArbeidsevne(
+                if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && brukerHarTilstrekkeligNedsattArbeidsevne(
                         sykdomgrunnlag
                     ) && harIkkeVurdert_11_17_tidligere(
                         avklaringsbehovene

@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonkskravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -12,7 +12,7 @@ import java.time.Instant
 
 class InformasjonskravRepositoryImpl(
     private val connection: DBConnection,
-): InformasjonkskravRepository {
+): InformasjonskravRepository {
 
     private val log = LoggerFactory.getLogger(javaClass)
 

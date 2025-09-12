@@ -54,6 +54,11 @@ class SamordningUføreSteg(
             }
 
             VurderingType.REVURDERING -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    avklaringsbehovene.avbrytForSteg(type())
+                    return Fullført
+                }
+
                 val uføreGrunnlag = uføreRepository.hentHvisEksisterer(kontekst.behandlingId)
                 val behandling = behandlingRepository.hent(kontekst.behandlingId)
                 val uføreGrunnlagPåForrigeBehandling = behandling.forrigeBehandlingId?.let {

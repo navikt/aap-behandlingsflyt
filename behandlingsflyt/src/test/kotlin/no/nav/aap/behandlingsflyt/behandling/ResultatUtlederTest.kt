@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling
 
+import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
@@ -21,6 +22,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKansellerRevurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
@@ -41,7 +43,10 @@ class ResultatUtlederTest {
         underveisRepository = InMemoryUnderveisRepository,
         InMemoryBehandlingRepository,
         trukketSøknadService = TrukketSøknadService(
-            InMemoryTrukketSøknadRepository,
+            InMemoryTrukketSøknadRepository
+        ),
+        kansellerRevurderingService = KansellerRevurderingService(
+            InMemoryKansellerRevurderingRepository
         )
     )
 
@@ -84,13 +89,20 @@ class ResultatUtlederTest {
     }
 
     @Test
-    fun `per nå, støtter kun å utlede resultat for førstegangsbehandling`() {
+    fun `per nå, støtter kun å utlede resultat for førstegangsbehandling og revurdering`() {
         val sak = nySak(Periode(1 januar 2023, 31 desember 2023))
         val behandling = opprettBehandling(sak)
         InMemoryBehandlingRepository.oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
-        val behandling2 = opprettBehandling(sak)
 
-        assertThat(behandling2.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+        val klage = InMemorySakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
+            sak.saksnummer,
+            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTATT_KLAGE)),
+                årsak = ÅrsakTilOpprettelse.KLAGE
+            )
+        )
+
+        assertThat(klage.typeBehandling()).isEqualTo(TypeBehandling.Klage)
 
         InMemoryUnderveisRepository.lagre(
             behandlingId = behandling.id,
@@ -102,7 +114,7 @@ class ResultatUtlederTest {
         )
 
         assertThrows<IllegalArgumentException> {
-            resultatUtleder.utledResultat(behandling2.id)
+            resultatUtleder.utledResultat(klage.id)
         }
     }
 

@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -28,11 +29,13 @@ class AvklarYrkesskadeLøser(
 
         val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
 
-        // TODO Midlertidig sjekk for å ikke kunne velge saker hvor skadedato mangler - mulighet for dette må implementeres
-        løsning.yrkesskadesvurdering.relevanteSaker.forEach { sakRef ->
+        løsning.yrkesskadesvurdering.relevanteSaker().forEach { sak ->
             yrkesskadeGrunnlag?.yrkesskader?.yrkesskader?.forEach { ys ->
-                if (sakRef == ys.ref && ys.skadedato == null) {
-                    throw UgyldigForespørselException("Skadedato må være satt for yrkesskade med referanse $sakRef - dette er ikke støttet enda")
+                if (sak.referanse == ys.ref && ys.skadedato == null && sak.manuellYrkesskadeDato == null) {
+                    throw UgyldigForespørselException("Skadedato må være satt for yrkesskade med referanse ${sak.referanse}.")
+                }
+                if (sak.referanse == ys.ref && ys.skadedato != null && sak.manuellYrkesskadeDato != null) {
+                    throw UgyldigForespørselException("Kan ikke manuelt sette yrkesskadedato når det eksisterer dato i register for ${sak.referanse}")
                 }
             }
         }
@@ -41,7 +44,12 @@ class AvklarYrkesskadeLøser(
             behandlingId = behandling.id,
             yrkesskadevurdering = Yrkesskadevurdering(
                 begrunnelse = løsning.yrkesskadesvurdering.begrunnelse,
-                relevanteSaker = løsning.yrkesskadesvurdering.relevanteSaker,
+                relevanteSaker = løsning.yrkesskadesvurdering.relevanteSaker().map {
+                    YrkesskadeSak(
+                        it.referanse,
+                        it.manuellYrkesskadeDato
+                    )
+                },
                 erÅrsakssammenheng = løsning.yrkesskadesvurdering.erÅrsakssammenheng,
                 andelAvNedsettelsen = løsning.yrkesskadesvurdering.andelAvNedsettelsen?.let { Prosent(it) },
                 vurdertAv = kontekst.bruker.ident,

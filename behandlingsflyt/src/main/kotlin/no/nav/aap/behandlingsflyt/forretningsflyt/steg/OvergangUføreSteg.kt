@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -34,6 +35,7 @@ import kotlin.collections.orEmpty
 class OvergangUføreSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val sykdomRepository: SykdomRepository,
     private val overgangUføreRepository: OvergangUføreRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårService: VilkårService,
@@ -42,6 +44,7 @@ class OvergangUføreSteg private constructor(
         vilkårsresultatRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         overgangUføreRepository = repositoryProvider.provide(),
+        sykdomRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         vilkårService = VilkårService(repositoryProvider),
     )
@@ -67,7 +70,9 @@ class OvergangUføreSteg private constructor(
                     )
                     return Fullført
                 }
-                if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && harIkkeVurdert_11_18_tidligere(
+                if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && sykdomsVilkårErOppfylt(
+                        kontekst
+                    ) && harIkkeVurdert_11_18_tidligere(
                         avklaringsbehovene
                     )
                 ) {
@@ -85,6 +90,7 @@ class OvergangUføreSteg private constructor(
                 }
 
             }
+
             VurderingType.MELDEKORT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.IKKE_RELEVANT -> {
@@ -108,6 +114,21 @@ class OvergangUføreSteg private constructor(
             vilkårsresultatRepository.hent(behandlingId).finnVilkår(Vilkårtype.BISTANDSVILKÅRET).vilkårsperioder()
                 .all { it.erOppfylt() }
         return alleBistandsVilkårOppfylt
+    }
+
+    private fun sykdomsVilkårErOppfylt(kontekst: FlytKontekstMedPerioder): Boolean {
+        val sykdomsGrunnlag = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+        if (sykdomsGrunnlag == null) {
+            return false
+        } else {
+            val sisteSykdomsvurdering = sykdomsGrunnlag.sykdomsvurderinger.maxByOrNull { it.opprettet }
+            if (sisteSykdomsvurdering?.harSkadeSykdomEllerLyte == true && sisteSykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel == true && sisteSykdomsvurdering.erArbeidsevnenNedsatt == true) {
+                return true
+            } else {
+                return false
+            }
+        }
     }
 
     private fun harIkkeVurdert_11_18_tidligere(avklaringsbehovene: Avklaringsbehovene): Boolean {

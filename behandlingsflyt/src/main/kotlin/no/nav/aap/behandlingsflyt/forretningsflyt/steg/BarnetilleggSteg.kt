@@ -47,6 +47,12 @@ class BarnetilleggSteg(
         }
 
         VurderingType.REVURDERING -> {
+            if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                log.info("Revurdering gir ingen behandlingsgrunnlag, avbryter steg. BehandlingId: ${kontekst.behandlingId}.")
+                avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+                    .avbrytForSteg(type())
+                Fullført
+            }
             vurder(kontekst)
         }
 

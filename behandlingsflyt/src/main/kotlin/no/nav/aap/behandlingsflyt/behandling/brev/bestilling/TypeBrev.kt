@@ -3,7 +3,9 @@ package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 enum class TypeBrev {
     VEDTAK_AVSLAG,
     VEDTAK_INNVILGELSE,
+    VEDTAK_11_18,
     VEDTAK_ENDRING,
+    VEDTAK_11_7,
     VARSEL_OM_BESTILLING,
     FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT,
     FORHÅNDSVARSEL_KLAGE_FORMKRAV,
@@ -17,6 +19,8 @@ enum class TypeBrev {
         return setOf(
             VEDTAK_AVSLAG,
             VEDTAK_INNVILGELSE,
+            VEDTAK_11_18,
+            VEDTAK_11_7,
             VEDTAK_ENDRING,
             KLAGE_AVVIST,
             KLAGE_OPPRETTHOLDELSE,
