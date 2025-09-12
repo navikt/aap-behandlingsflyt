@@ -67,6 +67,17 @@ class VurderSykepengeErstatningSteg private constructor(
 
             VurderingType.REVURDERING -> {
                 // TODO: Dette må gjøres mye mer robust og sjekkes konsistent mot 11-6...
+
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    log.info("Ingen behandlingsgrunnlag for behandlingId ${kontekst.behandlingId}, avbryter steg ${type()}")
+                    avklaringsbehovService.avbrytForSteg(kontekst.behandlingId, type())
+                    vilkårService.ingenNyeVurderinger(
+                        kontekst,
+                        Vilkårtype.BISTANDSVILKÅRET,
+                        "mangler behandlingsgrunnlag",
+                    )
+                    return Fullført
+                }
                 vurder(kontekst)
             }
 

@@ -97,6 +97,7 @@ fun NormalOpenAPIRoute.saksApi(
                                     Resultat.INNVILGELSE -> ResultatKode.INNVILGET
                                     Resultat.AVSLAG -> ResultatKode.AVSLAG
                                     Resultat.TRUKKET -> ResultatKode.TRUKKET
+                                    Resultat.KANSELLERT -> ResultatKode.KANSELLERT
                                     null -> null
                                 }
                             })
@@ -199,6 +200,7 @@ fun NormalOpenAPIRoute.saksApi(
                                     Resultat.INNVILGELSE -> ResultatKode.INNVILGET
                                     Resultat.AVSLAG -> ResultatKode.AVSLAG
                                     Resultat.TRUKKET -> ResultatKode.TRUKKET
+                                    Resultat.KANSELLERT -> ResultatKode.KANSELLERT
                                     null -> null
                                 }
                             })

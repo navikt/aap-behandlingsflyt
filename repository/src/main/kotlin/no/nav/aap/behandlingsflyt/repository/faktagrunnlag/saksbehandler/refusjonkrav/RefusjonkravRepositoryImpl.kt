@@ -73,6 +73,27 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
         }.flatten()
     }
 
+    override fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<RefusjonkravVurdering> {
+        val query = """
+            SELECT REFUSJONKRAV_VURDERINGER_ID
+            FROM REFUSJONKRAV_GRUNNLAG G
+                JOIN BEHANDLING B1 ON B1.ID = G.BEHANDLING_ID
+            WHERE G.AKTIV
+            AND B1.SAK_ID = ?
+            AND B1.OPPRETTET_TID < (SELECT B2.OPPRETTET_TID FROM BEHANDLING B2 WHERE ID = ?)
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, sakId.id)
+                setLong(2, behandlingId.id)
+            }
+            setRowMapper {
+                hentRefusjonkrav(it.getLong("REFUSJONKRAV_VURDERINGER_ID"))
+            }
+        }.flatten()
+    }
+
     override fun lagre(sakId: SakId, behandlingId: BehandlingId, refusjonkravVurderinger: List<RefusjonkravVurdering>) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         if (eksisterendeGrunnlag != null) {

@@ -713,7 +713,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     /**
      * Denne må brukes med omhu, da siste opprettede behandling ikke nødvendigvis er siste behandling
      * i den lenkede listen av behandlinger. Ref. fasttrack/atomære behandlinger
-     * 
+     *
      * Bruk i stedet: [SakOgBehandlingService.finnSisteYtelsesbehandlingFor]
      */
     protected fun hentSisteOpprettedeBehandlingForSak(
@@ -1067,13 +1067,14 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     protected fun leggTilVurderingsbehovForBehandling(
         behandling: Behandling,
-        vurderingsbehov: List<VurderingsbehovMedPeriode>
+        vurderingsbehov: List<VurderingsbehovMedPeriode>,
+        årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
     ) {
         dataSource.transaction { connection ->
             SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 .finnEllerOpprettOrdinærBehandling(
                     behandling.sakId,
-                    VurderingsbehovOgÅrsak(vurderingsbehov, ÅrsakTilOpprettelse.SØKNAD)
+                    VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse)
                 )
         }
         prosesserBehandling(behandling)
