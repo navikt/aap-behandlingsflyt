@@ -23,7 +23,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     OvergangUfore,
     IverksettUtbetalingSomSelvstendigJobb,
     RefaktorereFastsettSykdomsvilkar,
-    SykepengerPeriodisert
+    SykepengerPeriodisert,
+    OvergangArbeid,
     ;
 
     override fun key(): String = name

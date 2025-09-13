@@ -27,7 +27,8 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.OvergangUfore to false,
         BehandlingsflytFeature.IverksettUtbetalingSomSelvstendigJobb to true,
         BehandlingsflytFeature.RefaktorereFastsettSykdomsvilkar to true,
-        BehandlingsflytFeature.SykepengerPeriodisert to false
+        BehandlingsflytFeature.SykepengerPeriodisert to false,
+        BehandlingsflytFeature.OvergangArbeid to false,
     )
 )
 
@@ -42,6 +43,7 @@ object FakeUnleashFasttrackAktivitetsplikt : FakeUnleashBase(
         BehandlingsflytFeature.OvergangUfore to true,
         BehandlingsflytFeature.IverksettUtbetalingSomSelvstendigJobb to true,
         BehandlingsflytFeature.RefaktorereFastsettSykdomsvilkar to true,
-        BehandlingsflytFeature.SykepengerPeriodisert to true
+        BehandlingsflytFeature.SykepengerPeriodisert to true,
+        BehandlingsflytFeature.OvergangArbeid to true,
     )
 )
