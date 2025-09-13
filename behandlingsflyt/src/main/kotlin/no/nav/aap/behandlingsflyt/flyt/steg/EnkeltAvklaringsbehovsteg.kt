@@ -65,7 +65,8 @@ fun oppdaterAvklaringsbehov(
     val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
 
     if (vedtakBehøverVurdering()) {
-        if (avklaringsbehov == null || !avklaringsbehov.harAvsluttetStatusIHistorikken()) {
+        if (avklaringsbehov == null || !avklaringsbehov.harAvsluttetStatusIHistorikken() || avklaringsbehov.status() == AVBRUTT) {
+            /* ønsket tilstand: OPPRETTET */
             when (avklaringsbehov?.status()) {
                 OPPRETTET -> {
                     /* ønsket tilstand er OPPRETTET */
@@ -82,6 +83,7 @@ fun oppdaterAvklaringsbehov(
                     error("ikke mulig")
             }
         } else if (erTilstrekkeligVurdert()) {
+            /* ønsket tilstand: ... */
             when (avklaringsbehov.status()) {
                 OPPRETTET, AVBRUTT ->
                     avklaringsbehovene.avslutt(definisjon)
@@ -95,6 +97,7 @@ fun oppdaterAvklaringsbehov(
                 }
             }
         } else {
+            /* ønsket tilstand: OPPRETTET */
             when (avklaringsbehov.status()) {
                 OPPRETTET -> {
                     /* forbli OPPRETTET */
@@ -110,11 +113,12 @@ fun oppdaterAvklaringsbehov(
                 }
             }
         }
-    } else {
+    } else /* vedtaket behøver ikke vurdering */ {
+        /* ønsket tilstand: ikke eksistere (null) eller AVBRUTT. */
         when (avklaringsbehov?.status()) {
             null,
             AVBRUTT -> {
-                /* trenger ikke menneskelig vurdering for vedtaket. */
+                /* allerede ønsket tilstand */
             }
 
             OPPRETTET,
@@ -124,11 +128,8 @@ fun oppdaterAvklaringsbehov(
             KVALITETSSIKRET,
             SENDT_TILBAKE_FRA_KVALITETSSIKRER -> {
                 avklaringsbehovene.avbryt(definisjon)
+                tilbakestillGrunnlag()
             }
-        }
-
-        if (avklaringsbehov?.harAvsluttetStatusIHistorikken() == true) {
-            tilbakestillGrunnlag()
         }
     }
 }
