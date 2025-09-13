@@ -9,56 +9,40 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
-import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
-
+import no.nav.aap.komponenter.verdityper.Tid
 
 class OvergangUføreVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<OvergangUføreFaktagrunnlag> {
     private val vilkår: Vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGUFØREVILKÅRET)
     override fun vurder(grunnlag: OvergangUføreFaktagrunnlag) {
-
         val overgangUføreVurderinger = grunnlag.vurderinger
         val sorterteVurderinger = overgangUføreVurderinger.sortedBy { it.opprettet }
 
         val overgangUføreTidslinje = sorterteVurderinger.map { vurdering ->
-            Tidslinje(
-                Periode(
-                    fom = listOfNotNull(
-                        vurdering.vurderingenGjelderFra,
-                        vurdering.virkningsdato,
-                        grunnlag.rettighetsperiode.fom,
-                    ).max(),
-                    tom = grunnlag.rettighetsperiode.tom
-                ), vurdering
-            )
+            val fom = listOfNotNull(
+                vurdering.vurderingenGjelderFra,
+                vurdering.virkningsdato,
+                grunnlag.rettighetsperiode.fom,
+            ).max()
+            /* Fra lovteksten § 11-18:
+             * > Det kan gis arbeidsavklaringspenger i inntil åtte måneder
+             * > når medlemmet skal vurderes for uføretrygd.
+             *
+             * Dagens praksis i Arena er dato-til-dato, men regelspesifiseringen gir ingen spesifikasjon.
+             */
+            val tom = if (vurdering.brukerRettPåAAP == true) fom.plusMonths(8).minusDays(1) else Tid.MAKS
+
+            Tidslinje(Periode(fom, tom), vurdering)
         }.fold(Tidslinje<OvergangUføreVurdering>()) { t1, t2 ->
             t1.kombiner(t2, StandardSammenslåere.prioriterHøyreSideCrossJoin())
         }
 
-
         val tidslinje = overgangUføreTidslinje.mapValue { overganguførevurdering ->
-            opprettVilkårsvurdering(
-                overganguførevurdering, grunnlag
-            )
+            opprettVilkårsvurdering(overganguførevurdering, grunnlag)
         }
-        val oppfyltIkkeOppfyltTidslinje = Tidslinje(tidslinje.mapValue { it.erOppfylt() }.komprimer().map{ begrensSegment(it) })
-        val begrensetTidslinje: Tidslinje<Vilkårsvurdering> = tidslinje.innerJoin(oppfyltIkkeOppfyltTidslinje) { _, vilårsvurdering, _ ->
-            vilårsvurdering
-        }
-
-        vilkår.leggTilVurderinger(begrensetTidslinje)
-    }
-
-    private fun begrensSegment(segment: Segment<Boolean>): Segment<Boolean> {
-        val maksDato = segment.fom().plusMonths(8).minusDays(1)
-        val erOppfylt = segment.verdi
-        return if (!erOppfylt || segment.tom().isBefore(maksDato)) {
-            segment
-        } else {
-            Segment(Periode(segment.fom(), maksDato), segment.verdi)
-        }
+        vilkår.leggTilVurderinger(tidslinje)
     }
 
     private fun opprettVilkårsvurdering(
