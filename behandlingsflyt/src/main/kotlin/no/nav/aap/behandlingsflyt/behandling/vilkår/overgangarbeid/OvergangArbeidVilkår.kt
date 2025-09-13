@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Av
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -13,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.Ove
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 
 
 class OvergangArbeidVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<OvergangArbeidFaktagrunnlag> {
@@ -23,13 +23,16 @@ class OvergangArbeidVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
         val overgangArbeidTidslinje = overgangArbeidVurderinger
             .sortedBy { it.opprettet }
             .map { vurdering ->
-                Tidslinje(
-                    Periode(
-                        fom = vurdering.vurderingenGjelderFra ?: grunnlag.vurderingsdato,
-                        tom = grunnlag.sisteDagMedMuligYtelse
-                    ),
-                    vurdering
-                )
+                val fom = vurdering.vurderingenGjelderFra ?: grunnlag.vurderingsdato
+                val tom = if (vurdering.brukerRettPåAAP == true)
+                    /* Vilkåret har en begrensning på maks 6 måneder. Dette burde sjekkes på
+                     * tvers av vurderinger. Men dette vil fungere i den vanlige casen. Eksempel
+                     * på 6-månders-periode fra regelspesifiseringen: 01.02.23 - 31.07.23 */
+                    fom.plusMonths(6).minusDays(1)
+                else
+                    Tid.MAKS
+
+                Tidslinje(Periode(fom, tom), vurdering)
             }
             .fold(Tidslinje<OvergangArbeidVurdering>()) { t1, t2 ->
                 t1.kombiner(t2, StandardSammenslåere.prioriterHøyreSideCrossJoin())
@@ -42,7 +45,6 @@ class OvergangArbeidVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
             )
         }
         vilkår.leggTilVurderinger(tidslinje)
-
     }
 
     private fun opprettVilkårsvurdering(
@@ -54,9 +56,10 @@ class OvergangArbeidVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
         var innvilgelsesårsak: Innvilgelsesårsak? = null
 
         if (overgangArbeidVurdering == null) {
-            utfall = Utfall.IKKE_OPPFYLT
-            avslagsårsak = Avslagsårsak.IKKE_RETT_PA_AAP_I_PERIODE_SOM_ARBEIDSSOKER
-        } else if (overgangArbeidVurdering.virkningsdato != null &&
+            utfall = Utfall.IKKE_VURDERT
+        } else if (
+        /* Jeg forstår ikke hva denne sjekken på virknignsdato gjør. (peterbb) */
+            overgangArbeidVurdering.virkningsdato != null &&
             overgangArbeidVurdering.brukerRettPåAAP == true
         ) {
             utfall = Utfall.OPPFYLT
@@ -67,15 +70,12 @@ class OvergangArbeidVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
         }
 
         return Vilkårsvurdering(
-            Vilkårsperiode(
-                periode = Periode(grunnlag.vurderingsdato, grunnlag.vurderingsdato.plusMonths(6)),
-                utfall = utfall,
-                begrunnelse = null,
-                innvilgelsesårsak = innvilgelsesårsak,
-                avslagsårsak = avslagsårsak,
-                faktagrunnlag = grunnlag,
-                manuellVurdering = false
-            )
+            utfall = utfall,
+            begrunnelse = null,
+            innvilgelsesårsak = innvilgelsesårsak,
+            avslagsårsak = avslagsårsak,
+            faktagrunnlag = grunnlag,
+            manuellVurdering = false
         )
     }
 }
