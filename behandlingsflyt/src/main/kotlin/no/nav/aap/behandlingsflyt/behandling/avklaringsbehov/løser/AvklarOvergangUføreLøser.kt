@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
@@ -30,10 +29,7 @@ class AvklarOvergangUføreLøser(
 
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
-        val overgangUføreVurdering = løsning.overgangUføreVurdering.tilOvergangUføreVurdering(
-            kontekst.bruker,
-            løsning.overgangUføreVurdering.virkningsdato
-        )
+        val overgangUføreVurdering = løsning.overgangUføreVurdering.tilOvergangUføreVurdering(kontekst.bruker)
 
         val eksisterendeOverganguforevurderinger = behandling.forrigeBehandlingId
             ?.let { overgangUforeRepository.hentHvisEksisterer(it) }

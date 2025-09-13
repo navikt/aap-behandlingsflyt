@@ -59,7 +59,6 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
             brukerHarSøktOmUføretrygd = row.getBoolean("BRUKER_SOKT_UFORETRYGD"),
             brukerHarFåttVedtakOmUføretrygd = row.getStringOrNull("BRUKER_VEDTAK_UFORETRYGD"),
             brukerRettPåAAP = row.getBooleanOrNull("BRUKER_RETT_PAA_AAP"),
-            vurderingenGjelderFra = row.getLocalDateOrNull("VURDERINGEN_GJELDER_FRA"),
             virkningsdato = row.getLocalDateOrNull("VIRKNINGSDATO"),
             vurdertAv = row.getString("VURDERT_AV"),
             opprettet = row.getInstant("OPPRETTET_TID")
@@ -151,7 +150,7 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
         val overganguforevurderingerId = connection.executeReturnKey("""INSERT INTO OVERGANG_UFORE_VURDERINGER DEFAULT VALUES""")
 
         connection.executeBatch(
-            "INSERT INTO OVERGANG_UFORE_VURDERING (BEGRUNNELSE, BRUKER_SOKT_UFORETRYGD, BRUKER_VEDTAK_UFORETRYGD, BRUKER_RETT_PAA_AAP, VIRKNINGSDATO, VURDERT_AV, VURDERINGER_ID, VURDERINGEN_GJELDER_FRA) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO OVERGANG_UFORE_VURDERING (BEGRUNNELSE, BRUKER_SOKT_UFORETRYGD, BRUKER_VEDTAK_UFORETRYGD, BRUKER_RETT_PAA_AAP, VIRKNINGSDATO, VURDERT_AV, VURDERINGER_ID) VALUES (?, ?, ?, ?, ?, ?, ?)",
             vurderinger
         ) {
             setParams { vurdering ->
@@ -162,7 +161,6 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
                 setLocalDate(5, vurdering.virkningsdato)
                 setString(6, vurdering.vurdertAv)
                 setLong(7, overganguforevurderingerId)
-                setLocalDate(8, vurdering.vurderingenGjelderFra)
             }
         }
 

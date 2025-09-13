@@ -11,7 +11,6 @@ data class OvergangUføreVurdering(
     val brukerRettPåAAP: Boolean?,
     val virkningsdato: LocalDate?,
     val vurdertAv: String,
-    val vurderingenGjelderFra: LocalDate?,
     val opprettet: Instant? = null
 ) {
     fun harRettPåAAPMedOvergangUføre(): Boolean {
