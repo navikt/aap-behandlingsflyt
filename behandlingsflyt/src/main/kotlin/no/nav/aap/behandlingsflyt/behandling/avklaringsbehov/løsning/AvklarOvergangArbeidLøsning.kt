@@ -16,14 +16,16 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_OVERGANG_ARBEID)
 class AvklarOvergangArbeidLøsning(
-    @param:JsonProperty("overgangArbeidVurdering", required = true)
-    val overgangArbeidVurdering: OvergangArbeidVurderingLøsningDto,
+
+    @param:JsonProperty("løsningerForPerioder", required = true)
+    override val løsningerForPerioder: List<OvergangArbeidVurderingLøsningDto>,
+
     @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = AVKLAR_OVERGANG_ARBEID
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5032`
-) : EnkeltAvklaringsbehovLøsning {
+) : PeriodisertAvklaringsbehovLøsning<OvergangArbeidVurderingLøsningDto> {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarOvergangArbeidLøser(repositoryProvider).løs(kontekst, this)
     }

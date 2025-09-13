@@ -4,6 +4,5 @@ enum class Innvilgelsesårsak(val kode: String, val hjemmel: String) {
     YRKESSKADE_ÅRSAKSSAMMENHENG("11-5_11-22", "§ 11-5 jamfør § 11-22 1. ledd"),
     STUDENT("11-5_11-14", "§ 11-14"),
     SYKEPENGEERSTATNING("11-5_11-13", "§ 11-13"),
-    ARBEIDSSØKER("11_5-11_17", "§ 11-17"),
     VURDERES_FOR_UFØRETRYGD("11-5_11-18", "§ 11-18"),
 }

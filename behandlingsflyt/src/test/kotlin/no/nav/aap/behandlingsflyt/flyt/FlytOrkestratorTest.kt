@@ -144,7 +144,6 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRep
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -161,7 +160,6 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -1323,6 +1321,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     løsOvergangUføre()
                 }
             }
+            .løsOvergangArbeid(Utfall.IKKE_OPPFYLT)
             .løsSykdomsvurderingBrev()
             .løsAvklaringsBehov(
                 AvklarSykepengerErstatningLøsning(
@@ -4403,6 +4402,83 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     }
 
     @Test
+    fun `Vurdering av 11-17`() {
+        if (gatewayProvider.provide<UnleashGateway>().isDisabled(BehandlingsflytFeature.OvergangArbeid)) {
+            return
+        }
+
+        val sak = happyCaseFørstegangsbehandling(LocalDate.now())
+        val endringsdato = sak.rettighetsperiode.fom.plusDays(7)
+        val sluttdato = endringsdato.plusMonths(6).minusDays(1)
+
+        /* Gir AAP som arbeidssøker. */
+        sak.opprettManuellRevurdering(
+            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+        )
+            .løsSykdom(vurderingGjelderFra = endringsdato, erOppfylt = false)
+            .løsBistand(erOppfylt = false)
+            .løsOvergangArbeid(Utfall.OPPFYLT, fom = endringsdato)
+            .løsSykdomsvurderingBrev()
+            .fattVedtakEllerSendRetur()
+            .also {
+                assertThat(it.status()).isEqualTo(Status.IVERKSETTES)
+            }
+            .assertRettighetstype(
+                Periode(sak.rettighetsperiode.fom, endringsdato.minusDays(1)) to RettighetsType.BISTANDSBEHOV,
+                Periode(endringsdato, sluttdato) to RettighetsType.ARBEIDSSØKER,
+                Periode(sluttdato.plusDays(1), sak.rettighetsperiode.tom) to null
+            )
+
+        /* Revurdering som ombestemmer seg, og ikke gir AAP som arbeidssøker. */
+        sak.opprettManuellRevurdering(
+            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+        )
+            .løsSykdom(vurderingGjelderFra = endringsdato, erOppfylt = false)
+            .løsBistand(erOppfylt = false)
+            .løsOvergangArbeid(Utfall.IKKE_OPPFYLT, fom = endringsdato)
+            .løsSykdomsvurderingBrev()
+            .fattVedtakEllerSendRetur()
+            .also {
+                assertThat(it.status()).isEqualTo(Status.IVERKSETTES)
+                it.assertRettighetstype(
+                    Periode(sak.rettighetsperiode.fom, endringsdato.minusDays(1)) to RettighetsType.BISTANDSBEHOV,
+                    Periode(endringsdato, sak.rettighetsperiode.tom) to null,
+                )
+            }
+    }
+
+    @Test
+    fun `Endrer sykdomsvurdering slik at 11-17-vurdering ikke lenger er nødvendig`() {
+        if (gatewayProvider.provide<UnleashGateway>().isDisabled(BehandlingsflytFeature.OvergangArbeid)) {
+            return
+        }
+
+        val sak = happyCaseFørstegangsbehandling(LocalDate.now())
+
+        /* Gir AAP som arbeidssøker. */
+        val endringsdato = sak.rettighetsperiode.fom.plusDays(7)
+        sak.opprettManuellRevurdering(
+            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+        )
+            .løsSykdom(vurderingGjelderFra = endringsdato, erOppfylt = false)
+            .løsBistand(erOppfylt = true)
+            .løsOvergangArbeid(Utfall.OPPFYLT, fom = endringsdato)
+            /* Her hopper vi "tilbake" i flyten og endrer sykdom til oppfylt. */
+            .løsSykdom(vurderingGjelderFra = endringsdato, erOppfylt = true)
+            .løsSykdomsvurderingBrev()
+            .fattVedtakEllerSendRetur()
+            .also {
+                assertThat(it.status()).isEqualTo(Status.IVERKSETTES)
+            }
+            .assertRettighetstype(
+                sak.rettighetsperiode to RettighetsType.BISTANDSBEHOV,
+            )
+            .assertVilkårsutfall(Vilkårtype.OVERGANGARBEIDVILKÅRET,
+                sak.rettighetsperiode to Utfall.IKKE_VURDERT
+            )
+    }
+
+    @Test
     fun `barn lagres i pip i starten av behandlingen`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val manueltBarnIdent = genererIdent(LocalDate.now().minusYears(3))
@@ -4521,18 +4597,4 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .containsExactly(forventetStatus)
     }
 
-    fun Behandling.assertRettighetstype(vararg rettighetstyper: Pair<Periode, RettighetsType?>): Behandling {
-        val underveisperioder = dataSource.transaction(readOnly = true) { UnderveisRepositoryImpl(it).hent(this.id) }
-            .somTidslinje()
-
-        val assertions = tidslinjeOf(*rettighetstyper)
-            .map<(Underveisperiode) -> Unit> { rettighetsType ->
-                { underveisperiode ->
-                    assertThat(underveisperiode.rettighetsType).isEqualTo(rettighetsType)
-                }
-            }
-        underveisperioder.assertTidslinje(assertions)
-
-        return this
-    }
 }

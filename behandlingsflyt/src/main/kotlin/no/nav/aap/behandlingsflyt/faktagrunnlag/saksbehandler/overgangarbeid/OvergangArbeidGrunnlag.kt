@@ -1,23 +1,20 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid
 
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
 data class OvergangArbeidGrunnlag(
-    val id: Long?,
     val vurderinger: List<OvergangArbeidVurdering>,
 ) {
-
-    fun somOvergangArbeidvurderingstidslinje(startDato: LocalDate): Tidslinje<OvergangArbeidVurdering> {
+    fun gjeldendeVurderinger(maksDato: LocalDate = Tid.MAKS): Tidslinje<OvergangArbeidVurdering> {
         return vurderinger
-            .sortedBy { it.vurderingenGjelderFra ?: startDato }
-            .fold(Tidslinje()) { tidslinje, vurdering ->
-                tidslinje.kombiner(
-                    Tidslinje(Periode(vurdering.vurderingenGjelderFra ?: startDato, LocalDate.MAX), vurdering),
-                    StandardSammenslåere.prioriterHøyreSideCrossJoin()
-                )
-            }
+            .groupBy { it.vurdertIBehandling }
+            .values
+            .sortedBy { it[0].opprettet }
+            .flatMap { it.sortedBy { it.vurderingenGjelderFra } }
+            .somTidslinje { Periode(it.vurderingenGjelderFra, it.vurderingenGjelderTil ?: maksDato) }
     }
 }

@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.outerJoinNotNull
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 
 
 /* her er det en del rom for forbedringer:
@@ -25,17 +26,24 @@ fun vurderRettighetsType(vilkårsresultat: Vilkårsresultat): Tidslinje<Rettighe
         .alle()
         .map { vilkår -> vilkår.tidslinje().mapValue { vurdering -> vilkår.type to vurdering } }
         .outerJoinNotNull { it.toMap() }
-        .mapValue {
-            when {
+        .fold(Tidslinje<RettighetsType>()) { forutgåendeTidslinje, periode, vilkårsvurderinger ->
+            /* NB: Vi har ikke noen mekanismer for å identifisere opphør. Når vi får opphør, så skal [forutgåendeTidslinje]
+            *   begrenses til perioden etter opphør når den sendes inn til oppfylles av. */
+            val rettighetsType = when {
                 /* Prioritert rekkefølge */
-                KravForStudent.oppfyllesAv(it) -> RettighetsType.STUDENT
-                KravForOvergangUføretrygd.oppfyllesAv(it) -> RettighetsType.VURDERES_FOR_UFØRETRYGD
-                KravForSykepengeerstatning.oppfyllesAv(it) -> RettighetsType.SYKEPENGEERSTATNING
-                KravForOvergangArbeid.oppfyllesAv(it) -> RettighetsType.ARBEIDSSØKER
-                KravForOrdinærAap.oppfyllesAv(it) -> RettighetsType.BISTANDSBEHOV
-                KravForYrkesskade.oppfyllesAv(it) -> RettighetsType.BISTANDSBEHOV
+                KravForStudent.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.STUDENT
+                KravForOvergangUføretrygd.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.VURDERES_FOR_UFØRETRYGD
+                KravForSykepengeerstatning.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.SYKEPENGEERSTATNING
+                KravForOvergangArbeid.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.ARBEIDSSØKER
+                KravForOrdinærAap.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.BISTANDSBEHOV
+                KravForYrkesskade.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.BISTANDSBEHOV
                 else -> null
             }
+
+            if (rettighetsType == null)
+                forutgåendeTidslinje
+            else
+                forutgåendeTidslinje.mergePrioriterHøyre(tidslinjeOf(periode to rettighetsType))
         }
         .segmenter()
         .mapNotNull { segment -> segment.verdi?.let { Segment(segment.periode, it) } }
@@ -50,6 +58,7 @@ object KravForStudent : KravspesifikasjonForRettighetsType {
 
     override val kravOvergangUfør = IngenKrav
     override val kravOvergangArbeid = IngenKrav
+    override val forutgåendeAap = IngenKravOmForutgåendeAAP
 }
 
 object KravForOrdinærAap : KravspesifikasjonForRettighetsType {
@@ -59,6 +68,7 @@ object KravForOrdinærAap : KravspesifikasjonForRettighetsType {
 
     override val kravOvergangUfør = IngenKrav
     override val kravOvergangArbeid = IngenKrav
+    override val forutgåendeAap = IngenKravOmForutgåendeAAP
 }
 
 object KravForYrkesskade: KravspesifikasjonForRettighetsType {
@@ -68,6 +78,7 @@ object KravForYrkesskade: KravspesifikasjonForRettighetsType {
     override val kravForutgåendeMedlemskap = IngenKrav
     override val kravOvergangUfør = IngenKrav
     override val kravOvergangArbeid = IngenKrav
+    override val forutgåendeAap = IngenKravOmForutgåendeAAP
 }
 
 object KravForSykepengeerstatning : KravspesifikasjonForRettighetsType {
@@ -77,6 +88,7 @@ object KravForSykepengeerstatning : KravspesifikasjonForRettighetsType {
     override val kravBistand = IngenKrav
     override val kravOvergangUfør = IngenKrav
     override val kravOvergangArbeid = IngenKrav
+    override val forutgåendeAap = IngenKravOmForutgåendeAAP
 }
 
 object KravForOvergangUføretrygd : KravspesifikasjonForRettighetsType {
@@ -86,11 +98,13 @@ object KravForOvergangUføretrygd : KravspesifikasjonForRettighetsType {
 
     override val kravBistand = IngenKrav
     override val kravOvergangArbeid = IngenKrav
+    override val forutgåendeAap = IngenKravOmForutgåendeAAP
 }
 
 object KravForOvergangArbeid : KravspesifikasjonForRettighetsType {
     override val kravForutgåendeMedlemskap = MåVæreOppfylt()
-    override val kravOvergangArbeid = MåVæreOppfylt(null, Innvilgelsesårsak.ARBEIDSSØKER)
+    override val kravOvergangArbeid = MåVæreOppfylt()
+    override val forutgåendeAap = KravOmForutgåendeAAP(RettighetsType.BISTANDSBEHOV)
 
     override val kravBistand = IngenKrav
     override val kravSykdom = IngenKrav

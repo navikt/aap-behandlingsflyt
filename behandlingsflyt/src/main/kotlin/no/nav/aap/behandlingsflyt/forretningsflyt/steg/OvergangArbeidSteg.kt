@@ -1,39 +1,36 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.overgangarbeid.OvergangArbeidFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.overgangarbeid.OvergangArbeidVilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
-import kotlin.collections.orEmpty
 
 class OvergangArbeidSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -41,7 +38,11 @@ class OvergangArbeidSteg private constructor(
     private val overgangArbeidRepository: OvergangArbeidRepository,
     private val sykdomRepository: SykdomRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val vilkårService: VilkårService,
+    private val bistandRepository: BistandRepository,
+    private val behandlingRepository: BehandlingRepository,
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val studentRepository: StudentRepository,
+    private val overgangUføreRepository: OvergangUføreRepository,
     private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -50,132 +51,153 @@ class OvergangArbeidSteg private constructor(
         overgangArbeidRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
-        vilkårService = VilkårService(repositoryProvider),
+        bistandRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        studentRepository = repositoryProvider.provide(),
+        overgangUføreRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
     )
-
-    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (unleashGateway.isDisabled(BehandlingsflytFeature.OvergangArbeid)) {
             return Fullført
         }
-
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        val overgangArbeidGrunnlag = overgangArbeidRepository.hentHvisEksisterer(kontekst.behandlingId)
-        val sykdomgrunnlag = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
-        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_ARBEID)
-        when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING -> {
-                return Fullført
-            }
 
-            VurderingType.REVURDERING -> {
-                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-                    log.info("Ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.OVERGANGARBEIDVILKÅRET} for behandlingId ${kontekst.behandlingId}. Avbryter steg.")
-                    avklaringsbehovene.avbrytForSteg(type())
-                    vilkårService.ingenNyeVurderinger(
-                        kontekst.behandlingId,
-                        Vilkårtype.OVERGANGARBEIDVILKÅRET,
-                        kontekst.rettighetsperiode,
-                        "mangler behandlingsgrunnlag",
-                    )
-                    return Fullført
-                }
-                if (harVurdertBistandsVilkår(avklaringsbehovene) && !bistandsVilkårErOppfylt(kontekst.behandlingId) && brukerHarTilstrekkeligNedsattArbeidsevne(
-                        sykdomgrunnlag
-                    ) && harIkkeVurdert_11_17_tidligere(
-                        avklaringsbehovene
-                    )
-                ) {
-                    settSykdomsVilkårTilIkkeRelevant(kontekst)
-                    return FantAvklaringsbehov(Definisjon.AVKLAR_OVERGANG_ARBEID)
-                } else {
-                    if (avklaringsbehov != null && avklaringsbehov.erÅpent()) {
-                        avklaringsbehovene.avbryt(Definisjon.AVKLAR_OVERGANG_ARBEID)
-                    }
-                    vurderVilkårForPeriode(
-                        kontekst.rettighetsperiode,
-                        overgangArbeidGrunnlag,
-                        vilkårsresultat
-                    )
-                }
-            }
-
-            VurderingType.MELDEKORT,
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
-VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
-            VurderingType.IKKE_RELEVANT -> {
-                // Skal ikke gjøre noe
-            }
-        }
-        if (kontekst.harNoeTilBehandling()) {
-            vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
-        }
-        return Fullført
-    }
-
-
-    private fun harVurdertBistandsVilkår(avklaringsbehovene: Avklaringsbehovene): Boolean {
-        return avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.AVKLAR_BISTANDSBEHOV)
-    }
-
-    private fun bistandsVilkårErOppfylt(behandlingId: BehandlingId): Boolean {
-        val alleBistandsVilkårOppfylt =
-            vilkårsresultatRepository.hent(behandlingId).finnVilkår(Vilkårtype.BISTANDSVILKÅRET).vilkårsperioder()
-                .all { it.erOppfylt() }
-        return alleBistandsVilkårOppfylt
-    }
-
-    private fun brukerHarTilstrekkeligNedsattArbeidsevne(sykdomGrunnlag: SykdomGrunnlag?): Boolean {
-        if (sykdomGrunnlag == null) return false
-        val sisteSykdomsvurdering = sykdomGrunnlag.sykdomsvurderinger.maxByOrNull { it.opprettet }
-        if (sisteSykdomsvurdering == null) {
-            return false
-        } else {
-            if (!sisteSykdomsvurdering.harSkadeSykdomEllerLyte || sisteSykdomsvurdering.erArbeidsevnenNedsatt == false || sisteSykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel == false) {
-                return true
-            } else
-                return false
-        }
-    }
-
-    private fun harIkkeVurdert_11_17_tidligere(avklaringsbehovene: Avklaringsbehovene): Boolean {
-        return !avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.AVKLAR_OVERGANG_ARBEID)
-    }
-
-    private fun settSykdomsVilkårTilIkkeRelevant(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).leggTilVurdering(
-            Vilkårsperiode(
-                periode = Periode(kontekst.rettighetsperiode.fom, kontekst.rettighetsperiode.tom),
-                utfall = Utfall.IKKE_RELEVANT,
-                begrunnelse = null,
-                versjon = ApplikasjonsVersjon.versjon
-            )
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            avklaringsbehovene = avklaringsbehovene,
+            behandlingRepository = behandlingRepository,
+            vilkårsresultatRepository = vilkårsresultatRepository,
+            definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
+            tvingerAvklaringsbehov = setOf(
+                Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                Vurderingsbehov.HELHETLIG_VURDERING,
+            ),
+            nårVurderingErRelevant = ::perioderVurderingErRelevant,
+            kontekst = kontekst,
+            erTilstrekkeligVurdert = { true },
+            tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst) },
         )
-        log.info("Merket sykdom som ikke relevant pga innvilget arbeidssøker - vilkår.")
+
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        val avklarOvergangArbeid = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_ARBEID)
+        if (avklarOvergangArbeid?.status() == Status.AVSLUTTET) {
+            val grunnlag = OvergangArbeidFaktagrunnlag(
+                rettighetsperiode = kontekst.rettighetsperiode,
+                overgangArbeidGrunnlag = requireNotNull(overgangArbeidRepository.hentHvisEksisterer(kontekst.behandlingId)) {
+                    "Grunnlag må eksistere når avklaringsbehov har status AVSLUTTET"
+                },
+            )
+            OvergangArbeidVilkår(vilkårsresultat).vurder(grunnlag = grunnlag)
+        } else {
+            vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGARBEIDVILKÅRET)
+        }
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
 
-
         return Fullført
     }
 
+    private fun perioderVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
+        val utfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
 
-    private fun vurderVilkårForPeriode(
-        periode: Periode,
-        overgangArbeidGrunnlag: OvergangArbeidGrunnlag?,
-        vilkårsresultat: Vilkårsresultat
-    ) {
-        val grunnlag = OvergangArbeidFaktagrunnlag(
-            periode.fom,
-            periode.tom,
-            overgangArbeidGrunnlag?.vurderinger.orEmpty(),
-        )
-        OvergangArbeidVilkår(vilkårsresultat).vurder(grunnlag = grunnlag)
+        val sykdomsvurderinger = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?.somSykdomsvurderingstidslinje(kontekst.rettighetsperiode.fom)
+            ?: tidslinjeOf()
+
+        val bistandsvurderinger = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?.somBistandsvurderingstidslinje(kontekst.rettighetsperiode.fom)
+            ?: tidslinjeOf()
+
+        val studentVurderinger = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?.somTidslinje(kontekst.rettighetsperiode)
+            ?: tidslinjeOf()
+
+        val overgangUføreVurderinger = overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?.somOvergangUforevurderingstidslinje(kontekst.rettighetsperiode.fom)
+            ?: tidslinjeOf()
+
+        val forutgåendeOrdinærAap =
+            Tidslinje.map2(sykdomsvurderinger, bistandsvurderinger) { sykdomsvurdering, bistandsvurdering ->
+                sykdomsvurdering?.erOppfylt(kontekst.rettighetsperiode.fom) == true &&
+                        bistandsvurdering?.erBehovForBistand() == true
+            }
+                .fold(
+                    Tidslinje(
+                        kontekst.rettighetsperiode,
+                        false
+                    )
+                ) { forutgåendeOrdinærAap, periode, rettTilOrdinærAap ->
+                    forutgåendeOrdinærAap.or(
+                        tidslinjeOf(
+                            Periode(
+                                periode.fom.plusDays(1),
+                                Tid.MAKS
+                            ) to rettTilOrdinærAap
+                        )
+                    )
+                }
+
+        return Tidslinje.map6(
+            utfall,
+            sykdomsvurderinger,
+            bistandsvurderinger,
+            studentVurderinger,
+            overgangUføreVurderinger,
+            forutgåendeOrdinærAap,
+        ) { utfall, sykdomsvurdering, bistandsvurdering, studentvurdering, uførevurdering, forutgåendeOrdinærAap ->
+            when (utfall) {
+                null -> false
+                TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
+                TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
+                TidligereVurderinger.Behandlingsutfall.UKJENT -> {
+                    if (studentvurdering?.erOppfylt() == true) {
+                        return@map6 false
+                    }
+
+                    if (uførevurdering?.harRettPåAAPMedOvergangUføre() == true) {
+                        return@map6 false
+                    }
+
+                    if (forutgåendeOrdinærAap != true) {
+                        return@map6 false
+                    }
+
+                    sykdomsvurdering?.harSkadeSykdomEllerLyte == false ||
+                            sykdomsvurdering?.erArbeidsevnenNedsatt == false ||
+                            sykdomsvurdering?.erSkadeSykdomEllerLyteVesentligdel == false ||
+                            bistandsvurdering?.erBehovForBistand() != true
+                }
+            }
+        }
     }
 
+    private fun tilbakestillGrunnlag(kontekst: FlytKontekstMedPerioder) {
+        val vedtatteVurderinger = kontekst.forrigeBehandlingId
+            ?.let { overgangArbeidRepository.hentHvisEksisterer(it)?.vurderinger }
+            .orEmpty()
+
+        val gjeldendeVurderinger = overgangArbeidRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?.vurderinger
+            .orEmpty()
+        if (gjeldendeVurderinger.toSet() != vedtatteVurderinger.toSet()) {
+            overgangArbeidRepository.lagre(kontekst.behandlingId, vedtatteVurderinger)
+        }
+
+        val forrigeVilkårsvurderinger =
+            kontekst.forrigeBehandlingId
+                ?.let { vilkårsresultatRepository.hent(it).optionalVilkår(Vilkårtype.OVERGANGARBEIDVILKÅRET) }
+                ?.tidslinje()
+                ?: Tidslinje()
+
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        val vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.OVERGANGARBEIDVILKÅRET)
+        if (vilkår != null) {
+            vilkår.nullstillTidslinje()
+            vilkår.leggTilVurderinger(forrigeVilkårsvurderinger)
+            vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+        }
+    }
 
     companion object : FlytSteg {
         override fun konstruer(
@@ -188,5 +210,11 @@ VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
         override fun type(): StegType {
             return StegType.OVERGANG_ARBEID
         }
+    }
+}
+
+fun Tidslinje<Boolean>.or(other: Tidslinje<Boolean>): Tidslinje<Boolean> {
+    return this.outerJoin(other) { thisBool, otherBool ->
+        (thisBool ?: false) || (otherBool ?: false)
     }
 }
