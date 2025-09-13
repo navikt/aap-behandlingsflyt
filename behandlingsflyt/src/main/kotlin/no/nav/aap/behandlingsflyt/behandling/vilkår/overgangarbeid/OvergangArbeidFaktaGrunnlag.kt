@@ -1,11 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.overgangarbeid
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidVurdering
-import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidGrunnlag
+import no.nav.aap.komponenter.type.Periode
 
 data class OvergangArbeidFaktagrunnlag(
-    val vurderingsdato: LocalDate,
-    val sisteDagMedMuligYtelse: LocalDate,
-    val vurderinger: List<OvergangArbeidVurdering>
+    val rettighetsperiode: Periode,
+    val overgangArbeidGrunnlag: OvergangArbeidGrunnlag,
 ) : Faktagrunnlag

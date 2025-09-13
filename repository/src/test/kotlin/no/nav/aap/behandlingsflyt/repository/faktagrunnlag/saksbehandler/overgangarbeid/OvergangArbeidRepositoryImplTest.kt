@@ -16,6 +16,7 @@ import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import java.time.Instant
 import java.time.LocalDate
 
 internal class OvergangArbeidRepositoryImplTest {
@@ -42,12 +43,14 @@ internal class OvergangArbeidRepositoryImplTest {
             val overgangArbeidRepository = OvergangArbeidRepositoryImpl(connection)
 
             val testDate = LocalDate.of(2025, 1, 1)
-            val expected =  OvergangArbeidVurdering(
+            val expected = OvergangArbeidVurdering(
                 begrunnelse = "test",
                 brukerRettPåAAP = true,
                 vurderingenGjelderFra = testDate,
-                virkningsdato = testDate,
                 vurdertAv = "Saks behandler",
+                vurderingenGjelderTil = null,
+                opprettet = Instant.now(),
+                vurdertIBehandling = behandling.id
             )
 
             overgangArbeidRepository.lagre(behandling.id, listOf(expected))
@@ -73,9 +76,11 @@ internal class OvergangArbeidRepositoryImplTest {
                         begrunnelse = "test",
                         brukerRettPåAAP = true,
                         vurderingenGjelderFra = LocalDate.now(),
-                        virkningsdato = LocalDate.now(),
                         vurdertAv = "Saks behandler",
-                        )
+                        vurderingenGjelderTil = null,
+                        opprettet = Instant.now(),
+                        vurdertIBehandling = behandling.id,
+                    )
                 )
             )
             overgangArbeidRepository.lagre(
@@ -85,8 +90,10 @@ internal class OvergangArbeidRepositoryImplTest {
                         begrunnelse = "test",
                         brukerRettPåAAP = true,
                         vurderingenGjelderFra = LocalDate.now(),
-                        virkningsdato = LocalDate.now(),
                         vurdertAv = "Saks behandler",
+                        vurderingenGjelderTil = LocalDate.now().plusDays(2),
+                        opprettet = Instant.now(),
+                        vurdertIBehandling = behandling.id,
                     )
                 )
             )

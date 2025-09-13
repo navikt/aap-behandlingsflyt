@@ -68,9 +68,6 @@ class Bistandsvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<B
         if (studentvurdering?.erOppfylt() == true) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.STUDENT
-        } else if (bistandsvurdering?.skalVurdereAapIOvergangTilArbeid == true) {
-            innvilgelsesårsak = Innvilgelsesårsak.ARBEIDSSØKER
-            utfall = Utfall.OPPFYLT
         } else if (bistandsvurdering?.erBehovForBistand() == true) {
             utfall = Utfall.OPPFYLT
         } else {

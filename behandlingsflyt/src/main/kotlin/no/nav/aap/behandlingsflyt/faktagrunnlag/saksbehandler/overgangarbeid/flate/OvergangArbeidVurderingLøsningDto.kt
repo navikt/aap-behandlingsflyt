@@ -1,21 +1,26 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate
 
-
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidVurdering
-import no.nav.aap.komponenter.verdityper.Bruker
+import java.time.Instant
 import java.time.LocalDate
 
 data class OvergangArbeidVurderingLøsningDto(
-    val begrunnelse: String,
-    val brukerRettPåAAP: Boolean?,
-    val virkningsdato: LocalDate?,
-    val overgangBegrunnelse: String?,
-) {
-    fun tilOvergangArbeidVurdering(bruker: Bruker, vurderingenGjelderFra: LocalDate?) = OvergangArbeidVurdering(
-        begrunnelse = begrunnelse,
-        brukerRettPåAAP = brukerRettPåAAP,
-        vurderingenGjelderFra = vurderingenGjelderFra,
-        virkningsdato = virkningsdato,
-        vurdertAv = bruker.ident
-    )
+    override val begrunnelse: String,
+    override val fom: LocalDate,
+    override val tom: LocalDate?,
+    val brukerRettPåAAP: Boolean,
+): LøsningForPeriode {
+    fun tilOvergangArbeidVurdering(avklaringsbehovKontekst: AvklaringsbehovKontekst): OvergangArbeidVurdering {
+        return OvergangArbeidVurdering(
+            begrunnelse = begrunnelse,
+            brukerRettPåAAP = brukerRettPåAAP,
+            vurderingenGjelderFra = fom,
+            vurdertAv = avklaringsbehovKontekst.bruker.ident,
+            opprettet = Instant.now(),
+            vurdertIBehandling = avklaringsbehovKontekst.behandlingId(),
+            vurderingenGjelderTil = tom,
+        )
+    }
 }

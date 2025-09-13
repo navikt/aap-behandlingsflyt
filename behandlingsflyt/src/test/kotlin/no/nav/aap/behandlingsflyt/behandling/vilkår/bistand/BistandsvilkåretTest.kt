@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarBistandLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -119,37 +118,6 @@ class BistandsvilkåretTest {
         assertThat(vilkår.vilkårsperioder().last().periode.fom).isEqualTo(iDag.plusDays(10))
     }
 
-    @Test
-    fun `Skal kunne innvilge 11-18`() {
-        val vilkårsresultat = Vilkårsresultat()
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
-
-        val iDag = LocalDate.now()
-        Bistandsvilkåret(vilkårsresultat).vurder(
-            BistandFaktagrunnlag(
-                vurderingsdato = iDag,
-                sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
-                vurderinger = listOf(
-                    bistandvurdering(),
-                    bistandvurdering(
-                        vurderingenGjelderFra = iDag.plusDays(10),
-                        erBehovForAktivBehandling = false,
-                        erBehovForAnnenOppfølging = false,
-                        erBehovForArbeidsrettetTiltak = false,
-                        skalVurdereAapIOvergangTilArbeid = true,
-                        skalVurdereAapIOvergangTilUføre = false
-                    )
-                ),
-                studentvurdering = null
-            )
-        )
-
-        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-
-        assertThat(vilkår.vilkårsperioder()).hasSize(2)
-        assertThat(vilkår.vilkårsperioder()).allMatch { it.utfall == Utfall.OPPFYLT }
-        assertThat(vilkår.vilkårsperioder().last().innvilgelsesårsak).isEqualTo(Innvilgelsesårsak.ARBEIDSSØKER)
-    }
 
     @Test
     fun `Skal bygge tidslinje på tvers av behandlinger`() {
