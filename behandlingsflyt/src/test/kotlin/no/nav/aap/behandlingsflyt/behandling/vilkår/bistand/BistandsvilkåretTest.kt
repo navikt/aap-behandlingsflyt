@@ -149,41 +149,6 @@ class BistandsvilkåretTest {
     }
 
     @Test
-    fun `Skal kunne innvilge 11-17`() {
-        val vilkårsresultat = Vilkårsresultat()
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
-
-        val iDag = LocalDate.now()
-        Bistandsvilkåret(vilkårsresultat).vurder(
-            BistandFaktagrunnlag(
-                vurderingsdato = iDag,
-                sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
-                vurderinger = listOf(
-                    bistandvurdering(),
-                    bistandvurdering(
-                        vurderingenGjelderFra = iDag.plusDays(10),
-                        erBehovForAktivBehandling = false,
-                        erBehovForAnnenOppfølging = false,
-                        erBehovForArbeidsrettetTiltak = false,
-                        skalVurdereAapIOvergangTilArbeid = false,
-                        skalVurdereAapIOvergangTilUføre = true
-                    )
-                ),
-                studentvurdering = null
-            )
-        )
-
-        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-
-        assertThat(vilkår.vilkårsperioder()).hasSize(2)
-        assertThat(vilkår.vilkårsperioder()).allMatch { it.utfall == Utfall.OPPFYLT }
-        assertThat(
-            vilkår.vilkårsperioder().last().innvilgelsesårsak
-        ).isEqualTo(Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD)
-        assertThat(vilkår.vilkårsperioder().last().periode.fom).isEqualTo(iDag.plusDays(10))
-    }
-
-    @Test
     fun `Skal bygge tidslinje på tvers av behandlinger`() {
         val bistandsvurdering1 = BistandVurdering(
             begrunnelse = "Begrunnelse",

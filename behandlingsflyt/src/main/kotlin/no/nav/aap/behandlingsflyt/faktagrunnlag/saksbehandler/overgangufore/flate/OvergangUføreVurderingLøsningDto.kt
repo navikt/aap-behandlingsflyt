@@ -12,12 +12,11 @@ data class OvergangUføreVurderingLøsningDto(
     val virkningsdato: LocalDate?,
     val overgangBegrunnelse: String?,
 ) {
-    fun tilOvergangUføreVurdering(bruker: Bruker, vurderingenGjelderFra: LocalDate?) = OvergangUføreVurdering(
+    fun tilOvergangUføreVurdering(bruker: Bruker) = OvergangUføreVurdering(
         begrunnelse = begrunnelse,
         brukerHarSøktOmUføretrygd = brukerHarSøktOmUføretrygd,
         brukerHarFåttVedtakOmUføretrygd = brukerHarFåttVedtakOmUføretrygd,
         brukerRettPåAAP = brukerRettPåAAP,
-        vurderingenGjelderFra = vurderingenGjelderFra,
         virkningsdato = virkningsdato,
         vurdertAv = bruker.ident
     )

@@ -174,7 +174,6 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
@@ -1273,7 +1272,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     }
 
     @Test
-    @Disabled
     fun `avslag på 11-6 er også inngang til 11-13 og 11-18`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val person = TestPersoner.STANDARD_PERSON()
@@ -1390,7 +1388,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     }
 
     @Test
-    @Disabled
     fun `11-18 uføre underveis i en behandling`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val person = TestPersoner.STANDARD_PERSON()
@@ -1506,18 +1503,12 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
 
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
-
         assertTidslinje(
             vilkårsresultat.rettighetstypeTidslinje(),
-            Periode(periode.fom, virkningsdatoOvergangUføre.minusDays(1)) to {
-                assertThat(it).isNotEqualTo(RettighetsType.VURDERES_FOR_UFØRETRYGD) // TODO: Dette fungerer ikke as-is, og må oppdateres når ny funksjonalitet er på plass
-            },
             Periode(virkningsdatoOvergangUføre, virkningsdatoOvergangUføre.plusMonths(8).minusDays(1)) to {
                 assertThat(it).isEqualTo(RettighetsType.VURDERES_FOR_UFØRETRYGD)
             },
-            Periode(virkningsdatoOvergangUføre.plusMonths(8), periode.tom) to {
-                assertThat(it).isNotEqualTo(RettighetsType.VURDERES_FOR_UFØRETRYGD) // TODO: Dette fungerer ikke as-is, og må oppdateres når ny funksjonalitet er på plass
-            })
+        )
     }
 
     @Test

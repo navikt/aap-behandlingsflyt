@@ -16,7 +16,6 @@ import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
-import java.time.Instant
 import java.time.LocalDate
 
 internal class OvergangUføreRepositoryImplTest {
@@ -48,7 +47,6 @@ internal class OvergangUføreRepositoryImplTest {
                 brukerHarSøktOmUføretrygd = true,
                 brukerHarFåttVedtakOmUføretrygd = "NEI",
                 brukerRettPåAAP = true,
-                vurderingenGjelderFra = testDate,
                 virkningsdato = testDate,
                 vurdertAv = "Saks behandler",
             )
@@ -77,7 +75,6 @@ internal class OvergangUføreRepositoryImplTest {
                         brukerHarSøktOmUføretrygd = true,
                         brukerHarFåttVedtakOmUføretrygd = "NEI",
                         brukerRettPåAAP = true,
-                        vurderingenGjelderFra = LocalDate.now(),
                         virkningsdato = LocalDate.now(),
                         vurdertAv = "Saks behandler",
                     )
@@ -91,7 +88,6 @@ internal class OvergangUføreRepositoryImplTest {
                         brukerHarSøktOmUføretrygd = true,
                         brukerHarFåttVedtakOmUføretrygd = "NEI",
                         brukerRettPåAAP = true,
-                        vurderingenGjelderFra = LocalDate.now(),
                         virkningsdato = LocalDate.now(),
                         vurdertAv = "Saks behandler",
                     )
