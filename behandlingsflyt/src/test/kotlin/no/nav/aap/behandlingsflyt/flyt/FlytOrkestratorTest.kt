@@ -440,7 +440,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val periodeBarnUnderAtten = Periode(periode.fom, barnBlirAttenPå.minusDays(1))
         val barnErAtten = barnetillegg.begrensetTil(periodeBarnUnderAtten)
 
-        assertThat(barnErAtten).isNotEmpty
+        assertThat(barnErAtten.segmenter()).isNotEmpty
         // Verifiser at barnetillegg kun gis fram til barnet er 18 år
         assertTidslinje(barnErAtten, periodeBarnUnderAtten to {
             assertThat(it).isEqualTo(Beløp(37))
@@ -448,7 +448,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         val periodeBarnOverAtten = Periode(barnBlirAttenPå, periode.tom)
         val barnErOverAtten = barnetillegg.begrensetTil(periodeBarnOverAtten)
-        assertThat(barnErOverAtten).isNotEmpty
+        assertThat(barnErOverAtten.segmenter()).isNotEmpty
         // Verifiser at barnetillegg er null etter fylte 18 år
         assertTidslinje(barnErOverAtten, periodeBarnOverAtten to {
             assertThat(it).isEqualTo(Beløp(0))
@@ -514,7 +514,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val barnetillegg = uthentetTilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
 
         val begrensetTilRettighetsperioden = barnetillegg.begrensetTil(periode)
-        assertThat(begrensetTilRettighetsperioden).isNotEmpty
+        assertThat(begrensetTilRettighetsperioden.segmenter()).isNotEmpty
         assertThat(begrensetTilRettighetsperioden.helePerioden()).isEqualTo(periode)
 
         // Skal kun gi barnetillegg for det unge barnet

@@ -102,7 +102,7 @@ class UnderveisServiceTest {
 
             val vurderingTidslinje = underveisService.vurderRegler(input)
 
-            assertThat(vurderingTidslinje).isNotEmpty()
+            assertThat(vurderingTidslinje.segmenter()).isNotEmpty()
         }
     }
 }

@@ -205,8 +205,8 @@ class TidligereVurderingerImpl(
         return when {
             utfall.isEmpty() || !utfall.erSammenhengende() -> UKJENT
             utfall.helePerioden() != kontekst.rettighetsperiode -> UKJENT
-            utfall.any { it.verdi == IKKE_BEHANDLINGSGRUNNLAG } -> IKKE_BEHANDLINGSGRUNNLAG.also { it -> log.info("Gir IKKE_BEHANDLINGSGRUNNLAG i steg: $førSteg.") }
-            utfall.all { it.verdi == UUNGÅELIG_AVSLAG } -> UUNGÅELIG_AVSLAG.also { it -> log.info("Gir avslag for UUNGÅELIG_AVSLAG i steg: $førSteg.") }
+            utfall.segmenter().any { it.verdi == IKKE_BEHANDLINGSGRUNNLAG } -> IKKE_BEHANDLINGSGRUNNLAG.also { it -> log.info("Gir IKKE_BEHANDLINGSGRUNNLAG i steg: $førSteg.") }
+            utfall.segmenter().all { it.verdi == UUNGÅELIG_AVSLAG } -> UUNGÅELIG_AVSLAG.also { it -> log.info("Gir avslag for UUNGÅELIG_AVSLAG i steg: $førSteg.") }
             else -> UKJENT
         }
     }

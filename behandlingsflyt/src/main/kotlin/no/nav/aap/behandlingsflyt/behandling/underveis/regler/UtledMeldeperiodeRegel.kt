@@ -13,7 +13,7 @@ class UtledMeldeperiodeRegel : UnderveisRegel {
             tidslinje: Tidslinje<T>,
         ): Tidslinje<Tidslinje<T>> {
             return tidslinje.splittOppIPerioder(
-                vurderinger.map {
+                vurderinger.segmenter().map {
                     Periode(
                         fom = maxOf(it.verdi.meldeperiode().fom, vurderinger.minDato()),
                         tom = minOf(it.verdi.meldeperiode().tom, vurderinger.maxDato()),

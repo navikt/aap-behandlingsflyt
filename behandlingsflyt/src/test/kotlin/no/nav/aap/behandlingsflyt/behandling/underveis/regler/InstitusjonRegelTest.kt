@@ -122,7 +122,7 @@ class InstitusjonRegelTest {
 
         val resultat = regel.vurder(input, tidligereResultatTidslinje)
 
-        assertEquals(7, resultat.count())
+        assertEquals(7, resultat.segmenter().count())
 
         // Blir lagt inn i løpet av januar men får ingen reduksjon før 1/2
         assertEquals(

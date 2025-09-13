@@ -118,7 +118,7 @@ class ApiInternGatewayImpl() : ApiInternGateway {
                             barnetillegg = tilkjentPeriode.tilkjent.barnetillegg.verdi,
                         )
                     },
-                    rettighetsTypeTidsLinje = rettighetsTypeTidslinje.map { segment ->
+                    rettighetsTypeTidsLinje = rettighetsTypeTidslinje.segmenter().map { segment ->
                         RettighetsTypePeriode(
                             segment.periode.fom,
                             segment.periode.tom,

@@ -45,7 +45,7 @@ class AvklarOvergangUføreLøser(
 
         val gjeldende = eksisterendeOverganguforevurderinger
             .kombiner(ny, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-            .toList().map { it.verdi }
+            .segmenter().map { it.verdi }
 
         overgangUforeRepository.lagre(
             behandlingId = behandling.id,

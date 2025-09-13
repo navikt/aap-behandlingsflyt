@@ -102,7 +102,7 @@ class OvergangUføreSteg private constructor(
             VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
                 val perioderOvergangUføreErRelevant = perioderMedVurderingsbehov(kontekst)
 
-                if (perioderOvergangUføreErRelevant.any { it.verdi } && vurderingsbehovTvingerVurdering(kontekst)) {
+                if (perioderOvergangUføreErRelevant.segmenter().any { it.verdi } && vurderingsbehovTvingerVurdering(kontekst)) {
                     return true
                 }
 
@@ -126,7 +126,7 @@ class OvergangUføreSteg private constructor(
 
                 perioderOvergangUføreErRelevant.leftJoin(perioderOvergangUføreErVurdert) { erRelevant, erVurdert ->
                     erRelevant && erVurdert != true
-                }.any { it.verdi }
+                }.segmenter().any { it.verdi }
             }
 
             VurderingType.MELDEKORT -> false

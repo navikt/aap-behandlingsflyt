@@ -19,7 +19,7 @@ class ArbeidsevnePerioder private constructor(
         leggTil(ArbeidsevnePerioder(arbeidsevneVurderinger.tidslinje()))
 
     fun gjeldendeArbeidsevner(): List<ArbeidsevneVurdering> =
-        tidslinje.komprimer().map {
+        tidslinje.komprimer().segmenter().map {
             it.verdi.toArbeidsevneVurdering(it.periode.fom)
         }
 }

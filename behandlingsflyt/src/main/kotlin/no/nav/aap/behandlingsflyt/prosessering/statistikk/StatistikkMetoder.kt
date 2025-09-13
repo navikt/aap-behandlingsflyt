@@ -217,7 +217,7 @@ class StatistikkMetoder(
 
         val tilkjentYtelse =
             tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)?.map { Segment(it.periode, it.tilkjent) }
-                ?.let(::Tidslinje)?.mapValue { it }?.komprimer()?.map {
+                ?.let(::Tidslinje)?.mapValue { it }?.komprimer()?.segmenter()?.map {
                     val verdi = it.verdi
                     TilkjentYtelsePeriodeDTO(
                         fraDato = it.periode.fom,
@@ -244,7 +244,7 @@ class StatistikkMetoder(
 
         val rettighetstypePerioder = underveisRepository.hentHvisEksisterer(behandling.id)?.perioder.orEmpty()
             .filter { it.rettighetsType != null }.map { Segment(it.periode, it.rettighetsType) }.let(::Tidslinje)
-            .komprimer().map {
+            .komprimer().segmenter().map {
                 RettighetstypePeriode(
                     fraDato = it.periode.fom,
                     tilDato = it.periode.tom,

@@ -193,7 +193,7 @@ class AvklaringsbehovService(
                     VurderingType.REVURDERING -> {
                         val perioderBistandsvilkåretErRelevant = nårVurderingErRelevant(kontekst)
 
-                        if (perioderBistandsvilkåretErRelevant.any { it.verdi } && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }) {
+                        if (perioderBistandsvilkåretErRelevant.segmenter().any { it.verdi } && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }) {
                             return@oppdaterAvklaringsbehov true
                         }
 
@@ -221,7 +221,7 @@ class AvklaringsbehovService(
 
                         perioderBistandsvilkåretErRelevant.leftJoin(perioderBistandsvilkåretErVurdert) { erRelevant, erVurdert ->
                             erRelevant && erVurdert != true
-                        }.any { it.verdi }
+                        }.segmenter().any { it.verdi }
                     }
 
                     VurderingType.MELDEKORT -> false

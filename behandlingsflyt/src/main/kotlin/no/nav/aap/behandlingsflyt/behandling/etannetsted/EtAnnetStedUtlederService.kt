@@ -130,7 +130,7 @@ class EtAnnetStedUtlederService(
             val oppholdSomKanGiReduksjon = Tidslinje(
                 oppholdSomLiggerMindreEnnTreMånederFraForrigeSomGaReduksjon(
                     helseoppholdUtenBarnetillegg, perioderSomTrengerVurdering
-                ).mapNotNull {
+                ).segmenter().mapNotNull {
                     val fom = it.fom().withDayOfMonth(1).plusMonths(1)
 
                     if (fom.isAfter(it.tom())) {

@@ -27,7 +27,7 @@ class GrunnbeløpTest {
             joinStyle = StandardSammenslåere.kunHøyre()
         )
 
-        assertThat(utregnetTidslinjeGjennomsnitt)
+        assertThat(utregnetTidslinjeGjennomsnitt.segmenter())
             .containsExactly(
                 Segment(Periode(31 desember 2009, 31 desember 2009), Beløp(72006)),
                 Segment(Periode(1 januar 2010, 1 januar 2010), Beløp(74721))
@@ -44,7 +44,7 @@ class GrunnbeløpTest {
             joinStyle = StandardSammenslåere.kunHøyre()
         )
 
-        assertThat(utregnetTidslinje)
+        assertThat(utregnetTidslinje.segmenter())
             .containsExactly(
                 Segment(Periode(30 april 2010, 30 april 2010), Beløp(72881)),
                 Segment(Periode(1 mai 2010, 1 mai 2010), Beløp(75641))

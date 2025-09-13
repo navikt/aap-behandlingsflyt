@@ -46,7 +46,7 @@ fun <T, R> Tidslinje<T>.mapMedDatoTilDatoVarighet(
 
     var datoTilDato: Periode? = null
 
-    for (vurdering in this) {
+    for (vurdering in this.segmenter()) {
         if (harBegrensetVarighet(vurdering.verdi)) {
             if (datoTilDato == null) {
                 datoTilDato = Periode(vurdering.periode.fom, varighet(vurdering.periode.fom))

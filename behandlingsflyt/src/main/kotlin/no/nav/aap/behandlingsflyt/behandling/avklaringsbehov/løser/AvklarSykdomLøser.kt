@@ -54,7 +54,7 @@ class AvklarSykdomLøser(
         val gjeldendeVurderinger = eksisterendeSykdomsvurderinger
             .kombiner(nyeSykdomsvurderinger, StandardSammenslåere.prioriterHøyreSideCrossJoin())
             .komprimer()
-            .toList()
+            .segmenter()
             .map { it.verdi }
 
         validerSykdomOgYrkesskadeKonsistens(nyeSykdomsvurderinger, yrkesskadeGrunnlag, behandling.typeBehandling())
@@ -75,7 +75,7 @@ class AvklarSykdomLøser(
         typeBehandling: TypeBehandling
     ) {
         val harYrkesskade = yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
-        sykdomLøsning.forEach {
+        sykdomLøsning.segmenter().forEach {
             if (!it.verdi.erKonsistentForSykdom(harYrkesskade, typeBehandling)) {
                 log.info(
                     "Sykdomsvurderingen er ikke konsistent med yrkesskade sykdomsvurdering=[{}] harYrkesskade=[{}]",

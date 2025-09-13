@@ -81,7 +81,7 @@ internal class Aktivitetsplikt11_7RepositoryImplTest {
 
             aktivitetspliktRepository.lagre(
                 behandling.id,
-                nyTidslinje.toList().map { it.verdi }
+                nyTidslinje.segmenter().map { it.verdi }
             )
 
             val grunnlag2 = aktivitetspliktRepository.hentHvisEksisterer(behandling.id)

@@ -116,7 +116,7 @@ class VurderBistandsbehovSteg private constructor(
             VurderingType.REVURDERING -> {
                 val perioderBistandsvilkåretErRelevant = perioderHvorBistandsvilkåretErRelevant(kontekst)
 
-                if (perioderBistandsvilkåretErRelevant.any { it.verdi } && vurderingsbehovTvingerVurdering(kontekst)) {
+                if (perioderBistandsvilkåretErRelevant.segmenter().any { it.verdi } && vurderingsbehovTvingerVurdering(kontekst)) {
                     return true
                 }
 
@@ -144,7 +144,7 @@ class VurderBistandsbehovSteg private constructor(
 
                 perioderBistandsvilkåretErRelevant.leftJoin(perioderBistandsvilkåretErVurdert) { erRelevant, erVurdert ->
                     erRelevant && erVurdert != true
-                }.any { it.verdi }
+                }.segmenter().any { it.verdi }
             }
 
             VurderingType.MELDEKORT -> false

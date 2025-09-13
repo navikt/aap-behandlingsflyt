@@ -49,10 +49,11 @@ fun NormalOpenAPIRoute.foreslaaVedtakAPI(
                         val foreslåVedtakPerioder =
                             underveisGrunnlag
                                 .tilForeslåVedtakDataTidslinje()
+                                .segmenter()
                                 .map {
                                     val avslagsårsaker =
                                         avslagstidslinjer
-                                            .flatMap { tidslinje -> tidslinje.begrensetTil(it.periode) }
+                                            .flatMap { tidslinje -> tidslinje.begrensetTil(it.periode).segmenter() }
                                             .mapNotNull { it.verdi }
                                     ForeslåVedtakDto(
                                         periode = it.periode,
