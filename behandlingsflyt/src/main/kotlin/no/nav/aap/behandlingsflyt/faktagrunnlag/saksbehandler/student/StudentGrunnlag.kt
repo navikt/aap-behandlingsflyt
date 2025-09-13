@@ -1,5 +1,9 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student
 
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
+import no.nav.aap.komponenter.type.Periode
+
 class StudentGrunnlag(
     val id: Long? = null,
     val studentvurdering: StudentVurdering?,
@@ -10,6 +14,15 @@ class StudentGrunnlag(
             return true
         }
         return studentvurdering != null
+    }
+
+    fun somTidslinje(rettighetsperiode: Periode): Tidslinje<StudentVurdering> {
+        /* TODO: periodisering av studentvilkåret */
+        return if (studentvurdering == null) {
+            tidslinjeOf()
+        } else {
+            tidslinjeOf(rettighetsperiode to studentvurdering)
+        }
     }
 
     override fun equals(other: Any?): Boolean {

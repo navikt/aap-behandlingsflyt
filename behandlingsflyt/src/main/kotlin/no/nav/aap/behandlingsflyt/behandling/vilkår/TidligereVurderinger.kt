@@ -2,27 +2,25 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår
 
 import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl.BehandlingsUtfall.IKKE_BEHANDLINGSGRUNNLAG
-import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl.BehandlingsUtfall.UKJENT
-import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl.BehandlingsUtfall.UUNGÅELIG_AVSLAG
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger.Behandlingsutfall.UKJENT
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Revurdering
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.outerJoin
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
-import kotlin.collections.component1
 
 /** Når kan vi definitivt si at det er avslag, slik
  * at vi ikke trenger å vurdere flere vilkår.
@@ -41,6 +39,14 @@ interface TidligereVurderinger {
     fun muligMedRettTilAAP(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean {
         return !girAvslagEllerIngenBehandlingsgrunnlag(kontekst, førSteg)
     }
+
+    enum class Behandlingsutfall {
+        IKKE_BEHANDLINGSGRUNNLAG,
+        UUNGÅELIG_AVSLAG,
+        UKJENT,
+    }
+
+    fun behandlingsutfall(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Tidslinje<Behandlingsutfall>
 }
 
 class TidligereVurderingerImpl(
@@ -51,11 +57,6 @@ class TidligereVurderingerImpl(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    enum class BehandlingsUtfall {
-        IKKE_BEHANDLINGSGRUNNLAG,
-        UUNGÅELIG_AVSLAG,
-        UKJENT,
-    }
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
@@ -65,7 +66,7 @@ class TidligereVurderingerImpl(
 
     class Sjekk(
         val steg: StegType,
-        val sjekk: (vilkårsresultat: Vilkårsresultat, kontekst: FlytKontekstMedPerioder) -> Tidslinje<BehandlingsUtfall>
+        val sjekk: (vilkårsresultat: Vilkårsresultat, kontekst: FlytKontekstMedPerioder) -> Tidslinje<TidligereVurderinger.Behandlingsutfall>
     )
 
     private val definerteSjekkerForRevurdering = listOf(
@@ -78,7 +79,14 @@ class TidligereVurderingerImpl(
                 else
                     UKJENT
             )
-        }
+        },
+        Sjekk(StegType.VURDER_LOVVALG) { vilkårsresultat, _ ->
+            ikkeOppfyltFørerTilAvslag(Vilkårtype.LOVVALG, vilkårsresultat)
+        },
+
+        Sjekk(StegType.VURDER_ALDER) { vilkårsresultat, _ ->
+            ikkeOppfyltFørerTilAvslag(Vilkårtype.ALDERSVILKÅRET, vilkårsresultat)
+        },
     )
 
     private val definerteSjekkerFørstegangsbehandling = listOf(
@@ -101,6 +109,8 @@ class TidligereVurderingerImpl(
         },
 
         Sjekk(StegType.VURDER_BISTANDSBEHOV) { vilkårsresultat, _ ->
+            /* TODO: Tror ikke dette er riktig. Sykdomsvilkåret er ikke satt når
+            *   man er i steget VURDER_BiSTANDSBEHOV. */
             val sykdomstidslinje = vilkårsresultat.tidslinjeFor(Vilkårtype.SYKDOMSVILKÅRET)
             val bistandstidslinje = vilkårsresultat.tidslinjeFor(Vilkårtype.BISTANDSVILKÅRET)
 
@@ -190,25 +200,8 @@ class TidligereVurderingerImpl(
     private fun gir(
         kontekst: FlytKontekstMedPerioder,
         førSteg: StegType
-    ): BehandlingsUtfall {
-
-        val sjekker = when (kontekst.behandlingType) {
-            TypeBehandling.Førstegangsbehandling -> sjekkerFørstegangsbehandling
-            TypeBehandling.Revurdering -> sjekkerRevurdering
-            else -> return UKJENT
-        }
-
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-
-
-        val utfall = sjekker
-            .asSequence()
-            .takeWhile { it.steg != førSteg }
-            .map { it.sjekk(vilkårsresultat, kontekst) }
-            .asIterable()
-            .outerJoin { it.minOrNull() ?: UKJENT }
-            .begrensetTil(kontekst.rettighetsperiode)
-
+    ): TidligereVurderinger.Behandlingsutfall {
+        val utfall = behandlingsutfall(kontekst, førSteg)
         return when {
             utfall.isEmpty() || !utfall.erSammenhengende() -> UKJENT
             utfall.helePerioden() != kontekst.rettighetsperiode -> UKJENT
@@ -216,6 +209,28 @@ class TidligereVurderingerImpl(
             utfall.all { it.verdi == UUNGÅELIG_AVSLAG } -> UUNGÅELIG_AVSLAG.also { it -> log.info("Gir avslag for UUNGÅELIG_AVSLAG i steg: $førSteg.") }
             else -> UKJENT
         }
+    }
+
+
+    override fun behandlingsutfall(
+        kontekst: FlytKontekstMedPerioder,
+        førSteg: StegType
+    ): Tidslinje<TidligereVurderinger.Behandlingsutfall> {
+        val sjekker = when (kontekst.behandlingType) {
+            TypeBehandling.Førstegangsbehandling -> sjekkerFørstegangsbehandling
+            TypeBehandling.Revurdering -> sjekkerRevurdering
+            else -> return tidslinjeOf(kontekst.rettighetsperiode to UKJENT)
+        }
+
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        return sjekker
+            .asSequence()
+            .takeWhile { it.steg != førSteg }
+            .map { it.sjekk(vilkårsresultat, kontekst) }
+            .plus(listOf(tidslinjeOf(kontekst.rettighetsperiode to UKJENT)))
+            .asIterable()
+            .outerJoin { it.minOrNull() ?: UKJENT }
+            .begrensetTil(kontekst.rettighetsperiode)
     }
 
     override fun girAvslagEllerIngenBehandlingsgrunnlag(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean {
@@ -240,7 +255,7 @@ class TidligereVurderingerImpl(
     private fun ikkeOppfyltFørerTilAvslag(
         vilkårtype: Vilkårtype,
         vilkårsresultat: Vilkårsresultat,
-    ): Tidslinje<BehandlingsUtfall> {
+    ): Tidslinje<TidligereVurderinger.Behandlingsutfall> {
         return vilkårsresultat.tidslinjeFor(vilkårtype)
             .mapValue {
                 when (it.utfall) {

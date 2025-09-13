@@ -54,7 +54,7 @@ class AktivitetspliktFlytTest :
     fun `Happy-case flyt for aktivitetsplikt 11_7`() {
         val person = TestPersoner.STANDARD_PERSON()
         val sak = happyCaseFørstegangsbehandling(person = person)
-        var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom)
+        var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
 
         var aktivitetspliktBehandling = dataSource.transaction { connection ->
             assertThat(
@@ -214,18 +214,9 @@ class AktivitetspliktFlytTest :
                     vurdering = "Begrunnelse"
                 ),
             )
-            .løsAvklaringsBehov(
-                AvklarSykepengerErstatningLøsning(
-                    sykepengeerstatningVurdering = SykepengerVurderingDto(
-                        begrunnelse = "...",
-                        dokumenterBruktIVurdering = emptyList(),
-                        harRettPå = false,
-                    ),
-                ),
-            )
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
-                    .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
+                    .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
             }
 
         val underveisÅpenTidslinje = dataSource.transaction { connection ->
@@ -256,7 +247,7 @@ class AktivitetspliktFlytTest :
     fun `Åpen behandling skal trekkes tilbake ved effktuering av aktivitetsplikt`() {
         val person = TestPersoner.STANDARD_PERSON()
         val sak = happyCaseFørstegangsbehandling(person = person)
-        var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom)
+        var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
 
         åpenBehandling = åpenBehandling.løsAvklaringsBehov(
             AvklarBistandsbehovLøsning(
@@ -280,22 +271,12 @@ class AktivitetspliktFlytTest :
                     vurdering = "Begrunnelse"
                 ),
             )
-            .løsAvklaringsBehov(
-                AvklarSykepengerErstatningLøsning(
-                    sykepengeerstatningVurdering = SykepengerVurderingDto(
-                        begrunnelse = "...",
-                        dokumenterBruktIVurdering = emptyList(),
-                        harRettPå = false,
-                    ),
-                ),
-            )
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
-                    .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
+                    .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
             }
 
         val aktivtStegIÅpenBehandlingFørEffektuering = åpenBehandling.aktivtSteg()
-        assertThat(aktivtStegIÅpenBehandlingFørEffektuering).isEqualTo(StegType.FORESLÅ_VEDTAK)
 
         val underveisTidslinjeFørEffekuering = dataSource.transaction { connection ->
             UnderveisRepositoryImpl(connection).hent(åpenBehandling.id)
