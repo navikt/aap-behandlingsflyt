@@ -9,8 +9,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDateTime
 
 class KansellerRevurderingLøser(
     private val behandlingRepository: BehandlingRepository,
@@ -43,6 +46,28 @@ class KansellerRevurderingLøser(
                 vurdertAv = kontekst.bruker,
             ),
         )
+
+        // Oppdaterer behandling årsak med begrunnelse for kansellering av revurdering
+        val kansellertVurderingsbehovOgÅrsak = behandlingRepository.hentVurderingsbehovOgÅrsaker(behandling.id)
+            .filter { it.vurderingsbehov.any { behov -> behov.type == Vurderingsbehov.REVURDERING_KANSELLERT } }
+            .maxByOrNull { it.opprettet }
+
+        if (kansellertVurderingsbehovOgÅrsak != null) {
+            val oppdatertVurderingsbehogOgÅrsak = VurderingsbehovOgÅrsak(
+                kansellertVurderingsbehovOgÅrsak.vurderingsbehov,
+                kansellertVurderingsbehovOgÅrsak.årsak,
+                LocalDateTime.now(),
+                løsning.vurdering.begrunnelse
+            )
+            behandlingRepository.oppdaterVurderingsbehovOgÅrsak(behandling, oppdatertVurderingsbehogOgÅrsak)
+
+            val nyesteBehandlingÅrsakId = behandlingRepository.hentBehandlingAarsakId(behandling.id).firstOrNull()
+
+            if (nyesteBehandlingÅrsakId != null) {
+                behandlingRepository.oppdaterVurderingsbehovMedNyesteBehandlingAarsakId(behandling.id, nyesteBehandlingÅrsakId)
+            }
+
+        }
 
         return LøsningsResultat(løsning.vurdering.begrunnelse)
     }
