@@ -829,8 +829,9 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     protected fun hentBrevAvType(behandling: Behandling, typeBrev: TypeBrev) =
         dataSource.transaction(readOnly = true) {
-            BrevbestillingRepositoryImpl(it).hent(behandling.id)
-                .first { it.typeBrev == typeBrev }
+            val brev = BrevbestillingRepositoryImpl(it).hent(behandling.id)
+            brev.firstOrNull { it.typeBrev == typeBrev }
+                ?: error("Ingen brev av type $typeBrev. Følgende finnes: ${brev.joinToString { it.typeBrev.toString() }}")
         }
 
     protected fun løsForutgåendeMedlemskap(
