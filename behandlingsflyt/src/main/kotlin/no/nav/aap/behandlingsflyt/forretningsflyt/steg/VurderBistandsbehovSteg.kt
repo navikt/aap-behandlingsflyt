@@ -23,7 +23,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
-import no.nav.aap.behandlingsflyt.flyt.steg.oppdaterAvklaringsbehov
+import no.nav.aap.behandlingsflyt.flyt.steg.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -70,11 +70,15 @@ class VurderBistandsbehovSteg private constructor(
         }
 
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        oppdaterAvklaringsbehov(
+        oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             avklaringsbehovene = avklaringsbehovene,
+            behandlingRepository = behandlingRepository,
+            vilkårsresultatRepository = vilkårsresultatRepository,
             definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,
-            vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
             erTilstrekkeligVurdert = { true },
+            tvingerAvklaringsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD, Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+            nårVurderingErRelevant = ::perioderHvorBistandsvilkåretErRelevant,
+            kontekst = kontekst,
             tilbakestillGrunnlag = {
                 val forrigeVurderinger = kontekst.forrigeBehandlingId
                     ?.let { bistandRepository.hentHvisEksisterer(it) }
@@ -105,55 +109,6 @@ class VurderBistandsbehovSteg private constructor(
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
 
         return Fullført
-    }
-
-    private fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
-        return when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.REVURDERING -> {
-                val perioderBistandsvilkåretErRelevant = perioderHvorBistandsvilkåretErRelevant(kontekst)
-
-                if (perioderBistandsvilkåretErRelevant.any { it.verdi } && vurderingsbehovTvingerVurdering(kontekst)) {
-                    return true
-                }
-
-                val perioderBistandsvilkåretErVurdert = kontekst.forrigeBehandlingId
-                    ?.let { forrigeBehandlingId ->
-                        val forrigeBehandling = behandlingRepository.hent(forrigeBehandlingId)
-                        val forrigeRettighetsperiode =
-                            /* Lagrer vi ned rettighetsperioden som ble brukt for en behandling noe sted? */
-                            vilkårsresultatRepository.hent(forrigeBehandlingId)
-                                .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
-                                .tidslinje()
-                                .helePerioden()
-
-                        perioderHvorBistandsvilkåretErRelevant(
-                            kontekst.copy(
-                                /* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */
-                                behandlingId = forrigeBehandlingId,
-                                forrigeBehandlingId = forrigeBehandling.forrigeBehandlingId,
-                                rettighetsperiode = forrigeRettighetsperiode,
-                                behandlingType = forrigeBehandling.typeBehandling(),
-                            )
-                        )
-                    }
-                    ?: tidslinjeOf()
-
-                perioderBistandsvilkåretErRelevant.leftJoin(perioderBistandsvilkåretErVurdert) { erRelevant, erVurdert ->
-                    erRelevant && erVurdert != true
-                }.any { it.verdi }
-            }
-
-            VurderingType.MELDEKORT -> false
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> false
-            VurderingType.IKKE_RELEVANT -> false
-        }
-    }
-
-    private fun vurderingsbehovTvingerVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
-        return kontekst.vurderingsbehovRelevanteForSteg.any {
-            it in listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, Vurderingsbehov.MOTTATT_SØKNAD)
-        }
     }
 
     private fun perioderHvorBistandsvilkåretErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {

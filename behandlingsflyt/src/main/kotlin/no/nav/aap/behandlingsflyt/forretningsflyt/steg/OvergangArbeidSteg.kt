@@ -14,13 +14,12 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
-import no.nav.aap.behandlingsflyt.flyt.steg.oppdaterAvklaringsbehov
+import no.nav.aap.behandlingsflyt.flyt.steg.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -52,10 +51,18 @@ class OvergangArbeidSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        oppdaterAvklaringsbehov(
+        oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             avklaringsbehovene = avklaringsbehovene,
+            behandlingRepository = behandlingRepository,
+            vilkårsresultatRepository = vilkårsresultatRepository,
             definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
-            vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
+            tvingerAvklaringsbehov = setOf(
+                Vurderingsbehov.MOTTATT_SØKNAD,
+                Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                Vurderingsbehov.HELHETLIG_VURDERING,
+            ),
+            nårVurderingErRelevant = ::perioderVurderingErRelevant,
+            kontekst = kontekst,
             erTilstrekkeligVurdert = { true },
             tilbakestillGrunnlag = {
                 val vedtatteVurderinger = kontekst.forrigeBehandlingId?.let {
@@ -86,54 +93,6 @@ class OvergangArbeidSteg private constructor(
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
 
         return Fullført
-    }
-
-    private fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
-        return when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
-                val perioderOvergangArbeidErRelevant = perioderVurderingErRelevant(kontekst)
-
-                if (perioderOvergangArbeidErRelevant.any { it.verdi } && vurderingsbehovTvingerVurdering(kontekst)) {
-                    return true
-                }
-
-                val perioderOvergangArbeidErVurdert = kontekst.forrigeBehandlingId?.let { forrigeBehandlingId ->
-                    val forrigeBehandling = behandlingRepository.hent(forrigeBehandlingId)
-                    val forrigeRettighetsperiode =
-                        /* Lagrer vi ned rettighetsperioden som ble brukt for en behandling noe sted? */
-                        vilkårsresultatRepository.hent(forrigeBehandlingId).finnVilkår(Vilkårtype.ALDERSVILKÅRET)
-                            .tidslinje().helePerioden()
-
-                    perioderVurderingErRelevant(
-                        kontekst.copy(
-                            /* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */
-                            behandlingId = forrigeBehandlingId,
-                            forrigeBehandlingId = forrigeBehandling.forrigeBehandlingId,
-                            rettighetsperiode = forrigeRettighetsperiode,
-                            behandlingType = forrigeBehandling.typeBehandling(),
-                        )
-                    )
-                } ?: tidslinjeOf()
-
-                perioderOvergangArbeidErRelevant.leftJoin(perioderOvergangArbeidErVurdert) { erRelevant, erVurdert ->
-                    erRelevant && erVurdert != true
-                }.any { it.verdi }
-            }
-
-            VurderingType.MELDEKORT -> false
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> false
-            VurderingType.IKKE_RELEVANT -> false
-        }
-    }
-
-    private fun vurderingsbehovTvingerVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
-        return kontekst.vurderingsbehovRelevanteForSteg.any {
-            it in listOf(
-                Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
-                Vurderingsbehov.MOTTATT_SØKNAD,
-                Vurderingsbehov.HELHETLIG_VURDERING,
-            )
-        }
     }
 
     private fun perioderVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
