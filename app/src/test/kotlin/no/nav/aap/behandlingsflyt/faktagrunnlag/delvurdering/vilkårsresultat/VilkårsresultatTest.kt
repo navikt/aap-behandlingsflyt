@@ -7,21 +7,11 @@ import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 
 class VilkårsresultatTest {
     @Nested
     inner class RettighetsTypeTidslinjeTest {
-        @Test
-        fun `tomt vilkårsresultat gir ikke en veldefinert tidslinje`() {
-            val v = Vilkårsresultat()
-
-            assertThrows<Exception> {
-                v.rettighetstypeTidslinje()
-            }
-        }
-
         private fun tomVurdering(): Vilkårsresultat {
             val vilkårsresultat = Vilkårsresultat()
             for (vilkårtype in Vilkårtype.entries) {
@@ -32,25 +22,29 @@ class VilkårsresultatTest {
             return vilkårsresultat
         }
 
+        fun Vilkårsresultat.leggTilFellesVilkår(periode: Periode) {
+            for (vilkår in listOf(Vilkårtype.ALDERSVILKÅRET, Vilkårtype.LOVVALG, Vilkårtype.GRUNNLAGET, Vilkårtype.MEDLEMSKAP)) {
+               leggTilHvisIkkeEksisterer(vilkår).leggTilVurdering(Vilkårsperiode(
+                   periode = periode,
+                   utfall = Utfall.OPPFYLT,
+                   begrunnelse = null,
+                   innvilgelsesårsak = null,
+               ))
+            }
+        }
+
         @Test
         fun `om sykdomsvilkåret er innvilget som student, så er rettighetstype 11-5_11-14`() {
             val v = tomVurdering()
             val periode = Periode(LocalDate.now(), LocalDate.now().plusDays(10))
-            v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
-                Vilkårsperiode(
-                    periode,
-                    utfall = Utfall.OPPFYLT,
-                    begrunnelse = null,
-                    innvilgelsesårsak = Innvilgelsesårsak.STUDENT,
-                )
-            )
-            Vilkårtype.entries.filter { it != BISTANDSVILKÅRET }.forEach {
+            Vilkårtype.entries.forEach {
                 val vilkår = v.leggTilHvisIkkeEksisterer(it)
                 vilkår.leggTilVurdering(
                     Vilkårsperiode(
                         periode,
                         utfall = Utfall.OPPFYLT,
                         begrunnelse = null,
+                        innvilgelsesårsak = if (it in listOf(BISTANDSVILKÅRET, SYKDOMSVILKÅRET)) Innvilgelsesårsak.STUDENT else null,
                     )
                 )
             }
@@ -94,6 +88,7 @@ class VilkårsresultatTest {
                     begrunnelse = null,
                 )
             )
+            v.leggTilFellesVilkår(Periode(nå, nå.plusDays(30)))
             val tidslinje = v.rettighetstypeTidslinje()
             assertThat(tidslinje.segmenter()).hasSize(2)
             assertThat(tidslinje.erSammenhengende()).isFalse
@@ -135,6 +130,7 @@ class VilkårsresultatTest {
                     begrunnelse = null,
                 )
             )
+            v.leggTilFellesVilkår(Periode(dagensDato.minusDays(5), dagensDato.plusDays(15)))
 
             val res = v.rettighetstypeTidslinje()
             assertTidslinje(
@@ -180,6 +176,7 @@ class VilkårsresultatTest {
                     begrunnelse = null,
                 )
             )
+            v.leggTilFellesVilkår(Periode(nå.minusDays(5), nå.plusDays(15)))
 
             val res = v.rettighetstypeTidslinje().komprimer()
             assertThat(res.segmenter()).hasSize(2)
@@ -233,6 +230,7 @@ class VilkårsresultatTest {
                     andrePeriode, utfall = Utfall.OPPFYLT, begrunnelse = null
                 )
             )
+            v.leggTilFellesVilkår(Periode(nå, nå.plusDays(30)))
 
             val res = v.rettighetstypeTidslinje().komprimer()
             assertTidslinje(
@@ -275,6 +273,7 @@ class VilkårsresultatTest {
                     begrunnelse = null,
                 )
             )
+            v.leggTilFellesVilkår(Periode(nå, sykepengerPeriode))
 
             val res = v.rettighetstypeTidslinje().komprimer()
             assertTidslinje(
@@ -296,7 +295,7 @@ class VilkårsresultatTest {
                     Periode(nå, sykepengerPeriode),
                     utfall = Utfall.OPPFYLT,
                     begrunnelse = null,
-                    innvilgelsesårsak = Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD
+                    innvilgelsesårsak = null,
                 )
             )
 
@@ -314,6 +313,7 @@ class VilkårsresultatTest {
                     begrunnelse = null,
                 )
             )
+            v.leggTilFellesVilkår(Periode(nå, sykepengerPeriode))
 
             val res = v.rettighetstypeTidslinje().komprimer()
             assertTidslinje(
