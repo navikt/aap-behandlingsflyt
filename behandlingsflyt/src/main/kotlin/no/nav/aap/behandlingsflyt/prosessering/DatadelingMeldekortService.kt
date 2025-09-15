@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.type.Periode
+import org.jetbrains.annotations.TestOnly
 
 class DatadelingMeldekortService(
     private val saksRepository: SakRepository,
@@ -39,7 +40,8 @@ class DatadelingMeldekortService(
         return kontraktObjekter ?: emptyList()
     }
 
-    private fun tilKontrakt(
+    @TestOnly
+    internal fun tilKontrakt(
         meldekort: Meldekort,
         personIdent: Ident,
         sak: Sak,
@@ -54,17 +56,13 @@ class DatadelingMeldekortService(
         val rettighetsType = meldekortetsUnderveisperiode?.rettighetsType
         val avslagsårsak = meldekortetsUnderveisperiode?.avslagsårsak
 
-        // TODO: vurder sammen med NKS om vi har mer relevant info å sende med
-        // Vi kan også sjekke for fritak fra meldeplikt, og rimelig grunn for å ikke oppfylle meldeplikt
-        // men denne koden skrives om pt. så best å vente.
-
         return DetaljertMeldekortDTO(
             personIdent = personIdent.identifikator,
             saksnummer = sak.saksnummer,
             behandlingId = behandlingId.id,
             journalpostId = meldekort.journalpostId.identifikator,
             meldeperiodeFom = meldekortetsPeriode.fom,
-            meldeperiodeTom = meldekortetsPeriode.fom,
+            meldeperiodeTom = meldekortetsPeriode.tom,
             mottattTidspunkt = meldekort.mottattTidspunkt,
             timerArbeidPerPeriode = meldekort.timerArbeidPerPeriode.map {
                 ArbeidIPeriodeDTO(
@@ -85,7 +83,6 @@ class DatadelingMeldekortService(
     ): Underveisperiode? {
         // TODO: det kan være flere underveisperioder som overlapper med meldekortets periode,
         // vi støtter her bare at det er en. Hva gjør vi hvis det er flere?
-
         val underveisPerioder = underveisGrunnlag.perioder.filter {
             it.meldePeriode.overlapp(meldekortetsPeriode) != null
         }

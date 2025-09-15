@@ -152,9 +152,6 @@ class BehandlingHendelseServiceImpl(
         if (behandling.typeBehandling() in listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)) {
             flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, behandling.id))
         }
-
-
-
     }
 
     private fun hentReservertTil(behandlingId: BehandlingId): String? {
