@@ -56,25 +56,18 @@ class AktivitetspliktFlytTest :
         val sak = happyCaseFørstegangsbehandling(person = person)
         var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom)
 
-        dataSource.transaction { connection ->
+        var aktivitetspliktBehandling = dataSource.transaction { connection ->
             assertThat(
                 Aktivitetsplikt11_7RepositoryImpl(connection)
                     .hentHvisEksisterer(åpenBehandling.id)
             ).isNull()
-        }
 
-        // TODO: Mekanisme for opprettelse og automatisk prosessering
-        var aktivitetspliktBehandling = opprettBehandling(
-            sakId = sak.id,
-            typeBehandling = TypeBehandling.Aktivitetsplikt,
-            vurderingsbehov = listOf(
-                VurderingsbehovMedPeriode(
-                    Vurderingsbehov.AKTIVITETSPLIKT_11_7,
-                    periode = sak.rettighetsperiode
-                )
-            ),
-            forrigeBehandlingId = null
-        )
+            opprettAktivitetspliktBehandling(
+                Vurderingsbehov.AKTIVITETSPLIKT_11_7,
+                postgresRepositoryRegistry.provider(connection),
+                sak
+            )
+        }
 
         assertThat(aktivitetspliktBehandling.status()).isEqualTo(Status.OPPRETTET)
 
@@ -399,7 +392,6 @@ class AktivitetspliktFlytTest :
     private fun opprettAktivitetspliktBehandlingMedVurdering(
         sak: Sak,
         status: Status,
-        forrige: BehandlingId? = null,
         vurdering: (behandlingId: BehandlingId) -> Aktivitetsplikt11_7Vurdering,
     ): Behandling {
         return dataSource.transaction { connection ->
@@ -408,7 +400,8 @@ class AktivitetspliktFlytTest :
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val Aktivitetsplikt11_7Repository = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
 
-            val behandling = opprettAktivitetspliktBehandling(repositoryProvider, sak, forrige)
+            val behandling =
+                opprettAktivitetspliktBehandling(Vurderingsbehov.AKTIVITETSPLIKT_11_7, repositoryProvider, sak)
 
             Aktivitetsplikt11_7Repository.lagre(
                 behandling.id, listOf(vurdering(behandling.id))
@@ -424,23 +417,18 @@ class AktivitetspliktFlytTest :
         val sak = happyCaseFørstegangsbehandling(person = person)
         var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom)
 
-        dataSource.transaction { connection ->
+        var aktivitetspliktBehandling = dataSource.transaction { connection ->
             assertThat(
                 Aktivitetsplikt11_7RepositoryImpl(connection)
                     .hentHvisEksisterer(åpenBehandling.id)
             ).isNull()
+            
+            opprettAktivitetspliktBehandling(
+                Vurderingsbehov.AKTIVITETSPLIKT_11_9,
+                postgresRepositoryRegistry.provider(connection),
+                sak
+            )
         }
-
-        var aktivitetspliktBehandling = opprettBehandling(
-            sakId = sak.id,
-            typeBehandling = TypeBehandling.Aktivitetsplikt11_9,
-            vurderingsbehov = listOf(
-                VurderingsbehovMedPeriode(
-                    Vurderingsbehov.AKTIVITETSPLIKT_11_9,
-                )
-            ),
-            forrigeBehandlingId = null
-        )
 
         assertThat(aktivitetspliktBehandling.status()).isEqualTo(Status.OPPRETTET)
 
@@ -457,17 +445,12 @@ class AktivitetspliktFlytTest :
     }
 
     private fun opprettAktivitetspliktBehandling(
+        vurderingsbehov: Vurderingsbehov,
         repositoryProvider: RepositoryProvider,
         sak: Sak,
-        forrige: BehandlingId? = null
     ): Behandling {
-        return repositoryProvider.provide<BehandlingRepository>().opprettBehandling(
-            sak.id, TypeBehandling.Aktivitetsplikt,
-            forrigeBehandlingId = forrige,
-            VurderingsbehovOgÅrsak(
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.AKTIVITETSPLIKT_11_7)),
-                årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,
-            )
+        return SakOgBehandlingService(repositoryProvider, gatewayProvider).opprettAktivitetspliktBehandling(
+            sak.id, vurderingsbehov
         )
     }
 
