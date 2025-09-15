@@ -1,4 +1,4 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+// Felles kode for alle build.gradle.kts filer som laster api-intern.conventions pluginen
 
 plugins {
     id("org.jetbrains.kotlin.jvm")
@@ -7,11 +7,6 @@ plugins {
 group = "no.nav.aap"
 version = project.findProperty("version")?.toString() ?: "0.0.0"
 
-repositories {
-    mavenCentral()
-    maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
-    mavenLocal()
-}
 
 testing {
     suites {
@@ -22,22 +17,30 @@ testing {
 }
 
 
-tasks.test {
-    useJUnitPlatform()
-    maxParallelForks = Runtime.getRuntime().availableProcessors() / 2
-    testLogging {
-        events("passed", "skipped", "failed")
+tasks {
+    test {
+        useJUnitPlatform()
+        maxParallelForks = Runtime.getRuntime().availableProcessors() / 2
+        testLogging {
+            events("passed", "skipped", "failed")
+        }
+    }
+
+    // Bruk et unikt navn for jar-filen til distTar, for å unngå navnekollisjoner i multi-modul prosjekt,
+    // og dermed feil av typen Entry <name>.jar is a duplicate but no duplicate handling strategy has been set.
+    withType<Jar> {
+        archiveFileName.set("${rootProject.name}-${project.name}.jar")
     }
 }
 
 kotlin {
     jvmToolchain(21)
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_21)
-        apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+        apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2)
+        languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2)
     }
 }
-
 
 kotlin.sourceSets["main"].kotlin.srcDirs("main")
 kotlin.sourceSets["test"].kotlin.srcDirs("test")
