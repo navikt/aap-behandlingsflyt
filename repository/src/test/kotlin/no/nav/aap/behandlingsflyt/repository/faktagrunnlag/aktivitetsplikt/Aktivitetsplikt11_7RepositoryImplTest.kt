@@ -1,20 +1,12 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.aktivitetsplikt
 
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettSak
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -28,6 +20,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
+import java.util.*
 
 internal class Aktivitetsplikt11_7RepositoryImplTest {
     companion object {
@@ -53,7 +46,9 @@ internal class Aktivitetsplikt11_7RepositoryImplTest {
                 erOppfylt = true,
                 vurdertAv = "ident",
                 gjelderFra = 1 januar 2023,
-                opprettet = Instant.parse("2023-01-01T12:00:00Z")
+                opprettet = Instant.parse("2023-01-01T12:00:00Z"),
+                vurdertIBehandling = behandling.id,
+                skalIgnorereVarselFrist = false
             )
 
             aktivitetspliktRepository.lagre(behandling.id, listOf(vurdering))
@@ -61,13 +56,22 @@ internal class Aktivitetsplikt11_7RepositoryImplTest {
 
             assertThat(grunnlag).isEqualTo(Aktivitetsplikt11_7Grunnlag(listOf(vurdering)))
 
+            val varselBrevbestillingReferanse = BrevbestillingReferanse(UUID.randomUUID())
+            val varselSendt = LocalDate.of(2023, 1, 1)
+            val frist = LocalDate.of(2023, 1, 25)
+
+            aktivitetspliktRepository.lagreVarsel(behandling.id, varselBrevbestillingReferanse)
+            aktivitetspliktRepository.lagreFrist(behandling.id, varselSendt, frist)
+
             val vurdering2 = Aktivitetsplikt11_7Vurdering(
                 begrunnelse = "Begrunnelse 2",
                 erOppfylt = false,
                 utfall = Utfall.STANS,
                 vurdertAv = "ident2",
                 gjelderFra = 1 februar 2023,
-                opprettet = Instant.parse("2023-01-02T12:10:00Z")
+                opprettet = Instant.parse("2023-01-02T12:10:00Z"),
+                vurdertIBehandling = behandling.id,
+                skalIgnorereVarselFrist = false
             )
             val nyTidslinje = grunnlag!!.tidslinje()
                 .kombiner(
@@ -77,7 +81,7 @@ internal class Aktivitetsplikt11_7RepositoryImplTest {
 
             aktivitetspliktRepository.lagre(
                 behandling.id,
-                nyTidslinje.toList().map{it.verdi}
+                nyTidslinje.toList().map { it.verdi }
             )
 
             val grunnlag2 = aktivitetspliktRepository.hentHvisEksisterer(behandling.id)
@@ -89,6 +93,12 @@ internal class Aktivitetsplikt11_7RepositoryImplTest {
                     assertThat(it).isEqualTo(vurdering2)
                 }
             )
+
+            val varsel = aktivitetspliktRepository.hentVarselHvisEksisterer(behandling.id)
+            assertThat(varsel).isNotNull
+            assertThat(varsel?.sendtDato).isEqualTo(varselSendt)
+            assertThat(varsel?.svarfrist).isEqualTo(frist)
+            assertThat(varsel?.varselId).isEqualTo(varselBrevbestillingReferanse)
         }
     }
 }
