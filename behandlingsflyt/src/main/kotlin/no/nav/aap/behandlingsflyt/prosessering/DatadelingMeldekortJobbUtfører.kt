@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
@@ -18,11 +19,17 @@ class DatadelingMeldekortJobbUtfører(
     private val saksRepository: SakRepository,
     private val underveisRepository: UnderveisRepository,
     private val meldekortRepository: MeldekortRepository,
+    private val meldeperiodeRepository: MeldeperiodeRepository,
     private val apiInternGateway: ApiInternGateway,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val service = DatadelingMeldekortService(saksRepository, underveisRepository, meldekortRepository)
+    private val service = DatadelingMeldekortService(
+        saksRepository,
+        underveisRepository,
+        meldekortRepository,
+        meldeperiodeRepository,
+    )
 
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
@@ -55,6 +62,7 @@ class DatadelingMeldekortJobbUtfører(
                 saksRepository = sakRepository,
                 underveisRepository = repositoryProvider.provide<UnderveisRepository>(),
                 meldekortRepository = repositoryProvider.provide<MeldekortRepository>(),
+                meldeperiodeRepository = repositoryProvider.provide<MeldeperiodeRepository>(),
             )
         }
 

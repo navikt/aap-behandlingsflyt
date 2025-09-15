@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -18,6 +19,7 @@ class DatadelingMeldekortService(
     private val saksRepository: SakRepository,
     private val underveisRepository: UnderveisRepository,
     private val meldekortRepository: MeldekortRepository,
+    private val meldeperiodeRepository: MeldeperiodeRepository,
 ) {
 
     internal fun opprettKontraktObjekter(
@@ -28,11 +30,13 @@ class DatadelingMeldekortService(
         val personIdent = sak.person.aktivIdent()
         val underveisGrunnlag = underveisRepository.hent(behandlingId)
 
-        val meldekortene = meldekortRepository.hent(behandlingId).meldekort()
-        val kontraktObjekter = meldekortene.map { meldekort ->
+        // hvis behandlingen ikke er aktiv, returneres tom liste
+        val meldekortene = meldekortRepository.hentHvisEksisterer(behandlingId)?.meldekort()
+
+        val kontraktObjekter = meldekortene?.map { meldekort ->
             tilKontrakt(meldekort, personIdent, sak, behandlingId, underveisGrunnlag)
         }
-        return kontraktObjekter
+        return kontraktObjekter ?: emptyList()
     }
 
     private fun tilKontrakt(
@@ -42,12 +46,13 @@ class DatadelingMeldekortService(
         behandlingId: BehandlingId,
         underveisGrunnlag: UnderveisGrunnlag
     ): DetaljertMeldekortDTO {
+        val meldekortPerioder = meldeperiodeRepository.hent(behandlingId)
+        val meldekortetsPeriode = finnMeldekortPeriode(meldekort, meldekortPerioder)
 
-        val underveisPeriode = finnUnderveisperiode(meldekort, underveisGrunnlag.perioder)
-        val meldePeriode = underveisPeriode.meldePeriode
-        val meldepliktStatus = underveisPeriode.meldepliktStatus
-        val rettighetsType = underveisPeriode.rettighetsType
-        val avslagsårsak = underveisPeriode.avslagsårsak
+        val meldekortetsUnderveisperiode = underveisperiodeOmBareEn(underveisGrunnlag, meldekortetsPeriode)
+        val meldepliktStatus = meldekortetsUnderveisperiode?.meldepliktStatus
+        val rettighetsType = meldekortetsUnderveisperiode?.rettighetsType
+        val avslagsårsak = meldekortetsUnderveisperiode?.avslagsårsak
 
         // TODO: vurder sammen med NKS om vi har mer relevant info å sende med
         // Vi kan også sjekke for fritak fra meldeplikt, og rimelig grunn for å ikke oppfylle meldeplikt
@@ -58,8 +63,8 @@ class DatadelingMeldekortService(
             saksnummer = sak.saksnummer,
             behandlingId = behandlingId.id,
             journalpostId = meldekort.journalpostId.identifikator,
-            meldeperiodeFom = meldePeriode.fom,
-            meldeperiodeTom = meldePeriode.fom,
+            meldeperiodeFom = meldekortetsPeriode.fom,
+            meldeperiodeTom = meldekortetsPeriode.fom,
             mottattTidspunkt = meldekort.mottattTidspunkt,
             timerArbeidPerPeriode = meldekort.timerArbeidPerPeriode.map {
                 ArbeidIPeriodeDTO(
@@ -74,14 +79,32 @@ class DatadelingMeldekortService(
         )
     }
 
-    private fun finnUnderveisperiode(
-        meldekort: Meldekort, underveisPerioder: List<Underveisperiode>
-    ): Underveisperiode {
+    private fun underveisperiodeOmBareEn(
+        underveisGrunnlag: UnderveisGrunnlag,
+        meldekortetsPeriode: Periode
+    ): Underveisperiode? {
+        // TODO: det kan være flere underveisperioder som overlapper med meldekortets periode,
+        // vi støtter her bare at det er en. Hva gjør vi hvis det er flere?
+
+        val underveisPerioder = underveisGrunnlag.perioder.filter {
+            it.meldePeriode.overlapp(meldekortetsPeriode) != null
+        }
+        val meldekortetsUnderveisperiode = if (underveisPerioder.size == 1) {
+            underveisPerioder.first()
+        } else {
+            null
+        }
+        return meldekortetsUnderveisperiode
+    }
+
+    private fun finnMeldekortPeriode(
+        meldekort: Meldekort, meldeperioder: List<Periode>
+    ): Periode {
         val arbeidsperiode = arbeidsperiodeFraMeldekort(meldekort)
-        return underveisPerioder.first {
-            // Alle arbeidsperiodene i meldekortet må være innenfor en og samme underveisperiode.
-            // Underveisperioder skal ikke overlappe med hverandre.
-            it.meldePeriode.inneholder(arbeidsperiode)
+        return meldeperioder.first {
+            // Alle arbeidsperiodene i meldekortet må være innenfor en og samme meldekortperiode.
+            // MeldekortPerioder overlapper ikke med hverandre.
+            it.inneholder(arbeidsperiode)
         }
     }
 
