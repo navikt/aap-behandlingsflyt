@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Aktivitetsplikt11_9
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -117,6 +118,10 @@ class BrevUtlederService(
 
             TypeBehandling.Aktivitetsplikt -> {
                 return VedtakAktivitetsplikt11_7
+            }
+            
+            TypeBehandling.Aktivitetsplikt11_9 -> {
+                return VedtakAktivitetsplikt11_9
             }
 
             TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling, TypeBehandling.Aktivitetsplikt11_9 ->
