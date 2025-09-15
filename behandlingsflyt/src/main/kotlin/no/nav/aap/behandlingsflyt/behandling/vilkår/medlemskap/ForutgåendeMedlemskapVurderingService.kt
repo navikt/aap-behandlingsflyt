@@ -156,8 +156,8 @@ class ForutgåendeMedlemskapVurderingService {
         val bosattUtenforNorge =
             grunnlag.brukerPersonopplysning.folkeregisterStatuser.any { it.status != PersonStatus.bosatt }
 
-        val utenlandsAddresserGrunnlag = grunnlag.brukerPersonopplysning.utenlandsAddresser?.map {
-            UtenlandsAdresseGrunnlag(
+        val adresser = grunnlag.brukerPersonopplysning.utenlandsAddresser?.map {
+            UtenlandskAdresseDto(
                 gyldigFraOgMed = it.gyldigFraOgMed,
                 gyldigTilOgMed = it.gyldigTilOgMed,
                 adresseNavn = it.adresseNavn,
@@ -171,13 +171,16 @@ class ForutgåendeMedlemskapVurderingService {
                     || forutgåendePeriode.inneholder(it.gyldigTilOgMed)
                     || (it.gyldigFraOgMed != null && forutgåendePeriode.inneholder(it.gyldigFraOgMed))
         }
+        val folkeregisterStatuserDto = grunnlag.brukerPersonopplysning.folkeregisterStatuser.map{
+            FolkeregisterStatusDto(it.status, it.gyldighetstidspunkt, it.opphoerstidspunkt)
+        }
 
         return TilhørighetVurdering(
             kilde = listOf(Kilde.PDL),
             indikasjon = Indikasjon.UTENFOR_NORGE,
             opplysning = "Har hatt utenlandsk adresse i perioden",
-            resultat = bosattUtenforNorge || !utenlandsAddresserGrunnlag.isNullOrEmpty(),
-            utenlandsAddresserGrunnlag = utenlandsAddresserGrunnlag,
+            resultat = bosattUtenforNorge || !adresser.isNullOrEmpty(),
+            utenlandsAddresserGrunnlag = UtenlandsAdresserGrunnlag(adresser, folkeregisterStatuserDto),
             vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse
         )
     }

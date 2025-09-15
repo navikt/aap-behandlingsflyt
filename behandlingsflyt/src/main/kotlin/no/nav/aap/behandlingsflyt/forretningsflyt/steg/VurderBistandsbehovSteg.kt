@@ -87,7 +87,7 @@ class VurderBistandsbehovSteg private constructor(
                         bistandsGrunnlag,
                         vilkårsresultat,
                         avklaringsbehovene,
-                        TypeBehandling.Førstegangsbehandling,
+                        kontekst.behandlingType,
                     )
                 ) {
                     return FantAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV)

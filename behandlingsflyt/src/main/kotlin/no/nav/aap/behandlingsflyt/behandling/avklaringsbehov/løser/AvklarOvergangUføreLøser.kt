@@ -15,13 +15,11 @@ import java.time.LocalDate
 class AvklarOvergangUføreLøser(
     private val behandlingRepository: BehandlingRepository,
     private val overgangUforeRepository: OvergangUføreRepository,
-    private val sykdomRepository: SykdomRepository,
 ) : AvklaringsbehovsLøser<AvklarOvergangUføreLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
         overgangUforeRepository = repositoryProvider.provide(),
-        sykdomRepository = repositoryProvider.provide(),
     )
 
 
@@ -32,12 +30,9 @@ class AvklarOvergangUføreLøser(
 
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
-        val nyesteSykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)
-            ?.sykdomsvurderinger?.maxByOrNull { it.opprettet }
-
         val overgangUføreVurdering = løsning.overgangUføreVurdering.tilOvergangUføreVurdering(
             kontekst.bruker,
-            nyesteSykdomsvurdering?.vurderingenGjelderFra
+            løsning.overgangUføreVurdering.virkningsdato
         )
 
         val eksisterendeOverganguforevurderinger = behandling.forrigeBehandlingId

@@ -148,8 +148,8 @@ class MedlemskapLovvalgVurderingService {
     private fun utenlandskAdresse(grunnlag: Personopplysning, rettighetsPeriode: Periode): TilhørighetVurdering {
         val bosattUtenforNorge = grunnlag.status != PersonStatus.bosatt
 
-        val utenlandsAddresserGrunnlag = grunnlag.utenlandsAddresser?.map {
-            UtenlandsAdresseGrunnlag(
+        val adresser = grunnlag.utenlandsAddresser?.map {
+            UtenlandskAdresseDto(
                 gyldigFraOgMed = it.gyldigFraOgMed,
                 gyldigTilOgMed = it.gyldigTilOgMed,
                 adresseNavn = it.adresseNavn,
@@ -168,8 +168,11 @@ class MedlemskapLovvalgVurderingService {
             kilde = listOf(Kilde.PDL),
             indikasjon = Indikasjon.UTENFOR_NORGE,
             opplysning = "Utenlandsk adresse",
-            resultat = bosattUtenforNorge || !utenlandsAddresserGrunnlag.isNullOrEmpty(),
-            utenlandsAddresserGrunnlag = utenlandsAddresserGrunnlag,
+            resultat = bosattUtenforNorge || !adresser.isNullOrEmpty(),
+            utenlandsAddresserGrunnlag = UtenlandsAdresserGrunnlag(
+                adresser,
+                listOf(FolkeregisterStatusDto(grunnlag.status, null, null))
+            ),
             vurdertPeriode = VurdertPeriode.SØKNADSTIDSPUNKT.beskrivelse
         )
     }
