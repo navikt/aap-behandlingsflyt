@@ -16,7 +16,7 @@ interface KravspesifikasjonForRettighetsType {
         fun oppfyllesAv(vilkårsvurdering: Vilkårsvurdering?): Boolean
     }
 
-    data class MåVæreOppfylt(val akseptableInnvilgelsesårrsaker: List<Innvilgelsesårsak?>) : Krav {
+    data class MåVæreOppfylt(val akseptableInnvilgelsesårsaker: List<Innvilgelsesårsak?>) : Krav {
         constructor(vararg innvilgelsesårsak: Innvilgelsesårsak?) : this(
             if (innvilgelsesårsak.isEmpty()) listOf(null)
             else innvilgelsesårsak.toList()
@@ -25,7 +25,7 @@ interface KravspesifikasjonForRettighetsType {
         override fun oppfyllesAv(vilkårsvurdering: Vilkårsvurdering?) =
             vilkårsvurdering != null
                     && vilkårsvurdering.erOppfylt()
-                    && vilkårsvurdering.innvilgelsesårsak in akseptableInnvilgelsesårrsaker
+                    && vilkårsvurdering.innvilgelsesårsak in akseptableInnvilgelsesårsaker
     }
 
     data object SkalIkkeGiAvslag : Krav {
