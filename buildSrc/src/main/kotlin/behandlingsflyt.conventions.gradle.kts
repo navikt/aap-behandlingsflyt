@@ -1,4 +1,4 @@
-// Felles kode for alle build.gradle.kts filer som laster api-intern.conventions pluginen
+// Felles kode for alle build.gradle.kts filer som laster denne conventions pluginen
 
 plugins {
     id("org.jetbrains.kotlin.jvm")
@@ -7,6 +7,11 @@ plugins {
 group = "no.nav.aap"
 version = project.findProperty("version")?.toString() ?: "0.0.0"
 
+repositories {
+    mavenCentral()
+    maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
+    mavenLocal()
+}
 
 testing {
     suites {
