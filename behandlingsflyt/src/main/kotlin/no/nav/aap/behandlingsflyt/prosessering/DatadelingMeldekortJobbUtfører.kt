@@ -14,7 +14,7 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 
-class MeldekortTilApiInternJobbUtfører(
+class DatadelingMeldekortJobbUtfører(
     private val saksRepository: SakRepository,
     private val underveisRepository: UnderveisRepository,
     private val meldekortRepository: MeldekortRepository,
@@ -22,7 +22,7 @@ class MeldekortTilApiInternJobbUtfører(
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val service = MeldekortTilApiInternService(saksRepository, underveisRepository, meldekortRepository)
+    private val service = DatadelingMeldekortService(saksRepository, underveisRepository, meldekortRepository)
 
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
@@ -50,7 +50,7 @@ class MeldekortTilApiInternJobbUtfører(
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             val sakRepository = repositoryProvider.provide<SakRepository>()
 
-            return MeldekortTilApiInternJobbUtfører(
+            return DatadelingMeldekortJobbUtfører(
                 apiInternGateway = gatewayProvider.provide(ApiInternGateway::class),
                 saksRepository = sakRepository,
                 underveisRepository = repositoryProvider.provide<UnderveisRepository>(),
@@ -61,7 +61,7 @@ class MeldekortTilApiInternJobbUtfører(
         fun nyJobb(
             sakId: SakId,
             behandlingId: BehandlingId,
-        ) = JobbInput(MeldekortTilApiInternJobbUtfører).apply {
+        ) = JobbInput(DatadelingMeldekortJobbUtfører).apply {
             forBehandling(sakId.toLong(), behandlingId.toLong())
         }
     }

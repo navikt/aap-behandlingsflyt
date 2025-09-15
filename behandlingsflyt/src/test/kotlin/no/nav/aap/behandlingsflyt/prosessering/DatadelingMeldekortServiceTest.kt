@@ -34,7 +34,7 @@ import kotlin.random.Random
 
 
 @ExtendWith(TestDatabaseExtension::class)
-class MeldekortTilApiInternServiceTest {
+class DatadelingMeldekortServiceTest {
     @TestDatabase
     lateinit var dataSource: DataSource
 
@@ -84,7 +84,7 @@ class MeldekortTilApiInternServiceTest {
 
             // Sjekk at vi fikk opp de to meldekortene og behandlingene vi nettopp lagde
 
-            // TODO
+            // TODO me
 
         }
 
@@ -134,6 +134,11 @@ class MeldekortTilApiInternServiceTest {
             )
         )
 
+    }
+
+    @Test
+    fun `mapping til kontrakt`(){
+        // TODO
     }
 
     private fun tilfeldigReferanse(): InnsendingReferanse =

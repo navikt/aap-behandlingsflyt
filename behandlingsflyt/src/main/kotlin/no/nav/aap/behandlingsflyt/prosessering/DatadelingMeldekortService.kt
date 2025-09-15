@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.type.Periode
 
-class MeldekortTilApiInternService(
+class DatadelingMeldekortService(
     private val saksRepository: SakRepository,
     private val underveisRepository: UnderveisRepository,
     private val meldekortRepository: MeldekortRepository,
