@@ -1,8 +1,12 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykepengerErstatningLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivForhåndsvarselBruddAktivitetspliktBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentePåFristForhåndsvarselAktivitetsplikt11_7Løsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderBrudd11_7Løsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
@@ -96,7 +100,41 @@ class AktivitetspliktFlytTest :
                         gjelderFra = bruddFom
                     )
                 )
-            ).medKontekst {
+            )
+            .medKontekst {
+                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .containsExactlyInAnyOrder(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
+                val brevbestillingReferanse = dataSource.transaction { connection ->
+                    val aktivitetsplikt11_7Repository = Aktivitetsplikt11_7RepositoryImpl(connection)
+                    aktivitetsplikt11_7Repository.hentVarselHvisEksisterer(aktivitetspliktBehandling.id)?.varselId
+                        ?: error("Fant ikke varsel")
+
+                }
+                aktivitetspliktBehandling.løsAvklaringsBehov(
+                    SkrivForhåndsvarselBruddAktivitetspliktBrevLøsning(
+                        brevbestillingReferanse = brevbestillingReferanse.brevbestillingReferanse,
+                        handling = SkrivBrevAvklaringsbehovLøsning.Handling.FERDIGSTILL,
+                        behovstype = Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV.kode
+                    )
+                )
+            }
+            .medKontekst {
+                assertThat(this.åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                    .isEqualTo(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT)
+            }
+            .løsAvklaringsBehov(avklaringsBehovLøsning = VentePåFristForhåndsvarselAktivitetsplikt11_7Løsning())
+            .løsAvklaringsBehov(
+                VurderBrudd11_7Løsning(
+                    aktivitetsplikt11_7Vurdering = Aktivitetsplikt11_7LøsningDto(
+                        begrunnelse = "Brudd",
+                        erOppfylt = false,
+                        utfall = Utfall.STANS,
+                        gjelderFra = bruddFom,
+                        skalIgnorereVarselFrist = true
+                    )
+                )
+            )
+            .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
             }
@@ -114,7 +152,7 @@ class AktivitetspliktFlytTest :
         aktivitetspliktBehandling.fattVedtakEllerSendRetur().medKontekst {
             assertThat(this.behandling).extracting { it.aktivtSteg() }
                 .isEqualTo(StegType.BREV)
-         
+
         }.løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_11_7).medKontekst {
             assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
         }
@@ -281,16 +319,20 @@ class AktivitetspliktFlytTest :
         val bruddFom = sak.rettighetsperiode.fom.plusWeeks(18)
         opprettAktivitetspliktBehandlingMedVurdering(
             sak,
-            Status.AVSLUTTET,
+            Status.AVSLUTTET
+        ) { behandlingId ->
             Aktivitetsplikt11_7Vurdering(
                 begrunnelse = "Brudd",
                 erOppfylt = false,
                 utfall = Utfall.STANS,
                 gjelderFra = bruddFom,
                 vurdertAv = "Saksbehandler",
-                opprettet = sak.rettighetsperiode.fom.plusWeeks(20).atStartOfDay().toInstant(ZoneOffset.UTC)
+                opprettet = sak.rettighetsperiode.fom.plusWeeks(20).atStartOfDay().toInstant(ZoneOffset.UTC),
+                vurdertIBehandling = behandlingId,
+                skalIgnorereVarselFrist = false
             )
-        )
+        }
+
 
         val effektueringsbehandling = dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
@@ -357,8 +399,8 @@ class AktivitetspliktFlytTest :
     private fun opprettAktivitetspliktBehandlingMedVurdering(
         sak: Sak,
         status: Status,
-        vurdering: Aktivitetsplikt11_7Vurdering,
         forrige: BehandlingId? = null,
+        vurdering: (behandlingId: BehandlingId) -> Aktivitetsplikt11_7Vurdering,
     ): Behandling {
         return dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
@@ -369,11 +411,49 @@ class AktivitetspliktFlytTest :
             val behandling = opprettAktivitetspliktBehandling(repositoryProvider, sak, forrige)
 
             Aktivitetsplikt11_7Repository.lagre(
-                behandling.id, listOf(vurdering)
+                behandling.id, listOf(vurdering(behandling.id))
             )
             behandlingRepository.oppdaterBehandlingStatus(behandling.id, status)
             behandling
         }
+    }
+
+    @Test
+    fun `Happy-case-flyt for aktivitetsplikt § 11-9`() {
+        val person = TestPersoner.STANDARD_PERSON()
+        val sak = happyCaseFørstegangsbehandling(person = person)
+        var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom)
+
+        dataSource.transaction { connection ->
+            assertThat(
+                Aktivitetsplikt11_7RepositoryImpl(connection)
+                    .hentHvisEksisterer(åpenBehandling.id)
+            ).isNull()
+        }
+
+        var aktivitetspliktBehandling = opprettBehandling(
+            sakId = sak.id,
+            typeBehandling = TypeBehandling.Aktivitetsplikt11_9,
+            vurderingsbehov = listOf(
+                VurderingsbehovMedPeriode(
+                    Vurderingsbehov.AKTIVITETSPLIKT_11_9,
+                )
+            ),
+            forrigeBehandlingId = null
+        )
+
+        assertThat(aktivitetspliktBehandling.status()).isEqualTo(Status.OPPRETTET)
+
+        prosesserBehandling(aktivitetspliktBehandling)
+
+        hentBehandling(aktivitetspliktBehandling.referanse)
+            .medKontekst {
+                assertThat(this.behandling).extracting { it.aktivtSteg() }
+                    .isEqualTo(StegType.BREV)
+
+            }.løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_11_9).medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+            }
     }
 
     private fun opprettAktivitetspliktBehandling(

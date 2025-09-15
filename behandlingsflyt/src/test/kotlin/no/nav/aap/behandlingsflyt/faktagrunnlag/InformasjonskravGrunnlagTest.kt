@@ -214,7 +214,9 @@ class InformasjonskravGrunnlagTest {
                 listOf(StegType.VURDER_LOVVALG to LovvalgInformasjonskrav),
                 kontekst
             )
+            val lagretData = MedlemskapArbeidInntektRepositoryImpl(connection).hentHvisEksisterer(kontekst.behandlingId)
 
+            assertThat(lagretData?.inntekterINorgeGrunnlag?.size == 2).isTrue()
             assertThat(erOppdatert).isEmpty()
         }
     }
