@@ -31,12 +31,10 @@ class DatadelingMeldePerioderOgSakStatusJobbUtfører(
             personIdent.identifikator,
             SakStatus.fromKelvin(sak.saksnummer.toString(), sak.status(), sak.rettighetsperiode)
         )
-
-        // TODO flytt inn her
     }
 
     companion object : ProvidersJobbSpesifikasjon {
-        override val beskrivelse = "Sender meldekort, meldekortperioder, og vedtaksdata til api-intern."
+        override val beskrivelse = "Sender meldekort perioder og vedtaksdata til api-intern."
         override val navn = "DatadelingMeldePerioderJobbUtfører"
         override val type = "flyt.DatadelingMeldePerioder"
 
