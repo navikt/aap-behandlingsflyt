@@ -142,9 +142,16 @@ class BehandlingHendelseServiceImpl(
                 .forBehandling(sak.id.id, behandling.id.id)
         )
 
+        // Sende nye meldekort til API-intern
+        // TODO skru på jobben når API-intern er klar til å motta
+        // flytJobbRepository.leggTil(MeldekortTilApiInternJobbUtfører.nyJobb(sak.id, behandling.id))
+
         if (behandling.typeBehandling() in listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)) {
             flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, behandling.id))
         }
+
+
+
     }
 
     private fun hentReservertTil(behandlingId: BehandlingId): String? {
