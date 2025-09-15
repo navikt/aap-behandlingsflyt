@@ -9,6 +9,7 @@ import java.util.Objects
 data class Aktivitetsplikt11_7Grunnlag(
     val vurderinger: List<Aktivitetsplikt11_7Vurdering>
 ) {
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

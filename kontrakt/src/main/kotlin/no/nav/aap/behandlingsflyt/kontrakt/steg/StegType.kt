@@ -257,7 +257,12 @@ public enum class StegType(
         gruppe = StegGruppe.UDEFINERT,
         status = Status.IVERKSETTES,
     ),
-    
+
+    VURDER_AKTIVITETSPLIKT_11_9(
+        gruppe = StegGruppe.AKTIVITETSPLIKT_11_9,
+        status = Status.UTREDES,
+    ),
+
     // Aktivitetsplikt slutt
     
     UDEFINERT(

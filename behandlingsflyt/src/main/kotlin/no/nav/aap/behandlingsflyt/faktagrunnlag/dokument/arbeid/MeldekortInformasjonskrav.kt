@@ -23,7 +23,8 @@ class MeldekortInformasjonskrav private constructor(
     private val mottaDokumentService: MottaDokumentService,
     private val meldekortRepository: MeldekortRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-) : Informasjonskrav {
+
+    ) : Informasjonskrav {
     override val navn = Companion.navn
 
     companion object : Informasjonskravkonstruktør {
@@ -51,7 +52,8 @@ class MeldekortInformasjonskrav private constructor(
 
         val eksisterendeGrunnlag = meldekortRepository.hentHvisEksisterer(kontekst.behandlingId)
         val eksisterendeMeldekort = eksisterendeGrunnlag?.meldekortene.orEmpty()
-        val allePlussNye = HashSet<Meldekort>(eksisterendeMeldekort)
+        val allePlussNye = mutableSetOf<Meldekort>()
+        allePlussNye.addAll(eksisterendeMeldekort)
 
         for (ubehandletMeldekort in meldekortSomIkkeErBehandlet) {
             val nyttMeldekort = Meldekort(
@@ -59,16 +61,17 @@ class MeldekortInformasjonskrav private constructor(
                 timerArbeidPerPeriode = ubehandletMeldekort.timerArbeidPerPeriode,
                 mottattTidspunkt = ubehandletMeldekort.mottattTidspunkt
             )
+            // TODO en og en er ineffektivt, kan være 100 kall, oppdater i pulje heller
             mottaDokumentService.markerSomBehandlet(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
                 referanse = InnsendingReferanse(ubehandletMeldekort.journalpostId)
             )
+
             allePlussNye.add(nyttMeldekort)
         }
 
         meldekortRepository.lagre(behandlingId = kontekst.behandlingId, meldekortene = allePlussNye)
-
         return ENDRET // Antar her at alle nye kort gir en endring vi må ta hensyn til
     }
 

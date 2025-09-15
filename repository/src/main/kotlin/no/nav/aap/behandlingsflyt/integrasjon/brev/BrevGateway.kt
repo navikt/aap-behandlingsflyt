@@ -233,6 +233,7 @@ class BrevGateway : BrevbestillingGateway {
         TypeBrev.FORVALTNINGSMELDING -> Brevtype.FORVALTNINGSMELDING
         TypeBrev.VEDTAK_11_18 -> Brevtype.VEDTAK_11_18
         TypeBrev.VEDTAK_11_7 -> Brevtype.VEDTAK_11_7
+        TypeBrev.VEDTAK_11_9 -> Brevtype.VEDTAK_11_9
     }
 
     private fun mapFaktagrunnlag(brevBehov: BrevBehov): Set<Faktagrunnlag> {
