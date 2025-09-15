@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Aktivitetsplikt
+import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Aktivitetsplikt11_9
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Klage
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.OppfølgingsBehandling
@@ -21,4 +22,5 @@ fun TypeBehandling.flyt(): BehandlingFlyt = when (this) {
     TypeBehandling.SvarFraAndreinstans -> SvarFraAndreinstans.flyt()
     TypeBehandling.OppfølgingsBehandling -> OppfølgingsBehandling.flyt()
     TypeBehandling.Aktivitetsplikt -> Aktivitetsplikt.flyt()
+    TypeBehandling.Aktivitetsplikt11_9 -> Aktivitetsplikt11_9.flyt()
 }

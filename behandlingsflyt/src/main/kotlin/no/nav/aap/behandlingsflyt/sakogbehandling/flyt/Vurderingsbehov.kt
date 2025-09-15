@@ -36,6 +36,7 @@ enum class Vurderingsbehov {
     MOTTATT_KABAL_HENDELSE,
     OPPFØLGINGSOPPGAVE,
     AKTIVITETSPLIKT_11_7,
+    AKTIVITETSPLIKT_11_9,
     EFFEKTUER_AKTIVITETSPLIKT,
     OVERGANG_UFORE,
     OVERGANG_ARBEID;
@@ -95,6 +96,7 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.HELHETLIG_VURDERING -> Vurderingsbehov.HELHETLIG_VURDERING
         EksponertÅrsak.REVURDER_MELDEPLIKT_RIMELIG_GRUNN -> Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN
         EksponertÅrsak.AKTIVITETSPLIKT_11_7 -> Vurderingsbehov.AKTIVITETSPLIKT_11_7
+        EksponertÅrsak.AKTIVITETSPLIKT_11_9 -> Vurderingsbehov.AKTIVITETSPLIKT_11_9
         EksponertÅrsak.EFFEKTUER_AKTIVITETSPLIKT -> Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
         EksponertÅrsak.OVERGANG_UFORE -> Vurderingsbehov.OVERGANG_UFORE
         EksponertÅrsak.OVERGANG_ARBEID -> Vurderingsbehov.OVERGANG_ARBEID

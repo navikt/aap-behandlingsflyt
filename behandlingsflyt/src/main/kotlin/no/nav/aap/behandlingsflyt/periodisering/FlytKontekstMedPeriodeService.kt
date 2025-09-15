@@ -96,6 +96,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.SØKNAD_TRUKKET,
             Vurderingsbehov.REVURDERING_KANSELLERT ->
                 REVURDERING
+
             Vurderingsbehov.REVURDER_MANUELL_INNTEKT,
             Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN,
             Vurderingsbehov.OVERGANG_UFORE,
@@ -111,7 +112,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.KLAGE_TRUKKET, Vurderingsbehov.MOTTATT_KABAL_HENDELSE ->
                 IKKE_RELEVANT // TODO: Verifiser at dette er korrekt.
             Vurderingsbehov.OPPFØLGINGSOPPGAVE -> IKKE_RELEVANT
-            Vurderingsbehov.AKTIVITETSPLIKT_11_7 -> IKKE_RELEVANT
+            Vurderingsbehov.AKTIVITETSPLIKT_11_7, Vurderingsbehov.AKTIVITETSPLIKT_11_9 -> IKKE_RELEVANT
             Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT -> EFFEKTUER_AKTIVITETSPLIKT
         }
     }

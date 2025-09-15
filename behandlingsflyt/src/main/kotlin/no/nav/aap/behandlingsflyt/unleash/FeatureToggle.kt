@@ -18,6 +18,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     BrevBeregningsgrunnlag,
     NyBrevtype11_18,
     Aktivitetsplikt11_7,
+    Aktivitetsplikt11_9,
     TilgangssjekkSettPaaVent,
     OverforingsdatoNullForAvregning,
     NyeSykdomVilkar;

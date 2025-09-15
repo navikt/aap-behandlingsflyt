@@ -77,7 +77,8 @@ class BrevUtlederService(
                             .orEmpty()
                             .any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
                         if (vurderesForUføretrygd &&
-                            unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18)) {
+                            unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18)
+                        ) {
                             VurderesForUføretrygd
                         } else {
                             brevBehovInnvilgelse(behandling)
@@ -118,7 +119,7 @@ class BrevUtlederService(
                 return VedtakAktivitetsplikt11_7
             }
 
-            TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling ->
+            TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling, TypeBehandling.Aktivitetsplikt11_9 ->
                 return null // TODO
         }
     }
