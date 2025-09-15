@@ -1,7 +1,11 @@
 package no.nav.aap.behandlingsflyt.integrasjon.aordning
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektInformasjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Inntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektskomponentResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektskomponentData
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Virksomhet
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
@@ -12,6 +16,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import java.net.URI
+import java.time.LocalDate
 import java.time.YearMonth
 
 class InntektkomponentenGatewayImpl : InntektkomponentenGateway {
@@ -41,7 +46,7 @@ class InntektkomponentenGatewayImpl : InntektkomponentenGateway {
         return requireNotNull(client.post(uri = url, request = httpRequest))
     }
 
-    override fun hentAInntekt(fnr: String, fom: YearMonth, tom: YearMonth): InntektskomponentResponse {
+    override fun hentAInntekt(fnr: String, fom: YearMonth, tom: YearMonth): InntektskomponentData {
         val request = InntektskomponentRequest(
             maanedFom = fom,
             maanedTom = tom,
@@ -49,14 +54,41 @@ class InntektkomponentenGatewayImpl : InntektkomponentenGateway {
         )
 
         try {
-            return query(request)
+            val response = query(request)
+            return mapFraRespons(response)
         } catch (e: Exception) {
             throw RuntimeException("Feil ved henting av data i Inntektskomponenten: ${e.message}, $e")
         }
     }
 }
 
-data class InntektskomponentRequest(
+private fun mapFraRespons(response: InntektskomponentResponse): InntektskomponentData {
+    val rensetInnektliste =
+        response.arbeidsInntektMaaned.filter { it.arbeidsInntektInformasjon.inntektListe?.isNotEmpty() == true }
+
+    return InntektskomponentData(
+        rensetInnektliste.map {
+            ArbeidsInntektMaaned(
+                aarMaaned = it.aarMaaned,
+                arbeidsInntektInformasjon = ArbeidsInntektInformasjon(
+                    inntektListe = it.arbeidsInntektInformasjon.inntektListe?.map { inntekt ->
+                        Inntekt(
+                            beloep = inntekt.beloep,
+                            opptjeningsland = inntekt.opptjeningsland,
+                            skattemessigBosattLand = inntekt.skattemessigBosattLand,
+                            opptjeningsperiodeFom = inntekt.opptjeningsperiodeFom,
+                            opptjeningsperiodeTom = inntekt.opptjeningsperiodeTom,
+                            virksomhet = Virksomhet(inntekt.virksomhet.identifikator),
+                            beskrivelse = inntekt.beskrivelse
+                        )
+                    } ?: emptyList()
+                )
+            )
+        }
+    )
+}
+
+internal data class InntektskomponentRequest(
     val maanedFom: YearMonth,
     val maanedTom: YearMonth,
     val ident: Ident,
@@ -64,7 +96,34 @@ data class InntektskomponentRequest(
     val ainntektsfilter: String = "ArbeidsavklaringspengerA-inntekt"
 )
 
-data class Ident(
+internal data class Ident(
     val identifikator: String,
     val aktoerType: String = "NATURLIG_IDENT"
+)
+
+internal data class InntektskomponentResponse(
+    val arbeidsInntektMaaned: List<ArbeidsInntektMaanedResponse> = emptyList()
+)
+
+internal data class ArbeidsInntektMaanedResponse(
+    val aarMaaned: YearMonth,
+    val arbeidsInntektInformasjon: ArbeidsInntektInformasjonResponse
+)
+
+internal data class ArbeidsInntektInformasjonResponse(
+    val inntektListe: List<InntektResponse>? = emptyList()
+)
+
+internal data class InntektResponse(
+    val beloep: Double,
+    val opptjeningsland: String?,
+    val skattemessigBosattLand: String?,
+    val opptjeningsperiodeFom: LocalDate?,
+    val opptjeningsperiodeTom: LocalDate?,
+    val virksomhet: VirksomhetResponse,
+    val beskrivelse: String?
+)
+
+internal data class VirksomhetResponse(
+    val identifikator: String,
 )

@@ -1088,6 +1088,12 @@ object FakeServers : AutoCloseable {
                                 }
                             ]
                         }
+                    },
+                    {
+                        "aarMaaned": "2026-01",
+                        "arbeidsInntektInformasjon": {
+                            "inntektListe": null
+                        }
                     }
                 ]
             }
