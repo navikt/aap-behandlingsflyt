@@ -49,7 +49,7 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
                 t1.kombiner(t2, StandardSammenslåere.prioriterHøyreSideCrossJoin())
             }
 
-        val sykepengerVurdering = grunnlag.sykepengerErstatningFaktagrunnlag?.vurdering
+        val sykepengerVurdering = grunnlag.sykepengerErstatningFaktagrunnlag?.vurderinger?.last()
 
         val tidslinje =
             Tidslinje.zip3(

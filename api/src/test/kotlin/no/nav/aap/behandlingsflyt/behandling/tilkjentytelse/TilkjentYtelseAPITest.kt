@@ -52,8 +52,6 @@ class TilkjentYtelseAPITest : BaseApiTest() {
                 perioder
             )
 
-            println("PERIODER $perioder")
-
             val tilkjentYtelseVerdi = Tilkjent(
                 dagsats = Beløp(500),
                 gradering = TilkjentGradering(

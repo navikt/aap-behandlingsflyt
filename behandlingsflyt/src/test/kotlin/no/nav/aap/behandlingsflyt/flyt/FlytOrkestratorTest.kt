@@ -137,6 +137,7 @@ import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtf
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FormkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
@@ -980,7 +981,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .medKontekst {
                 assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
             }
-            .løsSykdom()
+            .løsSykdom(erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true)
             .løsAvklaringsBehov(
                 AvklarBistandsbehovLøsning(
                     bistandsVurdering = BistandVurderingLøsningDto(
@@ -1061,6 +1062,13 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
                 // Venter på at brevet skal fullføres
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.SKRIV_VEDTAKSBREV) }
+
+                val vilkårsresultat = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(behandling.id) }
+                    .finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).tidslinje().komprimer()
+
+                assertTidslinje(vilkårsresultat, periode to {
+                    assertThat(it.innvilgelsesårsak).isEqualTo(Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG)
+                })
             }
             .løsVedtaksbrev()
             .medKontekst {
@@ -1188,29 +1196,16 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     })
             }
 
+        if (gatewayProvider.provide<UnleashGateway>().isDisabled(BehandlingsflytFeature.SykepengerPeriodisert)) {
+            return
+        }
 
         // Verifisere at det går an å kun 1 mnd med sykepengeerstatning
         val revurdering = sak.opprettManuellRevurdering(
             listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
         )
-            .løsAvklaringsBehov(
-                AvklarSykdomLøsning(
-                    sykdomsvurderinger = listOf(
-                        SykdomsvurderingLøsningDto(
-                            begrunnelse = "Er syk nok",
-                            dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
-                            harSkadeSykdomEllerLyte = false,
-                            erSkadeSykdomEllerLyteVesentligdel = false,
-                            erNedsettelseIArbeidsevneMerEnnHalvparten = null,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = null,
-                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true,
-                            yrkesskadeBegrunnelse = null,
-                            vurderingenGjelderFra = periode.fom.plusMonths(1),
-                        )
-                    )
-                )
-            )
+            .løsSykdom(vurderingGjelderFra = LocalDate.now().plusMonths(1))
+            .løsBistand()
             .løsSykdomsvurderingBrev()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
@@ -1220,9 +1215,105 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 }.map { Segment(it.periode, it) }.let(::Tidslinje)
 
                 val oppfyltPeriode = underveisTidslinje.filter { it.verdi.rettighetsType != null }.helePerioden()
+                val vilkårsresultat = hentVilkårsresultat(behandlingId = this.behandling.id)
 
                 assertThat(oppfyltPeriode.fom).isEqualTo(periode.fom)
-                assertThat(oppfyltPeriode.tom).isEqualTo(periode.fom.plusMonths(1).minusDays(1))
+                // Oppfylt ut rettighetsperioden
+                assertThat(oppfyltPeriode.tom).isEqualTo(periode.tom)
+
+                assertTidslinje(
+                    vilkårsresultat.rettighetstypeTidslinje(),
+                    Periode(periode.fom, periode.fom.plusMonths(1).minusDays(1)) to {
+                        assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
+                    },
+                    Periode(periode.fom.plusMonths(1), periode.tom) to {
+                        assertThat(it).isEqualTo(RettighetsType.BISTANDSBEHOV)
+                    }
+                )
+            }
+            .fattVedtakEllerSendRetur()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
+
+        // Revurdering nr 2, innvilger sp-erstatning på nytt
+        val revurdering2 = sak.opprettManuellRevurdering(
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+        )
+            .medKontekst {
+                assertThat(this.behandling.id).isNotEqualTo(revurdering.id)
+            }
+            .løsAvklaringsBehov(
+                AvklarSykdomLøsning(
+                    sykdomsvurderinger = listOf(
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Er syk nok",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                            harSkadeSykdomEllerLyte = true,
+                            erSkadeSykdomEllerLyteVesentligdel = true,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = null,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            erArbeidsevnenNedsatt = true,
+                            yrkesskadeBegrunnelse = null,
+                            vurderingenGjelderFra = LocalDate.now().plusMonths(2),
+                        )
+                    )
+                )
+            )
+            // Nei på 11-6
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    bistandsVurdering = BistandVurderingLøsningDto(
+                        begrunnelse = "Trenger  hjelp fra nav",
+                        erBehovForAktivBehandling = false,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = false,
+                        skalVurdereAapIOvergangTilUføre = false,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = "Nope"
+                    ),
+                ),
+            )
+            .apply {
+                if (gatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.OvergangUfore)) {
+                    løsOvergangUføre()
+                }
+            }
+            .løsSykdomsvurderingBrev()
+            .løsAvklaringsBehov(
+                AvklarSykepengerErstatningLøsning(
+                    sykepengeerstatningVurdering = SykepengerVurderingDto(
+                        begrunnelse = "...",
+                        dokumenterBruktIVurdering = emptyList(),
+                        harRettPå = true,
+                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                        gjelderFra = LocalDate.now().plusMonths(2)
+                    ),
+                )
+            )
+            .medKontekst {
+                val underveisTidslinje = dataSource.transaction {
+                    UnderveisRepositoryImpl(it).hent(this.behandling.id).perioder
+                }.map { Segment(it.periode, it) }.let(::Tidslinje)
+
+                val oppfyltPeriode = underveisTidslinje.filter { it.verdi.rettighetsType != null }.helePerioden()
+                val vilkårsresultat = hentVilkårsresultat(behandlingId = this.behandling.id)
+
+                assertThat(oppfyltPeriode.fom).isEqualTo(periode.fom)
+                // Oppfylt ut rettighetsperioden
+                assertThat(oppfyltPeriode.tom).isEqualTo(periode.tom)
+
+                assertTidslinje(
+                    vilkårsresultat.rettighetstypeTidslinje(),
+                    Periode(periode.fom, periode.fom.plusMonths(1).minusDays(1)) to {
+                        assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
+                    },
+                    Periode(periode.fom.plusMonths(1), periode.fom.plusMonths(2).minusDays(1)) to {
+                        assertThat(it).isEqualTo(RettighetsType.BISTANDSBEHOV)
+                    },
+                    Periode(periode.fom.plusMonths(2), periode.tom) to {
+                        assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
+                    }
+                )
             }
     }
 

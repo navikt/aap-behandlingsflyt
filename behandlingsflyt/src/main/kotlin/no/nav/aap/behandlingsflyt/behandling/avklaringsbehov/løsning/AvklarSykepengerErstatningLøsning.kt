@@ -25,7 +25,11 @@ class AvklarSykepengerErstatningLøsning(
         defaultValue = VURDER_SYKEPENGEERSTATNING_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5007`
 ) : EnkeltAvklaringsbehovLøsning {
-    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
-        return AvklarSykepengerErstatningLøser(repositoryProvider).løs(kontekst, this)
+    override fun løs(
+        repositoryProvider: RepositoryProvider,
+        kontekst: AvklaringsbehovKontekst,
+        gatewayProvider: GatewayProvider
+    ): LøsningsResultat {
+        return AvklarSykepengerErstatningLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }
 }

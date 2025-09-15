@@ -46,7 +46,10 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(
                 respond(
                     SykepengerGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        sykepengerErstatningGrunnlag?.vurdering?.tilResponse(ansattInfoService)
+                        vurdering = sykepengerErstatningGrunnlag?.vurderinger.orEmpty().firstOrNull()
+                            ?.tilResponse(ansattInfoService),
+                        vurderinger = sykepengerErstatningGrunnlag?.vurderinger.orEmpty()
+                            .map { it.tilResponse(ansattInfoService) }
                     )
                 )
             }
@@ -61,6 +64,7 @@ private fun SykepengerVurdering.tilResponse(ansattInfoService: AnsattInfoService
         dokumenterBruktIVurdering = dokumenterBruktIVurdering,
         harRettPå = harRettPå,
         grunn = grunn,
+        gjelderFra = gjelderFra,
         vurdertAv = VurdertAvResponse(
             ident = vurdertAv,
             dato = vurdertTidspunkt?.toLocalDate() ?: error("Mangler dato for sykepengervurdering"),

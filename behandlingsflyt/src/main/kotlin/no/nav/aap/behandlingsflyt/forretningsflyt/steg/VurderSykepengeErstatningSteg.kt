@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -20,9 +21,14 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -31,24 +37,93 @@ class VurderSykepengeErstatningSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sykepengerErstatningRepository: SykepengerErstatningRepository,
     private val sykdomRepository: SykdomRepository,
+    private val bistandRepository: BistandRepository,
+    private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val vilkårService: VilkårService,
+    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
         sykepengerErstatningRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
+        bistandRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         vilkårService = VilkårService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.SykepengerPeriodisert)) {
+            return gammelUtfør(kontekst)
+        }
+
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            avklaringsbehovene = avklaringsbehovene,
+            behandlingRepository = behandlingRepository,
+            vilkårsresultatRepository = vilkårsresultatRepository,
+            definisjon = Definisjon.AVKLAR_SYKEPENGEERSTATNING,
+            tvingerAvklaringsbehov = setOf(),
+            nårVurderingErRelevant = ::perioderMedVurderingsbehov,
+            kontekst = kontekst,
+            erTilstrekkeligVurdert = { true }, // ??
+            tilbakestillGrunnlag = {
+                val vedtatteVurderinger =
+                    kontekst.forrigeBehandlingId?.let { sykepengerErstatningRepository.hentHvisEksisterer(it) }
+                        ?.vurderinger.orEmpty()
+
+                val aktiveVurderinger =
+                    sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
+                        ?.vurderinger.orEmpty()
+
+                if (vedtatteVurderinger.toSet() != aktiveVurderinger.toSet()) {
+                    sykepengerErstatningRepository.lagre(kontekst.behandlingId, vedtatteVurderinger)
+                }
+            }
+        )
+        return Fullført
+    }
+
+    private fun perioderMedVurderingsbehov(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
+        val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
+
+        val kravDato = kontekst.rettighetsperiode.fom
+
+        val sykdomsvurderinger =
+            sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.somSykdomsvurderingstidslinje(kravDato)
+                ?: Tidslinje.empty()
+
+        val bistandvurderinger =
+            bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje(kravDato)
+                ?: Tidslinje.empty()
+
+        return Tidslinje.zip3(tidligereVurderingsutfall, sykdomsvurderinger, bistandvurderinger)
+            .mapValue { (behandlingsutfall, sykdomsvurdering, bistandvurdering) ->
+                when (behandlingsutfall) {
+                    null -> false
+                    TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
+                    TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
+                    TidligereVurderinger.Behandlingsutfall.UKJENT -> {
+                        (sykdomsvurdering?.erOppfyltSettBortIfraVissVarighet() == true && !sykdomsvurdering.erOppfylt(
+                            kravDato
+                        )) || (bistandvurdering?.erBehovForBistand() == false && sykdomsvurdering?.erOppfylt(
+                            kravDato
+                        ) == true)
+                    }
+                }
+            }
+    }
+
+    private fun gammelUtfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
@@ -98,9 +173,9 @@ class VurderSykepengeErstatningSteg private constructor(
             sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.sykdomsvurderinger.orEmpty()
 
         val kravDato = kontekst.rettighetsperiode.fom
-
         val overgangUføre = vilkårsresultat.optionalVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)
             ?.harPerioderSomErOppfylt() != true
+
         val behovForBistand = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET).harPerioderSomErOppfylt()
         val erRelevantÅVurdereSykepengererstatning = sykdomsvurderinger.any { sykdomsvurdering ->
             (sykdomsvurdering.erOppfyltSettBortIfraVissVarighet() && !sykdomsvurdering.erOppfylt(kravDato))
@@ -112,16 +187,16 @@ class VurderSykepengeErstatningSteg private constructor(
         if (erRelevantÅVurdereSykepengererstatning) {
             val grunnlag = sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-            if (grunnlag?.vurdering != null) {
+            if (grunnlag?.vurderinger != null) {
                 val rettighetsperiode = kontekst.rettighetsperiode
                 val vurderingsdato = rettighetsperiode.fom
                 val faktagrunnlag = SykepengerErstatningFaktagrunnlag(
                     vurderingsdato,
                     // TODO: Trenger å finne en god løsning for hvordan vi setter slutt på dette vilkåret ved tom kvote
-                    rettighetsperiode.tom, grunnlag.vurdering
+                    rettighetsperiode.tom, grunnlag.vurderinger
                 )
 
-                if (grunnlag.vurdering.harRettPå) {
+                if (grunnlag.vurderinger.any { it.harRettPå }) { /// !!!!
                     // TODO her bør vi finne en bedre løsning på sikt
                     //      Vi bør sentralisere behandling av vilkår til én vurderer-klasse.
                     vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET).leggTilVurdering(
@@ -156,7 +231,7 @@ class VurderSykepengeErstatningSteg private constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return VurderSykepengeErstatningSteg(repositoryProvider)
+            return VurderSykepengeErstatningSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {

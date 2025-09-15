@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.verdityper.dokument.JournalpostId
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class SykepengerVurdering(
@@ -10,6 +11,7 @@ data class SykepengerVurdering(
     val grunn: SykepengerGrunn? = null,
     val vurdertAv: String,
     val vurdertTidspunkt: LocalDateTime? = null,
+    val gjelderFra: LocalDate? = null,
 )
 
 /**
