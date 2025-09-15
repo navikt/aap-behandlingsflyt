@@ -110,7 +110,7 @@ class YrkesskadeInformasjonskrav private constructor(
             ref = "YRK",
             saksnummer = null,
             kildesystem = "KELVIN",
-            skadedato = periode.fom.minusDays(60),
+            skadedato = null,
         )
     }
 
