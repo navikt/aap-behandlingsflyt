@@ -2,6 +2,9 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.flyt.BehandlingType
+import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Aktivitetsplikt
+import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Aktivitetsplikt11_9
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -10,7 +13,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -19,6 +24,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
@@ -179,20 +185,52 @@ class SakOgBehandlingService(
         }
     }
 
-     fun opprettAktivitetsPliktBehandling(
-         sakId: SakId,
-         vuderingsbehovOgÅrsak: VurderingsbehovOgÅrsak,
-         forrigeBehandlingId: BehandlingId?,
+    fun opprettAktivitetspliktBehandling(
+        sakId: SakId,
+        vurderingsbehov: Vurderingsbehov,
+    ): Behandling {
+        val behandlingstype = when (vurderingsbehov) {
+            Vurderingsbehov.AKTIVITETSPLIKT_11_7 -> TypeBehandling.Aktivitetsplikt
+            Vurderingsbehov.AKTIVITETSPLIKT_11_9 -> {
+                if (unleashGateway.isDisabled(BehandlingsflytFeature.Aktivitetsplikt11_9)) {
+                    throw IllegalStateException("Kan ikke opprette aktivitetsplikt 11-9 behandling når funksjonaliteten er deaktivert")
+                }
+                TypeBehandling.Aktivitetsplikt11_9
+            }
 
-         ): Behandling {
-         return behandlingRepository.opprettBehandling(
+            else -> throw UgyldigForespørselException("Kan kun opprette behandling for aktivitetsplikt")
+        }
+
+        val sisteYtelseBehandling = finnSisteYtelsesbehandlingFor(sakId)
+
+        if (sisteYtelseBehandling == null) {
+            throw UgyldigForespørselException("Kan ikke opprette aktiviterspliktbehandling uten en ytelsebehandling")
+        }
+
+        val aktivitetspliktBehandlinger = behandlingRepository.hentAlleFor(
             sakId = sakId,
-            vurderingsbehovOgÅrsak = vuderingsbehovOgÅrsak,
-            typeBehandling = TypeBehandling.Aktivitetsplikt,
-            forrigeBehandlingId = forrigeBehandlingId,
+            behandlingstypeFilter = listOf(behandlingstype)
         )
-    }
+        val forrige = aktivitetspliktBehandlinger.firstOrNull()?.id
 
+        val åpenAktivitetspliktBehandling = aktivitetspliktBehandlinger.filter { it.status().erÅpen() }
+
+        if (åpenAktivitetspliktBehandling.isNotEmpty()) {
+            throw UgyldigForespørselException("Finnes allerede en åpen behandling av denne typen")
+        }
+
+        return behandlingRepository.opprettBehandling(
+            sakId = sakId,
+            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(vurderingsbehov)),
+                årsak = ÅrsakTilOpprettelse.AKTIVITETSPLIKT
+            ),
+            typeBehandling = behandlingstype,
+            forrigeBehandlingId = forrige,
+        ).also { behandling ->
+            forrige?.let { grunnlagKopierer.overfør(it, behandling.id) }
+        }
+    }
 
     private fun opprettKlagebehandling(
         sisteYtelsesbehandling: Behandling?,
