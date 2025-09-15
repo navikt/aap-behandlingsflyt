@@ -375,6 +375,42 @@ class AktivitetspliktFlytTest :
             behandling
         }
     }
+    
+    @Test
+    fun `Happy-case-flyt for aktivitetsplikt § 11-9`() {
+        val person = TestPersoner.STANDARD_PERSON()
+        val sak = happyCaseFørstegangsbehandling(person = person)
+        var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom)
+
+        dataSource.transaction { connection ->
+            assertThat(
+                Aktivitetsplikt11_7RepositoryImpl(connection)
+                    .hentHvisEksisterer(åpenBehandling.id)
+            ).isNull()
+        }
+
+        var aktivitetspliktBehandling = opprettBehandling(
+            sakId = sak.id,
+            typeBehandling = TypeBehandling.Aktivitetsplikt11_9,
+            vurderingsbehov = listOf(
+                VurderingsbehovMedPeriode(
+                    Vurderingsbehov.AKTIVITETSPLIKT_11_9,
+                )
+            ),
+            forrigeBehandlingId = null
+        )
+
+        assertThat(aktivitetspliktBehandling.status()).isEqualTo(Status.OPPRETTET)
+
+        prosesserBehandling(aktivitetspliktBehandling)
+
+        aktivitetspliktBehandling = hentBehandling(aktivitetspliktBehandling.referanse)
+        assertThat(aktivitetspliktBehandling)
+            .extracting { it.aktivtSteg() }
+            .isEqualTo(StegType.VURDER_AKTIVITETSPLIKT_11_9)
+
+        assertThat(aktivitetspliktBehandling.status()).isEqualTo(Status.AVSLUTTET)
+    }
 
     private fun opprettAktivitetspliktBehandling(
         repositoryProvider: RepositoryProvider,
