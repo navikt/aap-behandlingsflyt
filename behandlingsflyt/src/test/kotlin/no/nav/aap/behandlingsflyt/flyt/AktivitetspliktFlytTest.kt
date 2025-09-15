@@ -417,7 +417,7 @@ class AktivitetspliktFlytTest :
             behandling
         }
     }
-    
+
     @Test
     fun `Happy-case-flyt for aktivitetsplikt § 11-9`() {
         val person = TestPersoner.STANDARD_PERSON()
@@ -446,12 +446,14 @@ class AktivitetspliktFlytTest :
 
         prosesserBehandling(aktivitetspliktBehandling)
 
-        aktivitetspliktBehandling = hentBehandling(aktivitetspliktBehandling.referanse)
-        assertThat(aktivitetspliktBehandling)
-            .extracting { it.aktivtSteg() }
-            .isEqualTo(StegType.VURDER_AKTIVITETSPLIKT_11_9)
+        hentBehandling(aktivitetspliktBehandling.referanse)
+            .medKontekst {
+                assertThat(this.behandling).extracting { it.aktivtSteg() }
+                    .isEqualTo(StegType.BREV)
 
-        assertThat(aktivitetspliktBehandling.status()).isEqualTo(Status.AVSLUTTET)
+            }.løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_11_9).medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+            }
     }
 
     private fun opprettAktivitetspliktBehandling(
