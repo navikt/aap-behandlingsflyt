@@ -93,7 +93,9 @@ class ManglendeLigningGrunnlagSteg internal constructor(
                     manuellInntektGrunnlagRepository.hentHvisEksisterer(forrigeBehandlingId)?.manuelleInntekter
                 }.orEmpty()
 
-                if (forrigeManuelleInntekter != manuellInntektGrunnlag?.manuelleInntekter) {
+                val gjeldendeManuelleInntekter = manuellInntektGrunnlag?.manuelleInntekter.orEmpty()
+
+                if (forrigeManuelleInntekter != gjeldendeManuelleInntekter) {
                    manuellInntektGrunnlagRepository.lagre(kontekst.behandlingId, forrigeManuelleInntekter)
                 }
             }
