@@ -17,7 +17,7 @@ import java.time.LocalDate
 import kotlin.reflect.KClass
 
 @Tag("motor")
-class MellomlagringFlyttest() : AbstraktFlytOrkestratorTest(FakeUnleash::class as KClass<UnleashGateway>) {
+class MellomlagringFlyttest() : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
     @Test
     fun `skal nullstille mellomlagret verdi når avklaringsbehov løses - og nullstille hengende mellomlagrede verdier ved iverksettelse`() {

@@ -18,13 +18,21 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.UtenlandsAdresse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.komponenter.miljo.Miljø
 import org.intellij.lang.annotations.Language
+import org.slf4j.LoggerFactory
+import kotlin.jvm.javaClass
 
 object PdlPersonopplysningGateway : PersonopplysningGateway {
+
+    private val log = LoggerFactory.getLogger(javaClass)
     override fun innhent(person: Person): Personopplysning {
         val request = PdlRequest(PERSON_QUERY, IdentVariables(person.aktivIdent().identifikator))
         val response: PdlPersoninfoDataResponse = PdlGateway.query(request)
 
+        if (Miljø.erDev()) {
+            log.info("Henter personinfo fra PDL i dev ${response.data}")
+        }
         val foedselsdato = PdlParser.utledFødselsdato(response.data?.hentPerson?.foedselsdato)
             ?: error("fødselsdato skal alltid eksistere i PDL")
 
@@ -64,7 +72,9 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
     override fun innhentMedHistorikk(person: Person): PersonopplysningMedHistorikk {
         val request = PdlRequest(PERSON_QUERY_HISTORIKK, IdentVariables(person.aktivIdent().identifikator))
         val response: PdlPersoninfoDataResponse = PdlGateway.query(request)
-
+        if (Miljø.erDev()) {
+            log.info("Henter personinfo med historikk fra PDL i dev ${response.data}")
+        }
         val foedselsdato = PdlParser.utledFødselsdato(response.data?.hentPerson?.foedselsdato)
             ?: error("fødselsdato skal alltid eksistere i PDL")
 

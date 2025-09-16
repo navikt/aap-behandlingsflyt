@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -35,7 +36,7 @@ class BeregningsGrunnlagApiTest {
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelsen = Prosent(30),
                     erÅrsakssammenheng = true,
-                    relevanteSaker = listOf("yrkesskadesaken"),
+                    relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
                     vurdertAv = "saksbehandler"
                 ),
                 beregningGrunnlag = BeregningGrunnlag(
@@ -104,7 +105,7 @@ class BeregningsGrunnlagApiTest {
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelsen = Prosent(30),
                     erÅrsakssammenheng = true,
-                    relevanteSaker = listOf("yrkesskadesaken"),
+                    relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
                     vurdertAv = "saksbehandler"
                 ),
                 beregningGrunnlag = BeregningGrunnlag(

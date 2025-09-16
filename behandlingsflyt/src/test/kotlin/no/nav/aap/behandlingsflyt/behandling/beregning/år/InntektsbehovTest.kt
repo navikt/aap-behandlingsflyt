@@ -4,8 +4,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Innte
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
@@ -126,5 +132,54 @@ class InntektsbehovTest {
         )
 
         assertThat(inntektsbehov.finnesUføreData()).isTrue()
+    }
+
+    @Test
+    fun `bruker manuell dato for yrkesskade om den er null fra register`() {
+        val nedsettelsesDato = LocalDate.now().minusYears(3)
+        val inntektsbehov = Inntektsbehov(
+            Input(
+                nedsettelsesDato,
+                inntekter = emptySet(),
+                uføregrad = listOf(Uføre(LocalDate.now(), Prosent.`30_PROSENT`)),
+                yrkesskadevurdering = Yrkesskadevurdering(
+                    begrunnelse = "...",
+                    relevanteSaker = listOf(YrkesskadeSak("123", LocalDate.of(2023, 1, 1))),
+                    erÅrsakssammenheng = true,
+                    andelAvNedsettelsen = Prosent(70),
+                    vurdertAv = "Jojo Joyes",
+                ),
+                registrerteYrkesskader = Yrkesskader(
+                    listOf(
+                        Yrkesskade(
+                            ref = "123",
+                            saksnummer = 0,
+                            kildesystem = "KLVN",
+                            skadedato = null
+                        )
+                    )
+                ),
+                beregningGrunnlag = BeregningGrunnlag(
+                    tidspunktVurdering = BeregningstidspunktVurdering(
+                        begrunnelse = "begrunnelse",
+                        nedsattArbeidsevneDato = nedsettelsesDato,
+                        ytterligereNedsattArbeidsevneDato = LocalDate.now().minusYears(10),
+                        ytterligereNedsattBegrunnelse = "begrunnelse",
+                        vurdertAv = "saksbehandler"
+                    ), yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
+                        vurderinger = listOf(
+                            YrkesskadeBeløpVurdering(
+                                antattÅrligInntekt = Beløp(1234),
+                                referanse = "123",
+                                begrunnelse = "...",
+                                vurdertAv = "meg",
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+        assertThat(inntektsbehov.skadetidspunkt()).isEqualTo(LocalDate.of(2023, 1, 1))
     }
 }

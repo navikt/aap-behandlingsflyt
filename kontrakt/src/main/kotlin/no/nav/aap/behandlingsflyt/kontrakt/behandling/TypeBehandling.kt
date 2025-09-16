@@ -14,7 +14,8 @@ public enum class TypeBehandling(
     Klage("ae0058"),
     SvarFraAndreinstans("svar-fra-andreinstans"),
     OppfølgingsBehandling("oppfølgingsbehandling"),
-    Aktivitetsplikt("aktivitetsplikt");
+    Aktivitetsplikt("aktivitetsplikt"),
+    Aktivitetsplikt11_9("aktivitetsplikt11-9");
 
     public fun identifikator(): String = identifikator
 

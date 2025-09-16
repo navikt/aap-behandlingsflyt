@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.aktivitetsplikt
 
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Varsel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -9,6 +11,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 
 class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : Aktivitetsplikt11_7Repository {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -56,10 +59,65 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
         }
     }
 
+    override fun lagreVarsel(
+        behandlingId: BehandlingId,
+        varsel: BrevbestillingReferanse
+    ) {
+        val query = """
+            INSERT INTO aktivitetsplikt_11_7_varsel (behandling_id, brev_referanse) 
+            VALUES (?, ?)
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setUUID(2, varsel.brevbestillingReferanse)
+            }
+        }
+    }
+
+    override fun lagreFrist(
+        behandlingId: BehandlingId,
+        datoVarslet: LocalDate,
+        svarfrist: LocalDate
+    ) {
+        val query = """
+            UPDATE aktivitetsplikt_11_7_varsel SET dato_varslet=?, frist=? WHERE behandling_id=?
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setLocalDate(1, datoVarslet)
+                setLocalDate(2, svarfrist)
+                setLong(3, behandlingId.toLong())
+            }
+        }
+    }
+
+    override fun hentVarselHvisEksisterer(behandlingId: BehandlingId): Aktivitetsplikt11_7Varsel? {
+        val query = """
+            select * 
+            from aktivitetsplikt_11_7_varsel
+            where behandling_id = ?
+        """.trimIndent()
+
+        return connection.queryFirstOrNull(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper(::mapVarsel)
+        }
+    }
+
     override fun kopier(
         fraBehandling: BehandlingId,
         tilBehandling: BehandlingId
     ) {
+        val eksisterendeGrunnlag = hentHvisEksisterer(tilBehandling)
+        if (eksisterendeGrunnlag != null) {
+            deaktiverEksisterende(tilBehandling)
+        }
+
         val query = """
             insert into aktivitetsplikt_11_7_grunnlag (behandling_id, vurderinger_id, aktiv)
             select ?, vurderinger_id, true
@@ -67,7 +125,7 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
             where behandling_id = ? and aktiv
         """.trimIndent()
         connection.execute(query) {
-            setParams{
+            setParams {
                 setLong(1, tilBehandling.toLong())
                 setLong(2, fraBehandling.toLong())
             }
@@ -103,8 +161,8 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
 
         val query = """
             INSERT INTO aktivitetsplikt_11_7_vurdering 
-            (begrunnelse, er_oppfylt, utfall, vurdert_av, vurderingen_gjelder_fra, opprettet_tid, vurderinger_id) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            (begrunnelse, er_oppfylt, utfall, vurdert_av, vurderingen_gjelder_fra, opprettet_tid, vurderinger_id, vurdert_i_behandling, skal_ignorere_varsel_frist) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         connection.executeBatch(query, vurderinger) {
@@ -116,6 +174,8 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
                 setLocalDate(5, vurdering.gjelderFra)
                 setInstant(6, vurdering.opprettet)
                 setLong(7, vurderingerId)
+                setLong(8, vurdering.vurdertIBehandling.toLong())
+                setBoolean(9, vurdering.skalIgnorereVarselFrist)
             }
         }
 
@@ -140,7 +200,20 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
             utfall = row.getStringOrNull("utfall")?.let { Utfall.valueOf(it) },
             vurdertAv = row.getString("vurdert_av"),
             gjelderFra = row.getLocalDate("vurderingen_gjelder_fra"),
-            opprettet = row.getInstant("opprettet_tid")
+            opprettet = row.getInstant("opprettet_tid"),
+            vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
+            skalIgnorereVarselFrist = row.getBoolean("skal_ignorere_varsel_frist"),
         )
+    }
+
+    private fun mapVarsel(row: Row): Aktivitetsplikt11_7Varsel? {
+        val varselUuid = row.getUUIDOrNull("brev_referanse")
+        return varselUuid?.let {
+            Aktivitetsplikt11_7Varsel(
+                varselId = BrevbestillingReferanse(row.getUUID("brev_referanse")),
+                sendtDato = row.getLocalDateOrNull("dato_varslet"),
+                svarfrist = row.getLocalDateOrNull("frist")
+            )
+        }
     }
 }

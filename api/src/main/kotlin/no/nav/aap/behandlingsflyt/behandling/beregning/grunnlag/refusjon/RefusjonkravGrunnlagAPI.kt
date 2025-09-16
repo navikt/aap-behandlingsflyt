@@ -52,9 +52,8 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
                             gjeldendeVurderinger?.firstOrNull()
                         val historiskeVurderinger =
                             refusjonkravRepository
-                                .hentAlleVurderingerPåSak(
-                                    behandling.sakId
-                                ).map { it.tilResponse(ansattInfoService) }
+                                .hentHistoriskeVurderinger(behandling.sakId, behandling.id)
+                                .map { it.tilResponse(ansattInfoService) }
 
                         RefusjonkravGrunnlagResponse(
                             harTilgangTilÅSaksbehandle = kanSaksbehandle(),

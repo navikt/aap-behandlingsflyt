@@ -79,9 +79,20 @@ class RettTilRegelTest {
                     )
                 )
             )
+        val grunnlagVilkåret = Vilkår(
+            Vilkårtype.GRUNNLAGET, setOf(
+                Vilkårsperiode(
+                    periode,
+                    Utfall.OPPFYLT,
+                    false,
+                    null,
+                    faktagrunnlag = null
+                )
+            )
+        )
 
         val vilkårsresultat = Vilkårsresultat(
-            vilkår = listOf(aldersVilkåret, lovvalgsVilkåret, sykdomsVilkåret, medlemskapVilkåret, bistandVilkåret)
+            vilkår = listOf(aldersVilkåret, lovvalgsVilkåret, sykdomsVilkåret, medlemskapVilkåret, bistandVilkåret, grunnlagVilkåret)
         ).rettighetstypeTidslinje()
 
         assertTidslinje(
@@ -166,6 +177,17 @@ class RettTilRegelTest {
                     )
                 )
             )
+        val grunnlagVilkåret = Vilkår(
+            Vilkårtype.GRUNNLAGET, setOf(
+                Vilkårsperiode(
+                    periode,
+                    Utfall.OPPFYLT,
+                    false,
+                    null,
+                    faktagrunnlag = null
+                )
+            )
+        )
 
         val vilkårsresultat = Vilkårsresultat(
             vilkår = listOf(
@@ -173,7 +195,8 @@ class RettTilRegelTest {
                 lovvalgsVilkåret,
                 sykdomsVilkåret,
                 medlemskapVilkåret,
-                bistandVilkåret
+                bistandVilkåret,
+                grunnlagVilkåret,
             )
         ).rettighetstypeTidslinje()
 

@@ -64,6 +64,9 @@
       <env name="INTEGRASJON_EREG_SCOPE" value="api://dev-fss.arbeidsforhold.ereg-services/.default" />
       <env name="INTEGRASJON_SAM_URL" value="https://sam-q2.dev-fss-pub.nais.io" />
       <env name="INTEGRASJON_SAM_SCOPE" value="api://dev-fss.pensjonsamhandling.sam-q2/.default" />
+      <env name="NAIS_TOKEN_ENDPOINT" value="http://host.docker.internal:7164/api/v1/token" />
+      <env name="NAIS_TOKEN_EXCHANGE_ENDPOINT" value="http://host.docker.internal:7164/api/v1/token/exchange" />
+      <env name="NAIS_TOKEN_INTROSPECTION_ENDPOINT" value="http://host.docker.internal:7164/api/v1/introspect" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="no.nav.aap.behandlingsflyt.AppKt" />
     <module name="aap-behandlingsflyt.app.main" />

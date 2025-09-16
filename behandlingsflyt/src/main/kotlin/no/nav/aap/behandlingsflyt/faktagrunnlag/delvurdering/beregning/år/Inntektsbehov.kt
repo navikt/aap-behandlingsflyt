@@ -51,7 +51,15 @@ class Inntektsbehov(private val input: Input) {
      * inntekt, så skal beregningen skje med yrkesskadefordel (§11-22)
      */
     fun yrkesskadeVurderingEksisterer(): Boolean {
-        return input.registrerteYrkesskader?.harYrkesskade() == true && input.yrkesskadevurdering?.relevanteSaker != null && input.yrkesskadevurdering.relevanteSaker.isNotEmpty() && input.beregningGrunnlag?.yrkesskadeBeløpVurdering != null && input.yrkesskadevurdering.andelAvNedsettelsen != null
+        if (input.yrkesskadevurdering == null) return false
+        val betingelser = listOf(
+            input.registrerteYrkesskader?.harYrkesskade() == true,
+            input.yrkesskadevurdering.relevanteSaker.isNotEmpty(),
+            input.beregningGrunnlag?.yrkesskadeBeløpVurdering != null,
+            input.yrkesskadevurdering.andelAvNedsettelsen != null
+        )
+
+        return betingelser.all { it }
     }
 
     /**
@@ -90,13 +98,15 @@ class Inntektsbehov(private val input: Input) {
         // Finn den saken med størst beløp basert på antall G på skadetidspunktet
         val relevanteSaker = input.yrkesskadevurdering?.relevanteSaker.orEmpty()
         val sakerMedDato =
-            relevanteSaker.map { sak -> input.registrerteYrkesskader?.yrkesskader?.singleOrNull { it.ref == sak } }
+            relevanteSaker.mapNotNull { sak -> input.registrerteYrkesskader?.yrkesskader?.singleOrNull { it.ref == sak.referanse } }
 
-        return sakerMedDato.filterNotNull().map { sak ->
+        return sakerMedDato.map { sak ->
+            val skadedato = sak.skadedato
+                ?: input.yrkesskadevurdering?.relevanteSaker?.firstOrNull { it.referanse == sak.ref }?.manuellYrkesskadeDato
             YrkesskadeBeregning(
                 sak.ref,
-                requireNotNull(sak.skadedato), // TODO her må alternativt skadedato hentes fra yrkesskadevurdering når denne får funksjonalitet for å manuelt overstyre skadedato
-                input.beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger?.first { it.referanse == sak.ref }?.antattÅrligInntekt!!
+                requireNotNull(skadedato) { "Ulovlig tilstand. skadedato er null, og mangler manuell yrkesskade dato."},
+                input.beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger?.firstOrNull { it.referanse == sak.ref }?.antattÅrligInntekt!!
             )
         }
     }

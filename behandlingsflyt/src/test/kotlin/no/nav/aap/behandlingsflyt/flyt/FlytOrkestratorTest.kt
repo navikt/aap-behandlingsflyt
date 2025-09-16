@@ -32,6 +32,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FullmektigLøsningDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.HåndterSvarFraAndreinstansLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.HåndterSvarFraAndreinstansLøsningDto
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KansellerRevurderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivForhåndsvarselKlageFormkravBrevLøsning
@@ -41,8 +42,12 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentePåFr
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderFormkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKlageKontorLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKlageNayLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadeSakDto
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.flate.KansellerRevurderingVurderingDto
+import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.flate.KansellerRevurderingÅrsakDto
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.flate.TrekkKlageVurderingDto
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.flate.TrekkKlageÅrsakDto
@@ -58,6 +63,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
@@ -96,7 +102,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.Samordn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.svarfraandreinstans.SvarFraAndreinstansKonsekvens
@@ -130,6 +135,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UtenlandsPeriodeDto
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.KANSELLER_REVURDERING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SEND_FORVALTNINGSMELDING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.START_BEHANDLING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SØKNAD
@@ -168,6 +174,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
@@ -186,7 +193,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as Avklaringsb
 @Tag("motor")
 @ParameterizedClass
 @MethodSource("testData")
-class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
+class FlytOrkestratorTest(unleashGateway: KClass< UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
     companion object {
         @Suppress("unused")
         @JvmStatic
@@ -751,6 +758,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "Ikke årsakssammenheng",
                         relevanteSaker = emptyList(),
+                        relevanteYrkesskadeSaker = emptyList(),
                         andelAvNedsettelsen = null,
                         erÅrsakssammenheng = false
                     )
@@ -786,6 +794,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "Ikke årsakssammenheng",
                         relevanteSaker = emptyList(),
+                        relevanteYrkesskadeSaker = emptyList(),
                         andelAvNedsettelsen = null,
                         erÅrsakssammenheng = false
                     )
@@ -1010,6 +1019,12 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 yrkesskadesvurdering = YrkesskadevurderingDto(
                     begrunnelse = "Veldig relevante",
                     relevanteSaker = person.yrkesskade.map { it.saksreferanse },
+                    relevanteYrkesskadeSaker = person.yrkesskade.map {
+                        YrkesskadeSakDto(
+                            it.saksreferanse,
+                            null,
+                        )
+                    },
                     andelAvNedsettelsen = 50,
                     erÅrsakssammenheng = true
                 )
@@ -1110,8 +1125,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
-        behandling = løsAvklaringsBehov(
-            behandling,
+        behandling = behandling.løsAvklaringsBehov(
             AvklarSykdomLøsning(
                 sykdomsvurderinger = listOf(
                     SykdomsvurderingLøsningDto(
@@ -1130,93 +1144,69 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 )
             ),
         )
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            RefusjonkravLøsning(
-                listOf(
-                    RefusjonkravVurderingDto(
-                        harKrav = true,
-                        fom = LocalDate.now(),
-                        tom = null,
-                        navKontor = "",
-                    )
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
+            }
+            .løsAvklaringsBehov(
+                AvklarSykepengerErstatningLøsning(
+                    sykepengeerstatningVurdering = SykepengerVurderingDto(
+                        begrunnelse = "...",
+                        dokumenterBruktIVurdering = emptyList(),
+                        harRettPå = true,
+                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR
+                    ),
                 )
             )
-        )
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).anySatisfy { avklaringsbehov ->
+                    assertThat(avklaringsbehov.definisjon).isEqualTo(
+                        Definisjon.FORESLÅ_VEDTAK
+                    )
+                }
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .løsAvklaringsBehov(ForeslåVedtakLøsning()).medKontekst {
+                // Saken står til To-trinnskontroll hos beslutter
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon == Definisjon.FATTE_VEDTAK).isTrue() }
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .fattVedtakEllerSendRetur()
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
 
-        behandling = løsSykdomsvurderingBrev(behandling)
+                val resultat = dataSource.transaction {
+                    ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id)
+                }
+                assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
+            }.løsVedtaksbrev().medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
 
-        behandling = kvalitetssikreOk(behandling)
+                val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
+                val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
+                assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1).first()
+                    .extracting(Vilkårsperiode::erOppfylt, Vilkårsperiode::innvilgelsesårsak).containsExactly(true, Innvilgelsesårsak.SYKEPENGEERSTATNING)
 
-        behandling = løsAvklaringsBehov(
-            behandling, AvklarSykepengerErstatningLøsning(
-                sykepengeerstatningVurdering = SykepengerVurderingDto(
-                    begrunnelse = "...",
-                    dokumenterBruktIVurdering = emptyList(),
-                    harRettPå = true,
-                    grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR
-                ),
-            )
-        )
+                val resultat =
+                    dataSource.transaction {
+                        ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(
+                            behandling.id
+                        )
+                    }
+                assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
 
-        behandling = løsAvklaringsBehov(
-            behandling,
-            FastsettBeregningstidspunktLøsning(
-                beregningVurdering = BeregningstidspunktVurderingDto(
-                    begrunnelse = "Trenger hjelp fra Nav",
-                    nedsattArbeidsevneDato = LocalDate.now(),
-                    ytterligereNedsattArbeidsevneDato = null,
-                    ytterligereNedsattBegrunnelse = null
-                ),
-            ),
-        )
+                assertTidslinje(
+                    vilkårsresultat.rettighetstypeTidslinje(),
+                    periode to {
+                        assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
+                    })
+            }
 
-        behandling = løsForutgåendeMedlemskap(behandling)
-        // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
-        assertThat(åpneAvklaringsbehov).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
-        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-
-        behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
-
-        // Saken står til To-trinnskontroll hos beslutter
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
-        assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon == Definisjon.FATTE_VEDTAK).isTrue() }
-        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-
-        behandling = fattVedtakEllerSendRetur(behandling)
-
-        assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
-
-        var resultat =
-            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
-        assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
-
-        behandling = behandling.løsVedtaksbrev()
-
-        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
-
-        val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
-        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-
-        assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1)
-            .first()
-            .extracting(Vilkårsperiode::erOppfylt, Vilkårsperiode::innvilgelsesårsak)
-            .containsExactly(true, Innvilgelsesårsak.SYKEPENGEERSTATNING)
-
-        resultat =
-            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
-        assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
-
-        assertTidslinje(
-            vilkårsresultat.rettighetstypeTidslinje(),
-            periode to {
-                assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
-            })
 
         // Verifisere at det går an å kun 1 mnd med sykepengeerstatning
         val revurdering = sendInnDokument(
@@ -1380,6 +1370,137 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             vilkårsresultat.rettighetstypeTidslinje(),
             periode to {
                 assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
+            })
+    }
+
+    @Test
+    @Disabled
+    fun `11-18 uføre underveis i en behandling`() {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val ident = person.aktivIdent()
+        val virkningsdatoOvergangUføre = periode.fom.plusDays(20)
+
+        // Sender inn en søknad
+        var behandling = sendInnSøknad(ident, periode, TestSøknader.STANDARD_SØKNAD)
+            .medKontekst {
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .løsAvklaringsBehov(
+                AvklarSykdomLøsning(
+                    sykdomsvurderinger = listOf(
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Er syk nok",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
+                            harSkadeSykdomEllerLyte = true,
+                            erSkadeSykdomEllerLyteVesentligdel = true,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            erArbeidsevnenNedsatt = true,
+                            yrkesskadeBegrunnelse = null,
+                            vurderingenGjelderFra = null,
+                        )
+                    )
+                ),
+            )
+            // Nei på 11-6
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    bistandsVurdering = BistandVurderingLøsningDto(
+                        begrunnelse = "Overgang uføre",
+                        erBehovForAktivBehandling = false,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = false,
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = "Yep"
+                    ),
+                ),
+            )
+            .løsAvklaringsBehov(
+                AvklarOvergangUføreLøsning(
+                    OvergangUføreVurderingLøsningDto(
+                        begrunnelse = "Løsning",
+                        brukerHarSøktOmUføretrygd = true,
+                        brukerHarFåttVedtakOmUføretrygd = "NEI",
+                        brukerRettPåAAP = true,
+                        virkningsdato = virkningsdatoOvergangUføre,
+                        overgangBegrunnelse = null
+                    )
+                )
+            )
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
+            }
+            .løsAvklaringsBehov(
+                AvklarSykepengerErstatningLøsning(
+                    sykepengeerstatningVurdering = SykepengerVurderingDto(
+                        begrunnelse = "...",
+                        dokumenterBruktIVurdering = emptyList(),
+                        harRettPå = false,
+                        grunn = null
+                    ),
+                )
+            )
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon == Definisjon.FATTE_VEDTAK).isTrue() }
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .fattVedtakEllerSendRetur()
+            .medKontekst {
+                assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
+            }
+
+        var resultat =
+            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
+        assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
+
+        behandling = behandling.løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_11_18)
+
+        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
+
+        val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
+        val overgangUføreVilkår = vilkårsresultat.finnVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)
+
+        // Sjekker at overgangUføreVilkår ble oppfylt med innvilgelsesårsak satt til 11-13.
+        assertTidslinje(
+            overgangUføreVilkår.tidslinje(), Periode(periode.fom, virkningsdatoOvergangUføre.minusDays(1)) to {
+                assertThat(it.utfall).isEqualTo(Utfall.IKKE_VURDERT)
+            },
+            Periode(virkningsdatoOvergangUføre, virkningsdatoOvergangUføre.plusMonths(8).minusDays(1)) to {
+                assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT)
+            },
+            Periode(virkningsdatoOvergangUføre.plusMonths(8), periode.tom) to {
+                assertThat(it.utfall).isEqualTo(Utfall.IKKE_VURDERT)
+            })
+
+        resultat =
+            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
+
+        assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
+
+        assertTidslinje(
+            vilkårsresultat.rettighetstypeTidslinje(),
+            Periode(periode.fom, virkningsdatoOvergangUføre.minusDays(1)) to {
+                assertThat(it).isNotEqualTo(RettighetsType.VURDERES_FOR_UFØRETRYGD) // TODO: Dette fungerer ikke as-is, og må oppdateres når ny funksjonalitet er på plass
+            },
+            Periode(virkningsdatoOvergangUføre, virkningsdatoOvergangUføre.plusMonths(8).minusDays(1)) to {
+                assertThat(it).isEqualTo(RettighetsType.VURDERES_FOR_UFØRETRYGD)
+            },
+            Periode(virkningsdatoOvergangUføre.plusMonths(8), periode.tom) to {
+                assertThat(it).isNotEqualTo(RettighetsType.VURDERES_FOR_UFØRETRYGD) // TODO: Dette fungerer ikke as-is, og må oppdateres når ny funksjonalitet er på plass
             })
     }
 
@@ -1594,6 +1715,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "",
                         relevanteSaker = emptyList(),
+                        relevanteYrkesskadeSaker = emptyList(),
                         andelAvNedsettelsen = null,
                         erÅrsakssammenheng = false
                     )
@@ -2518,15 +2640,13 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        var behandling = sendInnSøknad(
+        val behandling = sendInnSøknad(
             ident, periode, SøknadV0(
                 student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
             )
-        )
-
-        behandling = løsAvklaringsBehov(
-            behandling, AvklarOverstyrtLovvalgMedlemskapLøsning(
+        ).løsAvklaringsBehov(
+            AvklarOverstyrtLovvalgMedlemskapLøsning(
                 manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
                     LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", EØSLand.NOR),
                     MedlemskapVedSøknadsTidspunktDto("crazy medlemskap vurdering", true)
@@ -2734,7 +2854,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             )
 
             // Validér avklaring
-            assertThat(behandlingRepo.hent(behandlingId).aktivtSteg()).isEqualTo(StegType.START_BEHANDLING)
+            assertThat(behandlingRepo.hent(behandlingId).aktivtSteg()).isEqualTo(START_BEHANDLING)
         }
 
         motor.kjørJobber()
@@ -2960,12 +3080,12 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         dataSource.transaction { connection ->
             val behandlingRepo = BehandlingRepositoryImpl(connection)
-            assertThat(behandlingRepo.hent(revurdering.id).aktivtSteg()).isEqualTo(StegType.VURDER_RETTIGHETSPERIODE)
+            assertThat(behandlingRepo.hent(revurdering.id).aktivtSteg()).isEqualTo(VURDER_RETTIGHETSPERIODE)
 
             assertThat(behandlingRepo.hentStegHistorikk(revurdering.id).map { tilstand -> tilstand.steg() }
                 .distinct()).containsExactlyElementsOf(
                 listOf(
-                    START_BEHANDLING, SEND_FORVALTNINGSMELDING, SØKNAD, VURDER_RETTIGHETSPERIODE
+                    START_BEHANDLING, SEND_FORVALTNINGSMELDING, KANSELLER_REVURDERING, SØKNAD, VURDER_RETTIGHETSPERIODE
                 )
             )
 
@@ -4347,5 +4467,98 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 manueltBarnIdent.identifikator,
             )
         }
+    }
+
+    @Test
+    fun `Teste KansellerRevurderingFlyt`() {
+        val person = TestPersoner.STANDARD_PERSON()
+        val ident = person.aktivIdent()
+
+        // Førstegangsbehandling
+        val sak = happyCaseFørstegangsbehandling()
+        val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
+
+        // Revurdering 1 - skal bli kansellert
+        var revurdering1 = opprettManuellRevurdering(
+            sak,
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+        )
+            .medKontekst {
+                assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .løsSykdom()
+
+        assertThat(revurdering1.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+        assertThat(revurdering1.forrigeBehandlingId).isEqualTo(førstegangsbehandling.id)
+
+        // Kanseller revurdering 1
+        sendInnDokument(
+            ident,
+            NyÅrsakTilBehandlingHendelse(
+                LocalDateTime.now(),
+                InnsendingType.NY_ÅRSAK_TIL_BEHANDLING,
+                InnsendingReferanse(InnsendingReferanse.Type.BEHANDLING_REFERANSE, revurdering1.referanse.toString()),
+                StrukturertDokument(NyÅrsakTilBehandlingV0(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_KANSELLERT))),
+                sak.rettighetsperiode
+            )
+        )
+        assertThat(hentAlleAvklaringsbehov(revurdering1)).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erÅpent() && avklaringsbehov.definisjon == Definisjon.KANSELLER_REVURDERING).isTrue() }
+
+        løsAvklaringsBehov(
+            revurdering1,
+            KansellerRevurderingLøsning(
+                vurdering = KansellerRevurderingVurderingDto(
+                    årsak = KansellerRevurderingÅrsakDto.REVURDERINGEN_ER_FEILREGISTRERT,
+                    begrunnelse = "Fordi den ikke er aktuell lenger"
+                ),
+            )
+        )
+
+        val avklaringsbehovene: List<Avklaringsbehov> = hentAlleAvklaringsbehov(revurdering1)
+        var revurdering1FraRepo = hentBehandling(revurdering1.referanse)
+        assertThat(revurdering1FraRepo.status()).isEqualTo(Status.AVSLUTTET)
+        assertThat(avklaringsbehovene.none { it.erÅpent() }).isTrue()
+        assertStatusForDefinisjon(avklaringsbehovene, Definisjon.KANSELLER_REVURDERING, AvklaringsbehovStatus.AVSLUTTET)
+        assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVKLAR_SYKDOM, AvklaringsbehovStatus.AVBRUTT)
+        assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVKLAR_BISTANDSBEHOV, AvklaringsbehovStatus.AVBRUTT)
+
+        // Revurdering 2 - skal ikke kopiere data fra revurdering1 men fra førstegangsbehandling
+        var revurdering2 = opprettManuellRevurdering(
+            sak,
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP)
+        )
+            .medKontekst {
+                assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
+
+        assertThat(revurdering2.forrigeBehandlingId).isEqualTo(førstegangsbehandling.id)
+
+        // Verifiser at data er kopiert fra førstegangsbehandling
+        val vilkårsresultat1 = hentVilkårsresultat(førstegangsbehandling.id)
+        val vilkårsresultat2 = hentVilkårsresultat(revurdering2.id)
+
+        assertThat(vilkårsresultat2).usingRecursiveComparison()
+                .ignoringFields(
+                    "id",
+                    "faktagrunnlag",
+                    "vilkår.vilkårTidslinje",
+                    "vilkår.vurdertTidspunkt",
+                    "vilkår.faktagrunnlag",
+                    "vilkår.vilkårTidslinje",
+                    "vilkår.vurdertTidspunkt"
+                )
+                .isEqualTo(vilkårsresultat1)
+    }
+
+    fun assertStatusForDefinisjon(
+        avklaringsbehov: List<Avklaringsbehov>,
+        definisjon: Definisjon,
+        forventetStatus: AvklaringsbehovStatus
+    ) {
+        assertThat(avklaringsbehov.filter { it.definisjon == definisjon }
+            .map { it.status() })
+            .containsExactly(forventetStatus)
     }
 }

@@ -29,17 +29,11 @@ class FastsettMeldeperiodeSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val rettighetsperiode = kontekst.rettighetsperiode
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING -> {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     return Fullført
                 }
 
-                val rettighetsperiode = rettighetsperiode
-                oppdaterMeldeperioder(kontekst.behandlingId, rettighetsperiode)
-                return Fullført
-            }
-
-            VurderingType.REVURDERING -> {
                 val rettighetsperiode = rettighetsperiode
                 oppdaterMeldeperioder(kontekst.behandlingId, rettighetsperiode)
                 return Fullført

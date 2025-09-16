@@ -51,7 +51,7 @@ class KvalitetssikrerLøser(
             val tidligsteStegMedRetur = vurderingerSomErSendtTilbake
                 .map { Definisjon.forKode(it.definisjon) }
                 .map { it.løsesISteg }
-                .minWith(flyt.compareable())
+                .minWith(flyt.stegComparator)
 
             val vurderingerFørRetur = relevanteVurderinger
                 .filter { it.godkjent == true }

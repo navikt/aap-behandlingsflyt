@@ -21,6 +21,9 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.KLAGE_AVVI
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.KLAGE_OPPRETTHOLDELSE
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.KLAGE_TRUKKET
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VARSEL_OM_BESTILLING
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_11_18
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_11_7
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_11_9
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_AVSLAG
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_ENDRING
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_INNVILGELSE
@@ -92,31 +95,33 @@ class BehandlingHendelseServiceImpl(
             årsakerTilBehandling = vurderingsbehov.map { it.type.name },
             vurderingsbehov = vurderingsbehov.map { it.type.name },
             årsakTilOpprettelse = behandling.årsakTilOpprettelse?.name ?: "Ukjent årsak",
-            avklaringsbehov = avklaringsbehovene.alle().map { avklaringsbehov ->
-                val brevbestilling = if (avklaringsbehov.definisjon == Definisjon.SKRIV_BREV) {
-                    brevbestillingRepository.hent(behandling.id)
-                        .firstOrNull { it.status == Status.FORHÅNDSVISNING_KLAR }
-                } else {
-                    null
-                }
-                AvklaringsbehovHendelseDto(
-                    avklaringsbehovDefinisjon = avklaringsbehov.definisjon,
-                    status = avklaringsbehov.status(),
-                    endringer = avklaringsbehov.historikk.map { endring ->
-                        EndringDTO(
-                            status = endring.status,
-                            tidsstempel = endring.tidsstempel,
-                            endretAv = endring.endretAv,
-                            frist = endring.frist,
-                            årsakTilSattPåVent = endring.grunn?.oversettTilKontrakt(),
-                            begrunnelse = endring.begrunnelse,
-                            årsakTilRetur = endring.årsakTilRetur.map {
-                                ÅrsakTilRetur(it.oversettTilKontrakt())
-                            })
-                    },
-                    typeBrev = brevbestilling?.typeBrev?.oversettTilKontrakt()
-                )
-            },
+            avklaringsbehov = avklaringsbehovene.alle()
+                .sortedWith(compareBy(behandling.flyt().stegComparator) { it.funnetISteg })
+                .map { avklaringsbehov ->
+                    val brevbestilling = if (avklaringsbehov.definisjon == Definisjon.SKRIV_BREV) {
+                        brevbestillingRepository.hent(behandling.id)
+                            .firstOrNull { it.status == Status.FORHÅNDSVISNING_KLAR }
+                    } else {
+                        null
+                    }
+                    AvklaringsbehovHendelseDto(
+                        avklaringsbehovDefinisjon = avklaringsbehov.definisjon,
+                        status = avklaringsbehov.status(),
+                        endringer = avklaringsbehov.historikk.map { endring ->
+                            EndringDTO(
+                                status = endring.status,
+                                tidsstempel = endring.tidsstempel,
+                                endretAv = endring.endretAv,
+                                frist = endring.frist,
+                                årsakTilSattPåVent = endring.grunn?.oversettTilKontrakt(),
+                                begrunnelse = endring.begrunnelse,
+                                årsakTilRetur = endring.årsakTilRetur.map {
+                                    ÅrsakTilRetur(it.oversettTilKontrakt())
+                                })
+                        },
+                        typeBrev = brevbestilling?.typeBrev?.oversettTilKontrakt()
+                    )
+                },
             relevanteIdenterPåBehandling = pipRepository.finnIdenterPåBehandling(behandling.referanse).map { it.ident },
             erPåVent = erPåVent,
             mottattDokumenter = mottattDokumenter,
@@ -140,9 +145,16 @@ class BehandlingHendelseServiceImpl(
                 .forBehandling(sak.id.id, behandling.id.id)
         )
 
+        // Sende nye meldekort til API-intern
+        // TODO skru på jobben når API-intern er klar til å motta
+        // flytJobbRepository.leggTil(MeldekortTilApiInternJobbUtfører.nyJobb(sak.id, behandling.id))
+
         if (behandling.typeBehandling() in listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)) {
             flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, behandling.id))
         }
+
+
+
     }
 
     private fun hentReservertTil(behandlingId: BehandlingId): String? {
@@ -215,6 +227,9 @@ class BehandlingHendelseServiceImpl(
             KLAGE_TRUKKET -> TypeBrev.KLAGE_TRUKKET
             FORHÅNDSVARSEL_KLAGE_FORMKRAV -> TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV
             FORVALTNINGSMELDING -> TypeBrev.FORVALTNINGSMELDING
+            VEDTAK_11_18 -> TypeBrev.VEDTAK_11_18
+            VEDTAK_11_7 -> TypeBrev.VEDTAK_11_7
+            VEDTAK_11_9 -> TypeBrev.VEDTAK_11_9
         }
     }
 
