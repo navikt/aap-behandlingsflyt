@@ -81,6 +81,77 @@ class ManuellInntektGrunnlagRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `lagre for flere år og hente ut igjen`() {
+        val dataSource = InitTestDatabase.freshDatabase()
+
+        val behandling = dataSource.transaction {
+            val sak = sak(it, Periode(1 januar 2023, 31 desember 2023))
+            finnEllerOpprettBehandling(it, sak)
+        }
+
+        val manuellVurdering2024 = ManuellInntektVurdering(
+            år = Year.of(2024),
+            begrunnelse = "begrunnelse 2024",
+            belop = BigDecimal(100).let(::Beløp),
+            vurdertAv = "saksbehandler"
+        )
+
+        val manuellVurdering2025 = ManuellInntektVurdering(
+            år = Year.of(2025),
+            begrunnelse = "begrunnelse 2025",
+            belop = BigDecimal(200).let(::Beløp),
+            vurdertAv = "saksbehandler"
+        )
+
+        dataSource.transaction {
+            val repo = ManuellInntektGrunnlagRepositoryImpl(it)
+
+            repo.lagre(behandling.id, setOf(manuellVurdering2024, manuellVurdering2025))
+            val uthentet = repo.hentHvisEksisterer(behandling.id)
+
+            assertThat(uthentet?.manuelleInntekter).hasSize(2)
+        }
+    }
+
+    @Test
+    fun `lagre for flere år og så fjerne et år`() {
+        val dataSource = InitTestDatabase.freshDatabase()
+
+        val behandling = dataSource.transaction {
+            val sak = sak(it, Periode(1 januar 2023, 31 desember 2023))
+            finnEllerOpprettBehandling(it, sak)
+        }
+
+        val manuellVurdering2024 = ManuellInntektVurdering(
+            år = Year.of(2024),
+            begrunnelse = "begrunnelse 2024",
+            belop = BigDecimal(100).let(::Beløp),
+            vurdertAv = "saksbehandler"
+        )
+
+        val manuellVurdering2025 = ManuellInntektVurdering(
+            år = Year.of(2025),
+            begrunnelse = "begrunnelse 2025",
+            belop = BigDecimal(200).let(::Beløp),
+            vurdertAv = "saksbehandler"
+        )
+
+        dataSource.transaction {
+            val repo = ManuellInntektGrunnlagRepositoryImpl(it)
+
+            repo.lagre(behandling.id, setOf(manuellVurdering2024, manuellVurdering2025))
+            val uthentet = repo.hentHvisEksisterer(behandling.id)
+
+            assertThat(uthentet?.manuelleInntekter).hasSize(2)
+
+            repo.lagre(behandling.id, setOf(manuellVurdering2024))
+            val uthentetEtterSletting = repo.hentHvisEksisterer(behandling.id)
+
+            assertThat(uthentetEtterSletting?.manuelleInntekter).hasSize(1)
+        }
+    }
+
     private fun sak(connection: DBConnection, periode: Periode): Sak {
         return PersonOgSakService(
             FakePdlGateway,
