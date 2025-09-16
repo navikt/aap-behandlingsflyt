@@ -37,13 +37,10 @@ tasks {
         // Dette unngår feil av typen "Entry <name>.jar is a duplicate but no duplicate handling strategy has been set"
         archiveBaseName.set("${rootProject.name}-${project.name}")
     }
-
 }
 
 kotlin {
-    jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
+    jvmToolchain(21)
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
         apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2)
