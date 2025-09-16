@@ -134,7 +134,7 @@ jobs:
           VAR: image=${{ needs.build.outputs.image }}
 
   deploy-prod:
-      needs: [deploy-dev, build]
+      needs: [publiser-kontrakt, deploy-dev, build]
       runs-on: ubuntu-latest
       concurrency:
         group: deploy-prod
