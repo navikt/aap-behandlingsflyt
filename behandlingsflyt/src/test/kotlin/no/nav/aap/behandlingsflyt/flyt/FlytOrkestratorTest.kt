@@ -1125,8 +1125,7 @@ class FlytOrkestratorTest(unleashGateway: KClass< UnleashGateway>) : AbstraktFly
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
-        behandling = løsAvklaringsBehov(
-            behandling,
+        behandling = behandling.løsAvklaringsBehov(
             AvklarSykdomLøsning(
                 sykdomsvurderinger = listOf(
                     SykdomsvurderingLøsningDto(
@@ -1145,93 +1144,69 @@ class FlytOrkestratorTest(unleashGateway: KClass< UnleashGateway>) : AbstraktFly
                 )
             ),
         )
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            RefusjonkravLøsning(
-                listOf(
-                    RefusjonkravVurderingDto(
-                        harKrav = true,
-                        fom = LocalDate.now(),
-                        tom = null,
-                        navKontor = "",
-                    )
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
+            }
+            .løsAvklaringsBehov(
+                AvklarSykepengerErstatningLøsning(
+                    sykepengeerstatningVurdering = SykepengerVurderingDto(
+                        begrunnelse = "...",
+                        dokumenterBruktIVurdering = emptyList(),
+                        harRettPå = true,
+                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR
+                    ),
                 )
             )
-        )
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).anySatisfy { avklaringsbehov ->
+                    assertThat(avklaringsbehov.definisjon).isEqualTo(
+                        Definisjon.FORESLÅ_VEDTAK
+                    )
+                }
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .løsAvklaringsBehov(ForeslåVedtakLøsning()).medKontekst {
+                // Saken står til To-trinnskontroll hos beslutter
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon == Definisjon.FATTE_VEDTAK).isTrue() }
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .fattVedtakEllerSendRetur()
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
 
-        behandling = løsSykdomsvurderingBrev(behandling)
+                val resultat = dataSource.transaction {
+                    ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id)
+                }
+                assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
+            }.løsVedtaksbrev().medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
 
-        behandling = kvalitetssikreOk(behandling)
+                val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
+                val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
+                assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1).first()
+                    .extracting(Vilkårsperiode::erOppfylt, Vilkårsperiode::innvilgelsesårsak).containsExactly(true, Innvilgelsesårsak.SYKEPENGEERSTATNING)
 
-        behandling = løsAvklaringsBehov(
-            behandling, AvklarSykepengerErstatningLøsning(
-                sykepengeerstatningVurdering = SykepengerVurderingDto(
-                    begrunnelse = "...",
-                    dokumenterBruktIVurdering = emptyList(),
-                    harRettPå = true,
-                    grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR
-                ),
-            )
-        )
+                val resultat =
+                    dataSource.transaction {
+                        ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(
+                            behandling.id
+                        )
+                    }
+                assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
 
-        behandling = løsAvklaringsBehov(
-            behandling,
-            FastsettBeregningstidspunktLøsning(
-                beregningVurdering = BeregningstidspunktVurderingDto(
-                    begrunnelse = "Trenger hjelp fra Nav",
-                    nedsattArbeidsevneDato = LocalDate.now(),
-                    ytterligereNedsattArbeidsevneDato = null,
-                    ytterligereNedsattBegrunnelse = null
-                ),
-            ),
-        )
+                assertTidslinje(
+                    vilkårsresultat.rettighetstypeTidslinje(),
+                    periode to {
+                        assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
+                    })
+            }
 
-        behandling = løsForutgåendeMedlemskap(behandling)
-        // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
-        assertThat(åpneAvklaringsbehov).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
-        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-
-        behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
-
-        // Saken står til To-trinnskontroll hos beslutter
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
-        assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon == Definisjon.FATTE_VEDTAK).isTrue() }
-        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-
-        behandling = fattVedtakEllerSendRetur(behandling)
-
-        assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
-
-        var resultat =
-            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
-        assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
-
-        behandling = behandling.løsVedtaksbrev()
-
-        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
-
-        val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
-        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-
-        assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1)
-            .first()
-            .extracting(Vilkårsperiode::erOppfylt, Vilkårsperiode::innvilgelsesårsak)
-            .containsExactly(true, Innvilgelsesårsak.SYKEPENGEERSTATNING)
-
-        resultat =
-            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
-        assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
-
-        assertTidslinje(
-            vilkårsresultat.rettighetstypeTidslinje(),
-            periode to {
-                assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
-            })
 
         // Verifisere at det går an å kun 1 mnd med sykepengeerstatning
         val revurdering = sendInnDokument(
