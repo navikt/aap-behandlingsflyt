@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.Personinfo
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import org.intellij.lang.annotations.Language
+import java.time.LocalDate
 
 object PdlPersoninfoGateway : PersoninfoGateway {
 
@@ -20,6 +21,12 @@ object PdlPersoninfoGateway : PersoninfoGateway {
         hentPerson(ident: $ident) {
             navn(historikk: false) {
                 fornavn, mellomnavn, etternavn,
+            }
+            foedselsdato {
+                foedselsdato
+            }
+            doedsfall {
+                doedsdato
             }
         }
     }
@@ -46,7 +53,11 @@ object PdlPersoninfoGateway : PersoninfoGateway {
         val request = PdlRequest(PERSONINFO_QUERY, IdentVariables(ident.identifikator))
         val response: PdlPersonNavnDataResponse = PdlGateway.query(request, currentToken)
         val navn = response.data?.hentPerson?.navn?.firstOrNull()
-        return Personinfo(ident, navn?.fornavn, navn?.mellomnavn, navn?.etternavn)
+
+        val foedselsdato = response.data?.hentPerson?.foedselsdato?.firstOrNull()?.foedselsdato?.let(LocalDate::parse)
+        val doedsdato = response.data?.hentPerson?.doedsfall?.firstOrNull()?.doedsdato?.let(LocalDate::parse)
+
+        return Personinfo(ident, foedselsdato, doedsdato, navn?.fornavn, navn?.mellomnavn, navn?.etternavn)
     }
 
 }
