@@ -47,27 +47,12 @@ class AvbrytRevurderingLøser(
             ),
         )
 
-        // Oppdaterer behandling årsak med begrunnelse for hvorfor revurdering ble avbrutt
-        val avbrytVurderingsbehovOgÅrsak = behandlingRepository.hentVurderingsbehovOgÅrsaker(behandling.id)
-            .filter { it.vurderingsbehov.any { behov -> behov.type == Vurderingsbehov.REVURDERING_AVBRUTT } }
-            .maxByOrNull { it.opprettet }
-
-        if (avbrytVurderingsbehovOgÅrsak != null) {
-            val oppdatertVurderingsbehogOgÅrsak = VurderingsbehovOgÅrsak(
-                avbrytVurderingsbehovOgÅrsak.vurderingsbehov,
-                avbrytVurderingsbehovOgÅrsak.årsak,
-                LocalDateTime.now(),
-                løsning.vurdering.begrunnelse
-            )
-            behandlingRepository.oppdaterVurderingsbehovOgÅrsak(behandling, oppdatertVurderingsbehogOgÅrsak)
-
-            val nyesteBehandlingÅrsakId = behandlingRepository.hentBehandlingAarsakId(behandling.id).firstOrNull()
-
-            if (nyesteBehandlingÅrsakId != null) {
-                behandlingRepository.oppdaterVurderingsbehovMedNyesteBehandlingAarsakId(behandling.id, nyesteBehandlingÅrsakId)
-            }
-
-        }
+        // Oppretter behandlingsårsak med begrunnelse for avbrutt revurdering, og setter riktig behandlingÅrsak i vurderingsbehov
+        behandlingRepository.oppdaterBegrunnelseForVurderingsbehovAarsak(
+            behandling,
+            løsning.vurdering.begrunnelse,
+            Vurderingsbehov.REVURDERING_AVBRUTT
+        )
 
         return LøsningsResultat(løsning.vurdering.begrunnelse)
     }

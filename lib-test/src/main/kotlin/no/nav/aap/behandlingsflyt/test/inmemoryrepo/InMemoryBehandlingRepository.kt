@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import org.slf4j.LoggerFactory
@@ -106,11 +107,11 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         return emptyList()
     }
 
-    override fun hentBehandlingAarsakId(behandlingId: BehandlingId): List<Long> {
-        return emptyList()
-    }
-
-    override fun oppdaterVurderingsbehovMedNyesteBehandlingAarsakId(behandlingId: BehandlingId, nyesteBehandlingAarsakId: Long) {
+    override fun oppdaterBegrunnelseForVurderingsbehovAarsak(
+        behandling: Behandling,
+        begrunnelse: String,
+        vurderingsbehov: Vurderingsbehov,
+    ) {
     }
 
     override fun hentSakId(referanse: BehandlingReferanse): SakId {

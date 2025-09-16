@@ -450,33 +450,50 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
-    override fun hentBehandlingAarsakId(behandlingId: BehandlingId): List<Long> {
-        val query = """
-            SELECT id FROM behandling_aarsak WHERE behandling_id = ? ORDER BY opprettet_tid DESC
+    override fun oppdaterBegrunnelseForVurderingsbehovAarsak(behandling: Behandling, begrunnelse: String, vurderingsbehov: Vurderingsbehov) {
+        val avbrytVurderingsbehovOgÅrsak = hentVurderingsbehovOgÅrsaker(behandling.id)
+            .filter { it.vurderingsbehov.any { behov -> behov.type == vurderingsbehov } }
+            .maxByOrNull { it.opprettet }
+
+        if (avbrytVurderingsbehovOgÅrsak != null) {
+            val oppdatertVurderingsbehogOgÅrsak = VurderingsbehovOgÅrsak(
+                avbrytVurderingsbehovOgÅrsak.vurderingsbehov,
+                avbrytVurderingsbehovOgÅrsak.årsak,
+                LocalDateTime.now(),
+                begrunnelse
+            )
+
+            oppdaterVurderingsbehovOgÅrsak(behandling, oppdatertVurderingsbehogOgÅrsak)
+
+            // Hent nyeste behandling årsak id og oppdater vurderingsbehov med denne
+            val query = """
+                SELECT id FROM behandling_aarsak WHERE behandling_id = ? ORDER BY opprettet_tid DESC
             """.trimIndent()
 
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, behandlingId.toLong())
-            }
-            setRowMapper { it.getLong("id") }
-        }
-    }
+            val nyesteBehandlingÅrsakId = connection.queryList(query) {
+                setParams {
+                    setLong(1, behandling.id.toLong())
+                }
+                setRowMapper { it.getLong("id") }
+            }.firstOrNull()
 
-    override fun oppdaterVurderingsbehovMedNyesteBehandlingAarsakId(behandlingId: BehandlingId, nyesteBehandlingAarsakId: Long) {
-        val query = """
-            UPDATE vurderingsbehov SET behandling_aarsak_id = ? WHERE behandling_id = ? and aarsak = ?
-        """.trimIndent()
+            if (nyesteBehandlingÅrsakId != null) {
+                val query = """
+                    UPDATE vurderingsbehov SET behandling_aarsak_id = ? WHERE behandling_id = ? and aarsak = ?
+                """.trimIndent()
 
-        connection.execute(query) {
-            setParams {
-                setLong(1, nyesteBehandlingAarsakId)
-                setLong(2, behandlingId.toLong())
-                setString(3, Vurderingsbehov.REVURDERING_AVBRUTT.name)
+                connection.execute(query) {
+                    setParams {
+                        setLong(1, nyesteBehandlingÅrsakId)
+                        setLong(2, behandling.id.toLong())
+                        setString(3, vurderingsbehov.name)
+                    }
+                    setResultValidator {
+                        require(it == 1)
+                    }
+                }
             }
-            setResultValidator {
-                require(it == 1)
-            }
+
         }
     }
 

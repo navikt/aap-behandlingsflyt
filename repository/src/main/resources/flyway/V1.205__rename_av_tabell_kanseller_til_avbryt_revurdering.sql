@@ -16,3 +16,8 @@ create unique index uidx_avbryt_revurdering_grunnlag_behandling_id
 
 alter table avbryt_revurdering_vurdering
 alter column aarsak type varchar(100);
+
+update avklaringsbehov
+set funnet_i_steg = 'AVBRYT_REVURDERING'
+where funnet_i_steg = 'KANSELLER_REVURDERING'
+  and definisjon = '5033';

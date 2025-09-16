@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.lookup.repository.Repository
@@ -39,9 +40,7 @@ interface BehandlingRepository : Repository {
 
     fun oppdaterVurderingsbehovOgÅrsak(behandling: Behandling, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak)
 
-    fun hentBehandlingAarsakId(behandlingId: BehandlingId): List<Long>
-
-    fun oppdaterVurderingsbehovMedNyesteBehandlingAarsakId(behandlingId: BehandlingId, nyesteBehandlingAarsakId: Long)
+    fun oppdaterBegrunnelseForVurderingsbehovAarsak(behandling: Behandling, begrunnelse: String, vurderingsbehov: Vurderingsbehov)
 
     fun hentVurderingsbehovOgÅrsaker(behandlingId: BehandlingId): List<VurderingsbehovOgÅrsak>
 
