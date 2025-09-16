@@ -506,7 +506,7 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`4102`,
         type = BehovType.VENTEPUNKT,
         løsesISteg = StegType.VURDER_AKTIVITETSPLIKT_11_7,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
         defaultFrist = Period.ofWeeks(3),
     );
 
