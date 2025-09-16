@@ -1,4 +1,4 @@
-// Felles kode for alle build.gradle.kts filer som laster denne conventions pluginen
+// Felles kode for alle build.gradle.kts filer som laster inn denne conventions pluginen
 
 plugins {
     id("org.jetbrains.kotlin.jvm")
@@ -31,11 +31,12 @@ tasks {
         }
     }
 
-    // Bruk et unikt navn for jar-filen til distTar, for å unngå navnekollisjoner i multi-modul prosjekt,
-    // og dermed feil av typen Entry <name>.jar is a duplicate but no duplicate handling strategy has been set.
-    withType<Jar> {
-        archiveFileName.set("${rootProject.name}-${project.name}.jar")
+    (tasks.findByName("distTar") as? Tar)?.apply {
+        // Bruk et unikt navn for jar-filen til distTar, for å unngå navnekollisjoner i multi-modul prosjekt,
+        // og dermed feil av typen "Entry <name>.jar is a duplicate but no duplicate handling strategy has been set"
+        archiveBaseName.set("${rootProject.name}-${project.name}")
     }
+
 }
 
 kotlin {
