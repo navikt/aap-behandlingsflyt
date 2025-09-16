@@ -33,25 +33,16 @@ tasks {
 
     (tasks.findByName("distTar") as? Tar)?.apply {
         // Bruk et unikt navn for jar-filen til distTar, for å unngå navnekollisjoner i multi-modul prosjekt,
-        // og dermed feil av typen "Entry <name>.jar is a duplicate but no duplicate handling strategy has been set"
+        // slik at vi ikke bruker samme navn, feks. "kontrakt.jar" "api.jar" i flere moduler.
+        // Dette unngår feil av typen "Entry <name>.jar is a duplicate but no duplicate handling strategy has been set"
         archiveBaseName.set("${rootProject.name}-${project.name}")
     }
 
 }
 
-// Configure Java/Kotlin toolchain (ensures compilation + tests use the same JDK even if developer has multiple)
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-        vendor.set(JvmVendorSpec.ADOPTIUM)
-    }
-}
-
 kotlin {
     jvmToolchain {
         languageVersion.set(JavaLanguageVersion.of(21))
-        vendor.set(JvmVendorSpec.ADOPTIUM)
     }
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
@@ -60,15 +51,9 @@ kotlin {
     }
 }
 
-// Apply --release (ensures classfile + API targeting Java 21)
-tasks.withType<JavaCompile>().configureEach {
-    options.release.set(21)
-}
-
-// Launchers stay consistent
+// Pass på at når vi kaller JavaExec eller Test tasks så bruker vi samme JVM som vi kompilerer med
 val toolchainLauncher = javaToolchains.launcherFor {
     languageVersion.set(JavaLanguageVersion.of(21))
-    vendor.set(JvmVendorSpec.ADOPTIUM)
 }
 tasks.withType<Test>().configureEach { javaLauncher.set(toolchainLauncher) }
 tasks.withType<JavaExec>().configureEach { javaLauncher.set(toolchainLauncher) }
