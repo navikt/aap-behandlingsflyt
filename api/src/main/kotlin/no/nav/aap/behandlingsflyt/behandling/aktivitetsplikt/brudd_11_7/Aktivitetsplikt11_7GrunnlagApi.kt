@@ -4,8 +4,10 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.brev.ForhåndsvarselBruddAktivitetsplikt
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
@@ -40,18 +42,20 @@ fun NormalOpenAPIRoute.aktivitetsplikt11_7GrunnlagApi(
                 val repositoryProvider = repositoryRegistry.provider(connection)
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val aktivitetsplikt11_7Repository = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
+                val brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider)
 
                 val behandling: Behandling =
                     BehandlingReferanseService(behandlingRepository).behandling(req)
-                
+
                 val grunnlag = aktivitetsplikt11_7Repository.hentHvisEksisterer(behandling.id)
-                
+
                 if (grunnlag == null) {
                     Aktivitetsplikt11_7GrunnlagDto(
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle()
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        harSendtForhåndsvarsel = false
                     )
                 }
-                
+
                 val nåTilstand = grunnlag?.vurderinger.orEmpty()
 
                 val vedtatteVurderinger = behandling.forrigeBehandlingId
@@ -60,11 +64,12 @@ fun NormalOpenAPIRoute.aktivitetsplikt11_7GrunnlagApi(
                 val vurdering = nåTilstand
                     .filterNot { it in vedtatteVurderinger }
                     .singleOrNull()
-                
+
                 Aktivitetsplikt11_7GrunnlagDto(
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle(), 
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = vurdering?.tilDto(ansattInfoService),
-                        vedtatteVurderinger = vedtatteVurderinger.map{it.tilDto(ansattInfoService)}
+                        vedtatteVurderinger = vedtatteVurderinger.map{it.tilDto(ansattInfoService)},
+                        harSendtForhåndsvarsel = harSendtForhåndsvarselForBehandlingen(brevbestillingService, behandling)
                     )
             }
             respond(respons)
@@ -72,10 +77,20 @@ fun NormalOpenAPIRoute.aktivitetsplikt11_7GrunnlagApi(
     }
 }
 
+private fun harSendtForhåndsvarselForBehandlingen(
+    brevbestillingService: BrevbestillingService,
+    behandling: Behandling
+): Boolean {
+    return brevbestillingService.hentBestillinger(behandling.id, ForhåndsvarselBruddAktivitetsplikt.typeBrev)
+        .maxByOrNull { it.opprettet }
+        ?.status == Status.FULLFØRT
+}
+
 data class Aktivitetsplikt11_7GrunnlagDto(
     val vurdering: Aktivitetsplikt11_7VurderingDto? = null,
     val vedtatteVurderinger: List<Aktivitetsplikt11_7VurderingDto> = emptyList(),
-    val harTilgangTilÅSaksbehandle: Boolean
+    val harTilgangTilÅSaksbehandle: Boolean,
+    val harSendtForhåndsvarsel: Boolean
 )
 
 data class Aktivitetsplikt11_7VurderingDto(
@@ -84,6 +99,7 @@ data class Aktivitetsplikt11_7VurderingDto(
     val utfall: Utfall?,
     val gjelderFra: LocalDate,
     val vurdertAv: VurdertAvResponse?,
+    val skalIgnorereVarselFrist: Boolean
 )
 
 internal fun Aktivitetsplikt11_7Vurdering.tilDto(ansattInfoService: AnsattInfoService): Aktivitetsplikt11_7VurderingDto {
@@ -93,5 +109,6 @@ internal fun Aktivitetsplikt11_7Vurdering.tilDto(ansattInfoService: AnsattInfoSe
         utfall = utfall,
         gjelderFra = gjelderFra,
         vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet, ansattInfoService),
+        skalIgnorereVarselFrist = this.skalIgnorereVarselFrist
     )
 }

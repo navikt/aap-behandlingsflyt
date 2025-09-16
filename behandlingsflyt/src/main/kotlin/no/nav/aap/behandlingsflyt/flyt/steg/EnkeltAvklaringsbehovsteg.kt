@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.AVBRUTT
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.AVSLUTTET
@@ -10,6 +12,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.TOTRINNS_VURDERT
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 
 /** Oppdater tilstanden på avklaringsbehovet [definisjon], slik at kvalitetssikring,
  * to-trinnskontroll og tilbakeflyt blir riktig.
@@ -131,4 +139,77 @@ fun oppdaterAvklaringsbehov(
             tilbakestillGrunnlag()
         }
     }
+}
+
+/** Special case av [oppdaterAvklaringsbehov] for vilkår som er periodisert. Brukeren
+ * av funksjonen må fortelle hvilke perioder hvor vilkåret kan bli vurdert for ([nårVurderingErRelevant]).
+ *
+ * Hvis det er en periode som trenger vurdering som ikke trengte vurdering i forrige behandling, så løftes
+ * avklaringsbehovet.
+ *
+ * Hvis vurderingsbehovene relevant for steget er i [tvingerAvklaringsbehov], så åpnes avklaringsbehovet
+ * også hvis det ikke er en endring i periodene som behøver vurdering, gitt at det er noen perioder som
+ * behøver vurdering.
+ *
+ * Vurder å skrive om til service, slik at man slipper å injecte inn alle repositoriesene?
+ */
+fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+    avklaringsbehovene: Avklaringsbehovene,
+    behandlingRepository: BehandlingRepository,
+    vilkårsresultatRepository: VilkårsresultatRepository,
+    definisjon: Definisjon,
+    tvingerAvklaringsbehov: Set<Vurderingsbehov>,
+    nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
+    kontekst: FlytKontekstMedPerioder,
+    erTilstrekkeligVurdert: () -> Boolean,
+    tilbakestillGrunnlag: () -> Unit,
+) {
+    oppdaterAvklaringsbehov(
+        avklaringsbehovene = avklaringsbehovene,
+        definisjon = definisjon,
+        vedtakBehøverVurdering = {
+            when (kontekst.vurderingType) {
+                VurderingType.FØRSTEGANGSBEHANDLING,
+                VurderingType.REVURDERING -> {
+                    val perioderBistandsvilkåretErRelevant = nårVurderingErRelevant(kontekst)
+
+                    if (perioderBistandsvilkåretErRelevant.any { it.verdi } && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }) {
+                        return@oppdaterAvklaringsbehov true
+                    }
+
+                    val perioderBistandsvilkåretErVurdert = kontekst.forrigeBehandlingId
+                        ?.let { forrigeBehandlingId ->
+                            val forrigeBehandling = behandlingRepository.hent(forrigeBehandlingId)
+                            val forrigeRettighetsperiode =
+                                /* Lagrer vi ned rettighetsperioden som ble brukt for en behandling noe sted? */
+                                vilkårsresultatRepository.hent(forrigeBehandlingId)
+                                    .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
+                                    .tidslinje()
+                                    .helePerioden()
+
+                            nårVurderingErRelevant(
+                                kontekst.copy(
+                                    /* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */
+                                    behandlingId = forrigeBehandlingId,
+                                    forrigeBehandlingId = forrigeBehandling.forrigeBehandlingId,
+                                    rettighetsperiode = forrigeRettighetsperiode,
+                                    behandlingType = forrigeBehandling.typeBehandling(),
+                                )
+                            )
+                        }
+                        ?: tidslinjeOf()
+
+                    perioderBistandsvilkåretErRelevant.leftJoin(perioderBistandsvilkåretErVurdert) { erRelevant, erVurdert ->
+                        erRelevant && erVurdert != true
+                    }.any { it.verdi }
+                }
+
+                VurderingType.MELDEKORT -> false
+                VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> false
+                VurderingType.IKKE_RELEVANT -> false
+            }
+        },
+        erTilstrekkeligVurdert = erTilstrekkeligVurdert,
+        tilbakestillGrunnlag = tilbakestillGrunnlag,
+    )
 }
