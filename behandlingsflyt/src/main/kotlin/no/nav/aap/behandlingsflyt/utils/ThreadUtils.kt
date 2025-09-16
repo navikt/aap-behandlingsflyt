@@ -8,6 +8,10 @@ fun <U> withMdc(supplier: Supplier<U>): Supplier<U> {
     val mdc = MDC.getCopyOfContextMap()
     return Supplier {
         MDC.setContextMap(mdc)
-        supplier.get()
+        try {
+            supplier.get()
+        } finally {
+            MDC.clear()
+        }
     }
 }
