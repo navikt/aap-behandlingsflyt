@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingService
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
@@ -72,11 +72,11 @@ class StatistikkJobbUtfører(
     private val trukketSøknadService: TrukketSøknadService,
     private val klageresultatUtleder: IKlageresultatUtleder,
     private val statistikkGateway: StatistikkGateway,
-    private val kansellerRevurderingService: KansellerRevurderingService
+    private val avbrytRevurderingService: AvbrytRevurderingService
 ) : JobbUtfører {
 
     private val resultatUtleder =
-        ResultatUtleder(underveisRepository, behandlingRepository, trukketSøknadService, kansellerRevurderingService)
+        ResultatUtleder(underveisRepository, behandlingRepository, trukketSøknadService, avbrytRevurderingService)
 
     private val log = LoggerFactory.getLogger(javaClass)
     override fun utfør(input: JobbInput) {
@@ -157,7 +157,7 @@ class StatistikkJobbUtfører(
                 Vurderingsbehov.FASTSATT_PERIODE_PASSERT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.MELDEKORT /* TODO: mer spesifikk? er pga fravær av meldekort */
                 Vurderingsbehov.VURDER_RETTIGHETSPERIODE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_RETTIGHETSPERIODE
                 Vurderingsbehov.SØKNAD_TRUKKET -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET
-                Vurderingsbehov.REVURDERING_KANSELLERT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_KANSELLERT
+                Vurderingsbehov.REVURDERING_AVBRUTT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT
                 Vurderingsbehov.KLAGE_TRUKKET -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.KLAGE_TRUKKET
                 Vurderingsbehov.REVURDER_MANUELL_INNTEKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_MANUELL_INNTEKT
                 Vurderingsbehov.FRITAK_MELDEPLIKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FRITAK_MELDEPLIKT
@@ -314,7 +314,7 @@ class StatistikkJobbUtfører(
                         Resultat.INNVILGELSE -> ResultatKode.INNVILGET
                         Resultat.AVSLAG -> ResultatKode.AVSLAG
                         Resultat.TRUKKET -> ResultatKode.TRUKKET
-                        Resultat.KANSELLERT -> ResultatKode.KANSELLERT
+                        Resultat.AVBRUTT -> ResultatKode.AVBRUTT
                     }
                 }
             }
@@ -335,7 +335,7 @@ class StatistikkJobbUtfører(
             TypeBehandling.Revurdering -> {
                 resultatUtleder.utledRevurderingResultat(behandling.id).let {
                     when (it) {
-                        Resultat.KANSELLERT -> ResultatKode.KANSELLERT
+                        Resultat.AVBRUTT -> ResultatKode.AVBRUTT
                         else -> null
                     }
                 }
@@ -437,7 +437,7 @@ class StatistikkJobbUtfører(
                 trukketSøknadService = TrukketSøknadService(repositoryProvider.provide()),
                 klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
                 statistikkGateway = gatewayProvider.provide(),
-                kansellerRevurderingService = KansellerRevurderingService(repositoryProvider)
+                avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
             )
         }
 

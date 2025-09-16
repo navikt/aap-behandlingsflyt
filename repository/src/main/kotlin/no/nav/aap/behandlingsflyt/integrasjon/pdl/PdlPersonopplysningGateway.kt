@@ -30,9 +30,6 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
         val request = PdlRequest(PERSON_QUERY, IdentVariables(person.aktivIdent().identifikator))
         val response: PdlPersoninfoDataResponse = PdlGateway.query(request)
 
-        if (Miljø.erDev()) {
-            log.info("Henter personinfo fra PDL i dev ${response.data}")
-        }
         val foedselsdato = PdlParser.utledFødselsdato(response.data?.hentPerson?.foedselsdato)
             ?: error("fødselsdato skal alltid eksistere i PDL")
 
@@ -72,9 +69,7 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
     override fun innhentMedHistorikk(person: Person): PersonopplysningMedHistorikk {
         val request = PdlRequest(PERSON_QUERY_HISTORIKK, IdentVariables(person.aktivIdent().identifikator))
         val response: PdlPersoninfoDataResponse = PdlGateway.query(request)
-        if (Miljø.erDev()) {
-            log.info("Henter personinfo med historikk fra PDL i dev ${response.data}")
-        }
+       
         val foedselsdato = PdlParser.utledFødselsdato(response.data?.hentPerson?.foedselsdato)
             ?: error("fødselsdato skal alltid eksistere i PDL")
 

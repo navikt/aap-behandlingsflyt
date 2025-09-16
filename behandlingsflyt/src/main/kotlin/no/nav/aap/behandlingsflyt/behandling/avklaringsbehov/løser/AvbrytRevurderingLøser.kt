@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KansellerRevurderingLøsning
-import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingRepository
-import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingVurdering
-import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingÅrsak
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvbrytRevurderingLøsning
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingRepository
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingVurdering
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingÅrsak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -15,47 +15,47 @@ import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDateTime
 
-class KansellerRevurderingLøser(
+class AvbrytRevurderingLøser(
     private val behandlingRepository: BehandlingRepository,
-    private val kansellerRevurderingRepository: KansellerRevurderingRepository
-) : AvklaringsbehovsLøser<KansellerRevurderingLøsning> {
+    private val avbrytRevurderingRepository: AvbrytRevurderingRepository
+) : AvklaringsbehovsLøser<AvbrytRevurderingLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
-        kansellerRevurderingRepository = repositoryProvider.provide()
+        avbrytRevurderingRepository = repositoryProvider.provide()
     )
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
-        løsning: KansellerRevurderingLøsning
+        løsning: AvbrytRevurderingLøsning
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.behandlingId())
 
         if (behandling.typeBehandling() != TypeBehandling.Revurdering) {
-            throw UgyldigForespørselException("kan kun kansellere revurdering i en revurdering behandling")
+            throw UgyldigForespørselException("kan kun avbryte revurdering i en revurdering behandling")
         }
         if (behandling.status() !in listOf(Status.OPPRETTET, Status.UTREDES)) {
-            throw UgyldigForespørselException("kan kun kansellere revurdering som utredes")
+            throw UgyldigForespørselException("kan kun avbryte revurdering som utredes")
         }
 
-        kansellerRevurderingRepository.lagre(
+        avbrytRevurderingRepository.lagre(
             behandlingId = kontekst.behandlingId(),
-            vurdering = KansellerRevurderingVurdering(
-                årsak = løsning.vurdering.årsak?.name?.let { KansellerRevurderingÅrsak.valueOf(it) },
+            vurdering = AvbrytRevurderingVurdering(
+                årsak = løsning.vurdering.årsak?.name?.let { AvbrytRevurderingÅrsak.valueOf(it) },
                 begrunnelse = løsning.vurdering.begrunnelse,
                 vurdertAv = kontekst.bruker,
             ),
         )
 
-        // Oppdaterer behandling årsak med begrunnelse for kansellering av revurdering
-        val kansellertVurderingsbehovOgÅrsak = behandlingRepository.hentVurderingsbehovOgÅrsaker(behandling.id)
-            .filter { it.vurderingsbehov.any { behov -> behov.type == Vurderingsbehov.REVURDERING_KANSELLERT } }
+        // Oppdaterer behandling årsak med begrunnelse for hvorfor revurdering ble avbrutt
+        val avbrytVurderingsbehovOgÅrsak = behandlingRepository.hentVurderingsbehovOgÅrsaker(behandling.id)
+            .filter { it.vurderingsbehov.any { behov -> behov.type == Vurderingsbehov.REVURDERING_AVBRUTT } }
             .maxByOrNull { it.opprettet }
 
-        if (kansellertVurderingsbehovOgÅrsak != null) {
+        if (avbrytVurderingsbehovOgÅrsak != null) {
             val oppdatertVurderingsbehogOgÅrsak = VurderingsbehovOgÅrsak(
-                kansellertVurderingsbehovOgÅrsak.vurderingsbehov,
-                kansellertVurderingsbehovOgÅrsak.årsak,
+                avbrytVurderingsbehovOgÅrsak.vurderingsbehov,
+                avbrytVurderingsbehovOgÅrsak.årsak,
                 LocalDateTime.now(),
                 løsning.vurdering.begrunnelse
             )
@@ -73,6 +73,6 @@ class KansellerRevurderingLøser(
     }
 
     override fun forBehov(): Definisjon {
-        return Definisjon.KANSELLER_REVURDERING
+        return Definisjon.AVBRYT_REVURDERING
     }
 }

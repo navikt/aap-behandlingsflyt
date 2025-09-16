@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingService
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
@@ -73,14 +73,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBeregningsgrunnlagRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKansellerRevurderingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvbrytRevurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -216,7 +215,7 @@ class StatistikkJobbUtførerTest {
                 trukketSøknadService = TrukketSøknadService(postgresRepositoryRegistry.provider(connection)),
                 klageresultatUtleder = KlageresultatUtleder(postgresRepositoryRegistry.provider(connection)),
                 statistikkGateway = StatistikkGatewayImpl(),
-                kansellerRevurderingService = KansellerRevurderingService(postgresRepositoryRegistry.provider(connection))
+                avbrytRevurderingService = AvbrytRevurderingService(postgresRepositoryRegistry.provider(connection))
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -419,7 +418,7 @@ class StatistikkJobbUtførerTest {
                 trukketSøknadService = TrukketSøknadService(postgresRepositoryRegistry.provider(connection)),
                 klageresultatUtleder = KlageresultatUtleder(postgresRepositoryRegistry.provider(connection)),
                 statistikkGateway = StatistikkGatewayImpl(),
-                kansellerRevurderingService = KansellerRevurderingService(postgresRepositoryRegistry.provider(connection))
+                avbrytRevurderingService = AvbrytRevurderingService(postgresRepositoryRegistry.provider(connection))
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -608,8 +607,8 @@ class StatistikkJobbUtførerTest {
                 ),
                 klageresultatUtleder = DummyKlageresultatUtleder(),
                 statistikkGateway = StatistikkGatewayImpl(),
-                kansellerRevurderingService = KansellerRevurderingService(
-                    InMemoryKansellerRevurderingRepository
+                avbrytRevurderingService = AvbrytRevurderingService(
+                    InMemoryAvbrytRevurderingRepository
                 )
             )
 

@@ -472,7 +472,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             setParams {
                 setLong(1, nyesteBehandlingAarsakId)
                 setLong(2, behandlingId.toLong())
-                setString(3, Vurderingsbehov.REVURDERING_KANSELLERT.name)
+                setString(3, Vurderingsbehov.REVURDERING_AVBRUTT.name)
             }
             setResultValidator {
                 require(it == 1)

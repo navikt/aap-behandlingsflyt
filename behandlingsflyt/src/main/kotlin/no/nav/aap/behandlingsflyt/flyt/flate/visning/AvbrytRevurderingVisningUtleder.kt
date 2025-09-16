@@ -8,7 +8,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 // Brukes via reflection/dynamisk oppslag av rammeverk, ikke fjern selv om den ser ubrukt ut
 @Suppress("unused")
-class KansellerRevurderingVisningUtleder (
+class AvbrytRevurderingVisningUtleder (
     private val behandlingRepository: BehandlingRepository,
 ) : StegGruppeVisningUtleder {
     constructor(repositoryProvider: RepositoryProvider): this(
@@ -18,11 +18,11 @@ class KansellerRevurderingVisningUtleder (
     override fun skalVises(behandlingId: BehandlingId): Boolean {
         val behandling = behandlingRepository.hent(behandlingId)
         return behandling.vurderingsbehov().any {
-            it.type == Vurderingsbehov.REVURDERING_KANSELLERT
+            it.type == Vurderingsbehov.REVURDERING_AVBRUTT
         }
     }
 
     override fun gruppe(): StegGruppe {
-        return StegGruppe.KANSELLER_REVURDERING
+        return StegGruppe.AVBRYT_REVURDERING
     }
 }

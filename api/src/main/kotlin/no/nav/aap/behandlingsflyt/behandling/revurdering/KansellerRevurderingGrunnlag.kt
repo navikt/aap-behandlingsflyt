@@ -3,9 +3,9 @@ package no.nav.aap.behandlingsflyt.behandling.revurdering
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingRepository
-import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.tilDto
-import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.flate.KansellerRevurderingVurderingDto
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingRepository
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.tilDto
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.flate.AvbrytRevurderingVurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -16,28 +16,28 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
-data class KansellertRevurderingGrunnlagDto(
-    val vurdering: KansellerRevurderingVurderingDto?
+data class AvbrytRevurderingGrunnlagDto(
+    val vurdering: AvbrytRevurderingVurderingDto?
 )
 
-fun NormalOpenAPIRoute.kansellertRevurderingGrunnlagAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
-    route("/api/behandling/{referanse}/grunnlag/kansellert-revurdering").authorizedGet<BehandlingReferanse, KansellertRevurderingGrunnlagDto>(
+fun NormalOpenAPIRoute.avbrytRevurderingGrunnlagAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+    route("/api/behandling/{referanse}/grunnlag/avbryt-revurdering").authorizedGet<BehandlingReferanse, AvbrytRevurderingGrunnlagDto>(
         AuthorizationParamPathConfig(
             operasjon = Operasjon.SE,
             behandlingPathParam = BehandlingPathParam("referanse")
         )
     ) { req ->
-        val kansellertRevurderingGrunnlagDto = dataSource.transaction(readOnly = true) { connection ->
+        val avbrytRevurderingGrunnlagDto = dataSource.transaction(readOnly = true) { connection ->
             val repositoryProvider = repositoryRegistry.provider(connection)
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val kansellerRevurderingRepository = repositoryProvider.provide<KansellerRevurderingRepository>()
+            val avbrytRevurderingRepository = repositoryProvider.provide<AvbrytRevurderingRepository>()
 
             val behandlingId = behandlingRepository.hent(BehandlingReferanse(req.referanse)).id
 
-            kansellerRevurderingRepository.hentHvisEksisterer(behandlingId)?.vurdering?.let {
-                KansellertRevurderingGrunnlagDto(vurdering = it.tilDto())
-            } ?: KansellertRevurderingGrunnlagDto(vurdering = null)
+            avbrytRevurderingRepository.hentHvisEksisterer(behandlingId)?.vurdering?.let {
+                AvbrytRevurderingGrunnlagDto(vurdering = it.tilDto())
+            } ?: AvbrytRevurderingGrunnlagDto(vurdering = null)
         }
-        respond(kansellertRevurderingGrunnlagDto)
+        respond(avbrytRevurderingGrunnlagDto)
     }
 }

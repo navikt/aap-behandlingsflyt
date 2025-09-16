@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingService
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
@@ -42,7 +42,7 @@ class IverksettVedtakSteg private constructor(
     private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
     private val utbetalingGateway: UtbetalingGateway,
     private val trukketSøknadService: TrukketSøknadService,
-    private val kansellerRevurderingService: KansellerRevurderingService,
+    private val avbrytRevurderingService: AvbrytRevurderingService,
     private val flytJobbRepository: FlytJobbRepository,
     private val unleashGateway: UnleashGateway,
     private val mellomlagretVurderingRepository: MellomlagretVurderingRepository
@@ -52,7 +52,7 @@ class IverksettVedtakSteg private constructor(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && trukketSøknadService.søknadErTrukket(kontekst.behandlingId)
-            || kontekst.vurderingType == VurderingType.REVURDERING && kansellerRevurderingService.revurderingErKansellert(kontekst.behandlingId)
+            || kontekst.vurderingType == VurderingType.REVURDERING && avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId)
         ) {
             return Fullført
         }
@@ -132,7 +132,7 @@ class IverksettVedtakSteg private constructor(
                 utbetalingGateway = utbetalingGateway,
                 virkningstidspunktUtleder = virkningstidspunktUtlederService,
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
-                kansellerRevurderingService = KansellerRevurderingService(repositoryProvider),
+                avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
                 flytJobbRepository = flytJobbRepository,
                 unleashGateway = gatewayProvider.provide(),
                 mellomlagretVurderingRepository = mellomlagretVurderingRepository

@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling
 
-import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingService
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -14,7 +14,7 @@ enum class Resultat {
     INNVILGELSE,
     AVSLAG,
     TRUKKET,
-    KANSELLERT
+    AVBRUTT
 }
 
 
@@ -22,13 +22,13 @@ class ResultatUtleder(
     private val underveisRepository: UnderveisRepository,
     private val behandlingRepository: BehandlingRepository,
     private val trukketSøknadService: TrukketSøknadService,
-    private val kansellerRevurderingService: KansellerRevurderingService
+    private val avbrytRevurderingService: AvbrytRevurderingService
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         underveisRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
-        kansellerRevurderingService = KansellerRevurderingService(repositoryProvider)
+        avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
     )
 
     fun utledResultat(behandlingId: BehandlingId): Resultat {
@@ -46,8 +46,8 @@ class ResultatUtleder(
             "Kan ikke utlede resultat for ${behandling.typeBehandling()} ennå."
         }
 
-        if (kansellerRevurderingService.revurderingErKansellert(behandling.id)) {
-            return Resultat.KANSELLERT
+        if (avbrytRevurderingService.revurderingErAvbrutt(behandling.id)) {
+            return Resultat.AVBRUTT
         }
 
         return null
