@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.utils.withMdc
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -34,6 +35,7 @@ import java.time.Duration
 import java.time.YearMonth
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
+
 
 class LovvalgInformasjonskrav private constructor(
     private val sakService: SakService,
@@ -63,9 +65,12 @@ class LovvalgInformasjonskrav private constructor(
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
 
-        val medlemskapPerioderFuture = CompletableFuture.supplyAsync({ medlemskapGateway.innhent(sak.person, sak.rettighetsperiode) }, executor)
-        val arbeidGrunnlagFuture = CompletableFuture.supplyAsync({ innhentAARegisterGrunnlag(sak) }, executor)
-        val inntektGrunnlagFuture = CompletableFuture.supplyAsync({ innhentAInntektGrunnlag(sak) }, executor)
+        val medlemskapPerioderFuture = CompletableFuture
+            .supplyAsync(withMdc{ medlemskapGateway.innhent(sak.person, sak.rettighetsperiode) }, executor)
+        val arbeidGrunnlagFuture = CompletableFuture
+            .supplyAsync(withMdc{ innhentAARegisterGrunnlag(sak) }, executor)
+        val inntektGrunnlagFuture = CompletableFuture
+            .supplyAsync(withMdc{ innhentAInntektGrunnlag(sak) }, executor)
 
         val medlemskapPerioder = medlemskapPerioderFuture.get()
         val arbeidGrunnlag = arbeidGrunnlagFuture.get()
@@ -98,7 +103,7 @@ class LovvalgInformasjonskrav private constructor(
 
         // EREG har ikke batch-oppslag
         val futures = orgnumre.map { orgnummer ->
-            CompletableFuture.supplyAsync({
+            CompletableFuture.supplyAsync(withMdc{
                 val response = enhetsregisteretGateway.hentEREGData(Organisasjonsnummer(orgnummer))
                 response?.let {
                     EnhetGrunnlag(

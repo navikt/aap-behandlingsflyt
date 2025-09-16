@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.utils.withMdc
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -60,12 +61,12 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
 
-        val medlemskapPerioderFuture = CompletableFuture.supplyAsync({ medlemskapGateway.innhent(
+        val medlemskapPerioderFuture = CompletableFuture.supplyAsync(withMdc{ medlemskapGateway.innhent(
             sak.person,
             Periode(sak.rettighetsperiode.fom.minusYears(5), sak.rettighetsperiode.fom)
         ) }, executor)
-        val arbeidGrunnlagFuture = CompletableFuture.supplyAsync({ innhentAARegisterGrunnlag5år(sak) }, executor)
-        val inntektGrunnlagFuture = CompletableFuture.supplyAsync({ innhentAInntektGrunnlag5år(sak) }, executor)
+        val arbeidGrunnlagFuture = CompletableFuture.supplyAsync(withMdc{ innhentAARegisterGrunnlag5år(sak) }, executor)
+        val inntektGrunnlagFuture = CompletableFuture.supplyAsync(withMdc{ innhentAInntektGrunnlag5år(sak) }, executor)
 
         val medlemskapPerioder = medlemskapPerioderFuture.get()
         val arbeidGrunnlag = arbeidGrunnlagFuture.get()
@@ -107,7 +108,7 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
         // EREG har ikke batch-oppslag
         val executor = Executors.newVirtualThreadPerTaskExecutor()
         val futures = orgnumre.map { orgnummer ->
-            CompletableFuture.supplyAsync({
+            CompletableFuture.supplyAsync(withMdc{
                 val response = enhetsregisteretGateway.hentEREGData(Organisasjonsnummer(orgnummer))
                 response?.let {
                     EnhetGrunnlag(
