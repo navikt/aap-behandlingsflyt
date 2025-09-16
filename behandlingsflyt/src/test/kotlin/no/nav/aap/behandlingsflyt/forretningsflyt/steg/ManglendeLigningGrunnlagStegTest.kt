@@ -36,7 +36,6 @@ import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -59,15 +58,6 @@ class ManglendeLigningGrunnlagStegTest {
 
     private val sisteÅr = Year.of(2025)
 
-    // TODO kan fjernes når vi har verifisert i dev og fjernet isProd-togglen i ManglendeLigningGrunnlagSteg
-    companion object {
-        @BeforeAll
-        @JvmStatic
-        internal fun beforeAll() {
-            System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
-        }
-    }
-
     @BeforeEach
     fun setup() {
         avklaringsbehovRepository = mockk()
@@ -89,7 +79,7 @@ class ManglendeLigningGrunnlagStegTest {
             every { hentHvisEksisterer(any()) } returns null
         }
         tidligereVurderinger = mockk {
-            every { girAvslagEllerIngenBehandlingsgrunnlag(any(), any()) } returns false
+            every { girAvslagEllerIngenBehandlingsgrunnlag(any(), StegType.MANGLENDE_LIGNING) } returns false
         }
 
         steg = ManglendeLigningGrunnlagSteg(
@@ -97,7 +87,8 @@ class ManglendeLigningGrunnlagStegTest {
             inntektGrunnlagRepository,
             manuellInntektGrunnlagRepository,
             tidligereVurderinger,
-            beregningService
+            beregningService,
+            erProd = false
         )
     }
 
@@ -216,7 +207,7 @@ class ManglendeLigningGrunnlagStegTest {
 
         // Vil i utgangspunktet opprette avklaringsbehov dersom ingen inntekter finnes
         every { inntektGrunnlagRepository.hentHvisEksisterer(behandling.id) } returns InntektGrunnlag(emptySet())
-        every { tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(any(), any()) } returns true
+        every { tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(any(), StegType.MANGLENDE_LIGNING) } returns true
         every { avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id) } returns avklaringsbehovene
 
         val resultat = steg.utfør(flytKontekst)

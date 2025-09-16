@@ -32,18 +32,20 @@ class ManglendeLigningGrunnlagSteg internal constructor(
     private val inntektGrunnlagRepository: InntektGrunnlagRepository,
     private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val beregningService: BeregningService
+    private val beregningService: BeregningService,
+    private val erProd: Boolean
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
         inntektGrunnlagRepository = repositoryProvider.provide(),
         manuellInntektGrunnlagRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
-        beregningService = BeregningService(repositoryProvider)
+        beregningService = BeregningService(repositoryProvider),
+        erProd = erProd()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (erProd()) {
+        if (erProd) {
             return gammelVariant(kontekst)
         }
 

@@ -40,11 +40,10 @@ import org.junit.jupiter.api.extension.ExtendWith
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
 @ExtendWith(MockKExtension::class)
-@MockKExtension.CheckUnnecessaryStub
 class FormkravStegTest {
     val trekkKlageServiceMock = mockk<TrekkKlageService>()
     val formkravRepositoryMock = mockk<FormkravRepository>()
@@ -69,7 +68,6 @@ class FormkravStegTest {
     fun tearDown() {
         unmockkStatic(LocalDateTime::class)
     }
-
 
     @Test
     fun `FormkravSteg-utfører skal gi avklaringsbehov VURDER_FORMKRAV om man ikke har vurdert dette formkravet enda`() {
