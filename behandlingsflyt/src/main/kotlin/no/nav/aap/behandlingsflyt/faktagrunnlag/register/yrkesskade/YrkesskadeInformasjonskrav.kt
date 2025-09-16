@@ -55,7 +55,8 @@ class YrkesskadeInformasjonskrav private constructor(
             requireNotNull(personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)?.fødselsdato)
         val registerYrkesskade: List<Yrkesskade> = yrkesskadeRegisterGateway.innhent(sak.person, fødselsdato)
         val oppgittYrkesskade = oppgittYrkesskade(kontekst.sakId, sak.rettighetsperiode)
-        val yrkesskader = registerYrkesskade + listOfNotNull(oppgittYrkesskade)
+        val oppgittYrkesskadeUtenSkadedato = oppgittYrkesskade(kontekst.sakId, null)
+        val yrkesskader = registerYrkesskade + listOfNotNull(oppgittYrkesskade, oppgittYrkesskadeUtenSkadedato)
 
         val behandlingId = kontekst.behandlingId
         val gamleData = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
@@ -75,7 +76,7 @@ class YrkesskadeInformasjonskrav private constructor(
 
     private fun oppgittYrkesskade(
         id: SakId,
-        periode: Periode,
+        periode: Periode?,
     ): Yrkesskade? {
         val mottattDokumenter = mottattDokumentRepository.hentDokumenterAvType(id, InnsendingType.SØKNAD)
 
@@ -101,16 +102,21 @@ class YrkesskadeInformasjonskrav private constructor(
     }
 
     private fun fakeOppgittYrkesskade(
-        periode: Periode
+        periode: Periode?
     ): Yrkesskade {
         check(Miljø.er() in listOf(MiljøKode.DEV, MiljøKode.LOKALT))
         check(!Miljø.erProd())
 
+        val skadedato = if (periode != null) {
+            periode.fom.minusDays(60)
+        } else {
+            null
+        }
         return Yrkesskade(
             ref = "YRK",
             saksnummer = null,
             kildesystem = "KELVIN",
-            skadedato = periode.fom.minusDays(60),
+            skadedato = skadedato,
         )
     }
 
