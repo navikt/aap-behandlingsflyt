@@ -36,6 +36,7 @@ import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -57,6 +58,15 @@ class ManglendeLigningGrunnlagStegTest {
     private val behandlingRepository = InMemoryBehandlingRepository
 
     private val sisteÅr = Year.of(2025)
+
+    // TODO kan fjernes når vi har verifisert i dev og fjernet isProd-togglen i ManglendeLigningGrunnlagSteg
+    companion object {
+        @BeforeAll
+        @JvmStatic
+        internal fun beforeAll() {
+            System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
+        }
+    }
 
     @BeforeEach
     fun setup() {
