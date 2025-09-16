@@ -113,7 +113,7 @@ class YrkesskadeInformasjonskrav private constructor(
             null
         }
         return Yrkesskade(
-            ref = "YRK",
+            ref = "YRK" + "-" + Math.floor(Math.random() * 100),
             saksnummer = null,
             kildesystem = "KELVIN",
             skadedato = skadedato,
