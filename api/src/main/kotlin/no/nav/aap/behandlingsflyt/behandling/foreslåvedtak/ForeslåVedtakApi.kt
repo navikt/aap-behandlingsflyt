@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.foreslåvedtak
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.ForeslåVedtakDto.Companion.tilForeslåVedtakData
+import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.UnderveisPeriodeInfo.Companion.tilForeslåVedtakData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FORESLÅ_VEDTAK_KODE
@@ -57,17 +57,18 @@ fun NormalOpenAPIRoute.foreslaaVedtakAPI(
             if (underveisGrunnlag == null) {
                 respond(ForeslåVedtakResponse(emptyList()))
             } else {
-                val foreslåVedtakPerioder =
+                val underveisPerioder =
                     underveisGrunnlag.perioder.map {
-                        ForeslåVedtakDto(
-                            it.periode,
-                            it.utfall,
-                            it.rettighetsType
+                        UnderveisPeriodeInfo(
+                            periode = it.periode,
+                            utfall = it.utfall,
+                            rettighetsType = it.rettighetsType,
+                            underveisÅrsak = it.avslagsårsak
                         )
                     }
 
-                val perioderMedInfo =
-                    foreslåVedtakPerioder
+                val foreslåVedtakPerioder =
+                    underveisPerioder
                         .map {
                             Segment(it.periode, it.tilForeslåVedtakData())
                         }.let(::Tidslinje)
@@ -81,12 +82,15 @@ fun NormalOpenAPIRoute.foreslaaVedtakAPI(
                                 periode = it.periode,
                                 utfall = it.verdi.utfall,
                                 rettighetsType = it.verdi.rettighetsType,
-                                avslagsårsaker = avslagsårsaker
+                                avslagsårsak = AvslagsårsakDto(
+                                    vilkårsavslag = avslagsårsaker,
+                                    underveisavslag = it.verdi.underveisÅrsak
+                                )
                             )
                         }
                 respond(
                     ForeslåVedtakResponse(
-                        perioderMedInfo
+                        foreslåVedtakPerioder
                     )
                 )
             }
