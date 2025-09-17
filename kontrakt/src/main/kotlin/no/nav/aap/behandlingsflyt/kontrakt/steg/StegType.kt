@@ -176,8 +176,8 @@ public enum class StegType(
         gruppe = StegGruppe.IVERKSETT_VEDTAK,
         status = Status.IVERKSETTES
     ),
-    KANSELLER_REVURDERING(
-        gruppe = StegGruppe.KANSELLER_REVURDERING,
+    AVBRYT_REVURDERING(
+        gruppe = StegGruppe.AVBRYT_REVURDERING,
         status = Status.UTREDES
     ),
     BREV(

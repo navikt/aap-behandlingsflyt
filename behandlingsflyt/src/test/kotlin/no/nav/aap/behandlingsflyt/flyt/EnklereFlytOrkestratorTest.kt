@@ -16,7 +16,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_SYKDOM
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.FASTSETT_MELDEPERIODER
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.FATTE_VEDTAK
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.IVERKSETT_VEDTAK
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.KANSELLER_REVURDERING
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVBRYT_REVURDERING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.OPPRETT_REVURDERING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SEND_FORVALTNINGSMELDING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.START_BEHANDLING
@@ -282,7 +282,7 @@ class EnklereFlytOrkestratorTest {
             listOf(
                 START_BEHANDLING,
                 SEND_FORVALTNINGSMELDING,
-                KANSELLER_REVURDERING,
+                AVBRYT_REVURDERING,
                 SØKNAD,
                 VURDER_RETTIGHETSPERIODE,
                 VURDER_LOVVALG,
@@ -305,7 +305,7 @@ class EnklereFlytOrkestratorTest {
             listOf(
                 START_BEHANDLING,
                 SEND_FORVALTNINGSMELDING,
-                KANSELLER_REVURDERING,
+                AVBRYT_REVURDERING,
                 SØKNAD,
                 VURDER_RETTIGHETSPERIODE,
                 VURDER_LOVVALG,
@@ -406,27 +406,27 @@ class EnklereFlytOrkestratorTest {
                     stegStatus = StegStatus.AVSLUTTER,
                     aktiv = false
                 ),StegTilstand(
-                    stegType = KANSELLER_REVURDERING,
+                    stegType = AVBRYT_REVURDERING,
                     stegStatus = StegStatus.START,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = KANSELLER_REVURDERING,
+                    stegType = AVBRYT_REVURDERING,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = KANSELLER_REVURDERING,
+                    stegType = AVBRYT_REVURDERING,
                     stegStatus = StegStatus.UTFØRER,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = KANSELLER_REVURDERING,
+                    stegType = AVBRYT_REVURDERING,
                     stegStatus = StegStatus.AVKLARINGSPUNKT,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = KANSELLER_REVURDERING,
+                    stegType = AVBRYT_REVURDERING,
                     stegStatus = StegStatus.AVSLUTTER,
                     aktiv = false
                 ),
@@ -580,27 +580,27 @@ class EnklereFlytOrkestratorTest {
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = KANSELLER_REVURDERING,
+                    stegType = AVBRYT_REVURDERING,
                     stegStatus = StegStatus.START,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = KANSELLER_REVURDERING,
+                    stegType = AVBRYT_REVURDERING,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = KANSELLER_REVURDERING,
+                    stegType = AVBRYT_REVURDERING,
                     stegStatus = StegStatus.UTFØRER,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = KANSELLER_REVURDERING,
+                    stegType = AVBRYT_REVURDERING,
                     stegStatus = StegStatus.AVKLARINGSPUNKT,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = KANSELLER_REVURDERING,
+                    stegType = AVBRYT_REVURDERING,
                     stegStatus = StegStatus.AVSLUTTER,
                     aktiv = false
                 ),

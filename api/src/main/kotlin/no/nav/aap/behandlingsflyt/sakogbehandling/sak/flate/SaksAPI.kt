@@ -21,9 +21,6 @@ import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
@@ -95,7 +92,7 @@ fun NormalOpenAPIRoute.saksApi(
                                     Resultat.INNVILGELSE -> ResultatKode.INNVILGET
                                     Resultat.AVSLAG -> ResultatKode.AVSLAG
                                     Resultat.TRUKKET -> ResultatKode.TRUKKET
-                                    Resultat.KANSELLERT -> ResultatKode.KANSELLERT
+                                    Resultat.AVBRUTT -> ResultatKode.AVBRUTT
                                     null -> null
                                 }
                             })
@@ -173,7 +170,7 @@ fun NormalOpenAPIRoute.saksApi(
                                     Resultat.INNVILGELSE -> ResultatKode.INNVILGET
                                     Resultat.AVSLAG -> ResultatKode.AVSLAG
                                     Resultat.TRUKKET -> ResultatKode.TRUKKET
-                                    Resultat.KANSELLERT -> ResultatKode.KANSELLERT
+                                    Resultat.AVBRUTT -> ResultatKode.AVBRUTT
                                     null -> null
                                 }
                             })

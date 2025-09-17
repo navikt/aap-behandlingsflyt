@@ -145,10 +145,10 @@ class MedlemskapLovvalgVurderingService {
         )
     }
 
-    private fun utenlandskAdresse(grunnlag: Personopplysning, rettighetsPeriode: Periode): TilhørighetVurdering {
-        val bosattUtenforNorge = grunnlag.status != PersonStatus.bosatt
+    private fun utenlandskAdresse(grunnlag: Personopplysning?, rettighetsPeriode: Periode): TilhørighetVurdering {
+        val bosattUtenforNorge = grunnlag?.status != PersonStatus.bosatt
 
-        val adresser = grunnlag.utenlandsAddresser?.map {
+        val adresser = grunnlag?.utenlandsAddresser?.map {
             UtenlandskAdresseDto(
                 gyldigFraOgMed = it.gyldigFraOgMed,
                 gyldigTilOgMed = it.gyldigTilOgMed,
@@ -171,7 +171,7 @@ class MedlemskapLovvalgVurderingService {
             resultat = bosattUtenforNorge || !adresser.isNullOrEmpty(),
             utenlandsAddresserGrunnlag = UtenlandsAdresserGrunnlag(
                 adresser,
-                listOf(FolkeregisterStatusDto(grunnlag.status, null, null))
+                listOf(FolkeregisterStatusDto(grunnlag?.status, null, null))
             ),
             vurdertPeriode = VurdertPeriode.SØKNADSTIDSPUNKT.beskrivelse
         )
@@ -199,18 +199,18 @@ class MedlemskapLovvalgVurderingService {
     }
 
     private fun manglerStatsborgerskapIEØS(
-        grunnlag: Personopplysning,
+        grunnlag: Personopplysning?,
         rettighetsPeriode: Periode
     ): TilhørighetVurdering {
         val manglerEØS =
-            grunnlag.statsborgerskap.none { it.land in enumValues<EØSLand>().map { eøsLand -> eøsLand.name } }
-        val manglerStatsborgerskapGrunnlag = grunnlag.statsborgerskap.map {
+            grunnlag?.statsborgerskap?.none { it.land in enumValues<EØSLand>().map { eøsLand -> eøsLand.name } }
+        val manglerStatsborgerskapGrunnlag = grunnlag?.statsborgerskap?.map {
             ManglerStatsborgerskapGrunnlag(
                 land = it.land,
                 gyldigFraOgMed = it.gyldigFraOgMed,
                 gyldigTilOgMed = it.gyldigTilOgMed
             )
-        }.filter {
+        }?.filter {
             (it.gyldigTilOgMed == null)
                     || rettighetsPeriode.inneholder(it.gyldigTilOgMed)
                     || (it.gyldigFraOgMed != null && rettighetsPeriode.inneholder(it.gyldigFraOgMed))
@@ -220,7 +220,7 @@ class MedlemskapLovvalgVurderingService {
             kilde = listOf(Kilde.PDL),
             indikasjon = Indikasjon.UTENFOR_NORGE,
             opplysning = "Mangler statsborgerskap i EØS",
-            resultat = manglerEØS,
+            resultat = manglerEØS == true,
             manglerStatsborgerskapGrunnlag = manglerStatsborgerskapGrunnlag,
             vurdertPeriode = VurdertPeriode.SØKNADSTIDSPUNKT.beskrivelse
         )

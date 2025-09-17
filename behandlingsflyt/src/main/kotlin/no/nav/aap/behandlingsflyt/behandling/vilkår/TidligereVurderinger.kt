@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår
 
-import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingService
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger.Behandlingsutfall.UKJENT
@@ -52,7 +52,7 @@ interface TidligereVurderinger {
 class TidligereVurderingerImpl(
     private val trukketSøknadService: TrukketSøknadService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val kansellerRevurderingService: KansellerRevurderingService
+    private val avbrytRevurderingService: AvbrytRevurderingService
 ) : TidligereVurderinger {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -61,7 +61,7 @@ class TidligereVurderingerImpl(
     constructor(repositoryProvider: RepositoryProvider) : this(
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        kansellerRevurderingService = KansellerRevurderingService(repositoryProvider)
+        avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
     )
 
     class Sjekk(
@@ -71,10 +71,10 @@ class TidligereVurderingerImpl(
 
     private val definerteSjekkerForRevurdering = listOf(
         // NB! Pass på hvis du utvide denne listen med noe som gjør avslag, at alle steg håndtere avslag i revurdering.
-        Sjekk(StegType.KANSELLER_REVURDERING) { _, kontekst ->
+        Sjekk(StegType.AVBRYT_REVURDERING) { _, kontekst ->
             Tidslinje(
                 kontekst.rettighetsperiode,
-                if (kansellerRevurderingService.revurderingErKansellert(kontekst.behandlingId))
+                if (avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId))
                     IKKE_BEHANDLINGSGRUNNLAG
                 else
                     UKJENT
