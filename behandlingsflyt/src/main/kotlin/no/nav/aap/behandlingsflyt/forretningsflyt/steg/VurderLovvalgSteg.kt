@@ -171,7 +171,6 @@ class VurderLovvalgSteg private constructor(
                 ?: medlemskapArbeidInntektRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(sakId)
 
         val brukerPersonopplysning = personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(behandlingId)
-            ?: throw IllegalStateException("Forventet å finne personopplysninger")
 
         val grunnlag = MedlemskapLovvalgGrunnlag(
             medlemskapArbeidInntektGrunnlag,

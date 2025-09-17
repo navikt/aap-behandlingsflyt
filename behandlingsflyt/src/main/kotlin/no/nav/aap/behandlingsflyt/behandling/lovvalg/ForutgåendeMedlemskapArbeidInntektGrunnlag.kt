@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 
 data class ForutgåendeMedlemskapGrunnlag(
     val medlemskapArbeidInntektGrunnlag: ForutgåendeMedlemskapArbeidInntektGrunnlag?,
-    val personopplysningGrunnlag: PersonopplysningMedHistorikkGrunnlag,
+    val personopplysningGrunnlag: PersonopplysningMedHistorikkGrunnlag?,
     var nyeSoknadGrunnlag: UtenlandsOppholdData?
 ) : Faktagrunnlag
 

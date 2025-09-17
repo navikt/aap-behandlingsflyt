@@ -193,7 +193,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as Avklaringsb
 @Tag("motor")
 @ParameterizedClass
 @MethodSource("testData")
-class FlytOrkestratorTest(unleashGateway: KClass< UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
+class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
     companion object {
         @Suppress("unused")
         @JvmStatic
@@ -881,6 +881,84 @@ class FlytOrkestratorTest(unleashGateway: KClass< UnleashGateway>) : AbstraktFly
                 assertThat(this.åpneAvklaringsbehov).anySatisfy { it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
+    }
+
+    @Test
+    fun `kan trekke søknad som har passert manuelt vurdert lovvalg`() {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        var behandling = sendInnSøknad(
+            ident, periode, SøknadV0(
+                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                medlemskap = SøknadMedlemskapDto("NEI", "NEI", "NEI", null, null)
+            )
+        )
+
+        // Validér avklaring
+        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        assertTrue(åpneAvklaringsbehov.all { Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP == it.definisjon })
+
+        // Løs lovvalg
+        behandling.løsLovvalg()
+
+        // Validér avklaring
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        assertTrue(åpneAvklaringsbehov.all { Definisjon.AVKLAR_SYKDOM == it.definisjon })
+
+        // Trekk søknad
+        leggTilVurderingsbehovForBehandling(
+            behandling,
+            listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SØKNAD_TRUKKET))
+        )
+
+        assertThat(hentAlleAvklaringsbehov(behandling)).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erÅpent() && avklaringsbehov.definisjon == Definisjon.VURDER_TREKK_AV_SØKNAD).isTrue() }
+        behandling = løsAvklaringsBehov(
+            behandling,
+            TrekkSøknadLøsning(begrunnelse = "trekker søknaden"),
+        )
+        assertThat(hentAlleAvklaringsbehov(behandling)).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erAvsluttet()).isTrue() }
+        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
+    fun `kan trekke søknad som har passert forutgående medlemskap`() {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        var behandling = sendInnSøknad(
+            ident, periode, SøknadV0(
+                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                medlemskap = SøknadMedlemskapDto("NEI", "NEI", "NEI", null, null)
+            )
+        )
+
+        // Løs fram til forutgående
+        behandling
+            .løsLovvalg()
+        løsFramTilForutgåendeMedlemskap(behandling)
+
+
+        // Validér avklaring
+        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        assertTrue(åpneAvklaringsbehov.all { Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP == it.definisjon })
+
+        // Løs forutgående
+        behandling.løsForutgåendeMedlemskap()
+
+        // Trekk søknad
+        leggTilVurderingsbehovForBehandling(
+            behandling,
+            listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SØKNAD_TRUKKET))
+        )
+
+        assertThat(hentAlleAvklaringsbehov(behandling)).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erÅpent() && avklaringsbehov.definisjon == Definisjon.VURDER_TREKK_AV_SØKNAD).isTrue() }
+        behandling = løsAvklaringsBehov(
+            behandling,
+            TrekkSøknadLøsning(begrunnelse = "trekker søknaden"),
+        )
+        assertThat(hentAlleAvklaringsbehov(behandling)).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erAvsluttet()).isTrue() }
+        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
     }
 
     @Test
