@@ -4355,6 +4355,7 @@ class FlytOrkestratorTest(unleashGateway: KClass< UnleashGateway>) : AbstraktFly
             }
             .løsRettighetsperiode(andreOverstyring)
             .løsSykdom()
+            .løsBistand()
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt(LocalDate.now())
             .løsUtenSamordning()
