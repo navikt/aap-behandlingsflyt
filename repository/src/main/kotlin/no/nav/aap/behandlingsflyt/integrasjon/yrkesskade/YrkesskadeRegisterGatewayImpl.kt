@@ -43,9 +43,16 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
             return emptyList()
         }
 
-        // https://github.com/navikt/yrkesskade/blob/main/libs/model-sakoversikt/src/main/kotlin/no/nav/yrkesskade/saksoversikt/model/SakerResultat.kt
-        // Kun saker med status GODKJENT eller DELVIS_GODKJENT er yrkesskadesaker som skal med i vurderingen
-        val gyldigeStatuser = listOf("GODKJENT", "DELVIS_GODKJENT")
+        /**
+         * https://github.com/navikt/yrkesskade/blob/main/libs/model-sakoversikt/src/main/kotlin/no/nav/yrkesskade/saksoversikt/model/SakerResultat.kt
+         *
+         * Statuser som skal med i vurderingen:
+         * "GODKJENT" = Godkjente yrkesskader
+         * "DELVIS_GODKJENT" = En eller flere skader i saken er godkjent og andre er ikke det
+         * "INNVILGELSE" = Samme som godkjent bare at saken ligger i Kompys
+         * Må ikke forveksles med "INNVILGET" eller "DELVIS_INNVILGET" som har med innvilget menerstatning å gjøre
+         */
+        val gyldigeStatuser = listOf("GODKJENT", "DELVIS_GODKJENT", "INNVILGELSE")
 
         return response
             .saker
