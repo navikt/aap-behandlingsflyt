@@ -15,7 +15,7 @@ create unique index uidx_avbryt_revurdering_grunnlag_behandling_id
     where (aktiv = true);
 
 alter table avbryt_revurdering_vurdering
-alter column aarsak type varchar(100);
+alter column aarsak type text;
 
 update avklaringsbehov
 set funnet_i_steg = 'AVBRYT_REVURDERING'

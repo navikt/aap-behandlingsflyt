@@ -450,53 +450,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
-    override fun oppdaterBegrunnelseForVurderingsbehovAarsak(behandling: Behandling, begrunnelse: String, vurderingsbehov: Vurderingsbehov) {
-        val avbrytVurderingsbehovOgÅrsak = hentVurderingsbehovOgÅrsaker(behandling.id)
-            .filter { it.vurderingsbehov.any { behov -> behov.type == vurderingsbehov } }
-            .maxByOrNull { it.opprettet }
-
-        if (avbrytVurderingsbehovOgÅrsak != null) {
-            val oppdatertVurderingsbehogOgÅrsak = VurderingsbehovOgÅrsak(
-                avbrytVurderingsbehovOgÅrsak.vurderingsbehov,
-                avbrytVurderingsbehovOgÅrsak.årsak,
-                LocalDateTime.now(),
-                begrunnelse
-            )
-
-            oppdaterVurderingsbehovOgÅrsak(behandling, oppdatertVurderingsbehogOgÅrsak)
-
-            // Hent nyeste behandling årsak id og oppdater vurderingsbehov med denne
-            val query = """
-                SELECT id FROM behandling_aarsak WHERE behandling_id = ? ORDER BY opprettet_tid DESC
-            """.trimIndent()
-
-            val nyesteBehandlingÅrsakId = connection.queryList(query) {
-                setParams {
-                    setLong(1, behandling.id.toLong())
-                }
-                setRowMapper { it.getLong("id") }
-            }.firstOrNull()
-
-            if (nyesteBehandlingÅrsakId != null) {
-                val query = """
-                    UPDATE vurderingsbehov SET behandling_aarsak_id = ? WHERE behandling_id = ? and aarsak = ?
-                """.trimIndent()
-
-                connection.execute(query) {
-                    setParams {
-                        setLong(1, nyesteBehandlingÅrsakId)
-                        setLong(2, behandling.id.toLong())
-                        setString(3, vurderingsbehov.name)
-                    }
-                    setResultValidator {
-                        require(it == 1)
-                    }
-                }
-            }
-
-        }
-    }
-
     override fun hentSakId(referanse: BehandlingReferanse): SakId {
         val query = """
             SELECT SAK_ID FROM BEHANDLING WHERE referanse = ?
