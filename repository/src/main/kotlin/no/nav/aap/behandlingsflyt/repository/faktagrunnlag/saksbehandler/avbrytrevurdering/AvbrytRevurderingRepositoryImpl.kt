@@ -1,32 +1,32 @@
-package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.kansellerrevurdering
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering
 
-import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingRepository
-import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingVurdering
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingRepository
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 
-class KansellerRevurderingRepositoryImpl(
+class AvbrytRevurderingRepositoryImpl(
     private val connection: DBConnection,
-) : KansellerRevurderingRepository {
+) : AvbrytRevurderingRepository {
 
     override fun lagre(
         behandlingId: BehandlingId,
-        vurdering: KansellerRevurderingVurdering
+        vurdering: AvbrytRevurderingVurdering
     ) {
         settGamleGrunnlagTilInaktive(behandlingId)
         val vurderingId = lagreVurdering(vurdering)
         lagreGrunnlag(behandlingId, vurderingId)
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): KansellerRevurderingGrunnlag? {
-        return connection.queryFirstOrNull<KansellerRevurderingGrunnlag>(
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): AvbrytRevurderingGrunnlag? {
+        return connection.queryFirstOrNull<AvbrytRevurderingGrunnlag>(
             """
                 select *
-                from kanseller_revurdering_grunnlag as grunnlag
-                left join kanseller_revurdering_vurdering as vurdering on grunnlag.id = vurdering.id
+                from avbryt_revurdering_grunnlag as grunnlag
+                left join avbryt_revurdering_vurdering as vurdering on grunnlag.id = vurdering.id
                 where grunnlag.aktiv = true and grunnlag.behandling_id = ?
             """.trimIndent()
         ) {
@@ -34,8 +34,8 @@ class KansellerRevurderingRepositoryImpl(
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper {
-                KansellerRevurderingGrunnlag(
-                    vurdering = KansellerRevurderingVurdering(
+                AvbrytRevurderingGrunnlag(
+                    vurdering = AvbrytRevurderingVurdering(
                         årsak = it.getEnumOrNull("aarsak"),
                         begrunnelse = it.getString("begrunnelse"),
                         vurdertAv = Bruker(ident = it.getString("vurdert_av"))
@@ -47,7 +47,7 @@ class KansellerRevurderingRepositoryImpl(
 
     private fun settGamleGrunnlagTilInaktive(behandlingId: BehandlingId) {
         return connection.execute("""
-            update kanseller_revurdering_grunnlag
+            update avbryt_revurdering_grunnlag
             set aktiv = false
             where behandling_id = ?
         """.trimIndent()
@@ -58,9 +58,9 @@ class KansellerRevurderingRepositoryImpl(
         }
     }
 
-    private fun lagreVurdering(vurdering: KansellerRevurderingVurdering): Long {
+    private fun lagreVurdering(vurdering: AvbrytRevurderingVurdering): Long {
         return connection.executeReturnKey("""
-            insert into kanseller_revurdering_vurdering (aarsak, begrunnelse, vurdert_av)
+            insert into avbryt_revurdering_vurdering (aarsak, begrunnelse, vurdert_av)
             values (?, ?, ?)
         """.trimIndent()
         ) {
@@ -74,7 +74,7 @@ class KansellerRevurderingRepositoryImpl(
 
     private fun lagreGrunnlag(behandlingId: BehandlingId, vurdering: Long): Long {
         return connection.executeReturnKey("""
-            insert into kanseller_revurdering_grunnlag(
+            insert into avbryt_revurdering_grunnlag(
                 BEHANDLING_ID, VURDERING_ID, AKTIV
             ) values (?, ?, TRUE)
         """.trimIndent()) {
@@ -93,9 +93,9 @@ class KansellerRevurderingRepositoryImpl(
         // Gjør ingenting
     }
 
-    companion object : Factory<KansellerRevurderingRepository> {
-        override fun konstruer(connection: DBConnection): KansellerRevurderingRepository {
-            return KansellerRevurderingRepositoryImpl(connection)
+    companion object : Factory<AvbrytRevurderingRepository> {
+        override fun konstruer(connection: DBConnection): AvbrytRevurderingRepository {
+            return AvbrytRevurderingRepositoryImpl(connection)
         }
     }
 }

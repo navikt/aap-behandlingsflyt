@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
-import no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering.KansellerRevurderingService
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Aktivitetsplikt
@@ -35,7 +35,7 @@ class SakOgBehandlingService(
     private val behandlingRepository: BehandlingRepository,
     private val trukketSøknadService: TrukketSøknadService,
     private val unleashGateway: UnleashGateway,
-    private val kansellerRevurderingService: KansellerRevurderingService,
+    private val avbrytRevurderingService: AvbrytRevurderingService,
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
@@ -46,7 +46,7 @@ class SakOgBehandlingService(
         behandlingRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         unleashGateway = gatewayProvider.provide(),
-        kansellerRevurderingService = KansellerRevurderingService(repositoryProvider),
+        avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
     )
 
     fun finnBehandling(behandlingReferanse: BehandlingReferanse): Behandling {
@@ -67,8 +67,8 @@ class SakOgBehandlingService(
         )
         val nesteId = mutableMapOf<BehandlingId, BehandlingId>()
         for (behandling in ytelsesbehandlinger) {
-            // Hopp over hvis behandlingen er kansellert
-            if (kansellerRevurderingService.revurderingErKansellert(behandling.id)) {
+            // Hopp over hvis behandlingen er avbrutt
+            if (avbrytRevurderingService.revurderingErAvbrutt(behandling.id)) {
                 continue
             }
 
@@ -78,7 +78,7 @@ class SakOgBehandlingService(
         }
 
         var behandling =
-            ytelsesbehandlinger.firstOrNull { !kansellerRevurderingService.revurderingErKansellert(it.id) }?.id
+            ytelsesbehandlinger.firstOrNull { !avbrytRevurderingService.revurderingErAvbrutt(it.id) }?.id
                 ?: return null
 
         while (nesteId[behandling] != null) {

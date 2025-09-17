@@ -19,5 +19,5 @@ enum class InformasjonskravNavn {
     RETTIGHETSPERIODE,
     TRUKKET_SØKNAD,
     TRUKKET_KLAGE,
-    KANSELLERT_REVURDERING,
+    AVBRYT_REVURDERING,
 }

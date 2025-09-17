@@ -53,9 +53,9 @@ public enum class Definisjon(
             Rolle.SAKSBEHANDLER_NASJONAL
         ),
     ),
-    KANSELLER_REVURDERING(
+    AVBRYT_REVURDERING(
         kode = AvklaringsbehovKode.`5033`,
-        løsesISteg = StegType.KANSELLER_REVURDERING,
+        løsesISteg = StegType.AVBRYT_REVURDERING,
         type = BehovType.MANUELT_PÅKREVD,
         løsesAv = listOf(
             Rolle.SAKSBEHANDLER_OPPFOLGING,

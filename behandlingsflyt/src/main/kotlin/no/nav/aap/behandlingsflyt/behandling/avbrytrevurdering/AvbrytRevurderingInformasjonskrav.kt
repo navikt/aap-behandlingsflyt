@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.kansellerrevurdering
+package no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class KansellerRevurderingInformasjonskrav (
+class AvbrytRevurderingInformasjonskrav (
     private val avklaringsbehovRepository: AvklaringsbehovRepository
 ) : Informasjonskrav {
     constructor(repositoryProvider: RepositoryProvider) : this(
@@ -28,24 +28,24 @@ class KansellerRevurderingInformasjonskrav (
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return Vurderingsbehov.REVURDERING_KANSELLERT in kontekst.vurderingsbehovRelevanteForSteg
+        return Vurderingsbehov.REVURDERING_AVBRUTT in kontekst.vurderingsbehovRelevanteForSteg
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        val kansellerRevurderingAvklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KANSELLER_REVURDERING)
+        val avbrytRevurderingAvklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVBRYT_REVURDERING)
 
-        return if (kansellerRevurderingAvklaringsbehov == null)
+        return if (avbrytRevurderingAvklaringsbehov == null)
             ENDRET
         else
             IKKE_ENDRET
     }
 
     companion object : Informasjonskravkonstruktør {
-        override val navn = InformasjonskravNavn.KANSELLERT_REVURDERING
+        override val navn = InformasjonskravNavn.AVBRYT_REVURDERING
 
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): Informasjonskrav {
-            return KansellerRevurderingInformasjonskrav(repositoryProvider)
+            return AvbrytRevurderingInformasjonskrav(repositoryProvider)
         }
     }
 }

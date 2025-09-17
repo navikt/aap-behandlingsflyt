@@ -12,7 +12,7 @@ enum class Vurderingsbehov {
     MOTTATT_DIALOGMELDING,
     MOTATT_KLAGE,
     SØKNAD_TRUKKET,
-    REVURDERING_KANSELLERT,
+    REVURDERING_AVBRUTT,
     KLAGE_TRUKKET,
     REVURDER_MEDLEMSKAP,
     REVURDER_SAMORDNING,
@@ -87,7 +87,7 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT -> Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT
         EksponertÅrsak.VURDER_RETTIGHETSPERIODE -> Vurderingsbehov.VURDER_RETTIGHETSPERIODE
         EksponertÅrsak.SØKNAD_TRUKKET -> Vurderingsbehov.SØKNAD_TRUKKET
-        EksponertÅrsak.REVURDERING_KANSELLERT -> Vurderingsbehov.REVURDERING_KANSELLERT
+        EksponertÅrsak.REVURDERING_AVBRUTT -> Vurderingsbehov.REVURDERING_AVBRUTT
         EksponertÅrsak.FRITAK_MELDEPLIKT -> Vurderingsbehov.FRITAK_MELDEPLIKT
         EksponertÅrsak.KLAGE_TRUKKET -> Vurderingsbehov.KLAGE_TRUKKET
         EksponertÅrsak.REVURDER_MANUELL_INNTEKT -> Vurderingsbehov.REVURDER_MANUELL_INNTEKT

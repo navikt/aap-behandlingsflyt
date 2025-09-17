@@ -28,7 +28,6 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon.refusjo
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.bistand.bistandsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangufore.overgangUforeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangarbeid.overgangArbeidGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangarbeid.overgangArbeidGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepengergrunnlag.sykepengerGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt.manglendeGrunnlagApi
@@ -58,7 +57,7 @@ import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiode
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringAPI
 import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.revurdering.kansellertRevurderingGrunnlagAPI
+import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrunnlagApi
@@ -184,7 +183,7 @@ internal fun Application.server(
                 tilkjentYtelseAPI(dataSource, repositoryRegistry)
                 foreslaaVedtakAPI(dataSource, repositoryRegistry)
                 trukketSøknadGrunnlagAPI(dataSource, repositoryRegistry)
-                kansellertRevurderingGrunnlagAPI(dataSource, repositoryRegistry)
+                avbrytRevurderingGrunnlagAPI(dataSource, repositoryRegistry)
                 rettighetsperiodeGrunnlagAPI(dataSource, repositoryRegistry, gatewayProvider)
                 beregningVurderingAPI(dataSource, repositoryRegistry, gatewayProvider)
                 beregningsGrunnlagApi(dataSource, repositoryRegistry)

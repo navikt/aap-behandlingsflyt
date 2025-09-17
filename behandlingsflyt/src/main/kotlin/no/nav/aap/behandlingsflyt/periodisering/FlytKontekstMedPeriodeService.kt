@@ -94,7 +94,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.REFUSJONSKRAV,
             Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
             Vurderingsbehov.SØKNAD_TRUKKET,
-            Vurderingsbehov.REVURDERING_KANSELLERT ->
+            Vurderingsbehov.REVURDERING_AVBRUTT ->
                 REVURDERING
 
             Vurderingsbehov.REVURDER_MANUELL_INNTEKT,
