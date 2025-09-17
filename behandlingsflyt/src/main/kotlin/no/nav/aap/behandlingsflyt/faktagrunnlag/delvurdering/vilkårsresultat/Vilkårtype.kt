@@ -76,7 +76,8 @@ enum class Vilkårtype(
         ),
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON,
-            Avslagsårsak.IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE
+            Avslagsårsak.IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE,
+            Avslagsårsak.VARIGHET_OVERSKREDET_OVERGANG_UFORE,
         ),
         hjemmel = "§ 11-18"
     ),

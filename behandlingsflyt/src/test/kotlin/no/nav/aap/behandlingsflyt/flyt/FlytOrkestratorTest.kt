@@ -1496,7 +1496,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT)
             },
             Periode(virkningsdatoOvergangUføre.plusMonths(8), periode.tom) to {
-                assertThat(it.utfall).isEqualTo(Utfall.IKKE_VURDERT)
+                assertThat(it.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
             })
 
         resultat =
