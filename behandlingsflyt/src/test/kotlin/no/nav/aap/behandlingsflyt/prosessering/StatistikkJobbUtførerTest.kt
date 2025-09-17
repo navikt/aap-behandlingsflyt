@@ -80,7 +80,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseReposi
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -673,7 +672,6 @@ class StatistikkJobbUtførerTest {
                 sakStatus = UTREDES,
                 hendelsesTidspunkt = hendelsesTidspunkt,
                 identerForSak = listOf("123"),
-                årsakTilBehandling = listOf(Vurderingsbehov.SØKNAD),
                 vurderingsbehov = listOf(Vurderingsbehov.SØKNAD)
             )
         )

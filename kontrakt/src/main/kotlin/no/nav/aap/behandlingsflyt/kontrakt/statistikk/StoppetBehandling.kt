@@ -29,8 +29,6 @@ public data class StoppetBehandling(
     val soknadsFormat: Kanal = Kanal.DIGITAL,
     val ident: String,
     val versjon: String,
-    @Deprecated("Kan fjernes etter at statistikk har byttet til å bruke vurderingsbehov")
-    val årsakTilBehandling: List<Vurderingsbehov>?,
     val vurderingsbehov: List<Vurderingsbehov>,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
     val hendelsesTidspunkt: LocalDateTime,
