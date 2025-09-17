@@ -124,7 +124,6 @@ class StatistikkJobbUtfører(
             hendelsesTidspunkt = hendelse.hendelsesTidspunkt,
             avsluttetBehandling = if (hendelse.status == AVSLUTTET) hentAvsluttetBehandlingDTO(hendelse) else null,
             identerForSak = hentIdenterPåSak(sak.saksnummer),
-            årsakTilBehandling = vurderingsbehovForBehandling,
             vurderingsbehov = vurderingsbehovForBehandling
         )
         return statistikkHendelse

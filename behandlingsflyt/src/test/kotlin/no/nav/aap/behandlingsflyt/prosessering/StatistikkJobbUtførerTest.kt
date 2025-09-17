@@ -672,7 +672,6 @@ class StatistikkJobbUtførerTest {
                 sakStatus = UTREDES,
                 hendelsesTidspunkt = hendelsesTidspunkt,
                 identerForSak = listOf("123"),
-                årsakTilBehandling = listOf(Vurderingsbehov.SØKNAD),
                 vurderingsbehov = listOf(Vurderingsbehov.SØKNAD)
             )
         )

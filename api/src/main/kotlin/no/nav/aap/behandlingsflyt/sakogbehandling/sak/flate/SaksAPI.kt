@@ -424,6 +424,8 @@ fun NormalOpenAPIRoute.saksApi(
                     SakPersoninfoDTO(
                         fnr = personinfo.ident.identifikator,
                         navn = personinfo.fulltNavn(),
+                        fødselsdato = personinfo.fødselsdato,
+                        dødsdato = personinfo.dødsdato,
                     )
                 )
             }

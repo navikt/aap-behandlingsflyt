@@ -50,7 +50,9 @@ data class HentPerson(
 
 data class PdlNavnData(
     val ident: String?,
-    val navn: List<PdlNavn>
+    val navn: List<PdlNavn>,
+    val foedselsdato: List<PdlFoedsel>? = null,
+    val doedsfall: Set<PDLDødsfall>? = null,
 )
 
 data class PdlNavnDataBolk(
