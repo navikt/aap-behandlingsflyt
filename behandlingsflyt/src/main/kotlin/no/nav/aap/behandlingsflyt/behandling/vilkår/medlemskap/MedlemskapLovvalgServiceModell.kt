@@ -70,7 +70,7 @@ data class UtenlandsAdresserGrunnlag(
 )
 
 data class FolkeregisterStatusDto(
-    val status: PersonStatus,
+    val status: PersonStatus?,
     val gyldighetstidspunkt: LocalDate?,
     val opphoerstidspunkt: LocalDate?
 )

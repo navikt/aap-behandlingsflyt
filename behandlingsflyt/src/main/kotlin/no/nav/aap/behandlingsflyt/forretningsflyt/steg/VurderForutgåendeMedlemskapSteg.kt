@@ -106,7 +106,6 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         if (kontekst.harNoeTilBehandling()) {
             val personopplysningForutgåendeGrunnlag =
                 personopplysningForutgåendeRepository.hentHvisEksisterer(kontekst.behandlingId)
-                    ?: throw IllegalStateException("Forventet å finne personopplysninger")
 
             val forutgåendeMedlemskapArbeidInntektGrunnlag =
                 forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
