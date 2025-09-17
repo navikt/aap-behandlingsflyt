@@ -152,7 +152,7 @@ class VurderBistandsbehovSteg private constructor(
 
     private fun vurderingsbehovTvingerVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
         return kontekst.vurderingsbehovRelevanteForSteg.any {
-            it in listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, Vurderingsbehov.MOTTATT_SØKNAD)
+            it in listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, Vurderingsbehov.MOTTATT_SØKNAD, Vurderingsbehov.HELHETLIG_VURDERING)
         }
     }
 

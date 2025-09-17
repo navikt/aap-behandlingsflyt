@@ -4235,7 +4235,7 @@ class FlytOrkestratorTest(unleashGateway: KClass< UnleashGateway>) : AbstraktFly
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
         val nyStartDato = periode.fom.minusDays(7)
 
-        val behandling = sendInnSøknad(
+        var behandling = sendInnSøknad(
             ident, periode, SøknadV0(
                 student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto(
@@ -4247,6 +4247,22 @@ class FlytOrkestratorTest(unleashGateway: KClass< UnleashGateway>) : AbstraktFly
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
             .isEqualTo(Definisjon.AVKLAR_SYKDOM)
+
+        behandling = sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("12344932123"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    ManuellRevurderingV0(
+                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_RETTIGHETSPERIODE),
+                        ""
+                    ),
+                ),
+                innsendingType = InnsendingType.MANUELL_REVURDERING,
+                periode = periode
+            )
+        )
+
         behandling.løsRettighetsperiode(nyStartDato)
 
         assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
@@ -4355,6 +4371,7 @@ class FlytOrkestratorTest(unleashGateway: KClass< UnleashGateway>) : AbstraktFly
             }
             .løsRettighetsperiode(andreOverstyring)
             .løsSykdom()
+            .løsBistand()
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt(LocalDate.now())
             .løsUtenSamordning()

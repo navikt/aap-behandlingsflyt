@@ -68,7 +68,7 @@ class RettighetsperiodeSteg private constructor(
     }
 
     private fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-        return (Vurderingsbehov.VURDER_RETTIGHETSPERIODE in kontekst.vurderingsbehovRelevanteForSteg)
+        return kontekst.vurderingsbehovRelevanteForSteg.any { it in setOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE, Vurderingsbehov.HELHETLIG_VURDERING) }
     }
 
     private fun oppdaterVilkårsresultatForNyPeriode(kontekst: FlytKontekstMedPerioder) {
