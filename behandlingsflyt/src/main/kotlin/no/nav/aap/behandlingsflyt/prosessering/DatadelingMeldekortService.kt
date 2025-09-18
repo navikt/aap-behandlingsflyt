@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.type.Periode
-import org.jetbrains.annotations.TestOnly
 
 class DatadelingMeldekortService(
     private val saksRepository: SakRepository,
@@ -40,7 +39,6 @@ class DatadelingMeldekortService(
         return kontraktObjekter
     }
 
-    @TestOnly
     internal fun tilKontrakt(
         meldekort: Meldekort,
         personIdent: Ident,
