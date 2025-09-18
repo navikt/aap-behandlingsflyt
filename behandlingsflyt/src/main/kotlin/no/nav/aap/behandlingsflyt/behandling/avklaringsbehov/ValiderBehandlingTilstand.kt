@@ -50,7 +50,7 @@ internal object ValiderBehandlingTilstand {
         if (!gyldigRekkefølgeSteg && !avklaringsbehov.erVentebehov()) {
             log.warn("Bruker forsøkte å løse '${avklaringsbehov.name}' før nåværende steg '${behandling.aktivtSteg().name}'")
 
-            throw UgyldigForespørselException("Aktivt steg ${behandling.aktivtSteg().name} må løses før du kan løse ${avklaringsbehov.name}")
+            throw UgyldigForespørselException("Aktivt steg ${behandling.aktivtSteg().name} må løses før du kan løse ${avklaringsbehov.name}.")
         }
     }
 
