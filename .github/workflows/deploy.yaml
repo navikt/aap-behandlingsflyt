@@ -29,8 +29,11 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
             gradle-version: wrapper
-      - name: Bygg & test
-        run: gradle build :app:copyRuntimeLibs test --continue --stacktrace
+      - name: Bygg
+        run: gradle app:build :app:copyRuntimeLibs -x test --continue
+
+      - name: Test
+        run: gradle test --rerun-tasks
 
       - uses: dorny/test-reporter@v2.1.1
         if: success() || failure()
