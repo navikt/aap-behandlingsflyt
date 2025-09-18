@@ -26,6 +26,7 @@ tasks {
     }
 
     withType<ShadowJar> {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
         mergeServiceFiles()
     }
 }
