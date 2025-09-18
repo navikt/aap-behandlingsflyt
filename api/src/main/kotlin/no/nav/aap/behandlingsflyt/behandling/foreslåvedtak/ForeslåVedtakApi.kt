@@ -27,73 +27,65 @@ fun NormalOpenAPIRoute.foreslaaVedtakAPI(
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = FORESLÅ_VEDTAK_KODE
         ) { behandlingReferanse ->
-            val underveisGrunnlag =
+            val response =
                 dataSource.transaction(readOnly = true) { conn ->
                     val repositoryProvider = repositoryRegistry.provider(conn)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
                     val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
-                    underveisRepository.hentHvisEksisterer(behandling.id)
-                }
-
-            val vilkårsresultat =
-                dataSource.transaction(readOnly = true) { conn ->
-                    val repositoryProvider = repositoryRegistry.provider(conn)
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val behandling =
-                        BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
+                    val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
                     val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
-                    vilkårsresultatRepository.hent(behandling.id)
-                }
+                    val vilkårsresultat = vilkårsresultatRepository.hent(behandling.id)
 
-            val allevilkårmedavslag = vilkårsresultat.alle().filter { it.harPerioderSomIkkeErOppfylt() }
-            val avslagstidslinjer =
-                allevilkårmedavslag.map { vilkår ->
-                    vilkår.vilkårsperioder().map { Segment(it.periode, it.avslagsårsak) }.let { Tidslinje(it) }
-                }
+                    val allevilkårmedavslag = vilkårsresultat.alle().filter { it.harPerioderSomIkkeErOppfylt() }
+                    val avslagstidslinjer =
+                        allevilkårmedavslag.map { vilkår ->
+                            vilkår.vilkårsperioder().map { Segment(it.periode, it.avslagsårsak) }.let { Tidslinje(it) }
+                        }
 
-            // Hvis avslag tidlig i behandlingen finnes ikke underveisgrunnlag
-            if (underveisGrunnlag == null) {
-                respond(ForeslåVedtakResponse(emptyList()))
-            } else {
-                val underveisPerioder =
-                    underveisGrunnlag.perioder.map {
-                        UnderveisPeriodeInfo(
-                            periode = it.periode,
-                            utfall = it.utfall,
-                            rettighetsType = it.rettighetsType,
-                            underveisÅrsak = it.avslagsårsak
+                    // Hvis avslag tidlig i behandlingen finnes ikke underveisgrunnlag
+                    if (underveisGrunnlag == null) {
+                        ForeslåVedtakResponse(emptyList())
+                    } else {
+                        val underveisPerioder =
+                            underveisGrunnlag.perioder.map {
+                                UnderveisPeriodeInfo(
+                                    periode = it.periode,
+                                    utfall = it.utfall,
+                                    rettighetsType = it.rettighetsType,
+                                    underveisÅrsak = it.avslagsårsak
+                                )
+                            }
+
+                        val foreslåVedtakPerioder =
+                            underveisPerioder
+                                .map {
+                                    Segment(it.periode, it.tilForeslåVedtakData())
+                                }.let(::Tidslinje)
+                                .komprimer()
+                                .map {
+                                    val avslagsårsaker =
+                                        avslagstidslinjer
+                                            .flatMap { tidslinje -> tidslinje.begrensetTil(it.periode) }
+                                            .mapNotNull { it.verdi }
+                                    ForeslåVedtakDto(
+                                        periode = it.periode,
+                                        utfall = it.verdi.utfall,
+                                        rettighetsType = it.verdi.rettighetsType,
+                                        avslagsårsak =
+                                            AvslagsårsakDto(
+                                                vilkårsavslag = avslagsårsaker,
+                                                underveisavslag = it.verdi.underveisÅrsak
+                                            )
+                                    )
+                                }
+                        ForeslåVedtakResponse(
+                            foreslåVedtakPerioder
                         )
                     }
-
-                val foreslåVedtakPerioder =
-                    underveisPerioder
-                        .map {
-                            Segment(it.periode, it.tilForeslåVedtakData())
-                        }.let(::Tidslinje)
-                        .komprimer()
-                        .map {
-                            val avslagsårsaker =
-                                avslagstidslinjer
-                                    .flatMap { tidslinje -> tidslinje.begrensetTil(it.periode) }
-                                    .mapNotNull { it.verdi }
-                            ForeslåVedtakDto(
-                                periode = it.periode,
-                                utfall = it.verdi.utfall,
-                                rettighetsType = it.verdi.rettighetsType,
-                                avslagsårsak = AvslagsårsakDto(
-                                    vilkårsavslag = avslagsårsaker,
-                                    underveisavslag = it.verdi.underveisÅrsak
-                                )
-                            )
-                        }
-                respond(
-                    ForeslåVedtakResponse(
-                        foreslåVedtakPerioder
-                    )
-                )
-            }
+                }
+            respond(response)
         }
     }
 }
