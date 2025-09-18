@@ -72,6 +72,8 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PDL_HENDELSE_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
@@ -288,6 +290,10 @@ internal fun Application.server(
 
     if (!Miljø.erLokal()) {
         startKabalKonsument(dataSource, repositoryRegistry)
+
+    }
+    if (Miljø.erDev()) {
+        startPDLHendelseKonsument(dataSource, repositoryRegistry)
     }
 
     routing {
@@ -424,6 +430,32 @@ fun Application.startKabalKonsument(
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("Forbereder stopp av applikasjon, lukker KabalKafkaKonsument.")
 
+        konsument.lukk()
+    }
+
+    return konsument
+}
+
+fun Application.startPDLHendelseKonsument(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry
+): KafkaKonsument {
+    val konsument = PdlHendelseKafkaKonsument(
+        config = KafkaConsumerConfig(),
+        dataSource = dataSource,
+        repositoryRegistry = repositoryRegistry
+    )
+    monitor.subscribe(ApplicationStarted) {
+        val t = Thread() {
+            konsument.konsumer()
+        }
+        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
+            log.error("Konsumering av $PDL_HENDELSE_TOPIC ble lukket pga uhåndtert feil", e)
+        }
+        t.start()
+    }
+    monitor.subscribe(ApplicationStopped) {
+        log.info("Applikasjonen er stoppet, lukker PDLHendelseKonsument.")
         konsument.lukk()
     }
 
