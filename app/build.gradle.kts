@@ -48,6 +48,11 @@ tasks.register<JavaExec>("beregnCSV") {
     mainClass.set("no.nav.aap.behandlingsflyt.BeregnMedCSVKt")
 }
 
+tasks.register<Copy>("copyRuntimeLibs") {
+    from(configurations.runtimeClasspath)
+    into("build/libs/runtime-libs")
+}
+
 fun runCommand(command: String): String {
     val execResult = providers.exec {
         this.workingDir = project.projectDir
