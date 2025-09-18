@@ -22,6 +22,7 @@ public enum class InnsendingType {
      */
     NY_ÅRSAK_TIL_BEHANDLING,
     KABAL_HENDELSE,
+    PDL_HENDELSE,
 
     OPPFØLGINGSOPPGAVE
 }

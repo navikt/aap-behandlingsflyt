@@ -18,7 +18,8 @@ public data class InnsendingReferanse(
         BEHANDLING_REFERANSE,
         SAKSBEHANDLER_KELVIN_REFERANSE,
         MANUELL_OPPRETTELSE,
-        KABAL_HENDELSE_ID
+        KABAL_HENDELSE_ID,
+        PDL_HENDELSE_ID
     }
 
     @get:JsonIgnore
@@ -49,6 +50,7 @@ public data class InnsendingReferanse(
     public constructor(id: JournalpostId) : this(Type.JOURNALPOST, id.identifikator)
     public constructor(id: AvvistLegeerklæringId) : this(Type.AVVIST_LEGEERKLÆRING_ID, id.asString)
     public constructor(id: KabalHendelseId) : this(Type.KABAL_HENDELSE_ID, id.asString)
+    public constructor(id: PdlHendelseId) : this(Type.PDL_HENDELSE_ID, id.asString)
 }
 
 public data class InnsendingId(@JsonValue val value: UUID) {
@@ -80,3 +82,14 @@ public data class KabalHendelseId(@JsonValue val value: UUID) {
         public fun ny(): KabalHendelseId = KabalHendelseId(UUID.randomUUID())
     }
 }
+
+public data class PdlHendelseId(@JsonValue val value: UUID) {
+    val asString: String get() = value.toString()
+
+    public constructor(value: String) : this(UUID.fromString(value))
+
+    public companion object {
+        public fun ny(): PdlHendelseId = PdlHendelseId(UUID.randomUUID())
+    }
+}
+
