@@ -15,7 +15,7 @@ tasks {
     val projectProps by registering(WriteProperties::class) {
         destinationFile = layout.buildDirectory.file("version.properties")
         // Define property.
-        property("behandlingsflyt.api.version", getCheckedOutGitCommitHash())
+        property("project.version", getCheckedOutGitCommitHash())
     }
 
     processResources {
