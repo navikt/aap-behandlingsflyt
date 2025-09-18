@@ -19,11 +19,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.EnkeltAvklaringsbehovstegService
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
-import no.nav.aap.behandlingsflyt.flyt.steg.oppdaterAvklaringsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -50,6 +50,7 @@ class VurderBistandsbehovSteg private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårService: VilkårService,
     private val behandlingRepository: BehandlingRepository,
+    private val enkeltAvklaringsbehovstegService: EnkeltAvklaringsbehovstegService
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         bistandRepository = repositoryProvider.provide(),
@@ -60,6 +61,7 @@ class VurderBistandsbehovSteg private constructor(
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         vilkårService = VilkårService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
+        enkeltAvklaringsbehovstegService = EnkeltAvklaringsbehovstegService(repositoryProvider)
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -70,7 +72,7 @@ class VurderBistandsbehovSteg private constructor(
         }
 
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        oppdaterAvklaringsbehov(
+        enkeltAvklaringsbehovstegService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
@@ -88,6 +90,7 @@ class VurderBistandsbehovSteg private constructor(
                     bistandRepository.lagre(kontekst.behandlingId, forrigeVurderinger)
                 }
             },
+            kontekst
         )
 
         /* Dette skal på sikt ut av denne metoden, og samles i et eget fastsett-steg. */

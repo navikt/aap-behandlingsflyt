@@ -14,12 +14,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.EnkeltAvklaringsbehovstegService
 import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
-import no.nav.aap.behandlingsflyt.flyt.steg.oppdaterAvklaringsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -36,6 +36,7 @@ class VurderLovvalgSteg private constructor(
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val enkeltAvklaringsbehovstegService: EnkeltAvklaringsbehovstegService
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
@@ -43,18 +44,20 @@ class VurderLovvalgSteg private constructor(
         medlemskapArbeidInntektRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        enkeltAvklaringsbehovstegService = EnkeltAvklaringsbehovstegService(repositoryProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        oppdaterAvklaringsbehov(
+        enkeltAvklaringsbehovstegService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, grunnlag, avklaringsbehovene) },
             erTilstrekkeligVurdert = { grunnlag.value.medlemskapArbeidInntektGrunnlag?.manuellVurdering != null },
             tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst, grunnlag.value) },
+            kontekst
         )
 
         when (kontekst.vurderingType) {

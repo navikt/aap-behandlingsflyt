@@ -7,10 +7,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeGr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.EnkeltAvklaringsbehovstegService
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
-import no.nav.aap.behandlingsflyt.flyt.steg.oppdaterAvklaringsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -23,12 +23,14 @@ class VurderYrkesskadeSteg private constructor(
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val enkeltAvklaringsbehovstegService: EnkeltAvklaringsbehovstegService
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         sykdomRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        enkeltAvklaringsbehovstegService = EnkeltAvklaringsbehovstegService(repositoryProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -38,7 +40,7 @@ class VurderYrkesskadeSteg private constructor(
         val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
         val sykdomsgrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
 
-        oppdaterAvklaringsbehov(
+        enkeltAvklaringsbehovstegService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_YRKESSKADE,
             vedtakBehøverVurdering = {
@@ -53,7 +55,8 @@ class VurderYrkesskadeSteg private constructor(
                 val forrigeGrunnlag =
                     kontekst.forrigeBehandlingId?.let { sykdomRepository.hentHvisEksisterer(it) }?.yrkesskadevurdering
                 sykdomRepository.lagre(kontekst.behandlingId, forrigeGrunnlag)
-            }
+            },
+            kontekst
         )
 
         return Fullført
