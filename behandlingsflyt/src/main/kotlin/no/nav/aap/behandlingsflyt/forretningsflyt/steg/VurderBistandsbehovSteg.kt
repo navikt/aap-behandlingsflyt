@@ -65,7 +65,7 @@ class VurderBistandsbehovSteg private constructor(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (Miljø.erProd()) {
+        if (Miljø.erDev() || Miljø.erDev() || Miljø.erProd()) {
             return gammelUtfør(kontekst)
         }
 

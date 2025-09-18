@@ -151,9 +151,9 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 )
             )
-            .apply {
+           /* .apply {
                 // TODO legges kun ut i dev i første runde
-                if (Miljø.erDev() || Miljø.erLokal()) {
+                if (Miljø.erLokal()) {
                     medSteg(
                         steg = OvergangUføreSteg,
                         vurderingsbehovRelevanteForSteg = listOf(
@@ -168,7 +168,7 @@ object Revurdering : BehandlingType {
             }
             .apply {
                 // TODO legges kun ut i dev i første runde
-                if (Miljø.erDev() || Miljø.erLokal()) {
+                if (Miljø.erLokal()) {
                     medSteg(
                         steg = OvergangArbeidSteg,
                         vurderingsbehovRelevanteForSteg = listOf(
@@ -180,7 +180,7 @@ object Revurdering : BehandlingType {
                         )
                     )
                 }
-            }
+            }*/
             .medSteg(
                 steg = RefusjonkravSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
