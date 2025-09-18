@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FritakMeldepliktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SamordningVentPaVirkningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -187,11 +186,11 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             ),
         )
 
-        // Vilkår skal være ikke vurdert når samordningen har mindre enn 100% gradering
+        // Vilkår skal være ikke oppfylt når samordningen har 100% gradering
         vilkårOppdatert = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
-        assertThat(vilkårOppdatert.vilkårsperioder()).hasSize(2)
+        assertThat(vilkårOppdatert.vilkårsperioder()).hasSize(1)
             .extracting(Vilkårsperiode::utfall)
-            .containsExactly(tuple(Utfall.IKKE_OPPFYLT), tuple(Utfall.IKKE_VURDERT))
+            .containsExactly(tuple(Utfall.IKKE_OPPFYLT))
 
         behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
             .fattVedtakEllerSendRetur()
@@ -206,30 +205,19 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 .filter { it.verdi == Prosent.`100_PROSENT` }.helePerioden()
 
         // Verifiser at samordningen ble fanget opp
-        assertThat(periodeMedFullSamordning.inneholder(sykePengerPeriode.tom)).isTrue
-        // Verifiser at samordning med 100% strekker seg ut rettighetsperioden for å unngå feilaktig utbetaling fordi perioden har passert
-        assertThat(periodeMedFullSamordning.tom).isEqualTo(periode.tom)
+        assertThat(periodeMedFullSamordning.fom).isEqualTo(periode.fom)
+        assertThat(periodeMedFullSamordning.tom).isEqualTo(sykePengerPeriode.tom)
 
         val behandlingReferanse = behandling.referanse
         behandling = behandling.løsVedtaksbrev()
 
-        var revurdering = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
+        // Skal ikke lage ny revurdering automatisk
+        val sisteBehandling = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
+        assertThat(sisteBehandling.referanse).isEqualTo(behandlingReferanse)
 
-        // Siden samordning overlappet, skal en revurdering opprettes med en gang
-        assertThat(revurdering.referanse).isNotEqualTo(behandlingReferanse)
-        assertThat(revurdering.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
         motor.kjørJobber()
-
-        // Verifiser at den er satt på vent
-        var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
-
-        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
-
-        // Ta av vent
-        revurdering = løsAvklaringsBehov(revurdering, SamordningVentPaVirkningstidspunktLøsning())
-
-        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
-        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_SAMORDNING_GRADERING)
+        val sak = hentSak(behandling)
+        var revurdering = opprettManuellRevurdering(sak, listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
 
         // Avklar samordning i revurdering
         revurdering = løsAvklaringsBehov(
@@ -265,7 +253,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             }
         }
 
-        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
+        val åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
         assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
 
     }
@@ -285,13 +273,9 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             )
         )
         val ident = person.aktivIdent()
-        var revurdering = revurderingEtterVentPåSamordning(ident, periode, sykePengerPeriode)
-
-        // Verifiser at den er satt på vent
-        var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
-
-        assertThat(
-            åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
+        var behandling = opprettSamordning(ident, periode, sykePengerPeriode)
+        val sak = hentSak(behandling)
+        var revurdering = opprettManuellRevurdering(sak, listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
 
         // Opprett manuell revurdering før ta av vent
         revurdering = sendInnDokument(
@@ -311,13 +295,10 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         assertThat(revurdering.vurderingsbehov().map { it.type }).describedAs("Ny årsak skal være lagt til")
             .contains(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
 
-        // Ta av vent
-        revurdering = løsAvklaringsBehov(revurdering, SamordningVentPaVirkningstidspunktLøsning())
-
         assertThat(revurdering.aktivtSteg()).describedAs("Forventer at behandlingen ligger på sykdom nå.")
             .isEqualTo(StegType.AVKLAR_SYKDOM)
 
-        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
+        var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
         assertThat(åpneAvklaringsbehovPåNyBehandling.filter { it.erVentepunkt() }).isEmpty()
 
         assertThat(åpneAvklaringsbehovPåNyBehandling).describedAs("Sykdom skal være åpent avklaringsbehov.")
@@ -332,7 +313,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
     }
 
     @Test
-    fun `ny informasjon i tidligere steg skal tilbakeføre behandling som er på vent pga samordning`() {
+    fun `ny informasjon i tidligere steg skal tilbakeføre behandling som er på samordning`() {
         val fom = LocalDate.now().minusYears(1)
         val periode = Periode(fom, fom.plusYears(3))
 
@@ -346,12 +327,10 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             )
         )
         val ident = person.aktivIdent()
-        var revurdering = revurderingEtterVentPåSamordning(ident, periode, sykePengerPeriode)
+        val behandling = opprettSamordning(ident, periode, sykePengerPeriode)
+        val sak = hentSak(behandling)
+        var revurdering = opprettManuellRevurdering(sak, listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
 
-        // Verifiser at den er satt på vent
-        var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
-        assertThat(
-            åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
 
         // Nytt institusjonsopphold
         person.institusjonsopphold = listOf(
@@ -369,14 +348,14 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         // prosesser på nytt
         nullstillInformasjonskravOppdatert(InformasjonskravNavn.INSTITUSJONSOPPHOLD, revurdering.sakId)
         revurdering = prosesserBehandling(revurdering)
-        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
+        val åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
 
         // Behandlingen tilbakeføres til EtAnnetStedSteg
         assertThat(revurdering.aktivtSteg()).isEqualTo(StegType.DU_ER_ET_ANNET_STED)
         assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.AVKLAR_SONINGSFORRHOLD)
     }
 
-    private fun revurderingEtterVentPåSamordning(
+    private fun opprettSamordning(
         ident: Ident,
         periode: Periode,
         sykePengerPeriode: Periode
@@ -464,7 +443,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                     ),
                     begrunnelse = "En god begrunnelse",
                     maksDatoEndelig = false,
-                    fristNyRevurdering = LocalDate.now().plusMonths(1),
+                    fristNyRevurdering = null,
                 ),
             ),
         )
@@ -482,17 +461,14 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 .filter { it.verdi == Prosent.`100_PROSENT` }.helePerioden()
 
         // Verifiser at samordningen ble fanget opp
-        assertThat(periodeMedFullSamordning.inneholder(sykePengerPeriode.tom)).isTrue
-        // Verifiser at samordning med 100% strekker seg ut rettighetsperioden for å unngå feilaktig utbetaling fordi perioden har passert
-        assertThat(periodeMedFullSamordning.tom).isEqualTo(periode.tom)
+        assertThat(periodeMedFullSamordning).isEqualTo(sykePengerPeriode)
         behandling = behandling.løsVedtaksbrev()
 
         val nyesteBehandling = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
         val behandlingReferanse = behandling.referanse
 
-        // Siden samordning overlappet, skal en revurdering opprettes med en gang
-        assertThat(nyesteBehandling.referanse).isNotEqualTo(behandlingReferanse)
-        assertThat(nyesteBehandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+        // Skal ikke opprette automatisk revurdering ved ukjent samordning
+        assertThat(nyesteBehandling.referanse).isEqualTo(behandlingReferanse)
 
         motor.kjørJobber()
         return nyesteBehandling

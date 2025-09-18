@@ -7,7 +7,9 @@ import java.time.LocalDate
 
 data class VurderingerForSamordning(
     val begrunnelse: String?,
+    @Deprecated("Ikke lenger i bruk")
     val maksDatoEndelig: Boolean?,
+    @Deprecated("Ikke lenger i bruk")
     val fristNyRevurdering: LocalDate?,
     val vurderteSamordningerData: List<SamordningVurderingData>
 ) {
