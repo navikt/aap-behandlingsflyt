@@ -31,13 +31,13 @@ class DatadelingMeldekortService(
         val personIdent = sak.person.aktivIdent()
         val underveisGrunnlag = underveisRepository.hent(behandlingId)
 
-        // hvis behandlingen ikke er aktiv, returneres tom liste
-        val meldekortene = meldekortRepository.hentHvisEksisterer(behandlingId)?.meldekort()
+        // hvis Behandlingen ikke er aktiv, returneres tom liste
+        val meldekortene = meldekortRepository.hentHvisEksisterer(behandlingId)?.meldekort().orEmpty()
 
-        val kontraktObjekter = meldekortene?.map { meldekort ->
+        val kontraktObjekter = meldekortene.map { meldekort ->
             tilKontrakt(meldekort, personIdent, sak, behandlingId, underveisGrunnlag)
         }
-        return kontraktObjekter ?: emptyList()
+        return kontraktObjekter
     }
 
     @TestOnly

@@ -78,14 +78,14 @@ class DatadelingMeldekortJobbUtfører(
     For å sette inn jobber for de meldekortene som er opprettet før vi begynte
     å lytte på hendelser, kan vi bruke denne koden i databasen:
 
-    SELECT
-    'INSERT INTO jobb (type, behandling_id, sak_id) VALUES ('
-        'flyt.Datadeling.Meldekortdetaljer'|| ', ' || behandling.id || ', ' || behandling.sak_id || ');'
-        FROM MELDEKORT_GRUNNLAG
-         LEFT JOIN public.behandling
-                   ON meldekort_grunnlag.behandling_id = public.behandling.id
-        WHERE aktiv = true
-        ORDER BY sak_id ASC;
+    SELECT 'INSERT INTO jobb (type, behandling_id, sak_id) VALUES ('''
+               || 'flyt.Datadeling.Meldekortdetaljer' || ''', ' || behandling.id || ', ' || behandling.sak_id || ');'
+    FROM MELDEKORT_GRUNNLAG
+             LEFT JOIN behandling
+                       ON meldekort_grunnlag.behandling_id = behandling.id
+    WHERE aktiv = true
+      AND behandling_id < FØRSTE_JOBBEN_VI_HAR_BEHANDLET
+    ORDER BY sak_id DESC;
      */
 
 }
