@@ -28,12 +28,12 @@ data class BistandVurderingLøsningDto(
     )
 
     fun valider() {
-        if (Miljø.erProd() || Miljø.erDev() ||  Miljø.erLokal()) {
+      /*  if (Miljø.erProd() || Miljø.erDev() ||  Miljø.erLokal()) {
             val gyldigAnnenOppfølging =
                 (erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak) xor (erBehovForAnnenOppfølging != null)
             if (!gyldigAnnenOppfølging) throw UgyldigForespørselException(
                 "erBehovForAnnenOppfølging kan bare bli besvart hvis erBehovForAktivBehandling og erBehovForArbeidsrettetTiltak er besvart med nei"
             )
-        }
+        }*/
     }
 }
