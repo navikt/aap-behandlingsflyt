@@ -28,11 +28,5 @@ public data class PdlHendelseV0(
     val kilde: String,
 ) : PdlHendelse
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public data class Doedsfall(
-    val ident: String,
-    val doedsdato: LocalDate,
-) : PdlHendelse
-
 
 
