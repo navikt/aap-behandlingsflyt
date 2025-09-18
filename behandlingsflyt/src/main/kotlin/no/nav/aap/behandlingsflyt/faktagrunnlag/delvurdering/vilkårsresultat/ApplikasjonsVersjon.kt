@@ -10,6 +10,6 @@ object ApplikasjonsVersjon {
         val file = this::class.java.classLoader.getResourceAsStream("version.properties")
         val properties = Properties()
         properties.load(file)
-        versjon = properties.getProperty("project.version")
+        versjon = properties.getProperty("behandlingsflyt.api.version")
     }
 }
