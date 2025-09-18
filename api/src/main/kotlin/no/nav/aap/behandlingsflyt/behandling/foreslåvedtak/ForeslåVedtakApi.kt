@@ -4,7 +4,10 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.UnderveisPeriodeInfo.Companion.tilForeslåVedtakData
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FORESLÅ_VEDTAK_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -38,32 +41,14 @@ fun NormalOpenAPIRoute.foreslaaVedtakAPI(
                     val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
                     val vilkårsresultat = vilkårsresultatRepository.hent(behandling.id)
 
-                    val allevilkårmedavslag = vilkårsresultat.alle().filter { it.harPerioderSomIkkeErOppfylt() }
-                    val avslagstidslinjer =
-                        allevilkårmedavslag.map { vilkår ->
-                            vilkår.vilkårsperioder().map { Segment(it.periode, it.avslagsårsak) }.let { Tidslinje(it) }
-                        }
-
+                    val avslagstidslinjer = utledAvslagstidslinjer(vilkårsresultat)
                     // Hvis avslag tidlig i behandlingen finnes ikke underveisgrunnlag
                     if (underveisGrunnlag == null) {
                         ForeslåVedtakResponse(emptyList())
                     } else {
-                        val underveisPerioder =
-                            underveisGrunnlag.perioder.map {
-                                UnderveisPeriodeInfo(
-                                    periode = it.periode,
-                                    utfall = it.utfall,
-                                    rettighetsType = it.rettighetsType,
-                                    underveisÅrsak = it.avslagsårsak
-                                )
-                            }
-
                         val foreslåVedtakPerioder =
-                            underveisPerioder
-                                .map {
-                                    Segment(it.periode, it.tilForeslåVedtakData())
-                                }.let(::Tidslinje)
-                                .komprimer()
+                            underveisGrunnlag
+                                .tilForeslåVedtakDataTidslinje()
                                 .map {
                                     val avslagsårsaker =
                                         avslagstidslinjer
@@ -88,4 +73,28 @@ fun NormalOpenAPIRoute.foreslaaVedtakAPI(
             respond(response)
         }
     }
+}
+
+private fun utledAvslagstidslinjer(vilkårsresultat: Vilkårsresultat): List<Tidslinje<Avslagsårsak?>> {
+    val allevilkårmedavslag = vilkårsresultat.alle().filter { it.harPerioderSomIkkeErOppfylt() }
+    return allevilkårmedavslag.map { vilkår ->
+        vilkår.vilkårsperioder().map { Segment(it.periode, it.avslagsårsak) }.let { Tidslinje(it) }
+    }
+}
+
+private fun UnderveisGrunnlag.tilForeslåVedtakDataTidslinje(): Tidslinje<ForeslåVedtakData> {
+    val underveisPerioder =
+        this.perioder.map {
+            UnderveisPeriodeInfo(
+                periode = it.periode,
+                utfall = it.utfall,
+                rettighetsType = it.rettighetsType,
+                underveisÅrsak = it.avslagsårsak
+            )
+        }
+    return underveisPerioder
+        .map {
+            Segment(it.periode, it.tilForeslåVedtakData())
+        }.let(::Tidslinje)
+        .komprimer()
 }
