@@ -11,7 +11,14 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    override fun lagreVurdering(behandlingId: BehandlingId, vurdering: RettighetsperiodeVurdering) {
+    override fun lagreVurdering(behandlingId: BehandlingId, vurdering: RettighetsperiodeVurdering?) {
+        if (vurdering == null) {
+            val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
+            if (eksisterendeGrunnlag != null) {
+                deaktiverGrunnlag(behandlingId)
+            }
+            return
+        }
         lagreGrunnlag(behandlingId, RettighetsperiodeGrunnlag(vurdering))
     }
 
