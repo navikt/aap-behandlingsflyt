@@ -37,7 +37,7 @@ internal object ValiderBehandlingTilstand {
             log.warn("Forsøker å løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen, har $eksisterendeAvklaringsbehov")
 
             throw UgyldigForespørselException(
-                "Forsøker å løse avklaringsbehov '${avklaringsbehov.name}' som ikke hører til behandlingen"
+                "Forsøker å løse avklaringsbehov '${avklaringsbehov.name}' som ikke hører til behandlingen."
             )
         }
     }
