@@ -49,7 +49,7 @@ class DatadelingMeldekortService(
         personIdent: Ident,
         sak: Sak,
         behandlingId: BehandlingId,
-        underveisGrunnlag: UnderveisGrunnlag?
+        underveisGrunnlag: UnderveisGrunnlag
     ): DetaljertMeldekortDTO {
         val meldekortPerioder = meldeperiodeRepository.hent(behandlingId)
         val meldekortetsPeriode = finnMeldekortPeriode(meldekort, meldekortPerioder)
