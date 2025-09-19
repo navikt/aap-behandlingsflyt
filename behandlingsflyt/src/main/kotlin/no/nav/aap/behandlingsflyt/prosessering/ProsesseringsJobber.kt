@@ -21,7 +21,8 @@ object ProsesseringsJobber {
             OpprettBehandlingFastsattPeriodePassertJobbUtfører,
             OppdagEndretInformasjonskravJobbUtfører,
             HentSamIdJobbUtfører,
-            VarsleVedtakJobbUtfører
+            VarsleVedtakJobbUtfører,
+            KafkaFeilJobbUtfører
         )
     }
 }
