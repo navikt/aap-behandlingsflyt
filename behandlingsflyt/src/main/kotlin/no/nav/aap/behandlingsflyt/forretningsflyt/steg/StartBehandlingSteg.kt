@@ -1,31 +1,20 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
-import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
-import java.time.LocalDate
 
 class StartBehandlingSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val samordningVurderingRepository: SamordningVurderingRepository,
 ) : BehandlingSteg {
-
-    private val logger = LoggerFactory.getLogger(StartBehandlingSteg::class.java)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (kontekst.behandlingType == TypeBehandling.Førstegangsbehandling) {
@@ -43,25 +32,6 @@ class StartBehandlingSteg private constructor(
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         }
 
-        if (kontekst.behandlingType == TypeBehandling.Revurdering) {
-            if (kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.REVURDER_SAMORDNING)) {
-                val eksisterendeSamordningsvurdering =
-                    samordningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
-                if (eksisterendeSamordningsvurdering != null && eksisterendeSamordningsvurdering.fristNyRevurdering != null) {
-                    if (eksisterendeSamordningsvurdering.fristNyRevurdering.isAfter(LocalDate.now())) {
-                        logger.info("Fant samordningdato, setter på vent.")
-                        return FantVentebehov(
-                            Ventebehov(
-                                definisjon = Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT,
-                                grunn = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER,
-                                frist = eksisterendeSamordningsvurdering.fristNyRevurdering
-                            )
-                        )
-                    }
-                }
-            }
-        }
-
         if (kontekst.behandlingType == TypeBehandling.SvarFraAndreinstans) return Fullført
 
         return Fullført
@@ -73,7 +43,6 @@ class StartBehandlingSteg private constructor(
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
             return StartBehandlingSteg(
-                repositoryProvider.provide(),
                 repositoryProvider.provide(),
             )
         }

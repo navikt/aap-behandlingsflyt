@@ -56,7 +56,9 @@ data class SamordningYtelseGrunnlag(
 data class SamordningVurderingGrunnlag(
     val vurderingerId: Long? = null,
     val begrunnelse: String?,
+    @Deprecated("Ikke lenger i bruk - erstattet av Oppfølgingsoppgave")
     val maksDatoEndelig: Boolean?,
+    @Deprecated("Ikke lenger i bruk - erstattet av Oppfølgingsoppgave")
     val fristNyRevurdering: LocalDate?,
     val vurderinger: List<SamordningVurdering>,
     val vurdertAv: String,

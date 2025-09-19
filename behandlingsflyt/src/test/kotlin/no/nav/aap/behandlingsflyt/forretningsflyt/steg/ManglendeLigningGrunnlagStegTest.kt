@@ -3,7 +3,9 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -55,6 +57,8 @@ class ManglendeLigningGrunnlagStegTest {
     private lateinit var steg: ManglendeLigningGrunnlagSteg
     private val sakRepository = InMemorySakRepository
     private val behandlingRepository = InMemoryBehandlingRepository
+    private lateinit var avbrytRevurderingService: AvbrytRevurderingService
+    private lateinit var avklaringsbehovService: AvklaringsbehovService
 
     private val sisteÅr = Year.of(2025)
 
@@ -82,13 +86,24 @@ class ManglendeLigningGrunnlagStegTest {
             every { girAvslagEllerIngenBehandlingsgrunnlag(any(), StegType.MANGLENDE_LIGNING) } returns false
         }
 
+        avklaringsbehovRepository = mockk()
+
+        avbrytRevurderingService = mockk {
+            every { revurderingErAvbrutt(any()) } returns false
+        }
+
+        avklaringsbehovService = AvklaringsbehovService(
+            avklaringsbehovRepository, avbrytRevurderingService
+        );
+
         steg = ManglendeLigningGrunnlagSteg(
             avklaringsbehovRepository,
             inntektGrunnlagRepository,
             manuellInntektGrunnlagRepository,
             tidligereVurderinger,
             beregningService,
-            erProd = false
+            erProd = false,
+            avklaringsbehovService
         )
     }
 
@@ -221,7 +236,9 @@ class ManglendeLigningGrunnlagStegTest {
 
     @ParameterizedTest
     @EnumSource(VurderingType::class, mode = Mode.EXCLUDE, names = ["FØRSTEGANGSBEHANDLING", "REVURDERING"])
-    fun `oppretter ikke avklaringsbehov for vurderingstyper som ikke er FØRSTEGANGSBEHANDLING eller REVURDERING`(vurderingType: VurderingType) {
+    fun `oppretter ikke avklaringsbehov for vurderingstyper som ikke er FØRSTEGANGSBEHANDLING eller REVURDERING`(
+        vurderingType: VurderingType
+    ) {
         val behandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
         val flytKontekst = flytKontekstMedPerioder(behandling, vurderingType = vurderingType)
         val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, behandling.id)
@@ -282,7 +299,7 @@ class ManglendeLigningGrunnlagStegTest {
     private fun flytKontekstMedPerioder(behandling: Behandling, vurderingType: VurderingType? = null): FlytKontekstMedPerioder = FlytKontekstMedPerioder(
         behandling.sakId, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
         vurderingType = vurderingType
-            ?: when (behandling.typeBehandling() ) {
+            ?: when (behandling.typeBehandling()) {
                 TypeBehandling.Førstegangsbehandling -> VurderingType.FØRSTEGANGSBEHANDLING
                 TypeBehandling.Revurdering -> VurderingType.REVURDERING
                 else -> VurderingType.IKKE_RELEVANT

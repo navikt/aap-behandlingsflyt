@@ -29,8 +29,11 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
             gradle-version: wrapper
-      - name: Bygg & test
-        run: gradle test buildFatJar --continue --stacktrace
+      - name: Bygg
+        run: gradle app:build :app:copyRuntimeLibs -x test --continue
+
+      - name: Test
+        run: gradle test --rerun-tasks
 
       - uses: dorny/test-reporter@v2.1.1
         if: success() || failure()
@@ -134,7 +137,7 @@ jobs:
           VAR: image=${{ needs.build.outputs.image }}
 
   deploy-prod:
-      needs: [deploy-dev, build]
+      needs: [publiser-kontrakt, deploy-dev, build]
       runs-on: ubuntu-latest
       concurrency:
         group: deploy-prod
