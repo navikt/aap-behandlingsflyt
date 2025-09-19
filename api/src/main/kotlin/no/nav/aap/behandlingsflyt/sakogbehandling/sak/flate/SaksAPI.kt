@@ -12,6 +12,9 @@ import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -319,6 +322,18 @@ fun NormalOpenAPIRoute.saksApi(
                                 søknadErTrukket =
                                     resultatUtleder.utledResultatFørstegangsBehandling(behandling) == Resultat.TRUKKET
                             }
+                            val avklaringsDefinisjon = if (behandling.typeBehandling() == TypeBehandling.OppfølgingsBehandling){
+                                val oppfølgingsoppgaveDokument = MottaDokumentService(repositoryProvider.provide())
+                                    .hentOppfølgingsBehandlingDokument(behandlingId = behandling.id)
+                                val avklaringsbehovKodeAsNullableString = oppfølgingsoppgaveDokument?.opprinnelse?.avklaringsbehovKode
+                                val avklaringsbehovKodeAsNullableEnum = avklaringsbehovKodeAsNullableString?.let {
+                                    enumValueOf<AvklaringsbehovKode>(it)
+                                }
+                                avklaringsbehovKodeAsNullableEnum?.let { avklaringsbehov ->
+                                    Definisjon.forKode(avklaringsbehov)
+                                }
+                            } else null
+
                             val vurderingsbehov = behandling.vurderingsbehov().map(VurderingsbehovMedPeriode::type)
                             BehandlinginfoDTO(
                                 referanse = behandling.referanse.referanse,
@@ -326,7 +341,8 @@ fun NormalOpenAPIRoute.saksApi(
                                 status = behandling.status(),
                                 vurderingsbehov = vurderingsbehov,
                                 årsakTilOpprettelse = behandling.årsakTilOpprettelse,
-                                opprettet = behandling.opprettetTidspunkt
+                                opprettet = behandling.opprettetTidspunkt,
+                                avklaringsDefinisjon = avklaringsDefinisjon
                             )
                         }
 
