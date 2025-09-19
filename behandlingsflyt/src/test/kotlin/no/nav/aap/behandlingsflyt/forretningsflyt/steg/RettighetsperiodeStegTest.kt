@@ -3,7 +3,9 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -61,10 +63,15 @@ class RettighetsperiodeStegTest {
             every { hentVurdering(any()) } returns null
         }
 
+        val avbrytRevurderingService: AvbrytRevurderingService = mockk {
+            every { revurderingErAvbrutt(any()) } returns false
+        }
+
         steg = RettighetsperiodeSteg(
             vilkårsresultatRepository,
             sakService,
             avklaringsbehovRepository,
+            AvklaringsbehovService(avklaringsbehovRepository, avbrytRevurderingService),
             tidligereVurderinger,
             rettighetsperiodeRepository,
             erProd = false

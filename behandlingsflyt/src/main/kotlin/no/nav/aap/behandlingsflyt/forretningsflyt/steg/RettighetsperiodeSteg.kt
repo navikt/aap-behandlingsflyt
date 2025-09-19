@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -12,7 +13,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
-import no.nav.aap.behandlingsflyt.flyt.steg.oppdaterAvklaringsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -28,6 +28,7 @@ class RettighetsperiodeSteg constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sakService: SakService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
     private val rettighetsperiodeRepository: VurderRettighetsperiodeRepository,
     private val erProd: Boolean = erProd()
@@ -45,8 +46,9 @@ class RettighetsperiodeSteg constructor(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val rettighetsperiodeVurdering = rettighetsperiodeRepository.hentVurdering(kontekst.behandlingId)
 
-        oppdaterAvklaringsbehov(
+        avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
+            kontekst = kontekst,
             definisjon = Definisjon.VURDER_RETTIGHETSPERIODE,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
@@ -162,7 +164,8 @@ class RettighetsperiodeSteg constructor(
                 sakService = SakService(repositoryProvider),
                 avklaringsbehovRepository = repositoryProvider.provide(),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
-                rettighetsperiodeRepository = repositoryProvider.provide()
+                rettighetsperiodeRepository = repositoryProvider.provide(),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
             )
         }
 
