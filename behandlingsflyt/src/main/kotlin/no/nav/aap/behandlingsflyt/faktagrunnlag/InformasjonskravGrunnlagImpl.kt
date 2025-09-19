@@ -103,7 +103,8 @@ class InformasjonskravGrunnlagImpl(
             kontekst.sakId,
             kontekst.behandlingId,
             relevanteInformasjonskrav.map { (_, krav, _) -> krav.navn },
-            Instant.now()
+            Instant.now(),
+            kontekst.rettighetsperiode,
         )
         return endredeInformasjonskrav.map { (konstruktør, _, _) -> konstruktør }
     }
