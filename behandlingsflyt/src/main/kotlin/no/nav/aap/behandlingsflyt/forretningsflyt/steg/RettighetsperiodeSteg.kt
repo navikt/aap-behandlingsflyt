@@ -24,7 +24,7 @@ import no.nav.aap.komponenter.miljo.Miljø.erProd
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
-class RettighetsperiodeSteg private constructor(
+class RettighetsperiodeSteg constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sakService: SakService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
@@ -52,7 +52,8 @@ class RettighetsperiodeSteg private constructor(
                 when (kontekst.vurderingType) {
                     VurderingType.FØRSTEGANGSBEHANDLING,
                     VurderingType.REVURDERING ->
-                        tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) && erRelevant(kontekst)
+                        tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
+                                && manueltTriggetVurderingsbehov(kontekst)
 
                     VurderingType.MELDEKORT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
@@ -71,16 +72,16 @@ class RettighetsperiodeSteg private constructor(
         )
 
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
-                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-                    return Fullført
-                }
-                if (erRelevant(kontekst)) {
+            VurderingType.FØRSTEGANGSBEHANDLING,
+            VurderingType.REVURDERING -> {
+                if (tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) && manueltTriggetVurderingsbehov(kontekst)) {
                     oppdaterVilkårsresultatForNyPeriode(kontekst)
                 }
             }
 
-            VurderingType.IKKE_RELEVANT, VurderingType.MELDEKORT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> {
+            VurderingType.IKKE_RELEVANT,
+            VurderingType.MELDEKORT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> {
                 // Ikke relevant
             }
         }
@@ -97,7 +98,7 @@ class RettighetsperiodeSteg private constructor(
                     return Fullført
                 }
 
-                if (erRelevant(kontekst)) {
+                if (manueltTriggetVurderingsbehov(kontekst)) {
                     if (erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene)) {
                         avklaringsbehovene.avbrytÅpneAvklaringsbehov()
                         return FantAvklaringsbehov(Definisjon.VURDER_RETTIGHETSPERIODE)
@@ -121,10 +122,13 @@ class RettighetsperiodeSteg private constructor(
         return !avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.VURDER_RETTIGHETSPERIODE)
     }
 
-    private fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
+    private fun manueltTriggetVurderingsbehov(kontekst: FlytKontekstMedPerioder): Boolean {
         if (kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.VURDER_RETTIGHETSPERIODE)) {
             return true
         }
+
+        // HELHETLIG_VURDERING skal kun trigge avklaringsbehov dersom det tidligere er lagt inn overstyring av
+        // rettighetsperiode. Hvis ikke må alle behandlinger vurdere denne ved helhetlig vurdering.
         if (kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.HELHETLIG_VURDERING)
             && rettighetsperiodeRepository.hentVurdering(kontekst.behandlingId) != null) {
             return true
