@@ -157,8 +157,8 @@ object Revurdering : BehandlingType {
                 )
             )
            .apply {
-                // TODO legges kun ut i dev i første runde
-                if (Miljø.erLokal() || Miljø.erDev()) {
+                // TODO legge ut 11-18 når det er klart
+                if (Miljø.erLokal()) {
                     medSteg(
                         steg = OvergangUføreSteg,
                         vurderingsbehovRelevanteForSteg = listOf(
@@ -172,9 +172,8 @@ object Revurdering : BehandlingType {
                     )
                 }
             }
-           /*
             .apply {
-                // TODO legges kun ut i dev i første runde
+                // TODO legge ut 11-17 når det er klart
                 if (Miljø.erLokal()) {
                     medSteg(
                         steg = OvergangArbeidSteg,
@@ -188,7 +187,7 @@ object Revurdering : BehandlingType {
                         )
                     )
                 }
-            }*/
+            }
             .medSteg(
                 steg = RefusjonkravSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,

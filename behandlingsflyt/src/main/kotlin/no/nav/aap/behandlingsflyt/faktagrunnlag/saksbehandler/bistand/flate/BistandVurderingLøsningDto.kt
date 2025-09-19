@@ -28,6 +28,7 @@ data class BistandVurderingLøsningDto(
     )
 
     fun valider() {
+        //TODO: Fjerne valideringen når 11-17/11-18 blir innført, da dette bare gir mening for det gamle bistandskortet
         val gyldigAnnenOppfølging =
             (erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak) xor (erBehovForAnnenOppfølging != null)
         if (!gyldigAnnenOppfølging) throw UgyldigForespørselException(

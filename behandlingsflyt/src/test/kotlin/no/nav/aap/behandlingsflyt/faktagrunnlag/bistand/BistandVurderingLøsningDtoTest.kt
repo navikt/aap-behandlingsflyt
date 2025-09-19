@@ -11,9 +11,9 @@ import org.junit.jupiter.params.provider.ValueSource
 
 class BistandVurderingLøsningLøsningDtoTest {
 
+    //TODO alle testene her blir overflødige etter innføring av 11-17 og 11-18
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
-    @Disabled("Inntil vi går i prod med 11-17 og 11-18")
     fun `erBehovForAnnenOppfølging kan være en Boolean hvis erBehovForAnnenOppfølging AND erBehovForArbeidsrettetTiltak er false`(
         erBehovForAnnenOppfølging: Boolean
     ) {
@@ -29,7 +29,6 @@ class BistandVurderingLøsningLøsningDtoTest {
 
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
-    @Disabled("Inntil vi går i prod med 11-17 og 11-18")
     fun `erBehovForAnnenOppfølging kan være null hvis erBehovForAnnenOppfølging OR erBehovForArbeidsrettetTiltak er true`(
         behov: Boolean
     ) {
@@ -44,7 +43,6 @@ class BistandVurderingLøsningLøsningDtoTest {
     }
 
     @Test
-    @Disabled("Inntil vi går i prod med 11-17 og 11-18")
     fun `erBehovForAnnenOppfølging kan være null hvis erBehovForAnnenOppfølging AND erBehovForArbeidsrettetTiltak er true`() {
         BistandVurderingLøsningDto("hei",
             erBehovForAktivBehandling = true,
@@ -58,7 +56,6 @@ class BistandVurderingLøsningLøsningDtoTest {
 
     @ParameterizedTest
     @CsvSource(value = ["true, true", "true, false", "false, true", "false, false"])
-    @Disabled("Inntil vi går i prod med 11-17 og 11-18")
     fun `erBehovForAnnenOppfølging kan ikke være en Boolean hvis erBehovForAnnenOppfølging OR erBehovForArbeidsrettetTiltak er true`(
         behov: Boolean,
         erBehovForAnnenOppfølging: Boolean
@@ -78,7 +75,6 @@ class BistandVurderingLøsningLøsningDtoTest {
 
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
-    @Disabled("Inntil vi går i prod med 11-17 og 11-18")
     fun `erBehovForAnnenOppfølging kan ikke være en Boolean hvis erBehovForAnnenOppfølging AND erBehovForArbeidsrettetTiltak er true`(
         erBehovForAnnenOppfølging: Boolean
     ) {
@@ -96,7 +92,6 @@ class BistandVurderingLøsningLøsningDtoTest {
     }
 
     @Test
-    @Disabled("Inntil vi går i prod med 11-17 og 11-18")
     fun `erBehovForAnnenOppfølging kan ikke være null hvis erBehovForAnnenOppfølging AND erBehovForArbeidsrettetTiltak er false`() {
         assertThrows<UgyldigForespørselException> {
             BistandVurderingLøsningDto(
