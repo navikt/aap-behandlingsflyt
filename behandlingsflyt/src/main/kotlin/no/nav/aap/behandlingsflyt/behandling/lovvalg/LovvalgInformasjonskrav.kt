@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.utils.withMdc
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -34,6 +35,7 @@ import java.time.Duration
 import java.time.YearMonth
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
+
 
 class LovvalgInformasjonskrav private constructor(
     private val sakService: SakService,
@@ -63,10 +65,16 @@ class LovvalgInformasjonskrav private constructor(
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
 
-        val medlemskapPerioder =
-            medlemskapGateway.innhent(sak.person, sak.rettighetsperiode)
-        val arbeidGrunnlag = innhentAARegisterGrunnlag(sak)
-        val inntektGrunnlag = innhentAInntektGrunnlag(sak)
+        val medlemskapPerioderFuture = CompletableFuture
+            .supplyAsync(withMdc{ medlemskapGateway.innhent(sak.person, sak.rettighetsperiode) }, executor)
+        val arbeidGrunnlagFuture = CompletableFuture
+            .supplyAsync(withMdc{ innhentAARegisterGrunnlag(sak) }, executor)
+        val inntektGrunnlagFuture = CompletableFuture
+            .supplyAsync(withMdc{ innhentAInntektGrunnlag(sak) }, executor)
+
+        val medlemskapPerioder = medlemskapPerioderFuture.get()
+        val arbeidGrunnlag = arbeidGrunnlagFuture.get()
+        val inntektGrunnlag = inntektGrunnlagFuture.get()
         val enhetGrunnlag = innhentEREGGrunnlag(inntektGrunnlag)
 
         val eksisterendeData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
@@ -94,9 +102,8 @@ class LovvalgInformasjonskrav private constructor(
         }.toSet()
 
         // EREG har ikke batch-oppslag
-        val executor = Executors.newVirtualThreadPerTaskExecutor()
         val futures = orgnumre.map { orgnummer ->
-            CompletableFuture.supplyAsync({
+            CompletableFuture.supplyAsync(withMdc{
                 val response = enhetsregisteretGateway.hentEREGData(Organisasjonsnummer(orgnummer))
                 response?.let {
                     EnhetGrunnlag(
@@ -142,6 +149,8 @@ class LovvalgInformasjonskrav private constructor(
     }
 
     companion object : Informasjonskravkonstruktør {
+        private val executor = Executors.newVirtualThreadPerTaskExecutor()
+
         override val navn = InformasjonskravNavn.LOVVALG
 
         override fun konstruer(
