@@ -28,7 +28,12 @@ class DatadelingMeldekortService(
     ): List<DetaljertMeldekortDTO> {
         val sak = saksRepository.hent(sakId)
         val personIdent = sak.person.aktivIdent()
-        val underveisGrunnlag = underveisRepository.hent(behandlingId)
+        val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandlingId)
+
+        if(underveisGrunnlag == null) {
+            // hvis det ikke finnes UnderveisGrunnlag, finnes det heller ingen meldekort å rapportere
+            return emptyList()
+        }
 
         // hvis Behandlingen ikke er aktiv, returneres tom liste
         val meldekortene = meldekortRepository.hentHvisEksisterer(behandlingId)?.meldekort().orEmpty()
@@ -44,7 +49,7 @@ class DatadelingMeldekortService(
         personIdent: Ident,
         sak: Sak,
         behandlingId: BehandlingId,
-        underveisGrunnlag: UnderveisGrunnlag
+        underveisGrunnlag: UnderveisGrunnlag?
     ): DetaljertMeldekortDTO {
         val meldekortPerioder = meldeperiodeRepository.hent(behandlingId)
         val meldekortetsPeriode = finnMeldekortPeriode(meldekort, meldekortPerioder)
@@ -81,6 +86,7 @@ class DatadelingMeldekortService(
     ): Underveisperiode? {
         // TODO: det kan være flere underveisperioder som overlapper med meldekortets periode,
         // vi støtter her bare at det er en. Hva gjør vi hvis det er flere?
+        // hva om det ikke finnest noen?
         val underveisPerioder = underveisGrunnlag.perioder.filter {
             it.meldePeriode.overlapp(meldekortetsPeriode) != null
         }
