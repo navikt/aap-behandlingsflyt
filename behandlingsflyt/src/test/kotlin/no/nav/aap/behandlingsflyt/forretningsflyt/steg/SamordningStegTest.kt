@@ -359,7 +359,7 @@ class SamordningStegTest {
 
 
     @Test
-    fun `skal kunne sette gradering til 100 prosent hvis maksdato ikke er bekreftet`() {
+    fun `skal ikke gjøre noe spesielt dersom maksdato (deprekert) ikke er bekreftet`() {
         val behandling = opprettBehandling(nySak())
         val steg = SamordningSteg(
             samordningService = SamordningService(
@@ -410,10 +410,9 @@ class SamordningStegTest {
         val uthentet = InMemorySamordningRepository.hentHvisEksisterer(behandling.id)
 
         val samordninger = uthentet?.samordningPerioder.orEmpty()
-        assertThat(samordninger).hasSize(2)
+        assertThat(samordninger).hasSize(1)
         assertThat(samordninger.first().gradering).isEqualTo(Prosent.`100_PROSENT`)
-        assertThat(samordninger.last().gradering).isEqualTo(Prosent.`100_PROSENT`)
-        assertThat(samordninger.last().periode.tom).isEqualTo(Tid.MAKS)
+        assertThat(samordninger.first().periode).isEqualTo(sykepengePeriode)
     }
 
     private fun settOppRessurser(

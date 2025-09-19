@@ -80,7 +80,6 @@ class SamordningAvslagSteg(
             samordningTidslinje.outerJoinNotNull(samordningUføreTidslinje) { andreYtelserSamordning, samordningUføreGradering ->
                 val samordningerYtelser =
                     andreYtelserSamordning?.ytelsesGraderinger.orEmpty()
-                        .filter { it.ytelse != Ytelse.UKJENT_SLUTTDATO_PÅ_YTELSE }
                         .map { it.ytelse.toString() to it.gradering }
                 val samordningUføre = listOfNotNull(samordningUføreGradering?.let { "UFØRE" to it })
                 val samordninger = (samordningerYtelser + samordningUføre)
