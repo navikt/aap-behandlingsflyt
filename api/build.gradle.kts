@@ -3,7 +3,7 @@ plugins {
     id("behandlingsflyt.conventions")
 }
 
-val mockOAuth2ServerVersion = "2.3.0"
+val mockOAuth2ServerVersion = "3.0.0"
 val kafkaVersion = "4.1.0"
 
 dependencies {

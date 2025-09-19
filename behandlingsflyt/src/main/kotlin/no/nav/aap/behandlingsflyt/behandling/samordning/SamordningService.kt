@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.samordning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
@@ -13,9 +12,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere.slåSammenTilListe
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import kotlin.math.min
 
@@ -40,41 +37,14 @@ class SamordningService(
         val vurderinger =
             grunnlag?.vurderinger.orEmpty().filter { it.ytelseType.type == AvklaringsType.MANUELL }
                 .map { ytelse ->
-                    var segmenterForYtelse =
+                    val segmenterForYtelse =
                         ytelse.vurderingPerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) }
-                    if (harUkjentSluttdatoForSamordning(grunnlag, ytelse)) {
-                        segmenterForYtelse = segmenterForYtelse.plus(segmentForSamordningUtenSluttdato(ytelse))
-                    }
-
                     Tidslinje(segmenterForYtelse)
                 }.fold(Tidslinje.empty<List<Pair<Ytelse, SamordningVurderingPeriode>>>()) { acc, curr ->
                     acc.kombiner(curr, slåSammenTilListe())
                 }
 
         return vurderinger
-    }
-
-    private fun harUkjentSluttdatoForSamordning(
-        grunnlag: SamordningVurderingGrunnlag?,
-        ytelse: SamordningVurdering
-    ): Boolean =
-        grunnlag?.fristNyRevurdering != null && grunnlag.maksDatoEndelig == false && ytelse.vurderingPerioder.isNotEmpty()
-
-    private fun segmentForSamordningUtenSluttdato(
-        ytelse: SamordningVurdering,
-    ): Segment<Pair<Ytelse, SamordningVurderingPeriode>> {
-        val sisteDagMedSamordning = ytelse.vurderingPerioder.maxOfOrNull { it.periode.tom }
-            ?: error("Mangler perioder for ${ytelse.ytelseType} - klarer ikke utlede neste startdato")
-
-        val periode = Periode(sisteDagMedSamordning.plusDays(1), Tid.MAKS)
-        val samordningVurderingPeriode = SamordningVurderingPeriode(
-            periode = periode,
-            gradering = Prosent.`100_PROSENT`,
-            manuell = false
-        )
-        return Segment(
-            periode, Pair(Ytelse.UKJENT_SLUTTDATO_PÅ_YTELSE, samordningVurderingPeriode)
-        )
     }
 
     fun tidslinje(behandlingId: BehandlingId): Tidslinje<SamordningGradering> {
