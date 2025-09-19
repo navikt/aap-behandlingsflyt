@@ -1,12 +1,12 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.søkerOppgirStudentstatus
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.EnkeltAvklaringsbehovstegService
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -21,20 +21,20 @@ class VurderStudentSteg private constructor(
     private val studentRepository: StudentRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val enkeltAvklaringsbehovstegService: EnkeltAvklaringsbehovstegService
+    private val avklaringsbehovService: AvklaringsbehovService
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         studentRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
-        enkeltAvklaringsbehovstegService = EnkeltAvklaringsbehovstegService(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        enkeltAvklaringsbehovstegService.oppdaterAvklaringsbehov(
+        avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_STUDENT,
             vedtakBehøverVurdering = {

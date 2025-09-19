@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
@@ -14,7 +15,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.EnkeltAvklaringsbehovstegService
 import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -36,7 +36,7 @@ class VurderLovvalgSteg private constructor(
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val enkeltAvklaringsbehovstegService: EnkeltAvklaringsbehovstegService
+    private val avklaringsbehovService: AvklaringsbehovService
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
@@ -44,14 +44,14 @@ class VurderLovvalgSteg private constructor(
         medlemskapArbeidInntektRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
-        enkeltAvklaringsbehovstegService = EnkeltAvklaringsbehovstegService(repositoryProvider)
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        enkeltAvklaringsbehovstegService.oppdaterAvklaringsbehov(
+        avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, grunnlag, avklaringsbehovene) },

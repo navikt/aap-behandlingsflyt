@@ -5,6 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -14,7 +15,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
-import no.nav.aap.behandlingsflyt.flyt.steg.EnkeltAvklaringsbehovstegService
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
@@ -58,7 +58,7 @@ class ManglendeLigningGrunnlagStegTest {
     private val sakRepository = InMemorySakRepository
     private val behandlingRepository = InMemoryBehandlingRepository
     private lateinit var avbrytRevurderingService: AvbrytRevurderingService
-    private lateinit var enkeltAvklaringsbehovstegService: EnkeltAvklaringsbehovstegService
+    private lateinit var avklaringsbehovService: AvklaringsbehovService
 
     private val sisteÅr = Year.of(2025)
 
@@ -86,12 +86,14 @@ class ManglendeLigningGrunnlagStegTest {
             every { girAvslagEllerIngenBehandlingsgrunnlag(any(), StegType.MANGLENDE_LIGNING) } returns false
         }
 
+        avklaringsbehovRepository = mockk()
+
         avbrytRevurderingService = mockk {
             every { revurderingErAvbrutt(any()) } returns false
         }
 
-        enkeltAvklaringsbehovstegService = EnkeltAvklaringsbehovstegService(
-            avbrytRevurderingService
+        avklaringsbehovService = AvklaringsbehovService(
+            avklaringsbehovRepository, avbrytRevurderingService
         );
 
         steg = ManglendeLigningGrunnlagSteg(
@@ -101,7 +103,7 @@ class ManglendeLigningGrunnlagStegTest {
             tidligereVurderinger,
             beregningService,
             erProd = false,
-            enkeltAvklaringsbehovstegService
+            avklaringsbehovService
         )
     }
 

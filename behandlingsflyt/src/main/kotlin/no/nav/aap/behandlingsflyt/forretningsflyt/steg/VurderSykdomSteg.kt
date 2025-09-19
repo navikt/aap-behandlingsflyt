@@ -1,13 +1,13 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.vilkårIkkeOppfylt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.EnkeltAvklaringsbehovstegService
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -23,18 +23,18 @@ class VurderSykdomSteg private constructor(
     private val sykdomRepository: SykdomRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val enkeltAvklaringsbehovstegService: EnkeltAvklaringsbehovstegService
+    private val avklaringsbehovService: AvklaringsbehovService
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         studentRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
-        enkeltAvklaringsbehovstegService = EnkeltAvklaringsbehovstegService(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        enkeltAvklaringsbehovstegService.oppdaterAvklaringsbehov(
+        avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             definisjon = Definisjon.AVKLAR_SYKDOM,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },

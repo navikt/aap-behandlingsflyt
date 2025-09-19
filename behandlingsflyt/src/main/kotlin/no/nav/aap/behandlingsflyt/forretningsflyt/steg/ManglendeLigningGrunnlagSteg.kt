@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -12,7 +13,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.EnkeltAvklaringsbehovstegService
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -34,7 +34,7 @@ class ManglendeLigningGrunnlagSteg internal constructor(
     private val tidligereVurderinger: TidligereVurderinger,
     private val beregningService: BeregningService,
     private val erProd: Boolean,
-    private val enkeltAvklaringsbehovstegService: EnkeltAvklaringsbehovstegService
+    private val avklaringsbehovService: AvklaringsbehovService
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
@@ -43,7 +43,7 @@ class ManglendeLigningGrunnlagSteg internal constructor(
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         beregningService = BeregningService(repositoryProvider),
         erProd = erProd(),
-        enkeltAvklaringsbehovstegService = EnkeltAvklaringsbehovstegService(repositoryProvider)
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -55,7 +55,7 @@ class ManglendeLigningGrunnlagSteg internal constructor(
         val manuellInntektGrunnlag = manuellInntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
         val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        enkeltAvklaringsbehovstegService.oppdaterAvklaringsbehov(
+        avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.FASTSETT_MANUELL_INNTEKT,
             vedtakBehøverVurdering = {

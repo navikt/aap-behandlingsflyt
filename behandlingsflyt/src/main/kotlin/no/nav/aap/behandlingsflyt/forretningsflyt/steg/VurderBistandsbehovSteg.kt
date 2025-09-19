@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -19,7 +20,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.EnkeltAvklaringsbehovstegService
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -50,7 +50,7 @@ class VurderBistandsbehovSteg private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårService: VilkårService,
     private val behandlingRepository: BehandlingRepository,
-    private val enkeltAvklaringsbehovstegService: EnkeltAvklaringsbehovstegService
+    private val avklaringsbehovService: AvklaringsbehovService
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         bistandRepository = repositoryProvider.provide(),
@@ -61,7 +61,7 @@ class VurderBistandsbehovSteg private constructor(
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         vilkårService = VilkårService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
-        enkeltAvklaringsbehovstegService = EnkeltAvklaringsbehovstegService(repositoryProvider)
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -72,7 +72,7 @@ class VurderBistandsbehovSteg private constructor(
         }
 
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        enkeltAvklaringsbehovstegService.oppdaterAvklaringsbehov(
+        avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
