@@ -74,6 +74,33 @@ class VurderRettighetsperiodeRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `skal deaktivere vurdering av rettighetsperiode`() {
+        InitTestDatabase.freshDatabase().transaction { connection ->
+            val repo = VurderRettighetsperiodeRepositoryImpl(connection)
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+
+            val vurdering = RettighetsperiodeVurdering(
+                startDato = LocalDate.now().minusDays(10),
+                begrunnelse = "begrunnelse",
+                harRettUtoverSøknadsdato = true,
+                harKravPåRenter = true,
+                vurdertAv = "NAVident"
+            )
+
+            repo.lagreVurdering(behandling.id, vurdering)
+
+            val lagretVurdering = repo.hentVurdering(behandling.id)
+            assertThat(lagretVurdering).isNotNull()
+
+            repo.lagreVurdering(behandling.id, null)
+
+            val lagretVurderingEtterDeaktivering = repo.hentVurdering(behandling.id)
+            assertThat(lagretVurderingEtterDeaktivering).isNull()
+        }
+    }
+
     private companion object {
         private fun sak(connection: DBConnection): Sak {
             return PersonOgSakService(

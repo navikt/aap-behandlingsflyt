@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -18,14 +20,18 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø.erProd
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
-class RettighetsperiodeSteg private constructor(
+class RettighetsperiodeSteg constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sakService: SakService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val rettighetsperiodeRepository: VurderRettighetsperiodeRepository,
+    private val erProd: Boolean = erProd()
 ) : BehandlingSteg {
 
     private val logger = LoggerFactory.getLogger(RettighetsperiodeSteg::class.java)
@@ -33,7 +39,58 @@ class RettighetsperiodeSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         logger.info("Utfører rettighetsperiodesteg for behandling=${kontekst.behandlingId}")
 
+        if (erProd) {
+            return gammelUtfør(kontekst)
+        }
 
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        val rettighetsperiodeVurdering = rettighetsperiodeRepository.hentVurdering(kontekst.behandlingId)
+
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            avklaringsbehovene = avklaringsbehovene,
+            kontekst = kontekst,
+            definisjon = Definisjon.VURDER_RETTIGHETSPERIODE,
+            vedtakBehøverVurdering = {
+                when (kontekst.vurderingType) {
+                    VurderingType.FØRSTEGANGSBEHANDLING,
+                    VurderingType.REVURDERING ->
+                        tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
+                                && manueltTriggetVurderingsbehov(kontekst)
+
+                    VurderingType.MELDEKORT,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+                    VurderingType.IKKE_RELEVANT ->
+                        false
+                }
+            },
+            erTilstrekkeligVurdert = {
+                rettighetsperiodeVurdering != null
+            },
+            tilbakestillGrunnlag = {
+                val vedtattVurdering = kontekst.forrigeBehandlingId
+                    ?.let { rettighetsperiodeRepository.hentVurdering(it) }
+                rettighetsperiodeRepository.lagreVurdering(kontekst.behandlingId, vedtattVurdering)
+            },
+        )
+
+        when (kontekst.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING,
+            VurderingType.REVURDERING -> {
+                if (tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) && manueltTriggetVurderingsbehov(kontekst)) {
+                    oppdaterVilkårsresultatForNyPeriode(kontekst)
+                }
+            }
+
+            VurderingType.IKKE_RELEVANT,
+            VurderingType.MELDEKORT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> {
+                // Ikke relevant
+            }
+        }
+        return Fullført
+    }
+
+    private fun gammelUtfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
                 val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
@@ -43,7 +100,7 @@ class RettighetsperiodeSteg private constructor(
                     return Fullført
                 }
 
-                if (erRelevant(kontekst)) {
+                if (manueltTriggetVurderingsbehov(kontekst)) {
                     if (erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene)) {
                         avklaringsbehovene.avbrytÅpneAvklaringsbehov()
                         return FantAvklaringsbehov(Definisjon.VURDER_RETTIGHETSPERIODE)
@@ -67,8 +124,18 @@ class RettighetsperiodeSteg private constructor(
         return !avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.VURDER_RETTIGHETSPERIODE)
     }
 
-    private fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-        return (Vurderingsbehov.VURDER_RETTIGHETSPERIODE in kontekst.vurderingsbehovRelevanteForSteg)
+    private fun manueltTriggetVurderingsbehov(kontekst: FlytKontekstMedPerioder): Boolean {
+        if (kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.VURDER_RETTIGHETSPERIODE)) {
+            return true
+        }
+
+        // HELHETLIG_VURDERING skal kun trigge avklaringsbehov dersom det tidligere er lagt inn overstyring av
+        // rettighetsperiode. Hvis ikke må alle behandlinger vurdere denne ved helhetlig vurdering.
+        if (kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.HELHETLIG_VURDERING)
+            && rettighetsperiodeRepository.hentVurdering(kontekst.behandlingId) != null) {
+            return true
+        }
+        return false
     }
 
     private fun oppdaterVilkårsresultatForNyPeriode(kontekst: FlytKontekstMedPerioder) {
@@ -97,6 +164,8 @@ class RettighetsperiodeSteg private constructor(
                 sakService = SakService(repositoryProvider),
                 avklaringsbehovRepository = repositoryProvider.provide(),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+                rettighetsperiodeRepository = repositoryProvider.provide(),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
             )
         }
 

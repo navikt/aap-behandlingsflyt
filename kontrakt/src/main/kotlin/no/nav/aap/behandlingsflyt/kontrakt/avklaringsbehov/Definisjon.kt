@@ -104,7 +104,7 @@ public enum class Definisjon(
     VURDER_RETTIGHETSPERIODE(
         kode = AvklaringsbehovKode.`5029`,
         løsesISteg = StegType.VURDER_RETTIGHETSPERIODE,
-        type = BehovType.MANUELT_FRIVILLIG,
+        type = BehovType.MANUELT_PÅKREVD,
         kreverToTrinn = true,
         løsesAv = listOf(
             Rolle.SAKSBEHANDLER_NASJONAL
