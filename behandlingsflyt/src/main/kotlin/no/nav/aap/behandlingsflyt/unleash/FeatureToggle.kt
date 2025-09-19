@@ -21,7 +21,9 @@ enum class BehandlingsflytFeature : FeatureToggle {
     Aktivitetsplikt11_9,
     TilgangssjekkSettPaaVent,
     OverforingsdatoNullForAvregning,
-    NyeSykdomVilkar;
+    NyeSykdomVilkar,
+    OvergangUfore,
+    ;
 
     override fun key(): String = name
 }

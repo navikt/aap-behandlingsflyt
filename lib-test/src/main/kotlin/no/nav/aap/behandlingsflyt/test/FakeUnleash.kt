@@ -16,6 +16,7 @@ object FakeUnleash : UnleashGateway {
         BehandlingsflytFeature.Aktivitetsplikt11_7 to false,
         BehandlingsflytFeature.Aktivitetsplikt11_9 to false,
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
+        BehandlingsflytFeature.OvergangUfore to false,
     )
 
     override fun isEnabled(featureToggle: FeatureToggle) = requireNotNull(flags[featureToggle]) {
@@ -43,6 +44,7 @@ object FakeUnleashFasttrackAktivitetsplikt : UnleashGateway {
         BehandlingsflytFeature.Aktivitetsplikt11_7 to true,
         BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
         BehandlingsflytFeature.NyBrevtype11_18 to true,
+        BehandlingsflytFeature.OvergangUfore to true,
     )
 
     override fun isEnabled(featureToggle: FeatureToggle) = requireNotNull(flags[featureToggle]) {

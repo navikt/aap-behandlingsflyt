@@ -7,6 +7,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -16,12 +18,14 @@ class AvklarBistandLøser(
     private val behandlingRepository: BehandlingRepository,
     private val bistandRepository: BistandRepository,
     private val sykdomRepository: SykdomRepository,
+    private val unleashGateway: UnleashGateway,
 ) : AvklaringsbehovsLøser<AvklarBistandsbehovLøsning> {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
         bistandRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
+        unleashGateway = gatewayProvider.provide(),
     )
 
 
@@ -29,7 +33,7 @@ class AvklarBistandLøser(
         kontekst: AvklaringsbehovKontekst,
         løsning: AvklarBistandsbehovLøsning
     ): LøsningsResultat {
-        løsning.bistandsVurdering.valider()
+        løsning.bistandsVurdering.valider(unleashGateway)
     
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 

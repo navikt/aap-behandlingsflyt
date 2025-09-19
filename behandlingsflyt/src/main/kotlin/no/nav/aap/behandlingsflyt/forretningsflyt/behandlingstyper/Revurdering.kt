@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeIn
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
 import no.nav.aap.behandlingsflyt.flyt.BehandlingType
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvbrytRevurderingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BarnetilleggSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregnTilkjentYtelseSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregningAvklarFaktaSteg
@@ -35,14 +36,12 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ForeslåVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FritakMeldepliktSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.IkkeOppfyltMeldepliktSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.IverksettVedtakSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvbrytRevurderingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ManglendeLigningGrunnlagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OpprettRevurderingSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OvergangUføreSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OvergangArbeidSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OvergangUføreSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RefusjonkravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RettighetsperiodeSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningAndreStatligeYtelserSteg
@@ -63,6 +62,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderForutgåendeMedlemskapSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderLovvalgSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderStudentSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeSteg
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -100,7 +100,7 @@ object Revurdering : BehandlingType {
                 )
             )
             .medSteg(
-            steg = VurderLovvalgSteg,
+                steg = VurderLovvalgSteg,
                 informasjonskrav = listOf(PersonopplysningInformasjonskrav, LovvalgInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
@@ -156,22 +156,17 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 )
             )
-           .apply {
-                // TODO legge ut 11-18 når det er klart
-                if (Miljø.erLokal()) {
-                    medSteg(
-                        steg = OvergangUføreSteg,
-                        vurderingsbehovRelevanteForSteg = listOf(
-                            Vurderingsbehov.MOTTATT_SØKNAD,
-                            Vurderingsbehov.MOTTATT_DIALOGMELDING,
-                            Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
-                            Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
-                            Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
-                            Vurderingsbehov.HELHETLIG_VURDERING,
-                        )
-                    )
-                }
-            }
+            .medSteg(
+                steg = OvergangUføreSteg,
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                    Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
+                    Vurderingsbehov.HELHETLIG_VURDERING,
+                )
+            )
             .apply {
                 // TODO legge ut 11-17 når det er klart
                 if (Miljø.erLokal()) {

@@ -229,7 +229,7 @@ class BistandsvilkåretTest {
                 overgangBegrunnelse = null,
             )
 
-            AvklarBistandLøser(postgresRepositoryRegistry.provider(connection)).løs(
+            AvklarBistandLøser(postgresRepositoryRegistry.provider(connection), gatewayProvider).løs(
                 AvklaringsbehovKontekst(
                     bruker = Bruker(sak.person.aktivIdent().identifikator),
                     kontekst = FlytKontekst(

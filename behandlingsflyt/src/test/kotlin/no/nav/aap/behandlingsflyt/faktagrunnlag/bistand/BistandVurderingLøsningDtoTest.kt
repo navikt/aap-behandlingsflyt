@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.bistand
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
@@ -69,7 +69,7 @@ class BistandVurderingLøsningLøsningDtoTest {
                 skalVurdereAapIOvergangTilUføre = null,
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
-            ).valider()
+            ).valider(FakeUnleash)
         }
     }
 
@@ -87,7 +87,7 @@ class BistandVurderingLøsningLøsningDtoTest {
                 skalVurdereAapIOvergangTilUføre = null,
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
-            ).valider()
+            ).valider(FakeUnleash)
         }
     }
 
@@ -102,7 +102,7 @@ class BistandVurderingLøsningLøsningDtoTest {
                 skalVurdereAapIOvergangTilUføre = null,
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
-            ).valider()
+            ).valider(FakeUnleash)
         }
     }
 }

@@ -160,6 +160,7 @@ import no.nav.aap.behandlingsflyt.test.PersonNavn
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -1273,6 +1274,9 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
     @Test
     fun `avslag på 11-6 er også inngang til 11-13 og 11-18`() {
+        if (gatewayProvider.provide<UnleashGateway>().isDisabled(BehandlingsflytFeature.OvergangUfore)) {
+            return
+        }
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val person = TestPersoner.STANDARD_PERSON()
 
@@ -1389,6 +1393,9 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
     @Test
     fun `11-18 uføre underveis i en behandling`() {
+        if (gatewayProvider.provide<UnleashGateway>().isDisabled(BehandlingsflytFeature.OvergangUfore)) {
+            return
+        }
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val person = TestPersoner.STANDARD_PERSON()
 
