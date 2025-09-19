@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway

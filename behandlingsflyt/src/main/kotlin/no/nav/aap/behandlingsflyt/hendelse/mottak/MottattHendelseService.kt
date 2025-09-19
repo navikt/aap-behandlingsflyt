@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.hendelse
+package no.nav.aap.behandlingsflyt.hendelse.mottak
 
 import no.nav.aap.behandlingsflyt.dokumentHendelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
