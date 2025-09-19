@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_END
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ARBEIDSFORHOLDSTATUSER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
@@ -31,7 +31,6 @@ import no.nav.aap.behandlingsflyt.utils.withMdc
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
-import java.time.Duration
 import java.time.YearMonth
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
@@ -57,7 +56,7 @@ class LovvalgInformasjonskrav private constructor(
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
-                && (oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
+                && (oppdatert.ikkeKjørtSisteKalenderdag()
                 || kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))
                 && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
     }

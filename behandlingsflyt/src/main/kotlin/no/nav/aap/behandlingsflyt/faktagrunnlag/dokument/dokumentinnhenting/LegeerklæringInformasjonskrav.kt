@@ -9,13 +9,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.Duration
 
 class LegeerklæringInformasjonskrav private constructor(
     private val mottaDokumentService: MottaDokumentService,
@@ -43,7 +41,6 @@ class LegeerklæringInformasjonskrav private constructor(
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
-                oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
     }
 
