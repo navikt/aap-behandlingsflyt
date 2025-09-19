@@ -24,11 +24,11 @@ class KafkaFeilJobbUtfører(
     private val behandlingRepository: BehandlingRepository
 ) : JobbUtfører {
     override fun utfør(input: JobbInput) {
-        val (meldingkilde, melding) = input.payload<Pair<Meldingkilde, String>>()
+        val meldingkilde = Meldingkilde.valueOf(input.parameter(MELDING_KILDE))
 
         when (meldingkilde) {
             Meldingkilde.KABAL -> {
-                val hendelse = DefaultJsonMapper.fromJson<KabalHendelseKafkaMelding>(melding)
+                val hendelse = DefaultJsonMapper.fromJson<KabalHendelseKafkaMelding>(input.payload())
                 val saksnummer =
                     behandlingRepository.finnSaksnummer(BehandlingReferanse(UUID.fromString(hendelse.kildeReferanse)))
                 mottattHendelseService.registrerMottattHendelse(hendelse.tilInnsending(saksnummer))
