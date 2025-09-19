@@ -322,17 +322,19 @@ fun NormalOpenAPIRoute.saksApi(
                                 søknadErTrukket =
                                     resultatUtleder.utledResultatFørstegangsBehandling(behandling) == Resultat.TRUKKET
                             }
-                            val avklaringsDefinisjon = if (behandling.typeBehandling() == TypeBehandling.OppfølgingsBehandling){
-                                val oppfølgingsoppgaveDokument = MottaDokumentService(repositoryProvider.provide())
-                                    .hentOppfølgingsBehandlingDokument(behandlingId = behandling.id)
-                                val avklaringsbehovKodeAsNullableString = oppfølgingsoppgaveDokument?.opprinnelse?.avklaringsbehovKode
-                                val avklaringsbehovKodeAsNullableEnum = avklaringsbehovKodeAsNullableString?.let {
-                                    enumValueOf<AvklaringsbehovKode>(it)
-                                }
-                                avklaringsbehovKodeAsNullableEnum?.let { avklaringsbehov ->
-                                    Definisjon.forKode(avklaringsbehov)
-                                }
-                            } else null
+                            val avklaringsDefinisjon =
+                                if (behandling.typeBehandling() == TypeBehandling.OppfølgingsBehandling) {
+                                    val oppfølgingsoppgaveDokument = MottaDokumentService(repositoryProvider.provide())
+                                        .hentOppfølgingsBehandlingDokument(behandlingId = behandling.id)
+                                    val avklaringsbehovKodeAsNullableString =
+                                        oppfølgingsoppgaveDokument?.opprinnelse?.avklaringsbehovKode
+                                    val avklaringsbehovKodeAsNullableEnum = avklaringsbehovKodeAsNullableString?.let {
+                                        enumValueOf<AvklaringsbehovKode>(it)
+                                    }
+                                    avklaringsbehovKodeAsNullableEnum?.let { avklaringsbehov ->
+                                        Definisjon.forKode(avklaringsbehov)
+                                    }
+                                } else null
 
                             val vurderingsbehov = behandling.vurderingsbehov().map(VurderingsbehovMedPeriode::type)
                             BehandlinginfoDTO(
