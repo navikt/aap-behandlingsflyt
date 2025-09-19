@@ -43,6 +43,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldePerioderOgSakStatusJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldekortJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseJobbUtfører
@@ -145,16 +146,12 @@ class BehandlingHendelseServiceImpl(
                 .forBehandling(sak.id.id, behandling.id.id)
         )
 
-        // Sende nye meldekort til API-intern
-        // TODO skru på jobben når API-intern er klar til å motta
-        // flytJobbRepository.leggTil(MeldekortTilApiInternJobbUtfører.nyJobb(sak.id, behandling.id))
+        // Sender meldekort til API-intern
+        flytJobbRepository.leggTil(DatadelingMeldekortJobbUtfører.nyJobb(sak.id, behandling.id))
 
         if (behandling.typeBehandling() in listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)) {
             flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, behandling.id))
         }
-
-
-
     }
 
     private fun hentReservertTil(behandlingId: BehandlingId): String? {

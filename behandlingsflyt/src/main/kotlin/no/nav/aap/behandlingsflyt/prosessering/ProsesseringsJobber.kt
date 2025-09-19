@@ -14,6 +14,7 @@ object ProsesseringsJobber {
             StatistikkJobbUtfører,
             DatadelingMeldePerioderOgSakStatusJobbUtfører,
             DatadelingBehandlingJobbUtfører,
+            DatadelingMeldekortJobbUtfører,
             MeldeperiodeTilMeldekortBackendJobbUtfører,
             OpprettJobbForFastsattPeriodeJobbUtfører,
             OpprettJobbForFritakMeldepliktJobbUtfører,
