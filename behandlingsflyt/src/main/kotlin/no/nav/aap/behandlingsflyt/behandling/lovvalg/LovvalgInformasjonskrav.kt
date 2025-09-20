@@ -23,7 +23,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRe
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -56,20 +55,19 @@ class LovvalgInformasjonskrav private constructor(
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
-                && (oppdatert.ikkeKjørtSisteKalenderdag()
-                || kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))
                 && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
+                && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
 
         val medlemskapPerioderFuture = CompletableFuture
-            .supplyAsync(withMdc{ medlemskapGateway.innhent(sak.person, sak.rettighetsperiode) }, executor)
+            .supplyAsync(withMdc { medlemskapGateway.innhent(sak.person, sak.rettighetsperiode) }, executor)
         val arbeidGrunnlagFuture = CompletableFuture
-            .supplyAsync(withMdc{ innhentAARegisterGrunnlag(sak) }, executor)
+            .supplyAsync(withMdc { innhentAARegisterGrunnlag(sak) }, executor)
         val inntektGrunnlagFuture = CompletableFuture
-            .supplyAsync(withMdc{ innhentAInntektGrunnlag(sak) }, executor)
+            .supplyAsync(withMdc { innhentAInntektGrunnlag(sak) }, executor)
 
         val medlemskapPerioder = medlemskapPerioderFuture.get()
         val arbeidGrunnlag = arbeidGrunnlagFuture.get()
@@ -102,7 +100,7 @@ class LovvalgInformasjonskrav private constructor(
 
         // EREG har ikke batch-oppslag
         val futures = orgnumre.map { orgnummer ->
-            CompletableFuture.supplyAsync(withMdc{
+            CompletableFuture.supplyAsync(withMdc {
                 val response = enhetsregisteretGateway.hentEREGData(Organisasjonsnummer(orgnummer))
                 response?.let {
                     EnhetGrunnlag(
