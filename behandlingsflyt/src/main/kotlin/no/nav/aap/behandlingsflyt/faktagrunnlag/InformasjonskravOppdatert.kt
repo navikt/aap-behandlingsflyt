@@ -16,7 +16,7 @@ class InformasjonskravOppdatert(
      * Siden rettighetsperioden kan endre seg flere ganger i en behandling, så
      * kan man ikke utlede rettighetsperioden på annet vis. Og det er heller
      * ikke garantert at rettighetsperioden her matcher nåverende rettighetsperiode,
-     * selv om oppdateringen skjedde i samem behandling.
+     * selv om oppdateringen skjedde i samme behandling.
      */
     val rettighetsperiode: Periode?,
 ) {
