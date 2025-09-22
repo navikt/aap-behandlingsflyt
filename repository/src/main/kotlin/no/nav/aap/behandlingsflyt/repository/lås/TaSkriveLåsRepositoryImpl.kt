@@ -64,7 +64,7 @@ class TaSkriveLåsRepositoryImpl(private val connection: DBConnection): TaSkrive
         /* Lås sak før vi låser behandling. Hvis vi låser sak i setRowMapper, så
          * låses behandling først, og så sak.
          **/
-        val sakId = connection.queryFirst("""select id from behandling where referanse = ?""") {
+        val sakId = connection.queryFirst("""select sak_id from behandling where referanse = ?""") {
             setParams {
                 setUUID(1, behandlingUUid)
             }
